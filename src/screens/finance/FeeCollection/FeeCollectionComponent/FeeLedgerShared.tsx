@@ -121,6 +121,9 @@ export interface FeeRowProps {
   name: string;
   subtitle?: string;
   total: number;
+  scheduledTotal?: number;
+	prorationPolicyVersionId?: string | null;
+  prorationExplanation?: string | null;
   paid: number;
   due: number;
   status?: FeeCollectionStatusType;
@@ -143,6 +146,9 @@ export const FeeRow = ({
   name,
   subtitle,
   total,
+  scheduledTotal,
+	prorationPolicyVersionId,
+  prorationExplanation,
   paid,
   due,
   reconciliationAmount,
@@ -256,6 +262,54 @@ export const FeeRow = ({
               }}
             >
               ?
+            </Box>
+          </Tooltip>
+        )}
+        {prorationExplanation && (
+          <Tooltip
+            arrow
+            placement="top"
+            title={
+              <Box>
+                <Typography variant="caption" fontWeight={700} display="block">
+                  Proration
+                </Typography>
+				{prorationPolicyVersionId && (
+				  <Typography variant="caption" display="block">
+					Policy version: {prorationPolicyVersionId}
+				  </Typography>
+				)}
+                {scheduledTotal !== undefined && scheduledTotal !== total && (
+                  <Typography variant="caption" display="block">
+                    Scheduled: {formatNumber(scheduledTotal, 'INR')} · Charged:{' '}
+                    {formatNumber(total, 'INR')}
+                  </Typography>
+                )}
+                <Typography variant="caption" display="block">
+                  {prorationExplanation}
+                </Typography>
+              </Box>
+            }
+          >
+            <Box
+              component="span"
+              onClick={(event) => event.stopPropagation()}
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                bgcolor: 'primary.main',
+                color: 'primary.contrastText',
+                fontSize: '0.58rem',
+                fontWeight: 700,
+                cursor: 'help',
+                flexShrink: 0,
+              }}
+            >
+              P
             </Box>
           </Tooltip>
         )}

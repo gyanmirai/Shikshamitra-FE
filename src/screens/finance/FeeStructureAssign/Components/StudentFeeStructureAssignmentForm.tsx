@@ -12,6 +12,8 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import CancelButton from 'src/components/cancel-button';
 import CustomSelect from 'src/components/custom-select';
 import { FeeMonth } from 'src/enums/fee-collection-type';
@@ -27,6 +29,7 @@ import {
 } from 'src/redux/finance/financeFeeStructure';
 import {
   useAssignFeeStructureMutation,
+  usePreviewFeeStructureAssignmentMutation,
   useGetStudentFeeStructureQuery,
 } from 'src/redux/student/admission/admission-api';
 import {
@@ -47,8 +50,10 @@ import {
   TableCell,
   TableHead,
   Typography,
+  TextField,
   CardContent,
   DialogActions,
+  Alert,
 } from '@mui/material';
 
 interface FeeHeadItem {
@@ -91,6 +96,11 @@ interface Props {
 const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
   const [feeHeads, setFeeHeads] = useState<FeeHeadAssignment[]>([]);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canPreviewProration = hasGrantedPermission(
+    permissions,
+    financePermissions.policies.prorationPolicyActions.simulate
+  );
   const feeMonthLookup = FeeMonth as unknown as Record<number, string>;
   const feeStructureSettingsPath = '/finance/settings/create-fee-structure';
 
@@ -138,6 +148,8 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
     params: { studentId: student?.studentId },
     currentQueryAndMutation: useAssignFeeStructureMutation,
   });
+  const [previewAssignment, { data: assignmentPreview, isLoading: isPreviewing }] =
+    usePreviewFeeStructureAssignmentMutation();
 
   // Pre-populate if structure is already assigned
   useEffect(() => {
@@ -200,6 +212,14 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
           .map((item: any) => item.feeHeadId);
 
         formik.setFieldValue('selectedFeeHeads', selectedOptionalHeads);
+        formik.setFieldValue(
+          'chargeStartDate',
+          assignedStructureData.chargeStartDate?.slice(0, 10) ?? currentYear?.startDate?.slice(0, 10) ?? ''
+        );
+        formik.setFieldValue(
+          'chargeEndDate',
+          assignedStructureData.chargeEndDate?.slice(0, 10) ?? currentYear?.endDate?.slice(0, 10) ?? ''
+        );
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -209,9 +229,16 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
     initialValues: {
       feeStructureId: '',
       selectedFeeHeads: [] as string[],
+      chargeStartDate: currentYear?.startDate?.slice(0, 10) ?? '',
+      chargeEndDate: currentYear?.endDate?.slice(0, 10) ?? '',
     },
+    enableReinitialize: true,
     validationSchema: Yup.object({
       feeStructureId: Yup.string().required('Fee Structure is required'),
+      chargeStartDate: Yup.date().required('Charge start date is required'),
+      chargeEndDate: Yup.date()
+        .required('Charge end date is required')
+        .min(Yup.ref('chargeStartDate'), 'Charge end date must be on or after start date'),
     }),
     onSubmit: async (values) => {
       try {
@@ -304,6 +331,9 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
           standardFeeStructureId: values.feeStructureId,
           selectedOptionalFeeHeadIds: values.selectedFeeHeads,
           feeHeadDetails: selectedFeeHeadsPayload,
+          chargeStartDate: values.chargeStartDate,
+          chargeEndDate: values.chargeEndDate,
+          chargePeriodSource: 'Admission',
         };
 
         await assignFeeStructure({ body }).unwrap();
@@ -314,6 +344,57 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
       }
     },
   });
+
+  const handlePreview = async () => {
+    const errors = await formik.validateForm();
+    if (Object.keys(errors).length > 0 || !student?.studentId) {
+      formik.setTouched({ feeStructureId: true, chargeStartDate: true, chargeEndDate: true });
+      return;
+    }
+    const feeHeadDetails = feeHeads
+      .filter((feeHead) => formik.values.selectedFeeHeads.includes(feeHead.feeHeadId))
+      .map((feeHead) => {
+        const detail: Record<string, unknown> = {
+          feeHeadId: feeHead.feeHeadId,
+          amount: feeHead.selectedAmount ?? feeHead.amount,
+          chargeStartDate: formik.values.chargeStartDate,
+          chargeEndDate: formik.values.chargeEndDate,
+        };
+        if (feeHead.isOneTime && feeHead.payableMonth) {
+          const value = parseMonthYearValue(feeHead.payableMonth, feeHead.payableYear);
+          if (value) {
+            detail.payableMonth = value.month;
+            detail.payableYear = value.year;
+          }
+        } else if (!feeHead.isOneTime && feeHead.startPayableMonth && feeHead.endPayableMonth) {
+          const start = parseMonthYearValue(feeHead.startPayableMonth, feeHead.startPayableYear);
+          const end = parseMonthYearValue(feeHead.endPayableMonth, feeHead.endPayableYear);
+          if (start && end) {
+            detail.startPayableMonth = start.month;
+            detail.startPayableYear = start.year;
+            detail.endPayableMonth = end.month;
+            detail.endPayableYear = end.year;
+          }
+        }
+        return detail;
+      });
+
+    try {
+      await previewAssignment({
+        body: {
+          studentId: student.studentId,
+          standardFeeStructureId: formik.values.feeStructureId,
+          selectedOptionalFeeHeadIds: formik.values.selectedFeeHeads,
+          feeHeadDetails,
+          chargeStartDate: formik.values.chargeStartDate,
+          chargeEndDate: formik.values.chargeEndDate,
+          chargePeriodSource: 'Admission',
+        },
+      }).unwrap();
+    } catch {
+      shikshaMitraToast.error({ message: 'Unable to preview this assignment.' });
+    }
+  };
 
   const handleToggleFeeHead = (feeHeadId: string) => {
     const currentSelected = formik.values.selectedFeeHeads;
@@ -489,6 +570,91 @@ const FeeStructureAssignmentForm = ({ student, handleClose }: Props) => {
               feeStructureEmptyState
             )}
           </Grid>
+
+          {formik.values.feeStructureId && (
+            <>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="date"
+                  label="Charge Start Date *"
+                  name="chargeStartDate"
+                  value={formik.values.chargeStartDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.chargeStartDate && Boolean(formik.errors.chargeStartDate)}
+                  helperText={
+                    (formik.touched.chargeStartDate &&
+                      (formik.errors.chargeStartDate as string)) ||
+                    'Fees before this date are excluded by the attached proration policy.'
+                  }
+                  inputProps={{
+                    min: currentYear?.startDate?.slice(0, 10),
+                    max: currentYear?.endDate?.slice(0, 10),
+                  }}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="date"
+                  label="Charge End Date *"
+                  name="chargeEndDate"
+                  value={formik.values.chargeEndDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.chargeEndDate && Boolean(formik.errors.chargeEndDate)}
+                  helperText={
+                    (formik.touched.chargeEndDate &&
+                      (formik.errors.chargeEndDate as string)) ||
+                    'Use the academic-year end unless the student has a known exit date.'
+                  }
+                  inputProps={{
+                    min: formik.values.chargeStartDate || currentYear?.startDate?.slice(0, 10),
+                    max: currentYear?.endDate?.slice(0, 10),
+                  }}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+            </>
+          )}
+
+          {formik.values.feeStructureId && canPreviewProration && (
+            <Grid size={{ xs: 12 }}>
+              <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+                <LoadingButton
+                  variant="outlined"
+                  size="small"
+                  loading={isPreviewing}
+                  onClick={handlePreview}
+                >
+                  Preview Demand
+                </LoadingButton>
+                <Typography variant="caption" color="text.secondary">
+                  Uses the pinned policy version and the same server calculator as assignment.
+                </Typography>
+              </Stack>
+              {assignmentPreview && (
+                <Alert severity="info" sx={{ mt: 1.5 }}>
+                  <Typography variant="body2" fontWeight={700}>
+                    Scheduled {formatNumber(assignmentPreview.scheduledTotal, 'INR')} · Prorated{' '}
+                    {formatNumber(assignmentPreview.proratedTotal, 'INR')} · Reduction{' '}
+                    {formatNumber(assignmentPreview.reductionTotal, 'INR')}
+                  </Typography>
+                  {assignmentPreview.lines
+                    .filter((line) => line.reductionAmount > 0)
+                    .map((line) => (
+                      <Typography key={`${line.feeHeadId}-${line.installmentLabel}`} variant="caption" display="block">
+                        {line.feeHeadName} · {line.installmentLabel}: {line.explanation}
+                      </Typography>
+                    ))}
+                </Alert>
+              )}
+            </Grid>
+          )}
 
           {formik.values.feeStructureId && feeHeads?.length > 0 && (
             <Grid size={{ xs: 12 }}>

@@ -145,9 +145,8 @@ const Concession = () => {
             onViewAllConcession.onTrue();
           }}
           onApprove={(data) => {
-            onConfirmDialg.onTrue();
-            setSelectedMode('Approve');
-            setSelectedConcession(data);
+            setSelectedConcessionForView(data);
+            viewConcessionRequest.onTrue();
           }}
           onReject={(data) => {
             onConfirmDialg.onTrue();
@@ -204,23 +203,17 @@ const Concession = () => {
         </Card>
       )}
 
-      {/* Approve Concession Dialog */}
+      {/* Rejection reason dialog. Approval always uses the fee-head allocation review. */}
       <CustomDialog
         open={onConfirmDialg.value}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedMode === 'Approve' ? 'Approve Concession' : 'Reject Concession'}
-            </Typography>
+            <Typography variant="h5">Reject Concession</Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title={
-                selectedMode === 'Approve'
-                  ? "Approve the student's concession request"
-                  : "Reject the student's concession request"
-              }
+              title="Reject the student's concession request"
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

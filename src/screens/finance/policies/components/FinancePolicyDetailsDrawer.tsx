@@ -1,9 +1,30 @@
 'use client';
 
 import React from 'react';
+import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Grid, Chip, Stack, Drawer, Button, Divider, Typography } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomTooltip from 'src/components/custom-tooltip';
+import {
+  Box,
+  Grid,
+  Chip,
+  Stack,
+  Paper,
+  Table,
+  Drawer,
+  Button,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableBody,
+  Typography,
+  IconButton,
+  TableContainer,
+} from '@mui/material';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -15,6 +36,101 @@ type FinancePolicyDetailsDrawerProps = {
   isLoading?: boolean;
 };
 
+// Reusable Detail Section Paper
+const DetailSection = ({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: string;
+  children: React.ReactNode;
+}) => (
+  <Paper
+    variant="outlined"
+    sx={{
+      p: 2.25,
+      mb: 2.5,
+      borderRadius: 1.75,
+      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.98),
+      borderColor: 'divider',
+      boxShadow: (theme) => `0 2px 10px -4px ${alpha(theme.palette.grey[500], 0.1)}`,
+    }}
+  >
+    <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
+      <Box
+        sx={{
+          width: 28,
+          height: 28,
+          borderRadius: 0.75,
+          bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+          color: 'primary.main',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+        }}
+      >
+        <Iconify icon={icon} width={16} height={16} />
+      </Box>
+      <Typography variant="subtitle2" fontWeight={700} color="text.primary">
+        {title}
+      </Typography>
+    </Stack>
+    {children}
+  </Paper>
+);
+
+const DetailField = ({
+  label,
+  value,
+  secondary,
+}: {
+  label: string;
+  value: React.ReactNode;
+  secondary?: string;
+}) => (
+  <Box sx={{ mb: 0.5 }}>
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      display="block"
+      sx={{ fontSize: '0.72rem', mb: 0.25 }}
+    >
+      {label}
+    </Typography>
+    <Typography variant="body2" fontWeight={600} color="text.primary">
+      {value ?? '—'}
+    </Typography>
+    {secondary && (
+      <Typography variant="caption" color="text.disabled" display="block">
+        {secondary}
+      </Typography>
+    )}
+  </Box>
+);
+
+const BooleanChip = ({ label, value }: { label: string; value?: boolean }) => (
+  <Box sx={{ mb: 0.5 }}>
+    <Typography
+      variant="caption"
+      color="text.secondary"
+      display="block"
+      sx={{ fontSize: '0.72rem', mb: 0.5 }}
+    >
+      {label}
+    </Typography>
+    <Label color={value ? 'success' : 'default'} sx={{ height: 22, fontSize: '0.7rem' }}>
+      {value ? 'Yes / Enabled' : 'No / Disabled'}
+    </Label>
+  </Box>
+);
+
+const formatEnumValue = (val: string) => {
+  if (!val) return '—';
+  return val.replace(/([A-Z])/g, ' $1').trim();
+};
+
 export default function FinancePolicyDetailsDrawer({
   open,
   onClose,
@@ -24,398 +140,1298 @@ export default function FinancePolicyDetailsDrawer({
 }: FinancePolicyDetailsDrawerProps) {
   if (!policy) return null;
 
-  const renderSectionHeader = (title: string, icon: string) => (
-    <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2, mt: 1 }}>
-      <Iconify icon={icon} sx={{ width: 20, height: 20, color: 'primary.main' }} />
-      <Typography variant="subtitle2" fontWeight={700} color="text.primary">
-        {title}
-      </Typography>
-    </Stack>
-  );
-
-  const renderField = (label: string, value: React.ReactNode) => (
-    <Box sx={{ mb: 1.5 }}>
-      <Typography variant="caption" color="text.secondary" display="block">
-        {label}
-      </Typography>
-      <Typography variant="body2" fontWeight={600} color="text.primary">
-        {value ?? '-'}
-      </Typography>
-    </Box>
-  );
-
-  const renderBooleanChip = (label: string, value: boolean) => (
-    <Box sx={{ mb: 1.5 }}>
-      <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-        {label}
-      </Typography>
-      <Chip
-        label={value ? 'Yes' : 'No'}
-        size="small"
-        color={value ? 'success' : 'default'}
-        variant="outlined"
-      />
-    </Box>
-  );
-
-  const formatEnumValue = (val: string) => {
-    if (!val) return '-';
-    return val.replace(/([A-Z])/g, ' $1').trim();
-  };
-
-  // ── Render dynamic fields based on policyType ────────────────────────────────
-
-  const renderPolicySpecificDetails = () => {
-    if (!policyDetails) {
-      return (
-        <Typography variant="body2" color="text.secondary">
-          No detailed configurations available.
-        </Typography>
-      );
-    }
-
-    const type = policy.policyType;
-
-    switch (type) {
-      case 'payment':
-        return (
-          <>
-            {renderSectionHeader('Payment Behaviour & Modes', 'mdi:cash-register')}
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Allow Partial Payment', policyDetails.allowPartialPayment)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Minimum Payment Type',
-                  formatEnumValue(policyDetails.minimumPaymentType)
-                )}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Minimum Payment Value',
-                  policyDetails.minimumPaymentValue != null
-                    ? `₹${policyDetails.minimumPaymentValue}`
-                    : '-'
-                )}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Allocation Method', formatEnumValue(policyDetails.allocationMethod))}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Allow Advance Payment', policyDetails.advancePaymentAllowed)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Receipt Generation Mode',
-                  formatEnumValue(policyDetails.receiptGeneration)
-                )}
-              </Grid>
-            </Grid>
-
-            <Divider sx={{ my: 2.5 }} />
-
-            {renderSectionHeader('Demand & Reminder Configurations', 'mdi:bell-ring-outline')}
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Auto Demand Generation', policyDetails.autoDemand)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Demand Generation Days Before',
-                  policyDetails.demandGenerationDaysBefore
-                    ? `${policyDetails.demandGenerationDaysBefore} days`
-                    : '-'
-                )}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Demand Auto Approve', policyDetails.demandAutoApprove)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Auto Reminder', policyDetails.autoReminder)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Reminder Days Before',
-                  policyDetails.reminderDaysBefore
-                    ? `${policyDetails.reminderDaysBefore} days`
-                    : '-'
-                )}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Reminder Frequency',
-                  policyDetails.reminderFrequencyDays
-                    ? `Every ${policyDetails.reminderFrequencyDays} days`
-                    : '-'
-                )}
-              </Grid>
-            </Grid>
-          </>
-        );
-
-      case 'concession':
-        return (
-          <>
-            {renderSectionHeader('Concession Calculation', 'mdi:percent-outline')}
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Value Source', formatEnumValue(policyDetails.valueSource))}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Calculation Method',
-                  formatEnumValue(policyDetails.calculationMethod)
-                )}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  policyDetails.valueSource === 'PolicyFixed' ? 'Configured Value' : 'Maximum Value',
-                  policyDetails.calculationMethod === 'FullWaiver'
-                    ? 'Full waiver'
-                    : policyDetails.calculationMethod === 'Percentage'
-                      ? `${policyDetails.valueSource === 'PolicyFixed' ? policyDetails.percentageValue : policyDetails.maximumPercentage}%`
-                      : `₹${policyDetails.valueSource === 'PolicyFixed' ? policyDetails.fixedAmount : policyDetails.maximumFixedAmount}`
-                )}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Apply On', formatEnumValue(policyDetails.applyOn))}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Rounding', formatEnumValue(policyDetails.roundOff))}
-              </Grid>
-            </Grid>
-
-          </>
-        );
-
-      case 'refund':
-        return (
-          <>
-            {renderSectionHeader('Refund Options & Rules', 'mdi:cash-refund')}
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Refund Method', formatEnumValue(policyDetails.refundMethod || 'Any'))}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Processing Days', `${policyDetails.processingDays ?? 0} days`)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Allow Partial Refund', policyDetails.allowPartialRefund)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Bank Details Required', policyDetails.bankDetailsRequired)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Max Refund Percentage',
-                  policyDetails.maxRefundPercentage ? `${policyDetails.maxRefundPercentage}%` : '-'
-                )}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Max Refund Amount',
-                  policyDetails.maxRefundAmount ? `₹${policyDetails.maxRefundAmount}` : '-'
-                )}
-              </Grid>
-            </Grid>
-
-            {policyDetails.deductionRules && policyDetails.deductionRules.length > 0 && (
-              <>
-                <Divider sx={{ my: 2.5 }} />
-                {renderSectionHeader(
-                  'Deduction Rules (Late Cancellations)',
-                  'mdi:calculator-variant-outline'
-                )}
-                <Stack spacing={1.5}>
-                  {policyDetails.deductionRules.map((rule: any, index: number) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        p: 1.5,
-                        borderRadius: 1,
-                        bgcolor: 'background.neutral',
-                        border: '1px solid',
-                        borderColor: 'divider',
-                      }}
-                    >
-                      <Grid container spacing={1}>
-                        <Grid size={{ xs: 4 }}>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            Canceled After
-                          </Typography>
-                          <Typography variant="body2" fontWeight={600}>
-                            {rule.afterDays} days
-                          </Typography>
-                        </Grid>
-                        <Grid size={{ xs: 4 }}>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            Deduction Type
-                          </Typography>
-                          <Typography variant="body2" fontWeight={600}>
-                            {rule.deductionType}
-                          </Typography>
-                        </Grid>
-                        <Grid size={{ xs: 4 }}>
-                          <Typography variant="caption" color="text.secondary" display="block">
-                            Deduction Value
-                          </Typography>
-                          <Typography variant="body2" fontWeight={600}>
-                            {rule.deductionType === 'Percentage'
-                              ? `${rule.deductionValue}%`
-                              : `₹${rule.deductionValue}`}
-                          </Typography>
-                        </Grid>
-                      </Grid>
-                    </Box>
-                  ))}
-                </Stack>
-              </>
-            )}
-          </>
-        );
-
-      case 'collection':
-        return (
-          <>
-            {renderSectionHeader('Collection & Waiver Configurations', 'mdi:wallet-giftcard')}
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Grace Period Days', `${policyDetails.gracePeriodDays ?? 0} days`)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Allow Online Collection', policyDetails.allowOnlineCollection)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Enable Late Fee', policyDetails.enableLateFee)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField('Late Fee Type', formatEnumValue(policyDetails.lateFeeType || '-'))}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Rounding Method',
-                  formatEnumValue(policyDetails.roundingMethod || 'None')
-                )}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Consider As Income', policyDetails.considerAsIncome)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderBooleanChip('Enable Waiver', policyDetails.enableWaiver)}
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                {renderField(
-                  'Max Waiver Percentage',
-                  policyDetails.maximumWaiverPercentage
-                    ? `${policyDetails.maximumWaiverPercentage}%`
-                    : '-'
-                )}
-              </Grid>
-            </Grid>
-          </>
-        );
-
-      default:
-        return null;
-    }
-  };
+  const type = policy.policyType;
 
   return (
     <Drawer
       anchor="right"
       open={open}
       onClose={onClose}
+      slotProps={{
+        backdrop: {
+          sx: {
+            bgcolor: 'rgba(15, 23, 42, 0.44)',
+            backdropFilter: 'blur(3px)',
+          },
+        },
+      }}
       PaperProps={{
         sx: {
-          width: { xs: '100%', sm: 'min(600px, 90vw)' },
+          width: { xs: '100%', sm: 'min(760px, 92vw)' },
           maxWidth: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
         },
       }}
     >
-      <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2.5 }}>
-          <Typography variant="h6" fontWeight={700}>
-            Policy Details
-          </Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={onClose}
-            startIcon={<Iconify icon="mdi:close" />}
-          >
-            Close
-          </Button>
-        </Stack>
-
-        <Divider />
-
-        <Box sx={{ flex: 1, overflowY: 'auto', mt: 2.5, pr: 0.5 }}>
-          {/* General policy info */}
-          {renderSectionHeader('General Information', 'mdi:information-outline')}
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>{renderField('Policy Name', policy.policyName)}</Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>{renderField('Policy Code', policy.policyCode)}</Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              {renderField('Academic Year', policy.academicYearName)}
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Box sx={{ mb: 1.5 }}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  display="block"
-                  sx={{ mb: 0.5 }}
-                >
-                  Status
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          bgcolor: 'background.paper',
+        }}
+      >
+        {/* Drawer Header */}
+        <Box
+          sx={{
+            px: { xs: 2, sm: 3 },
+            py: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? alpha(theme.palette.background.default, 0.5)
+                : alpha(theme.palette.grey[50], 0.8),
+            flexShrink: 0,
+            gap: 2,
+          }}
+        >
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 1.25,
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                color: 'primary.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Iconify icon={GlobalIcons.eye} width={22} height={22} />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="h6" fontWeight={700} noWrap>
+                  {policy.policyName}
                 </Typography>
+                <CustomTooltip
+                  title="View detailed configuration parameters, application rules, and financial metadata"
+                  placement="right"
+                  arrow
+                >
+                  <Iconify
+                    icon={GlobalIcons.info}
+                    color="info.main"
+                    width={16}
+                    height={16}
+                    sx={{ cursor: 'pointer' }}
+                  />
+                </CustomTooltip>
+                {type !== 'refund' && policy.policyCode && (
+                  <Label color="default" sx={{ height: 20, fontSize: '0.7rem' }}>
+                    {policy.policyCode}
+                  </Label>
+                )}
                 <Label
                   color={
                     policy.status === 'Active' || policy.status === 'Published'
                       ? 'success'
                       : policy.status === 'Draft'
                         ? 'warning'
-                        : policy.status === 'Inactive'
-                          ? 'error'
-                          : 'default'
+                        : 'default'
                   }
+                  sx={{ height: 20, fontSize: '0.7rem' }}
                 >
                   {policy.status}
                 </Label>
-              </Box>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              {renderField(
-                'Effective From',
-                policy.effectiveFrom
-                  ? new Date(policy.effectiveFrom).toLocaleDateString('en-IN')
-                  : '-'
-              )}
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              {renderField(
-                'Effective To',
-                policy.effectiveTo ? new Date(policy.effectiveTo).toLocaleDateString('en-IN') : '-'
-              )}
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              {renderField('Description', policyDetails?.description || '-')}
-            </Grid>
-          </Grid>
+                {policy.version && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={`v${policy.version}`}
+                    sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}
+                  />
+                )}
+              </Stack>
+              <Typography variant="caption" color="text.secondary">
+                {formatEnumValue(policy.policyType)} Policy · {policy.academicYearName || 'All Years'}
+              </Typography>
+            </Box>
+          </Stack>
 
-          <Divider sx={{ my: 2.5 }} />
+          <IconButton
+            onClick={onClose}
+            sx={{
+              p: 0.75,
+              color: 'text.secondary',
+              '&:hover': { bgcolor: 'action.hover' },
+            }}
+          >
+            <Iconify icon="mdi:close" width={20} height={20} />
+          </IconButton>
+        </Box>
 
-          {/* Dynamic properties of the policy */}
-          {isLoading ? (
-            <Stack alignItems="center" sx={{ py: 5 }}>
-              <Iconify
-                icon="line-md:loading-twotone-loop"
-                sx={{ width: 32, height: 32, color: 'primary.main' }}
-              />
-            </Stack>
-          ) : (
-            renderPolicySpecificDetails()
-          )}
+        {/* Scrollable Content Body */}
+        <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+          <Box sx={{ p: { xs: 2, sm: 3 }, pb: 6 }}>
+            {/* ── 1. General Information ── */}
+            <DetailSection title="General Information" icon={GlobalIcons.notebook}>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <DetailField label="Policy Name" value={policy.policyName} />
+                </Grid>
+                {type !== 'refund' && (
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField label="Policy Code" value={policy.policyCode || '—'} />
+                  </Grid>
+                )}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <DetailField label="Academic Year" value={policy.academicYearName || '—'} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Box sx={{ mb: 0.5 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      display="block"
+                      sx={{ fontSize: '0.72rem', mb: 0.25 }}
+                    >
+                      Default Selection
+                    </Typography>
+                    <Label color={policy.isDefault ? 'primary' : 'default'} sx={{ height: 22 }}>
+                      {policy.isDefault ? 'Default Policy' : 'Standard Policy'}
+                    </Label>
+                  </Box>
+                </Grid>
+                {policy.effectiveFrom && (
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Effective From"
+                      value={dayjs(policy.effectiveFrom).format('DD-MM-YYYY')}
+                    />
+                  </Grid>
+                )}
+                {policy.effectiveTo && (
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <DetailField
+                      label="Effective To"
+                      value={dayjs(policy.effectiveTo).format('DD-MM-YYYY')}
+                    />
+                  </Grid>
+                )}
+                <Grid size={{ xs: 12 }}>
+                  <DetailField
+                    label="Description"
+                    value={policyDetails?.description || 'No description provided.'}
+                  />
+                </Grid>
+              </Grid>
+            </DetailSection>
+
+            {/* Loading Indicator */}
+            {isLoading ? (
+              <Stack alignItems="center" justifyContent="center" sx={{ py: 8 }}>
+                <Iconify
+                  icon="line-md:loading-twotone-loop"
+                  sx={{ width: 36, height: 36, color: 'primary.main', mb: 1.5 }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Loading policy configuration details...
+                </Typography>
+              </Stack>
+            ) : !policyDetails ? (
+              <Paper variant="outlined" sx={{ p: 3, textAlign: 'center', borderRadius: 1.5 }}>
+                <Typography variant="body2" color="text.secondary">
+                  No detailed configuration found for this policy.
+                </Typography>
+              </Paper>
+            ) : (
+              <>
+                {/* ── Collection Policy Specific Details ── */}
+                {type === 'collection' && (
+                  <>
+                    <DetailSection title="Collection & Gateway Settings" icon="solar:card-bold">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Grace Period"
+                            value={`${policyDetails.gracePeriodDays ?? 0} days`}
+                            secondary={`Type: ${policyDetails.gracePeriodType || 'Calendar'}`}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <BooleanChip
+                            label="Online Gateway Collection"
+                            value={policyDetails.allowOnlineCollection}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Rounding Method"
+                            value={formatEnumValue(policyDetails.roundingMethod || 'None')}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <BooleanChip
+                            label="Consider As Operational Income"
+                            value={policyDetails.considerAsIncome}
+                          />
+                        </Grid>
+                        {policyDetails.considerAsIncome && policyDetails.lateFeeIncomeHeadName && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Late-Fee Income Head"
+                              value={policyDetails.lateFeeIncomeHeadName}
+                            />
+                          </Grid>
+                        )}
+                      </Grid>
+                    </DetailSection>
+
+                    <DetailSection title="Late Fee Accrual Rules" icon={GlobalIcons.receiptIcon}>
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <BooleanChip
+                            label="Late Fee Accrual"
+                            value={policyDetails.enableLateFee}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Late Fee Formula Type"
+                            value={formatEnumValue(policyDetails.lateFeeType || '—')}
+                          />
+                        </Grid>
+
+                        {policyDetails.lateFeeType === 'Flat' && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Flat Late Fee Amount"
+                              value={
+                                policyDetails.flatAmount != null
+                                  ? `₹${policyDetails.flatAmount}`
+                                  : '—'
+                              }
+                            />
+                          </Grid>
+                        )}
+
+                        {(policyDetails.lateFeeType === 'Percentage' ||
+                          policyDetails.lateFeeType === 'Compound') && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Interest Rate"
+                              value={
+                                policyDetails.percentage != null
+                                  ? `${policyDetails.percentage}%`
+                                  : '—'
+                              }
+                              secondary={
+                                policyDetails.percentageBase
+                                  ? `Base: ${formatEnumValue(policyDetails.percentageBase)}`
+                                  : undefined
+                              }
+                            />
+                          </Grid>
+                        )}
+
+                        {policyDetails.lateFeeType === 'PerDay' && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Daily Amount"
+                              value={
+                                policyDetails.amountPerDay != null
+                                  ? `₹${policyDetails.amountPerDay} / day`
+                                  : '—'
+                              }
+                            />
+                          </Grid>
+                        )}
+                        {policyDetails.lateFeeType === 'PerWeek' && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Weekly Amount"
+                              value={
+                                policyDetails.amountPerWeek != null
+                                  ? `₹${policyDetails.amountPerWeek} / week`
+                                  : '—'
+                              }
+                            />
+                          </Grid>
+                        )}
+                        {policyDetails.lateFeeType === 'PerMonth' && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Monthly Amount"
+                              value={
+                                policyDetails.amountPerMonth != null
+                                  ? `₹${policyDetails.amountPerMonth} / month`
+                                  : '—'
+                              }
+                            />
+                          </Grid>
+                        )}
+
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Maximum Late Fee Ceiling"
+                            value={
+                              policyDetails.maximumLateFeeAmount != null
+                                ? `₹${policyDetails.maximumLateFeeAmount}`
+                                : 'No ceiling (Uncapped)'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Maximum Charging Days"
+                            value={
+                              policyDetails.maximumChargingDays != null
+                                ? `${policyDetails.maximumChargingDays} days cutoff`
+                                : 'No cutoff days'
+                            }
+                          />
+                        </Grid>
+                      </Grid>
+
+                      {policyDetails.lateFeeType === 'Slab' && (
+                        <Box sx={{ mt: 2.5 }}>
+                          <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                            Configured Escalation Slabs
+                          </Typography>
+                          {(policyDetails.escalationRules ?? []).length === 0 ? (
+                            <Typography variant="caption" color="text.secondary">
+                              No escalation slabs configured.
+                            </Typography>
+                          ) : (
+                            <TableContainer
+                              component={Paper}
+                              variant="outlined"
+                              sx={{ borderRadius: 1.5, overflow: 'hidden' }}
+                            >
+                              <Table size="small">
+                                <TableHead>
+                                  <TableRow
+                                    sx={{
+                                      bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
+                                    }}
+                                  >
+                                    <TableCell
+                                      sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
+                                    >
+                                      From Day
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
+                                    >
+                                      To Day
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
+                                    >
+                                      Calculation
+                                    </TableCell>
+                                    <TableCell
+                                      sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
+                                    >
+                                      Charge Value
+                                    </TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {(policyDetails.escalationRules as any[]).map((slab, i) => (
+                                    <TableRow key={i}>
+                                      <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                        Day {slab.startDay}
+                                      </TableCell>
+                                      <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                        {slab.endDay != null ? `Day ${slab.endDay}` : 'Open (∞)'}
+                                      </TableCell>
+                                      <TableCell sx={{ fontSize: '12px', py: 0.75 }}>
+                                        {slab.calculationType}
+                                      </TableCell>
+                                      <TableCell
+                                        sx={{ fontSize: '12px', fontWeight: 600, py: 0.75 }}
+                                      >
+                                        {slab.calculationType === 'Flat'
+                                          ? `₹${slab.value}`
+                                          : `${slab.value}%`}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </TableContainer>
+                          )}
+                        </Box>
+                      )}
+                    </DetailSection>
+
+                    <DetailSection title="Waiver Rules & Controls" icon="solar:tag-price-bold">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <BooleanChip label="Waivers Allowed" value={policyDetails.enableWaiver} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <BooleanChip
+                            label="Maker-Checker Approval Required"
+                            value={policyDetails.requiresApproval}
+                          />
+                        </Grid>
+                        {policyDetails.requiresApproval && (
+                          <>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                              <DetailField
+                                label="Approval Threshold"
+                                value={
+                                  policyDetails.approvalThresholdAmount != null
+                                    ? `Above ₹${policyDetails.approvalThresholdAmount}`
+                                    : 'All amounts require approval'
+                                }
+                              />
+                            </Grid>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                              <Box sx={{ mb: 0.5 }}>
+                                <Typography
+                                  variant="caption"
+                                  color="text.secondary"
+                                  display="block"
+                                  sx={{ fontSize: '0.72rem', mb: 0.25 }}
+                                >
+                                  Approving Roles
+                                </Typography>
+                                <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
+                                  {(policyDetails.approvalRoles ?? []).length === 0 ? (
+                                    <Typography variant="body2" color="text.secondary">
+                                      {policyDetails.approvalRoleIds?.length
+                                        ? `${policyDetails.approvalRoleIds.length} role(s) configured`
+                                        : '—'}
+                                    </Typography>
+                                  ) : (
+                                    (policyDetails.approvalRoles as any[]).map((r, i) => (
+                                      <Chip
+                                        key={i}
+                                        label={r.name || r}
+                                        size="small"
+                                        variant="outlined"
+                                      />
+                                    ))
+                                  )}
+                                </Stack>
+                              </Box>
+                            </Grid>
+                          </>
+                        )}
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Maximum Waiver Amount Cap"
+                            value={
+                              policyDetails.maximumWaiverAmount != null
+                                ? `₹${policyDetails.maximumWaiverAmount}`
+                                : 'No monetary ceiling'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Maximum Waiver Percentage"
+                            value={
+                              policyDetails.maximumWaiverPercentage != null
+                                ? `${policyDetails.maximumWaiverPercentage}%`
+                                : '100%'
+                            }
+                          />
+                        </Grid>
+                        {policyDetails.waiverExpiry && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Waiver Policy Expiry"
+                              value={dayjs(policyDetails.waiverExpiry).format('DD-MM-YYYY')}
+                            />
+                          </Grid>
+                        )}
+                      </Grid>
+                    </DetailSection>
+                  </>
+                )}
+
+                {/* ── Payment Policy Details ── */}
+                {type === 'payment' && (
+                  <DetailSection title="Payment Behaviour & Modes" icon="mdi:cash-register">
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <BooleanChip
+                          label="Allow Partial Payment"
+                          value={policyDetails.allowPartialPayment}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <DetailField
+                          label="Allocation Method"
+                          value={formatEnumValue(policyDetails.allocationMethod)}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <DetailField
+                          label="Minimum Payment Type"
+                          value={formatEnumValue(policyDetails.minimumPaymentType)}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <DetailField
+                          label="Minimum Payment Value"
+                          value={
+                            policyDetails.minimumPaymentValue != null
+                              ? `₹${policyDetails.minimumPaymentValue}`
+                              : '—'
+                          }
+                        />
+                      </Grid>
+                    </Grid>
+                  </DetailSection>
+                )}
+
+                {/* ── Concession Policy Details (Enhanced) ── */}
+                {type === 'concession' && (
+                  <>
+                    {/* Calculation Configuration */}
+                    <DetailSection
+                      title="Concession Calculation Engine"
+                      icon="solar:tag-price-bold"
+                    >
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Value Source"
+                            value={
+                              policyDetails.valueSource === 'RequestEnteredWithinLimits'
+                                ? 'Entered in Request (Within Limits)'
+                                : 'Fixed by Policy'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Calculation Method"
+                            value={
+                              policyDetails.calculationMethod === 'Percentage'
+                                ? 'Percentage (%)'
+                                : policyDetails.calculationMethod === 'FixedAmount'
+                                  ? 'Fixed Amount (₹)'
+                                  : 'Full Waiver (100%)'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label={
+                              policyDetails.valueSource === 'PolicyFixed'
+                                ? 'Configured Value'
+                                : 'Maximum Allowed Ceiling'
+                            }
+                            value={
+                              policyDetails.calculationMethod === 'FullWaiver'
+                                ? 'Full 100% Waiver'
+                                : policyDetails.calculationMethod === 'Percentage'
+                                  ? `${policyDetails.valueSource === 'PolicyFixed' ? (policyDetails.percentageValue ?? '—') : (policyDetails.maximumPercentage ?? '—')}%`
+                                  : `₹${policyDetails.valueSource === 'PolicyFixed' ? (policyDetails.fixedAmount ?? '—') : (policyDetails.maximumFixedAmount ?? '—')}`
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Rounding Method"
+                            value={
+                              policyDetails.roundOff || policyDetails.roundingMethod
+                                ? formatEnumValue(
+                                    policyDetails.roundOff || policyDetails.roundingMethod
+                                  )
+                                : 'None'
+                            }
+                          />
+                        </Grid>
+                      </Grid>
+                    </DetailSection>
+
+                    {/* Application Behaviour & Recalculation Scope */}
+                    <DetailSection
+                      title="Application Scope & Guarantees"
+                      icon="solar:shield-check-bold"
+                    >
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Apply Concession On"
+                            value={
+                              policyDetails.applyOn === 'AllOutstanding'
+                                ? 'All Outstanding Installments'
+                                : policyDetails.applyOn === 'CurrentInstallment'
+                                  ? 'Current Unpaid Installment Only'
+                                  : policyDetails.applyOn === 'FutureInstallments'
+                                    ? 'Future Installments Only'
+                                    : formatEnumValue(policyDetails.applyOn)
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Fee Head Eligibility"
+                            value="Configured per Fee Structure"
+                            secondary="Attached when fee structure is assigned to students"
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                          <Paper
+                            variant="outlined"
+                            sx={{
+                              p: 1.5,
+                              bgcolor: (theme) => alpha(theme.palette.success.main, 0.04),
+                              borderColor: (theme) => alpha(theme.palette.success.main, 0.2),
+                              borderRadius: 1,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.25,
+                            }}
+                          >
+                            <Iconify
+                              icon="solar:shield-check-bold"
+                              width={18}
+                              height={18}
+                              sx={{ color: 'success.main', flexShrink: 0 }}
+                            />
+                            <Typography variant="caption" color="text.secondary">
+                              <strong>Zero Refund Guarantee:</strong> Concessions recalculate unpaid
+                              demands only and never generate refund liabilities or negative demand
+                              entries.
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      </Grid>
+                    </DetailSection>
+
+                    {/* Downstream Utilization & Audit Metadata */}
+                    <DetailSection
+                      title="Utilization & Audit Metadata"
+                      icon="solar:history-bold-duotone"
+                    >
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Downstream Attachment"
+                            value={
+                              policy.isUsedInDownstream ? (
+                                <Label color="info">Attached to Structures</Label>
+                              ) : (
+                                <Label color="default">Not Attached</Label>
+                              )
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Active Version"
+                            value={`Version ${policy.version || policyDetails.version || 1}`}
+                          />
+                        </Grid>
+                        {(policy.updatedAt || policy.lastModificationTime) && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Last Modified"
+                              value={dayjs(policy.updatedAt || policy.lastModificationTime).format(
+                                'DD-MM-YYYY hh:mm A'
+                              )}
+                              secondary={policy.updatedBy ? `By: ${policy.updatedBy}` : undefined}
+                            />
+                          </Grid>
+                        )}
+                        {(policy.creationTime || (policyDetails as any)?.creationTime) && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Created Date"
+                              value={dayjs(
+                                policy.creationTime || (policyDetails as any)?.creationTime
+                              ).format('DD-MM-YYYY hh:mm A')}
+                              secondary={
+                                (policyDetails as any)?.creatorName ||
+                                (policyDetails as any)?.createdBy
+                                  ? `By: ${(policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy}`
+                                  : undefined
+                              }
+                            />
+                          </Grid>
+                        )}
+                      </Grid>
+                    </DetailSection>
+                  </>
+                )}
+
+                {/* ── Refund Policy Details (Enhanced) ── */}
+                {type === 'refund' && (
+                  <>
+                    {/* Scope & Eligibility */}
+                    <DetailSection title="Refund Scope & Eligibility" icon="solar:shield-check-bold-duotone">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Eligible Payment State"
+                            value={
+                              policyDetails.eligiblePaymentState === 'FullyPaidOnly'
+                                ? 'Fully Paid Only'
+                                : 'Partial & Full Payments'
+                            }
+                            secondary={
+                              policyDetails.eligiblePaymentState === 'FullyPaidOnly'
+                                ? 'Student demand must be 100% settled'
+                                : 'Any settled receipt is eligible'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Fee Head Scope"
+                            value={
+                              policyDetails.feeHeadScope === 'AllFeeHeads'
+                                ? 'All Fee Heads Included'
+                                : `${(policyDetails.applicableFeeHeadIds ?? []).length} Selected Fee Heads`
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Request Deadline Window"
+                            value={
+                              policyDetails.requestDeadlineDays != null
+                                ? `${policyDetails.requestDeadlineDays} days from settlement`
+                                : 'No deadline (Open window)'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <BooleanChip
+                            label="Allow Partial Refund"
+                            value={policyDetails.allowPartialRefund}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <BooleanChip
+                            label="Include Paid Incidental Charges"
+                            value={policyDetails.includePaidCharges}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <BooleanChip
+                            label="Include Paid Late Fees"
+                            value={policyDetails.includePaidLateFee}
+                          />
+                        </Grid>
+                      </Grid>
+
+                      {/* Fee Heads chip list if applicable */}
+                      {policyDetails.feeHeadScope === 'SelectedFeeHeads' &&
+                        (policyDetails.applicableFeeHeadIds ?? []).length > 0 && (
+                          <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px dashed', borderColor: 'divider' }}>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ mb: 1 }}>
+                              APPLICABLE FEE HEADS ({policyDetails.applicableFeeHeadIds.length})
+                            </Typography>
+                            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                              {(policyDetails.applicableFeeHeadIds as string[]).map((headId, i) => (
+                                <Chip
+                                  key={i}
+                                  label={headId}
+                                  size="small"
+                                  color="primary"
+                                  variant="outlined"
+                                  sx={{ height: 22, fontSize: '0.72rem' }}
+                                />
+                              ))}
+                            </Stack>
+                          </Box>
+                        )}
+                    </DetailSection>
+
+                    {/* Calculation & Ceilings */}
+                    <DetailSection title="Refund Calculation & Ceilings" icon="solar:calculator-minimalistic-bold-duotone">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Amount Calculation Mode"
+                            value={
+                              policyDetails.amountMode === 'RemainingPaidAmount'
+                                ? 'Entire Remaining Paid Amount (100%)'
+                                : policyDetails.amountMode === 'ManualUpToEligible'
+                                  ? 'Manual (Up to eligible balance)'
+                                  : policyDetails.amountMode === 'Percentage'
+                                    ? 'Percentage of Eligible Amount'
+                                    : 'Fixed Amount'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Configured Value / Rate"
+                            value={
+                              policyDetails.amountMode === 'Percentage'
+                                ? `${policyDetails.percentageValue ?? 0}%`
+                                : policyDetails.amountMode === 'FixedAmount'
+                                  ? `₹${policyDetails.fixedAmount ?? 0}`
+                                  : '100% Eligible Balance'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Maximum Cap per Single Request"
+                            value={
+                              policyDetails.maximumPerRequest != null
+                                ? `₹${policyDetails.maximumPerRequest.toLocaleString('en-IN')}`
+                                : 'No per-request cap'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Maximum Cap per Student / Year"
+                            value={
+                              policyDetails.maximumPerStudentYear != null
+                                ? `₹${policyDetails.maximumPerStudentYear.toLocaleString('en-IN')}`
+                                : 'No cumulative student cap'
+                            }
+                            secondary="Enforced across all processed and reserved refunds"
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Rounding Method"
+                            value={formatEnumValue(policyDetails.roundingMethod || 'None')}
+                          />
+                        </Grid>
+                      </Grid>
+                    </DetailSection>
+
+                    {/* Deductions & Payout Methods */}
+                    <DetailSection title="Deductions & Allowed Disbursement" icon="solar:tag-price-bold-duotone">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Administrative Deduction Rule"
+                            value={
+                              policyDetails.deductionType === 'None' || !policyDetails.deductionType
+                                ? 'No Deductions (0%)'
+                                : policyDetails.deductionType === 'Percentage'
+                                  ? `${policyDetails.deductionValue}% Deduction`
+                                  : `₹${policyDetails.deductionValue} Fixed Deduction`
+                            }
+                          />
+                        </Grid>
+                        {policyDetails.deductionType && policyDetails.deductionType !== 'None' && (
+                          <>
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                              <DetailField
+                                label="Maximum Deduction Ceiling"
+                                value={
+                                  policyDetails.maximumDeduction != null
+                                    ? `₹${policyDetails.maximumDeduction.toLocaleString('en-IN')}`
+                                    : 'No deduction ceiling'
+                                }
+                              />
+                            </Grid>
+                            <Grid size={{ xs: 12 }}>
+                              <DetailField
+                                label="Deduction Justification"
+                                value={policyDetails.deductionExplanation || 'Standard administrative fee'}
+                              />
+                            </Grid>
+                          </>
+                        )}
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Operational Processing SLA"
+                            value={
+                              policyDetails.processingTargetDays != null
+                                ? `${policyDetails.processingTargetDays} days turnaround`
+                                : '—'
+                            }
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12 }}>
+                          <Box sx={{ mb: 0.5 }}>
+                            <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.72rem', mb: 0.5 }}>
+                              Permitted Payout Channels
+                            </Typography>
+                            <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
+                              {(policyDetails.allowedPayoutMethods ?? ['Cash']).map((method: string, i: number) => (
+                                <Chip
+                                  key={i}
+                                  label={method}
+                                  size="small"
+                                  color="info"
+                                  variant="outlined"
+                                  sx={{ height: 24, fontSize: '0.75rem', fontWeight: 600 }}
+                                />
+                              ))}
+                            </Stack>
+                          </Box>
+                        </Grid>
+                      </Grid>
+                    </DetailSection>
+
+                    {/* Guarantees & Settlement Callout */}
+                    <DetailSection title="Settlement Guarantees & Constraints" icon="solar:shield-check-bold">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12 }}>
+                          <Paper
+                            variant="outlined"
+                            sx={{
+                              p: 1.5,
+                              bgcolor: (theme) => alpha(theme.palette.info.main, 0.04),
+                              borderColor: (theme) => alpha(theme.palette.info.main, 0.2),
+                              borderRadius: 1.25,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.25,
+                            }}
+                          >
+                            <Iconify
+                              icon="solar:shield-check-bold"
+                              width={20}
+                              height={20}
+                              sx={{ color: 'info.main', flexShrink: 0 }}
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.74rem' }}>
+                              <strong>Settled Money Only Invariant:</strong> Refunds can only be created from verified settled money. Prior processed refunds and active reservations are permanently subtracted from the eligible base before calculating payout amounts.
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      </Grid>
+                    </DetailSection>
+
+                    {/* Audit Metadata */}
+                    <DetailSection title="Version & Audit Trail" icon="solar:history-bold-duotone">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Active Policy Version"
+                            value={`Version ${policy.version || policyDetails.version || 1}`}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Downstream Fee Structure Attachment"
+                            value={
+                              policy.isUsedInDownstream || policyDetails.isUsedInDownstream ? (
+                                <Label color="info" sx={{ height: 22 }}>Attached to Fee Structures</Label>
+                              ) : (
+                                <Label color="default" sx={{ height: 22 }}>Not Attached</Label>
+                              )
+                            }
+                          />
+                        </Grid>
+                        {(policy.updatedAt || policy.lastModificationTime || (policyDetails as any)?.lastModificationTime) && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Last Modified"
+                              value={dayjs(
+                                policy.updatedAt ||
+                                  policy.lastModificationTime ||
+                                  (policyDetails as any)?.lastModificationTime
+                              ).format('DD-MM-YYYY hh:mm A')}
+                              secondary={
+                                policy.updatedBy || (policyDetails as any)?.lastModifierName
+                                  ? `By: ${policy.updatedBy || (policyDetails as any)?.lastModifierName}`
+                                  : undefined
+                              }
+                            />
+                          </Grid>
+                        )}
+                        {(policy.creationTime || (policyDetails as any)?.creationTime) && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Created Date"
+                              value={dayjs(
+                                policy.creationTime || (policyDetails as any)?.creationTime
+                              ).format('DD-MM-YYYY hh:mm A')}
+                              secondary={
+                                (policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy
+                                  ? `By: ${(policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy}`
+                                  : undefined
+                              }
+                            />
+                          </Grid>
+                        )}
+                      </Grid>
+                    </DetailSection>
+                  </>
+                )}
+
+                {/* ── Proration Policy Details (Enhanced) ── */}
+                {type === 'proration' && (
+                  <>
+                    {/* Strategy & Overview */}
+                    <DetailSection title="Proration Strategy & Scope" icon="solar:calculator-bold-duotone">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Default Academic Policy"
+                            value={
+                              <Label color={policyDetails.isDefault || policy.isDefault ? 'primary' : 'default'} sx={{ height: 22 }}>
+                                {policyDetails.isDefault || policy.isDefault ? 'Default Policy' : 'Standard Policy'}
+                              </Label>
+                            }
+                            secondary="Assigned to new fee structures by default"
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Downstream Attachment"
+                            value={
+                              policy.isUsedInDownstream || policyDetails.isUsedInDownstream ? (
+                                <Label color="info" sx={{ height: 22 }}>Attached to Fee Structures</Label>
+                              ) : (
+                                <Label color="default" sx={{ height: 22 }}>Not Attached</Label>
+                              )
+                            }
+                            secondary={policy.isUsedInDownstream ? 'Active in student demand calculations' : undefined}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Total Fee Heads"
+                            value={`${(policyDetails.feeHeadRules ?? []).length} fee heads`}
+                          />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Active Proration Rules"
+                            value={
+                              <Label color="primary" sx={{ height: 22 }}>
+                                {(policyDetails.feeHeadRules ?? []).filter((r: any) => {
+                                  const rt = r.ruleType;
+                                  return rt !== 'NoProration' && rt !== 'FullCharge' && rt !== 'FullMonthCharge';
+                                }).length} Prorated Fee Head(s)
+                              </Label>
+                            }
+                          />
+                        </Grid>
+                      </Grid>
+                    </DetailSection>
+
+                    {/* Fee Head Rules Table */}
+                    <DetailSection title="Fee Head Proration Rules" icon="solar:widget-bold-duotone">
+                      {(policyDetails.feeHeadRules ?? []).length === 0 ? (
+                        <Paper
+                          variant="outlined"
+                          sx={{
+                            p: 3,
+                            textAlign: 'center',
+                            borderRadius: 1.5,
+                            borderStyle: 'dashed',
+                          }}
+                        >
+                          <Typography variant="body2" color="text.secondary">
+                            No fee head rules configured in this proration policy.
+                          </Typography>
+                        </Paper>
+                      ) : (
+                        <TableContainer
+                          component={Paper}
+                          variant="outlined"
+                          sx={{ borderRadius: 1.5, overflow: 'hidden' }}
+                        >
+                          <Table size="small">
+                            <TableHead>
+                              <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08) }}>
+                                <TableCell sx={{ fontWeight: 700, fontSize: '11px', py: 1 }}>
+                                  Fee Head
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 700, fontSize: '11px', py: 1 }}>
+                                  Proration Rule
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 700, fontSize: '11px', py: 1 }}>
+                                  Configuration & Parameters
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 700, fontSize: '11px', py: 1 }}>
+                                  Rounding
+                                </TableCell>
+                              </TableRow>
+                            </TableHead>
+                            <TableBody>
+                              {(policyDetails.feeHeadRules as any[]).map((rule, idx) => {
+                                const rawType = rule.ruleType;
+                                const isDaily = rawType === 'Daily' || rawType === 'DailyProration';
+                                const isMonthly = rawType === 'MonthlyCutoff' || rawType === 'MonthlyProration';
+                                const isFull = rawType === 'FullCharge' || rawType === 'FullMonthCharge';
+                                const isNone = rawType === 'NoProration' || !rawType;
+
+                                const ruleLabel = isDaily
+                                  ? 'Daily Proration'
+                                  : isMonthly
+                                    ? 'Monthly Cut-off'
+                                    : isFull
+                                      ? 'Full Month Charge'
+                                      : 'No Proration';
+
+                                const ruleColor: 'primary' | 'info' | 'warning' | 'default' = isDaily
+                                  ? 'primary'
+                                  : isMonthly
+                                    ? 'info'
+                                    : isFull
+                                      ? 'warning'
+                                      : 'default';
+
+                                const cutoffDay = rule.cutoffDay ?? rule.configuration?.cutOffDay;
+                                const afterCutoff = rule.afterCutoffAction ?? rule.configuration?.monthlyRule;
+                                const minDays = rule.minimumChargeDays ?? rule.configuration?.minimumChargeDays;
+                                const rounding = rule.roundingMode ?? rule.configuration?.roundOff ?? 'Currency';
+
+                                return (
+                                  <TableRow key={idx} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
+                                    <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>
+                                      {rule.feeHeadName || rule.feeHeadId || `Head #${idx + 1}`}
+                                    </TableCell>
+                                    <TableCell sx={{ py: 1 }}>
+                                      <Label color={ruleColor} sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}>
+                                        {ruleLabel}
+                                      </Label>
+                                    </TableCell>
+                                    <TableCell sx={{ fontSize: '12px', py: 1 }}>
+                                      {isDaily && (
+                                        <Typography variant="caption" color="text.secondary">
+                                          Calendar Days {minDays ? `· Min ${minDays} days` : ''}
+                                        </Typography>
+                                      )}
+                                      {isMonthly && (
+                                        <Typography variant="caption" color="text.secondary">
+                                          Cut-off: <strong>Day {cutoffDay ?? 15}</strong> ·{' '}
+                                          {afterCutoff === 'HalfCharge' || afterCutoff === 'HalfMonthRule'
+                                            ? '50% Half Month'
+                                            : 'Charge Next Month'}
+                                        </Typography>
+                                      )}
+                                      {isFull && (
+                                        <Typography variant="caption" color="text.secondary">
+                                          100% Full Month on Enrollment
+                                        </Typography>
+                                      )}
+                                      {isNone && (
+                                        <Typography variant="caption" color="text.disabled">
+                                          Full installment amount
+                                        </Typography>
+                                      )}
+                                    </TableCell>
+                                    <TableCell sx={{ fontSize: '12px', py: 1 }}>
+                                      <Typography variant="caption" color="text.secondary">
+                                        {formatEnumValue(String(rounding))}
+                                      </Typography>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </TableContainer>
+                      )}
+                    </DetailSection>
+
+                    {/* Zero Refund & Demand Guarantee Callout */}
+                    <DetailSection title="Application Guarantees & Constraints" icon="solar:shield-check-bold">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12 }}>
+                          <Paper
+                            variant="outlined"
+                            sx={{
+                              p: 1.5,
+                              bgcolor: (theme) => alpha(theme.palette.info.main, 0.04),
+                              borderColor: (theme) => alpha(theme.palette.info.main, 0.2),
+                              borderRadius: 1.25,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1.25,
+                            }}
+                          >
+                            <Iconify
+                              icon="solar:shield-check-bold"
+                              width={20}
+                              height={20}
+                              sx={{ color: 'info.main', flexShrink: 0 }}
+                            />
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.74rem' }}>
+                              <strong>Demand Generation Only:</strong> Proration policies strictly compute initial installment demand amounts for mid-term joiners. They never adjust historical ledger entries, existing receipts, or posted student transactions.
+                            </Typography>
+                          </Paper>
+                        </Grid>
+                      </Grid>
+                    </DetailSection>
+
+                    {/* Audit Metadata */}
+                    <DetailSection title="Version & Audit Trail" icon="solar:history-bold-duotone">
+                      <Grid container spacing={2}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <DetailField
+                            label="Active Policy Version"
+                            value={`Version ${policy.version || policyDetails.version || 1}`}
+                          />
+                        </Grid>
+                        {(policy.updatedAt || policy.lastModificationTime || (policyDetails as any)?.lastModificationTime) && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Last Modified"
+                              value={dayjs(
+                                policy.updatedAt ||
+                                  policy.lastModificationTime ||
+                                  (policyDetails as any)?.lastModificationTime
+                              ).format('DD-MM-YYYY hh:mm A')}
+                              secondary={
+                                policy.updatedBy || (policyDetails as any)?.lastModifierName
+                                  ? `By: ${policy.updatedBy || (policyDetails as any)?.lastModifierName}`
+                                  : undefined
+                              }
+                            />
+                          </Grid>
+                        )}
+                        {(policy.creationTime || (policyDetails as any)?.creationTime) && (
+                          <Grid size={{ xs: 12, sm: 6 }}>
+                            <DetailField
+                              label="Created Date"
+                              value={dayjs(
+                                policy.creationTime || (policyDetails as any)?.creationTime
+                              ).format('DD-MM-YYYY hh:mm A')}
+                              secondary={
+                                (policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy
+                                  ? `By: ${(policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy}`
+                                  : undefined
+                              }
+                            />
+                          </Grid>
+                        )}
+                      </Grid>
+                    </DetailSection>
+                  </>
+                )}
+              </>
+            )}
+          </Box>
+        </Scrollbar>
+
+        {/* Footer */}
+        <Box
+          sx={{
+            p: 2,
+            bgcolor: 'background.neutral',
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            display: 'flex',
+            justifyContent: 'flex-end',
+            flexShrink: 0,
+          }}
+        >
+          <Button
+            variant="outlined"
+            size="small"
+            color="inherit"
+            onClick={onClose}
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          >
+            Close
+          </Button>
         </Box>
       </Box>
     </Drawer>

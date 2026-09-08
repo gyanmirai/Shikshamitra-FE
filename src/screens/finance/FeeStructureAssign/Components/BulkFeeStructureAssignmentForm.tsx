@@ -43,6 +43,7 @@ import {
   TableCell,
   TableHead,
   Typography,
+  TextField,
   CardContent,
   DialogActions,
 } from '@mui/material';
@@ -150,9 +151,16 @@ const BulkFeeStructureAssignmentForm = ({ students, standardId, handleClose }: P
     initialValues: {
       feeStructureId: '',
       selectedFeeHeads: [] as string[],
+      chargeStartDate: currentYear?.startDate?.slice(0, 10) ?? '',
+      chargeEndDate: currentYear?.endDate?.slice(0, 10) ?? '',
     },
+    enableReinitialize: true,
     validationSchema: Yup.object({
       feeStructureId: Yup.string().required('Fee Structure is required'),
+      chargeStartDate: Yup.date().required('Charge start date is required'),
+      chargeEndDate: Yup.date()
+        .required('Charge end date is required')
+        .min(Yup.ref('chargeStartDate'), 'Charge end date must be on or after start date'),
     }),
     onSubmit: async (values) => {
       try {
@@ -239,6 +247,9 @@ const BulkFeeStructureAssignmentForm = ({ students, standardId, handleClose }: P
           standardFeeStructureId: values.feeStructureId,
           selectedOptionalFeeHeadIds: formik.values.selectedFeeHeads,
           feeHeadDetails,
+          chargeStartDate: values.chargeStartDate,
+          chargeEndDate: values.chargeEndDate,
+          chargePeriodSource: 'Admission',
         };
 
         await assignBulkFeeStructure({ body }).unwrap();
@@ -435,6 +446,57 @@ const BulkFeeStructureAssignmentForm = ({ students, standardId, handleClose }: P
               feeStructureEmptyState
             )}
           </Grid>
+
+          {formik.values.feeStructureId && (
+            <>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="date"
+                  label="Charge Start Date *"
+                  name="chargeStartDate"
+                  value={formik.values.chargeStartDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.chargeStartDate && Boolean(formik.errors.chargeStartDate)}
+                  helperText={
+                    (formik.touched.chargeStartDate &&
+                      (formik.errors.chargeStartDate as string)) ||
+                    'Applied to every selected student in this bulk assignment.'
+                  }
+                  inputProps={{
+                    min: currentYear?.startDate?.slice(0, 10),
+                    max: currentYear?.endDate?.slice(0, 10),
+                  }}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="date"
+                  label="Charge End Date *"
+                  name="chargeEndDate"
+                  value={formik.values.chargeEndDate}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  error={formik.touched.chargeEndDate && Boolean(formik.errors.chargeEndDate)}
+                  helperText={
+                    (formik.touched.chargeEndDate &&
+                      (formik.errors.chargeEndDate as string)) ||
+                    'Use bulk assignment only when all selected students share this period.'
+                  }
+                  inputProps={{
+                    min: formik.values.chargeStartDate || currentYear?.startDate?.slice(0, 10),
+                    max: currentYear?.endDate?.slice(0, 10),
+                  }}
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+            </>
+          )}
 
           {formik.values.feeStructureId && feeHeads?.length > 0 && (
             <Grid size={{ xs: 12 }}>

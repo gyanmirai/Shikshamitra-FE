@@ -2,20 +2,25 @@ import type { RootState } from 'src/redux/store';
 
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
+import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Chip, Grid, Divider, Typography } from '@mui/material';
+import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
+import { Box, Chip, Grid, Alert, Stack, Divider, Typography } from '@mui/material';
 import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
 import { useGetConcessionPoliciesQuery } from 'src/redux/finance/concessionPolicy';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import {
+  useGetProrationAttachmentImpactMutation,
+  useGetProrationPoliciesQuery,
+} from 'src/redux/finance/prorationPolicy';
+import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import { useValidateCollectionPolicyAttachmentMutation } from 'src/redux/finance/financeFeeStructure';
 import {
   type FinancePolicyType,
   useGetFinancePoliciesQuery,
 } from 'src/redux/finance/financePolicy';
-
-import FeeHeadOverridesEditor from './FeeHeadOverridesEditor';
 
 // ── types ────────────────────────────────────────────────────────────────────
 
@@ -25,24 +30,29 @@ export interface PolicyValues {
   refundPolicyId: string;
   prorationPolicyId: string;
   concessionPolicyId: string;
-	concessionFeeHeadScope: 'EntireFeeStructure' | 'SelectedFeeHeads';
-	concessionApplicableFeeHeadIds: string[];
+  concessionFeeHeadScope: 'EntireFeeStructure' | 'SelectedFeeHeads';
+  concessionApplicableFeeHeadIds: string[];
 }
 
-type PolicyIdKey = Exclude<keyof PolicyValues, 'concessionFeeHeadScope' | 'concessionApplicableFeeHeadIds'>;
+type PolicyIdKey = Exclude<
+  keyof PolicyValues,
+  'concessionFeeHeadScope' | 'concessionApplicableFeeHeadIds'
+>;
 
 interface FeePoliciesTabProps {
   values: PolicyValues;
-	onChange: (field: keyof PolicyValues, value: PolicyValues[keyof PolicyValues]) => void;
+  onChange: (field: keyof PolicyValues, value: PolicyValues[keyof PolicyValues]) => void;
   isEditing: boolean;
   isLocked: boolean;
-  feeHeads?: Array<{ feeHeadId: string; feeHeadName?: string }>;
+  feeHeads?: Array<{ feeHeadId: string; feeHeadName?: string; isOneTime?: boolean }>;
+  feeStructureMetadataId: string;
+  feeStructureId?: string;
 }
 
 // ── helper ───────────────────────────────────────────────────────────────────
 
 const POLICY_CONFIG: Array<{
-	key: PolicyIdKey;
+  key: PolicyIdKey;
   type: FinancePolicyType;
   label: string;
   icon: string;
@@ -74,8 +84,8 @@ const POLICY_CONFIG: Array<{
     label: 'Collection Policy',
     icon: 'solar:hand-money-bold-duotone',
     color: 'success',
-    required: false,
-    description: 'Defines late fee and waiver rules for collection',
+    required: true,
+    description: 'Defines versioned late-fee and waiver rules for the selected fee heads',
   },
   {
     key: 'refundPolicyId',
@@ -84,7 +94,7 @@ const POLICY_CONFIG: Array<{
     icon: 'solar:arrow-left-up-bold-duotone',
     color: 'warning',
     required: false,
-    description: 'Governs refund method, deductions and approval',
+    description: 'Defines eligible paid amounts, caps, deductions, and allowed payout methods',
   },
   {
     key: 'prorationPolicyId',
@@ -130,14 +140,23 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
 }) => {
   const theme = useTheme();
 
-  // Collection Policy has a real backend endpoint (Phase 1) unlike the other policy
-  // types here, which still call the generic /finance-policies endpoint that doesn't exist.
+  // Versioned policies use their typed endpoints. The remaining
+  // policy types still use the legacy generic client until their backend slices are migrated.
   const isCollectionPolicy = policyType === 'collection';
   const isConcessionPolicy = policyType === 'concession';
+  const isRefundPolicy = policyType === 'refund';
+  const isProrationPolicy = policyType === 'proration';
 
   const { data: genericPolicyData, isLoading: isGenericLoading } = useGetFinancePoliciesQuery(
     { policyType, academicYearId, status: 'Active' },
-    { skip: !academicYearId || isCollectionPolicy || isConcessionPolicy }
+    {
+      skip:
+        !academicYearId ||
+        isCollectionPolicy ||
+        isConcessionPolicy ||
+        isRefundPolicy ||
+        isProrationPolicy,
+    }
   );
 
   const { data: collectionPolicyData, isLoading: isCollectionLoading } =
@@ -147,16 +166,37 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
     );
   const { data: concessionPolicyData, isLoading: isConcessionLoading } =
     useGetConcessionPoliciesQuery(
-      { academicYearId, status: 'Active', page: 1, pageSize: 100 },
+      { academicYearId: academicYearId as string, status: 'Active', page: 1, pageSize: 100 },
       { skip: !academicYearId || !isConcessionPolicy }
+    );
+  const { data: refundPolicyData, isLoading: isRefundLoading } = useGetRefundPoliciesQuery(
+    { academicYearId: academicYearId as string, status: 'Active', page: 1, pageSize: 100 },
+    { skip: !academicYearId || !isRefundPolicy }
+  );
+  const { data: prorationPolicyData, isLoading: isProrationLoading } =
+    useGetProrationPoliciesQuery(
+      { academicYearId: academicYearId as string, status: 'Active', page: 1, pageSize: 100 },
+      { skip: !academicYearId || !isProrationPolicy }
     );
 
   const isLoading = isCollectionPolicy
     ? isCollectionLoading
-    : isConcessionPolicy ? isConcessionLoading : isGenericLoading;
+    : isConcessionPolicy
+      ? isConcessionLoading
+      : isRefundPolicy
+        ? isRefundLoading
+        : isProrationPolicy
+          ? isProrationLoading
+          : isGenericLoading;
   const policyData = isCollectionPolicy
     ? collectionPolicyData
-    : isConcessionPolicy ? concessionPolicyData : genericPolicyData;
+    : isConcessionPolicy
+      ? concessionPolicyData
+      : isRefundPolicy
+        ? refundPolicyData
+        : isProrationPolicy
+          ? prorationPolicyData
+          : genericPolicyData;
 
   const options = (policyData?.data ?? policyData?.items ?? policyData ?? []).map((p: any) => ({
     label: p.policyName,
@@ -182,12 +222,12 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
         gap: 2,
         p: 2,
         borderRadius: 1.5,
-        border: `1px solid ${varAlpha(palette.mainChannel as string, 0.12)}`,
-        bgcolor: varAlpha(palette.mainChannel as string, 0.03),
+        border: `1px solid ${alpha(palette.main, 0.12)}`,
+        bgcolor: alpha(palette.main, 0.03),
         transition: 'all 0.18s',
         '&:hover': {
-          borderColor: varAlpha(palette.mainChannel as string, 0.25),
-          bgcolor: varAlpha(palette.mainChannel as string, 0.05),
+          borderColor: alpha(palette.main, 0.25),
+          bgcolor: alpha(palette.main, 0.05),
         },
       }}
     >
@@ -197,7 +237,7 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
           width: 40,
           height: 40,
           borderRadius: 1.5,
-          bgcolor: varAlpha(palette.mainChannel as string, 0.12),
+          bgcolor: alpha(palette.main, 0.12),
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -223,7 +263,7 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
             <Chip
               label={selectedOption.code ?? selectedOption.label}
               size="small"
-              variant="soft"
+              variant="outlined"
               color={color}
               sx={{ fontSize: 10, height: 18, fontWeight: 600, borderRadius: 0.75 }}
             />
@@ -258,11 +298,16 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
   isEditing,
   isLocked,
   feeHeads = [],
+  feeStructureMetadataId,
+  feeStructureId,
 }) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [overridesEditorOpen, setOverridesEditorOpen] = React.useState(false);
-
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canManageProrationAttachment = hasGrantedPermission(
+    permissions,
+    financePermissions.policies.prorationPolicyActions.manageAttachment
+  );
   const { data: collectionPolicyData } = useGetCollectionPoliciesQuery(
     { academicYearId: currentYear?.id as string, status: 'Active' },
     { skip: !currentYear?.id || !values.collectionPolicyId }
@@ -270,14 +315,99 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
   const selectedCollectionPolicy = (collectionPolicyData?.items ?? []).find(
     (p: any) => p.id === values.collectionPolicyId
   );
-	const { data: feeHeadData, isLoading: feeHeadsLoading } = useGetFeeHeadsQuery(
-		{ academicYearId: currentYear?.id },
-		{ skip: !currentYear?.id }
-	);
-	const structureFeeHeadIds = new Set(feeHeads.map((x) => x.feeHeadId));
-	const concessionFeeHeadOptions = (feeHeadData?.items ?? [])
-		.filter((x) => structureFeeHeadIds.has(x.id) && x.isActive && x.isConcessionApplied)
-		.map((x) => ({ label: x.name, value: x.id }));
+  const defaultCollectionPolicy = (collectionPolicyData?.items ?? []).find(
+    (policy: any) => policy.isDefault
+  );
+  const { data: prorationPolicyData } = useGetProrationPoliciesQuery(
+    { academicYearId: currentYear?.id as string, status: 'Active', page: 1, pageSize: 100 },
+    { skip: !currentYear?.id }
+  );
+  const defaultProrationPolicy = (prorationPolicyData?.items ?? []).find(
+    (policy) => policy.isDefault
+  );
+  const selectedProrationPolicy = (prorationPolicyData?.items ?? []).find(
+    (policy) => policy.id === values.prorationPolicyId
+  );
+
+  React.useEffect(() => {
+    if (isEditing && !values.collectionPolicyId && defaultCollectionPolicy?.id) {
+      onChange('collectionPolicyId', defaultCollectionPolicy.id);
+    }
+  }, [defaultCollectionPolicy?.id, isEditing, onChange, values.collectionPolicyId]);
+
+  React.useEffect(() => {
+    if (
+      isEditing &&
+      canManageProrationAttachment &&
+      !values.prorationPolicyId &&
+      defaultProrationPolicy?.id
+    ) {
+      onChange('prorationPolicyId', defaultProrationPolicy.id);
+    }
+  }, [
+    canManageProrationAttachment,
+    defaultProrationPolicy?.id,
+    isEditing,
+    onChange,
+    values.prorationPolicyId,
+  ]);
+
+  const [validateAttachment, { data: attachmentImpact, isLoading: impactLoading }] =
+    useValidateCollectionPolicyAttachmentMutation();
+  const [getProrationImpact, { data: prorationImpact, isLoading: prorationImpactLoading }] =
+    useGetProrationAttachmentImpactMutation();
+  const feeHeadIdsKey = feeHeads
+    .map((item) => item.feeHeadId)
+    .sort()
+    .join(',');
+
+  React.useEffect(() => {
+    if (!feeStructureMetadataId || !values.collectionPolicyId || !feeHeadIdsKey) return;
+    validateAttachment({
+      feeStructureMetadataId,
+      collectionPolicyId: values.collectionPolicyId,
+      feeHeadIds: feeHeadIdsKey.split(','),
+    });
+  }, [feeStructureMetadataId, values.collectionPolicyId, feeHeadIdsKey, validateAttachment]);
+
+  React.useEffect(() => {
+    if (!feeStructureId || !values.prorationPolicyId) return;
+    getProrationImpact({ id: values.prorationPolicyId, feeStructureId });
+  }, [feeStructureId, getProrationImpact, values.prorationPolicyId]);
+  const { data: feeHeadData, isLoading: feeHeadsLoading } = useGetActiveFeeHeadsQuery(
+    currentYear?.id as string,
+    { skip: !currentYear?.id }
+  );
+  const structureFeeHeadIds = new Set(feeHeads.map((x) => x.feeHeadId));
+  const lateFeePolicyHeadIds = new Set<string>(
+    selectedCollectionPolicy?.enableLateFee
+      ? (selectedCollectionPolicy.lateFeeApplyOnFeeHeads ?? [])
+      : []
+  );
+  const waiverPolicyHeadIds = new Set<string>(
+    selectedCollectionPolicy?.enableWaiver
+      ? (selectedCollectionPolicy.waiverApplyOnFeeHeads ?? [])
+      : []
+  );
+  const applicablePolicyHeadIds = new Set([...lateFeePolicyHeadIds, ...waiverPolicyHeadIds]);
+  const lateFeeCovered = feeHeads.filter((x) => lateFeePolicyHeadIds.has(x.feeHeadId));
+  const waiverCovered = feeHeads.filter((x) => waiverPolicyHeadIds.has(x.feeHeadId));
+  const headsWithoutLateFee = feeHeads.filter((x) => !lateFeePolicyHeadIds.has(x.feeHeadId));
+  const headsWithoutWaiver = feeHeads.filter((x) => !waiverPolicyHeadIds.has(x.feeHeadId));
+  const policyOnlyHeads = (feeHeadData ?? []).filter(
+    (x) => applicablePolicyHeadIds.has(x.id) && !structureFeeHeadIds.has(x.id)
+  );
+  const concessionFeeHeadOptions = (feeHeadData ?? [])
+    .filter((x) => structureFeeHeadIds.has(x.id) && x.isConcessionApplied)
+    .map((x) => ({ label: x.name, value: x.id }));
+  const nonFullProrationHeadIds = new Set(
+    (selectedProrationPolicy?.feeHeadRules ?? [])
+      .filter((rule) => rule.ruleType !== 'FullCharge')
+      .map((rule) => rule.feeHeadId)
+  );
+  const invalidOneTimeProrationHeads = feeHeads.filter(
+    (head) => head.isOneTime && nonFullProrationHeadIds.has(head.feeHeadId)
+  );
 
   return (
     <Box sx={{ p: 2 }}>
@@ -290,8 +420,8 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
         sx={{
           p: 1.5,
           borderRadius: 1.5,
-          bgcolor: varAlpha(theme.palette.info.mainChannel, 0.04),
-          border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.15)}`,
+          bgcolor: alpha(theme.palette.info.main, 0.04),
+          border: `1px solid ${alpha(theme.palette.info.main, 0.15)}`,
         }}
       >
         <Iconify
@@ -300,11 +430,12 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
           sx={{ color: theme.palette.info.main, flexShrink: 0, mt: 0.1 }}
         />
         <Typography variant="caption" color="info.main" fontWeight={500}>
-          These policies automatically apply to all Fee Heads in this structure. Individual Fee Head
-          overrides for the Collection Policy will take precedence over these settings.
+          Collection rules apply only where the selected policy and this structure share the same
+          Fee Head. The policy is version-pinned when the structure is saved, so future policy edits
+          do not silently change existing student assignments.
         </Typography>
       </Box>
-      <Divider sx={{ my: 2, borderColor: varAlpha(theme.palette.grey['500Channel'], 0.1) }} />
+      <Divider sx={{ my: 2, borderColor: alpha(theme.palette.grey[500], 0.1) }} />
 
       <Grid container spacing={2}>
         {POLICY_CONFIG.map((cfg) => (
@@ -321,88 +452,206 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
               value={values[cfg.key] ?? ''}
               onChange={(val) => onChange(cfg.key, val)}
               isEditing={isEditing}
-              isLocked={isLocked}
+              isLocked={
+                isLocked || (cfg.type === 'proration' && !canManageProrationAttachment)
+              }
               academicYearId={currentYear?.id}
             />
           </Grid>
         ))}
       </Grid>
 
-		{values.concessionPolicyId && (
-			<Box sx={{ mt: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
-				<Typography variant="body2" fontWeight={700} mb={0.5}>Concession Fee Heads</Typography>
-				<Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
-					Only active fee heads enabled for concession can be selected. This scope is snapshotted for each student assignment.
-				</Typography>
-				<Grid container spacing={2}>
-					<Grid size={{ xs: 12, sm: 6 }}>
-						<CustomSelect label="Scope" options={[
-							{ label: 'All eligible fee heads', value: 'EntireFeeStructure' },
-							{ label: 'Selected eligible fee heads', value: 'SelectedFeeHeads' },
-						]} labelKey="label" valueKey="value" value={values.concessionFeeHeadScope}
-							disabled={!isEditing || isLocked}
-							onChange={(value) => {
-								onChange('concessionFeeHeadScope', value as PolicyValues['concessionFeeHeadScope']);
-								if (value === 'EntireFeeStructure') onChange('concessionApplicableFeeHeadIds', []);
-							}} />
-					</Grid>
-					{values.concessionFeeHeadScope === 'SelectedFeeHeads' && (
-						<Grid size={{ xs: 12, sm: 6 }}>
-							<CustomSelect multiple label="Eligible Fee Heads" options={concessionFeeHeadOptions}
-								isLoading={feeHeadsLoading} labelKey="label" valueKey="value"
-								value={values.concessionApplicableFeeHeadIds}
-								disabled={!isEditing || isLocked}
-								onChange={(value) => onChange('concessionApplicableFeeHeadIds', value as string[])} />
-						</Grid>
-					)}
-				</Grid>
-				{concessionFeeHeadOptions.length === 0 && !feeHeadsLoading && (
-					<Typography variant="caption" color="error.main" display="block" mt={1}>
-						No fee head in this structure is active and enabled for concession.
-					</Typography>
-				)}
-			</Box>
-		)}
+      {values.concessionPolicyId && (
+        <Box sx={{ mt: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+          <Typography variant="body2" fontWeight={700} mb={0.5}>
+            Concession Fee Heads
+          </Typography>
+          <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+            Only active fee heads enabled for concession can be selected. This scope is snapshotted
+            for each student assignment.
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <CustomSelect
+                label="Scope"
+                options={[
+                  { label: 'All eligible fee heads', value: 'EntireFeeStructure' },
+                  { label: 'Selected eligible fee heads', value: 'SelectedFeeHeads' },
+                ]}
+                labelKey="label"
+                valueKey="value"
+                value={values.concessionFeeHeadScope}
+                disabled={!isEditing || isLocked}
+                onChange={(value) => {
+                  onChange(
+                    'concessionFeeHeadScope',
+                    value as PolicyValues['concessionFeeHeadScope']
+                  );
+                  if (value === 'EntireFeeStructure')
+                    onChange('concessionApplicableFeeHeadIds', []);
+                }}
+              />
+            </Grid>
+            {values.concessionFeeHeadScope === 'SelectedFeeHeads' && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <CustomSelect
+                  multiple
+                  label="Eligible Fee Heads"
+                  options={concessionFeeHeadOptions}
+                  isLoading={feeHeadsLoading}
+                  labelKey="label"
+                  valueKey="value"
+                  value={values.concessionApplicableFeeHeadIds}
+                  disabled={!isEditing || isLocked}
+                  onChange={(value) =>
+                    onChange('concessionApplicableFeeHeadIds', value as string[])
+                  }
+                />
+              </Grid>
+            )}
+          </Grid>
+          {concessionFeeHeadOptions.length === 0 && !feeHeadsLoading && (
+            <Typography variant="caption" color="error.main" display="block" mt={1}>
+              No fee head in this structure is active and enabled for concession.
+            </Typography>
+          )}
+        </Box>
+      )}
 
-      {/* ── Per-fee-head Collection Policy overrides ────────────────────── */}
+      {/* ── Read-only Collection Policy coverage ─────────────────────────── */}
       {values.collectionPolicyId && feeHeads.length > 0 && (
         <>
-          <Divider sx={{ my: 2, borderColor: varAlpha(theme.palette.grey['500Channel'], 0.1) }} />
+          <Divider sx={{ my: 2, borderColor: alpha(theme.palette.grey[500], 0.1) }} />
           <Box
             sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: 1,
+              p: 2,
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 1.5,
             }}
           >
-            <Box>
-              <Typography variant="body2" fontWeight={700}>
-                Fee Head Overrides
-              </Typography>
-              <Typography variant="caption" color="text.disabled">
-                Exempt a fee head from late fees, or give it its own rule.
-              </Typography>
-            </Box>
-            <Chip
-              label="Configure"
-              size="small"
-              variant="soft"
-              color="success"
-              onClick={() => setOverridesEditorOpen(true)}
-              sx={{ cursor: 'pointer', fontWeight: 600 }}
-            />
-          </Box>
+            <Typography variant="body2" fontWeight={700}>
+              Collection Policy Impact
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+              {selectedCollectionPolicy?.policyName} · version{' '}
+              {selectedCollectionPolicy?.version ?? 'current'}
+              {impactLoading ? ' · checking…' : ''}
+            </Typography>
 
-          {overridesEditorOpen && (
-            <FeeHeadOverridesEditor
-              open={overridesEditorOpen}
-              onClose={() => setOverridesEditorOpen(false)}
-              collectionPolicyId={values.collectionPolicyId}
-              collectionPolicyName={selectedCollectionPolicy?.policyName}
-              feeHeads={feeHeads}
-            />
-          )}
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mb={1.5}>
+              <Chip
+                size="small"
+                color={
+                  selectedCollectionPolicy?.enableLateFee && lateFeeCovered.length === 0
+                    ? 'warning'
+                    : 'success'
+                }
+                label={`Late fee: ${lateFeeCovered.length}/${feeHeads.length} heads`}
+              />
+              <Chip
+                size="small"
+                color={
+                  selectedCollectionPolicy?.enableWaiver && waiverCovered.length === 0
+                    ? 'warning'
+                    : 'info'
+                }
+                label={`Waiver: ${waiverCovered.length}/${feeHeads.length} heads`}
+              />
+            </Stack>
+
+            {attachmentImpact?.isAttachable === false && (
+              <Alert severity="error" sx={{ mb: 1 }}>
+                This policy cannot be attached to the selected fee structure.
+              </Alert>
+            )}
+
+            {selectedCollectionPolicy?.enableLateFee && lateFeeCovered.length === 0 && (
+              <Alert severity="warning" sx={{ mb: 1 }}>
+                None of this structure&apos;s Fee Heads are in the policy&apos;s late-fee scope. The
+                policy can still be attached, but it will not charge a late fee here.
+              </Alert>
+            )}
+
+            {selectedCollectionPolicy?.enableWaiver && waiverCovered.length === 0 && (
+              <Alert severity="warning" sx={{ mb: 1 }}>
+                None of this structure&apos;s Fee Heads are in the policy&apos;s waiver scope. The
+                policy can still be attached, but waivers will not be available here.
+              </Alert>
+            )}
+
+            {selectedCollectionPolicy?.enableLateFee && headsWithoutLateFee.length > 0 && (
+              <Alert severity="warning" sx={{ mb: 1 }}>
+                Late fee will not apply to:{' '}
+                {headsWithoutLateFee.map((x) => x.feeHeadName || x.feeHeadId).join(', ')}.
+              </Alert>
+            )}
+
+            {selectedCollectionPolicy?.enableWaiver && headsWithoutWaiver.length > 0 && (
+              <Alert severity="warning" sx={{ mb: 1 }}>
+                Waiver will not apply to:{' '}
+                {headsWithoutWaiver.map((x) => x.feeHeadName || x.feeHeadId).join(', ')}.
+              </Alert>
+            )}
+
+            {policyOnlyHeads.length > 0 && (
+              <Alert severity="info">
+                Policy heads not present in this structure are ignored:{' '}
+                {policyOnlyHeads.map((x) => x.name).join(', ')}.
+              </Alert>
+            )}
+
+            {(attachmentImpact?.warnings ?? []).map((warning: string) => (
+              <Typography
+                key={warning}
+                variant="caption"
+                color="text.secondary"
+                display="block"
+                mt={0.75}
+              >
+                {warning}
+              </Typography>
+            ))}
+          </Box>
+        </>
+      )}
+
+      {values.prorationPolicyId && feeHeads.length > 0 && (
+        <>
+          <Divider sx={{ my: 2, borderColor: alpha(theme.palette.grey[500], 0.1) }} />
+          <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
+            <Typography variant="body2" fontWeight={700}>
+              Proration Policy Impact
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+              {selectedProrationPolicy?.policyName} · version{' '}
+              {prorationImpact?.policyVersion ?? selectedProrationPolicy?.version ?? 'current'}
+              {prorationImpactLoading ? ' · checking…' : ''}
+            </Typography>
+
+            {invalidOneTimeProrationHeads.length > 0 && (
+              <Alert severity="error" sx={{ mb: 1 }}>
+                One-time Fee Structure lines cannot use Daily or Monthly Cutoff proration:{' '}
+                {invalidOneTimeProrationHeads
+                  .map((head) => head.feeHeadName || head.feeHeadId)
+                  .join(', ')}.
+              </Alert>
+            )}
+
+            {(prorationImpact?.warnings ?? []).map((warning) => (
+              <Alert severity="warning" sx={{ mb: 1 }} key={warning}>
+                {warning}
+              </Alert>
+            ))}
+
+            {invalidOneTimeProrationHeads.length === 0 &&
+              (prorationImpact?.warnings.length ?? 0) === 0 && (
+                <Alert severity="success">
+                  The selected policy is compatible with this Fee Structure. The current policy
+                  version will be pinned when saved.
+                </Alert>
+              )}
+          </Box>
         </>
       )}
     </Box>

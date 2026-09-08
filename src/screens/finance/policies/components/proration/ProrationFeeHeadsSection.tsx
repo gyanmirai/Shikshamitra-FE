@@ -3,95 +3,105 @@
 /**
  * ProrationFeeHeadsSection — Card 2
  *
- * Renders a table of all active fee heads.
- * Each row has:
- *   - Fee Head name (read-only)
- *   - Fee Type (Recurring / OneTime) — read-only
- *   - Proration Applicable — Switch (disabled for OneTime)
- *   - Rule — dropdown (enabled only when Proration Applicable = ON)
- *   - Expandable inline config (appears below the row when rule != NoProration / FullMonthCharge)
- *
- * Validation (shown as alert banner):
- *   - At least one Recurring fee head must have Proration Applicable = ON
- *   - When Proration Applicable = ON, Rule is mandatory
+ * Renders a structured configuration table of all active fee heads.
+ * Features:
+ *   - Fee Head type badge (Recurring / OneTime)
+ *   - Proration Rule selector with rich option descriptions
+ *   - Inline status badge summarizing current parameters
+ *   - Expandable nested configuration for Daily and Monthly rules
+ *   - Quick-action presets (Apply Daily / Apply Monthly / Reset)
  */
 
 import React, { useState } from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
+import CustomTooltip from 'src/components/custom-tooltip';
+import ShakingTextField from 'src/components/shaking-text-field';
 import {
   Box,
   Grid,
+  Paper,
+  Stack,
   Alert,
-  Select,
-  Switch,
-  Tooltip,
-  MenuItem,
+  Button,
   Collapse,
   TextField,
-  InputLabel,
   Typography,
   IconButton,
-  FormControl,
-  FormHelperText,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
-import { ProrationSectionCard } from './ProrationCommon';
+import { SectionCard } from '../collection/CollectionCommon';
 
 import type { ProrationRuleType, IProrationFeeHeadRule } from '../../types/finance-policy.types';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const RULE_OPTIONS: { value: ProrationRuleType; label: string; description: string }[] = [
+const RULE_OPTIONS: {
+  value: ProrationRuleType;
+  label: string;
+  icon: string;
+  description: string;
+}[] = [
   {
     value: 'NoProration',
     label: 'No Proration',
-    description: 'Always charge the full configured amount, regardless of start date.',
+    icon: 'solar:forbidden-circle-bold',
+    description: 'Always charge the full installment amount regardless of student join date.',
   },
   {
     value: 'DailyProration',
     label: 'Daily Proration',
-    description: 'Charge proportional to the number of days in the billing period.',
+    icon: 'solar:calendar-date-bold-duotone',
+    description:
+      'Charge proportional to the exact number of active calendar days in billing period.',
   },
   {
     value: 'MonthlyProration',
     label: 'Monthly Proration',
-    description: 'Charge based on calendar month rules (current, next, or half-month).',
+    icon: 'solar:calendar-minimalistic-bold-duotone',
+    description:
+      'Calculate charge based on calendar cut-off day (Full Month, Next Month, or Half Month).',
   },
   {
     value: 'FullMonthCharge',
     label: 'Full Month Charge',
-    description: 'Always charge the complete monthly amount.',
+    icon: 'solar:clock-circle-bold-duotone',
+    description:
+      'Always charge complete monthly installment when student is enrolled in any part of month.',
   },
 ];
 
 const ROUND_OFF_OPTIONS = [
-  { value: 'NoRoundOff', label: 'No Round Off' },
-  { value: 'NearestRupee', label: 'Nearest Rupee' },
-  { value: 'RoundUp', label: 'Round Up' },
-  { value: 'RoundDown', label: 'Round Down' },
+  { value: 'NoRoundOff', label: 'No Round Off (Exact Currency)' },
+  { value: 'RoundUp', label: 'Round Up (Ceil to Integer)' },
+  { value: 'RoundDown', label: 'Round Down (Floor to Integer)' },
 ];
 
+const CALCULATION_BASIS_OPTIONS = [{ value: 'CalendarDays', label: 'Calendar Days (Standard)' }];
+
+const RULE_GRID_COLUMNS = {
+  xs: 'minmax(0, 1fr)',
+  md: 'minmax(220px, 1.2fr) minmax(220px, 1fr) minmax(180px, 0.9fr) 40px',
+} as const;
+
 const MONTHLY_RULE_OPTIONS = [
-  {
-    value: 'ChargeCurrentMonth',
-    label: 'Charge Current Month',
-    description: 'Always charge the current month.',
-  },
   {
     value: 'ChargeNextMonth',
     label: 'Charge Next Month',
     description:
-      'If admitted before cut-off → charge current month; after cut-off → charge next month.',
+      'If admitted before cut-off → charge current month; if admitted after cut-off → waive current and charge from next month.',
   },
   {
     value: 'HalfMonthRule',
     label: 'Half Month Rule',
     description:
-      'If admitted before cut-off → charge full month; after cut-off → charge half month.',
+      'If admitted before cut-off → charge full month; if admitted after cut-off → charge half (50%) of monthly amount.',
   },
 ];
 
-// ─── Helper: Rule Config Inline Form ─────────────────────────────────────────
+// ─── Helper: Daily Proration Inline Form ──────────────────────────────────────
 
 interface RuleConfigProps {
   rule: IProrationFeeHeadRule;
@@ -105,169 +115,165 @@ function DailyProrationConfig({ rule, index, onChange, errors }: RuleConfigProps
   const errCfg = errors?.feeHeadRules?.[index]?.configuration ?? {};
 
   return (
-    <Grid container spacing={2} sx={{ mt: 0.5 }}>
+    <Grid container spacing={2} sx={{ mt: 0.25 }}>
       {/* Calculation Basis */}
       <Grid size={{ xs: 12, sm: 4 }}>
-        <FormControl fullWidth size="small">
-          <InputLabel>Calculation Basis *</InputLabel>
-          <Select
+        <ShakingTextField error={Boolean(errCfg.calculationBasis)}>
+          <CustomSelect
             label="Calculation Basis *"
+            options={CALCULATION_BASIS_OPTIONS}
+            labelKey="label"
+            valueKey="value"
             value={cfg.calculationBasis ?? 'CalendarDays'}
-            onChange={(e) => onChange(index, 'calculationBasis', e.target.value)}
-          >
-            <MenuItem value="CalendarDays">Calendar Days</MenuItem>
-          </Select>
-          <FormHelperText>Only Calendar Days supported currently</FormHelperText>
-        </FormControl>
+            onChange={(value) => onChange(index, 'calculationBasis', value)}
+            error={Boolean(errCfg.calculationBasis)}
+            helperText={
+              errCfg.calculationBasis || 'Calculates: Scheduled × (Active Days / Total Period Days)'
+            }
+          />
+        </ShakingTextField>
       </Grid>
 
       {/* Round Off */}
       <Grid size={{ xs: 12, sm: 4 }}>
-        <FormControl fullWidth size="small">
-          <InputLabel>Round Off</InputLabel>
-          <Select
-            label="Round Off"
+        <ShakingTextField error={Boolean(errCfg.roundOff)}>
+          <CustomSelect
+            label="Rounding Mode *"
+            options={ROUND_OFF_OPTIONS}
+            labelKey="label"
+            valueKey="value"
             value={cfg.roundOff ?? 'NoRoundOff'}
-            onChange={(e) => onChange(index, 'roundOff', e.target.value)}
-          >
-            {ROUND_OFF_OPTIONS.map((o) => (
-              <MenuItem key={o.value} value={o.value}>
-                {o.label}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+            onChange={(value) => onChange(index, 'roundOff', value)}
+            error={Boolean(errCfg.roundOff)}
+            helperText={errCfg.roundOff || 'Applied to the calculated prorated amount'}
+          />
+        </ShakingTextField>
       </Grid>
 
       {/* Minimum Charge Days */}
       <Grid size={{ xs: 12, sm: 4 }}>
-        <TextField
-          fullWidth
-          size="small"
-          type="number"
-          label="Minimum Charge Days"
-          value={cfg.minimumChargeDays ?? ''}
-          onChange={(e) => {
-            const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
-            onChange(index, 'minimumChargeDays', val);
-          }}
-          error={Boolean(errCfg.minimumChargeDays)}
-          helperText={errCfg.minimumChargeDays || 'Optional — positive integer'}
-          inputProps={{ min: 1, step: 1 }}
-        />
+        <ShakingTextField error={Boolean(errCfg.minimumChargeDays)}>
+          <TextField
+            fullWidth
+            size="small"
+            type="number"
+            label="Minimum Charge Days"
+            value={cfg.minimumChargeDays ?? ''}
+            onChange={(e) => {
+              const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
+              onChange(index, 'minimumChargeDays', val);
+            }}
+            error={Boolean(errCfg.minimumChargeDays)}
+            helperText={errCfg.minimumChargeDays || 'Optional — Minimum days to bill (0 to 366)'}
+            inputProps={{ min: 0, max: 366, step: 1 }}
+            placeholder="0"
+          />
+        </ShakingTextField>
       </Grid>
     </Grid>
   );
 }
 
+// ─── Helper: Monthly Proration Inline Form ────────────────────────────────────
+
 function MonthlyProrationConfig({ rule, index, onChange, errors }: RuleConfigProps) {
   const cfg = rule.configuration;
   const errCfg = errors?.feeHeadRules?.[index]?.configuration ?? {};
-  const monthlyRule = cfg.monthlyRule ?? 'ChargeCurrentMonth';
-  const showCutOff = monthlyRule === 'ChargeNextMonth' || monthlyRule === 'HalfMonthRule';
+  const monthlyRule = cfg.monthlyRule ?? 'ChargeNextMonth';
+  const cutoff = cfg.cutOffDay ?? 15;
 
   return (
-    <Grid container spacing={2} sx={{ mt: 0.5 }}>
+    <Grid container spacing={2} sx={{ mt: 0.25 }}>
       {/* Monthly Rule */}
-      <Grid size={{ xs: 12, sm: showCutOff ? 6 : 8 }}>
-        <FormControl fullWidth size="small" error={Boolean(errCfg.monthlyRule)}>
-          <InputLabel>Monthly Rule *</InputLabel>
-          <Select
-            label="Monthly Rule *"
+      <Grid size={{ xs: 12, sm: 7 }}>
+        <ShakingTextField error={Boolean(errCfg.monthlyRule)}>
+          <CustomSelect
+            label="Cut-off Behavior Strategy *"
+            options={MONTHLY_RULE_OPTIONS}
+            labelKey="label"
+            valueKey="value"
             value={monthlyRule}
-            renderValue={(val) => {
-              const selectedOpt = MONTHLY_RULE_OPTIONS.find((o) => o.value === val);
-              return selectedOpt ? selectedOpt.label : val;
-            }}
-            onChange={(e) => {
-              onChange(index, 'monthlyRule', e.target.value);
-              // Reset cut-off day when switching to ChargeCurrentMonth
-              if (e.target.value === 'ChargeCurrentMonth') {
-                onChange(index, 'cutOffDay', null);
-              }
-            }}
-          >
-            {MONTHLY_RULE_OPTIONS.map((o) => (
-              <MenuItem
-                key={o.value}
-                value={o.value}
-                sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
-              >
-                <Typography variant="caption" fontWeight={600}>
-                  {o.label}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontSize="0.68rem"
-                  sx={{ whiteSpace: 'normal' }}
-                >
-                  {o.description}
-                </Typography>
-              </MenuItem>
-            ))}
-          </Select>
-          {errCfg.monthlyRule && <FormHelperText>{errCfg.monthlyRule}</FormHelperText>}
-        </FormControl>
+            onChange={(value) => onChange(index, 'monthlyRule', value)}
+            error={Boolean(errCfg.monthlyRule)}
+            helperText={
+              errCfg.monthlyRule ||
+              MONTHLY_RULE_OPTIONS.find((option) => option.value === monthlyRule)?.description
+            }
+          />
+        </ShakingTextField>
       </Grid>
 
       {/* Cut-off Day */}
-      {showCutOff && (
-        <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={{ xs: 12, sm: 5 }}>
+        <ShakingTextField error={Boolean(errCfg.cutOffDay)}>
           <TextField
             fullWidth
             size="small"
             type="number"
-            label={monthlyRule === 'ChargeNextMonth' ? 'Cut-off Day *' : 'Half Month Cut-off Day *'}
+            required
+            label={
+              monthlyRule === 'ChargeNextMonth' ? 'Monthly Cut-off Day' : 'Half Month Cut-off Day'
+            }
             value={cfg.cutOffDay ?? ''}
             onChange={(e) => {
               const val = e.target.value === '' ? null : parseInt(e.target.value, 10);
               onChange(index, 'cutOffDay', val);
             }}
             error={Boolean(errCfg.cutOffDay)}
-            helperText={
-              errCfg.cutOffDay ||
-              (monthlyRule === 'ChargeNextMonth'
-                ? 'Before cut-off → current month; after → next month'
-                : 'Before cut-off → full month; after → half month')
-            }
+            helperText={errCfg.cutOffDay || 'Day of month (1 to 31)'}
             inputProps={{ min: 1, max: 31, step: 1 }}
+            placeholder="15"
           />
-        </Grid>
-      )}
+        </ShakingTextField>
+      </Grid>
 
-      {/* Business logic info */}
-      {monthlyRule !== 'ChargeCurrentMonth' && (
-        <Grid size={{ xs: 12 }}>
-          <Alert severity="info" variant="outlined" sx={{ fontSize: '0.78rem', py: 0.5 }}>
-            {monthlyRule === 'ChargeNextMonth' ? (
-              <>
-                <strong>Admission before day {cfg.cutOffDay ?? '?'}:</strong> Charge current month
-                &nbsp;|&nbsp;
-                <strong>Admission after day {cfg.cutOffDay ?? '?'}:</strong> Charge next month
-              </>
-            ) : (
-              <>
-                <strong>Admission before day {cfg.cutOffDay ?? '?'}:</strong> Charge full month
-                &nbsp;|&nbsp;
-                <strong>Admission after day {cfg.cutOffDay ?? '?'}:</strong> Charge half month
-              </>
-            )}
-          </Alert>
-        </Grid>
-      )}
+      {/* Dynamic Visual Rule Explanation Pill */}
+      <Grid size={{ xs: 12 }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            p: 1.5,
+            borderRadius: 1,
+            bgcolor: (theme) => alpha(theme.palette.info.main, 0.04),
+            borderColor: (theme) => alpha(theme.palette.info.main, 0.2),
+          }}
+        >
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Iconify
+              icon="solar:info-circle-bold"
+              width={16}
+              height={16}
+              sx={{ color: 'info.main', flexShrink: 0 }}
+            />
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.74rem' }}>
+              {monthlyRule === 'ChargeNextMonth' ? (
+                <>
+                  Student admitted on or before day <strong>{cutoff}</strong> → Charged full current
+                  month.&nbsp; Admitted after day <strong>{cutoff}</strong> → Current month waived,
+                  charges start next month.
+                </>
+              ) : (
+                <>
+                  Student admitted on or before day <strong>{cutoff}</strong> → Charged 100% full
+                  month.&nbsp; Admitted after day <strong>{cutoff}</strong> → Charged 50% half-month
+                  rate.
+                </>
+              )}
+            </Typography>
+          </Stack>
+        </Paper>
+      </Grid>
     </Grid>
   );
 }
 
-// ─── Fee Head Row ─────────────────────────────────────────────────────────────
+// ─── Helper: Fee Head Row ─────────────────────────────────────────────────────
 
 interface FeeHeadRowProps {
   rule: IProrationFeeHeadRule;
   index: number;
   expanded: boolean;
   onToggleExpand: () => void;
-  onApplicableChange: (checked: boolean) => void;
   onRuleChange: (ruleType: ProrationRuleType) => void;
   onConfigChange: (index: number, field: string, value: any) => void;
   errors: any;
@@ -279,7 +285,6 @@ function FeeHeadRow({
   index,
   expanded,
   onToggleExpand,
-  onApplicableChange,
   onRuleChange,
   onConfigChange,
   errors,
@@ -287,115 +292,170 @@ function FeeHeadRow({
 }: FeeHeadRowProps) {
   const isOneTime = rule.feeType === 'OneTime';
   const hasConfig = rule.ruleType === 'DailyProration' || rule.ruleType === 'MonthlyProration';
+  const isEnabled = rule.ruleType !== 'NoProration';
   const ruleError = errors?.feeHeadRules?.[index]?.ruleType;
+
+  // Build a concise preview badge for the active rule configuration
+  const getConfigSummary = () => {
+    if (rule.ruleType === 'DailyProration') {
+      const parts = ['Calendar Days'];
+      if (rule.configuration.roundOff && rule.configuration.roundOff !== 'NoRoundOff') {
+        parts.push(rule.configuration.roundOff.replace(/([A-Z])/g, ' $1').trim());
+      }
+      if (rule.configuration.minimumChargeDays) {
+        parts.push(`Min ${rule.configuration.minimumChargeDays}d`);
+      }
+      return parts.join(' · ');
+    }
+    if (rule.ruleType === 'MonthlyProration') {
+      const isNext = rule.configuration.monthlyRule === 'ChargeNextMonth';
+      const day = rule.configuration.cutOffDay ?? 15;
+      return `${isNext ? 'Next Month' : 'Half Month'} · Cut-off ${day}th`;
+    }
+    if (rule.ruleType === 'FullMonthCharge') {
+      return '100% Full Month';
+    }
+    return 'Full Amount';
+  };
 
   return (
     <Box
       sx={{
         borderTop: isFirst ? 'none' : '1px solid',
         borderColor: 'divider',
+        transition: 'all 0.15s ease-in-out',
+        bgcolor: isEnabled ? (theme) => alpha(theme.palette.primary.main, 0.02) : 'transparent',
       }}
     >
-      {/* Main row */}
+      {/* Main row grid */}
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: '1fr 100px 1fr 40px',
+          gridTemplateColumns: RULE_GRID_COLUMNS,
           gap: 1.5,
           alignItems: 'center',
-          px: 1.5,
-          py: 1,
-          bgcolor: rule.prorationApplicable ? 'action.selected' : 'transparent',
-          transition: 'background-color 0.2s',
-          '&:hover': { bgcolor: rule.prorationApplicable ? 'action.selected' : 'action.hover' },
+          px: 2,
+          py: 1.25,
+          '&:hover': {
+            bgcolor: (theme) => alpha(theme.palette.action.hover, 0.6),
+          },
         }}
       >
-        {/* Fee Head Name */}
-        <Typography variant="caption" fontWeight={600} fontSize="13px" noWrap>
-          {rule.feeHeadName || rule.feeHeadId}
-        </Typography>
-
-        {/* Proration Applicable Switch */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-          {isOneTime ? (
-            <Tooltip title="One-time fees cannot be prorated" placement="top">
-              <Box>
-                <Typography variant="caption" color="text.disabled" fontSize="0.68rem">
-                  N/A
-                </Typography>
-              </Box>
-            </Tooltip>
-          ) : (
-            <Switch
-              size="small"
-              checked={rule.prorationApplicable}
-              onChange={(e) => onApplicableChange(e.target.checked)}
-            />
-          )}
+        {/* Fee Head Name & Category Tag */}
+        <Box sx={{ minWidth: 0 }}>
+          <Stack direction="row" spacing={1} alignItems="center">
+            <Typography variant="subtitle2" fontWeight={600} fontSize="0.82rem" noWrap>
+              {rule.feeHeadName || rule.feeHeadId}
+            </Typography>
+            <Label
+              color={rule.feeType === 'Recurring' ? 'info' : 'default'}
+              sx={{ height: 18, fontSize: '0.65rem', fontWeight: 600 }}
+            >
+              {rule.feeType}
+            </Label>
+          </Stack>
         </Box>
 
         {/* Rule Dropdown */}
-        <FormControl
-          fullWidth
-          size="small"
-          disabled={isOneTime || !rule.prorationApplicable}
-          error={Boolean(ruleError)}
-        >
-          <Select
-            displayEmpty
-            value={rule.ruleType ?? ''}
-            onChange={(e) => onRuleChange(e.target.value as ProrationRuleType)}
-            renderValue={(val) => {
-              if (!val)
-                return (
-                  <Typography variant="caption" color="text.disabled">
-                    Select rule…
-                  </Typography>
-                );
-              return RULE_OPTIONS.find((r) => r.value === val)?.label ?? val;
-            }}
-            sx={{ fontSize: '0.8rem' }}
-          >
-            {RULE_OPTIONS.map((o) => (
-              <MenuItem
-                key={o.value}
-                value={o.value}
-                sx={{ flexDirection: 'column', alignItems: 'flex-start' }}
-              >
-                <Typography variant="caption" fontWeight={600}>
-                  {o.label}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" fontSize="0.68rem">
-                  {o.description}
-                </Typography>
-              </MenuItem>
-            ))}
-          </Select>
-          {ruleError && <FormHelperText sx={{ fontSize: '0.68rem' }}>{ruleError}</FormHelperText>}
-        </FormControl>
+        <ShakingTextField error={Boolean(ruleError)}>
+          <CustomSelect
+            label="Proration Model *"
+            options={RULE_OPTIONS}
+            labelKey="label"
+            valueKey="value"
+            value={rule.ruleType}
+            onChange={(value) => onRuleChange(value as ProrationRuleType)}
+            disabled={isOneTime}
+            error={Boolean(ruleError)}
+            helperText={
+              ruleError ||
+              (isOneTime
+                ? 'One-time fee heads always use No Proration'
+                : RULE_OPTIONS.find((option) => option.value === rule.ruleType)?.description)
+            }
+          />
+        </ShakingTextField>
 
-        {/* Expand toggle */}
-        <IconButton
-          size="small"
-          onClick={onToggleExpand}
-          disabled={!hasConfig}
-          sx={{ opacity: hasConfig ? 1 : 0.2 }}
-        >
-          <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} width={18} />
-        </IconButton>
+        {/* Config Summary Pill (Desktop) */}
+        <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
+          <Label
+            color={
+              rule.ruleType === 'DailyProration'
+                ? 'primary'
+                : rule.ruleType === 'MonthlyProration'
+                  ? 'info'
+                  : rule.ruleType === 'FullMonthCharge'
+                    ? 'warning'
+                    : 'default'
+            }
+            sx={{ height: 22, fontSize: '0.68rem', fontWeight: 600 }}
+          >
+            {getConfigSummary()}
+          </Label>
+        </Box>
+
+        {/* Expand / Collapse Action Button */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          {hasConfig ? (
+            <CustomTooltip
+              title={expanded ? 'Collapse configuration' : 'Configure parameters'}
+              arrow
+            >
+              <IconButton
+                size="small"
+                onClick={onToggleExpand}
+                sx={{
+                  width: 28,
+                  height: 28,
+                  bgcolor: expanded
+                    ? (theme) => alpha(theme.palette.primary.main, 0.1)
+                    : 'action.hover',
+                  color: expanded ? 'primary.main' : 'text.secondary',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <Iconify
+                  icon={expanded ? 'solar:alt-arrow-up-bold' : 'solar:alt-arrow-down-bold'}
+                  width={16}
+                />
+              </IconButton>
+            </CustomTooltip>
+          ) : (
+            <Box sx={{ width: 28 }} />
+          )}
+        </Box>
       </Box>
 
-      {/* Expandable config */}
+      {/* Expandable Configuration Body */}
       <Collapse in={expanded && hasConfig} unmountOnExit>
-        <Box
+        <Paper
+          variant="outlined"
           sx={{
-            px: 2.5,
-            py: 1.5,
-            bgcolor: 'background.neutral',
-            borderTop: '1px dashed',
-            borderColor: 'divider',
+            m: 1.5,
+            mt: 0.5,
+            p: 2,
+            borderRadius: 1.25,
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? alpha(theme.palette.background.default, 0.6)
+                : alpha(theme.palette.grey[50], 0.9),
+            borderColor: (theme) => alpha(theme.palette.primary.main, 0.2),
           }}
         >
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+            <Iconify
+              icon="solar:tuning-square-2-bold-duotone"
+              width={18}
+              height={18}
+              sx={{ color: 'primary.main' }}
+            />
+            <Typography variant="subtitle2" fontWeight={700} fontSize="0.8rem">
+              {rule.ruleType === 'DailyProration'
+                ? 'Daily Proration Parameters'
+                : 'Monthly Cut-off Strategy'}
+            </Typography>
+          </Stack>
+
           {rule.ruleType === 'DailyProration' && (
             <DailyProrationConfig
               rule={rule}
@@ -404,6 +464,7 @@ function FeeHeadRow({
               errors={errors}
             />
           )}
+
           {rule.ruleType === 'MonthlyProration' && (
             <MonthlyProrationConfig
               rule={rule}
@@ -412,13 +473,13 @@ function FeeHeadRow({
               errors={errors}
             />
           )}
-        </Box>
+        </Paper>
       </Collapse>
     </Box>
   );
 }
 
-// ─── Main Section ─────────────────────────────────────────────────────────────
+// ─── Main Section Component ───────────────────────────────────────────────────
 
 interface ProrationFeeHeadsSectionProps {
   formik: any;
@@ -428,8 +489,12 @@ export default function ProrationFeeHeadsSection({ formik }: ProrationFeeHeadsSe
   const rules: IProrationFeeHeadRule[] = formik.values.feeHeadRules ?? [];
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
+  const totalRules = rules.length;
+  const enabledCount = rules.filter((r) => r.ruleType !== 'NoProration').length;
   const hasAtLeastOneRecurringEnabled = rules.some(
-    (r) => r.feeType === 'Recurring' && r.prorationApplicable
+    (r) =>
+      r.feeType === 'Recurring' &&
+      (r.ruleType === 'DailyProration' || r.ruleType === 'MonthlyProration')
   );
 
   const toggleExpand = (index: number) => {
@@ -441,29 +506,8 @@ export default function ProrationFeeHeadsSection({ formik }: ProrationFeeHeadsSe
     });
   };
 
-  const handleApplicableChange = (index: number, checked: boolean) => {
-    const updated = [...rules];
-    updated[index] = {
-      ...updated[index],
-      prorationApplicable: checked,
-      // Reset rule when turning off
-      ruleType: checked ? updated[index].ruleType : null,
-      configuration: checked ? updated[index].configuration : {},
-    };
-    formik.setFieldValue('feeHeadRules', updated);
-    // Collapse row when turning off
-    if (!checked) {
-      setExpandedRows((prev) => {
-        const next = new Set(prev);
-        next.delete(index);
-        return next;
-      });
-    }
-  };
-
   const handleRuleChange = (index: number, ruleType: ProrationRuleType) => {
     const updated = [...rules];
-    // Reset config when rule changes
     updated[index] = {
       ...updated[index],
       ruleType,
@@ -471,11 +515,12 @@ export default function ProrationFeeHeadsSection({ formik }: ProrationFeeHeadsSe
         ruleType === 'DailyProration'
           ? { calculationBasis: 'CalendarDays', roundOff: 'NoRoundOff', minimumChargeDays: null }
           : ruleType === 'MonthlyProration'
-            ? { monthlyRule: 'ChargeCurrentMonth', cutOffDay: null }
+            ? { monthlyRule: 'ChargeNextMonth', cutOffDay: 15 }
             : {},
     };
     formik.setFieldValue('feeHeadRules', updated);
-    // Auto-expand if config needed
+
+    // Auto expand if configuration is needed
     if (ruleType === 'DailyProration' || ruleType === 'MonthlyProration') {
       setExpandedRows((prev) => new Set(prev).add(index));
     } else {
@@ -499,93 +544,155 @@ export default function ProrationFeeHeadsSection({ formik }: ProrationFeeHeadsSe
     formik.setFieldValue('feeHeadRules', updated);
   };
 
+  // Bulk Presets
+  const applyBulkRule = (ruleType: ProrationRuleType) => {
+    const updated = rules.map((r) => {
+      if (r.feeType === 'OneTime') return r;
+      return {
+        ...r,
+        ruleType,
+        configuration:
+          ruleType === 'DailyProration'
+            ? {
+                calculationBasis: 'CalendarDays' as const,
+                roundOff: 'NoRoundOff' as const,
+                minimumChargeDays: null,
+              }
+            : ruleType === 'MonthlyProration'
+              ? { monthlyRule: 'ChargeNextMonth' as const, cutOffDay: 15 }
+              : {},
+      };
+    });
+    formik.setFieldValue('feeHeadRules', updated);
+  };
+
   return (
-    <ProrationSectionCard
+    <SectionCard
       title="Fee Head Configuration"
-      subtitle="Configure proration rules per active fee head. Recurring fee heads can have proration enabled; One-time fee heads cannot."
+      subtitle="Define calculation rules for active fee heads. One-time fee heads remain un-prorated."
       icon="solar:widget-bold-duotone"
+      action={
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Label
+            color={hasAtLeastOneRecurringEnabled ? 'primary' : 'warning'}
+            sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}
+          >
+            {enabledCount} / {totalRules} Configured
+          </Label>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => applyBulkRule('DailyProration')}
+            startIcon={<Iconify icon="solar:calendar-date-bold" width={14} />}
+            sx={{ fontSize: '0.72rem', height: 26, px: 1.25 }}
+          >
+            All Daily
+          </Button>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => applyBulkRule('MonthlyProration')}
+            startIcon={<Iconify icon="solar:calendar-minimalistic-bold" width={14} />}
+            sx={{ fontSize: '0.72rem', height: 26, px: 1.25 }}
+          >
+            All Monthly
+          </Button>
+          <Button
+            size="small"
+            color="inherit"
+            onClick={() => applyBulkRule('NoProration')}
+            sx={{ fontSize: '0.72rem', height: 26, px: 1 }}
+          >
+            Reset
+          </Button>
+        </Stack>
+      }
     >
-      {/* Validation banner */}
+      {/* Validation Banner if missing required proration rule */}
       {!hasAtLeastOneRecurringEnabled && (
-        <Alert severity="warning" variant="outlined" sx={{ mb: 2, fontSize: '0.82rem' }}>
-          At least one <strong>Recurring</strong> fee head must have{' '}
-          <strong>Proration Applicable</strong> turned on before you can save this policy.
+        <Alert
+          severity="warning"
+          variant="outlined"
+          sx={{
+            mb: 2,
+            fontSize: '0.78rem',
+            borderRadius: 1.25,
+            bgcolor: (theme) => alpha(theme.palette.warning.main, 0.04),
+          }}
+        >
+          <strong>Validation Requirement:</strong> At least one <strong>Recurring</strong> fee head
+          must have either a <strong>Daily</strong> or <strong>Monthly</strong> proration rule
+          assigned before saving.
         </Alert>
       )}
 
-      {rules.length === 0 && (
-        <Box
+      {rules.length === 0 ? (
+        <Paper
+          variant="outlined"
           sx={{
-            p: 3,
+            p: 4,
             textAlign: 'center',
-            bgcolor: 'action.hover',
-            borderRadius: 1,
-            border: '1px dashed',
-            borderColor: 'divider',
+            borderRadius: 1.5,
+            borderStyle: 'dashed',
           }}
         >
           <Iconify
             icon="solar:file-search-bold-duotone"
-            width={32}
+            width={40}
+            height={40}
             sx={{ color: 'text.disabled', mb: 1 }}
           />
-          <Typography variant="body2" color="text.secondary">
-            No active fee heads found. Please create fee heads in Finance → Settings → Fee Head
-            first.
+          <Typography variant="subtitle2" color="text.secondary" fontWeight={600}>
+            No Active Fee Heads Found
           </Typography>
-        </Box>
-      )}
-
-      {rules.length > 0 && (
-        <Box
+          <Typography variant="caption" color="text.disabled" display="block" sx={{ mt: 0.5 }}>
+            Configure active fee heads in Finance → Settings → Fee Head before setting up proration.
+          </Typography>
+        </Paper>
+      ) : (
+        <Paper
+          variant="outlined"
           sx={{
-            border: '1px solid',
-            borderColor: 'divider',
             borderRadius: 1.5,
             overflow: 'hidden',
+            borderColor: 'divider',
           }}
         >
-          {/* Table header */}
+          {/* Table Header Bar */}
           <Box
             sx={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 100px 1fr 40px',
+              display: { xs: 'none', md: 'grid' },
+              gridTemplateColumns: RULE_GRID_COLUMNS,
               gap: 1.5,
-              px: 1.5,
+              px: 2,
               py: 1,
-              bgcolor: 'background.neutral',
+              bgcolor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? alpha(theme.palette.grey[800], 0.4)
+                  : alpha(theme.palette.grey[500], 0.06),
               borderBottom: '1px solid',
               borderColor: 'divider',
             }}
           >
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              color="text.secondary"
-              fontSize="0.72rem"
-            >
-              FEE HEAD
+            <Typography variant="caption" fontWeight={700} color="text.secondary" fontSize="0.7rem">
+              FEE HEAD & CATEGORY
+            </Typography>
+            <Typography variant="caption" fontWeight={700} color="text.secondary" fontSize="0.7rem">
+              PRORATION MODEL
             </Typography>
             <Typography
               variant="caption"
               fontWeight={700}
               color="text.secondary"
-              fontSize="0.72rem"
+              fontSize="0.7rem"
+              sx={{ display: { xs: 'none', md: 'block' } }}
             >
-              PRORATION
-            </Typography>
-            <Typography
-              variant="caption"
-              fontWeight={700}
-              color="text.secondary"
-              fontSize="0.72rem"
-            >
-              RULE
+              ACTIVE STRATEGY
             </Typography>
             <Box />
           </Box>
 
-          {/* Rows */}
+          {/* Fee Head Rows */}
           {rules.map((rule, index) => (
             <FeeHeadRow
               key={rule.feeHeadId}
@@ -593,33 +700,32 @@ export default function ProrationFeeHeadsSection({ formik }: ProrationFeeHeadsSe
               index={index}
               expanded={expandedRows.has(index)}
               onToggleExpand={() => toggleExpand(index)}
-              onApplicableChange={(checked) => handleApplicableChange(index, checked)}
               onRuleChange={(ruleType) => handleRuleChange(index, ruleType)}
               onConfigChange={handleConfigChange}
               errors={formik.errors}
               isFirst={index === 0}
             />
           ))}
-        </Box>
+        </Paper>
       )}
 
-      {/* Legend */}
+      {/* Legend and Info Helper */}
       {rules.length > 0 && (
-        <Box sx={{ mt: 1.5, display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <Iconify icon="mdi:chevron-down" width={14} sx={{ color: 'text.secondary' }} />
-            <Typography variant="caption" color="text.secondary" fontSize="0.7rem">
-              Expand row to configure rule options
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <Stack direction="row" spacing={3} alignItems="center" sx={{ mt: 1.75 }} flexWrap="wrap">
+          <Stack direction="row" spacing={0.75} alignItems="center">
             <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: 'primary.main' }} />
             <Typography variant="caption" color="text.secondary" fontSize="0.7rem">
-              Highlighted rows have proration enabled
+              Proration rule actively applied
             </Typography>
-          </Box>
-        </Box>
+          </Stack>
+          <Stack direction="row" spacing={0.75} alignItems="center">
+            <Iconify icon="solar:alt-arrow-down-bold" width={14} sx={{ color: 'text.secondary' }} />
+            <Typography variant="caption" color="text.secondary" fontSize="0.7rem">
+              Click arrow to adjust cut-off days or rounding
+            </Typography>
+          </Stack>
+        </Stack>
       )}
-    </ProrationSectionCard>
+    </SectionCard>
   );
 }

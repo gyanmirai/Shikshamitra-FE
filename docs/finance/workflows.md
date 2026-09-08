@@ -72,3 +72,10 @@ Use `src/constants/finance-menu.ts` to confirm active visibility before changing
 10. Collection shows an installment only when its server-calculated bill generation date has arrived. If a structure is assigned late, all dates already reached are available immediately.
 
 The four bill-generation rules are: installment start date, X days before due date, due date, and a specific per-installment date. The frontend previews calculated dates, but the backend remains authoritative.
+
+### Collection Policy history and audit
+
+1. The row action menu exposes Audit Trail and Version History only when Collection Policy `ViewVersions` is granted.
+2. Both drawers lazily load the immutable Collection Policy version stream when opened.
+3. Version History compares each snapshot with its predecessor and shows field-level changes, actor, timestamp, action, status, and reason when present.
+4. Audit Trail presents those same immutable records as create, update, clone, archive, and unarchive lifecycle events, so policy audit evidence cannot drift from version history.

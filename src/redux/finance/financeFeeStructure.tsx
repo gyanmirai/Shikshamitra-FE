@@ -92,16 +92,33 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
     }),
 
     createClassWiseFeeStructure: builder.mutation({
-      // Note: only collectionPolicyId is threaded through — StandardFeeStructureRequest
-      // is the only Fee Structure policy field the backend currently persists
-      // (paymentPolicyId/refundPolicyId/prorationPolicyId have no backing DTO field yet).
-      query: ({ feeStructureMetaDataId, standardId, name, feeHeads, collectionPolicyId }) => ({
+      query: ({
+        feeStructureMetaDataId,
+        standardId,
+        name,
+        feeHeads,
+        collectionPolicyId,
+        concessionPolicyId,
+        concessionFeeHeadScope,
+        concessionApplicableFeeHeadIds,
+        refundPolicyId,
+        prorationPolicyId,
+      }) => ({
         url: `/fee-structures`,
         method: 'POST',
         params: { feeStructureMetadataId: feeStructureMetaDataId },
         body: {
           standardId,
-          standardFeeStructures: { name, feeHeads, collectionPolicyId },
+          standardFeeStructures: {
+            name,
+            feeHeads,
+            collectionPolicyId,
+            concessionPolicyId,
+            concessionFeeHeadScope,
+            concessionApplicableFeeHeadIds,
+            refundPolicyId,
+            prorationPolicyId,
+          },
         },
       }),
       invalidatesTags: (_result, _error, { standardId }) => [
@@ -157,6 +174,18 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         params,
       }),
     }),
+
+    validateCollectionPolicyAttachment: builder.mutation({
+      query: (body: {
+        feeStructureMetadataId: string;
+        collectionPolicyId: string;
+        feeHeadIds: string[];
+      }) => ({
+        url: '/fee-structures/collection-policy-impact',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -177,4 +206,5 @@ export const {
   useLockClassWiseFeeStructureMutation,
   useUnlockClassWiseFeeStructureMutation,
   useGetAcademicYearMonthsQuery,
+  useValidateCollectionPolicyAttachmentMutation,
 } = financeFeeStructureApi;

@@ -42,6 +42,7 @@ import {
   useGetConcessionRequestByIdQuery,
   useCreateConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
+  usePreviewConcessionRequestMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import ConcessionDocumentList from './ConcessionDocumentList';
@@ -171,22 +172,13 @@ const validationSchema = Yup.object({
   concessionTypeId: Yup.string().required('Concession type is required'),
 });
 
-function computeDiscount(
-  selectedFeeHeadIds: string[],
-  typeEntries: Record<string, ValueEntry>,
-  feeHeads: any[]
-): number {
-  let total = 0;
-  selectedFeeHeadIds.forEach((fhId) => {
-    const entry = typeEntries[fhId];
-    const fh = feeHeads.find((f: any) => f.feeHeadId === fhId);
-    if (entry && fh) {
-      const base: number = fh.amount || 0;
-      total += base - (entry.netAmount ?? base);
-    }
+const buildFeeHeadConcessions = (values: FormValues) => {
+  const typeId = values.concessionTypeId;
+  return (values.selectedFeeHeads[typeId] || []).map((feeHeadId) => {
+    const entry = values.valueEntries[typeId]?.[feeHeadId] || { basedOn: 0, amount: 0 };
+    return { feeHeadId, basedOn: entry.basedOn, amount: entry.amount };
   });
-  return Number(total.toFixed(2));
-}
+};
 
 // ---------------------------------------------------------------------------
 // Component
@@ -252,6 +244,16 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useCreateConcessionRequestMutation,
   });
+  const [
+    previewConcessionRequest,
+    {
+      data: previewResponse,
+      isLoading: previewLoading,
+      isError: previewIsError,
+      error: previewError,
+      reset: resetPreview,
+    },
+  ] = usePreviewConcessionRequestMutation();
 
   // -- Derived lists ---------------------------------------------------------
 
@@ -267,12 +269,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   );
 
   // -- Formik ----------------------------------------------------------------
-
-  /**
-   * Ref so the formik onSubmit closure always reads the latest fee heads
-   * without needing them declared before the formik instance.
-   */
-  const feeHeadsRef = useRef<any[]>([]);
 
   const initialValues = useMemo(
     () =>
@@ -292,63 +288,44 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     validateOnChange: true,
     onSubmit: async (values) => {
       try {
-        const feeHeads = feeHeadsRef.current;
-        const totalFees = feeHeads.reduce((s: number, fh: any) => s + (fh.amount || 0), 0);
-        const concessionAmount = computeDiscount(
-          values.selectedFeeHeads[values.concessionTypeId] || [],
-          values.valueEntries[values.concessionTypeId] || {},
-          feeHeads
-        );
-
-        if (totalFees > 0 && concessionAmount > totalFees) {
-          shikshaMitraToast.error({ message: 'Concession amount cannot exceed total fees' });
-          return;
-        }
-
         const typeId = values.concessionTypeId;
-        const selectedFeeHeadIds = values.selectedFeeHeads[typeId] || [];
-        const feeHeadConcessions = selectedFeeHeadIds.map((fhId: string) => {
-          const entry = values.valueEntries[typeId]?.[fhId] || {
-            basedOn: 0,
-            amount: 0,
-            netAmount: 0,
-          };
-          return {
-            feeHeadId: fhId,
-            basedOn: entry.basedOn,
-            amount: entry.amount,
-            netAmount: entry.netAmount,
-          };
-        });
+        const feeHeadConcessions = buildFeeHeadConcessions(values);
+        await previewConcessionRequest({
+          academicYearId: currentYear?.id,
+          studentId: values.studentId,
+          concessionTypeId: typeId,
+          feeHeadConcessions,
+        }).unwrap();
 
-		const isEditing = !!(editData?.id && values.concessionRequestId);
-		const docBlock = values.concessionTypeDocuments?.find(
-			(d: any) => d.concessionTypeId === typeId
-		);
-		const documents = docBlock?.documents
-			?.filter((d: any) => d.url)
-			.map((d: any) => ({ documentId: d.documentId, url: d.url, status: 1 })) || [];
+        const isEditing = !!(editData?.id && values.concessionRequestId);
+        const docBlock = values.concessionTypeDocuments?.find(
+          (d: any) => d.concessionTypeId === typeId
+        );
+        const documents =
+          docBlock?.documents
+            ?.filter((d: any) => d.url)
+            .map((d: any) => ({ documentId: d.documentId, url: d.url, status: 1 })) || [];
 
-		if (isEditing) {
-		  await updateConcessionRequest({
+        if (isEditing) {
+          await updateConcessionRequest({
             concessionRequestId: values.concessionRequestId,
             academicYearId: currentYear?.id,
             studentId: values.studentId,
             concessionTypeId: typeId,
             remarks: values.remarks,
-			feeHeadConcessions,
-			documents,
-		  }).unwrap();
-		} else {
-		  await createConcessionRequest({
+            feeHeadConcessions,
+            documents,
+          }).unwrap();
+        } else {
+          await createConcessionRequest({
             academicYearId: currentYear?.id,
             studentId: values.studentId,
             concessionTypeId: typeId,
             remarks: values.remarks,
-			feeHeadConcessions,
-			documents,
-		  }).unwrap();
-		}
+            feeHeadConcessions,
+            documents,
+          }).unwrap();
+        }
 
         shikshaMitraToast.success({
           message: `Concession request ${isEditing ? 'updated' : 'created'} successfully`,
@@ -383,49 +360,57 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
-		params: { studentId: values.studentId, academicYearId: currentYear?.id },
-		options: { skip: !values.studentId || !currentYear?.id },
+    params: { studentId: values.studentId, academicYearId: currentYear?.id },
+    options: { skip: !values.studentId || !currentYear?.id },
     // Suppress automatic toast — we handle this error inline
     popupConfig: { error: false },
   }) as { data: any; isLoading: boolean; isError: boolean; error: any };
 
-  const feeHeads: any[] = useMemo(
-    () => {
-      const selected = feeStructureData?.feeHeads?.filter((item: any) => item.isSelected) || [];
-      if (feeStructureData?.concessionFeeHeadScope !== 'SelectedFeeHeads') return selected;
-      const eligible = new Set(feeStructureData?.concessionApplicableFeeHeadIds || []);
-      return selected.filter((item: any) => eligible.has(item.feeHeadId));
-    },
-    [feeStructureData]
-  );
+  const feeHeads: any[] = useMemo(() => {
+    const selected = feeStructureData?.feeHeads?.filter((item: any) => item.isSelected) || [];
+    if (feeStructureData?.concessionFeeHeadScope !== 'SelectedFeeHeads') return selected;
+    const eligible = new Set(feeStructureData?.concessionApplicableFeeHeadIds || []);
+    return selected.filter((item: any) => eligible.has(item.feeHeadId));
+  }, [feeStructureData]);
 
   // Detect the "no fee structure assigned" business-rule error
   const noFeeStructureError: boolean =
     feeStructureIsError &&
     (feeStructureError?.data?.errorCode === 'No fee structure has been assigned to this student.' ||
-      feeStructureError?.data?.status === 400);
+      feeStructureError?.data?.error?.code === 'Finance:ConcessionPolicy:010011');
 
-  const totalFees = useMemo(
-    () => feeHeads.reduce((sum: number, fh: any) => sum + (fh.amount || 0), 0),
-    [feeHeads]
+  const previewRequest = useMemo(
+    () => ({
+      academicYearId: currentYear?.id,
+      studentId: values.studentId,
+      concessionTypeId: values.concessionTypeId,
+      feeHeadConcessions: buildFeeHeadConcessions(values),
+    }),
+    [currentYear?.id, values]
   );
 
-  // Keep ref in sync so onSubmit closure always reads fresh fee heads
-  feeHeadsRef.current = feeHeads;
+  const previewReady =
+    Boolean(
+      previewRequest.academicYearId && previewRequest.studentId && previewRequest.concessionTypeId
+    ) &&
+    previewRequest.feeHeadConcessions.length > 0 &&
+    (feeStructureData?.concessionValueSource === 'PolicyFixed' ||
+      previewRequest.feeHeadConcessions.every((item) => Number(item.amount) > 0));
 
-  // -- Computed concession amount (auto-derived, never user-typed) -----------
+  useEffect(() => {
+    if (!previewReady) {
+      resetPreview();
+      return undefined;
+    }
+    const timer = window.setTimeout(() => {
+      previewConcessionRequest(previewRequest).catch(() => undefined);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [previewConcessionRequest, previewReady, previewRequest, resetPreview]);
 
-  const computedConcessionAmount = useMemo(
-    () =>
-      computeDiscount(
-        values.selectedFeeHeads[values.concessionTypeId] || [],
-        values.valueEntries[values.concessionTypeId] || {},
-        feeHeads
-      ),
-    [values.selectedFeeHeads, values.concessionTypeId, values.valueEntries, feeHeads]
-  );
-
-  const isAmountExceedingFees = totalFees > 0 && computedConcessionAmount > totalFees;
+  const authoritativePreview: any = (previewResponse as any)?.data ?? previewResponse;
+  const totalFees = Number(authoritativePreview?.totalEligibleBase ?? 0);
+  const computedConcessionAmount = Number(authoritativePreview?.totalConcessionAmount ?? 0);
 
   // -- Derived state for selected type / preview ----------------------------
 
@@ -435,15 +420,15 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   );
 
   const previewData = useMemo(() => {
-    if (!values.studentId || !values.concessionTypeId || computedConcessionAmount <= 0) return null;
+    if (!authoritativePreview || computedConcessionAmount <= 0) return null;
     return {
       totalFees,
       concessionAmount: computedConcessionAmount,
-      netPayable: Math.max(totalFees - computedConcessionAmount, 0),
+      netPayable: Number(authoritativePreview.netPayable),
       savingsPercent:
         totalFees > 0 ? ((computedConcessionAmount / totalFees) * 100).toFixed(1) : '0',
     };
-  }, [totalFees, computedConcessionAmount, values.studentId, values.concessionTypeId]);
+  }, [authoritativePreview, totalFees, computedConcessionAmount]);
 
   const selectedFeeHeadCount = (values.selectedFeeHeads[values.concessionTypeId] || []).length;
   const hasSelectedFeeHeads = selectedFeeHeadCount > 0;
@@ -805,20 +790,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       </Stack>
                       <Divider sx={{ mb: 2 }} />
                       <Grid container spacing={2}>
-                        {feeStructureData?.concessionPolicyName && (
-                          <Grid size={{ xs: 12 }}>
-                            <Alert severity="info" variant="outlined">
-                              Policy: <strong>{feeStructureData.concessionPolicyName}</strong>{' '}
-                              ({feeStructureData.concessionPolicyCode}, version{' '}
-                              {feeStructureData.concessionPolicyVersion}). It applies to{' '}
-                              {feeStructureData.concessionApplyOn === 'AllOutstanding'
-                                ? 'all outstanding installments'
-                                : feeStructureData.concessionApplyOn === 'CurrentInstallment'
-                                  ? 'the current unpaid installment'
-                                  : 'future installments'}.
-                            </Alert>
-                          </Grid>
-                        )}
                         <Grid size={{ xs: 12, md: 6 }}>
                           <Skeleton variant="rounded" height={40} sx={{ borderRadius: 1 }} />
                         </Grid>
@@ -862,6 +833,42 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                   </Grid>
                 )}
 
+                {values.studentId &&
+                  !feeStructureLoading &&
+                  feeStructureData?.concessionPolicyName && (
+                    <Grid size={{ xs: 12 }}>
+                      <Alert severity="info" variant="outlined" sx={{ mb: 1.5 }}>
+                        Policy: <strong>{feeStructureData.concessionPolicyName}</strong> (
+                        {feeStructureData.concessionPolicyCode}, version{' '}
+                        {feeStructureData.concessionPolicyVersion}). It applies to{' '}
+                        {feeStructureData.concessionApplyOn === 'AllOutstanding'
+                          ? ' all outstanding installments'
+                          : feeStructureData.concessionApplyOn === 'CurrentInstallment'
+                            ? ' the earliest unpaid installment'
+                            : ' installments after the earliest unpaid installment'}
+                        .
+                      </Alert>
+                    </Grid>
+                  )}
+
+                {previewLoading && (
+                  <Grid size={{ xs: 12 }}>
+                    <Alert severity="info" sx={{ mb: 1.5 }}>
+                      Calculating the live eligible balance...
+                    </Alert>
+                  </Grid>
+                )}
+
+                {previewIsError && previewReady && (
+                  <Grid size={{ xs: 12 }}>
+                    <Alert severity="error" sx={{ mb: 1.5 }}>
+                      {(previewError as any)?.data?.error?.message ||
+                        (previewError as any)?.data?.message ||
+                        'The server could not calculate this concession. Review the selected heads and values.'}
+                    </Alert>
+                  </Grid>
+                )}
+
                 {/* 3. Fee Summary */}
                 {values.studentId && totalFees > 0 && (
                   <Grid size={{ xs: 12 }} pb={1}>
@@ -869,7 +876,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       {[
                         {
                           icon: 'mdi:currency-inr',
-                          title: 'Total Fees',
+                          title: 'Eligible Outstanding',
                           value: totalFees,
                           color: 'text.primary',
                           /* UI-ONLY: accent strip color token per card type */
@@ -929,14 +936,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         </Grid>
                       ))}
                     </Grid>
-
-                    {isAmountExceedingFees && (
-                      <Alert severity="error" sx={{ mt: 1, borderRadius: 1.5 }}>
-                        Total concession ({formatNumber(computedConcessionAmount, 'INR')}) exceeds
-                        total applicable fees ({formatNumber(totalFees, 'INR')}). Please reduce the
-                        concession values.
-                      </Alert>
-                    )}
                   </Grid>
                 )}
                 {/* 2. Concession Details */}
@@ -1285,7 +1284,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           <Stack spacing={2}>
                             <Box display="flex" justifyContent="space-between" alignItems="center">
                               <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                                Total Fees
+                                Eligible Outstanding
                               </Typography>
                               <Typography variant="body2" fontWeight={700}>
                                 {formatNumber(previewData.totalFees, 'INR')}
@@ -1396,10 +1395,15 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                   variant="contained"
                   size="small"
                   disabled={
-					createLoading || updateLoading || isAmountExceedingFees
+                    createLoading ||
+                    updateLoading ||
+                    previewLoading ||
+                    !previewReady ||
+                    previewIsError ||
+                    !authoritativePreview
                   }
                   startIcon={<Iconify icon={GlobalIcons.submit} />}
-				  loading={createLoading || updateLoading}
+                  loading={createLoading || updateLoading || previewLoading}
                   onClick={handleSubmit}
                 >
                   {editData?.id ? 'Update' : 'Submit'}
