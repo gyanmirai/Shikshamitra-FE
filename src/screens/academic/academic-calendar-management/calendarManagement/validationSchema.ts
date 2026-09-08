@@ -1,6 +1,14 @@
 import * as Yup from 'yup';
 import { DayType } from 'src/enums/academic-calendar';
 
+import { normalizeCalendarDayTitle } from './calendarDayText';
+import {
+  CALENDAR_DAY_TITLE_MAX_LENGTH,
+  CALENDAR_DAY_DESCRIPTION_MAX_LENGTH,
+  CALENDAR_DAY_TITLE_MAX_LENGTH_MESSAGE,
+  CALENDAR_DAY_DESCRIPTION_MAX_LENGTH_MESSAGE,
+} from './calendarDay.constants';
+
 export const calendarValidationSchema = Yup.object().shape({
   academicMediumId: Yup.string().required('Academic Medium is required'),
   name: Yup.string()
@@ -20,8 +28,14 @@ export const calendarDayValidationSchema = (isPublished: boolean) =>
   Yup.object()
     .shape({
       title: Yup.string()
+        .transform(normalizeCalendarDayTitle)
+        .required('Title is required')
         .min(2, 'Title must be at least 2 characters')
-        .required('Title is required'),
+        .max(CALENDAR_DAY_TITLE_MAX_LENGTH, CALENDAR_DAY_TITLE_MAX_LENGTH_MESSAGE),
+      description: Yup.string().max(
+        CALENDAR_DAY_DESCRIPTION_MAX_LENGTH,
+        CALENDAR_DAY_DESCRIPTION_MAX_LENGTH_MESSAGE
+      ),
       dayType: Yup.mixed().required('Day Type is required').notOneOf([''], 'Day Type is required'),
       date: Yup.mixed().required('Date is required'),
       endDate: Yup.mixed().when('dayType', {

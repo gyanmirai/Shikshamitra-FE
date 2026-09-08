@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useConfirmDialog } from 'src/hooks/use-confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useAddSubjectMutation,
@@ -17,6 +18,7 @@ import {
 import { getSubjectInitialValues } from '../initialValues';
 import { subjectValidationSchema } from '../validationSchema';
 
+import type { SubjectFormValues } from '../initialValues';
 import type { ISubject, ISubjectFormProps } from '../type';
 
 export const useSubjectForm = ({ onClose, editData }: Omit<ISubjectFormProps, 'open'>) => {
@@ -36,9 +38,11 @@ export const useSubjectForm = ({ onClose, editData }: Omit<ISubjectFormProps, 'o
     currentQueryAndMutation: useCheckSubjectDuplicateMutation,
   });
 
+  const [confirmPossibleDuplicate, possibleDuplicateDialog] = useConfirmDialog();
+
   const initialValues = useMemo(() => getSubjectInitialValues(editData), [editData]);
 
-  const formik = useFormik({
+  const formik = useFormik<SubjectFormValues>({
     initialValues,
     validationSchema: subjectValidationSchema,
     onSubmit: async (values) => {
@@ -60,9 +64,13 @@ export const useSubjectForm = ({ onClose, editData }: Omit<ISubjectFormProps, 'o
 
         if (duplicateResult?.hasSimilarDuplicate) {
           const matchName = duplicateResult.matches?.[0]?.name || 'another subject';
-          const shouldContinue = window.confirm(
-            `Possible duplicate found: ${matchName}. Do you want to create anyway?`
-          );
+          const shouldContinue = await confirmPossibleDuplicate({
+            title: 'Possible Duplicate Subject',
+            message: `"${values.subjectName.trim()}" is similar to the existing subject "${matchName}". Do you want to create it anyway?`,
+            icon: 'warning',
+            cancelText: 'Review Subject',
+            confirmText: 'Create Anyway',
+          });
           if (!shouldContinue) return;
         }
 
@@ -108,6 +116,7 @@ export const useSubjectForm = ({ onClose, editData }: Omit<ISubjectFormProps, 'o
   return {
     formik,
     isSaveLoading: isUpdateLoading || isAddLoading || isDuplicateLoading,
+    possibleDuplicateDialog,
   };
 };
 

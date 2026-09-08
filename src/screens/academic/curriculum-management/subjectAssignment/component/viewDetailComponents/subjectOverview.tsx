@@ -10,6 +10,7 @@ import { SubjectType } from 'src/enums/subject-type';
 import { Box, Chip, Grid, Paper, Stack, Avatar, Skeleton, Typography } from '@mui/material';
 
 import TeacherHoverProfile from './TeacherHoverProfile';
+import { TeacherEmptyState } from './TeacherEmptyState';
 
 import type { ISubjectDetail } from '../type';
 
@@ -82,7 +83,12 @@ export const SubjectOverviewSkeleton: React.FC = () => {
 
               {/* Primary Teacher Skeleton */}
               <Box sx={{ mb: 2.5 }}>
-                <Skeleton variant="rounded" width={90} height={20} sx={{ mb: 1.25, borderRadius: 1 }} />
+                <Skeleton
+                  variant="rounded"
+                  width={90}
+                  height={20}
+                  sx={{ mb: 1.25, borderRadius: 1 }}
+                />
                 <Box
                   sx={{
                     p: 1.5,
@@ -103,7 +109,12 @@ export const SubjectOverviewSkeleton: React.FC = () => {
 
               {/* Secondary Teachers Skeleton */}
               <Box>
-                <Skeleton variant="rounded" width={110} height={20} sx={{ mb: 1.25, borderRadius: 1 }} />
+                <Skeleton
+                  variant="rounded"
+                  width={110}
+                  height={20}
+                  sx={{ mb: 1.25, borderRadius: 1 }}
+                />
                 <Box
                   sx={{
                     p: 1.25,
@@ -138,7 +149,8 @@ interface SectionBlockProps {
 
 const SectionBlock: React.FC<SectionBlockProps> = ({ icon, title, content, emptyText }) => {
   const theme = useTheme();
-  const hasContent = content && content.trim().length > 0 && content !== '<p></p>' && content !== 'N/A';
+  const hasContent =
+    content && content.trim().length > 0 && content !== '<p></p>' && content !== 'N/A';
 
   return (
     <Paper
@@ -185,7 +197,11 @@ const SectionBlock: React.FC<SectionBlockProps> = ({ icon, title, content, empty
           dangerouslySetInnerHTML={{ __html: content }}
         />
       ) : (
-        <Typography variant="body2" color="text.disabled" sx={{ fontStyle: 'italic', fontSize: '0.8125rem' }}>
+        <Typography
+          variant="body2"
+          color="text.disabled"
+          sx={{ fontStyle: 'italic', fontSize: '0.8125rem' }}
+        >
           {emptyText}
         </Typography>
       )}
@@ -222,13 +238,20 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                   border: `1px solid ${varAlpha(theme.palette.dividerChannel, 0.8)}`,
                 }}
               >
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}
+                >
                   Subject Information
                 </Typography>
 
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mb: 0.25 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      sx={{ display: 'block', mb: 0.25 }}
+                    >
                       Subject Code
                     </Typography>
                     <Typography
@@ -240,7 +263,11 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                   </Grid>
 
                   <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mb: 0.25 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      sx={{ display: 'block', mb: 0.25 }}
+                    >
                       Type
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
@@ -251,16 +278,28 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                   </Grid>
 
                   <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mb: 0.25 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      sx={{ display: 'block', mb: 0.25 }}
+                    >
                       Subject Name
                     </Typography>
-                    <Typography variant="body2" noWrap sx={{ fontWeight: 600, color: 'text.primary' }}>
+                    <Typography
+                      variant="body2"
+                      noWrap
+                      sx={{ fontWeight: 600, color: 'text.primary' }}
+                    >
                       {subject?.subjectName || subject?.subject?.name || '—'}
                     </Typography>
                   </Grid>
 
                   <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography variant="caption" color="text.disabled" sx={{ display: 'block', mb: 0.25 }}>
+                    <Typography
+                      variant="caption"
+                      color="text.disabled"
+                      sx={{ display: 'block', mb: 0.25 }}
+                    >
                       Medium
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
@@ -307,14 +346,21 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                 border: `1px solid ${varAlpha(theme.palette.dividerChannel, 0.8)}`,
               }}
             >
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}>
+              <Typography
+                variant="subtitle2"
+                sx={{ fontWeight: 700, mb: 2, color: 'text.primary' }}
+              >
                 Teaching Staff
               </Typography>
 
               {/* Primary Teacher Section */}
               <Box sx={{ mb: 2.5 }}>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
-                  <Label variant="soft" color="primary" sx={{ height: 20, fontSize: 11, fontWeight: 700 }}>
+                  <Label
+                    variant="soft"
+                    color="primary"
+                    sx={{ height: 20, fontSize: 11, fontWeight: 700 }}
+                  >
                     Primary Teacher
                   </Label>
                 </Stack>
@@ -381,30 +427,18 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                     }
                   />
                 ) : (
-                  <Box
-                    sx={{
-                      p: 2,
-                      borderRadius: 1.5,
-                      bgcolor: varAlpha(theme.palette.background.defaultChannel, 0.5),
-                      border: `1px dashed ${theme.palette.divider}`,
-                      textAlign: 'center',
-                    }}
-                  >
-                    <Iconify
-                      icon="mdi:account-off-outline"
-                      sx={{ fontSize: 26, color: 'text.disabled', mb: 0.5 }}
-                    />
-                    <Typography variant="caption" color="text.disabled" sx={{ display: 'block' }}>
-                      No primary teacher assigned
-                    </Typography>
-                  </Box>
+                  <TeacherEmptyState teacherRole="primary" />
                 )}
               </Box>
 
               {/* Secondary Teachers Section */}
               <Box>
                 <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
-                  <Label variant="soft" color="info" sx={{ height: 20, fontSize: 11, fontWeight: 700 }}>
+                  <Label
+                    variant="soft"
+                    color="info"
+                    sx={{ height: 20, fontSize: 11, fontWeight: 700 }}
+                  >
                     Secondary Teachers
                   </Label>
                   {subject?.secondaryTeachers && subject.secondaryTeachers.length > 0 && (
@@ -462,11 +496,19 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                               <Typography
                                 variant="body2"
                                 noWrap
-                                sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.8125rem' }}
+                                sx={{
+                                  fontWeight: 600,
+                                  color: 'text.primary',
+                                  fontSize: '0.8125rem',
+                                }}
                               >
                                 {teacher.name}
                               </Typography>
-                              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.675rem' }}>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                                sx={{ fontSize: '0.675rem' }}
+                              >
                                 Assistant
                               </Typography>
                             </Box>
@@ -476,23 +518,7 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                     ))}
                   </Stack>
                 ) : (
-                  <Box
-                    sx={{
-                      p: 2,
-                      borderRadius: 1.5,
-                      bgcolor: varAlpha(theme.palette.background.defaultChannel, 0.5),
-                      border: `1px dashed ${theme.palette.divider}`,
-                      textAlign: 'center',
-                    }}
-                  >
-                    <Iconify
-                      icon="mdi:account-group-outline"
-                      sx={{ fontSize: 26, color: 'text.disabled', mb: 0.5 }}
-                    />
-                    <Typography variant="caption" color="text.disabled" sx={{ display: 'block' }}>
-                      No secondary teachers assigned
-                    </Typography>
-                  </Box>
+                  <TeacherEmptyState teacherRole="secondary" />
                 )}
               </Box>
             </Paper>
@@ -503,4 +529,4 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
   );
 };
 
-export default React.memo(SubjectOverview);
+export default SubjectOverview;

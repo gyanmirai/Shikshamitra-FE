@@ -1,6 +1,14 @@
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
+import {
+  MIN_CHAPTER_NUMBER,
+  MAX_CHAPTER_NUMBER,
+  CHAPTER_NUMBER_RANGE_MESSAGE,
+  CHAPTER_NUMBER_INTEGER_MESSAGE,
+  CHAPTER_NUMBER_REQUIRED_MESSAGE,
+} from './chapterNumber';
+
 export const getChapterValidationSchema = (
   currentYear: { startDate: string; endDate: string },
   existingChapters: Array<{ chapterNumber: number; id: string }> = [],
@@ -8,7 +16,12 @@ export const getChapterValidationSchema = (
 ) =>
   Yup.object({
     chapterNo: Yup.number()
-      .required('Chapter Number is required')
+      .transform((value, originalValue) => (originalValue === '' ? undefined : value))
+      .typeError(CHAPTER_NUMBER_INTEGER_MESSAGE)
+      .integer(CHAPTER_NUMBER_INTEGER_MESSAGE)
+      .min(MIN_CHAPTER_NUMBER, CHAPTER_NUMBER_RANGE_MESSAGE)
+      .max(MAX_CHAPTER_NUMBER, CHAPTER_NUMBER_RANGE_MESSAGE)
+      .required(CHAPTER_NUMBER_REQUIRED_MESSAGE)
       .test('unique-chapter-no', 'This Chapter Number is already used', (value) => {
         if (value === undefined || value === null) return true;
         return !existingChapters.some(
@@ -16,6 +29,7 @@ export const getChapterValidationSchema = (
         );
       }),
     chapterName: Yup.string()
+      .trim()
       .required('Chapter Name is required')
       .min(3, 'minimum 3 character required'),
     unitName: Yup.string().max(128, 'Unit name must be 128 characters or less'),
@@ -69,8 +83,7 @@ export const getChapterValidationSchema = (
       .test(
         'no-past-date',
         'Start Date cannot be in the past',
-        (value) =>
-          Boolean(editingChapterId) || !value || !dayjs(value as any).isBefore(dayjs(), 'day')
+        (value) => !value || !dayjs(value as any).isBefore(dayjs(), 'day')
       ),
 
     endDate: Yup.mixed()
@@ -89,8 +102,7 @@ export const getChapterValidationSchema = (
       .test(
         'no-past-date',
         'End Date cannot be in the past',
-        (value) =>
-          Boolean(editingChapterId) || !value || !dayjs(value as any).isBefore(dayjs(), 'day')
+        (value) => !value || !dayjs(value as any).isBefore(dayjs(), 'day')
       )
       .test(
         'min-date',

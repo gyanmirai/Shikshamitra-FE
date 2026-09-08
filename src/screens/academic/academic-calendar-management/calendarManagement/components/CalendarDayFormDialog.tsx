@@ -5,22 +5,29 @@ import { useEffect } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { RootState } from 'src/redux/store';
+import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { TimePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { alpha, useTheme } from '@mui/material/styles';
-import { varAlpha } from 'src/theme/styles';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
+import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
+import {
+  useGetExamsQuery,
+  useGetExamScheduleQuery,
+} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 import {
   DayType,
   CalendarStatus,
@@ -32,33 +39,29 @@ import {
   useCreateCalendarDayMutation,
   useUpdateCalendarDayMutation,
 } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
-import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
-import {
-  useGetExamScheduleQuery,
-  useGetExamsQuery,
-} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 import {
   Box,
   Grid,
   Stack,
+  Paper,
   Switch,
   Button,
-  Autocomplete,
   Select,
   MenuItem,
+  Checkbox,
   TextField,
   Typography,
   InputLabel,
   FormControl,
+  Autocomplete,
   DialogActions,
   FormHelperText,
   FormControlLabel,
-  Paper,
-  Checkbox,
 } from '@mui/material';
 
 import { calendarDayInitialValues } from '../initialValues';
+import CalendarDayTextFields from './CalendarDayTextFields';
+import { normalizeCalendarDayTitle } from '../calendarDayText';
 import { calendarDayValidationSchema } from '../validationSchema';
 
 interface Props {
@@ -132,6 +135,7 @@ const CalendarDayFormDialog = ({
       const isSingleClass = !values.appliesToAll && values.standardIds.length === 1;
       const payload: any = {
         ...values,
+        title: normalizeCalendarDayTitle(values.title),
         date: values.date ? dayjs(values.date).format('YYYY-MM-DDTHH:mm:ssZ') : null,
         dayType: Number(values.dayType),
         holidayCategory: values.holidayCategory !== '' ? Number(values.holidayCategory) : null,
@@ -164,8 +168,10 @@ const CalendarDayFormDialog = ({
         }
         handleCloseDialog();
         formik.resetForm();
-      } catch (err: any) {
-        shikshaMitraToast.error({ message: err?.data?.detail || 'Failed to save' });
+      } catch (error) {
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Failed to save calendar day',
+        });
       }
     },
   });
@@ -177,7 +183,7 @@ const CalendarDayFormDialog = ({
   const isEvent = dayTypeNum === DayType.Event;
   const isExam = dayTypeNum === DayType.Exam;
   const isPtm = dayTypeNum === DayType.PTM;
-  const ptmMode = formik.values.ptmMode;
+  const { ptmMode } = formik.values;
   const showRoom = isPtm && ['inPerson', 'hybrid'].includes(ptmMode);
   const showMeetingLink = isPtm && ['online', 'hybrid'].includes(ptmMode);
 
@@ -760,42 +766,16 @@ const CalendarDayFormDialog = ({
                 </>
               )}
 
-              {/* Title */}
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Title *"
-                  name="title"
-                  value={formik.values.title}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={formik.touched.title && Boolean(formik.errors.title)}
-                  helperText={formik.touched.title && formik.errors.title}
-                  placeholder="e.g. Independence Day, Diwali Break, Sports Day..."
-                />
-              </Grid>
-
-              {/* Description */}
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  multiline
-                  rows={2}
-                  label="Description"
-                  name="description"
-                  value={
-                    // Bug #5411: strip raw backend GUID strings (ExamId / auto-created) from view
-                    formik.values.description
-                      .replace(/\.?\s*Auto-created from examination schedule\.?/gi, '')
-                      .replace(/\.?\s*ExamId:\s*[\w-]+/gi, '')
-                      .trim()
-                  }
-                  onChange={formik.handleChange}
-                  placeholder="Optional details or notes..."
-                />
-              </Grid>
+              <CalendarDayTextFields
+                title={formik.values.title}
+                description={formik.values.description}
+                titleError={formik.touched.title ? formik.errors.title : undefined}
+                descriptionError={
+                  formik.touched.description ? formik.errors.description : undefined
+                }
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+              />
 
               {/* Scope & Visibility Section */}
               {!(isExam && formik.values.linkedExamId) && (
