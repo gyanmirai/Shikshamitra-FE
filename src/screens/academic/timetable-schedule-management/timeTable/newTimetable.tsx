@@ -67,6 +67,8 @@ import {
 
 import type { TimetableSlot, TSubjectGroup } from './type';
 
+import { TimetablePreviewDialog } from './component/TimetablePreviewDialog';
+
 export const subjectGroupsData: TSubjectGroup[] = [
   {
     subjectName: 'Tech & Fitness Group',
@@ -2244,43 +2246,17 @@ const TimeTableForm = ({
         </DialogActions>
       </CustomDialog>
 
-      {/* Preview Dialog */}
-      <CustomDialog
+      <TimetablePreviewDialog
         open={previewOpen}
-        handleClose={() => setPreviewOpen(false)}
-        maxWidth="lg"
-        hasForm={false}
-        title={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Typography variant="h6" fontWeight={700}>
-              Timetable Preview (Read Only)
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="bottom-start"
-              title="Full-screen read-only preview of the complete weekly timetable board."
-            >
-              <IconButton size="small" color="info" sx={{ p: 0.5 }}>
-                <Iconify icon="lucide:info" width={18} />
-              </IconButton>
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <DialogContent sx={{ height: '70vh', p: 0 }}>
-          <TimetableBoard
-            slots={formik.values.slots}
-            onChange={() => { }}
-            subjects={subjects}
-            readOnly
-            selectedClass={selectedClass}
-            selectedDivision={selectedDivision}
-            standardId={standardId}
-            divisionId={divisionId}
-            timetableStatus={timetableStatus}
-          />
-        </DialogContent>
-      </CustomDialog>
+        onClose={() => setPreviewOpen(false)}
+        slots={formik.values.slots}
+        subjects={subjects}
+        selectedClass={selectedClass}
+        selectedDivision={selectedDivision}
+        standardId={standardId}
+        divisionId={divisionId}
+        timetableStatus={timetableStatus}
+      />
     </DialogScrollContent>
   );
 };

@@ -31,7 +31,8 @@ export const ACADEMIC_AUDIT_ACTION_OPTIONS = [
 ];
 
 export const ACADEMIC_AUDIT_SOURCE_LABELS: Record<string, string> = {
-  academic_calendar_audit: 'Calendar audit',
+  academic_calendar_audit: 'Academic Calendar Audit',
+  subject_audit: 'Subject Audit',
   subject_entity: 'Subject metadata',
   elective_group_entity: 'Elective metadata',
   room_audit: 'Room audit',

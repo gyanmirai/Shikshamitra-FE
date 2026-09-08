@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import dayjs from 'dayjs';
-import { LoadingButton } from '@mui/lab';
-import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
-import { Box, Stack, Paper, Avatar, TextField, Typography } from '@mui/material';
+import { Box, Stack, Paper, Avatar, Typography } from '@mui/material';
+
+import AuditReviewNoteForm from './AuditReviewNoteForm';
+import { getUserInitials } from '../utils/auditFormatters';
 
 import type { AuditReviewNote } from '../types/auditLogs.types';
-import { getUserInitials } from '../utils/auditFormatters';
 
 interface Props {
   notes?: AuditReviewNote[];
@@ -19,19 +18,6 @@ interface Props {
 /** List of review notes with an optional add form. */
 const AuditReviewNotes = ({ notes = [], canAddNote = true, onAdd }: Props) => {
   const theme = useTheme();
-  const [draft, setDraft] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  const handleAdd = async () => {
-    if (!draft.trim() || !onAdd) return;
-    setSaving(true);
-    try {
-      await onAdd(draft.trim());
-      setDraft('');
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <Stack spacing={1}>
@@ -89,33 +75,7 @@ const AuditReviewNotes = ({ notes = [], canAddNote = true, onAdd }: Props) => {
         </Paper>
       ))}
 
-      {canAddNote && (
-        <Box>
-          <TextField
-            fullWidth
-            size="small"
-            multiline
-            rows={2}
-            placeholder="Add a review note for this audit log..."
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            sx={{ mb: 1 }}
-          />
-          <Stack direction="row" justifyContent="flex-end">
-            <LoadingButton
-              size="small"
-              variant="contained"
-              color="info"
-              loading={saving}
-              disabled={!draft.trim()}
-              onClick={handleAdd}
-              startIcon={<Iconify icon="mdi:comment-plus-outline" width={16} />}
-            >
-              Add Note
-            </LoadingButton>
-          </Stack>
-        </Box>
-      )}
+      {canAddNote && onAdd && <AuditReviewNoteForm onAdd={onAdd} />}
     </Stack>
   );
 };

@@ -7,6 +7,10 @@ import {
   type AuditFilterState,
 } from '../types/auditLogs.types';
 
+export const AUDIT_REVIEW_NOTE_MAX_LENGTH = 4000;
+export const AUDIT_REVIEW_NOTE_MAX_LENGTH_MESSAGE =
+  'Review note must be 4,000 characters or fewer.';
+
 /** Empty filter state used for resets. */
 export const EMPTY_FILTERS: AuditFilterState = {
   search: '',

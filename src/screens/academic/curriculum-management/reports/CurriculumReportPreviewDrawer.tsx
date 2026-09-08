@@ -1,64 +1,36 @@
 'use client';
 
 import { toast } from 'sonner';
-import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import {
+  Box,
+  Chip,
+  Button,
+  Drawer,
+  Tooltip,
+  Divider,
+  IconButton,
+  Typography,
+  LinearProgress,
+  TablePagination,
+  CircularProgress,
+} from '@mui/material';
 import {
   usePreviewAcademicReportMutation,
   useLazyDownloadAcademicReportQuery,
   useCreateAcademicReportExportMutation,
   useLazyGetAcademicReportExportJobQuery,
 } from 'src/redux/academicAPI/AcademicReportApi';
-import {
-  Box,
-  Chip,
-  Table,
-  Button,
-  Drawer,
-  Tooltip,
-  Divider,
-  Skeleton,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
-  IconButton,
-  Typography,
-  LinearProgress,
-  TableContainer,
-  TablePagination,
-  CircularProgress,
-} from '@mui/material';
 
-interface AcademicReportRequestDto {
-  reportType: string;
-  format?: string | null;
-  page?: number;
-  pageSize?: number;
-  filters?: {
-    academicYearId?: string | null;
-    classIds?: string[] | null;
-    subjectIds?: string[] | null;
-    statuses?: number[] | null;
-    revisionRequired?: boolean | null;
-  };
-}
+import { CurriculumReportPreviewTable } from './CurriculumReportPreviewTable';
 
-interface PreviewColumn {
-  id: string | null;
-  label: string | null;
-}
-
-interface PreviewData {
-  reportType: string | null;
-  totalCount: number;
-  page: number;
-  pageSize: number;
-  columns: PreviewColumn[] | null;
-  rows: Record<string, string>[] | null;
-}
+import type {
+  PreviewData,
+  PreviewColumn,
+  AcademicReportRequestDto,
+} from './CurriculumReportPreview.types';
 
 interface CurriculumReportPreviewDrawerProps {
   open: boolean;
@@ -70,6 +42,23 @@ interface CurriculumReportPreviewDrawerProps {
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 type DownloadPhase = 'idle' | 'creating' | 'polling' | 'downloading';
+
+function saveFile(data: { bytes: string; contentType?: string | null; fileName?: string | null }) {
+  const byteChars = atob(data.bytes);
+  const byteArr = new Uint8Array(byteChars.length);
+  for (let index = 0; index < byteChars.length; index += 1) {
+    byteArr[index] = byteChars.charCodeAt(index);
+  }
+  const blob = new Blob([byteArr], { type: data.contentType || 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = data.fileName || 'report.pdf';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
 
 const CurriculumReportPreviewDrawer = ({
   open,
@@ -103,6 +92,11 @@ const CurriculumReportPreviewDrawer = ({
   const [pollJobStatus] = useLazyGetAcademicReportExportJobQuery();
   const [triggerDownload] = useLazyDownloadAcademicReportQuery();
 
+  /**
+   * Memoization Justification:
+   * - The cleanup callback is shared by effects and the asynchronous polling workflow.
+   * - A stable reference prevents cleanup effects from restarting on each render.
+   */
   const stopPolling = useCallback(() => {
     if (pollIntervalRef.current !== null) {
       clearInterval(pollIntervalRef.current);
@@ -128,27 +122,7 @@ const CurriculumReportPreviewDrawer = ({
     }
   }, [open, reportRequest, stopPolling]);
 
-  const saveFile = useCallback(
-    (data: { bytes: string; contentType?: string | null; fileName?: string | null }) => {
-      const byteChars = atob(data.bytes);
-      const byteArr = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i += 1) {
-        byteArr[i] = byteChars.charCodeAt(i);
-      }
-      const blob = new Blob([byteArr], { type: data.contentType || 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = data.fileName || 'report.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    },
-    []
-  );
-
-  const handleDownload = useCallback(async () => {
+  const handleDownload = async () => {
     if (!reportRequest || downloadPhase !== 'idle') return;
 
     setDownloadPhase('creating');
@@ -196,15 +170,7 @@ const CurriculumReportPreviewDrawer = ({
         // transient poll error — retry on next tick
       }
     }, 2000);
-  }, [
-    reportRequest,
-    downloadPhase,
-    createExport,
-    pollJobStatus,
-    triggerDownload,
-    stopPolling,
-    saveFile,
-  ]);
+  };
 
   const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
   const handleChangeRowsPerPage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -279,100 +245,12 @@ const CurriculumReportPreviewDrawer = ({
 
       {isPreviewLoading && <LinearProgress sx={{ height: 3, flexShrink: 0 }} />}
 
-      {/* Table */}
-      <TableContainer sx={{ flex: 1, overflow: 'auto' }}>
-        <Table stickyHeader size="small">
-          <TableHead>
-            <TableRow>
-              {isPreviewLoading
-                ? Array.from({ length: 5 }).map((_, i) => (
-                    <TableCell
-                      key={i}
-                      sx={(theme) => ({
-                        bgcolor: alpha(theme.palette.primary.light, 0.12),
-                        fontWeight: 700,
-                      })}
-                    >
-                      <Skeleton width={80} height={20} />
-                    </TableCell>
-                  ))
-                : columns.map((col) => (
-                    <TableCell
-                      key={col.id}
-                      sx={(theme) => ({
-                        // bgcolor: alpha(theme.palette.primary.light, 0.12),
-                        fontWeight: 700,
-                        whiteSpace: 'nowrap',
-                        color: theme.palette.primary.dark,
-                        // borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                        fontSize: '0.78rem',
-                      })}
-                    >
-                      {col.label}
-                    </TableCell>
-                  ))}
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {isPreviewLoading ? (
-              Array.from({ length: rowsPerPage }).map((_, rowIdx) => (
-                <TableRow key={rowIdx}>
-                  {Array.from({ length: 5 }).map((__, colIdx) => (
-                    <TableCell key={colIdx}>
-                      <Skeleton height={18} />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length || 1} align="center" sx={{ py: 8 }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: 1,
-                    }}
-                  >
-                    <Iconify icon="mdi:table-off" width={48} sx={{ color: 'text.disabled' }} />
-                    <Typography variant="body2" color="text.secondary">
-                      No data found for the selected filters
-                    </Typography>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row, rowIdx) => (
-                <TableRow
-                  key={rowIdx}
-                  hover
-                  sx={(theme) => ({
-                    '&:nth-of-type(even)': {
-                      bgcolor: theme.palette.action.hover,
-                    },
-                  })}
-                >
-                  {columns.map((col) => (
-                    <TableCell
-                      key={col.id}
-                      sx={{
-                        fontSize: '0.8rem',
-                        whiteSpace: 'nowrap',
-                        maxWidth: 220,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      {col.id ? (row[col.id] ?? '—') : '—'}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+      <CurriculumReportPreviewTable
+        columns={columns}
+        isLoading={isPreviewLoading}
+        rows={rows}
+        rowsPerPage={rowsPerPage}
+      />
 
       {/* Pagination */}
       {!isPreviewLoading && totalCount > 0 && (

@@ -20,6 +20,7 @@ import {
 
 import { getNoOfLectureInitialValues } from '../initialValues';
 import { noOfLectureValidationSchema } from '../validationSchema';
+import { toWeeklyLectureCount, getWeeklyLectureTotal } from '../weeklyLectureValue';
 
 import type {
   ISubject,
@@ -98,7 +99,7 @@ export function useWeeklyLectureForm({
     onSubmit: async (values) => {
       const subjectsPayload: ISubjectPayload[] = values.subjects.map((subject) => ({
         subjectId: subject.subjectId || subject.id,
-        weeklyLectures: Number(subject.noOfLecture) || 0,
+        weeklyLectures: toWeeklyLectureCount(subject.noOfLecture),
         electiveGroupId: subject.electiveGroupId || null,
       }));
 
@@ -237,7 +238,7 @@ export function useWeeklyLectureForm({
   }, [subjectTableData?.data?.items, editData]);
 
   const requiredLectures = useMemo(
-    () => formik.values.subjects.reduce((sum, s) => sum + Number(s.noOfLecture || 0), 0),
+    () => getWeeklyLectureTotal(formik.values.subjects),
     [formik.values.subjects]
   );
 

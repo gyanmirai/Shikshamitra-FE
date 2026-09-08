@@ -15,3 +15,5 @@ export const getSubjectInitialValues = (editData?: ISubject | null) => ({
         : 'Active',
   sortOrder: editData?.sortOrder ?? '',
 });
+
+export type SubjectFormValues = ReturnType<typeof getSubjectInitialValues>;

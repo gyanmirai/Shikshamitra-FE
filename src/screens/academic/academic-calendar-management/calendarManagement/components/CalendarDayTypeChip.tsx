@@ -1,9 +1,8 @@
-'use client';
-
-import { Chip } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { DayType, DAY_TYPE_LABELS, DAY_TYPE_COLORS } from 'src/enums/academic-calendar';
+import { DayType, DAY_TYPE_LABELS } from 'src/enums/academic-calendar';
+
+import { getDayTypeSemanticColor } from './calendarDayTypePresentation';
 
 const DAY_TYPE_ICONS: Record<DayType, string> = {
   [DayType.WorkingDay]: 'mdi:briefcase-check-outline',
@@ -23,30 +22,21 @@ interface CalendarDayTypeChipProps {
 
 const CalendarDayTypeChip = ({ dayType, size = 'small' }: CalendarDayTypeChipProps) => {
   const label = DAY_TYPE_LABELS[dayType] ?? 'Unknown';
-  const color = DAY_TYPE_COLORS[dayType] ?? '#9e9e9e';
   const icon = DAY_TYPE_ICONS[dayType] ?? 'mdi:calendar-outline';
 
   return (
-    <Chip
-      label={label}
-      size={size}
-      icon={
-        <Iconify
-          icon={icon}
-          width={12}
-          sx={{ color: `${color} !important`, ml: '4px !important' }}
-        />
-      }
+    <Label
+      color={getDayTypeSemanticColor(dayType)}
+      variant="soft"
+      startIcon={<Iconify icon={icon} width={12} />}
       sx={{
-        backgroundColor: alpha(color, 0.13),
-        color,
-        border: `1px solid ${alpha(color, 0.35)}`,
         fontWeight: 700,
         fontSize: '11px',
         height: size === 'small' ? 20 : 24,
-        '& .MuiChip-label': { px: 0.75 },
       }}
-    />
+    >
+      {label}
+    </Label>
   );
 };
 

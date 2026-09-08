@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Stack,
@@ -31,10 +30,7 @@ import AuditApprovalTrail from './AuditApprovalTrail';
 import AuditActionBadge from './badges/AuditActionBadge';
 import { AuditApprovalStatus } from '../types/auditLogs.types';
 import { getUserInitials, formatAuditTimestamp } from '../utils/auditFormatters';
-import {
-  APPROVAL_LABELS,
-  APPROVAL_COLOR_KEYS,
-} from '../constants/auditLogs.constants';
+import { APPROVAL_LABELS, APPROVAL_COLOR_KEYS } from '../constants/auditLogs.constants';
 
 import type { AuditLog } from '../types/auditLogs.types';
 
@@ -134,7 +130,6 @@ const AuditLogDetailsDrawer = ({
   onAIExplain,
 }: Props) => {
   const theme = useTheme();
-  const [noteSaving, setNoteSaving] = useState(false);
 
   const ts = log ? formatAuditTimestamp(log.timestamp) : null;
 
@@ -146,13 +141,8 @@ const AuditLogDetailsDrawer = ({
 
   const handleAddNote = async (note: string) => {
     if (!log || !onAddNote) return;
-    setNoteSaving(true);
-    try {
-      await onAddNote(log, note);
-      shikshaMitraToast.success({ message: 'Review note added' });
-    } finally {
-      setNoteSaving(false);
-    }
+    await onAddNote(log, note);
+    shikshaMitraToast.success({ message: 'Review note added' });
   };
 
   // Skip rows that would just repeat the header or show nothing.
@@ -215,7 +205,11 @@ const AuditLogDetailsDrawer = ({
                   <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.25 }} noWrap>
                     {log.actionLabel}
                   </Typography>
-                  <CustomTooltip title="Comprehensive audit trail log details" placement="right" arrow>
+                  <CustomTooltip
+                    title="Comprehensive audit trail log details"
+                    placement="right"
+                    arrow
+                  >
                     <Iconify
                       icon={GlobalIcons.info}
                       color="info.main"
@@ -343,7 +337,6 @@ const AuditLogDetailsDrawer = ({
               </Stack>
             </Section>
 
-
             {/* Diff */}
             <Section
               icon="mdi:compare-horizontal"
@@ -458,15 +451,19 @@ const AuditLogDetailsDrawer = ({
                   Restore
                 </LoadingButton>
               )}
-              <Button size="small" onClick={onClose} startIcon={<Iconify icon={GlobalIcons.cancel} />} variant="outlined">
+              <Button
+                size="small"
+                onClick={onClose}
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                variant="outlined"
+              >
                 Close
               </Button>
             </Stack>
           </Stack>
         </Box>
-      )
-      }
-    </Drawer >
+      )}
+    </Drawer>
   );
 };
 

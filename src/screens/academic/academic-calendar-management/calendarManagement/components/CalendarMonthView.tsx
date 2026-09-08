@@ -1,23 +1,15 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
-import { DayType, DAY_TYPE_COLORS, DAY_TYPE_LABELS } from 'src/enums/academic-calendar';
-import {
-  Box,
-  Paper,
-  Stack,
-  Button,
-  Avatar,
-  Tooltip,
-  Typography,
-  IconButton,
-  CircularProgress,
-} from '@mui/material';
+import { varAlpha, getSemanticTextStyles } from 'src/theme/styles';
+import { DayType, DAY_TYPE_LABELS } from 'src/enums/academic-calendar';
+import { Box, Paper, Stack, Button, Tooltip, Typography, IconButton } from '@mui/material';
 
-import CalendarDayTypeChip from './CalendarDayTypeChip';
+import { CalendarMonthSkeleton } from './CalendarSkeleton';
+import { CalendarMonthEventsPanel } from './CalendarMonthEventsPanel';
+import { getDayTypeSemanticColor } from './calendarDayTypePresentation';
 
 interface Props {
   calendarDays: any[];
@@ -84,7 +76,10 @@ const DayCell = ({
   }
 
   const primaryEvent = events[0];
-  const primaryColor = primaryEvent ? DAY_TYPE_COLORS[primaryEvent.dayType as DayType] : null;
+  const primaryStatusColor = primaryEvent
+    ? getDayTypeSemanticColor(primaryEvent.dayType as DayType)
+    : null;
+  const primaryStatusPalette = primaryStatusColor ? theme.vars.palette[primaryStatusColor] : null;
 
   return (
     <Box
@@ -99,14 +94,14 @@ const DayCell = ({
         borderBottom: `1px solid ${alpha(theme.palette.divider, 0.4)}`,
         backgroundColor: isToday
           ? alpha(theme.palette.primary.main, 0.04)
-          : primaryColor
-            ? alpha(primaryColor, 0.04)
+          : primaryStatusPalette
+            ? varAlpha(primaryStatusPalette.mainChannel, 0.06)
             : 'transparent',
         transition: 'all 0.15s',
         overflow: 'hidden',
         '&:hover': {
-          backgroundColor: primaryColor
-            ? alpha(primaryColor, 0.1)
+          backgroundColor: primaryStatusPalette
+            ? varAlpha(primaryStatusPalette.mainChannel, 0.12)
             : alpha(theme.palette.primary.main, 0.07),
           '& .add-hint': { opacity: 1 },
         },
@@ -183,7 +178,8 @@ const DayCell = ({
       {/* Events */}
       <Stack spacing={1}>
         {events.slice(0, 2).map((ev, i) => {
-          const evColor = DAY_TYPE_COLORS[ev.dayType as DayType];
+          const statusColor = getDayTypeSemanticColor(ev.dayType as DayType);
+          const statusPalette = theme.vars.palette[statusColor];
           return (
             <Tooltip
               key={i}
@@ -197,8 +193,8 @@ const DayCell = ({
                   px: 0.75,
                   py: 0.3,
                   borderRadius: 1,
-                  backgroundColor: alpha(evColor, 0.08),
-                  borderLeft: `2px solid ${evColor}`,
+                  backgroundColor: varAlpha(statusPalette.mainChannel, 0.12),
+                  borderLeft: `2px solid ${statusPalette.main}`,
                   overflow: 'hidden',
                 }}
               >
@@ -206,10 +202,10 @@ const DayCell = ({
                   noWrap
                   sx={{
                     fontSize: '10px',
-                    color: evColor,
                     fontWeight: 700,
                     display: 'block',
                     lineHeight: 1.3,
+                    ...getSemanticTextStyles(theme, statusColor),
                   }}
                 >
                   {ev.title}
@@ -229,8 +225,6 @@ const DayCell = ({
     </Box>
   );
 };
-
-import { CalendarMonthSkeleton } from './CalendarSkeleton';
 
 // ─── Main Month View Component ───────────────────────────────────────────────
 
@@ -354,6 +348,8 @@ const CalendarMonthView = ({
                 {[DayType.Holiday, DayType.Exam, DayType.Event, DayType.Vacation].map((dt) => {
                   const count = monthEvents.filter((e) => e.dayType === dt).length;
                   if (!count) return null;
+                  const statusColor = getDayTypeSemanticColor(dt);
+                  const statusPalette = theme.vars.palette[statusColor];
                   return (
                     <Box
                       key={dt}
@@ -364,8 +360,8 @@ const CalendarMonthView = ({
                         px: 1,
                         py: 0.35,
                         borderRadius: 2,
-                        backgroundColor: alpha(DAY_TYPE_COLORS[dt], 0.12),
-                        border: `1px solid ${alpha(DAY_TYPE_COLORS[dt], 0.3)}`,
+                        backgroundColor: varAlpha(statusPalette.mainChannel, 0.16),
+                        border: `1px solid ${varAlpha(statusPalette.mainChannel, 0.32)}`,
                       }}
                     >
                       <Box
@@ -373,11 +369,15 @@ const CalendarMonthView = ({
                           width: 6,
                           height: 6,
                           borderRadius: '50%',
-                          backgroundColor: DAY_TYPE_COLORS[dt],
+                          backgroundColor: statusPalette.main,
                         }}
                       />
                       <Typography
-                        sx={{ fontSize: '11px', fontWeight: 700, color: DAY_TYPE_COLORS[dt] }}
+                        sx={{
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          ...getSemanticTextStyles(theme, statusColor),
+                        }}
                       >
                         {count}
                       </Typography>
@@ -496,114 +496,7 @@ const CalendarMonthView = ({
           </Box>
         </Paper>
 
-        {/* Events panel */}
-        {monthEvents.length > 0 && (
-          <Paper
-            sx={{
-              borderRadius: 3,
-              overflow: 'hidden',
-              border: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
-              boxShadow: `0 2px 12px ${alpha(theme.palette.common.black, 0.05)}`,
-            }}
-          >
-            <Box
-              sx={{
-                px: 2,
-                py: 1.5,
-                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: alpha(theme.palette.primary.main, 0.04),
-              }}
-            >
-              <Stack direction="row" alignItems="center" gap={1}>
-                <Iconify icon="mdi:calendar-star-outline" width={17} color="primary.main" />
-                <Typography variant="subtitle2" fontWeight={700} sx={{ fontSize: '13px' }}>
-                  {currentMonth.format('MMMM')} Events
-                </Typography>
-              </Stack>
-              <Label
-                variant="soft"
-                color="primary"
-                sx={{
-                  height: 18,
-                  fontSize: '10px',
-                  fontWeight: 700,
-                }}
-              >
-                {monthEvents.length}
-              </Label>
-            </Box>
-
-            <Box sx={{ maxHeight: 460, overflowY: 'auto' }}>
-              <Stack>
-                {monthEvents.map((ev, i) => {
-                  const evColor = DAY_TYPE_COLORS[ev.dayType as DayType];
-                  return (
-                    <Box
-                      key={i}
-                      sx={{
-                        px: 1.75,
-                        py: 1.25,
-                        borderLeft: `3px solid ${evColor}`,
-                        borderBottom:
-                          i < monthEvents.length - 1
-                            ? `1px solid ${alpha(theme.palette.divider, 0.4)}`
-                            : 'none',
-                        '&:hover': { backgroundColor: alpha(evColor, 0.04) },
-                        transition: 'background 0.15s',
-                      }}
-                    >
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Avatar
-                          sx={{
-                            width: 34,
-                            height: 34,
-                            borderRadius: 1.5,
-                            backgroundColor: alpha(evColor, 0.14),
-                            flexShrink: 0,
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              color: evColor,
-                              fontSize: '12px',
-                              fontWeight: 800,
-                              lineHeight: 1,
-                            }}
-                          >
-                            {dayjs(ev.date).date()}
-                          </Typography>
-                        </Avatar>
-                        <Box flex={1} overflow="hidden">
-                          <Typography
-                            variant="body2"
-                            fontWeight={700}
-                            noWrap
-                            sx={{ fontSize: '12.5px' }}
-                          >
-                            {ev.title}
-                          </Typography>
-                          <Stack direction="row" alignItems="center" gap={1} mt={0.3}>
-                            <CalendarDayTypeChip dayType={ev.dayType} />
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ fontSize: '10.5px' }}
-                            >
-                              {dayjs(ev.date).format('ddd, DD MMM')}
-                            </Typography>
-                          </Stack>
-                        </Box>
-                      </Stack>
-                    </Box>
-                  );
-                })}
-              </Stack>
-            </Box>
-          </Paper>
-        )}
+        <CalendarMonthEventsPanel currentMonth={currentMonth} events={monthEvents} />
       </Box>
     </Box>
   );

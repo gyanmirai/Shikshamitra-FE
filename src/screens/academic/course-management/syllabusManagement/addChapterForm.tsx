@@ -3,8 +3,8 @@
 import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
+import { useState } from 'react';
 import { useFormik } from 'formik';
-import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
@@ -23,6 +23,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
@@ -50,7 +51,9 @@ import {
 } from '@mui/material';
 
 import { getChapterInitialValues } from './initialValues';
+import { getChapterNumberApiError } from './chapterNumber';
 import { getChapterValidationSchema } from './validationSchema';
+import { ChapterNumberField } from './components/ChapterNumberField';
 import { bloomOptions, difficultyOptions } from './syllabusPlanningData';
 
 import type { IChapterFormValues, IAddNewChapterProps } from './type';
@@ -82,10 +85,12 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   const [addChapter, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddChapterMutation,
+    popupConfig: { error: false },
   });
   const [updateChapter, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateChapterMutation,
+    popupConfig: { error: false },
   });
   const [uploadCurriculumFile] = useQueryAndMutation({
     type: 'mutation',
@@ -166,7 +171,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     initialValues: getChapterInitialValues(initialValues),
     enableReinitialize: true,
     validationSchema: getChapterValidationSchema(currentYear, existingChapters, initialValues?.id),
-    onSubmit: async (values) => {
+    onSubmit: async (values, helpers) => {
       try {
         if (!classId || !subjectId) {
           shikshaMitraToast.error({
@@ -190,7 +195,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
         if (initialValues) {
           const updatePayload = {
             assignedSubjectId: subjectId,
-            chapterNo: values.chapterNo,
+            chapterNo: Number(values.chapterNo),
             chapterName: values.chapterName.trim(),
             startDate: formattedStartDate,
             endDate: formattedEndDate,
@@ -209,7 +214,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           });
         } else {
           const postPayload = {
-            chapterNo: values.chapterNo,
+            chapterNo: Number(values.chapterNo),
             chapterName: values.chapterName.trim(),
             startDate: formattedStartDate,
             endDate: formattedEndDate,
@@ -226,9 +231,15 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
         }
         onClose(null, true);
       } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const chapterNumberError = getChapterNumberApiError(error);
+        if (chapterNumberError) {
+          helpers.setFieldTouched('chapterNo', true, false);
+          helpers.setFieldError('chapterNo', chapterNumberError);
+          return;
+        }
+
         shikshaMitraToast.error({
-          message: `Failed to save chapter: ${errorMessage}`,
+          message: parseApiProblemDetail(error).detail,
         });
       }
     },
@@ -277,7 +288,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     }
   };
 
-  const additionalFieldsCount = useMemo(() => {
+  const additionalFieldsCount = (() => {
     if (!formik.values) return 0;
     const keys: (keyof IChapterFormValues)[] = [
       'unitName',
@@ -309,7 +320,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
       const val = formik.values[key];
       return val !== null && val !== undefined && val !== '' && val !== 0;
     }).length;
-  }, [formik.values]);
+  })();
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -391,34 +402,12 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               <Grid container spacing={1}>
                 {/* Chapter Number */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
-                  >
-                    <TextField
-                      fullWidth
-                      label="Chapter Number *"
-                      name="chapterNo"
-                      type="number"
-                      placeholder="e.g. 1"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Iconify icon="mdi:pound" width={15} sx={{ color: 'text.disabled' }} />
-                          </InputAdornment>
-                        ),
-                      }}
-                      onKeyDown={(e) => {
-                        if (['e', 'E', '+', '-', '.'].includes(e.key)) {
-                          e.preventDefault();
-                        }
-                      }}
-                      value={formik.values.chapterNo}
-                      onChange={formik.handleChange}
-                      size="small"
-                      error={!!(formik.touched.chapterNo && formik.errors.chapterNo) || false}
-                      helperText={formik.touched.chapterNo && formik.errors.chapterNo}
-                    />
-                  </ShakingTextField>
+                  <ChapterNumberField
+                    value={formik.values.chapterNo}
+                    error={formik.touched.chapterNo ? formik.errors.chapterNo : undefined}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
                 </Grid>
 
                 {/* Chapter Name */}

@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
 import { useRouter } from 'src/routes/hooks';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
 import CancelButton from 'src/components/cancel-button';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { academicPaths } from 'src/constants/academic-menu';
-import { alpha, useTheme } from '@mui/material/styles';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Card,
@@ -22,7 +22,8 @@ import {
   DialogActions,
 } from '@mui/material';
 
-import { getSubjectIcon, type ISubject } from './type';
+import { type ISubject, getSubjectIcon } from './type';
+import { SubjectImpactStatusCard } from './components/SubjectImpactStatusCard';
 
 // ----------------------------------------------------------------------
 
@@ -197,14 +198,6 @@ export default function SubjectUsageDrawer({
   const subjectColor =
     selectedSubject?.color || (selectedSubject as any)?.subjectColor || theme.palette.primary.main;
 
-  const rawAllocations =
-    usageData?.usage?.subjectAllocations ||
-    usageData?.subjectAllocations ||
-    usageData?.usage?.classes ||
-    [];
-
-  const rawElectiveGroups = usageData?.usage?.electiveGroups || usageData?.electiveGroups || [];
-
   const chaptersCount = usageData?.usage?.chaptersCount ?? 0;
   const timetablePeriods = usageData?.usage?.timetablePeriodsCount ?? 0;
   const examSchedules = usageData?.usage?.examSchedulesCount ?? 0;
@@ -212,19 +205,35 @@ export default function SubjectUsageDrawer({
   const homeworkCount = usageData?.usage?.homeworkCount ?? 0;
   const teacherMappings = usageData?.usage?.teacherMappingsCount ?? 0;
 
-  // Normalized allocations labels
+  /**
+   * Memoization Justification:
+   * - Usage arrays can be large and are normalized for several downstream sections.
+   * - A stable result prevents the dependent metrics and navigation sections from recomputing.
+   */
   const allocationLabels = useMemo(() => {
+    const rawAllocations =
+      usageData?.usage?.subjectAllocations ||
+      usageData?.subjectAllocations ||
+      usageData?.usage?.classes ||
+      [];
+
     return rawAllocations
       .map(normalizeItemName)
       .filter((label) => Boolean(label && label.trim().length > 0));
-  }, [rawAllocations]);
+  }, [usageData]);
 
-  // Normalized elective group labels
+  /**
+   * Memoization Justification:
+   * - Elective usage records are normalized once and consumed by multiple drawer sections.
+   * - A stable result avoids repeating the mapping work during local expand/collapse updates.
+   */
   const electiveGroupLabels = useMemo(() => {
+    const rawElectiveGroups = usageData?.usage?.electiveGroups || usageData?.electiveGroups || [];
+
     return rawElectiveGroups
       .map(normalizeItemName)
       .filter((label) => Boolean(label && label.trim().length > 0));
-  }, [rawElectiveGroups]);
+  }, [usageData]);
 
   const displayedAllocations = showAllAllocations ? allocationLabels : allocationLabels.slice(0, 6);
   const hiddenAllocationsCount = allocationLabels.length - displayedAllocations.length;
@@ -234,19 +243,7 @@ export default function SubjectUsageDrawer({
     : electiveGroupLabels.slice(0, 6);
   const hiddenElectivesCount = electiveGroupLabels.length - displayedElectives.length;
 
-  // Dependent modules count
-  const dependentModuleCount = useMemo(() => {
-    let count = 0;
-    if (allocationLabels.length > 0) count += 1;
-    if (electiveGroupLabels.length > 0) count += 1;
-    if (chaptersCount > 0) count += 1;
-    if (timetablePeriods > 0) count += 1;
-    if (examSchedules > 0) count += 1;
-    if (lessonPlans > 0) count += 1;
-    if (homeworkCount > 0) count += 1;
-    if (teacherMappings > 0) count += 1;
-    return count;
-  }, [
+  const dependentModuleCount = [
     allocationLabels.length,
     electiveGroupLabels.length,
     chaptersCount,
@@ -255,73 +252,60 @@ export default function SubjectUsageDrawer({
     lessonPlans,
     homeworkCount,
     teacherMappings,
-  ]);
+  ].filter((count) => count > 0).length;
 
   const isInUse = !usageData?.canDelete && dependentModuleCount > 0;
 
-  const dependencyMetrics: DependencyMetricItem[] = useMemo(
-    () => [
-      {
-        label: 'Class Allocations',
-        value: allocationLabels.length,
-        icon: 'solar:buildings-3-bold-duotone',
-        color: theme.palette.primary.main,
-      },
-      {
-        label: 'Elective Groups',
-        value: electiveGroupLabels.length,
-        icon: 'solar:layers-bold-duotone',
-        color: theme.palette.info.main,
-      },
-      {
-        label: 'Syllabus Chapters',
-        value: chaptersCount,
-        icon: 'solar:book-2-bold-duotone',
-        color: theme.palette.primary.main,
-      },
-      {
-        label: 'Timetable Periods',
-        value: timetablePeriods,
-        icon: 'solar:calendar-date-bold-duotone',
-        color: theme.palette.warning.main,
-      },
-      {
-        label: 'Examinations',
-        value: examSchedules,
-        icon: 'solar:diploma-verified-bold-duotone',
-        color: theme.palette.error.main,
-      },
-      {
-        label: 'Lesson Plans',
-        value: lessonPlans,
-        icon: 'solar:notebook-bookmark-bold-duotone',
-        color: theme.palette.success.main,
-      },
-      {
-        label: 'Homework Records',
-        value: homeworkCount,
-        icon: 'solar:clipboard-check-bold-duotone',
-        color: theme.palette.secondary.main,
-      },
-      {
-        label: 'Assigned Teachers',
-        value: teacherMappings,
-        icon: 'solar:user-id-bold-duotone',
-        color: theme.palette.info.main,
-      },
-    ],
-    [
-      allocationLabels.length,
-      electiveGroupLabels.length,
-      chaptersCount,
-      timetablePeriods,
-      examSchedules,
-      lessonPlans,
-      homeworkCount,
-      teacherMappings,
-      theme.palette,
-    ]
-  );
+  const dependencyMetrics: DependencyMetricItem[] = [
+    {
+      label: 'Class Allocations',
+      value: allocationLabels.length,
+      icon: 'solar:buildings-3-bold-duotone',
+      color: theme.palette.primary.main,
+    },
+    {
+      label: 'Elective Groups',
+      value: electiveGroupLabels.length,
+      icon: 'solar:layers-bold-duotone',
+      color: theme.palette.info.main,
+    },
+    {
+      label: 'Syllabus Chapters',
+      value: chaptersCount,
+      icon: 'solar:book-2-bold-duotone',
+      color: theme.palette.primary.main,
+    },
+    {
+      label: 'Timetable Periods',
+      value: timetablePeriods,
+      icon: 'solar:calendar-date-bold-duotone',
+      color: theme.palette.warning.main,
+    },
+    {
+      label: 'Examinations',
+      value: examSchedules,
+      icon: 'solar:diploma-verified-bold-duotone',
+      color: theme.palette.error.main,
+    },
+    {
+      label: 'Lesson Plans',
+      value: lessonPlans,
+      icon: 'solar:notebook-bookmark-bold-duotone',
+      color: theme.palette.success.main,
+    },
+    {
+      label: 'Homework Records',
+      value: homeworkCount,
+      icon: 'solar:clipboard-check-bold-duotone',
+      color: theme.palette.secondary.main,
+    },
+    {
+      label: 'Assigned Teachers',
+      value: teacherMappings,
+      icon: 'solar:user-id-bold-duotone',
+      color: theme.palette.info.main,
+    },
+  ];
 
   return (
     <CustomDialog
@@ -343,11 +327,7 @@ export default function SubjectUsageDrawer({
             }}
           >
             {selectedSubject?.icon ? (
-              <Iconify
-                icon={getSubjectIcon(selectedSubject.icon)}
-                width={22}
-                height={22}
-              />
+              <Iconify icon={getSubjectIcon(selectedSubject.icon)} width={22} height={22} />
             ) : selectedSubject?.name ? (
               selectedSubject.name.slice(0, 2).toUpperCase()
             ) : (
@@ -679,101 +659,7 @@ export default function SubjectUsageDrawer({
             )}
 
             {/* 4. Dependency / Impact & Restrictions Card */}
-            <Card
-              sx={{
-                p: 2,
-                borderRadius: 1.5,
-                border: '1px solid',
-                borderColor: isInUse
-                  ? alpha(theme.palette.warning.main, 0.3)
-                  : alpha(theme.palette.success.main, 0.3),
-                bgcolor: isInUse
-                  ? alpha(theme.palette.warning.main, 0.04)
-                  : alpha(theme.palette.success.main, 0.04),
-                boxShadow: 'none',
-              }}
-            >
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ mb: 1 }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Box
-                    sx={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: alpha(
-                        isInUse ? theme.palette.warning.main : theme.palette.success.main,
-                        0.12
-                      ),
-                      color: isInUse ? 'warning.main' : 'success.main',
-                    }}
-                  >
-                    <Iconify
-                      icon={
-                        isInUse
-                          ? 'solar:shield-warning-bold-duotone'
-                          : 'solar:shield-check-bold-duotone'
-                      }
-                      width={16}
-                      height={16}
-                    />
-                  </Box>
-                  <Typography
-                    variant="subtitle2"
-                    sx={{
-                      fontWeight: 700,
-                      color: isInUse ? 'warning.darker' : 'success.darker',
-                    }}
-                  >
-                    {isInUse
-                      ? 'Impact & System Restrictions'
-                      : 'Safe to Modify or Delete'}
-                  </Typography>
-                </Stack>
-
-                <Label
-                  color={isInUse ? 'warning' : 'success'}
-                  variant="soft"
-                  sx={{ height: 20, fontSize: '11px' }}
-                >
-                  {isInUse ? 'Restricted Deletion' : 'Fully Modifiable'}
-                </Label>
-              </Stack>
-
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ fontSize: '12.5px', lineHeight: 1.5, mb: isInUse ? 1.5 : 0 }}
-              >
-                {isInUse ? (
-                  <>
-                    This subject is actively referenced across academic modules. Deletion is
-                    restricted while active curriculum, timetable, examination, or other dependent
-                    records exist.
-                  </>
-                ) : (
-                  'This subject has no active class allocations or academic records. You can safely edit details or delete this subject.'
-                )}
-              </Typography>
-
-              {isInUse && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                  <Label color="warning" variant="filled" sx={{ height: 18, fontSize: '10px' }}>
-                    Recommendation
-                  </Label>
-                  <Typography variant="caption" color="text.secondary" fontWeight={500}>
-                    Archive instead of deletion when this subject is no longer actively taught.
-                  </Typography>
-                </Box>
-              )}
-            </Card>
+            <SubjectImpactStatusCard isInUse={isInUse} />
 
             {/* 5. Quick Dependency Action Navigation */}
             {isInUse && (
@@ -945,4 +831,3 @@ export default function SubjectUsageDrawer({
     </CustomDialog>
   );
 }
-
