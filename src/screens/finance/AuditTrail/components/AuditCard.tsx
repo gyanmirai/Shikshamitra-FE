@@ -35,6 +35,10 @@ const ACTION_ICON_MAP: Record<string, string> = {
   GENERATE_RECEIPT: 'mdi:receipt-text-check-outline',
   ADD_CHARGE: 'mdi:cash-plus',
   REMOVE_CHARGE: 'mdi:cash-remove',
+  CLONE: 'mdi:content-copy',
+  ARCHIVE: 'mdi:archive-outline',
+  UNARCHIVE: 'mdi:archive-arrow-up-outline',
+  ACTIVATE: 'mdi:check-decagram-outline',
 };
 
 const ACTION_COLOR_MAP: Record<string, 'success' | 'warning' | 'error' | 'info' | 'default'> = {
@@ -49,6 +53,10 @@ const ACTION_COLOR_MAP: Record<string, 'success' | 'warning' | 'error' | 'info' 
   GENERATE_RECEIPT: 'info',
   ADD_CHARGE: 'warning',
   REMOVE_CHARGE: 'error',
+  CLONE: 'info',
+  ARCHIVE: 'warning',
+  UNARCHIVE: 'success',
+  ACTIVATE: 'success',
 };
 
 const cardVariants: Variants = {

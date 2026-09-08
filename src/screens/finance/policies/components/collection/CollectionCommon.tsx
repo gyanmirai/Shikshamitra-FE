@@ -1,7 +1,11 @@
 'use client';
 
 import React from 'react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { Box, Card, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+
 
 import type { ILateFeeEscalationRule } from '../../types/finance-policy.types';
 
@@ -56,10 +60,14 @@ export function computeSlabIssues(rules: ILateFeeEscalationRule[]): ISlabIssues 
 export function SectionCard({
   title,
   subtitle,
+  icon,
+  action,
   children,
 }: {
   title: string;
   subtitle?: string;
+  icon?: string;
+  action?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
@@ -67,30 +75,62 @@ export function SectionCard({
       variant="outlined"
       sx={{
         mb: 2.5,
-        boxShadow: '0 1px 4px 0 rgba(0,0,0,0.06)',
-        borderRadius: 2,
+        borderRadius: 1.75,
+        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.98),
+        borderColor: (theme) => alpha(theme.palette.divider, 0.9),
+        boxShadow: (theme) => `0 4px 16px -8px ${alpha(theme.palette.grey[500], 0.16)}`,
         overflow: 'visible',
       }}
     >
       <Box
         sx={{
-          px: 2.5,
+          px: { xs: 2, sm: 2.5 },
           py: 1.75,
           borderBottom: '1px solid',
           borderColor: 'divider',
-          borderRadius: '8px 8px 0 0',
+          bgcolor: (theme) =>
+            theme.palette.mode === 'dark'
+              ? alpha(theme.palette.background.default, 0.4)
+              : alpha(theme.palette.grey[50], 0.8),
+          borderRadius: '14px 14px 0 0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1.5,
         }}
       >
-        <Typography variant="h6" fontWeight={700} lineHeight={1.4}>
-          {title}
-        </Typography>
-        {subtitle && (
-          <Typography variant="caption" color="text.secondary" display="block">
-            {subtitle}
-          </Typography>
-        )}
+        <Stack direction="row" spacing={1.25} alignItems="center">
+          {icon && (
+            <Box
+              sx={{
+                width: 32,
+                height: 32,
+                borderRadius: 1,
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+                color: 'primary.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Iconify icon={icon} width={18} height={18} />
+            </Box>
+          )}
+          <Box>
+            <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3}>
+              {title}
+            </Typography>
+            {subtitle && (
+              <Typography variant="caption" color="text.secondary" display="block">
+                {subtitle}
+              </Typography>
+            )}
+          </Box>
+        </Stack>
+        {action && <Box sx={{ flexShrink: 0 }}>{action}</Box>}
       </Box>
-      <Box sx={{ p: 2.5 }}>{children}</Box>
+      <Box sx={{ p: { xs: 2, sm: 2.5 } }}>{children}</Box>
     </Card>
   );
 }
@@ -98,29 +138,37 @@ export function SectionCard({
 // ValidationCheck helper
 export function ValidationCheck({ label, valid }: { label: string; valid: boolean }) {
   return (
-    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ py: 0.2 }}>
+    <Stack direction="row" spacing={1} alignItems="center" sx={{ py: 0.35 }}>
       <Box
         sx={{
-          width: 14,
-          height: 14,
+          width: 16,
+          height: 16,
           borderRadius: '50%',
-          bgcolor: valid ? 'success.main' : 'action.disabled',
+          bgcolor: valid ? (theme) => alpha(theme.palette.success.main, 0.12) : 'action.hover',
+          color: valid ? 'success.main' : 'text.disabled',
+          border: '1px solid',
+          borderColor: valid ? 'success.light' : 'divider',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          transition: 'background-color 0.3s',
+          transition: 'all 0.25s ease',
         }}
       >
-        {valid && (
-          <Typography sx={{ fontSize: '0.5rem', color: 'white', lineHeight: 1, fontWeight: 900 }}>
-            ✓
-          </Typography>
+        {valid ? (
+          <Iconify icon={GlobalIcons.tick} width={11} height={11} />
+        ) : (
+          <Box sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'text.disabled' }} />
         )}
       </Box>
       <Typography
         variant="caption"
-        sx={{ fontSize: '0.7rem', color: valid ? 'text.primary' : 'text.disabled' }}
+        sx={{
+          fontSize: '0.72rem',
+          fontWeight: valid ? 500 : 400,
+          color: valid ? 'text.primary' : 'text.secondary',
+          lineHeight: 1.3,
+        }}
       >
         {label}
       </Typography>
@@ -128,30 +176,32 @@ export function ValidationCheck({ label, valid }: { label: string; valid: boolea
   );
 }
 
-// ValidationWarning helper — non-blocking, distinct from ValidationCheck's pass/fail dot.
-// Phase 4a's cap-enforcement UX (implementation plan §4b, open question 3 resolved as
-// "warning, not hard block" — mirrors how gracePeriodType: WorkingDay degrades rather than
-// blocks elsewhere in this feature) surfaces risk without preventing publish.
+// ValidationWarning helper
 export function ValidationWarning({ label }: { label: string }) {
   return (
-    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ py: 0.2 }}>
+    <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ py: 0.35 }}>
       <Box
         sx={{
-          width: 14,
-          height: 14,
+          width: 16,
+          height: 16,
           borderRadius: '50%',
-          bgcolor: 'warning.main',
+          bgcolor: (theme) => alpha(theme.palette.warning.main, 0.12),
+          color: 'warning.main',
+          border: '1px solid',
+          borderColor: 'warning.light',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
+          mt: 0.1,
         }}
       >
-        <Typography sx={{ fontSize: '0.55rem', color: 'white', lineHeight: 1, fontWeight: 900 }}>
-          !
-        </Typography>
+        <Iconify icon={GlobalIcons.alertIcon} width={11} height={11} />
       </Box>
-      <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'warning.dark' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontSize: '0.72rem', color: 'warning.dark', fontWeight: 500, lineHeight: 1.3 }}
+      >
         {label}
       </Typography>
     </Stack>
@@ -161,15 +211,27 @@ export function ValidationWarning({ label }: { label: string }) {
 // SummaryRow helper
 export function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center">
+    <Stack
+      direction="row"
+      justifyContent="space-between"
+      alignItems="center"
+      spacing={1}
+      sx={{
+        py: 0.4,
+        '&:not(:last-child)': {
+          borderBottom: '1px dashed',
+          borderColor: (theme) => alpha(theme.palette.divider, 0.6),
+        },
+      }}
+    >
       <Typography
         variant="caption"
         color="text.secondary"
-        sx={{ fontSize: '0.7rem', flexShrink: 0 }}
+        sx={{ fontSize: '0.72rem', flexShrink: 0, fontWeight: 500 }}
       >
         {label}
       </Typography>
-      {value}
+      <Box sx={{ minWidth: 0, textAlign: 'right' }}>{value}</Box>
     </Stack>
   );
 }

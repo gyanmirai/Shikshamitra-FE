@@ -100,6 +100,18 @@ export interface FeeLedgerLine {
   coverageEndDate?: string;
   scheduleSource?: 'PaymentTerm' | 'Legacy' | string;
   total: number;
+  scheduledTotal?: number;
+  prorationPolicyId?: string | null;
+  prorationPolicyVersionId?: string | null;
+  prorationFactor?: number | null;
+  prorationRuleType?: string | null;
+  prorationRoundingMode?: string | null;
+  prorationEligibleStartDate?: string | null;
+  prorationEligibleEndDate?: string | null;
+  prorationCoverageDays?: number | null;
+  prorationEligibleDays?: number | null;
+  prorationChargedDays?: number | null;
+  prorationExplanation?: string | null;
   paid: number;
   due: number;
   status: number | string;

@@ -2,34 +2,40 @@
 
 import React from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Stack, Button } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Stack, Button } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+
 
 interface CollectionFooterActionsProps {
   isSaving: boolean;
   onCancel: () => void;
-  onSubmit: () => void;
-  isSubmitDisabled: boolean;
+  submitLabel: string;
 }
 
 export default function CollectionFooterActions({
   isSaving,
   onCancel,
-  onSubmit,
-  isSubmitDisabled,
+  submitLabel,
 }: CollectionFooterActionsProps) {
   return (
     <Stack
       direction="row"
       justifyContent="flex-end"
+      alignItems="center"
       spacing={1.5}
       sx={{
         px: { xs: 2, sm: 3 },
-        py: 1.5,
-        bgcolor: 'background.paper',
+        py: 1.75,
+        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.95),
+        backdropFilter: 'blur(8px)',
         position: 'sticky',
         bottom: 0,
-        zIndex: 1,
+        zIndex: 2,
+        borderTop: '1px solid',
+        borderColor: 'divider',
+        boxShadow: (theme) => `0 -4px 16px -4px ${alpha(theme.palette.grey[500], 0.12)}`,
       }}
     >
       <Button
@@ -37,7 +43,7 @@ export default function CollectionFooterActions({
         color="inherit"
         onClick={onCancel}
         size="small"
-        startIcon={<Iconify icon="basil:cross-solid" />}
+        startIcon={<Iconify icon={GlobalIcons.cancel} />}
         disabled={isSaving}
       >
         Cancel
@@ -46,13 +52,19 @@ export default function CollectionFooterActions({
         variant="contained"
         color="primary"
         loading={isSaving}
-        onClick={onSubmit}
+        type="submit"
         size="small"
-        startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
-        disabled={isSubmitDisabled}
-        sx={{ minWidth: 90 }}
+        startIcon={
+          <Iconify
+            icon={submitLabel.toLowerCase().includes('draft') ? GlobalIcons.submit : GlobalIcons.publish}
+            width={18}
+            height={18}
+          />
+        }
+        disabled={isSaving}
+        sx={{ minWidth: 110 }}
       >
-        Submit
+        {submitLabel}
       </LoadingButton>
     </Stack>
   );

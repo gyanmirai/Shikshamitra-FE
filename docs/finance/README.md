@@ -25,6 +25,8 @@ Follow this order when changing Finance frontend behavior:
 | 4 | [workflows.md](./workflows.md) | Trace charge, collection, concession, adjustment, receipt, audit, and report flows |
 | 5 | [testing.md](./testing.md) | Pick frontend docs, unit, contract, type, and browser checks |
 | 6 | [Concession Policy frontend review](./references/concession-policy-frontend-review.md) | Compare the current partial UI with the target fee-structure, assignment, request, approval, and ledger flow |
+| 7 | [Refund Policy frontend flow](./references/refund-policy-frontend-flow.md) | Follow the target staff journey, screen behavior, client wiring, permission gates, settlement actions, and browser acceptance flow |
+| 8 | [Proration Policy frontend flow](./references/proration-policy-frontend-flow.md) | Review the current prototype and implement the typed policy, attachment, assignment preview, demand explanation, and cross-module UI flow |
 
 ## Ownership boundary
 
@@ -59,6 +61,8 @@ Use this table before code search:
 | Which command should I run? | [testing.md](./testing.md) |
 | Which backend API behavior is canonical? | `../../../Shikshamitra-BE/docs/modules/finance/api.md` |
 | What is missing from the current Concession Policy UI and how should it integrate? | [Concession Policy frontend review](./references/concession-policy-frontend-review.md) |
+| How should the Refund Policy and Fee Refund UI become an end-to-end staff workflow? | [Refund Policy frontend flow](./references/refund-policy-frontend-flow.md) |
+| How should Proration Policy become an end-to-end frontend workflow? | [Proration Policy frontend flow](./references/proration-policy-frontend-flow.md) |
 
 ## Validation
 

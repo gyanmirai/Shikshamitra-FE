@@ -14,6 +14,16 @@ export interface IFeeHeadListResponse {
   items: IFeeHeadResponse[];
 }
 
+export interface IActiveFeeHeadLookup {
+  id: string;
+  academicYearId: string;
+  feeCategoryId: string;
+  feeCategoryName: string;
+  name: string;
+  module: FeeHeadModule | null;
+  isConcessionApplied: boolean;
+}
+
 export interface IFeeHeadCreateOrUpdateBody {
   feeCategoryId: string;
   name: string;
@@ -35,6 +45,15 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
         url: '/fee-heads',
         method: 'GET',
         params,
+      }),
+      providesTags: [financeModuleType.feeHead],
+    }),
+
+    getActiveFeeHeads: builder.query<IActiveFeeHeadLookup[], string>({
+      query: (academicYearId) => ({
+        url: '/fee-heads/active',
+        method: 'GET',
+        params: { academicYearId },
       }),
       providesTags: [financeModuleType.feeHead],
     }),
@@ -93,6 +112,7 @@ export const FeeHeadManagementApi = financeModuleApi.injectEndpoints({
 export const {
   useGetFeeHeadsQuery,
   useLazyGetFeeHeadsQuery,
+  useGetActiveFeeHeadsQuery,
   useAddFeeHeadMutation,
   useUpdateFeeHeadMutation,
   useDeleteFeeHeadMutation,

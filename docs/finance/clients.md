@@ -32,6 +32,7 @@ Use this table to find the first integration file.
 | Invoice and receipt     | `src/redux/invoiceAndReceipt/**`                                                             |
 | Fee structure           | `src/redux/finance/financeFeeStructure.tsx`                                                  |
 | Payment terms           | `src/redux/finance/paymentTerm.tsx`                                                          |
+| Collection policies     | `src/redux/finance/collectionPolicy.ts`                                                      |
 | Concession Types        | `src/redux/finance/concessionType.ts`                                                        |
 | Categories and settings | `src/redux/finance/*Category*`, `src/redux/feeCategory/**`, and `src/redux/feeHeadManage/**` |
 
@@ -42,6 +43,8 @@ Payment Term create/update requests send `status` as `Draft` or `Active`. The cl
 The Payment Terms workspace queries the paged list separately for current and archived master records. Its Status column presents one user-facing lifecycle value only: `Draft`, `Active`, or `Archived`; version lifecycle fields remain internal to version history and assignment checks. Draft terms are activated from the row actions through `POST /finance/payment-terms/{paymentTermId}/versions/{versionId}/publish`, and the Status column has no toggle. Archiving moves a term to the Archived tab; restoring preserves the underlying version state, so the term returns to the Current tab as Draft or Active. Details come from `GET /finance/payment-terms/{paymentTermId}`; the audit-style history table lazily queries `GET /finance/payment-terms/{paymentTermId}/versions` when its drawer tab opens. The Default chip is shown in the Status column, and default selection remains part of create/update-draft requests, where the backend clears the previous board/year default atomically; there is no standalone set-default endpoint. An existing default cannot be cleared directly in its editor; selecting another payment term as default replaces it.
 
 The Concession Type settings client includes inactive records for administration and history, while the request form receives active types only for new requests. The row action menu loads audit-backed history from `GET /concession-types/{id}/versions`. Delete is shown only for inactive, unused records. Its document contract uses `maxFileSizeBytes`, `acceptedFormats`, and `isRequired`. New document rows use local defaults of 5 MB and PDF/JPG/JPEG/PNG, so opening the form does not make a defaults request. Supporting files use the concession-scoped multipart upload endpoint in `ConcessionManagement/concessionManagementApi.ts`, not the Academic Curriculum uploader.
+
+Collection Policy Version History and its policy-specific Audit Trail both lazily query `GET /finance/collection-policies/{id}/versions`. The immutable version stream is the canonical source for create, edit, clone, archive, and unarchive events; the UI renders the same records either as field-level version diffs or as a lifecycle audit timeline. Both row actions require the Collection Policy `ViewVersions` permission.
 
 ## Backend contract source
 

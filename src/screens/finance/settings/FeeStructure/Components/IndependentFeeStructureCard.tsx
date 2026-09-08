@@ -66,11 +66,12 @@ import type {
 const feeStructureSchema = Yup.object({
   name: Yup.string().trim().required('Fee Structure name is required'),
   concessionPolicyId: Yup.string().required('Concession Policy is required'),
-	concessionFeeHeadScope: Yup.string().oneOf(['EntireFeeStructure', 'SelectedFeeHeads']).required(),
-	concessionApplicableFeeHeadIds: Yup.array(Yup.string()).when('concessionFeeHeadScope', {
-		is: 'SelectedFeeHeads',
-		then: (schema) => schema.min(1, 'Select at least one concession-enabled fee head'),
-	}),
+  collectionPolicyId: Yup.string().required('Collection Policy is required'),
+  concessionFeeHeadScope: Yup.string().oneOf(['EntireFeeStructure', 'SelectedFeeHeads']).required(),
+  concessionApplicableFeeHeadIds: Yup.array(Yup.string()).when('concessionFeeHeadScope', {
+    is: 'SelectedFeeHeads',
+    then: (schema) => schema.min(1, 'Select at least one concession-enabled fee head'),
+  }),
   feeHeads: Yup.array(
     Yup.object({
       isOptional: Yup.boolean().optional(),
@@ -156,8 +157,8 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       refundPolicyId: initialData.refundPolicyId ?? '',
       prorationPolicyId: initialData.prorationPolicyId ?? '',
       concessionPolicyId: initialData.concessionPolicyId ?? '',
-		concessionFeeHeadScope: initialData.concessionFeeHeadScope ?? 'EntireFeeStructure',
-		concessionApplicableFeeHeadIds: initialData.concessionApplicableFeeHeadIds ?? [],
+      concessionFeeHeadScope: initialData.concessionFeeHeadScope ?? 'EntireFeeStructure',
+      concessionApplicableFeeHeadIds: initialData.concessionApplicableFeeHeadIds ?? [],
     },
     validationSchema: feeStructureSchema,
     validateOnChange: true,
@@ -282,12 +283,20 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     return touched?.[idx]?.[field] ? errors[idx][field] : undefined;
   };
 
-	const handlePolicyChange = (field: keyof PolicyValues, value: PolicyValues[keyof PolicyValues]) => {
+  const handlePolicyChange = (
+    field: keyof PolicyValues,
+    value: PolicyValues[keyof PolicyValues]
+  ) => {
     formik.setFieldValue(field, value);
   };
 
   const handleSave = async () => {
     setSubmitAttempted(true);
+    if (!formik.values.collectionPolicyId) {
+      setActiveTab(1);
+      shikshaMitraToast.error({ message: 'Select an active Collection Policy before saving.' });
+      return;
+    }
     formik.setTouched({
       name: true,
       feeHeads: formik.values.feeHeads.map(() => ({ paybleMonth: true, amount: true })) as any,
@@ -343,11 +352,11 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         }),
         ...(formik.values.concessionPolicyId && {
           concessionPolicyId: formik.values.concessionPolicyId,
-			concessionFeeHeadScope: formik.values.concessionFeeHeadScope,
-			concessionApplicableFeeHeadIds:
-				formik.values.concessionFeeHeadScope === 'SelectedFeeHeads'
-					? formik.values.concessionApplicableFeeHeadIds
-					: [],
+          concessionFeeHeadScope: formik.values.concessionFeeHeadScope,
+          concessionApplicableFeeHeadIds:
+            formik.values.concessionFeeHeadScope === 'SelectedFeeHeads'
+              ? formik.values.concessionApplicableFeeHeadIds
+              : [],
         }),
       };
 
@@ -376,8 +385,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             concessionFeeHeadScope:
               saved.concessionFeeHeadScope ?? formik.values.concessionFeeHeadScope,
             concessionApplicableFeeHeadIds:
-              saved.concessionApplicableFeeHeadIds ??
-              formik.values.concessionApplicableFeeHeadIds,
+              saved.concessionApplicableFeeHeadIds ?? formik.values.concessionApplicableFeeHeadIds,
           },
         });
         setCardId(newId);
@@ -412,8 +420,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             concessionFeeHeadScope:
               saved?.concessionFeeHeadScope ?? formik.values.concessionFeeHeadScope,
             concessionApplicableFeeHeadIds:
-              saved?.concessionApplicableFeeHeadIds ??
-              formik.values.concessionApplicableFeeHeadIds,
+              saved?.concessionApplicableFeeHeadIds ?? formik.values.concessionApplicableFeeHeadIds,
           },
         });
         setIsEditing(false);
@@ -1239,15 +1246,18 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 refundPolicyId: formik.values.refundPolicyId,
                 prorationPolicyId: formik.values.prorationPolicyId,
                 concessionPolicyId: formik.values.concessionPolicyId,
-				concessionFeeHeadScope: formik.values.concessionFeeHeadScope,
-				concessionApplicableFeeHeadIds: formik.values.concessionApplicableFeeHeadIds,
+                concessionFeeHeadScope: formik.values.concessionFeeHeadScope,
+                concessionApplicableFeeHeadIds: formik.values.concessionApplicableFeeHeadIds,
               }}
               onChange={handlePolicyChange}
               isEditing={isEditing}
               isLocked={isLocked}
+              feeStructureMetadataId={initialData.feeStructureMetaDataId}
+			  feeStructureId={cardId ?? undefined}
               feeHeads={formik.values.feeHeads.map((fh) => ({
                 feeHeadId: fh.feeHeadId,
                 feeHeadName: fh.feeHeadName,
+				isOneTime: fh.isOneTime,
               }))}
             />
           )}

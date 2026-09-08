@@ -7,6 +7,8 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinancePolicyTable from '../components/FinancePolicyTable';
@@ -19,6 +21,11 @@ export default function RefundPolicyWorkspace() {
   const drawerOpen = useBoolean();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canCreate = hasGrantedPermission(
+    permissions,
+    financePermissions.policies.refundPolicyActions.create
+  );
   const academicYearId = currentYear?.id || '';
 
   const handleAdd = () => {
@@ -35,22 +42,24 @@ export default function RefundPolicyWorkspace() {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Refund Policy"
-        description="Establish refund timeline rules, deduction tiers, bank requirements, and government compliance."
+        description="Define eligible settled payments, refundable Fee Heads, amount rules, deductions, caps, payout methods, and processing targets."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Policies & Rules', href: '/finance/policies' },
           { name: 'Refund Policy' },
         ]}
         action={
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Add />}
-            onClick={handleAdd}
-            sx={{ px: '24px' }}
-          >
-            Refund Policy
-          </Button>
+          canCreate ? (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Add />}
+              onClick={handleAdd}
+              sx={{ px: '24px' }}
+            >
+              Refund Policy
+            </Button>
+          ) : null
         }
       />
 

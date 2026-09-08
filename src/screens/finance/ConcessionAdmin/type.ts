@@ -100,6 +100,7 @@ export interface IConcessionMonthItem {
   status: FeeCollectionStatusType;
   isSelectable?: boolean;
   year: number;
+  concurrencyStamp: string;
 }
 
 export interface IConcessionFeeHeadWiseGroup {

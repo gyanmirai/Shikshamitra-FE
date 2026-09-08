@@ -10,36 +10,10 @@ export type MinPaymentType = 'FixedAmount' | 'Percentage' | 'InstallmentAmount';
 
 export type ReceiptGenerationMode = 'Immediate' | 'OnApproval' | 'OnSettlement';
 
-export type ConcessionCalculationMethod = 'Percentage' | 'FixedAmount' | 'FullWaiver' | 'Manual';
-export type ConcessionCalculationBase = 'OriginalFee' | 'OutstandingAmount' | 'FeeHeadAmount';
+export type ConcessionCalculationMethod = 'Percentage' | 'FixedAmount' | 'FullWaiver';
 export type ConcessionRoundOff = 'None' | 'RoundUp' | 'RoundDown' | 'NearestRupee';
-export type ConcessionApplyOn =
-  | 'PendingFeesOnly'
-  | 'PaidFeesOnly'
-  | 'PaidAndPending'
-  | 'FutureInstallmentsOnly'
-  | 'CurrentInstallmentOnly'
-  | 'EntireFeeStructure';
-export type ConcessionPaidFeeAdjustment =
-  | 'Refund'
-  | 'CreditNote'
-  | 'StudentWallet'
-  | 'FutureFeeAdjustment'
-  | 'ManualDecision';
-export type ConcessionPendingFeeHandling =
-  | 'ReduceOutstanding'
-  | 'RecalculateInstallments'
-  | 'FutureInstallmentsOnly';
-export type ConcessionFutureInstallmentStrategy =
-  | 'EqualDistribution'
-  | 'RemainingInstallments'
-  | 'CurrentInstallment';
 
-export type ConcessionExpiry = 'Never' | 'SessionEnd' | 'FixedDate';
-export type ConcessionRenewal = 'Manual' | 'Automatic' | 'ReapprovalRequired';
-export type ConcessionApplyOn_FeeHeads = 'EntireFeeStructure' | 'SelectedFeeHeads';
-
-export type RefundMethod = 'BankTransfer' | 'Cash' | 'Cheque' | 'OnlineGateway';
+export type RefundPayoutMethod = 'Cash' | 'Cheque' | 'DemandDraft' | 'BankTransfer' | 'Upi';
 
 // ─── Common fields shared by all policy types ─────────────────────────────────
 
@@ -127,20 +101,47 @@ export interface ILateFeeEscalationRule {
   roundOff?: string;
 }
 
+export interface ICollectionPolicyLateFeeRuleOverride {
+  lateFeeType: ICollectionPolicy['lateFeeType'];
+  flatAmount: number | null;
+  percentage: number | null;
+  percentageBase: ICollectionPolicy['percentageBase'];
+  amountPerDay: number | null;
+  amountPerWeek: number | null;
+  amountPerMonth: number | null;
+  compoundFrequency: ICollectionPolicy['compoundFrequency'];
+  escalationRules: ILateFeeEscalationRule[];
+  roundingMethod: ICollectionPolicy['roundingMethod'];
+  maximumLateFeeAmount: number | null;
+  maximumChargingDays: number | null;
+}
+
+export interface ICollectionPolicyFeeHeadOverride {
+  feeHeadId: string;
+  overrideMode: 'Inherit' | 'NoLateFee' | 'CustomRule';
+  lateFeeRule: ICollectionPolicyLateFeeRuleOverride | null;
+}
+
 // ─── Concession Policy ────────────────────────────────────────────────────────
 
-export interface IConcessionPolicy extends IFinancePolicyBase {
+export interface IConcessionPolicy extends Omit<IFinancePolicyBase, 'status'> {
   policyType: 'concession';
+  status: 'Draft' | 'Active' | 'Archived';
+  isDefault: boolean;
   valueSource: 'PolicyFixed' | 'RequestEnteredWithinLimits';
   calculationMethod: ConcessionCalculationMethod;
   percentageValue: number | null;
   fixedAmount: number | null;
   maximumPercentage: number | null;
-	maximumFixedAmount: number | null;
+  maximumFixedAmount: number | null;
   roundOff: ConcessionRoundOff;
   applyOn: 'AllOutstanding' | 'CurrentInstallment' | 'FutureInstallments';
   version?: number;
   isUsedInDownstream?: boolean;
+  concurrencyStamp: string;
+  changeReason?: string;
+  creationTime?: string;
+  lastModificationTime?: string | null;
 }
 
 export type IConcessionPolicyFormValues = Omit<
@@ -150,38 +151,38 @@ export type IConcessionPolicyFormValues = Omit<
 
 // ─── Refund Policy ────────────────────────────────────────────────────────────
 
-export interface IRefundDeductionRule {
-  afterDays: number;
-  deductionType: 'Percentage' | 'FlatAmount';
-  deductionValue: number;
-  description: string;
-}
-
-export interface IRefundPolicy extends IFinancePolicyBase {
+export interface IRefundPolicy extends Omit<
+  IFinancePolicyBase,
+  'status' | 'effectiveFrom' | 'effectiveTo'
+> {
   policyType: 'refund';
-  refundMethod?: RefundMethod;
-  processingDays?: number;
-  allowPartialRefund?: boolean;
-  requireApproval?: boolean;
-  approvalRoleIds?: string[];
-  deductionRules: IRefundDeductionRule[];
-  maxRefundPercentage?: number | null;
-  maxRefundAmount?: number | null;
-  refundOnWithdrawal?: boolean;
-  refundOnTransfer?: boolean;
-  governmentComplianceCode?: string;
-  bankDetailsRequired: boolean;
-  cancellationNoticeDays?: number | null;
-  applicableFeeHeads: string[];
-
-  // New Fields
-  refundOn?: 'FullPayment' | 'PartialAndFullPayment';
-  enableRefundForCharge?: boolean;
-  considerAsExpense?: boolean;
-  refundDueWithin?: number;
-  refundExpenseHeadId?: string;
-  refundPayableHeadId?: string;
-  lateFeeClawback?: boolean;
+  status: 'Draft' | 'Active' | 'Archived';
+  isDefault: boolean;
+  eligiblePaymentState: 'FullyPaidOnly' | 'PartialAndFullPayment';
+  feeHeadScope: 'AllFeeHeads' | 'SelectedFeeHeads';
+  applicableFeeHeadIds: string[];
+  includePaidCharges: boolean;
+  includePaidLateFee: boolean;
+  requestDeadlineDays: number | null;
+  allowPartialRefund: boolean;
+  amountMode: 'RemainingPaidAmount' | 'ManualUpToEligible' | 'FixedAmount' | 'Percentage';
+  percentageValue: number | null;
+  fixedAmount: number | null;
+  maximumPerRequest: number | null;
+  maximumPerStudentYear: number | null;
+  roundingMethod: ConcessionRoundOff;
+  deductionType: 'None' | 'FixedAmount' | 'Percentage';
+  deductionValue: number | null;
+  maximumDeduction: number | null;
+  deductionExplanation: string;
+  allowedPayoutMethods: RefundPayoutMethod[];
+  processingTargetDays: number | null;
+  version?: number;
+  isUsedInDownstream?: boolean;
+  concurrencyStamp: string;
+  changeReason?: string;
+  creationTime?: string;
+  lastModificationTime?: string | null;
 }
 
 export type IRefundPolicyFormValues = Omit<
@@ -205,6 +206,10 @@ export interface IFinancePolicyRow {
   updatedAt: string;
   isDefault: boolean;
   isUsedInDownstream?: boolean;
+  concurrencyStamp?: string;
+  version?: number;
+  creationTime?: string;
+  lastModificationTime?: string | null;
 }
 
 // ─── Drawer state ─────────────────────────────────────────────────────────────
@@ -223,14 +228,19 @@ export interface IFinancePolicyTableProps {
   policyType: FinancePolicyKind;
   onAdd: () => void;
   onEdit: (row: IFinancePolicyRow) => void;
+  archived?: boolean;
 }
 
 // ─── Collection Policy ────────────────────────────────────────────────────────
-export interface ICollectionPolicy extends IFinancePolicyBase {
+export interface ICollectionPolicy extends Omit<
+  IFinancePolicyBase,
+  'effectiveFrom' | 'effectiveTo'
+> {
   policyType: 'collection';
-  status: 'Active' | 'Archived';
+  status: 'Draft' | 'Active' | 'Archived';
   enableLateFee: boolean;
   gracePeriodDays: number;
+  gracePeriodType: 'Calendar' | 'WorkingDay';
   lateFeeApplyOnFeeHeads: string[];
   lateFeeType: 'Flat' | 'Percentage' | 'PerDay' | 'PerWeek' | 'PerMonth' | 'Compound' | 'Slab';
   flatAmount: number | null;
@@ -241,6 +251,7 @@ export interface ICollectionPolicy extends IFinancePolicyBase {
   amountPerMonth: number | null;
   compoundFrequency: 'Daily' | 'Weekly' | 'Monthly';
   escalationRules: ILateFeeEscalationRule[];
+  feeHeadOverrides: ICollectionPolicyFeeHeadOverride[];
   roundingMethod: 'None' | 'RoundUp' | 'RoundDown' | 'NearestRupee';
   /** Absolute ceiling on computed late fee, regardless of formula — closes the "runaway compounding" gap. */
   maximumLateFeeAmount: number | null;
@@ -253,7 +264,13 @@ export interface ICollectionPolicy extends IFinancePolicyBase {
   maximumWaiverPercentage: number | null;
   waiverExpiry: string | null;
   allowOnlineCollection: boolean;
-  lateFeeIncomeHeadId?: string;
+  lateFeeIncomeHeadId?: string | null;
+  requiresApproval: boolean;
+  approvalRoleIds: string[];
+  approvalThresholdAmount: number | null;
+  changeReason?: string | null;
+  version?: number;
+  isUsedInDownstream?: boolean;
 }
 
 export type ICollectionPolicyFormValues = Omit<
@@ -264,16 +281,13 @@ export type ICollectionPolicyFormValues = Omit<
 // ─── Proration Policy ─────────────────────────────────────────────────────────
 
 export type ProrationRuleType =
-  | 'NoProration'
-  | 'DailyProration'
-  | 'MonthlyProration'
-  | 'FullMonthCharge';
+  'NoProration' | 'DailyProration' | 'MonthlyProration' | 'FullMonthCharge';
 
 export type ProrationCalculationBasis = 'CalendarDays';
 
-export type ProrationRoundOff = 'NoRoundOff' | 'NearestRupee' | 'RoundUp' | 'RoundDown';
+export type ProrationRoundOff = 'NoRoundOff' | 'RoundUp' | 'RoundDown';
 
-export type ProrationMonthlyRule = 'ChargeCurrentMonth' | 'ChargeNextMonth' | 'HalfMonthRule';
+export type ProrationMonthlyRule = 'ChargeNextMonth' | 'HalfMonthRule';
 
 export interface IProrationRuleConfiguration {
   // Daily Proration
@@ -290,17 +304,43 @@ export interface IProrationFeeHeadRule {
   feeHeadId: string;
   feeHeadName?: string;
   feeType: 'Recurring' | 'OneTime'; // stored per rule; displayed read-only
-  prorationApplicable: boolean;
-  ruleType: ProrationRuleType | null;
+  ruleType: ProrationRuleType;
   configuration: IProrationRuleConfiguration;
 }
 
-export interface IProrationPolicy extends IFinancePolicyBase {
-  policyType: 'proration';
-  feeHeadRules: IProrationFeeHeadRule[];
+export interface IProrationPolicyRule {
+  feeHeadId: string;
+  feeHeadName?: string | null;
+  ruleType: 'FullCharge' | 'Daily' | 'MonthlyCutoff';
+  roundingMode: 'Currency' | 'NearestRupee' | 'RoundUpRupee' | 'RoundDownRupee';
+  minimumChargeDays?: number | null;
+  cutoffDay?: number | null;
+  afterCutoffAction?: 'NoCharge' | 'HalfCharge' | null;
 }
 
-export type IProrationPolicyFormValues = Omit<
-  IProrationPolicy,
-  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt' | 'academicYearName'
->;
+export interface IProrationPolicy extends Omit<
+  IFinancePolicyBase,
+  'status' | 'effectiveFrom' | 'effectiveTo'
+> {
+  policyType: 'proration';
+  status: 'Draft' | 'Active' | 'Archived';
+  version: number;
+  isUsedInDownstream: boolean;
+  concurrencyStamp: string;
+  creationTime?: string;
+  lastModificationTime?: string | null;
+  feeHeadRules: IProrationPolicyRule[];
+}
+
+export interface IProrationPolicyFormValues {
+  policyType: 'proration';
+  policyName: string;
+  policyCode: string;
+  description: string;
+  status: 'Draft' | 'Active';
+  academicYearId: string;
+  isDefault: boolean;
+  concurrencyStamp?: string | null;
+  changeReason?: string | null;
+  feeHeadRules: IProrationFeeHeadRule[];
+}

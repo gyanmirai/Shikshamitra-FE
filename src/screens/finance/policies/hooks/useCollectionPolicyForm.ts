@@ -4,13 +4,13 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import * as Yup from 'yup';
-import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useFormik, setNestedObjectValues } from 'formik';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
   useGetCollectionPoliciesQuery,
   useCreateCollectionPolicyMutation,
@@ -25,6 +25,9 @@ import type {
   ICollectionPolicyFormValues,
 } from '../types/finance-policy.types';
 
+const emptyStringToNull = (value: number, originalValue: unknown) =>
+  originalValue === '' ? null : value;
+
 // Helper to get initial values
 const getInitialValues = (
   editData: IFinancePolicyRow | null | undefined,
@@ -35,15 +38,15 @@ const getInitialValues = (
     policyName: data?.policyName || '',
     policyCode: data?.policyCode || '',
     description: data?.description || '',
-    status: data?.status || 'Active',
+    status: data?.status || 'Draft',
     academicYearId: data?.academicYearId || academicYearId || '',
-    effectiveFrom: data?.effectiveFrom || null,
-    effectiveTo: data?.effectiveTo || null,
     isDefault: data?.isDefault || false,
     policyType: 'collection',
+    changeReason: '',
 
     enableLateFee: data?.enableLateFee ?? false,
     gracePeriodDays: data?.gracePeriodDays ?? 0,
+    gracePeriodType: data?.gracePeriodType || 'Calendar',
     lateFeeApplyOnFeeHeads: data?.lateFeeApplyOnFeeHeads || [],
     lateFeeType: data?.lateFeeType || 'Flat',
     flatAmount: data?.flatAmount ?? null,
@@ -54,16 +57,21 @@ const getInitialValues = (
     amountPerMonth: data?.amountPerMonth ?? null,
     compoundFrequency: data?.compoundFrequency || 'Daily',
     escalationRules: data?.escalationRules || [],
+    feeHeadOverrides: data?.feeHeadOverrides || [],
     roundingMethod: data?.roundingMethod || 'None',
     maximumLateFeeAmount: data?.maximumLateFeeAmount ?? null,
     maximumChargingDays: data?.maximumChargingDays ?? null,
     considerAsIncome: data?.considerAsIncome ?? false,
+    lateFeeIncomeHeadId: data?.lateFeeIncomeHeadId ?? null,
 
     enableWaiver: data?.enableWaiver ?? false,
     waiverApplyOnFeeHeads: data?.waiverApplyOnFeeHeads || [],
     maximumWaiverAmount: data?.maximumWaiverAmount ?? null,
     maximumWaiverPercentage: data?.maximumWaiverPercentage ?? null,
     waiverExpiry: data?.waiverExpiry || null,
+    requiresApproval: data?.requiresApproval ?? true,
+    approvalRoleIds: data?.approvalRoleIds || [],
+    approvalThresholdAmount: data?.approvalThresholdAmount ?? null,
     allowOnlineCollection: data?.allowOnlineCollection ?? true,
   };
 };
@@ -76,11 +84,16 @@ const validationSchema = Yup.object().shape({
     .min(3, 'Must be at least 3 characters')
     .max(100, 'Cannot exceed 100 characters'),
   description: Yup.string().max(500, 'Cannot exceed 500 characters').nullable(),
-  status: Yup.string().required('Status is required'),
+  status: Yup.string()
+    .oneOf(['Draft', 'Active'], 'Status must be Draft or Active')
+    .required('Status is required'),
+  changeReason: Yup.string().trim().max(500, 'Cannot exceed 500 characters').nullable(),
   isDefault: Yup.boolean(),
 
   enableLateFee: Yup.boolean(),
   gracePeriodDays: Yup.number()
+    .nullable()
+    .transform(emptyStringToNull)
     .typeError('Grace Period must be a number')
     .min(0, 'Must be 0 or greater')
     .max(365, 'Cannot exceed 365 days')
@@ -88,6 +101,13 @@ const validationSchema = Yup.object().shape({
       is: true,
       then: (s) => s.required('Grace Period is required'),
     }),
+  gracePeriodType: Yup.string().when('enableLateFee', {
+    is: true,
+    then: (schema) =>
+      schema
+        .oneOf(['Calendar'], 'Only calendar-day grace periods are currently supported')
+        .required('Grace Day Type is required'),
+  }),
   lateFeeApplyOnFeeHeads: Yup.array()
     .of(Yup.string())
     .when('enableLateFee', {
@@ -100,46 +120,91 @@ const validationSchema = Yup.object().shape({
   }),
   flatAmount: Yup.number()
     .nullable()
+    .transform(emptyStringToNull)
     .when(['enableLateFee', 'lateFeeType'], {
       is: (enableLateFee: boolean, lateFeeType: string) => enableLateFee && lateFeeType === 'Flat',
-      then: (s) => s.required('Amount is required').min(0, 'Must be 0 or greater'),
+      then: (s) => s.required('Amount is required').moreThan(0, 'Must be greater than 0'),
     }),
   percentage: Yup.number()
     .nullable()
+    .transform(emptyStringToNull)
     .when(['enableLateFee', 'lateFeeType'], {
       is: (enableLateFee: boolean, lateFeeType: string) =>
         enableLateFee && (lateFeeType === 'Percentage' || lateFeeType === 'Compound'),
       then: (s) =>
         s
           .required('Percentage is required')
-          .min(0, 'Must be 0 or greater')
+          .moreThan(0, 'Must be greater than 0')
           .max(100, 'Cannot exceed 100%'),
     }),
   amountPerDay: Yup.number()
     .nullable()
+    .transform(emptyStringToNull)
     .when(['enableLateFee', 'lateFeeType'], {
       is: (enableLateFee: boolean, lateFeeType: string) =>
         enableLateFee && lateFeeType === 'PerDay',
-      then: (s) => s.required('Amount Per Day is required').min(0, 'Must be 0 or greater'),
+      then: (s) => s.required('Amount Per Day is required').moreThan(0, 'Must be greater than 0'),
     }),
   amountPerWeek: Yup.number()
     .nullable()
+    .transform(emptyStringToNull)
     .when(['enableLateFee', 'lateFeeType'], {
       is: (enableLateFee: boolean, lateFeeType: string) =>
         enableLateFee && lateFeeType === 'PerWeek',
-      then: (s) => s.required('Amount Per Week is required').min(0, 'Must be 0 or greater'),
+      then: (s) => s.required('Amount Per Week is required').moreThan(0, 'Must be greater than 0'),
     }),
   amountPerMonth: Yup.number()
     .nullable()
+    .transform(emptyStringToNull)
     .when(['enableLateFee', 'lateFeeType'], {
       is: (enableLateFee: boolean, lateFeeType: string) =>
         enableLateFee && lateFeeType === 'PerMonth',
-      then: (s) => s.required('Amount Per Month is required').min(0, 'Must be 0 or greater'),
+      then: (s) => s.required('Amount Per Month is required').moreThan(0, 'Must be greater than 0'),
+    }),
+  escalationRules: Yup.array()
+    .of(
+      Yup.object({
+        startDay: Yup.number()
+          .required('Start day is required')
+          .integer('Use a whole day')
+          .min(0, 'Must be 0 or greater'),
+        endDay: Yup.number()
+          .nullable()
+          .integer('Use a whole day')
+          .test(
+            'after-start-day',
+            'Must be on or after the start day',
+            function validateEndDay(value) {
+              return value === null || value === undefined || value >= this.parent.startDay;
+            }
+          ),
+        calculationType: Yup.string()
+          .oneOf(['Flat', 'Percentage'])
+          .required('Calculation type is required'),
+        value: Yup.number().required('Value is required').moreThan(0, 'Must be greater than 0'),
+        maxFee: Yup.number().nullable().min(0, 'Must be 0 or greater'),
+      })
+    )
+    .when(['enableLateFee', 'lateFeeType'], {
+      is: (enableLateFee: boolean, lateFeeType: string) => enableLateFee && lateFeeType === 'Slab',
+      then: (schema) =>
+        schema
+          .min(1, 'Add at least one late-fee slab')
+          .test(
+            'continuous-non-overlapping-ranges',
+            'Fix overlapping or missing-day-range slabs',
+            (rules) =>
+              !rules?.length || !computeSlabIssues(rules as ILateFeeEscalationRule[]).hasIssues
+          ),
     }),
 
-  maximumLateFeeAmount: Yup.number().nullable().min(0, 'Must be 0 or greater'),
+  maximumLateFeeAmount: Yup.number()
+    .nullable()
+    .transform(emptyStringToNull)
+    .min(0, 'Must be 0 or greater'),
   maximumChargingDays: Yup.number()
     .nullable()
+    .transform(emptyStringToNull)
     .integer('Must be a whole number')
     .min(1, 'Must be at least 1 day'),
 
@@ -150,14 +215,35 @@ const validationSchema = Yup.object().shape({
       is: true,
       then: (s) => s.min(1, 'Select at least one Fee Head'),
     }),
-  maximumWaiverAmount: Yup.number().nullable().min(0, 'Must be 0 or greater'),
+  maximumWaiverAmount: Yup.number()
+    .nullable()
+    .transform(emptyStringToNull)
+    .min(0, 'Must be 0 or greater'),
   maximumWaiverPercentage: Yup.number()
     .nullable()
+    .transform(emptyStringToNull)
     .min(0, 'Must be 0 or greater')
     .max(100, 'Cannot exceed 100%'),
   waiverExpiry: Yup.mixed().nullable(),
   allowOnlineCollection: Yup.boolean(),
   considerAsIncome: Yup.boolean(),
+  lateFeeIncomeHeadId: Yup.string()
+    .nullable()
+    .when(['enableLateFee', 'considerAsIncome'], {
+      is: (enableLateFee: boolean, considerAsIncome: boolean) => enableLateFee && considerAsIncome,
+      then: (s) => s.required('Select the income head for late-fee posting'),
+    }),
+  requiresApproval: Yup.boolean(),
+  approvalRoleIds: Yup.array()
+    .of(Yup.string())
+    .when(['enableWaiver', 'requiresApproval'], {
+      is: (enableWaiver: boolean, requiresApproval: boolean) => enableWaiver && requiresApproval,
+      then: (s) => s.min(1, 'Select at least one approving role'),
+    }),
+  approvalThresholdAmount: Yup.number()
+    .nullable()
+    .transform(emptyStringToNull)
+    .min(0, 'Must be 0 or greater'),
 });
 
 interface UseCollectionPolicyFormProps {
@@ -175,38 +261,40 @@ export function useCollectionPolicyForm({
 }: UseCollectionPolicyFormProps) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const unsavedChangesDialog = useBoolean();
-
-  // Load fee heads
-  const { data: feeHeadsData } = useGetFeeHeadsQuery({});
-  const feeHeads = useMemo(() => feeHeadsData?.items || [], [feeHeadsData]);
-
-  // Load existing Collection Policies for this academic year, to catch a second
-  // policy being marked isDefault before it ever reaches the backend — the backend
-  // enforces the same "one default per academic year per policy type" invariant
-  // authoritatively (CollectionPolicyAppService.EnsureNoOtherDefaultAsync); this is
-  // a fast client-side pre-check so the toast fires before a round trip.
   const effectiveAcademicYearId = academicYearId || currentYear?.id || '';
+
+  // Collection policies are academic-year scoped, so selectors must use the complete,
+  // unpaginated active lookup rather than the fee-head administration list.
+  const { data: feeHeadsData } = useGetActiveFeeHeadsQuery(effectiveAcademicYearId, {
+    skip: !effectiveAcademicYearId,
+  });
+  const feeHeads = useMemo(() => feeHeadsData || [], [feeHeadsData]);
+
+  // Load the current academic-year default so the form can explain that saving
+  // this selection will transfer the default designation to the new policy.
   const { data: existingPoliciesData } = useGetCollectionPoliciesQuery(
     { academicYearId: effectiveAcademicYearId, status: 'Active' },
     { skip: !effectiveAcademicYearId }
   );
   const otherDefaultPolicyName = useMemo(() => {
     const items = existingPoliciesData?.items || [];
-    const conflict = items.find(
+    const currentDefault = items.find(
       (p: any) =>
         p.isDefault && p.id !== editData?.id && p.academicYearId === effectiveAcademicYearId
     );
-    return conflict?.policyName as string | undefined;
+    return currentDefault?.policyName as string | undefined;
   }, [existingPoliciesData, editData?.id, effectiveAcademicYearId]);
 
   const [createPolicy, { isLoading: isCreating }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateCollectionPolicyMutation,
+    popupConfig: { error: false },
   });
 
   const [updatePolicy, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateCollectionPolicyMutation,
+    popupConfig: { error: false },
   });
 
   const isSaving = isCreating || isUpdating;
@@ -234,25 +322,26 @@ export function useCollectionPolicyForm({
     const v = formik.values;
     const nameValid = v.policyName.trim().length >= 3;
     const graceValid = !v.enableLateFee || (v.gracePeriodDays >= 0 && v.gracePeriodDays <= 365);
+    const graceTypeValid = !v.enableLateFee || v.gracePeriodType === 'Calendar';
     const headsValid = !v.enableLateFee || v.lateFeeApplyOnFeeHeads.length >= 1;
 
     let lateFeeValid = true;
     if (v.enableLateFee) {
-      if (v.lateFeeType === 'Flat') lateFeeValid = v.flatAmount !== null && v.flatAmount >= 0;
+      if (v.lateFeeType === 'Flat') lateFeeValid = v.flatAmount !== null && v.flatAmount > 0;
       else if (v.lateFeeType === 'Percentage' || v.lateFeeType === 'Compound') {
-        lateFeeValid = v.percentage !== null && v.percentage >= 0 && v.percentage <= 100;
+        lateFeeValid = v.percentage !== null && v.percentage > 0 && v.percentage <= 100;
       } else if (v.lateFeeType === 'PerDay')
-        lateFeeValid = v.amountPerDay !== null && v.amountPerDay >= 0;
+        lateFeeValid = v.amountPerDay !== null && v.amountPerDay > 0;
       else if (v.lateFeeType === 'PerWeek')
-        lateFeeValid = v.amountPerWeek !== null && v.amountPerWeek >= 0;
+        lateFeeValid = v.amountPerWeek !== null && v.amountPerWeek > 0;
       else if (v.lateFeeType === 'PerMonth')
-        lateFeeValid = v.amountPerMonth !== null && v.amountPerMonth >= 0;
+        lateFeeValid = v.amountPerMonth !== null && v.amountPerMonth > 0;
       else if (v.lateFeeType === 'Slab') {
         const slabIssues = computeSlabIssues(v.escalationRules);
         lateFeeValid =
           v.escalationRules.length > 0 &&
           v.escalationRules.every(
-            (s) => s.startDay >= 0 && (s.endDay === null || s.endDay >= s.startDay) && s.value >= 0
+            (s) => s.startDay >= 0 && (s.endDay === null || s.endDay >= s.startDay) && s.value > 0
           ) &&
           !slabIssues.hasIssues;
       }
@@ -264,7 +353,11 @@ export function useCollectionPolicyForm({
       !computeSlabIssues(v.escalationRules).hasIssues;
 
     const waiverHeadsValid = !v.enableWaiver || v.waiverApplyOnFeeHeads.length >= 1;
-		const isDefaultConflict = Boolean(v.isDefault && otherDefaultPolicyName);
+    const waiverApprovalValid =
+      !v.enableWaiver || !v.requiresApproval || v.approvalRoleIds.length >= 1;
+    const incomeHeadValid =
+      !v.enableLateFee || !v.considerAsIncome || Boolean(v.lateFeeIncomeHeadId);
+    const isDefaultConflict = false;
 
     // Phase 4b: Compound and Percentage can grow unbounded with days-late — warn (don't
     // block) when neither cap is set, since an uncapped Flat/PerDay/PerWeek/PerMonth policy
@@ -278,63 +371,56 @@ export function useCollectionPolicyForm({
     const isReadyToPublish =
       nameValid &&
       graceValid &&
+      graceTypeValid &&
       headsValid &&
       lateFeeValid &&
       waiverHeadsValid &&
-      slabValid &&
-      !isDefaultConflict;
+      waiverApprovalValid &&
+      incomeHeadValid &&
+      slabValid;
 
     return {
       nameValid,
       graceValid,
+      graceTypeValid,
       headsValid,
       lateFeeValid,
       waiverHeadsValid,
+      waiverApprovalValid,
+      incomeHeadValid,
       slabValid,
       isDefaultConflict,
       uncappedRunawayRisk,
       isReadyToPublish,
     };
-  }, [formik.values, otherDefaultPolicyName]);
+  }, [formik.values]);
 
-  const handleCustomSubmit = async (overrideStatus?: 'Active' | 'Archived') => {
+  const handleCustomSubmit = async (overrideStatus: 'Draft' | 'Active') => {
+    if (isSaving) return;
+
+    const isDraft = overrideStatus === 'Draft';
     const errors = await formik.validateForm();
     const hasErrors = Object.keys(errors).length > 0;
+
     if (hasErrors) {
-      formik.setTouched({
-        policyName: true,
-        gracePeriodDays: true,
-        lateFeeApplyOnFeeHeads: true,
-        lateFeeType: true,
-        flatAmount: true,
-        percentage: true,
-        amountPerDay: true,
-        amountPerWeek: true,
-        amountPerMonth: true,
-        waiverApplyOnFeeHeads: true,
-      });
-      shikshaMitraToast.error({ message: 'Fix all errors before saving.' });
-      return;
-    }
+      await formik.setTouched(setNestedObjectValues(errors, true), false);
 
-    if (!checks.slabValid) {
-      shikshaMitraToast.error({
-        message: 'Fix overlapping or missing-day-range slabs before saving.',
-      });
-      return;
-    }
-
-    if (checks.isDefaultConflict) {
-      shikshaMitraToast.error({
-        message: `"${otherDefaultPolicyName}" is already the default Collection Policy for this academic year. Only one default policy is allowed per year.`,
-      });
+      const firstInvalidField = Object.keys(errors)[0];
+      if (firstInvalidField) {
+        requestAnimationFrame(() => {
+          const field = document.querySelector<HTMLElement>(`[name="${firstInvalidField}"]`);
+          field?.focus();
+          field?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      }
       return;
     }
 
     try {
       const payload = {
         ...formik.values,
-        status: overrideStatus || formik.values.status,
+        status: overrideStatus,
+        isDefault: overrideStatus === 'Active' ? formik.values.isDefault : false,
         policyCode: formik.values.policyCode || `CP-${Date.now()}`,
         waiverExpiry: formik.values.waiverExpiry
           ? dayjs(formik.values.waiverExpiry).toISOString()
@@ -342,14 +428,14 @@ export function useCollectionPolicyForm({
       };
 
       if (editData?.id) {
-        await updatePolicy({ id: editData.id, body: payload });
+        await updatePolicy({ id: editData.id, body: payload }).unwrap();
         shikshaMitraToast.success({
-          message: `Collection policy "${payload.policyName}" updated.`,
+          message: `Collection policy "${payload.policyName}" ${isDraft ? 'saved as draft' : 'activated'}.`,
         });
       } else {
-        await createPolicy(payload);
+        await createPolicy(payload).unwrap();
         shikshaMitraToast.success({
-          message: `Collection policy "${payload.policyName}" created.`,
+          message: `Collection policy "${payload.policyName}" ${isDraft ? 'saved as draft' : 'activated'}.`,
         });
       }
       formik.resetForm();
@@ -396,7 +482,10 @@ export function useCollectionPolicyForm({
   const calculatedLateFee = useMemo(() => {
     const v = formik.values;
     if (!v.enableLateFee || calcDaysLate <= v.gracePeriodDays) return 0;
-    const effectiveDays = calcDaysLate - v.gracePeriodDays;
+    const effectiveDays = Math.min(
+      calcDaysLate - v.gracePeriodDays,
+      v.maximumChargingDays ?? Number.MAX_SAFE_INTEGER
+    );
 
     let rawFee = 0;
     if (v.lateFeeType === 'Flat') {
@@ -442,6 +531,7 @@ export function useCollectionPolicyForm({
       });
     }
 
+    if (v.maximumLateFeeAmount !== null) rawFee = Math.min(rawFee, v.maximumLateFeeAmount);
     if (v.roundingMethod === 'RoundUp') return Math.ceil(rawFee);
     if (v.roundingMethod === 'RoundDown') return Math.floor(rawFee);
     if (v.roundingMethod === 'NearestRupee') return Math.round(rawFee);
