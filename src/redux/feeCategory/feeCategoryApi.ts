@@ -6,6 +6,7 @@ import { financeModuleApi } from '../finance/financeModuleApi';
 
 export interface IFeeHeadItemRequest {
   id?: string | null;
+  incomeCategoryId: string;
   name: string;
   module?: FeeHeadModule | null;
   isConcessionApplied: boolean;
@@ -17,6 +18,10 @@ export interface IFeeHeadResponse {
   academicYearId: string;
   feeCategoryId: string;
   feeCategoryName?: string;
+  incomeCategoryId: string;
+  incomeCategoryName?: string;
+  incomeAccountHeadId: string;
+  incomeAccountHeadName?: string;
   name: string;
   module: FeeHeadModule | null;
   isConcessionApplied: boolean;
@@ -95,7 +100,11 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
           academicYearId,
         },
       }),
-      invalidatesTags: [financeModuleType.feeCategory, financeModuleType.feeHead],
+      invalidatesTags: [
+        financeModuleType.feeCategory,
+        financeModuleType.feeHead,
+        financeModuleType.incomeCategoryData,
+      ],
     }),
 
     // Update fee category
@@ -108,7 +117,11 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeCategory, financeModuleType.feeHead],
+      invalidatesTags: [
+        financeModuleType.feeCategory,
+        financeModuleType.feeHead,
+        financeModuleType.incomeCategoryData,
+      ],
     }),
 
     // Delete fee category
@@ -117,7 +130,11 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         url: `/fee-categories/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [financeModuleType.feeCategory, financeModuleType.feeHead],
+      invalidatesTags: [
+        financeModuleType.feeCategory,
+        financeModuleType.feeHead,
+        financeModuleType.incomeCategoryData,
+      ],
     }),
 
     // Patch fee category status
@@ -130,7 +147,11 @@ export const feeCategoryApi = financeModuleApi.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeCategory, financeModuleType.feeHead],
+      invalidatesTags: [
+        financeModuleType.feeCategory,
+        financeModuleType.feeHead,
+        financeModuleType.incomeCategoryData,
+      ],
     }),
   }),
 });

@@ -6,6 +6,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
@@ -19,6 +20,7 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   bankAccountApi,
   useGetBankAccountQuery,
+  useLazyGetBankAccountByIdQuery,
   useDeleteBankAccountMutation,
 } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 
@@ -29,6 +31,7 @@ import type { IBankAccount } from './Components/type';
 
 const BankAccountManagement: React.FC = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const access = useAccountSettingPermissions('BankAccount');
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
 
@@ -57,6 +60,7 @@ const BankAccountManagement: React.FC = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteBankAccountMutation,
   });
+  const [getBankAccountDetail] = useLazyGetBankAccountByIdQuery();
 
   // Dialog control states
   const deleteBankAccountDialog = useBoolean();
@@ -108,6 +112,7 @@ const BankAccountManagement: React.FC = () => {
         ]}
         action={
           <Button
+            disabled={!access.canAdd}
             onClick={() => addBankAccountDialog.onTrue()}
             size="small"
             startIcon={<Add />}
@@ -125,9 +130,14 @@ const BankAccountManagement: React.FC = () => {
           setSelectedBankAccount(data);
           deleteBankAccountDialog.onTrue();
         }}
-        onEdit={(data) => {
-          setSelectedBankAccount(data);
-          addBankAccountDialog.onTrue();
+        onEdit={async (data) => {
+          try {
+            const detail = await getBankAccountDetail(data.id).unwrap();
+            setSelectedBankAccount(detail);
+            addBankAccountDialog.onTrue();
+          } catch {
+            // Global API handler displays the error.
+          }
         }}
         open={open}
         onAddBankAccount={addBankAccountDialog}
@@ -208,7 +218,7 @@ const BankAccountManagement: React.FC = () => {
                       'getBankAccount',
                       { academicYearId: currentYear?.id, ...queryParams },
                       (draft: any) => {
-                        const list = Array.isArray(draft) ? draft : draft?.data || [];
+                        const list = Array.isArray(draft) ? draft : draft?.items || [];
                         const index = list.findIndex(
                           (c: any) => c.id === (selectedBankAccount as any)?.id
                         );

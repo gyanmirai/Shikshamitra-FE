@@ -5,6 +5,8 @@ export type IFeeCategory = IFeeCategoryResponse;
 
 export interface IFeeCategoryFormHead {
   id?: string;
+  isUsedInDownstream?: boolean;
+  incomeCategoryId: string;
   name: string;
   module?: FeeHeadModule | null;
   isConcessionApplied: boolean;

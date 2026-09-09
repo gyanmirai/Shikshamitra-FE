@@ -117,6 +117,19 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         ),
       },
       {
+        id: 'incomeCategoryName',
+        label: 'Income Category',
+        align: 'left',
+        render: (value, row: any) => (
+          <Stack spacing={0.25}>
+            <Typography variant="caption">{value || '-'}</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {row.incomeAccountHeadName || 'No account head'}
+            </Typography>
+          </Stack>
+        ),
+      },
+      {
         id: 'module',
         label: 'Module',
         align: 'left',

@@ -8,32 +8,44 @@ interface HeadSelectorProps {
   name?: string;
   label?: string;
   headType?: AccountHeadType;
+  categoryType?: 'Income' | 'Expense';
   value: string;
   onChange: (value: string | number | string[] | number[]) => void;
   error?: boolean;
   helperText?: string;
   required?: boolean;
   disabled?: boolean;
+  excludeId?: string;
 }
 
 export default function HeadSelector({
   name,
   label = 'Account Head',
   headType,
+  categoryType,
   value,
   onChange,
   error,
   helperText,
   required,
   disabled,
+  excludeId,
 }: HeadSelectorProps) {
-  const { options, isLoading } = useAccountHeadOptions(headType);
+  const {
+    options,
+    isLoading,
+    errorMessage,
+    disabled: optionsDisabled,
+    needsAcademicYear,
+  } = useAccountHeadOptions(headType, categoryType);
 
   const selectOptions =
-    options?.map((opt: any) => ({
-      value: opt.id,
-      label: `${opt.headName} (${opt.headCode})`,
-    })) || [];
+    options
+      ?.filter((opt: any) => opt.id !== excludeId)
+      .map((opt: any) => ({
+        value: opt.id,
+        label: opt.name,
+      })) || [];
 
   const handleChange = (val: string | number | string[] | number[]) => {
     onChange(val);
@@ -46,9 +58,16 @@ export default function HeadSelector({
       value={value}
       onChange={handleChange}
       formControlProps={{ fullWidth: true, size: 'small' }}
-      error={error}
-      helperText={helperText as string}
-      disabled={disabled || isLoading}
+      error={error || Boolean(errorMessage)}
+      helperText={
+        errorMessage ||
+        helperText ||
+        (needsAcademicYear ? 'Select an academic year to load Account Heads.' : undefined) ||
+        (!isLoading && !optionsDisabled && selectOptions.length === 0
+          ? 'No eligible Account Heads are available. Check the type and active status in Accounts > Settings > Account Heads.'
+          : undefined)
+      }
+      disabled={disabled || isLoading || optionsDisabled}
     />
   );
 }

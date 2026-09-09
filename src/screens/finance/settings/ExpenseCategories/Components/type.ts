@@ -2,11 +2,19 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
 export interface IExpenseCategory {
   id: string;
+  code?: string;
   name: string;
   description?: string;
   tags: string[];
-  expenseHeadId?: string;
-  isActive?: boolean;
+  defaultAccountHeadId?: string;
+  defaultAccountHeadName?: string;
+  effectiveFrom?: string;
+  effectiveTo?: string | null;
+  concurrencyStamp: string;
+  version: number;
+  canDelete: boolean;
+  isUsedInDownstream: boolean;
+  isActive: boolean;
   deactivationReason?: string | null;
 }
 

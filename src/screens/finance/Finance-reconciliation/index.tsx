@@ -281,7 +281,7 @@ const FinanceReconciliation = () => {
             />
             <Box width={240}>
               <HeadSelector
-                headType="Bank-Cash"
+                headType="Asset"
                 label="Bank Account Head"
                 value={selectedBankHead}
                 onChange={(val: any) => setSelectedBankHead(val)}

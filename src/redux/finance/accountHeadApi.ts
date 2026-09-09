@@ -11,12 +11,14 @@ export const accountHeadApi = financeModuleApi.injectEndpoints({
         page,
         pageSize,
         search,
+        includeInactive = true,
       }: {
         academicYearId: string;
         headType?: string;
         page?: number;
         pageSize?: number;
         search?: string;
+        includeInactive?: boolean;
       }) => ({
         url: '/account-heads',
         method: 'GET',
@@ -26,6 +28,7 @@ export const accountHeadApi = financeModuleApi.injectEndpoints({
           page,
           pageSize,
           search: search || undefined,
+          includeInactive,
         },
       }),
       providesTags: [financeModuleType.accountHead],
@@ -40,19 +43,16 @@ export const accountHeadApi = financeModuleApi.injectEndpoints({
     }),
 
     getAccountHeadOptions: builder.query({
-      query: ({ academicYearId, headType }: { academicYearId?: string; headType?: string }) => ({
-        url: '/account-heads/options',
+      query: ({ academicYearId, headType, categoryType }: {
+        academicYearId?: string;
+        headType?: string;
+        categoryType?: 'Income' | 'Expense';
+      }) => ({
+        url: categoryType
+          ? `/${categoryType.toLowerCase()}-categories/account-head-options`
+          : '/account-heads/options',
         method: 'GET',
-        params: { academicYearId, headType },
-      }),
-      providesTags: [financeModuleType.accountHead],
-    }),
-
-    getAccountHeadBalances: builder.query({
-      query: (academicYearId: string) => ({
-        url: '/account-heads/balances',
-        method: 'GET',
-        params: { academicYearId },
+        params: categoryType ? { academicYearId } : { academicYearId, headType },
       }),
       providesTags: [financeModuleType.accountHead],
     }),
@@ -67,9 +67,10 @@ export const accountHeadApi = financeModuleApi.injectEndpoints({
     }),
 
     postAccountHead: builder.mutation({
-      query: (body) => ({
+      query: ({ academicYearId, body }) => ({
         url: '/account-heads',
         method: 'POST',
+        params: { academicYearId },
         body,
       }),
       invalidatesTags: [financeModuleType.accountHead],
@@ -100,6 +101,10 @@ export const accountHeadApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.accountHead],
     }),
+    getAccountHeadVersions: builder.query({
+      query: (id: string) => ({ url: `/account-heads/${id}/versions`, method: 'GET' }),
+      providesTags: [financeModuleType.accountHead],
+    }),
   }),
   overrideExisting: false,
 });
@@ -112,6 +117,6 @@ export const {
   usePutAccountHeadMutation,
   useDeleteAccountHeadMutation,
   usePatchAccountHeadStatusMutation,
-  useGetAccountHeadBalancesQuery,
+  useGetAccountHeadVersionsQuery,
   useGetPayableAgeingQuery,
 } = accountHeadApi;

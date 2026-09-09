@@ -4,5 +4,6 @@ export const getExpenseCategoryInitialValues = (editData?: IExpenseCategory | nu
   name: editData?.name || '',
   description: editData?.description || '',
   tags: editData?.tags || [],
-  expenseHeadId: editData?.expenseHeadId || '',
+  defaultAccountHeadId: editData?.defaultAccountHeadId || '',
+  concurrencyStamp: editData?.concurrencyStamp || '',
 });
