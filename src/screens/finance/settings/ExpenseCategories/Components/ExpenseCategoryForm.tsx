@@ -15,7 +15,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
-import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   useGetExpenseCategoryQuery,
   usePutExpenseCategoryMutation,
@@ -30,14 +29,10 @@ import type { IExpenseCategoryFormProps } from './type';
 const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // State for downstream usage warning dialog
-  const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
-  const [pendingFormValues, setPendingFormValues] = useState<any>(null);
-
   const { data: expenseCategoryData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExpenseCategoryQuery,
-    params: { academicYearId: currentYear?.id, page: 1, pageSize: 1000 },
+    params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
     options: {
       skip: !currentYear?.id || !open?.value || editData,
     },
@@ -71,17 +66,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
     initialValues: getExpenseCategoryInitialValues(editData),
     enableReinitialize: true,
     validationSchema: expenseCategoryValidationSchema(existingNames, editData),
-    onSubmit: async (values) => {
-      // Check if updating an item that is used downstream
-      if ((editData as any)?.isUsedInDownstream && editData?.id) {
-        setPendingFormValues(values);
-        setShowDownstreamWarning(true);
-        return;
-      }
-
-      // Proceed with submission if not used downstream
-      await performSubmission(values);
-    },
+    onSubmit: async (values) => performSubmission(values),
   });
 
   // Perform the actual form submission
@@ -92,7 +77,8 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
         name: values.name,
         description: values.description || '',
         tags: values.tags || [],
-        expenseHeadId: values.expenseHeadId || undefined,
+        defaultAccountHeadId: values.defaultAccountHeadId,
+        concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
 
       if (editData?.id) {
@@ -148,7 +134,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Expense Category Name */}
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
@@ -174,19 +160,31 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
             </ShakingTextField>
           </Grid>
           {/* Expense Head */}
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={12}>
             <ShakingTextField
-              error={!!(formik.touched.expenseHeadId && formik.errors.expenseHeadId) || false}
+              error={
+                !!(formik.touched.defaultAccountHeadId && formik.errors.defaultAccountHeadId) ||
+                false
+              }
             >
               <HeadSelector
-                name="expenseHeadId"
-                label="Expense Head"
+                name="defaultAccountHeadId"
+                label="Default Expense Account Head"
                 headType="Expense"
-                value={formik.values.expenseHeadId}
-                onChange={(val) => formik.setFieldValue('expenseHeadId', val)}
-                error={formik.touched.expenseHeadId && Boolean(formik.errors.expenseHeadId)}
+                categoryType="Expense"
+                required
+                disabled={editData?.isUsedInDownstream}
+                value={formik.values.defaultAccountHeadId}
+                onChange={(val) => formik.setFieldValue('defaultAccountHeadId', val)}
+                error={
+                  formik.touched.defaultAccountHeadId && Boolean(formik.errors.defaultAccountHeadId)
+                }
                 helperText={
-                  formik.touched.expenseHeadId ? (formik.errors.expenseHeadId as string) : undefined
+                  editData?.isUsedInDownstream
+                    ? 'This category is already used. Create a new category to use a different account head.'
+                    : formik.touched.defaultAccountHeadId
+                    ? (formik.errors.defaultAccountHeadId as string)
+                    : undefined
                 }
               />
             </ShakingTextField>
@@ -287,25 +285,6 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
-
-      {/* Downstream Usage Warning Dialog */}
-      <DownstreamUsageWarning
-        open={showDownstreamWarning}
-        itemName={editData?.name || ''}
-        itemType="Expense Category"
-        isLoading={isAddLoading || isUpdateLoading}
-        onConfirm={async () => {
-          if (pendingFormValues) {
-            await performSubmission(pendingFormValues);
-            setShowDownstreamWarning(false);
-            setPendingFormValues(null);
-          }
-        }}
-        onCancel={() => {
-          setShowDownstreamWarning(false);
-          setPendingFormValues(null);
-        }}
-      />
     </BackPopUpChecked>
   );
 };

@@ -33,6 +33,7 @@ export const feeCategoryValidationSchema = (
     feeHeads: Yup.array()
       .of(
         Yup.object().shape({
+          incomeCategoryId: Yup.string().required('Income Category is required'),
           name: Yup.string()
             .required('Fee Head Name is required')
             .test('min-length', 'Fee Head Name must be between 3 and 40 characters', (value) =>

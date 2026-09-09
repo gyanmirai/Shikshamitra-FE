@@ -19,6 +19,12 @@ import { useGetPermissionsQuery } from 'src/redux/permission/permissionApi';
 import { extractGrantedPermissions } from '.';
 import PermissionNode from './permission-node';
 import { getAllChildrenData, type PermissionType } from './utils';
+import {
+  ACCOUNT_SETTING_ACTIONS,
+  getActionPermissionBase,
+  isAccountSettingPermission,
+  getNodeActionPermissionNames,
+} from './account-settings-permissions';
 
 // ----------------------------------------------------------------------
 
@@ -78,6 +84,15 @@ export default function Permission({
     const targetItem = permissionData.find((item) => item.name === targetName);
     const newValue = targetItem ? !targetItem.isGranted : false;
 
+    if (isAccountSettingPermission(key)) {
+      setPermissionData(
+        permissionData.map((item) =>
+          item.name === targetName ? { ...item, isGranted: newValue } : item
+        )
+      );
+      return;
+    }
+
     setPermissionData(
       permissionData.map((item) => {
         if (item.name === targetName) {
@@ -105,21 +120,7 @@ export default function Permission({
   const handleNodeSelectAll = (node: any, value: boolean) => {
     if (!expandedSubModule) return;
 
-    let key: string[] = [];
-
-    if (node?.children?.length > 0) {
-      node.children.forEach((child: any) => {
-        key.push(`${child.permissionName}.View`);
-        key.push(`${child.permissionName}.Add`);
-        key.push(`${child.permissionName}.Delete`);
-      });
-    } else {
-      key = [
-        `${node.permissionName}.View`,
-        `${node.permissionName}.Add`,
-        `${node.permissionName}.Delete`,
-      ];
-    }
+    const key = getNodeActionPermissionNames(node, permissionData);
 
     const newPermissions = permissionData.map((item) =>
       key.includes(item.name) ? { ...item, isGranted: value } : item
@@ -266,6 +267,15 @@ export default function Permission({
     </Card>
   );
 
+  const selectedPermissionModule = selectedModule.submodule?.find(
+    (item: any) => item.title === expandedSubModule
+  );
+  const matrixActions = getAllChildrenData(selectedPermissionModule).some((item: any) =>
+    isAccountSettingPermission(item.permissionName)
+  )
+    ? ACCOUNT_SETTING_ACTIONS
+    : ['View', 'Add', 'Delete'];
+
   const renderPermissionMatrix = (
     <Card
       sx={{
@@ -279,136 +289,149 @@ export default function Permission({
     >
       {selectedModule.submodule?.find((s: any) => s.title === expandedSubModule)?.children?.length >
         0 && (
-          <Box
-            sx={{
-              p: 2.5,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              borderBottom: '1px dashed',
-              borderColor: 'divider',
-              zIndex: 1,
-            }}
-          >
-            <Box>
-              <Typography variant="h6">Permissions</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Manage access & security
-              </Typography>
-            </Box>
+        <Box
+          sx={{
+            p: 2.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderBottom: '1px dashed',
+            borderColor: 'divider',
+            zIndex: 1,
+          }}
+        >
+          <Box>
+            <Typography variant="h6">Permissions</Typography>
+            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+              Manage access & security
+            </Typography>
+          </Box>
 
-            {/* Gamification HUD & Global Actions */}
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              {expandedSubModule && (
-                <Stack direction="row" spacing={2} alignItems="center">
-                  {['View', 'Add', 'Delete'].map((type) => {
-                    const activeSubModule = selectedModule.submodule?.find(
-                      (s: any) => s.title === expandedSubModule
-                    );
-                    const itemsToShow =
-                      (activeSubModule as any)?.children?.length > 0
-                        ? getAllChildrenData(activeSubModule)
-                        : [activeSubModule];
+          {/* Gamification HUD & Global Actions */}
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            {expandedSubModule && (
+              <Stack direction="row" spacing={2} alignItems="center">
+                {matrixActions.map((type) => {
+                  const activeSubModule = selectedModule.submodule?.find(
+                    (s: any) => s.title === expandedSubModule
+                  );
+                  const itemsToShow =
+                    (activeSubModule as any)?.children?.length > 0
+                      ? getAllChildrenData(activeSubModule)
+                      : [activeSubModule];
 
-                    // Check if all items have this permission enabled
-                    const isGlobalChecked = itemsToShow.every((item: any) => {
-                      const key = `${item.permissionName}.${type}`;
+                  // Check if all items have this permission enabled
+                  const availableItems = itemsToShow.filter((item: any) =>
+                    permissionData.some(
+                      (permission) =>
+                        permission.name ===
+                        `${getActionPermissionBase(item.permissionName)}.${type}`
+                    )
+                  );
+                  const isGlobalChecked =
+                    availableItems.length > 0 &&
+                    availableItems.every((item: any) => {
+                      const key = `${getActionPermissionBase(item.permissionName)}.${type}`;
                       return !!permissionData?.find((i) => i.name === key)?.isGranted;
                     });
 
-                    return (
-                      <Stack key={type} direction="row" spacing={1} alignItems="center">
-                        <Typography variant="subtitle2" sx={{ fontSize: '0.75rem' }}>
-                          {type}
-                        </Typography>
-                        <Switch
-                          size="small"
-                          checked={isGlobalChecked}
-                          onChange={(e) => {
-                            const isChecked = e.target.checked;
-                            const newPermissions: { name: string; isGranted: boolean }[] = [
-                              ...permissionData,
-                            ];
+                  return (
+                    <Stack key={type} direction="row" spacing={1} alignItems="center">
+                      <Typography variant="subtitle2" sx={{ fontSize: '0.75rem' }}>
+                        {type === 'ChangeStatus' ? 'Change Status' : type}
+                      </Typography>
+                      <Switch
+                        size="small"
+                        disabled={availableItems.length === 0}
+                        checked={isGlobalChecked}
+                        onChange={(e) => {
+                          const isChecked = e.target.checked;
+                          const newPermissions: { name: string; isGranted: boolean }[] = [
+                            ...permissionData,
+                          ];
 
-                            itemsToShow.forEach((item: any) => {
-                              const key = `${item.permissionName}.${type}`;
-                              const index = newPermissions.findIndex((i) => i.name === key);
-                              if (index !== -1) {
-                                newPermissions[index] = {
-                                  ...newPermissions[index],
-                                  isGranted: isChecked,
-                                };
+                          availableItems.forEach((item: any) => {
+                            const key = `${getActionPermissionBase(item.permissionName)}.${type}`;
+                            const index = newPermissions.findIndex((i) => i.name === key);
+                            if (index !== -1) {
+                              newPermissions[index] = {
+                                ...newPermissions[index],
+                                isGranted: isChecked,
+                              };
 
-                                if (isChecked) {
-                                  if (type === 'Add') {
-                                    const viewIndex = newPermissions.findIndex(
-                                      (i) => i.name === `${item.permissionName}.View`
-                                    );
-                                    if (viewIndex !== -1) {
-                                      newPermissions[viewIndex] = {
-                                        ...newPermissions[viewIndex],
-                                        isGranted: true,
-                                      };
-                                    }
+                              // Account settings have independent server actions; never infer extra grants.
+                              if (isAccountSettingPermission(item.permissionName)) return;
+
+                              if (isChecked) {
+                                if (type === 'Add') {
+                                  const viewIndex = newPermissions.findIndex(
+                                    (i) => i.name === `${item.permissionName}.View`
+                                  );
+                                  if (viewIndex !== -1) {
+                                    newPermissions[viewIndex] = {
+                                      ...newPermissions[viewIndex],
+                                      isGranted: true,
+                                    };
                                   }
-                                  if (type === 'Delete') {
-                                    const viewIndex = newPermissions.findIndex(
-                                      (i) => i.name === `${item.permissionName}.View`
-                                    );
-                                    if (viewIndex !== -1) {
-                                      newPermissions[viewIndex] = {
-                                        ...newPermissions[viewIndex],
-                                        isGranted: true,
-                                      };
-                                    }
-                                    const addIndex = newPermissions.findIndex(
-                                      (i) => i.name === `${item.permissionName}.Add`
-                                    );
-                                    if (addIndex !== -1) {
-                                      newPermissions[addIndex] = {
-                                        ...newPermissions[addIndex],
-                                        isGranted: true,
-                                      };
-                                    }
+                                }
+                                if (type === 'Delete') {
+                                  const viewIndex = newPermissions.findIndex(
+                                    (i) => i.name === `${item.permissionName}.View`
+                                  );
+                                  if (viewIndex !== -1) {
+                                    newPermissions[viewIndex] = {
+                                      ...newPermissions[viewIndex],
+                                      isGranted: true,
+                                    };
                                   }
-                                } else if (type === 'View') {
                                   const addIndex = newPermissions.findIndex(
                                     (i) => i.name === `${item.permissionName}.Add`
                                   );
                                   if (addIndex !== -1) {
                                     newPermissions[addIndex] = {
                                       ...newPermissions[addIndex],
-                                      isGranted: false,
-                                    };
-                                  }
-
-                                  const deleteIndex = newPermissions.findIndex(
-                                    (i) => i.name === `${item.permissionName}.Delete`
-                                  );
-                                  if (deleteIndex !== -1) {
-                                    newPermissions[deleteIndex] = {
-                                      ...newPermissions[deleteIndex],
-                                      isGranted: false,
+                                      isGranted: true,
                                     };
                                   }
                                 }
-                              }
-                            });
+                              } else if (type === 'View') {
+                                const addIndex = newPermissions.findIndex(
+                                  (i) => i.name === `${item.permissionName}.Add`
+                                );
+                                if (addIndex !== -1) {
+                                  newPermissions[addIndex] = {
+                                    ...newPermissions[addIndex],
+                                    isGranted: false,
+                                  };
+                                }
 
-                            setPermissionData(newPermissions);
-                          }}
-                        />
-                      </Stack>
-                    );
-                  })}
-                </Stack>
-              )}
-              {/* <Box sx={{ width: 250 }}>
+                                const deleteIndex = newPermissions.findIndex(
+                                  (i) => i.name === `${item.permissionName}.Delete`
+                                );
+                                if (deleteIndex !== -1) {
+                                  newPermissions[deleteIndex] = {
+                                    ...newPermissions[deleteIndex],
+                                    isGranted: false,
+                                  };
+                                }
+                              }
+                            }
+                          });
+
+                          setPermissionData(newPermissions);
+                        }}
+                      />
+                    </Stack>
+                  );
+                })}
+              </Stack>
+            )}
+            {/* <Box sx={{ width: 250 }}>
               <SecurityScore score={progress} />
             </Box> */}
-            </Stack>
-          </Box>
-        )}
+          </Stack>
+        </Box>
+      )}
 
       <Scrollbar sx={{ p: 2.5, zIndex: 1 }}>
         {expandedSubModule ? (

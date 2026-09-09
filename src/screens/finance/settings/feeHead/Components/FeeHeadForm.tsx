@@ -13,7 +13,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import HeadSelector from 'src/screens/finance/components/HeadSelector';
+import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetFeeHeadModulesQuery } from 'src/redux/feeHeadModule/feeHeadModuleApi';
@@ -59,6 +59,35 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
   const moduleOptions = useMemo(
     () => (moduleData || []).map((m: any) => ({ label: m.displayName, value: m.value })),
     [moduleData]
+  );
+
+  const {
+    data: incomeCategoryData,
+    isLoading: isIncomeCategoryLoading,
+    isFetching: isIncomeCategoryFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetIncomeCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+      page: 1,
+      pageSize: 100,
+      includeInactive: false,
+    },
+    options: {
+      skip: !currentYear?.id || !open?.value,
+    },
+  });
+
+  const incomeCategoryOptions = useMemo(
+    () =>
+      (incomeCategoryData?.items ?? []).map((category: any) => ({
+        id: category.id,
+        displayName: `${category.code ? `${category.code} — ` : ''}${category.name} → ${
+          category.defaultAccountHeadName || 'No account head'
+        }`,
+      })),
+    [incomeCategoryData]
   );
 
   // POST mutation for creating
@@ -116,7 +145,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
         module: values.module === '' ? null : values.module,
         isConcessionApplied: values.isConcessionApplied,
         description: values.description || '',
-        incomeHeadId: values.incomeHeadId || undefined,
+        incomeCategoryId: values.incomeCategoryId,
       };
 
       if (editData?.id) {
@@ -246,21 +275,33 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
             />
           </Grid>
 
-          {/* Income Head Field */}
+          {/* Accounting mapping */}
           <Grid size={{ xs: 12 }}>
             <ShakingTextField
-              error={!!(formik.touched.incomeHeadId && formik.errors.incomeHeadId) || false}
+              error={!!(formik.touched.incomeCategoryId && formik.errors.incomeCategoryId) || false}
             >
-              <HeadSelector
-                name="incomeHeadId"
-                label="Income Head"
-                headType="Income"
-                value={formik.values.incomeHeadId || ''}
-                onChange={(val) => formik.setFieldValue('incomeHeadId', val)}
-                error={formik.touched.incomeHeadId && Boolean(formik.errors.incomeHeadId)}
+              <CustomSelect
+                name="incomeCategoryId"
+                label="Income Category *"
+                options={incomeCategoryOptions}
+                value={formik.values.incomeCategoryId || ''}
+                labelKey="displayName"
+                valueKey="id"
+                isLoading={isIncomeCategoryLoading || isIncomeCategoryFetching}
+                disabled={Boolean(editData?.isUsedInDownstream)}
+                onChange={(value) => {
+                  formik.setFieldValue('incomeCategoryId', value);
+                  formik.setFieldTouched('incomeCategoryId', false);
+                }}
+                error={formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)}
                 helperText={
-                  formik.touched.incomeHeadId ? (formik.errors.incomeHeadId as string) : undefined
+                  formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
+                    ? (formik.errors.incomeCategoryId as string)
+                    : editData?.isUsedInDownstream
+                      ? 'Locked because this Fee Head is already used in a locked Fee Structure.'
+                      : 'The selected category determines the Income Account Head used for posting.'
                 }
+                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />
             </ShakingTextField>
           </Grid>

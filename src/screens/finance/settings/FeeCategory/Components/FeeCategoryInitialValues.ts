@@ -6,6 +6,8 @@ export const getFeeCategoryInitialValues = (editData?: IFeeCategory | null) => (
   feeHeads:
     editData?.feeHeads?.map((fh) => ({
       id: fh.id || '',
+      isUsedInDownstream: fh.isUsedInDownstream || false,
+      incomeCategoryId: fh.incomeCategoryId || '',
       name: fh.name || '',
       module: fh.module ?? '',
       description: fh.description || '',

@@ -9,7 +9,12 @@ import Typography from '@mui/material/Typography';
 import { Checkbox, IconButton } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import { PERMISSIONS } from './utils';
+import {
+  ACCOUNT_SETTING_ACTIONS,
+  getActionPermissionBase,
+  getNodePermissionActions,
+  isAccountSettingPermission,
+} from './account-settings-permissions';
 
 import type { PermissionType } from './utils';
 
@@ -37,13 +42,17 @@ export default function PermissionNode({
   const [expanded, setExpanded] = useState(
     !!permissions.find((p) => p.name === node.permissionName)?.isGranted
   );
-  const nodeKey = node.permissionName;
+  const nodeKey = getActionPermissionBase(node.permissionName);
+  const actions = getNodePermissionActions(node.permissionName, permissions);
+  const incompleteAccountPermissions =
+    isAccountSettingPermission(node.permissionName) &&
+    actions.length < ACCOUNT_SETTING_ACTIONS.length;
   const hasChildren = node.children && node.children.length > 0;
 
   // Check if all permissions for this node are active
-  const isNodeFullySelected = PERMISSIONS.every(
-    (perm) => !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)?.isGranted
-  );
+  const isNodeFullySelected =
+    actions.length > 0 &&
+    actions.every((perm) => !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)?.isGranted);
 
   const handleToggleExpand = (n: any) => {
     setPermission(
@@ -108,16 +117,22 @@ export default function PermissionNode({
               <Typography variant="subtitle2" sx={{ fontWeight: isNodeFullySelected ? 700 : 600 }}>
                 {node.title}
               </Typography>
+              {incompleteAccountPermissions && (
+                <Typography variant="caption" color="error">
+                  Some permissions are missing from the server. Update the backend permission
+                  definitions.
+                </Typography>
+              )}
             </Box>
             <Box
               sx={{
                 display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+                gridTemplateColumns: `repeat(${Math.max(actions.length, 1)}, 1fr)`,
                 gap: 2,
               }}
             >
               {!hasChildren &&
-                PERMISSIONS.map((perm) => {
+                actions.map((perm) => {
                   const isChecked = !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)
                     ?.isGranted;
                   return (
@@ -146,12 +161,12 @@ export default function PermissionNode({
                             color: isChecked ? 'primary.main' : 'text.secondary',
                           }}
                         >
-                          {perm}
+                          {perm === 'ChangeStatus' ? 'Change Status' : perm}
                         </Typography>
                         <Switch
                           size="small"
                           checked={isChecked}
-                          inputProps={{ 'aria-label': perm }}
+                          slotProps={{ input: { 'aria-label': perm } }}
                         />
                       </Box>
                     </motion.div>
@@ -162,6 +177,7 @@ export default function PermissionNode({
           {!hasChildren && (
             <Button
               size="small"
+              disabled={actions.length === 0}
               color={isNodeFullySelected ? 'error' : 'primary'}
               onClick={() => onSelectAll(node, !isNodeFullySelected, hasChildren)}
             >

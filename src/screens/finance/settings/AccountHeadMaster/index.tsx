@@ -6,6 +6,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
@@ -29,6 +30,7 @@ import type { IAccountHead } from './Components/type';
 
 const AccountHeadMaster: React.FC = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const access = useAccountSettingPermissions('AccountHead');
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
   const [headTypeFilter, setHeadTypeFilter] = useState<string>('All');
@@ -96,17 +98,18 @@ const AccountHeadMaster: React.FC = () => {
 
   const TABS = [
     { value: 'All', label: 'All' },
+    { value: 'Asset', label: 'Asset' },
+    { value: 'Liability', label: 'Liability' },
+    { value: 'Equity', label: 'Equity' },
     { value: 'Income', label: 'Income' },
     { value: 'Expense', label: 'Expense' },
-    { value: 'Bank-Cash', label: 'Bank-Cash' },
-    { value: 'Liability', label: 'Liability' },
   ];
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Account Heads"
-        description="Manage financial account heads. Create Income, Expense, Asset, and Liability heads to track your school's finances."
+        description="Manage the five-type chart of accounts, hierarchy, posting rules, lifecycle and audit versions."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Settings' },
@@ -114,6 +117,7 @@ const AccountHeadMaster: React.FC = () => {
         ]}
         action={
           <Button
+            disabled={!access.canAdd}
             onClick={() => addDialog.onTrue()}
             size="small"
             startIcon={<Add />}

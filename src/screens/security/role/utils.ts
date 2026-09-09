@@ -1,4 +1,4 @@
-export type PermissionType = 'View' | 'Add' | 'Delete';
+export type PermissionType = 'View' | 'Add' | 'Edit' | 'ChangeStatus' | 'Delete';
 
 export const PERMISSIONS: PermissionType[] = ['View', 'Add', 'Delete'];
 

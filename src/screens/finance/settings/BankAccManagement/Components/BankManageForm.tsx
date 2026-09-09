@@ -86,6 +86,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
     try {
       // Transform form data to API format
       const payload = {
+        code: values.code,
         bankName: values.bankName,
         branchName: values.branchName,
         branchAddress: values.branchAddress || '',
@@ -95,7 +96,12 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
         purpose: values.purpose || '',
         ifscCode: values.ifscCode,
         upiId: values.upiId || '',
-        bankHeadId: values.bankHeadId || undefined,
+        accountHeadId: values.accountHeadId,
+        effectiveFrom: new Date(`${values.effectiveFrom}T00:00:00Z`).toISOString(),
+        effectiveTo: values.effectiveTo
+          ? new Date(`${values.effectiveTo}T23:59:59Z`).toISOString()
+          : null,
+        concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
 
       if (editData?.id) {
@@ -132,7 +138,10 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
       accountType: 'accountDetails',
       accountNumber: 'accountDetails',
       purpose: 'accountDetails',
-      bankHeadId: 'accountDetails',
+      accountHeadId: 'accountDetails',
+      code: 'bankDetails',
+      effectiveFrom: 'bankDetails',
+      effectiveTo: 'bankDetails',
       ifscCode: 'paymentInfo',
       upiId: 'paymentInfo',
     };
@@ -176,8 +185,22 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
           </AccordionSummary>
           <AccordionDetails>
             <Grid container spacing={2}>
+              <Grid size={{ xs: 12, md: 4 }}>
+                <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Code *"
+                    name="code"
+                    value={formik.values.code}
+                    onChange={formik.handleChange}
+                    error={Boolean(formik.touched.code && formik.errors.code)}
+                    helperText={formik.touched.code && formik.errors.code}
+                  />
+                </ShakingTextField>
+              </Grid>
               {/* Bank Name */}
-              <Grid size={{ xs: 12 }}>
+              <Grid size={{ xs: 12, md: 8 }}>
                 <ShakingTextField
                   error={formik.touched.bankName && Boolean(formik.errors.bankName)}
                 >
@@ -199,6 +222,34 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     inputProps={{ maxLength: 100 }}
                   />
                 </ShakingTextField>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  size="small"
+                  label="Effective From *"
+                  name="effectiveFrom"
+                  InputLabelProps={{ shrink: true }}
+                  value={formik.values.effectiveFrom}
+                  onChange={formik.handleChange}
+                  error={Boolean(formik.touched.effectiveFrom && formik.errors.effectiveFrom)}
+                  helperText={formik.touched.effectiveFrom && formik.errors.effectiveFrom}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  size="small"
+                  label="Effective To"
+                  name="effectiveTo"
+                  InputLabelProps={{ shrink: true }}
+                  value={formik.values.effectiveTo}
+                  onChange={formik.handleChange}
+                  error={Boolean(formik.touched.effectiveTo && formik.errors.effectiveTo)}
+                  helperText={formik.touched.effectiveTo && formik.errors.effectiveTo}
+                />
               </Grid>
 
               {/* Branch Name */}
@@ -323,10 +374,10 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                     fullWidth
                     label="Account Number *"
                     name="accountNumber"
-                    type="number"
+                    type="text"
                     value={formik.values.accountNumber}
                     onChange={(e) => {
-                      const { value } = e.target;
+                      const value = e.target.value.replace(/\D/g, '');
                       if (value.length <= 18) {
                         formik.setFieldValue('accountNumber', value);
                       }
@@ -335,9 +386,7 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                       formik.setFieldValue('accountNumber', e.target.value.trim());
                       formik.handleBlur(e);
                     }}
-                    inputProps={{
-                      min: 0,
-                    }}
+                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 18 }}
                     error={formik.touched.accountNumber && Boolean(formik.errors.accountNumber)}
                     helperText={formik.touched.accountNumber && formik.errors.accountNumber}
                   />
@@ -363,17 +412,20 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
               {/* Bank Head */}
               <Grid size={{ xs: 12 }}>
                 <ShakingTextField
-                  error={!!(formik.touched.bankHeadId && formik.errors.bankHeadId) || false}
+                  error={!!(formik.touched.accountHeadId && formik.errors.accountHeadId) || false}
                 >
                   <HeadSelector
-                    name="bankHeadId"
-                    label="Bank/Cash Head"
-                    headType="Bank-Cash"
-                    value={formik.values.bankHeadId}
-                    onChange={(val) => formik.setFieldValue('bankHeadId', val)}
-                    error={formik.touched.bankHeadId && Boolean(formik.errors.bankHeadId)}
+                    name="accountHeadId"
+                    label="Asset Account Head"
+                    headType="Asset"
+                    required
+                    value={formik.values.accountHeadId}
+                    onChange={(val) => formik.setFieldValue('accountHeadId', val)}
+                    error={formik.touched.accountHeadId && Boolean(formik.errors.accountHeadId)}
                     helperText={
-                      formik.touched.bankHeadId ? (formik.errors.bankHeadId as string) : undefined
+                      formik.touched.accountHeadId
+                        ? (formik.errors.accountHeadId as string)
+                        : undefined
                     }
                   />
                 </ShakingTextField>

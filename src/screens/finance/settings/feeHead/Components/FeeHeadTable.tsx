@@ -60,6 +60,21 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         align: 'left',
       },
       {
+        id: 'incomeCategoryName',
+        label: 'Income Category',
+        align: 'left',
+        render: (value, row) => (
+          <Stack spacing={0.25}>
+            <Typography variant="caption" fontSize="13px">
+              {value || '-'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {(row as IFeeHead).incomeAccountHeadName || 'No account head'}
+            </Typography>
+          </Stack>
+        ),
+      },
+      {
         id: 'description',
         label: 'Description',
         align: 'left',

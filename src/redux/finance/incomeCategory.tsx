@@ -10,11 +10,13 @@ export const incomeCategoryApi = financeModuleApi.injectEndpoints({
         page,
         pageSize,
         search,
+        includeInactive = true,
       }: {
         academicYearId: string;
         page?: number;
         pageSize?: number;
         search?: string;
+        includeInactive?: boolean;
       }) => ({
         url: '/income-categories',
         method: 'GET',
@@ -23,6 +25,7 @@ export const incomeCategoryApi = financeModuleApi.injectEndpoints({
           page,
           pageSize,
           search: search || undefined,
+          includeInactive,
         },
       }),
       providesTags: [financeModuleType.incomeCategoryData],
@@ -64,6 +67,10 @@ export const incomeCategoryApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.incomeCategoryData],
     }),
+    getIncomeCategoryVersions: builder.query({
+      query: (id: string) => ({ url: `/income-categories/${id}/versions`, method: 'GET' }),
+      providesTags: [financeModuleType.incomeCategoryData],
+    }),
     getBudgetOptions: builder.query({
       query: () => ({ url: '/incomeOptions', method: 'GET' }),
       providesTags: [financeModuleType.incomeCategoryData],
@@ -77,5 +84,6 @@ export const {
   usePutIncomeCategoryMutation,
   useDeleteIncomeCategoryMutation,
   usePatchIncomeCategoryStatusMutation,
+  useGetIncomeCategoryVersionsQuery,
   useGetBudgetOptionsQuery,
 } = incomeCategoryApi;

@@ -21,5 +21,5 @@ export const feeHeadValidationSchema = (existingNames: Set<string>, editData?: I
       .oneOf(FEE_HEAD_MODULE_VALUES)
       .nullable()
       .notRequired(),
-    incomeHeadId: Yup.string().nullable(),
+    incomeCategoryId: Yup.string().required('Income Category is required'),
   });

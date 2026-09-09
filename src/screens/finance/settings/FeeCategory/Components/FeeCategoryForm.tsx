@@ -20,6 +20,7 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetFeeHeadModulesQuery } from 'src/redux/feeHeadModule/feeHeadModuleApi';
+import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   Box,
@@ -88,6 +89,35 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     [moduleData]
   );
 
+  const {
+    data: incomeCategoryData,
+    isLoading: isIncomeCategoryLoading,
+    isFetching: isIncomeCategoryFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetIncomeCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+      page: 1,
+      pageSize: 100,
+      includeInactive: false,
+    },
+    options: {
+      skip: !currentYear?.id || !open?.value,
+    },
+  });
+
+  const incomeCategoryOptions = useMemo(
+    () =>
+      (incomeCategoryData?.items ?? []).map((category: any) => ({
+        id: category.id,
+        displayName: `${category.code ? `${category.code} — ` : ''}${category.name} → ${
+          category.defaultAccountHeadName || 'No account head'
+        }`,
+      })),
+    [incomeCategoryData]
+  );
+
   const existingNames = useMemo(
     () =>
       new Set<string>(
@@ -133,6 +163,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
         description: values.description || '',
         feeHeads: values.feeHeads.map((fh: any) => ({
           id: fh.id || null,
+          incomeCategoryId: fh.incomeCategoryId,
           name: fh.name.trim(),
           module: fh.module === '' ? null : fh.module,
           isConcessionApplied: fh.isConcessionApplied,
@@ -167,6 +198,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
       ...(formik.values.feeHeads ?? []),
       {
         id: '',
+        incomeCategoryId: '',
         name: '',
         module: '',
         description: '',
@@ -361,6 +393,47 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                     : `${fh.name.length}/40 Maximum characters allowed`
                                 }
                                 inputProps={{ maxLength: 40 }}
+                              />
+                            </ShakingTextField>
+                          </Grid>
+
+                          {/* Income Category */}
+                          <Grid size={{ xs: 12, md: 4 }}>
+                            <ShakingTextField
+                              error={
+                                !!(
+                                  feeHeadTouched?.incomeCategoryId && feeHeadError?.incomeCategoryId
+                                )
+                              }
+                            >
+                              <CustomSelect
+                                name={`feeHeads.${idx}.incomeCategoryId`}
+                                label="Income Category *"
+                                options={incomeCategoryOptions}
+                                value={fh.incomeCategoryId || ''}
+                                labelKey="displayName"
+                                valueKey="id"
+                                isLoading={isIncomeCategoryLoading || isIncomeCategoryFetching}
+                                disabled={Boolean(fh.isUsedInDownstream)}
+                                onChange={(value) => {
+                                  formik.setFieldValue(`feeHeads.${idx}.incomeCategoryId`, value);
+                                  formik.setFieldTouched(`feeHeads.${idx}.incomeCategoryId`, false);
+                                }}
+                                error={
+                                  !!(
+                                    feeHeadTouched?.incomeCategoryId &&
+                                    feeHeadError?.incomeCategoryId
+                                  )
+                                }
+                                helperText={
+                                  feeHeadTouched?.incomeCategoryId && feeHeadError?.incomeCategoryId
+                                    ? (feeHeadError.incomeCategoryId as string)
+                                    : 'Determines the Income Account Head for posting.'
+                                }
+                                formControlProps={{
+                                  fullWidth: true,
+                                  sx: { maxWidth: 'unset' },
+                                }}
                               />
                             </ShakingTextField>
                           </Grid>
