@@ -5,15 +5,17 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import Drawer from '@mui/material/Drawer';
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
+import Accordion from '@mui/material/Accordion';
+import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Stack, Button, Typography, IconButton, LinearProgress, Card } from '@mui/material';
+import AccordionSummary from '@mui/material/AccordionSummary';
+import AccordionDetails from '@mui/material/AccordionDetails';
+import { Box, Card, Stack, Button, Typography, IconButton, LinearProgress } from '@mui/material';
+
+import { LessonReviewComment } from './LessonReviewComment';
 
 import type { LessonPlanRow, TeacherDiaryRow } from '../lessonPlanData';
 
@@ -316,21 +318,7 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
           <ProgressRow label="Planned Completion" value={plan.plannedCompletionPercentage} />
 
           {planReviewRemarks ? (
-            <Box
-              sx={{
-                p: 1.5,
-                borderRadius: 1.5,
-                bgcolor: 'warning.lighter',
-                border: (theme) => `1px solid ${theme.palette.warning.light}`,
-              }}
-            >
-              <Typography variant="caption" color="warning.dark">
-                Admin Comment
-              </Typography>
-              <Typography variant="body2" fontWeight={600} color="text.primary" sx={{ mt: 0.5 }}>
-                {planReviewRemarks}
-              </Typography>
-            </Box>
+            <LessonReviewComment remarks={planReviewRemarks} />
           ) : null}
         </AccordionCard>
 

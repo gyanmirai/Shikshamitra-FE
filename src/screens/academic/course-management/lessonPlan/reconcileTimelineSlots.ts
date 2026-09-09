@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 import type { LessonPlanRow } from './lessonPlanData';
 
 type TimelineSlot = {
@@ -8,11 +10,8 @@ type TimelineSlot = {
   lessonPlan?: unknown | null;
 };
 
-const getContextKey = (value: {
-  standardId?: string;
-  divisionId?: string;
-  subjectId?: string;
-}) => `${value.standardId || ''}:${value.divisionId || ''}:${value.subjectId || ''}`;
+const getContextKey = (value: { standardId?: string; divisionId?: string; subjectId?: string }) =>
+  `${value.standardId || ''}:${value.divisionId || ''}:${value.subjectId || ''}`;
 
 const hasMatchingContext = (slot: TimelineSlot, plan: LessonPlanRow) =>
   (!slot.standardId || slot.standardId === plan.standardId) &&
@@ -37,11 +36,32 @@ export const reconcileTimelineSlots = <TSlot extends TimelineSlot>(
   selectedDate: string,
   timelineTeacherId?: string
 ): TSlot[] => {
-  const eligiblePlans = lessonPlans.filter(
-    (plan) =>
-      getDateKey(plan.plannedDate) === getDateKey(selectedDate) &&
-      (!timelineTeacherId || plan.teacherId === timelineTeacherId)
-  );
+  const selectedDateKey = getDateKey(selectedDate);
+  const isEligiblePlan = (value: unknown): boolean => {
+    if (!value || typeof value !== 'object') return false;
+
+    const plan = value as {
+      plannedDate?: string | null;
+      PlannedDate?: string | null;
+      teacherId?: string;
+      TeacherId?: string;
+    };
+    const plannedDate = plan.plannedDate ?? plan.PlannedDate;
+    if (!plannedDate) return false;
+
+    // PlannedDate is an instant: midnight in the school's offset can be the
+    // previous UTC day. Compare in the same local timezone as the date picker.
+    const localDate = dayjs(plannedDate);
+    return (
+      localDate.isValid() &&
+      localDate.format('YYYY-MM-DD') === selectedDateKey &&
+      (!timelineTeacherId || (plan.teacherId ?? plan.TeacherId) === timelineTeacherId)
+    );
+  };
+  const eligiblePlans = lessonPlans.filter(isEligiblePlan);
+  // Embedded API plans need the same check as cached list plans. Never render
+  // an off-date plan (and its diary actions), including standalone manual rows.
+  const eligibleSlots = slots.filter((slot) => !slot.lessonPlan || isEligiblePlan(slot.lessonPlan));
 
   const plansBySlotId = new Map(
     eligiblePlans
@@ -50,7 +70,7 @@ export const reconcileTimelineSlots = <TSlot extends TimelineSlot>(
   );
   const assignedPlanIds = new Set<string>();
 
-  const slotsWithExactMatches = slots.map((slot) => {
+  const slotsWithExactMatches = eligibleSlots.map((slot) => {
     const existingPlanId = getPlanId(slot.lessonPlan);
     if (existingPlanId) assignedPlanIds.add(existingPlanId);
 

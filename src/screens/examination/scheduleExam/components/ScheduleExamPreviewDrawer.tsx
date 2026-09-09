@@ -18,6 +18,7 @@ import {
 
 import { mapBackendToFormik } from './initialValues';
 import { getExamStatusMeta } from '../scheduleExamStatus';
+import { formatExamDateRange } from '../schedule-exam-date-range';
 import { ScheduleExamPreviewHeader } from './ScheduleExamPreviewHeader';
 import { ScheduleExamPreviewAlerts } from './ScheduleExamPreviewAlerts';
 import { ScheduleExamPreviewActions } from './ScheduleExamPreviewActions';
@@ -240,17 +241,7 @@ const ScheduleExamPreviewDrawer = ({
 
   const meta = getExamStatusMeta(previewExam || exam || {});
 
-  const startDateStr = previewExam?.startDate
-    ? dayjs(previewExam.startDate).format('DD-MM-YYYY')
-    : '';
-  const endDateStr = previewExam?.endDate
-    ? dayjs(previewExam.endDate).format('DD-MM-YYYY')
-    : startDateStr;
-  const dateRange = startDateStr
-    ? startDateStr === endDateStr
-      ? startDateStr
-      : `${startDateStr} - ${endDateStr}`
-    : '';
+  const dateRange = formatExamDateRange(previewExam?.startDate, previewExam?.endDate);
 
   const allStandards: any[] = useMemo(
     () =>
