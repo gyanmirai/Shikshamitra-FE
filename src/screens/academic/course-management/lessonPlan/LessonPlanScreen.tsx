@@ -1122,85 +1122,79 @@ const LessonPlanScreen = () => {
 
   const handleSaveLesson = useCallback(
     async (form: LessonFormState, submitAfterSave: boolean) => {
-      try {
-        const missingFields = [
-          !currentYear?.id && 'academic year',
-          !form.teacherId && 'teacher',
-          !form.standardId && 'class',
-          !form.divisionId && 'division',
-          !form.subjectId && 'subject',
-          !form.chapterId && 'chapter',
-        ].filter(Boolean);
+      const missingFields = [
+        !currentYear?.id && 'academic year',
+        !form.teacherId && 'teacher',
+        !form.standardId && 'class',
+        !form.divisionId && 'division',
+        !form.subjectId && 'subject',
+        !form.chapterId && 'chapter',
+      ].filter(Boolean);
 
-        if (missingFields.length > 0) {
-          shikshaMitraToast.warning({
-            message: `Please select a valid ${missingFields.join(', ')} before saving.`,
-          });
-          return;
-        }
-
-        const plannedDate = form.plannedDate
-          ? dateConvertor(form.plannedDate.format(dateFormat))
-          : dateConvertor(dayjs(todayIso).format(dateFormat));
-
-        const planDetailsPayload = {
-          chapterId: form.chapterId,
-          topic: form.topic.trim(),
-          learningObjective: form.learningObjective.trim(),
-          teachingMethod: form.teachingMethod,
-          resourcesRequired: form.resourcesRequired.trim(),
-          plannedCompletionPercentage: form.plannedCompletionPercentage,
-        };
-
-        const createPayload = {
-          academicYearId: currentYear?.id,
-          // Teachers must submit their HR employee ID, never the identity-user ID
-          // or a stale value retained by the modal form.
-          teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : form.teacherId,
-          standardId: form.standardId,
-          divisionId: form.divisionId,
-          subjectId: form.subjectId,
-          plannedDate,
-          timetableSlotId: form.timetableSlotId || null,
-          isAiGenerated: form.source === 'AiGenerated',
-          // LessonPlanStatus: Draft = 0, Submitted = 1. The create endpoint
-          // applies this transition atomically for the modal's primary action.
-          status: submitAfterSave ? 1 : 0,
-          ...planDetailsPayload,
-        };
-
-        let result;
-        if (form.id) {
-          result = await updateLessonPlan({ id: form.id, body: planDetailsPayload }).unwrap();
-        } else {
-          result = await createLessonPlan(createPayload).unwrap();
-        }
-
-        const resultId =
-          result?.id ||
-          result?.result?.id ||
-          (result as any)?.result?.Id ||
-          (result as any)?.Id ||
-          form.id;
-        // New plans are submitted by the create payload. Existing plans still
-        // use the guarded submit endpoint after their editable fields update.
-        if (submitAfterSave && form.id && resultId) {
-          await submitLessonPlan({ id: resultId }).unwrap();
-        }
-
-        setLessonModalOpen(false);
-        shikshaMitraToast.success({
-          message: submitAfterSave
-            ? 'Lesson plan submitted for review.'
-            : 'Lesson plan saved as draft.',
+      if (missingFields.length > 0) {
+        shikshaMitraToast.warning({
+          message: `Please select a valid ${missingFields.join(', ')} before saving.`,
         });
-        // The mutations invalidate the lesson-plan tag, so active timeline/list queries refresh
-        // in the background without keeping this completed form open.
-      } catch (err: any) {
-        shikshaMitraToast.error({
-          message: err?.data?.error?.message || 'Failed to save lesson plan.',
-        });
+        return;
       }
+
+      const plannedDate = form.plannedDate
+        ? dateConvertor(form.plannedDate.format(dateFormat))
+        : dateConvertor(dayjs(todayIso).format(dateFormat));
+
+      const planDetailsPayload = {
+        chapterId: form.chapterId,
+        topic: form.topic.trim(),
+        learningObjective: form.learningObjective.trim(),
+        teachingMethod: form.teachingMethod,
+        resourcesRequired: form.resourcesRequired.trim(),
+        plannedCompletionPercentage: form.plannedCompletionPercentage,
+      };
+
+      const createPayload = {
+        academicYearId: currentYear?.id,
+        // Teachers must submit their HR employee ID, never the identity-user ID
+        // or a stale value retained by the modal form.
+        teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : form.teacherId,
+        standardId: form.standardId,
+        divisionId: form.divisionId,
+        subjectId: form.subjectId,
+        plannedDate,
+        timetableSlotId: form.timetableSlotId || null,
+        isAiGenerated: form.source === 'AiGenerated',
+        // LessonPlanStatus: Draft = 0, Submitted = 1. The create endpoint
+        // applies this transition atomically for the modal's primary action.
+        status: submitAfterSave ? 1 : 0,
+        ...planDetailsPayload,
+      };
+
+      let result;
+      if (form.id) {
+        result = await updateLessonPlan({ id: form.id, body: planDetailsPayload }).unwrap();
+      } else {
+        result = await createLessonPlan(createPayload).unwrap();
+      }
+
+      const resultId =
+        result?.id ||
+        result?.result?.id ||
+        (result as any)?.result?.Id ||
+        (result as any)?.Id ||
+        form.id;
+      // New plans are submitted by the create payload. Existing plans still
+      // use the guarded submit endpoint after their editable fields update.
+      if (submitAfterSave && form.id && resultId) {
+        await submitLessonPlan({ id: resultId }).unwrap();
+      }
+
+      setLessonModalOpen(false);
+      shikshaMitraToast.success({
+        message: submitAfterSave
+          ? 'Lesson plan submitted for review.'
+          : 'Lesson plan saved as draft.',
+      });
+      // The mutations invalidate the lesson-plan tag, so active timeline/list queries refresh
+      // in the background without keeping this completed form open.
     },
     [
       createLessonPlan,
@@ -2086,6 +2080,7 @@ const LessonPlanScreen = () => {
           'new-lesson-plan'
         }
         open={lessonModalOpen}
+        academicYearId={currentYear?.id}
         editData={editPlan}
         prefillDate={prefillDate}
         timelinePrefill={timelinePrefill}

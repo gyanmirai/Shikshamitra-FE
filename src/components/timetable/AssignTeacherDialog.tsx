@@ -1,29 +1,26 @@
 import { useDispatch } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useCallback } from 'react';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetSubjectAssignmentByIdQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
   Alert,
   Button,
-  Checkbox,
   Divider,
-  TextField,
+  Checkbox,
   IconButton,
   Typography,
-  Autocomplete,
   DialogContent,
   DialogActions,
-  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 
 import { Iconify } from '../iconify';
 import CustomDialog from '../customDialog';
 import CustomTooltip from '../custom-tooltip';
+import { SubjectTeacherRow } from './SubjectTeacherRow';
 
+import type { TeacherOption } from './teacherOptions';
 import type { TimeSlot, DayOfWeek, SlotSubject } from './types';
 import type { TimetableValidationIssue } from './timetableValidationIssues';
 
@@ -55,48 +52,6 @@ interface AssignTeacherDialogProps {
 }
 
 // ---------------------------------------------------------------------------
-// Teacher option type
-// ---------------------------------------------------------------------------
-
-export interface TeacherOption {
-  id: string;
-  name: string;
-  role: 'Primary' | 'Secondary';
-}
-
-// ---------------------------------------------------------------------------
-// Helper: build merged teacher options from a subject assignment API response subject
-// ---------------------------------------------------------------------------
-
-export function buildTeacherOptions(
-  subjects: Array<{
-    subjectId?: string;
-    primaryTeacher?: { id: string; name: string } | null;
-    secondaryTeachers?: Array<{ id: string; name: string }>;
-  }>
-): Record<string, TeacherOption[]> {
-  const result: Record<string, TeacherOption[]> = {};
-
-  subjects.forEach((sub) => {
-    if (!sub.subjectId) return;
-
-    const options: TeacherOption[] = [];
-
-    if (sub.primaryTeacher) {
-      options.push({ ...sub.primaryTeacher, role: 'Primary' });
-    }
-
-    (sub.secondaryTeachers ?? []).forEach((t) => {
-      options.push({ ...t, role: 'Secondary' });
-    });
-
-    result[sub.subjectId] = options;
-  });
-
-  return result;
-}
-
-// ---------------------------------------------------------------------------
 // Helper: lazily split pipe-separated subject names into individual rows
 // ---------------------------------------------------------------------------
 function splitPipeSubjects(subjects: SlotSubject[]): SlotSubject[] {
@@ -121,95 +76,6 @@ function splitPipeSubjects(subjects: SlotSubject[]): SlotSubject[] {
   });
   return result;
 }
-
-// ---------------------------------------------------------------------------
-// Sub-component: renders teacher dropdown for a single split subject row
-// ---------------------------------------------------------------------------
-
-interface SubjectTeacherRowProps {
-  sub: SlotSubject;
-  selectedId: string | undefined;
-  subjectAssignmentId: string;
-  onChange: (subjectId: string, value: TeacherOption | null) => void;
-  error?: string;
-}
-
-const SubjectTeacherRow: React.FC<SubjectTeacherRowProps> = ({
-  sub,
-  selectedId,
-  subjectAssignmentId,
-  onChange,
-  error,
-}) => {
-  const {
-    data: subjectAssignmentData,
-    isLoading: subjectAssignmentLoading,
-    isFetching: subjectAssignmentFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetSubjectAssignmentByIdQuery,
-    params: { assignmentId: subjectAssignmentId },
-    options: { skip: !subjectAssignmentId },
-  });
-
-  /**
-   * Memoization Justification:
-   * - Converts the subject assignment detail payload into per-subject teacher options.
-   * - Prevents rebuilding option arrays on local row state updates while the fetched payload is stable.
-   * - The modal renders one row per elective child subject, so stable option maps reduce repeated Autocomplete work.
-   */
-  const teacherOptionsBySubject: Record<string, TeacherOption[]> = React.useMemo(() => {
-    const assignmentSubjects =
-      subjectAssignmentData?.data?.subjects ?? subjectAssignmentData?.subjects ?? [];
-    return buildTeacherOptions(assignmentSubjects);
-  }, [subjectAssignmentData]);
-
-  // Derive the base subjectId (strip _part_ suffix if present)
-  const baseSubjectId = sub.subjectId.includes('_part_')
-    ? sub.subjectId.split('_part_')[0]
-    : sub.subjectId;
-
-  const options: TeacherOption[] = teacherOptionsBySubject[baseSubjectId] ?? [];
-  const selectedValue = options.find((t) => t.id === selectedId) ?? null;
-
-  return (
-    <Box key={sub.subjectId}>
-      <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
-        For {sub.name} :
-      </Typography>
-      <Autocomplete
-        fullWidth
-        size="small"
-        options={options}
-        loading={subjectAssignmentLoading || subjectAssignmentFetching}
-        getOptionLabel={(option) => option.name}
-        groupBy={(option) => option.role}
-        value={selectedValue}
-        isOptionEqualToValue={(option, value) => option.id === value.id}
-        onChange={(_, value) => onChange(sub.subjectId, value)}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Select Teacher"
-            error={!!error}
-            helperText={error}
-            InputProps={{
-              ...params.InputProps,
-              endAdornment: (
-                <>
-                  {subjectAssignmentLoading || subjectAssignmentFetching ? (
-                    <CircularProgress color="inherit" size={16} />
-                  ) : null}
-                  {params.InputProps.endAdornment}
-                </>
-              ),
-            }}
-          />
-        )}
-      />
-    </Box>
-  );
-};
 
 // ---------------------------------------------------------------------------
 // Component
@@ -239,6 +105,11 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [conflictIssues, setConflictIssues] = useState<TimetableValidationIssue[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [rowValidity, setRowValidity] = useState<Record<string, boolean>>({});
+  // Stable because each row reports readiness from an effect after its allocation query changes.
+  const handleValidityChange = useCallback((subjectId: string, valid: boolean) => {
+    setRowValidity((prev) => (prev[subjectId] === valid ? prev : { ...prev, [subjectId]: valid }));
+  }, []);
   const [applyTeacherToAllSubjectSlots, setApplyTeacherToAllSubjectSlots] = useState<
     Record<string, boolean>
   >({});
@@ -272,14 +143,19 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
 
   const splitSubjects = open ? splitPipeSubjects(open.subjects) : [];
 
-  const handleChange = useCallback((subjectId: string, value: TeacherOption | null) => {
-    dispatch(setIsChanges(true));
-    setSelectedIds((prev) => ({ ...prev, [subjectId]: value?.id ?? '' }));
-    setSelectedNames((prev) => ({ ...prev, [subjectId]: value?.name ?? '' }));
-  }, [dispatch]);
+  const handleChange = useCallback(
+    (subjectId: string, value: TeacherOption | null) => {
+      dispatch(setIsChanges(true));
+      setSelectedIds((prev) => ({ ...prev, [subjectId]: value?.id ?? '' }));
+      setSelectedNames((prev) => ({ ...prev, [subjectId]: value?.name ?? '' }));
+    },
+    [dispatch]
+  );
+
+  const hasUnavailableTeacher = splitSubjects.some((sub) => rowValidity[sub.subjectId] !== true);
 
   const handleSave = async () => {
-    if (!open) return;
+    if (!open || isSubmitting || hasUnavailableTeacher) return;
 
     const newErrors: Record<string, string> = {};
 
@@ -347,7 +223,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
       handleClose={handleCloseDialog}
       maxWidth="xs"
       fullWidth
-      hasForm={true}
+      hasForm
       title={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h6" fontWeight={700}>
@@ -398,6 +274,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
                   sub={sub}
                   selectedId={selectedIds[sub.subjectId]}
                   subjectAssignmentId={sub.subjectAssignmentId ?? ''}
+                  onValidityChange={handleValidityChange}
                   onChange={(subjectId, value) => {
                     handleChange(subjectId, value);
                     setErrors((prev) => {
@@ -451,7 +328,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
           onClick={handleSave}
           variant="contained"
           size="small"
-          disabled={isSubmitting}
+          disabled={isSubmitting || hasUnavailableTeacher}
           startIcon={<Iconify icon={GlobalIcons.submit} />}
         >
           {isSubmitting ? 'Checking...' : 'Submit'}

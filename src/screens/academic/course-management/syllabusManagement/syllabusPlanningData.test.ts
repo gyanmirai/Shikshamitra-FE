@@ -1,17 +1,17 @@
 import dayjs from 'dayjs';
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
 import {
   statusColor,
-  getChapterProgress,
   getCoverageStatus,
+  getChapterProgress,
   getSyllabusMetrics,
 } from './syllabusPlanningData';
 
 import type { IChapter } from './type';
 
 describe('syllabusPlanningData - getChapterProgress and getCoverageStatus', () => {
-  it('does not use static progressPercentage and returns 0 for future chapters', () => {
+  it('uses recorded progress even when the chapter is scheduled for the future', () => {
     const futureChapter: IChapter = {
       id: '1',
       chapterName: 'Basics of CHE',
@@ -25,12 +25,11 @@ describe('syllabusPlanningData - getChapterProgress and getCoverageStatus', () =
       creationTime: '2026-08-01',
       lastModifierId: 'u-1',
       lastModificationTime: '2026-08-01',
-      progressPercentage: 30, // static metadata from legacy input
+      progressPercentage: 30,
     };
 
-    // Should decouple and evaluate to 0 because the chapter has not started yet
-    expect(getChapterProgress(futureChapter)).toBe(0);
-    expect(getCoverageStatus(futureChapter)).toBe('Not Started');
+    expect(getChapterProgress(futureChapter)).toBe(30);
+    expect(getCoverageStatus(futureChapter)).toBe('In Progress');
   });
 
   it('handles chapters with DD-MM-YYYY format strings', () => {
@@ -50,11 +49,11 @@ describe('syllabusPlanningData - getChapterProgress and getCoverageStatus', () =
       progressPercentage: 50,
     };
 
-    expect(getChapterProgress(futureChapter)).toBe(0);
-    expect(getCoverageStatus(futureChapter)).toBe('Not Started');
+    expect(getChapterProgress(futureChapter)).toBe(50);
+    expect(getCoverageStatus(futureChapter)).toBe('In Progress');
   });
 
-  it('calculates progress correctly for currently active chapters', () => {
+  it('preserves actual progress instead of estimating it from elapsed days', () => {
     const activeChapter: IChapter = {
       id: '3',
       chapterName: 'Active Chapter',
@@ -62,6 +61,7 @@ describe('syllabusPlanningData - getChapterProgress and getCoverageStatus', () =
       chapterStartTime: dayjs().subtract(5, 'day').format('YYYY-MM-DD'),
       chapterEndTime: dayjs().add(5, 'day').format('YYYY-MM-DD'),
       description: 'Active',
+      progressPercentage: 15,
       standardId: 'std-1',
       subjectId: 'sub-1',
       creatorId: 'u-1',
@@ -71,8 +71,7 @@ describe('syllabusPlanningData - getChapterProgress and getCoverageStatus', () =
     };
 
     const progress = getChapterProgress(activeChapter);
-    expect(progress).toBeGreaterThan(0);
-    expect(progress).toBeLessThanOrEqual(100);
+    expect(progress).toBe(15);
     expect(getCoverageStatus(activeChapter)).toBe('In Progress');
   });
 

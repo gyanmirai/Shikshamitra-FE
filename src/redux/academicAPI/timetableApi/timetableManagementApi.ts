@@ -21,13 +21,7 @@ export const timetableManagementApi = academicApi.injectEndpoints({
     }),
 
     getTimetableByEmployee: builder.query({
-      query: ({
-        employeeId,
-        academicYearId,
-      }: {
-        employeeId: string;
-        academicYearId?: string;
-      }) => ({
+      query: ({ employeeId, academicYearId }: { employeeId: string; academicYearId?: string }) => ({
         url: `academics/timetable/by-employee/${employeeId}`,
         method: 'GET',
         params: academicYearId ? { academicYearId } : undefined,
@@ -41,7 +35,7 @@ export const timetableManagementApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.timetableManagement],
+      invalidatesTags: [academicType.timetableManagement, academicType.lessonPlan],
     }),
 
     validateTimetable: builder.mutation({
@@ -67,7 +61,7 @@ export const timetableManagementApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.timetableManagement],
+      invalidatesTags: [academicType.timetableManagement, academicType.lessonPlan],
     }),
 
     assignRooms: builder.mutation({

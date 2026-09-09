@@ -73,5 +73,5 @@ export const getHierarchyNextStep = (counts: HierarchyCounts) => {
   if (levelIndex === 0) return 'Start by adding the first education board for this academic year.';
 
   const parent = HIERARCHY_LEVELS[levelIndex - 1];
-  return `Next, select a ${parent.singular} and add its first ${firstEmptyLevel.singular}.`;
+  return `Select a ${parent.singular} and add its first ${firstEmptyLevel.singular}.`;
 };

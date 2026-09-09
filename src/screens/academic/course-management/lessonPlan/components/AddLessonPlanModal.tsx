@@ -3,41 +3,42 @@
 import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
+import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { useGetLessonPlanTimelineQuery } from 'src/redux/academicAPI/CurriculumManagementApi/LessonPlanApi/lesson-plan-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
-  Box,
   Chip,
-  Paper,
   Stack,
   Alert,
   Button,
-  Slider,
   Divider,
   Tooltip,
   TextField,
   Typography,
   InputAdornment,
-  LinearProgress,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 
-import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-
+import { LessonPlanTextInput } from './LessonPlanTextInput';
+import { ChapterCompletionSlider } from './ChapterCompletionSlider';
+import { getLessonPlanTextApiErrors } from '../lessonPlanApiErrors';
+import { LessonPlanSection as SectionPaper } from './LessonPlanSection';
+import { useLessonPlanCompletion } from '../hooks/use-lesson-plan-completion';
 import { todayIso, lessonPlanTemplates, teachingMethodOptions } from '../lessonPlanData';
+import { lessonPlanTextFields, validateLessonPlanText } from '../lessonPlanTextValidation';
 
 import type { LessonSource, LessonPlanRow } from '../lessonPlanData';
-import { GlobalIcons } from 'src/utils/icons';
-import { resolvePreviousProgress } from '../lessonPlanProgress';
+import type { LessonPlanTextField, LessonPlanTextErrors } from '../lessonPlanTextValidation';
 
 export type LessonFormState = {
   id?: string;
@@ -103,13 +104,14 @@ const templateDefaults: Record<string, Partial<LessonFormState>> = {
 
 type Props = {
   open: boolean;
+  academicYearId?: string;
   editData?: LessonPlanRow | null;
   prefillDate?: Dayjs | null;
   timelinePrefill?: Partial<LessonFormState> | null;
   currentTeacher?: SelectOption | null;
   lessonPlans?: LessonPlanRow[];
   onClose: () => void;
-  onSave: (form: LessonFormState, submitAfterSave: boolean) => void;
+  onSave: (form: LessonFormState, submitAfterSave: boolean) => void | Promise<void>;
   isLoading?: boolean;
 };
 
@@ -137,72 +139,6 @@ type TimelineSlot = {
 type ChapterOption = SelectOption & {
   id: string;
 };
-
-/**
- * SectionPaper (Strictly conforming to Section 2.18 of SKILL.md)
- */
-const SectionPaper = ({
-  title,
-  caption,
-  icon,
-  children,
-  action,
-}: {
-  title: string;
-  caption?: string;
-  icon: string;
-  children: React.ReactNode;
-  action?: React.ReactNode;
-}) => (
-  <Paper
-    variant="outlined"
-    sx={{
-      p: { xs: 1.5, md: 2 },
-      borderRadius: 1.5,
-      bgcolor: (theme) => alpha(theme.palette.background.paper, 0.92),
-      borderColor: (theme) => alpha(theme.palette.divider, 0.9),
-      boxShadow: (theme) => `0 10px 30px -24px ${alpha(theme.palette.grey[500], 0.4)}`,
-    }}
-  >
-    <Stack spacing={1.5}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        gap={1}
-      >
-        <Stack direction="row" spacing={1.25} alignItems="center">
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'primary.main',
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-            }}
-          >
-            <Iconify icon={icon} width={18} height={18} />
-          </Box>
-          <Stack spacing={0.2}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              {title}
-            </Typography>
-            {caption && (
-              <Typography variant="caption" color="text.secondary">
-                {caption}
-              </Typography>
-            )}
-          </Stack>
-        </Stack>
-        {action}
-      </Stack>
-      {children}
-    </Stack>
-  </Paper>
-);
 
 const AutoFilledField = ({ label, value }: { label: string; value: string }) => (
   <TextField
@@ -270,6 +206,7 @@ const hasDuplicateLessonSlot = (form: LessonFormState, lessonPlans: LessonPlanRo
 
 const AddLessonPlanModal = ({
   open,
+  academicYearId,
   editData,
   prefillDate,
   timelinePrefill,
@@ -285,6 +222,37 @@ const AddLessonPlanModal = ({
   }));
 
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<LessonPlanTextErrors>({});
+  const [saving, setSaving] = useState(false);
+  const saveInProgress = React.useRef(false);
+  const fieldRefs = React.useRef<
+    Partial<Record<LessonPlanTextField, HTMLInputElement | HTMLTextAreaElement | null>>
+  >({});
+  const pendingFocus = React.useRef<LessonPlanTextField | 'summary' | null>(null);
+  const errorPanelRef = React.useRef<HTMLDivElement>(null);
+  const isSaving = isLoading || saving;
+
+  React.useEffect(() => {
+    if (!isSaving && pendingFocus.current) {
+      const input =
+        pendingFocus.current === 'summary'
+          ? errorPanelRef.current
+          : fieldRefs.current[pendingFocus.current];
+      input?.focus();
+      pendingFocus.current = null;
+    }
+  }, [error, fieldErrors, isSaving]);
+  const completion = useLessonPlanCompletion(
+    open,
+    {
+      academicYearId,
+      standardId: form.standardId,
+      divisionId: form.divisionId,
+      subjectId: form.subjectId,
+      chapterId: form.chapterId,
+    },
+    form.plannedCompletionPercentage
+  );
   const [showValidation, setShowValidation] = useState(false);
   const isTimelinePrefill = Boolean(timelinePrefill?.timetableSlotId);
 
@@ -303,7 +271,10 @@ const AddLessonPlanModal = ({
       date: plannedDateStr || dateConvertor(dayjs(todayIso).startOf('day').format(dateFormat)),
       teacherId: selectedTeacherId,
     },
-    { skip: isTimelinePrefill || !selectedTeacherId || !plannedDateStr, refetchOnMountOrArgChange: true }
+    {
+      skip: isTimelinePrefill || !selectedTeacherId || !plannedDateStr,
+      refetchOnMountOrArgChange: true,
+    }
   );
 
   const isLocked = !!editData;
@@ -444,38 +415,19 @@ const AddLessonPlanModal = ({
 
   const handleChapterChange = (chapterName: string) => {
     const selectedCh = chapterOptions.find((opt) => opt.value === chapterName);
-    const previousProgress = resolvePreviousProgress(
-      lessonPlans,
-      selectedCh?.id,
-      form.divisionId,
-      form.topic
-    );
     setForm((prev) => ({
       ...prev,
       chapterName,
       chapterId: selectedCh?.id || '',
-      plannedCompletionPercentage: previousProgress || prev.plannedCompletionPercentage,
+      plannedCompletionPercentage: 0,
     }));
-  };
-
-  const handleTopicBlur = () => {
-    const previousProgress = resolvePreviousProgress(
-      lessonPlans,
-      form.chapterId,
-      form.divisionId,
-      form.topic
-    );
-    if (previousProgress > 0) {
-      setForm((prev) => ({
-        ...prev,
-        plannedCompletionPercentage: previousProgress,
-      }));
-    }
   };
 
   React.useEffect(() => {
     if (open) {
       setShowValidation(false);
+      setFieldErrors({});
+      pendingFocus.current = null;
       if (editData) {
         setForm({
           id: editData.id,
@@ -519,11 +471,16 @@ const AddLessonPlanModal = ({
     }
   }, [currentTeacher, editData, open, prefillDate, timelinePrefill]);
 
-  const set = useCallback(
-    <K extends keyof LessonFormState>(key: K, value: LessonFormState[K]) =>
-      setForm((prev) => ({ ...prev, [key]: value })),
-    []
-  );
+  const set = <K extends keyof LessonFormState>(key: K, value: LessonFormState[K]) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setFieldErrors((prev) => {
+      if (!Object.hasOwn(prev, key)) return prev;
+      const next = { ...prev };
+      delete next[key as LessonPlanTextField];
+      return next;
+    });
+    setError('');
+  };
 
   const applyTemplate = (templateValue: string) => {
     const defaults = templateDefaults[templateValue] || {};
@@ -550,18 +507,47 @@ const AddLessonPlanModal = ({
       return 'A lesson plan with the same topic already exists for this teacher on this date.';
     if (form.plannedCompletionPercentage < 0 || form.plannedCompletionPercentage > 100)
       return 'Planned completion must be between 0 and 100.';
+    if (!completion.ready) return completion.error || 'Please wait for recorded chapter progress.';
     return '';
   };
 
-  const handleSave = (submit: boolean) => {
+  const showFieldErrors = (errors: LessonPlanTextErrors) => {
+    pendingFocus.current =
+      (Object.keys(lessonPlanTextFields) as LessonPlanTextField[]).find((field) => errors[field]) ??
+      null;
+    setFieldErrors(errors);
+  };
+
+  const handleSave = async (submit: boolean) => {
+    if (saveInProgress.current || isLoading) return;
     setShowValidation(true);
+    const textErrors = validateLessonPlanText(form);
+    showFieldErrors(textErrors);
     const err = validate();
-    if (err) {
-      setError(err);
+    if (err || Object.keys(textErrors).length) {
+      if (!Object.keys(textErrors).length) pendingFocus.current = 'summary';
+      setError(err || 'Please correct the highlighted fields.');
       return;
     }
     setError('');
-    onSave(form, submit);
+    saveInProgress.current = true;
+    setSaving(true);
+    try {
+      const result = onSave({ ...form, plannedCompletionPercentage: completion.target }, submit);
+      if (result) await result;
+    } catch (saveError) {
+      const errors = getLessonPlanTextApiErrors(saveError);
+      showFieldErrors(errors);
+      if (!Object.keys(errors).length) pendingFocus.current = 'summary';
+      setError(
+        Object.keys(errors).length
+          ? 'Please correct the highlighted fields.'
+          : parseApiProblemDetail(saveError).detail
+      );
+    } finally {
+      saveInProgress.current = false;
+      setSaving(false);
+    }
   };
 
   const initialValues = React.useMemo(
@@ -598,9 +584,9 @@ const AddLessonPlanModal = ({
       learningObjective: form.learningObjective,
       teachingMethod: form.teachingMethod,
       resourcesRequired: form.resourcesRequired,
-      plannedCompletionPercentage: form.plannedCompletionPercentage,
+      plannedCompletionPercentage: completion.target,
     }),
-    [form]
+    [completion.target, form]
   );
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={currentValues}>
@@ -634,7 +620,12 @@ const AddLessonPlanModal = ({
         <DialogScrollContent sx={{ bgcolor: 'background.neutral', pb: 2 }}>
           <Stack spacing={2} sx={{ pt: 1 }}>
             {error && (
-              <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
+              <Alert
+                ref={errorPanelRef}
+                tabIndex={-1}
+                severity="error"
+                icon={<Iconify icon="mdi:alert-circle-outline" />}
+              >
                 {error}
               </Alert>
             )}
@@ -655,7 +646,11 @@ const AddLessonPlanModal = ({
                       size="small"
                       icon={
                         selected ? (
-                          <Iconify icon="mdi:check-circle" width={16} sx={{ ml: '4px !important' }} />
+                          <Iconify
+                            icon="mdi:check-circle"
+                            width={16}
+                            sx={{ ml: '4px !important' }}
+                          />
                         ) : undefined
                       }
                       variant={selected ? 'filled' : 'outlined'}
@@ -749,32 +744,29 @@ const AddLessonPlanModal = ({
                   }
                 />
 
-                <TextField
-                  size="small"
-                  label="Topic *"
+                <LessonPlanTextInput
+                  field="topic"
                   value={form.topic}
-                  onChange={(e) => set('topic', e.target.value)}
-                  onBlur={handleTopicBlur}
-                  fullWidth
-                  placeholder="e.g. Addition of Fractions"
-                  error={showValidation && !form.topic.trim()}
-                  helperText={
-                    showValidation && !form.topic.trim()
-                      ? 'Topic is required'
-                      : 'Matches prior progress for this chapter automatically on blur'
+                  onChange={(value) => set('topic', value)}
+                  disabled={isSaving}
+                  inputRef={(input) => {
+                    fieldRefs.current.topic = input;
+                  }}
+                  error={
+                    fieldErrors.topic ||
+                    (showValidation && !form.topic.trim() ? 'Topic is required' : undefined)
                   }
                 />
 
-                <TextField
-                  size="small"
-                  label="Learning Objective"
+                <LessonPlanTextInput
+                  field="learningObjective"
                   value={form.learningObjective}
-                  onChange={(e) => set('learningObjective', e.target.value)}
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  placeholder="Students will be able to..."
-                  helperText="Clearly state what students should achieve by the end of the lesson"
+                  onChange={(value) => set('learningObjective', value)}
+                  disabled={isSaving}
+                  inputRef={(input) => {
+                    fieldRefs.current.learningObjective = input;
+                  }}
+                  error={fieldErrors.learningObjective}
                 />
               </Stack>
             </SectionPaper>
@@ -786,7 +778,11 @@ const AddLessonPlanModal = ({
               icon="solar:presentation-graph-bold-duotone"
             >
               <Stack spacing={1.5}>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="flex-start">
+                <Stack
+                  direction={{ xs: 'column', sm: 'row' }}
+                  spacing={1.5}
+                  alignItems="flex-start"
+                >
                   <CustomSelect
                     label="Teaching Method"
                     options={teachingMethodOptions}
@@ -794,84 +790,26 @@ const AddLessonPlanModal = ({
                     onChange={(v) => set('teachingMethod', v as string)}
                     formControlProps={{ sx: { flex: 1 } }}
                   />
-                  <Box
-                    sx={{
-                      flex: 1,
-                      width: '100%',
-                      p: 1.5,
-                      borderRadius: 1.5,
-                      bgcolor: 'background.neutral',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Stack direction="row" alignItems="center" spacing={0.5}>
-                        <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                          Target Chapter Completion
-                        </Typography>
-                        <CustomTooltip
-                          placement="top"
-                          arrow
-                          title={
-                            <Box sx={{ p: 1, maxWidth: 280 }}>
-                              <Typography
-                                variant="caption"
-                                sx={{ lineHeight: 1.5, display: 'block' }}
-                              >
-                                <Box component="span" sx={{ fontWeight: 700 }}>
-                                  Chapter Completion Target
-                                </Box>{' '}
-                                indicates the percentage of the selected chapter that is planned to be completed by the end of this lesson. This helps track the intended progress through the chapter.
-                              </Typography>
-                            </Box>
-                          }
-                        >
-                          <Box
-                            component="span"
-                            sx={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              cursor: 'pointer',
-                              '&:hover': { color: 'text.primary' },
-                            }}
-                          >
-                            <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-                          </Box>
-                        </CustomTooltip>
-                      </Stack>
-                      <Label color="primary" variant="soft">
-                        {form.plannedCompletionPercentage}%
-                      </Label>
-                    </Stack>
-
-                    <Slider
-                      min={0}
-                      max={100}
-                      step={5}
-                      size="small"
-                      value={form.plannedCompletionPercentage}
-                      onChange={(_, v) => set('plannedCompletionPercentage', v as number)}
-                      valueLabelDisplay="auto"
-                      marks={[
-                        { value: 0, label: '0%' },
-                        { value: 50, label: '50%' },
-                        { value: 100, label: '100%' },
-                      ]}
-                      sx={{ mt: 1 }}
-                    />
-                  </Box>
+                  <ChapterCompletionSlider
+                    value={completion.target}
+                    minimum={completion.minimum}
+                    disabled={!completion.ready}
+                    loading={completion.loading}
+                    error={completion.error}
+                    onRetry={completion.retry}
+                    onChange={(value) => set('plannedCompletionPercentage', value)}
+                  />
                 </Stack>
 
-                <TextField
-                  size="small"
-                  label="Resources Required"
+                <LessonPlanTextInput
+                  field="resourcesRequired"
                   value={form.resourcesRequired}
-                  onChange={(e) => set('resourcesRequired', e.target.value)}
-                  fullWidth
-                  multiline
-                  minRows={2}
-                  placeholder="Textbook, worksheet, projector..."
-                  helperText="List materials, tools or aids needed to deliver this lesson"
+                  onChange={(value) => set('resourcesRequired', value)}
+                  disabled={isSaving}
+                  inputRef={(input) => {
+                    fieldRefs.current.resourcesRequired = input;
+                  }}
+                  error={fieldErrors.resourcesRequired}
                 />
               </Stack>
             </SectionPaper>
@@ -891,25 +829,27 @@ const AddLessonPlanModal = ({
             variant="outlined"
             startIcon={<Iconify icon="mdi:close" />}
             onClick={onClose}
-            disabled={isLoading}
+            disabled={isSaving}
           >
             Cancel
           </Button>
           <LoadingButton
             size="small"
             variant="outlined"
-            loading={isLoading}
+            loading={isSaving}
             startIcon={<Iconify icon="mdi:content-save-outline" />}
             onClick={() => handleSave(false)}
+            disabled={!completion.ready}
           >
             Draft
           </LoadingButton>
           <LoadingButton
             size="small"
             variant="contained"
-            loading={isLoading}
+            loading={isSaving}
             startIcon={<Iconify icon={GlobalIcons.submit} />}
             onClick={() => handleSave(true)}
+            disabled={!completion.ready}
           >
             Submit
           </LoadingButton>

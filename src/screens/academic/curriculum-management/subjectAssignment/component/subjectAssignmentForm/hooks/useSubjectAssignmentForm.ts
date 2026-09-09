@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { useRef, useMemo, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useGetSubjectAssignmentsQuery,
   useAddSubjectAssignmentMutation,
@@ -118,7 +119,7 @@ export function useSubjectAssignmentForm({
         onClose(null, true);
       } catch (error) {
         console.error('Failed to save subject assignment', error);
-        shikshaMitraToast.error({ message: 'Failed to save subject assignment' });
+        shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
       }
     },
   });

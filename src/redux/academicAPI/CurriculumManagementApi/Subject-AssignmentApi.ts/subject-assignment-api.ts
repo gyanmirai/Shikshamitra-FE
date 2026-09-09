@@ -45,7 +45,11 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [academicType.subjectAssignment],
+      invalidatesTags: [
+        academicType.subjectAssignment,
+        academicType.timetableManagement,
+        academicType.lessonPlan,
+      ],
     }),
 
     // Delete assignment
