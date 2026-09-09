@@ -225,9 +225,25 @@ export default function FinancePolicyVersionDrawer({
             </Paper>
           </Box>
         ) : (
-          <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              flex: 1,
+              minHeight: 0,
+              overflow: 'hidden',
+              p: { xs: 1.5, sm: 2 },
+              gap: 2,
+            }}
+          >
             {/* Version List Sidebar */}
-            <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
+            <Box
+              sx={{
+                width: { xs: '100%', sm: 260, md: 280 },
+                height: '100%',
+                flexShrink: 0,
+                minHeight: 0,
+              }}
+            >
               <VersionSidebar
                 versions={versions}
                 selectedVersionId={selectedVersionId}
@@ -237,7 +253,7 @@ export default function FinancePolicyVersionDrawer({
 
             {/* Version Changes Display */}
             <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
-              <Box sx={{ p: { xs: 2, sm: 3 }, pb: 6 }}>
+              <Box sx={{ pr: { xs: 0.5, sm: 1 }, pb: 4 }}>
                 {selectedVersion && (
                   <VersionDiffTable
                     selectedVersion={selectedVersion}
