@@ -44,3 +44,22 @@ describe('Accounts permission controls', () => {
     expect(screen.queryByLabelText('Edit')).not.toBeInTheDocument();
   });
 });
+
+
+it('toggles all three Fee Structure switches against canonical API names', () => {
+  const root = 'Finance.Settings.FeeStructure';
+  const toggle = vi.fn();
+  render(<ThemeProvider theme={createTheme(defaultSettings)}>
+    <PermissionNode node={{ title: 'Fee Structure', permissionName: `${root}.View` }}
+      moduleTitle="Finance" submoduleTitle="Settings"
+      permissions={['View', 'Add', 'Delete'].map((action) => ({ name: `${root}.${action}`, isGranted: true }))}
+      onToggle={toggle} onSelectAll={vi.fn()} setPermission={vi.fn()} />
+  </ThemeProvider>);
+  ['View', 'Add', 'Delete'].forEach((action) => {
+    expect(screen.getByLabelText(action)).toBeChecked();
+    fireEvent.click(screen.getByLabelText(action));
+    expect(toggle).toHaveBeenLastCalledWith(root, action, true);
+  });
+  expect(screen.queryByLabelText('Edit')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Publish')).not.toBeInTheDocument();
+});

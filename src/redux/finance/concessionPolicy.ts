@@ -3,6 +3,9 @@ import type { IConcessionPolicy } from 'src/screens/finance/policies/types/finan
 import { financePolicyType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
+import { policyCacheTags } from './policyCacheTags';
+
+const policyTags = policyCacheTags(financePolicyType.concessionPolicy);
 
 export interface ConcessionPolicyVersionResponse {
   id: string;
@@ -100,22 +103,22 @@ export const concessionPolicyApi = api.injectEndpoints({
           maxResultCount: pageSize,
         },
       }),
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.list,
     }),
     getConcessionPolicyById: builder.query<IConcessionPolicy, string>({
       query: (id: string) => `/finance/concession-policies/${id}`,
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
     createConcessionPolicy: builder.mutation<IConcessionPolicy, ConcessionPolicySavePayload>({
       query: (body) => ({ url: '/finance/concession-policies', method: 'POST', body }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     updateConcessionPolicy: builder.mutation<
       IConcessionPolicy,
       { id: string; body: ConcessionPolicySavePayload }
     >({
       query: ({ id, body }) => ({ url: `/finance/concession-policies/${id}`, method: 'PUT', body }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     cloneConcessionPolicy: builder.mutation<
       IConcessionPolicy,
@@ -126,23 +129,23 @@ export const concessionPolicyApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     archiveConcessionPolicy: builder.mutation<void, string>({
       query: (id) => ({ url: `/finance/concession-policies/${id}`, method: 'DELETE' }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     unarchiveConcessionPolicy: builder.mutation<IConcessionPolicy, string>({
       query: (id) => ({ url: `/finance/concession-policies/${id}/unarchive`, method: 'POST' }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     getConcessionPolicyVersions: builder.query<ConcessionPolicyVersionListResponse, string>({
       query: (id) => `/finance/concession-policies/${id}/versions`,
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
     getConcessionPolicyImpact: builder.query<ConcessionPolicyImpactResponse, string>({
       query: (id) => `/finance/concession-policies/${id}/impact`,
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
     simulateConcessionPolicy: builder.mutation<
       ConcessionPolicySimulationResponse,

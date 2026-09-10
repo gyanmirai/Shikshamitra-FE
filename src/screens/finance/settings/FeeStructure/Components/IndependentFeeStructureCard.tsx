@@ -65,13 +65,7 @@ import type {
 // ---------------------------------------------------------------------------
 const feeStructureSchema = Yup.object({
   name: Yup.string().trim().required('Fee Structure name is required'),
-  concessionPolicyId: Yup.string().required('Concession Policy is required'),
   collectionPolicyId: Yup.string().required('Collection Policy is required'),
-  concessionFeeHeadScope: Yup.string().oneOf(['EntireFeeStructure', 'SelectedFeeHeads']).required(),
-  concessionApplicableFeeHeadIds: Yup.array(Yup.string()).when('concessionFeeHeadScope', {
-    is: 'SelectedFeeHeads',
-    then: (schema) => schema.min(1, 'Select at least one concession-enabled fee head'),
-  }),
   feeHeads: Yup.array(
     Yup.object({
       isOptional: Yup.boolean().optional(),
@@ -485,8 +479,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     formik.values.paymentPolicyId ||
     formik.values.collectionPolicyId ||
     formik.values.refundPolicyId ||
-    formik.values.prorationPolicyId ||
-    formik.values.concessionPolicyId;
+    formik.values.prorationPolicyId;
 
   return (
     <motion.div
@@ -1253,11 +1246,11 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               isEditing={isEditing}
               isLocked={isLocked}
               feeStructureMetadataId={initialData.feeStructureMetaDataId}
-			  feeStructureId={cardId ?? undefined}
+              feeStructureId={cardId ?? undefined}
               feeHeads={formik.values.feeHeads.map((fh) => ({
                 feeHeadId: fh.feeHeadId,
                 feeHeadName: fh.feeHeadName,
-				isOneTime: fh.isOneTime,
+                isOneTime: fh.isOneTime,
               }))}
             />
           )}

@@ -24,6 +24,7 @@ import {
   getActionPermissionBase,
   isAccountSettingPermission,
   getNodeActionPermissionNames,
+  isFinanceConfigurationPermission,
 } from './account-settings-permissions';
 
 // ----------------------------------------------------------------------
@@ -103,7 +104,11 @@ export default function Permission({
           if (type === 'Add' && item.name === `${key}.View`) {
             return { ...item, isGranted: true };
           }
-          if (type === 'Delete' && (item.name === `${key}.View` || item.name === `${key}.Add`)) {
+          if (
+            type === 'Delete' &&
+            (item.name === `${key}.View` ||
+              (!isFinanceConfigurationPermission(key) && item.name === `${key}.Add`))
+          ) {
             return { ...item, isGranted: true };
           }
         }
@@ -365,7 +370,9 @@ export default function Permission({
                               if (isChecked) {
                                 if (type === 'Add') {
                                   const viewIndex = newPermissions.findIndex(
-                                    (i) => i.name === `${item.permissionName}.View`
+                                    (i) =>
+                                      i.name ===
+                                      `${getActionPermissionBase(item.permissionName)}.View`
                                   );
                                   if (viewIndex !== -1) {
                                     newPermissions[viewIndex] = {
@@ -376,7 +383,9 @@ export default function Permission({
                                 }
                                 if (type === 'Delete') {
                                   const viewIndex = newPermissions.findIndex(
-                                    (i) => i.name === `${item.permissionName}.View`
+                                    (i) =>
+                                      i.name ===
+                                      `${getActionPermissionBase(item.permissionName)}.View`
                                   );
                                   if (viewIndex !== -1) {
                                     newPermissions[viewIndex] = {
@@ -385,9 +394,14 @@ export default function Permission({
                                     };
                                   }
                                   const addIndex = newPermissions.findIndex(
-                                    (i) => i.name === `${item.permissionName}.Add`
+                                    (i) =>
+                                      i.name ===
+                                      `${getActionPermissionBase(item.permissionName)}.Add`
                                   );
-                                  if (addIndex !== -1) {
+                                  if (
+                                    addIndex !== -1 &&
+                                    !isFinanceConfigurationPermission(item.permissionName)
+                                  ) {
                                     newPermissions[addIndex] = {
                                       ...newPermissions[addIndex],
                                       isGranted: true,
@@ -396,7 +410,8 @@ export default function Permission({
                                 }
                               } else if (type === 'View') {
                                 const addIndex = newPermissions.findIndex(
-                                  (i) => i.name === `${item.permissionName}.Add`
+                                  (i) =>
+                                    i.name === `${getActionPermissionBase(item.permissionName)}.Add`
                                 );
                                 if (addIndex !== -1) {
                                   newPermissions[addIndex] = {
@@ -406,7 +421,9 @@ export default function Permission({
                                 }
 
                                 const deleteIndex = newPermissions.findIndex(
-                                  (i) => i.name === `${item.permissionName}.Delete`
+                                  (i) =>
+                                    i.name ===
+                                    `${getActionPermissionBase(item.permissionName)}.Delete`
                                 );
                                 if (deleteIndex !== -1) {
                                   newPermissions[deleteIndex] = {

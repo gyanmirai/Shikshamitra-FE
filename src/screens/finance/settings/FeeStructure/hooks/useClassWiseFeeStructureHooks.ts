@@ -19,7 +19,7 @@ export const useFetchStandardFeeStructures = (classId: string, skip = false) => 
     params: { standardId: classId },
     options: { skip: skip || !classId },
   });
-  return result as typeof result & { isLoading: boolean; isFetching: boolean; data: any };
+  return result as typeof result & { isLoading: boolean; isFetching: boolean; isError: boolean; refetch: () => void; data: any };
 };
 
 // ---------------------------------------------------------------------------

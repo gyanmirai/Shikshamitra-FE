@@ -3,6 +3,9 @@ import type { IProrationPolicy } from 'src/screens/finance/policies/types/financ
 import { financePolicyType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
+import { policyCacheTags } from './policyCacheTags';
+
+const policyTags = policyCacheTags(financePolicyType.prorationPolicy);
 
 export interface ProrationPolicyRulePayload {
   feeHeadId: string;
@@ -114,22 +117,22 @@ export const prorationPolicyApi = api.injectEndpoints({
           maxResultCount: pageSize,
         },
       }),
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.list,
     }),
     getProrationPolicyById: builder.query<IProrationPolicy, string>({
       query: (id) => `/finance/proration-policies/${id}`,
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
     createProrationPolicy: builder.mutation<IProrationPolicy, ProrationPolicySavePayload>({
       query: (body) => ({ url: '/finance/proration-policies', method: 'POST', body }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     updateProrationPolicy: builder.mutation<
       IProrationPolicy,
       { id: string; body: ProrationPolicySavePayload }
     >({
       query: ({ id, body }) => ({ url: `/finance/proration-policies/${id}`, method: 'PUT', body }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     activateProrationPolicy: builder.mutation<
       IProrationPolicy,
@@ -140,7 +143,7 @@ export const prorationPolicyApi = api.injectEndpoints({
         method: 'POST',
         params: changeReason ? { changeReason } : undefined,
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     cloneProrationPolicy: builder.mutation<
       IProrationPolicy,
@@ -151,26 +154,26 @@ export const prorationPolicyApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     archiveProrationPolicy: builder.mutation<void, string>({
       query: (id) => ({ url: `/finance/proration-policies/${id}`, method: 'DELETE' }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     unarchiveProrationPolicy: builder.mutation<IProrationPolicy, string>({
       query: (id) => ({ url: `/finance/proration-policies/${id}/unarchive`, method: 'POST' }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     getProrationPolicyVersions: builder.query<
       { totalCount: number; items: ProrationPolicyVersionResponse[] },
       string
     >({
       query: (id) => `/finance/proration-policies/${id}/versions`,
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
     getProrationPolicyImpact: builder.query<ProrationPolicyImpactResponse, string>({
       query: (id) => `/finance/proration-policies/${id}/impact`,
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
     simulateProrationPolicy: builder.mutation<
       ProrationPolicySimulationResponse,

@@ -3,24 +3,23 @@ import type { RootState } from 'src/redux/store';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { financePermissions } from 'src/constants/finance-menu';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
 import { Box, Chip, Grid, Alert, Stack, Divider, Typography } from '@mui/material';
 import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
-import { useGetConcessionPoliciesQuery } from 'src/redux/finance/concessionPolicy';
-import {
-  useGetProrationAttachmentImpactMutation,
-  useGetProrationPoliciesQuery,
-} from 'src/redux/finance/prorationPolicy';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { useValidateCollectionPolicyAttachmentMutation } from 'src/redux/finance/financeFeeStructure';
 import {
   type FinancePolicyType,
   useGetFinancePoliciesQuery,
 } from 'src/redux/finance/financePolicy';
+import {
+  useGetProrationPoliciesQuery,
+  useGetProrationAttachmentImpactMutation,
+} from 'src/redux/finance/prorationPolicy';
 
 // ── types ────────────────────────────────────────────────────────────────────
 
@@ -60,15 +59,6 @@ const POLICY_CONFIG: Array<{
   required: boolean;
   description: string;
 }> = [
-  {
-    key: 'concessionPolicyId',
-    type: 'concession',
-    label: 'Concession Policy',
-    icon: 'solar:ticket-sale-bold-duotone',
-    color: 'warning',
-    required: true,
-    description: 'Controls eligible unpaid fees, value limits, and request calculations',
-  },
   {
     key: 'paymentPolicyId',
     type: 'payment',
@@ -143,19 +133,13 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
   // Versioned policies use their typed endpoints. The remaining
   // policy types still use the legacy generic client until their backend slices are migrated.
   const isCollectionPolicy = policyType === 'collection';
-  const isConcessionPolicy = policyType === 'concession';
   const isRefundPolicy = policyType === 'refund';
   const isProrationPolicy = policyType === 'proration';
 
   const { data: genericPolicyData, isLoading: isGenericLoading } = useGetFinancePoliciesQuery(
     { policyType, academicYearId, status: 'Active' },
     {
-      skip:
-        !academicYearId ||
-        isCollectionPolicy ||
-        isConcessionPolicy ||
-        isRefundPolicy ||
-        isProrationPolicy,
+      skip: !academicYearId || isCollectionPolicy || isRefundPolicy || isProrationPolicy,
     }
   );
 
@@ -164,39 +148,29 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
       { academicYearId: academicYearId as string, status: 'Active' },
       { skip: !academicYearId || !isCollectionPolicy }
     );
-  const { data: concessionPolicyData, isLoading: isConcessionLoading } =
-    useGetConcessionPoliciesQuery(
-      { academicYearId: academicYearId as string, status: 'Active', page: 1, pageSize: 100 },
-      { skip: !academicYearId || !isConcessionPolicy }
-    );
   const { data: refundPolicyData, isLoading: isRefundLoading } = useGetRefundPoliciesQuery(
     { academicYearId: academicYearId as string, status: 'Active', page: 1, pageSize: 100 },
     { skip: !academicYearId || !isRefundPolicy }
   );
-  const { data: prorationPolicyData, isLoading: isProrationLoading } =
-    useGetProrationPoliciesQuery(
-      { academicYearId: academicYearId as string, status: 'Active', page: 1, pageSize: 100 },
-      { skip: !academicYearId || !isProrationPolicy }
-    );
+  const { data: prorationPolicyData, isLoading: isProrationLoading } = useGetProrationPoliciesQuery(
+    { academicYearId: academicYearId as string, status: 'Active', page: 1, pageSize: 100 },
+    { skip: !academicYearId || !isProrationPolicy }
+  );
 
   const isLoading = isCollectionPolicy
     ? isCollectionLoading
-    : isConcessionPolicy
-      ? isConcessionLoading
-      : isRefundPolicy
-        ? isRefundLoading
-        : isProrationPolicy
-          ? isProrationLoading
-          : isGenericLoading;
+    : isRefundPolicy
+      ? isRefundLoading
+      : isProrationPolicy
+        ? isProrationLoading
+        : isGenericLoading;
   const policyData = isCollectionPolicy
     ? collectionPolicyData
-    : isConcessionPolicy
-      ? concessionPolicyData
-      : isRefundPolicy
-        ? refundPolicyData
-        : isProrationPolicy
-          ? prorationPolicyData
-          : genericPolicyData;
+    : isRefundPolicy
+      ? refundPolicyData
+      : isProrationPolicy
+        ? prorationPolicyData
+        : genericPolicyData;
 
   const options = (policyData?.data ?? policyData?.items ?? policyData ?? []).map((p: any) => ({
     label: p.policyName,
@@ -374,10 +348,9 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
     if (!feeStructureId || !values.prorationPolicyId) return;
     getProrationImpact({ id: values.prorationPolicyId, feeStructureId });
   }, [feeStructureId, getProrationImpact, values.prorationPolicyId]);
-  const { data: feeHeadData, isLoading: feeHeadsLoading } = useGetActiveFeeHeadsQuery(
-    currentYear?.id as string,
-    { skip: !currentYear?.id }
-  );
+  const { data: feeHeadData } = useGetActiveFeeHeadsQuery(currentYear?.id as string, {
+    skip: !currentYear?.id,
+  });
   const structureFeeHeadIds = new Set(feeHeads.map((x) => x.feeHeadId));
   const lateFeePolicyHeadIds = new Set<string>(
     selectedCollectionPolicy?.enableLateFee
@@ -397,9 +370,6 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
   const policyOnlyHeads = (feeHeadData ?? []).filter(
     (x) => applicablePolicyHeadIds.has(x.id) && !structureFeeHeadIds.has(x.id)
   );
-  const concessionFeeHeadOptions = (feeHeadData ?? [])
-    .filter((x) => structureFeeHeadIds.has(x.id) && x.isConcessionApplied)
-    .map((x) => ({ label: x.name, value: x.id }));
   const nonFullProrationHeadIds = new Set(
     (selectedProrationPolicy?.feeHeadRules ?? [])
       .filter((rule) => rule.ruleType !== 'FullCharge')
@@ -452,71 +422,12 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
               value={values[cfg.key] ?? ''}
               onChange={(val) => onChange(cfg.key, val)}
               isEditing={isEditing}
-              isLocked={
-                isLocked || (cfg.type === 'proration' && !canManageProrationAttachment)
-              }
+              isLocked={isLocked || (cfg.type === 'proration' && !canManageProrationAttachment)}
               academicYearId={currentYear?.id}
             />
           </Grid>
         ))}
       </Grid>
-
-      {values.concessionPolicyId && (
-        <Box sx={{ mt: 2, p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
-          <Typography variant="body2" fontWeight={700} mb={0.5}>
-            Concession Fee Heads
-          </Typography>
-          <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
-            Only active fee heads enabled for concession can be selected. This scope is snapshotted
-            for each student assignment.
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <CustomSelect
-                label="Scope"
-                options={[
-                  { label: 'All eligible fee heads', value: 'EntireFeeStructure' },
-                  { label: 'Selected eligible fee heads', value: 'SelectedFeeHeads' },
-                ]}
-                labelKey="label"
-                valueKey="value"
-                value={values.concessionFeeHeadScope}
-                disabled={!isEditing || isLocked}
-                onChange={(value) => {
-                  onChange(
-                    'concessionFeeHeadScope',
-                    value as PolicyValues['concessionFeeHeadScope']
-                  );
-                  if (value === 'EntireFeeStructure')
-                    onChange('concessionApplicableFeeHeadIds', []);
-                }}
-              />
-            </Grid>
-            {values.concessionFeeHeadScope === 'SelectedFeeHeads' && (
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <CustomSelect
-                  multiple
-                  label="Eligible Fee Heads"
-                  options={concessionFeeHeadOptions}
-                  isLoading={feeHeadsLoading}
-                  labelKey="label"
-                  valueKey="value"
-                  value={values.concessionApplicableFeeHeadIds}
-                  disabled={!isEditing || isLocked}
-                  onChange={(value) =>
-                    onChange('concessionApplicableFeeHeadIds', value as string[])
-                  }
-                />
-              </Grid>
-            )}
-          </Grid>
-          {concessionFeeHeadOptions.length === 0 && !feeHeadsLoading && (
-            <Typography variant="caption" color="error.main" display="block" mt={1}>
-              No fee head in this structure is active and enabled for concession.
-            </Typography>
-          )}
-        </Box>
-      )}
 
       {/* ── Read-only Collection Policy coverage ─────────────────────────── */}
       {values.collectionPolicyId && feeHeads.length > 0 && (
@@ -631,10 +542,11 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
 
             {invalidOneTimeProrationHeads.length > 0 && (
               <Alert severity="error" sx={{ mb: 1 }}>
-                One-time Fee Structure lines cannot use Daily or Monthly Cutoff proration:{' '}
+                These legacy fee lines require Full charge proration:{' '}
                 {invalidOneTimeProrationHeads
                   .map((head) => head.feeHeadName || head.feeHeadId)
-                  .join(', ')}.
+                  .join(', ')}
+                .
               </Alert>
             )}
 

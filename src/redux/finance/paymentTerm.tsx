@@ -12,6 +12,8 @@ export interface PaymentTermListResponse {
 }
 
 export interface PaymentTermListItem {
+  publishedVersionId?: string | null;
+  publishedVersionNumber?: number | null;
   id: string;
   name: string;
   code: string;

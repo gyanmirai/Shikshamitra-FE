@@ -13,6 +13,8 @@ audience: humans-and-agents
 TL;DR: run docs validation for documentation changes and targeted Finance tests for client, mapper, cache, and audit changes.
 Do not claim Finance behavior is validated unless the relevant tests or a stronger suite ran.
 
+Active Fee Structure editor, typed client and browser checks: [workspace implementation](./references/fee-structure-workspace.md).
+
 ## Documentation checks
 
 Run one of these commands after editing Finance docs.
