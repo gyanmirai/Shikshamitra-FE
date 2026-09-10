@@ -1,10 +1,32 @@
 import { api } from 'src/redux/service';
 import { financeModuleType, studentAdmissionType } from 'src/redux/tagTypes';
 
-/**
- * Compatibility client for legacy student-admission and fee-assignment screens.
- * New Admissions CRM requests belong under `src/redux/student/admissions`.
- */
+export interface StudentFeeAssignmentPreviewLine {
+  feeHeadId: string;
+  feeHeadName: string;
+  installmentLabel: string;
+  coverageStartDate?: string | null;
+  coverageEndDate?: string | null;
+  scheduledAmount: number;
+  proratedAmount: number;
+  reductionAmount: number;
+  factor?: number | null;
+  ruleType?: string | null;
+  roundingMode?: string | null;
+  explanation?: string | null;
+}
+
+export interface StudentFeeAssignmentPreview {
+  prorationPolicyId?: string | null;
+  prorationPolicyVersionId?: string | null;
+  chargeStartDate: string;
+  chargeEndDate: string;
+  scheduledTotal: number;
+  proratedTotal: number;
+  reductionTotal: number;
+  lines: StudentFeeAssignmentPreviewLine[];
+}
+
 export const StudentAdmissionApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentAdmission: builder.query({
@@ -60,6 +82,16 @@ export const StudentAdmissionApi = api.injectEndpoints({
       }),
       invalidatesTags: [studentAdmissionType.studentAdmission, financeModuleType.feeCollection],
     }),
+    previewFeeStructureAssignment: builder.mutation<
+      StudentFeeAssignmentPreview,
+      { body: Record<string, unknown> }
+    >({
+      query: ({ body }) => ({
+        url: `/student-fee-structure/preview`,
+        method: 'POST',
+        body,
+      }),
+    }),
     assignBulkFeeStructure: builder.mutation({
       query: ({ body }) => ({
         url: '/student-fee-structure/assign-bulk',
@@ -77,6 +109,7 @@ export const {
   useAssignDivisionTOStudentMutation,
   useGetDivisionForStandardQuery,
   useAssignFeeStructureMutation,
+  usePreviewFeeStructureAssignmentMutation,
   useAssignBulkFeeStructureMutation,
   useGetStudentFeeStructureQuery,
 } = StudentAdmissionApi;

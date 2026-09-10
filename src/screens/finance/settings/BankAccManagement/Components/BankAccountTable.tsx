@@ -3,6 +3,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { LoadingButton } from '@mui/lab';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -10,7 +11,11 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
-import { usePatchBankAccountStatusMutation } from 'src/redux/finance/BankAccountManage/bankAccountApi';
+import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
+import {
+  useGetBankAccountVersionsQuery,
+  usePatchBankAccountStatusMutation,
+} from 'src/redux/finance/BankAccountManage/bankAccountApi';
 
 import { BankAccountType, type IBankAccount, type IBankAccountTableProps } from './type';
 
@@ -32,10 +37,13 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
     type: 'mutation',
     currentQueryAndMutation: usePatchBankAccountStatusMutation,
   });
+  const access = useAccountSettingPermissions('BankAccount');
 
   const statusConfirm = useBoolean();
   const [statusData, setStatusData] = useState<null | IBankAccount>(null);
   const [deactivationReason, setDeactivationReason] = useState('');
+  const [historyItem, setHistoryItem] = useState<IBankAccount | null>(null);
+  const history = useGetBankAccountVersionsQuery(historyItem?.id || '', { skip: !historyItem });
 
   const handleOpenStatusConfirm = (row: IBankAccount) => {
     setStatusData(row);
@@ -47,6 +55,11 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
 
   const columns: IColumn[] = useMemo(
     () => [
+      {
+        id: 'code',
+        label: 'Code',
+        minWidth: 90,
+      },
       {
         id: 'bankName',
         label: 'Bank Name',
@@ -113,7 +126,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         ),
       },
       {
-        id: 'accountNumber',
+        id: 'maskedAccountNumber',
         label: 'Account Number',
         align: 'left',
         minWidth: 160,
@@ -122,6 +135,12 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
             {value}
           </Typography>
         ),
+      },
+      {
+        id: 'accountHeadName',
+        label: 'Asset Account Head',
+        minWidth: 160,
+        render: (value) => value || 'Migration required',
       },
       {
         id: 'purpose',
@@ -186,6 +205,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
               />
               <Switch
                 size="small"
+                disabled={!access.canChangeStatus}
                 checked={bank.isActive || false}
                 onClick={(event) => event.stopPropagation()}
                 onChange={() => handleOpenStatusConfirm(bank)}
@@ -206,8 +226,14 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
           return (
             <ThreeDotsActions
               showThreeDots={false}
+              showViewIcon
+              viewLabel="Version history"
+              viewIcon="solar:history-bold"
+              handleViewClick={() => setHistoryItem(row as IBankAccount)}
               placement="right-top"
-              showDeleteIcon={row.isUsedInDownstream}
+              showDeleteIcon
+              disableEditIcon={!access.canEdit}
+              disableDeleteIcon={!access.canDelete || !(row as IBankAccount).canDelete}
               showEditIcon
               handleDeleteClick={() => {
                 onDelete(row as IBankAccount);
@@ -221,7 +247,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [access.canChangeStatus, access.canDelete, access.canEdit]
   );
 
   return (
@@ -272,7 +298,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
             <Typography variant="body2">
               {nextStatus ? 'Activate' : 'Deactivate'}{' '}
               <Box component="span" fontWeight="bold" color="text.primary">
-                {statusData?.bankName} ({statusData?.accountNumber})
+                {statusData?.bankName} ({statusData?.maskedAccountNumber})
               </Box>
               ?
             </Typography>
@@ -292,6 +318,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         action={
           <LoadingButton
             loading={isStatusLoading}
+            disabled={!nextStatus && !deactivationReason.trim()}
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
@@ -303,6 +330,7 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
                   body: {
                     isActive: nextStatus,
                     deactivationReason: nextStatus ? null : deactivationReason || null,
+                    concurrencyStamp: statusData.concurrencyStamp,
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
@@ -319,6 +347,13 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
             {nextStatus ? 'Activate' : 'Deactivate'}
           </LoadingButton>
         }
+      />
+      <AccountSettingVersionDialog
+        open={Boolean(historyItem)}
+        title={historyItem?.bankName || 'Bank account'}
+        data={history.data}
+        isLoading={history.isLoading}
+        onClose={() => setHistoryItem(null)}
       />
     </>
   );

@@ -39,7 +39,7 @@ describe('academic hierarchy progress', () => {
 
   it('explains the next actionable hierarchy step', () => {
     expect(getHierarchyNextStep(getHierarchyCounts(boards))).toBe(
-      'Next, select a stage and add its first standard.'
+      'Select a stage and add its first standard.'
     );
     expect(
       getHierarchyNextStep({ boards: 0, mediums: 0, stages: 0, standards: 0, divisions: 0 })

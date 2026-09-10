@@ -6,5 +6,5 @@ export const getFeeHeadInitialValues = (editData?: IFeeHead | null) => ({
   description: editData?.description || '',
   module: editData?.module ?? '',
   isConcessionApplied: editData?.isConcessionApplied || false,
-  incomeHeadId: editData?.incomeHeadId || '',
+  incomeCategoryId: editData?.incomeCategoryId || '',
 });

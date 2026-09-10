@@ -171,6 +171,9 @@ export interface MonthWiseFeeItem {
   installmentLabel?: string;
   dueDate?: string;
   total: number;
+  scheduledTotal?: number;
+	prorationPolicyVersionId?: string | null;
+  prorationExplanation?: string | null;
   paid: number;
   due: number;
   reconciliationAmount?: number;
@@ -197,6 +200,9 @@ export interface FeeHeadWiseFeeItem {
   installmentLabel?: string;
   dueDate?: string;
   total: number;
+  scheduledTotal?: number;
+	prorationPolicyVersionId?: string | null;
+  prorationExplanation?: string | null;
   paid: number;
   due: number;
   reconciliationAmount?: number;

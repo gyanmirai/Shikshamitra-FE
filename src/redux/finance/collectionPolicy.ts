@@ -11,9 +11,33 @@ import { api } from '../service';
 export interface ICollectionPolicyListParams {
   academicYearId: string;
   status?: string;
+  includeArchived?: boolean;
   search?: string;
   skipCount?: number;
   maxResultCount?: number;
+}
+
+export interface CollectionPolicyVersionResponse {
+  id: string;
+  policyType: 'collection';
+  policyId: string;
+  academicYearId: string;
+  versionNumber: number;
+  policyName: string;
+  status: string;
+  snapshotJson: string;
+  changeAction: string;
+  changeReason?: string | null;
+  creationTime: string;
+  creatorId?: string | null;
+  creatorUserName?: string | null;
+  creatorName?: string | null;
+  creatorDisplayName?: string | null;
+}
+
+export interface CollectionPolicyVersionListResponse {
+  totalCount: number;
+  items: CollectionPolicyVersionResponse[];
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
@@ -90,7 +114,10 @@ export const CollectionPolicyApi = api.injectEndpoints({
       invalidatesTags: [financePolicyType.financePolicy],
     }),
 
-    getCollectionPolicyVersions: builder.query({
+    getCollectionPolicyVersions: builder.query<
+      CollectionPolicyVersionListResponse,
+      { id: string; skipCount?: number; maxResultCount?: number }
+    >({
       query: ({ id, ...params }: { id: string; skipCount?: number; maxResultCount?: number }) => ({
         url: `/finance/collection-policies/${id}/versions`,
         method: 'GET',

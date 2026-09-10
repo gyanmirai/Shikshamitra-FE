@@ -16,7 +16,7 @@ export default function AccountHeadDetailView({ accountHead }: Props) {
       <Card>
         <CardContent>
           <Typography variant="subtitle1">
-            {accountHead.headName} ({accountHead.headCode})
+            {accountHead.headName}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Type: {accountHead.headType}
@@ -25,7 +25,7 @@ export default function AccountHeadDetailView({ accountHead }: Props) {
             Nature: {accountHead.nature}
           </Typography>
           <Typography variant="body2" color="text.secondary" mt={2}>
-            Running Balance: ₹{accountHead.runningBalance?.toLocaleString('en-IN') || '0'}
+            Version {accountHead.version}
           </Typography>
           <Box mt={4}>
             <Typography variant="body2" fontStyle="italic">

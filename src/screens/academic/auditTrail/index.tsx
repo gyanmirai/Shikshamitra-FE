@@ -17,9 +17,10 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { Box, Chip, Stack, Alert, Tooltip, Typography, IconButton } from '@mui/material';
 import { useGetAcademicAuditEventsQuery } from 'src/redux/academicAPI/AuditApi/academic-audit-api';
 
+import { AUDIT_ALL_SENTINEL } from './academicAudit.constants';
 import { isAllSentinel } from './utils/academicAuditActionMapper';
-import AcademicAuditDetailsDrawer, { formatActionLabel } from './components/AcademicAuditDetailsDrawer';
-import { AUDIT_ALL_SENTINEL, ACADEMIC_AUDIT_SOURCE_LABELS } from './academicAudit.constants';
+import { AcademicAuditDetailsDrawer } from './components/AcademicAuditDetailsDrawer';
+import { formatActionLabel, formatAcademicAuditSource } from './utils/academicAuditFormatters';
 import AcademicAuditFilter, { type AcademicAuditFilters } from './components/AcademicAuditFilter';
 
 const DEFAULT_FILTERS: AcademicAuditFilters = {
@@ -173,7 +174,7 @@ const AcademicAuditTrail = () => {
         label: 'Source',
         minWidth: 160,
         filterType: 'string',
-        render: (value) => ACADEMIC_AUDIT_SOURCE_LABELS[String(value)] ?? value ?? '-',
+        render: (value) => formatAcademicAuditSource(value == null ? null : String(value)),
       },
       {
         id: 'actions',

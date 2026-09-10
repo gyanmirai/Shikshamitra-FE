@@ -11,6 +11,7 @@ describe('getFeeCategoryInitialValues', () => {
       feeHeads: [
         {
           id: 'fee-head-id',
+          incomeCategoryId: 'income-category-id',
           name: 'Library Fees',
           module: FeeHeadModule.Library,
           description: '',
@@ -20,6 +21,7 @@ describe('getFeeCategoryInitialValues', () => {
     } as never);
 
     expect(values.feeHeads[0].module).toBe(8);
+    expect(values.feeHeads[0].incomeCategoryId).toBe('income-category-id');
   });
 
   it('preserves zero instead of treating it as an empty selection', () => {

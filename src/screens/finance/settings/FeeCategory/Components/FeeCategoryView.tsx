@@ -77,6 +77,20 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
 
                         <Divider />
 
+                        <Box>
+                          <Typography variant="caption" fontWeight={600} display="block">
+                            Income Category
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" display="block">
+                            {fh.incomeCategoryName || 'N/A'}
+                          </Typography>
+                          <Typography variant="caption" color="text.disabled">
+                            Account: {fh.incomeAccountHeadName || 'N/A'}
+                          </Typography>
+                        </Box>
+
+                        <Divider />
+
                         <Box
                           display="flex"
                           justifyContent="space-between"

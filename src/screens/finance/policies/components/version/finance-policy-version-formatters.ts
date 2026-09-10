@@ -19,6 +19,13 @@ const FIELD_LABELS: Record<string, string> = {
   approvalroleids: 'Approval Roles',
   roundingmethod: 'Rounding Method',
   roundoff: 'Rounding Method',
+  feeheadrules: 'Fee Head Proration Rules',
+  ruletype: 'Rule Type',
+  cutoffday: 'Cut-off Day',
+  aftercutoffaction: 'After Cut-off Action',
+  minimumchargedays: 'Minimum Charge Days',
+  calculationbasis: 'Calculation Basis',
+  monthlyrule: 'Monthly Rule',
 };
 
 const ENUM_LABELS: Record<string, Record<string, string>> = {
@@ -56,6 +63,25 @@ const ENUM_LABELS: Record<string, Record<string, string>> = {
     '1': 'Round Up',
     '2': 'Round Down',
     '3': 'Nearest Rupee',
+  },
+  ruletype: {
+    '0': 'No Proration',
+    '1': 'Daily Proration',
+    '2': 'Monthly Proration',
+    '3': 'Full Month Charge',
+    noproration: 'No Proration',
+    dailyproration: 'Daily Proration',
+    monthlyproration: 'Monthly Proration',
+    fullmonthcharge: 'Full Month Charge',
+    fullcharge: 'Full Charge',
+    daily: 'Daily',
+    monthlycutoff: 'Monthly Cut-off',
+  },
+  aftercutoffaction: {
+    '0': 'Charge Next Month',
+    '1': 'Half Charge',
+    nocharge: 'Charge Next Month',
+    halfcharge: '50% Half Month Charge',
   },
 };
 

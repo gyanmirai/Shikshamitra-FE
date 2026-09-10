@@ -10,11 +10,13 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
         page,
         pageSize,
         search,
+        includeInactive = true,
       }: {
         academicYearId: string;
         page?: number;
         pageSize?: number;
         search?: string;
+        includeInactive?: boolean;
       }) => ({
         url: '/expense-categories',
         method: 'GET',
@@ -23,6 +25,7 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
           page,
           pageSize,
           search: search || undefined,
+          includeInactive,
         },
       }),
       providesTags: [financeModuleType.expenseCategory],
@@ -65,6 +68,10 @@ export const expenseCategoryApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.expenseCategory],
     }),
+    getExpenseCategoryVersions: builder.query({
+      query: (id: string) => ({ url: `/expense-categories/${id}/versions`, method: 'GET' }),
+      providesTags: [financeModuleType.expenseCategory],
+    }),
 
     getBudgetOptions: builder.query({
       query: () => ({ url: '/expenseOptions', method: 'GET' }),
@@ -80,5 +87,6 @@ export const {
   usePutExpenseCategoryMutation,
   useDeleteExpenseCategoryMutation,
   usePatchExpenseCategoryStatusMutation,
+  useGetExpenseCategoryVersionsQuery,
   useGetBudgetOptionsQuery,
 } = expenseCategoryApi;

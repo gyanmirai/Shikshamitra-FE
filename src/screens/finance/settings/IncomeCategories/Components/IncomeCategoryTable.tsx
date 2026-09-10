@@ -9,7 +9,12 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
-import { usePatchIncomeCategoryStatusMutation } from 'src/redux/finance/incomeCategory';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
+import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
+import {
+  useGetIncomeCategoryVersionsQuery,
+  usePatchIncomeCategoryStatusMutation,
+} from 'src/redux/finance/incomeCategory';
 
 import type { IIncomeCategory, IIncomeCategoryTableProps } from './type';
 
@@ -31,10 +36,13 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
     type: 'mutation',
     currentQueryAndMutation: usePatchIncomeCategoryStatusMutation,
   });
+  const access = useAccountSettingPermissions('IncomeCategory');
 
   const statusConfirm = useBoolean();
   const [statusData, setStatusData] = useState<null | IIncomeCategory>(null);
   const [deactivationReason, setDeactivationReason] = useState('');
+  const [historyItem, setHistoryItem] = useState<IIncomeCategory | null>(null);
+  const history = useGetIncomeCategoryVersionsQuery(historyItem?.id || '', { skip: !historyItem });
 
   const handleOpenStatusConfirm = (row: IIncomeCategory) => {
     setStatusData(row);
@@ -56,6 +64,12 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
             {value}
           </Typography>
         ),
+      },
+      {
+        id: 'defaultAccountHeadName',
+        label: 'Default Income Head',
+        align: 'left',
+        render: (value) => value || 'Migration required',
       },
       {
         id: 'tags',
@@ -105,6 +119,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
               />
               <Switch
                 size="small"
+                disabled={!access.canChangeStatus}
                 checked={income.isActive || false}
                 onClick={(event) => event.stopPropagation()}
                 onChange={() => handleOpenStatusConfirm(income)}
@@ -125,8 +140,14 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
           return (
             <ThreeDotsActions
               showThreeDots={false}
+              showViewIcon
+              viewLabel="Version history"
+              viewIcon="solar:history-bold"
+              handleViewClick={() => setHistoryItem(row as IIncomeCategory)}
               placement="right-top"
-              showDeleteIcon={row.isUsedInDownstream}
+              showDeleteIcon
+              disableEditIcon={!access.canEdit}
+              disableDeleteIcon={!access.canDelete || !(row as IIncomeCategory).canDelete}
               showEditIcon
               handleDeleteClick={() => {
                 onDelete(row as IIncomeCategory);
@@ -140,7 +161,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [access.canChangeStatus, access.canDelete, access.canEdit]
   );
 
   return (
@@ -211,6 +232,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         action={
           <LoadingButton
             loading={isStatusLoading}
+            disabled={!nextStatus && !deactivationReason.trim()}
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
@@ -222,6 +244,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                   body: {
                     isActive: nextStatus,
                     deactivationReason: nextStatus ? null : deactivationReason || null,
+                    concurrencyStamp: statusData.concurrencyStamp,
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
@@ -238,6 +261,13 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
             {nextStatus ? 'Activate' : 'Deactivate'}
           </LoadingButton>
         }
+      />
+      <AccountSettingVersionDialog
+        open={Boolean(historyItem)}
+        title={historyItem?.name || 'Income category'}
+        data={history.data}
+        isLoading={history.isLoading}
+        onClose={() => setHistoryItem(null)}
       />
     </>
   );

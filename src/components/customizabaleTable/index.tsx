@@ -112,6 +112,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
     config: tableConfig,
     columns: memoizedColumns,
     serverSideFilter: shouldUseServerFilter,
+    serverSideSearch,
     serverSideSort,
     serverSidePagination,
   });

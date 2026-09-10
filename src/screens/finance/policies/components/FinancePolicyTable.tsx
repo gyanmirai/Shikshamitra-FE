@@ -3,23 +3,28 @@
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import React, { useMemo } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import React, { useMemo, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import { Box, Chip, MenuItem, Typography } from '@mui/material';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
-  useGetCollectionPoliciesQuery,
-  useArchiveCollectionPolicyMutation,
-  useUnarchiveCollectionPolicyMutation,
-} from 'src/redux/finance/collectionPolicy';
+  useGetRefundPoliciesQuery,
+  useGetRefundPolicyByIdQuery,
+  useCloneRefundPolicyMutation,
+  useArchiveRefundPolicyMutation,
+  useUnarchiveRefundPolicyMutation,
+} from 'src/redux/finance/refundPolicy';
 import {
   useGetFinancePoliciesQuery,
   useGetFinancePolicyByIdQuery,
@@ -27,6 +32,20 @@ import {
   useCloneFinancePolicyMutation,
   useDeleteFinancePolicyMutation,
 } from 'src/redux/finance/financePolicy';
+import {
+  useGetProrationPoliciesQuery,
+  useGetProrationPolicyByIdQuery,
+  useCloneProrationPolicyMutation,
+  useArchiveProrationPolicyMutation,
+  useUnarchiveProrationPolicyMutation,
+} from 'src/redux/finance/prorationPolicy';
+import {
+  useGetCollectionPoliciesQuery,
+  useGetCollectionPolicyByIdQuery,
+  useCloneCollectionPolicyMutation,
+  useArchiveCollectionPolicyMutation,
+  useUnarchiveCollectionPolicyMutation,
+} from 'src/redux/finance/collectionPolicy';
 import {
   useGetConcessionPoliciesQuery,
   useGetConcessionPolicyByIdQuery,
@@ -55,19 +74,22 @@ const STATUS_COLOR: Record<FinancePolicyStatus, 'success' | 'warning' | 'error' 
   Archived: 'default',
 };
 
-// Collection Policy's status is restricted to Active/Archived and never reaches Draft
-// (see finance-policy.types.ts ICollectionPolicy.status), so the delete-eligibility rule
-// can't be a single hardcoded 'Draft' check across all policy kinds — it's resolved
-// per policy type instead. For Collection Policy, Archived is the terminal "safe to
-// hard-delete" state; for every other kind, an unpublished Draft is.
+// Collection policies use archive/restore as their lifecycle and are never hard-deleted
+// from this table because fee structures and historical version snapshots may reference them.
 const isPolicyDeletable = (
   policyType: IFinancePolicyTableProps['policyType'],
   status: FinancePolicyStatus
-): boolean => (policyType === 'collection' ? status === 'Archived' : status === 'Draft');
+): boolean =>
+  !['collection', 'concession', 'refund', 'proration'].includes(policyType) && status === 'Draft';
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, onAdd, onEdit }) => {
+const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
+  policyType,
+  onAdd,
+  onEdit,
+  archived = false,
+}) => {
   const deleteDialog = useBoolean();
   const detailsDialog = useBoolean();
   const auditDialog = useBoolean();
@@ -82,7 +104,12 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
   });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
   const academicYearId = currentYear?.id || '';
+
+  useEffect(() => {
+    setQueryParams((previous) => ({ ...previous, page: 1, status: '' }));
+  }, [archived]);
 
   // ── Queries / Mutations ──────────────────────────────────────────────────────
   // Collection Policy has a real backend (Phase 1); every other kind still calls
@@ -91,6 +118,58 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
   // only the one matching `policyType` actually fires.
   const isCollectionKind = policyType === 'collection';
   const isConcessionKind = policyType === 'concession';
+  const isRefundKind = policyType === 'refund';
+  const isProrationKind = policyType === 'proration';
+  const usesArchiveTabs = isCollectionKind || isConcessionKind;
+  const concessionPermissions = financePermissions.policies.concessionPolicyActions;
+  const collectionPermissions = financePermissions.policies.collectionPolicyActions;
+  const refundPermissions = financePermissions.policies.refundPolicyActions;
+  const prorationPermissions = financePermissions.policies.prorationPolicyActions;
+  const canCreatePolicy = isCollectionKind
+    ? hasGrantedPermission(permissions, collectionPermissions.create)
+    : isConcessionKind
+      ? hasGrantedPermission(permissions, concessionPermissions.create)
+      : isRefundKind
+        ? hasGrantedPermission(permissions, refundPermissions.create)
+        : !isProrationKind || hasGrantedPermission(permissions, prorationPermissions.create);
+  const canEditPolicy = isCollectionKind
+    ? hasGrantedPermission(permissions, collectionPermissions.edit)
+    : isConcessionKind
+      ? hasGrantedPermission(permissions, concessionPermissions.edit)
+      : isRefundKind
+        ? hasGrantedPermission(permissions, refundPermissions.edit)
+        : !isProrationKind || hasGrantedPermission(permissions, prorationPermissions.edit);
+  const canClonePolicy = isCollectionKind
+    ? hasGrantedPermission(permissions, [collectionPermissions.clone, collectionPermissions.create])
+    : isConcessionKind
+      ? hasGrantedPermission(permissions, concessionPermissions.clone)
+      : isRefundKind
+        ? hasGrantedPermission(permissions, refundPermissions.clone)
+        : !isProrationKind || hasGrantedPermission(permissions, prorationPermissions.clone);
+  const canArchivePolicy = isCollectionKind
+    ? hasGrantedPermission(permissions, collectionPermissions.archive)
+    : isConcessionKind
+      ? hasGrantedPermission(permissions, concessionPermissions.archive)
+      : isRefundKind
+        ? hasGrantedPermission(permissions, refundPermissions.archive)
+        : !isProrationKind || hasGrantedPermission(permissions, prorationPermissions.archive);
+  const canRestorePolicy = isCollectionKind
+    ? hasGrantedPermission(permissions, [
+      collectionPermissions.restore,
+      collectionPermissions.archive,
+    ])
+    : isConcessionKind
+      ? hasGrantedPermission(permissions, concessionPermissions.restore)
+      : isRefundKind
+        ? hasGrantedPermission(permissions, refundPermissions.restore)
+        : !isProrationKind || hasGrantedPermission(permissions, prorationPermissions.restore);
+  const canViewPolicyVersions = isCollectionKind
+    ? hasGrantedPermission(permissions, collectionPermissions.viewVersions)
+    : isConcessionKind
+      ? hasGrantedPermission(permissions, concessionPermissions.viewVersions)
+      : isRefundKind
+        ? hasGrantedPermission(permissions, refundPermissions.viewVersions)
+        : !isProrationKind || hasGrantedPermission(permissions, prorationPermissions.viewVersions);
 
   const {
     data: genericPolicyData,
@@ -100,7 +179,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
     type: 'query',
     currentQueryAndMutation: useGetFinancePoliciesQuery,
     params: { policyType, ...queryParams },
-    options: { skip: isCollectionKind || isConcessionKind },
+    options: { skip: isCollectionKind || isConcessionKind || isRefundKind || isProrationKind },
   });
 
   const {
@@ -110,7 +189,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
   } = useGetCollectionPoliciesQuery(
     {
       academicYearId,
-      status: queryParams.status || undefined,
+      status: archived ? 'Archived' : queryParams.status || undefined,
+      includeArchived: archived,
       search: queryParams.search || undefined,
       skipCount: (queryParams.page - 1) * queryParams.pageSize,
       maxResultCount: queryParams.pageSize,
@@ -125,7 +205,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
   } = useGetConcessionPoliciesQuery(
     {
       academicYearId,
-      status: queryParams.status || undefined,
+      status: archived ? 'Archived' : queryParams.status || undefined,
       search: queryParams.search || undefined,
       page: queryParams.page,
       pageSize: queryParams.pageSize,
@@ -133,37 +213,126 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
     { skip: !isConcessionKind || !academicYearId }
   );
 
+  const {
+    data: refundPolicyData,
+    isLoading: isRefundLoading,
+    isFetching: isRefundFetching,
+  } = useGetRefundPoliciesQuery(
+    {
+      academicYearId,
+      status: archived ? 'Archived' : queryParams.status || undefined,
+      search: queryParams.search || undefined,
+      page: queryParams.page,
+      pageSize: queryParams.pageSize,
+    },
+    { skip: !isRefundKind || !academicYearId }
+  );
+
+  const {
+    data: prorationPolicyData,
+    isLoading: isProrationLoading,
+    isFetching: isProrationFetching,
+  } = useGetProrationPoliciesQuery(
+    {
+      academicYearId,
+      status: archived ? 'Archived' : queryParams.status || undefined,
+      search: queryParams.search || undefined,
+      page: queryParams.page,
+      pageSize: queryParams.pageSize,
+    },
+    { skip: !isProrationKind || !academicYearId }
+  );
+
   const policyData = isCollectionKind
     ? collectionPolicyData && {
-        items: collectionPolicyData.items,
-        totalCount: collectionPolicyData.totalCount,
-      }
+      items: collectionPolicyData.items,
+      totalCount: collectionPolicyData.totalCount,
+    }
     : isConcessionKind
       ? concessionPolicyData
-      : genericPolicyData;
+      : isRefundKind
+        ? refundPolicyData
+        : isProrationKind
+          ? prorationPolicyData
+          : genericPolicyData;
   const isLoading = isCollectionKind
     ? isCollectionLoading
-    : isConcessionKind ? isConcessionLoading : isGenericLoading;
+    : isConcessionKind
+      ? isConcessionLoading
+      : isRefundKind
+        ? isRefundLoading
+        : isProrationKind
+          ? isProrationLoading
+          : isGenericLoading;
   const isFetching = isCollectionKind
     ? isCollectionFetching
-    : isConcessionKind ? isConcessionFetching : isGenericFetching;
+    : isConcessionKind
+      ? isConcessionFetching
+      : isRefundKind
+        ? isRefundFetching
+        : isProrationKind
+          ? isProrationFetching
+          : isGenericFetching;
 
   const [archiveCollectionPolicy] = useArchiveCollectionPolicyMutation();
   const [unarchiveCollectionPolicy] = useUnarchiveCollectionPolicyMutation();
+  const [cloneCollectionPolicy, { isLoading: isCollectionCloning }] =
+    useCloneCollectionPolicyMutation();
   const [archiveConcessionPolicy] = useArchiveConcessionPolicyMutation();
   const [unarchiveConcessionPolicy] = useUnarchiveConcessionPolicyMutation();
   const [cloneConcessionPolicy] = useCloneConcessionPolicyMutation();
+  const [archiveRefundPolicy] = useArchiveRefundPolicyMutation();
+  const [unarchiveRefundPolicy] = useUnarchiveRefundPolicyMutation();
+  const [cloneRefundPolicy, { isLoading: isRefundCloning }] = useCloneRefundPolicyMutation();
+  const [archiveProrationPolicy] = useArchiveProrationPolicyMutation();
+  const [unarchiveProrationPolicy] = useUnarchiveProrationPolicyMutation();
+  const [cloneProrationPolicy, { isLoading: isProrationCloning }] =
+    useCloneProrationPolicyMutation();
 
-  const { data: genericPolicyDetails, isLoading: isGenericDetailsLoading } = useGetFinancePolicyByIdQuery(
-    selected?.id || '',
-    { skip: !selected?.id || !detailsDialog.value || isConcessionKind }
-  );
+  const { data: genericPolicyDetails, isLoading: isGenericDetailsLoading } =
+    useGetFinancePolicyByIdQuery(selected?.id || '', {
+      skip:
+        !selected?.id ||
+        !detailsDialog.value ||
+        isCollectionKind ||
+        isConcessionKind ||
+        isRefundKind ||
+        isProrationKind,
+    });
+  const { data: collectionPolicyDetails, isLoading: isCollectionDetailsLoading } =
+    useGetCollectionPolicyByIdQuery(selected?.id || '', {
+      skip: !selected?.id || !detailsDialog.value || !isCollectionKind,
+    });
   const { data: concessionPolicyDetails, isLoading: isConcessionDetailsLoading } =
     useGetConcessionPolicyByIdQuery(selected?.id || '', {
       skip: !selected?.id || !detailsDialog.value || !isConcessionKind,
     });
-  const policyDetails = isConcessionKind ? concessionPolicyDetails : genericPolicyDetails;
-  const isDetailsLoading = isConcessionKind ? isConcessionDetailsLoading : isGenericDetailsLoading;
+  const { data: refundPolicyDetails, isLoading: isRefundDetailsLoading } =
+    useGetRefundPolicyByIdQuery(selected?.id || '', {
+      skip: !selected?.id || !detailsDialog.value || !isRefundKind,
+    });
+  const { data: prorationPolicyDetails, isLoading: isProrationDetailsLoading } =
+    useGetProrationPolicyByIdQuery(selected?.id || '', {
+      skip: !selected?.id || !detailsDialog.value || !isProrationKind,
+    });
+  const policyDetails = isCollectionKind
+    ? collectionPolicyDetails
+    : isConcessionKind
+      ? concessionPolicyDetails
+      : isRefundKind
+        ? refundPolicyDetails
+        : isProrationKind
+          ? prorationPolicyDetails
+          : genericPolicyDetails;
+  const isDetailsLoading = isCollectionKind
+    ? isCollectionDetailsLoading
+    : isConcessionKind
+      ? isConcessionDetailsLoading
+      : isRefundKind
+        ? isRefundDetailsLoading
+        : isProrationKind
+          ? isProrationDetailsLoading
+          : isGenericDetailsLoading;
 
   const [deletePolicy, { isLoading: isDeleting }] = useQueryAndMutation({
     type: 'mutation',
@@ -209,250 +378,278 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
       // ── Policy Specific Columns ──
       ...(policyType === 'payment'
         ? [
-            {
-              id: 'allowPartialPayment',
-              label: 'Partial Payment',
-              align: 'left' as const,
-              render: (_: any, row: any) => (
-                <Chip
-                  label={row.allowPartialPayment ? 'Allowed' : 'Not Allowed'}
-                  color={row.allowPartialPayment ? 'success' : 'default'}
-                  size="small"
-                  variant="outlined"
-                />
-              ),
-            },
-            {
-              id: 'allocationMethod',
-              label: 'Allocation Method',
-              align: 'left' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value
-                    ? String(value)
-                        .replace(/([A-Z])/g, ' $1')
-                        .trim()
-                    : '-'}
-                </Typography>
-              ),
-            },
-            {
-              id: 'receiptPrefix',
-              label: 'Receipt Prefix',
-              align: 'left' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px" color="text.secondary">
-                  {value || '-'}
-                </Typography>
-              ),
-            },
-          ]
+          {
+            id: 'allowPartialPayment',
+            label: 'Partial Payment',
+            align: 'left' as const,
+            render: (_: any, row: any) => (
+              <Chip
+                label={row.allowPartialPayment ? 'Allowed' : 'Not Allowed'}
+                color={row.allowPartialPayment ? 'success' : 'default'}
+                size="small"
+                variant="outlined"
+              />
+            ),
+          },
+          {
+            id: 'allocationMethod',
+            label: 'Allocation Method',
+            align: 'left' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value
+                  ? String(value)
+                    .replace(/([A-Z])/g, ' $1')
+                    .trim()
+                  : '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'receiptPrefix',
+            label: 'Receipt Prefix',
+            align: 'left' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px" color="text.secondary">
+                {value || '-'}
+              </Typography>
+            ),
+          },
+        ]
         : []),
       ...(policyType === 'concession'
         ? [
-            {
-              id: 'valueSource',
-              label: 'Value Source',
-              align: 'left' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value
-                    ? String(value)
-                        .replace(/([A-Z])/g, ' $1')
-                        .trim()
-                    : '-'}
-                </Typography>
-              ),
-            },
-            {
-				id: 'calculationMethod',
-				label: 'Calculation Method',
-              align: 'left' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value || '-'}
-                </Typography>
-              ),
-            },
-            {
-				id: 'policyLimit',
-				label: 'Value / Limit',
-              align: 'right' as const,
-              render: (_: any, row: any) => (
-                <Typography variant="caption" fontSize="13px" fontWeight="600">
-					{row.calculationMethod === 'Percentage'
-						? `${row.valueSource === 'PolicyFixed' ? row.percentageValue : row.maximumPercentage}%`
-						: row.calculationMethod === 'FixedAmount'
-							? `₹${row.valueSource === 'PolicyFixed' ? row.fixedAmount : row.maximumFixedAmount}`
-							: '100%'}
-                </Typography>
-              ),
-            },
-			{
-				id: 'applyOn',
-				label: 'Apply On',
-				align: 'left' as const,
-				render: (value: any) => (
-					<Typography variant="caption" fontSize="13px">
-						{value ? String(value).replace(/([A-Z])/g, ' $1').trim() : '-'}
-					</Typography>
-				),
-			},
-          ]
+          {
+            id: 'valueSource',
+            label: 'Value Source',
+            align: 'left' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value
+                  ? String(value)
+                    .replace(/([A-Z])/g, ' $1')
+                    .trim()
+                  : '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'calculationMethod',
+            label: 'Calculation Method',
+            align: 'left' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'policyLimit',
+            label: 'Value / Limit',
+            align: 'right' as const,
+            render: (_: any, row: any) => (
+              <Typography variant="caption" fontSize="13px" fontWeight="600">
+                {row.calculationMethod === 'Percentage'
+                  ? `${row.valueSource === 'PolicyFixed' ? row.percentageValue : row.maximumPercentage}%`
+                  : row.calculationMethod === 'FixedAmount'
+                    ? `₹${row.valueSource === 'PolicyFixed' ? row.fixedAmount : row.maximumFixedAmount}`
+                    : '100%'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'applyOn',
+            label: 'Apply On',
+            align: 'left' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value
+                  ? String(value)
+                    .replace(/([A-Z])/g, ' $1')
+                    .trim()
+                  : '-'}
+              </Typography>
+            ),
+          },
+        ]
         : []),
       ...(policyType === 'refund'
         ? [
-            {
-              id: 'refundMethod',
-              label: 'Refund Method',
-              align: 'left' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value
-                    ? String(value)
-                        .replace(/([A-Z])/g, ' $1')
-                        .trim()
-                    : '-'}
-                </Typography>
-              ),
-            },
-            {
-              id: 'processingDays',
-              label: 'Processing Days',
-              align: 'center' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value != null ? `${value} days` : '-'}
-                </Typography>
-              ),
-            },
-            {
-              id: 'allowPartialRefund',
-              label: 'Partial Refund',
-              align: 'center' as const,
-              render: (value: any) => (
-                <Chip
-                  label={value ? 'Yes' : 'No'}
-                  color={value ? 'primary' : 'default'}
-                  size="small"
-                  variant="outlined"
-                />
-              ),
-            },
-          ]
+          {
+            id: 'amountMode',
+            label: 'Amount Rule',
+            align: 'left' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value
+                  ? String(value)
+                    .replace(/([A-Z])/g, ' $1')
+                    .trim()
+                  : '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'feeHeadScope',
+            label: 'Fee Head Scope',
+            align: 'left' as const,
+            render: (value: any, row: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value === 'SelectedFeeHeads'
+                  ? `${row.applicableFeeHeadIds?.length ?? 0} selected`
+                  : 'All Fee Heads'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'processingTargetDays',
+            label: 'Processing Target',
+            align: 'center' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value != null ? `${value} days` : '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'allowPartialRefund',
+            label: 'Partial Refund',
+            align: 'center' as const,
+            render: (value: any) => (
+              <Chip
+                label={value ? 'Yes' : 'No'}
+                color={value ? 'primary' : 'default'}
+                size="small"
+                variant="outlined"
+              />
+            ),
+          },
+        ]
         : []),
       ...(policyType === 'collection'
         ? [
-            {
-              id: 'enableLateFee',
-              label: 'Late Fee',
-              align: 'center' as const,
-              render: (value: any) => (
-                <Chip
-                  label={value ? 'Enabled' : 'Disabled'}
-                  color={value ? 'warning' : 'default'}
-                  size="small"
-                  variant="outlined"
-                />
-              ),
-            },
-            {
-              id: 'lateFeeType',
-              label: 'Late Fee Type',
-              align: 'left' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value || '-'}
-                </Typography>
-              ),
-            },
-            {
-              id: 'gracePeriodDays',
-              label: 'Grace Days',
-              align: 'center' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value != null ? `${value} days` : '-'}
-                </Typography>
-              ),
-            },
-            {
-              id: 'allowOnlineCollection',
-              label: 'Online Pay',
-              align: 'center' as const,
-              render: (value: any) => (
-                <Chip
-                  label={value ? 'Yes' : 'No'}
-                  color={value ? 'success' : 'default'}
-                  size="small"
-                  variant="outlined"
-                />
-              ),
-            },
-          ]
+          {
+            id: 'enableLateFee',
+            label: 'Late Fee',
+            align: 'center' as const,
+            render: (value: any) => (
+              <Chip
+                label={value ? 'Enabled' : 'Disabled'}
+                color={value ? 'warning' : 'default'}
+                size="small"
+                variant="outlined"
+              />
+            ),
+          },
+          {
+            id: 'lateFeeType',
+            label: 'Late Fee Type',
+            align: 'left' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'gracePeriodDays',
+            label: 'Grace Days',
+            align: 'center' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value != null ? `${value} days` : '-'}
+              </Typography>
+            ),
+          },
+          {
+            id: 'allowOnlineCollection',
+            label: 'Online Pay',
+            align: 'center' as const,
+            render: (value: any) => (
+              <Chip
+                label={value ? 'Yes' : 'No'}
+                color={value ? 'success' : 'default'}
+                size="small"
+                variant="outlined"
+              />
+            ),
+          },
+        ]
         : []),
       ...(policyType === 'proration'
         ? [
-            {
-              id: 'feeHeadRules',
-              label: 'Fee Heads Configured',
-              align: 'center' as const,
-              render: (_: any, row: any) => {
-                const rules: any[] = row.feeHeadRules ?? [];
-                const enabled = rules.filter((r: any) => r.prorationApplicable).length;
-                const total = rules.length;
-                return (
-                  <Chip
-                    label={total > 0 ? `${enabled} / ${total}` : '-'}
-                    size="small"
-                    color={enabled > 0 ? 'primary' : 'default'}
-                    variant={enabled > 0 ? 'filled' : 'outlined'}
-                    sx={{ height: 20, fontSize: '0.7rem' }}
-                  />
-                );
-              },
+          {
+            id: 'feeHeadRules',
+            label: 'Fee Heads Configured',
+            align: 'center' as const,
+            render: (_: any, row: any) => {
+              const rules: any[] = row.feeHeadRules ?? [];
+              const enabled = rules.filter((r: any) => r.ruleType !== 'NoProration').length;
+              const total = rules.length;
+              return (
+                <Chip
+                  label={total > 0 ? `${enabled} / ${total}` : '-'}
+                  size="small"
+                  color={enabled > 0 ? 'primary' : 'default'}
+                  variant={enabled > 0 ? 'filled' : 'outlined'}
+                  sx={{ height: 20, fontSize: '0.7rem' }}
+                />
+              );
             },
-            {
-              id: 'usedByCount',
-              label: 'Used By',
-              align: 'center' as const,
-              render: (_: any, row: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {row.usedByCount != null
-                    ? `${row.usedByCount} structure${row.usedByCount !== 1 ? 's' : ''}`
-                    : '-'}
-                </Typography>
-              ),
-            },
-          ]
+          },
+          {
+            id: 'usedByCount',
+            label: 'Used By',
+            align: 'center' as const,
+            render: (_: any, row: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {row.usedByCount != null
+                  ? `${row.usedByCount} structure${row.usedByCount !== 1 ? 's' : ''}`
+                  : '-'}
+              </Typography>
+            ),
+          },
+        ]
         : []),
-      {
-        id: 'effectiveFrom',
-        label: 'Effective From',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value ? new Date(value).toLocaleDateString('en-IN') : '-'}
-          </Typography>
-        ),
-      },
-      {
-        id: 'updatedBy',
-        label: 'Updated By',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value || '-'}
-          </Typography>
-        ),
-      },
+      ...(policyType !== 'collection' && policyType !== 'concession' && policyType !== 'refund'
+        ? [
+          {
+            id: 'effectiveFrom',
+            label: 'Effective From',
+            align: 'left' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value ? new Date(value).toLocaleDateString('en-IN') : '-'}
+              </Typography>
+            ),
+          },
+        ]
+        : []),
+      ...(policyType !== 'concession'
+        ? [
+          {
+            id: 'updatedBy',
+            label: 'Updated By',
+            align: 'left' as const,
+            render: (value: any) => (
+              <Typography variant="caption" fontSize="13px">
+                {value || '-'}
+              </Typography>
+            ),
+          },
+        ]
+        : []),
       {
         id: 'updatedAt',
         label: 'Last Updated',
         align: 'left',
-        render: (value) => (
+        render: (value, row: any) => (
           <Typography variant="caption" fontSize="13px">
-            {value ? new Date(value).toLocaleDateString('en-IN') : '-'}
+            {value || row.lastModificationTime || row.creationTime
+              ? new Date(value || row.lastModificationTime || row.creationTime).toLocaleDateString(
+                'en-IN'
+              )
+              : '-'}
           </Typography>
         ),
       },
@@ -461,18 +658,20 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
         label: 'Status',
         align: 'left',
         filterType: 'enum',
+        isFilter: !(usesArchiveTabs && archived),
         sticky: true,
-			enumOptions:
-				policyType === 'collection'
-					? [
-							{ label: 'Active', value: 'Active' },
-							{ label: 'Archived', value: 'Archived' },
-						]
-					: [
-							{ label: 'Draft', value: 'Draft' },
-							{ label: 'Active', value: 'Active' },
-							{ label: 'Archived', value: 'Archived' },
-						],
+        enumOptions: usesArchiveTabs
+          ? archived
+            ? [{ label: 'Archived', value: 'Archived' }]
+            : [
+              { label: 'Draft', value: 'Draft' },
+              { label: 'Active', value: 'Active' },
+            ]
+          : [
+            { label: 'Draft', value: 'Draft' },
+            { label: 'Active', value: 'Active' },
+            { label: 'Archived', value: 'Archived' },
+          ],
         render: (value) => (
           <Label color={STATUS_COLOR[value as FinancePolicyStatus] ?? 'default'}>{value}</Label>
         ),
@@ -495,9 +694,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
                 setSelected(policy);
                 detailsDialog.onTrue();
               }}
-              showEditIcon={policy.status !== 'Archived'}
+              showEditIcon={canEditPolicy && policy.status !== 'Archived'}
               handleEditClick={() => onEdit(policy)}
-              showDeleteIcon={!isConcessionKind && isPolicyDeletable(policyType, policy.status)}
+              showDeleteIcon={isPolicyDeletable(policyType, policy.status)}
               disableDeleteIcon={policy.isUsedInDownstream}
               handleDeleteClick={() => {
                 setSelected(policy);
@@ -505,99 +704,143 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
               }}
               actions={({ popover }) => (
                 <>
-                  <MenuItem
-                    disabled={isCloning}
-                    onClick={async () => {
-                      popover.onClose();
-                      try {
-                        if (isConcessionKind) {
-                          await cloneConcessionPolicy({
-                            id: policy.id,
-                            body: { targetAcademicYearId: academicYearId || policy.academicYearId },
-                          }).unwrap();
-                        } else {
-                          await clonePolicy({
-                            sourcePolicyId: policy.id,
-                            targetAcademicYearId: academicYearId || policy.academicYearId,
-                          }).unwrap();
-                        }
-                        shikshaMitraToast.success({
-                          message: `Policy "${policy.policyName}" cloned successfully.`,
-                        });
-                      } catch {
-                        shikshaMitraToast.error({ message: 'Failed to clone policy.' });
+                  {canClonePolicy && (
+                    <MenuItem
+                      disabled={
+                        isCloning || isCollectionCloning || isRefundCloning || isProrationCloning
                       }
-                    }}
-                  >
-                    <Iconify icon="mdi:content-copy" sx={{ mr: 1, width: 18, height: 18 }} />
-                    Clone
-                  </MenuItem>
-
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      setSelected(policy);
-                      auditDialog.onTrue();
-                    }}
-                  >
-                    <Iconify icon="mdi:history" sx={{ mr: 1, width: 18, height: 18 }} />
-                    Audit Trail
-                  </MenuItem>
-
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      setSelected(policy);
-                      versionDialog.onTrue();
-                    }}
-                  >
-                    <Iconify
-                      icon="mdi:timeline-clock-outline"
-                      sx={{ mr: 1, width: 18, height: 18 }}
-                    />
-                    Version History
-                  </MenuItem>
-
-                  <MenuItem
-                    onClick={async () => {
-                      popover.onClose();
-                      const isRestoring = policy.status === 'Archived';
-                      try {
-                        if (isCollectionKind) {
-                          if (isRestoring) {
-                            await unarchiveCollectionPolicy(policy.id).unwrap();
+                      onClick={async () => {
+                        popover.onClose();
+                        try {
+                          if (isCollectionKind) {
+                            await cloneCollectionPolicy({
+                              id: policy.id,
+                              body: {
+                                targetAcademicYearId: academicYearId || policy.academicYearId,
+                              },
+                            }).unwrap();
+                          } else if (isConcessionKind) {
+                            await cloneConcessionPolicy({
+                              id: policy.id,
+                              body: {
+                                targetAcademicYearId: academicYearId || policy.academicYearId,
+                              },
+                            }).unwrap();
+                          } else if (isRefundKind) {
+                            await cloneRefundPolicy({
+                              id: policy.id,
+                              body: {
+                                targetAcademicYearId: academicYearId || policy.academicYearId,
+                              },
+                            }).unwrap();
+                          } else if (isProrationKind) {
+                            await cloneProrationPolicy({
+                              id: policy.id,
+                              body: {
+                                targetAcademicYearId: academicYearId || policy.academicYearId,
+                              },
+                            }).unwrap();
                           } else {
-                            await archiveCollectionPolicy(policy.id).unwrap();
+                            await clonePolicy({
+                              sourcePolicyId: policy.id,
+                              targetAcademicYearId: academicYearId || policy.academicYearId,
+                            }).unwrap();
                           }
-                        } else if (isConcessionKind) {
-                          if (isRestoring) await unarchiveConcessionPolicy(policy.id).unwrap();
-                          else await archiveConcessionPolicy(policy.id).unwrap();
-                        } else {
-                          const newStatus: FinancePolicyStatus = isRestoring
-                            ? 'Active'
-                            : 'Archived';
-                          await patchPolicy({ id: policy.id, body: { status: newStatus } });
+                          shikshaMitraToast.success({
+                            message: `Policy "${policy.policyName}" cloned successfully.`,
+                          });
+                        } catch (error) {
+                          shikshaMitraToast.error({
+                            message: parseApiProblemDetail(error).detail,
+                          });
                         }
-                        shikshaMitraToast.success({
-                          message: `Policy ${policy.policyName} ${
-                            isRestoring ? 'restored' : 'archived'
-                          } successfully.`,
-                        });
-                      } catch {
-                        shikshaMitraToast.error({ message: 'Failed to update policy status.' });
-                      }
-                    }}
-                  >
-                    <Iconify
-                      icon={
-                        policy.status === 'Archived'
-                          ? 'mdi:archive-arrow-up-outline'
-                          : 'mdi:archive-outline'
-                      }
-                      sx={{ mr: 1, width: 18, height: 18 }}
-                    />
-                    {policy.status === 'Archived' ? 'Restore' : 'Archive'}
-                  </MenuItem>
+                      }}
+                    >
+                      <Iconify icon="mdi:content-copy" sx={{ mr: 1, width: 18, height: 18 }} />
+                      Clone
+                    </MenuItem>
+                  )}
+
+                  {canViewPolicyVersions && (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        setSelected(policy);
+                        auditDialog.onTrue();
+                      }}
+                    >
+                      <Iconify icon="mdi:history" sx={{ mr: 1, width: 18, height: 18 }} />
+                      Audit Trail
+                    </MenuItem>
+                  )}
+
+                  {canViewPolicyVersions && (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        setSelected(policy);
+                        versionDialog.onTrue();
+                      }}
+                    >
+                      <Iconify
+                        icon="mdi:timeline-clock-outline"
+                        sx={{ mr: 1, width: 18, height: 18 }}
+                      />
+                      Version History
+                    </MenuItem>
+                  )}
+
+                  {((policy.status === 'Archived' && canRestorePolicy) ||
+                    (policy.status !== 'Archived' && canArchivePolicy)) && (
+                      <MenuItem
+                        disabled={policy.status !== 'Archived' && policy.isUsedInDownstream}
+                        onClick={async () => {
+                          popover.onClose();
+                          const isRestoring = policy.status === 'Archived';
+                          try {
+                            if (isCollectionKind) {
+                              if (isRestoring) {
+                                await unarchiveCollectionPolicy(policy.id).unwrap();
+                              } else {
+                                await archiveCollectionPolicy(policy.id).unwrap();
+                              }
+                            } else if (isConcessionKind) {
+                              if (isRestoring) await unarchiveConcessionPolicy(policy.id).unwrap();
+                              else await archiveConcessionPolicy(policy.id).unwrap();
+                            } else if (isRefundKind) {
+                              if (isRestoring) await unarchiveRefundPolicy(policy.id).unwrap();
+                              else await archiveRefundPolicy(policy.id).unwrap();
+                            } else if (isProrationKind) {
+                              if (isRestoring) await unarchiveProrationPolicy(policy.id).unwrap();
+                              else await archiveProrationPolicy(policy.id).unwrap();
+                            } else {
+                              const newStatus: FinancePolicyStatus = isRestoring
+                                ? 'Active'
+                                : 'Archived';
+                              await patchPolicy({ id: policy.id, body: { status: newStatus } });
+                            }
+                            shikshaMitraToast.success({
+                              message: `Policy ${policy.policyName} ${isRestoring ? 'restored to Draft' : 'archived'
+                                } successfully.`,
+                            });
+                          } catch (error) {
+                            shikshaMitraToast.error({
+                              message: parseApiProblemDetail(error).detail,
+                            });
+                          }
+                        }}
+                      >
+                        <Iconify
+                          icon={
+                            policy.status === 'Archived'
+                              ? 'mdi:archive-arrow-up-outline'
+                              : 'mdi:archive-outline'
+                          }
+                          sx={{ mr: 1, width: 18, height: 18 }}
+                        />
+                        {policy.status === 'Archived' ? 'Restore' : 'Archive'}
+                      </MenuItem>
+                    )}
                 </>
               )}
             />
@@ -612,11 +855,29 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
       academicYearId,
       isCollectionKind,
       isConcessionKind,
+      isRefundKind,
+      isProrationKind,
       archiveCollectionPolicy,
       unarchiveCollectionPolicy,
       archiveConcessionPolicy,
       unarchiveConcessionPolicy,
       cloneConcessionPolicy,
+      cloneCollectionPolicy,
+      archiveRefundPolicy,
+      unarchiveRefundPolicy,
+      cloneRefundPolicy,
+      archiveProrationPolicy,
+      unarchiveProrationPolicy,
+      cloneProrationPolicy,
+      isCollectionCloning,
+      isRefundCloning,
+      isProrationCloning,
+      canEditPolicy,
+      canClonePolicy,
+      canArchivePolicy,
+      canRestorePolicy,
+      canViewPolicyVersions,
+      archived,
     ]
   );
 
@@ -638,6 +899,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
         }
         onServerSearch={(search) => setQueryParams((prev) => ({ ...prev, search, page: 1 }))}
         onServerFilter={(filters) => {
+          if (usesArchiveTabs && archived) return;
           const statusFilter = filters.find((f) => f.column === 'status');
           setQueryParams((prev) => ({
             ...prev,
@@ -646,18 +908,24 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
           }));
         }}
         noDataText={
-          <>
-            No policy found.{' '}
-            <Box
-              component="span"
-              onClick={onAdd}
-              color="primary.main"
-              fontWeight={600}
-              sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
-            >
-              Add Policy
-            </Box>
-          </>
+          usesArchiveTabs && archived ? (
+            `No archived ${isCollectionKind ? 'collection' : 'concession'} policies.`
+          ) : (
+            <>
+              No policy found.{' '}
+              {canCreatePolicy && (
+                <Box
+                  component="span"
+                  onClick={onAdd}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                >
+                  Add Policy
+                </Box>
+              )}
+            </>
+          )
         }
       />
 
@@ -680,7 +948,15 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
           auditDialog.onFalse();
           setSelected(null);
         }}
-        policy={selected}
+        policy={
+          selected
+            ? {
+              ...selected,
+              policyType,
+              academicYearName: selected.academicYearName || currentYear?.name || '',
+            }
+            : null
+        }
       />
 
       {/* Version History Drawer */}
@@ -693,10 +969,10 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({ policyType, on
         policy={
           selected
             ? {
-                ...selected,
-                policyType,
-                academicYearName: selected.academicYearName || currentYear?.name || '',
-              }
+              ...selected,
+              policyType,
+              academicYearName: selected.academicYearName || currentYear?.name || '',
+            }
             : null
         }
       />

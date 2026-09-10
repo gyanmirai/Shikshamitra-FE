@@ -10,11 +10,13 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
         page,
         pageSize,
         search,
+        includeInactive = true,
       }: {
         academicYearId: string;
         page?: number;
         pageSize?: number;
         search?: string;
+        includeInactive?: boolean;
       }) => ({
         url: '/bank-accounts',
         method: 'GET',
@@ -23,8 +25,13 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
           page,
           pageSize,
           search: search || undefined,
+          includeInactive,
         },
       }),
+      providesTags: [financeModuleType.bankAccount],
+    }),
+    getBankAccountById: builder.query({
+      query: (id: string) => ({ url: `/bank-accounts/${id}`, method: 'GET' }),
       providesTags: [financeModuleType.bankAccount],
     }),
     postBankAccount: builder.mutation({
@@ -61,14 +68,21 @@ export const bankAccountApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.bankAccount],
     }),
+    getBankAccountVersions: builder.query({
+      query: (id: string) => ({ url: `/bank-accounts/${id}/versions`, method: 'GET' }),
+      providesTags: [financeModuleType.bankAccount],
+    }),
   }),
   overrideExisting: false,
 });
 
 export const {
   useGetBankAccountQuery,
+  useGetBankAccountByIdQuery,
+  useLazyGetBankAccountByIdQuery,
   usePostBankAccountMutation,
   usePutBankAccountMutation,
   useDeleteBankAccountMutation,
   usePatchBankAccountStatusMutation,
+  useGetBankAccountVersionsQuery,
 } = bankAccountApi;

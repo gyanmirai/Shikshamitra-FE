@@ -20,6 +20,38 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     'A reason is required for this decision.',
   'Admissions.Application.DecisionInvalidState':
     'This application has changed and no longer allows that action. Refresh the application and try again.',
+  'Finance:ConcessionPolicy:010001': 'The concession policy could not be found.',
+  'Finance:ConcessionPolicy:010005':
+    'A concession policy with this name already exists for the academic year.',
+  'Finance:ConcessionPolicy:010006':
+    'A concession policy with this code already exists for the academic year.',
+  'Finance:ConcessionPolicy:010007': 'This concession policy status transition is not allowed.',
+  'Finance:ConcessionPolicy:010008': 'Archived concession policies cannot be edited.',
+  'Finance:ConcessionPolicy:010009': 'The academic year cannot be changed after creation.',
+  'Finance:ConcessionPolicy:010010': 'Only an Active concession policy can be attached or used.',
+  'Finance:ConcessionPolicy:010011': 'No concession policy is attached to this fee structure.',
+  'Finance:ConcessionPolicy:010012': 'The selected concession policy version is no longer available.',
+  'Finance:ConcessionPolicy:010013': 'Select at least one eligible fee head.',
+  'Finance:ConcessionPolicy:010014': 'The concession calculation configuration is invalid.',
+  'Finance:ConcessionPolicy:010015': 'The requested concession exceeds the policy limit.',
+  'Finance:ConcessionPolicy:010016': 'The entered concession value is not allowed by this policy.',
+  'Finance:ConcessionPolicy:010017':
+    'The concession policy and fee structure must use the same academic year.',
+  'Finance:ConcessionPolicy:010018':
+    'This concession policy is attached and cannot be moved to Draft or archived.',
+  'Finance:ConcessionPolicy:010019': 'Refresh the concession policy before saving it.',
+  'Finance:ConcessionPolicy:010020':
+    'This concession policy changed in another session. Refresh and try again.',
+  'Finance:ConcessionPolicy:010021':
+    'Enter a change reason before updating an Active concession policy.',
+  'Finance:ConcessionPolicy:010022': 'Only an Active concession policy can be the default.',
+  'Finance:RefundPolicy:010028': 'Only an Active refund policy can be the default.',
+  'Finance:ProrationPolicy:010025': 'Only an Active proration policy can be the default.',
+  'Finance:Concession:030002':
+    'Refresh the request before approval; concurrency information is missing.',
+  'Finance:Concession:030003':
+    'The request or fee balances changed. Refresh, review, and approve again.',
+  'Finance:Concession:030004': 'Select and review due-fee allocations before approval.',
   'Academic:Timetable:020004':
     'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.',
   'ShikshaMitra.Submission:UseFeedbackToReview':

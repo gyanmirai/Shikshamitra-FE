@@ -6,6 +6,7 @@ import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
@@ -29,6 +30,7 @@ import type { IExpenseCategory } from './Components/type';
 
 const FinanceExpenseCategoriesScreen = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const access = useAccountSettingPermissions('ExpenseCategory');
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
 
@@ -110,6 +112,7 @@ const FinanceExpenseCategoriesScreen = () => {
         ]}
         action={
           <Button
+            disabled={!access.canAdd}
             onClick={() => addExpenseCategoryDialog.onTrue()}
             size="small"
             startIcon={<Add />}

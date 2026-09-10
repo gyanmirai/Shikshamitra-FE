@@ -9,16 +9,16 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
+  Chip,
   Stack,
-  Alert,
   Paper,
   Button,
-  Chip,
   Tooltip,
   Typography,
   LinearProgress,
 } from '@mui/material';
 
+import { LessonReviewComment } from '../LessonReviewComment';
 import {
   getLessonStatusConfig,
   isSlotCurrentlyActive,
@@ -74,6 +74,9 @@ export const TimelineLessonItem: React.FC<Props> = ({
     plan?.plannedCompletionPercentage ?? plan?.actualCompletionPercentage ?? 0
   );
   const shouldShowProgress = hasPlan && completionPercentage > 0;
+  const hasReviewRemarks = Boolean(
+    hasPlan && plan.reviewRemarks && ['needsChanges', 'rejected'].includes(statusConfig.stateKey)
+  );
 
   const subjectText = slot.subjectName || plan?.subjectName || 'Subject';
   const chapterText = plan?.chapterName || '';
@@ -190,16 +193,22 @@ export const TimelineLessonItem: React.FC<Props> = ({
         )}
       </Stack>
 
-      {/* ── Main Body Row: Metadata & Progress on Left + Actions on Right ── */}
-      <Stack
-        direction={{ xs: 'column', md: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', md: 'center' }}
-        spacing={1.5}
-        sx={{ minWidth: 0, mt: 0.5 }}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', md: 'minmax(0, 1fr) auto' },
+          gridTemplateAreas: {
+            xs: hasReviewRemarks ? '"details" "feedback" "actions"' : '"details" "actions"',
+            md: hasReviewRemarks ? '"details details" "feedback actions"' : '"details actions"',
+          },
+          alignItems: 'center',
+          gap: 1.5,
+          minWidth: 0,
+          mt: 0.5,
+        }}
       >
         {/* ── Left Content Details ── */}
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ gridArea: 'details', minWidth: 0 }}>
           {/* Chapter / Lesson Name */}
           {hasPlan && chapterText && (
             <Tooltip title={chapterText} placement="top" arrow>
@@ -296,27 +305,17 @@ export const TimelineLessonItem: React.FC<Props> = ({
               </Box>
             </Stack>
           )}
-
-          {/* Feedback section inside card */}
-          {hasPlan &&
-            plan.reviewRemarks &&
-            ['needsChanges', 'rejected'].includes(statusConfig.stateKey) && (
-              <Alert
-                severity={statusConfig.stateKey === 'rejected' ? 'error' : 'warning'}
-                icon={<Iconify icon="solar:danger-bold" width={15} />}
-                sx={{
-                  mt: 1,
-                  py: 0.25,
-                  px: 1,
-                  borderRadius: 1,
-                  alignItems: 'center',
-                  '& .MuiAlert-message': { fontSize: 11.5, py: 0 },
-                }}
-              >
-                <strong>HOD requested:</strong> {plan.reviewRemarks}
-              </Alert>
-            )}
         </Box>
+
+        {hasReviewRemarks && (
+          <Box sx={{ gridArea: 'feedback', minWidth: 0 }}>
+            <LessonReviewComment
+              inline
+              remarks={plan.reviewRemarks}
+              severity={statusConfig.stateKey === 'rejected' ? 'error' : 'warning'}
+            />
+          </Box>
+        )}
 
         {/* ── Right Action Buttons Area ── */}
         <Stack
@@ -327,6 +326,8 @@ export const TimelineLessonItem: React.FC<Props> = ({
           flexWrap="wrap"
           useFlexGap
           sx={{
+            gridArea: 'actions',
+            minWidth: 0,
             flexShrink: 0,
             ...(!canView && { display: 'none' }),
             ...(!canManage && {
@@ -607,7 +608,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
             )
           )}
         </Stack>
-      </Stack>
+      </Box>
     </Paper>
   );
 };

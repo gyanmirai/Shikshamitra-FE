@@ -8,6 +8,8 @@ import { useSelector } from 'react-redux';
 import { Box, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 
 import FinancePolicyTable from '../components/FinancePolicyTable';
 import ProrationPolicyDrawer from '../components/ProrationPolicyDrawer';
@@ -19,6 +21,11 @@ export default function ProrationPolicyWorkspace() {
   const drawerOpen = useBoolean();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canCreate = hasGrantedPermission(
+    permissions,
+    financePermissions.policies.prorationPolicyActions.create
+  );
   const academicYearId = currentYear?.id || '';
 
   const handleAdd = () => {
@@ -47,6 +54,7 @@ export default function ProrationPolicyWorkspace() {
             size="small"
             startIcon={<Add />}
             onClick={handleAdd}
+            disabled={!canCreate || !academicYearId}
             sx={{ px: '24px' }}
           >
             Proration Policy

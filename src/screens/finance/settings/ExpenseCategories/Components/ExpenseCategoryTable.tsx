@@ -9,7 +9,12 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
-import { usePatchExpenseCategoryStatusMutation } from 'src/redux/finance/expenseCategory';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
+import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
+import {
+  useGetExpenseCategoryVersionsQuery,
+  usePatchExpenseCategoryStatusMutation,
+} from 'src/redux/finance/expenseCategory';
 
 import type { IExpenseCategory, IExpenseCategoryTableProps } from './type';
 
@@ -31,10 +36,13 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
     type: 'mutation',
     currentQueryAndMutation: usePatchExpenseCategoryStatusMutation,
   });
+  const access = useAccountSettingPermissions('ExpenseCategory');
 
   const statusConfirm = useBoolean();
   const [statusData, setStatusData] = useState<null | IExpenseCategory>(null);
   const [deactivationReason, setDeactivationReason] = useState('');
+  const [historyItem, setHistoryItem] = useState<IExpenseCategory | null>(null);
+  const history = useGetExpenseCategoryVersionsQuery(historyItem?.id || '', { skip: !historyItem });
 
   const handleOpenStatusConfirm = (row: IExpenseCategory) => {
     setStatusData(row);
@@ -56,6 +64,12 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
             {value}
           </Typography>
         ),
+      },
+      {
+        id: 'defaultAccountHeadName',
+        label: 'Default Expense Head',
+        align: 'left',
+        render: (value) => value || 'Migration required',
       },
       {
         id: 'tags',
@@ -105,6 +119,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
               />
               <Switch
                 size="small"
+                disabled={!access.canChangeStatus}
                 checked={expense.isActive || false}
                 onClick={(event) => event.stopPropagation()}
                 onChange={() => handleOpenStatusConfirm(expense)}
@@ -125,8 +140,14 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
           return (
             <ThreeDotsActions
               showThreeDots={false}
+              showViewIcon
+              viewLabel="Version history"
+              viewIcon="solar:history-bold"
+              handleViewClick={() => setHistoryItem(row as IExpenseCategory)}
               placement="right-top"
-              showDeleteIcon={row.isUsedInDownstream}
+              showDeleteIcon
+              disableEditIcon={!access.canEdit}
+              disableDeleteIcon={!access.canDelete || !(row as IExpenseCategory).canDelete}
               showEditIcon
               handleDeleteClick={() => {
                 onDelete(row as IExpenseCategory);
@@ -140,7 +161,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [access.canChangeStatus, access.canDelete, access.canEdit]
   );
 
   return (
@@ -211,6 +232,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         action={
           <LoadingButton
             loading={isStatusLoading}
+            disabled={!nextStatus && !deactivationReason.trim()}
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
@@ -222,6 +244,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
                   body: {
                     isActive: nextStatus,
                     deactivationReason: nextStatus ? null : deactivationReason || null,
+                    concurrencyStamp: statusData.concurrencyStamp,
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
@@ -238,6 +261,13 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
             {nextStatus ? 'Activate' : 'Deactivate'}
           </LoadingButton>
         }
+      />
+      <AccountSettingVersionDialog
+        open={Boolean(historyItem)}
+        title={historyItem?.name || 'Expense category'}
+        data={history.data}
+        isLoading={history.isLoading}
+        onClose={() => setHistoryItem(null)}
       />
     </>
   );

@@ -15,7 +15,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
-import { DownstreamUsageWarning } from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   useGetIncomeCategoriesQuery,
   usePutIncomeCategoryMutation,
@@ -30,14 +29,10 @@ import type { IIncomeCategoryFormProps } from './type';
 const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose, editData }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
-  // State for downstream usage warning dialog
-  const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
-  const [pendingFormValues, setPendingFormValues] = useState<any>(null);
-
   const { data: incomeCategoryData } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetIncomeCategoriesQuery,
-    params: { academicYearId: currentYear?.id, page: 1, pageSize: 1000 },
+    params: { academicYearId: currentYear?.id, page: 1, pageSize: 100 },
     options: {
       skip: !currentYear?.id || !open?.value || editData,
     },
@@ -72,17 +67,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
     initialValues: getIncomeCategoryInitialValues(editData),
     enableReinitialize: true,
     validationSchema: incomeCategoryValidationSchema(existingNames, editData),
-    onSubmit: async (values) => {
-      // Check if updating an item that is used downstream
-      if (editData?.isUsedInDownstream && editData?.id) {
-        setPendingFormValues(values);
-        setShowDownstreamWarning(true);
-        return;
-      }
-
-      // Proceed with submission if not used downstream
-      await performSubmission(values);
-    },
+    onSubmit: async (values) => performSubmission(values),
   });
 
   // Perform the actual form submission
@@ -93,7 +78,8 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
         name: values.name,
         description: values.description || '',
         tags: values.tags || [],
-        incomeHeadId: values.incomeHeadId || undefined,
+        defaultAccountHeadId: values.defaultAccountHeadId,
+        concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
 
       if (editData?.id) {
@@ -152,7 +138,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
       <DialogScrollContent>
         <Grid container spacing={3}>
           {/* Income Category Name */}
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.name && formik.errors.name) || false}>
               <TextField
                 fullWidth
@@ -182,19 +168,31 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
             </ShakingTextField>
           </Grid>
           {/* Income Head */}
-          <Grid size={{ xs: 12, md: 6 }}>
+          <Grid size={12}>
             <ShakingTextField
-              error={!!(formik.touched.incomeHeadId && formik.errors.incomeHeadId) || false}
+              error={
+                !!(formik.touched.defaultAccountHeadId && formik.errors.defaultAccountHeadId) ||
+                false
+              }
             >
               <HeadSelector
-                name="incomeHeadId"
-                label="Income Head"
+                name="defaultAccountHeadId"
+                label="Default Income Account Head"
                 headType="Income"
-                value={formik.values.incomeHeadId}
-                onChange={(val) => formik.setFieldValue('incomeHeadId', val)}
-                error={formik.touched.incomeHeadId && Boolean(formik.errors.incomeHeadId)}
+                categoryType="Income"
+                required
+                disabled={editData?.isUsedInDownstream}
+                value={formik.values.defaultAccountHeadId}
+                onChange={(val) => formik.setFieldValue('defaultAccountHeadId', val)}
+                error={
+                  formik.touched.defaultAccountHeadId && Boolean(formik.errors.defaultAccountHeadId)
+                }
                 helperText={
-                  formik.touched.incomeHeadId ? (formik.errors.incomeHeadId as string) : undefined
+                  editData?.isUsedInDownstream
+                    ? 'This category is already used. Create a new category to use a different account head.'
+                    : formik.touched.defaultAccountHeadId
+                    ? (formik.errors.defaultAccountHeadId as string)
+                    : undefined
                 }
               />
             </ShakingTextField>
@@ -299,25 +297,6 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
           {editData ? 'Update' : 'Submit'}
         </LoadingButton>
       </DialogActions>
-
-      {/* Downstream Usage Warning Dialog */}
-      <DownstreamUsageWarning
-        open={showDownstreamWarning}
-        itemName={editData?.name || ''}
-        itemType="Income Category"
-        isLoading={isAddLoading || isUpdateLoading}
-        onConfirm={async () => {
-          if (pendingFormValues) {
-            await performSubmission(pendingFormValues);
-            setShowDownstreamWarning(false);
-            setPendingFormValues(null);
-          }
-        }}
-        onCancel={() => {
-          setShowDownstreamWarning(false);
-          setPendingFormValues(null);
-        }}
-      />
     </BackPopUpChecked>
   );
 };

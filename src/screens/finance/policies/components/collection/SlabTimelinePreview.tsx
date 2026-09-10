@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import { alpha } from '@mui/material/styles';
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
 
 import { computeSlabIssues } from './CollectionCommon';
@@ -13,7 +16,14 @@ interface SlabTimelinePreviewProps {
 
 // A palette cycled per-slab (in sorted day order) so adjacent, non-overlapping
 // slabs are visually distinguishable at a glance.
-const SLAB_COLORS = ['#3b82f6', '#8b5cf6', '#0ea5e9', '#14b8a6', '#6366f1', '#0891b2'];
+const SLAB_COLORS = [
+  '#0284c7', // Sky
+  '#7c3aed', // Purple
+  '#059669', // Emerald
+  '#d97706', // Amber
+  '#4f46e5', // Indigo
+  '#0d9488', // Teal
+];
 
 export default function SlabTimelinePreview({ rules }: SlabTimelinePreviewProps) {
   const { overlapIndices, gaps } = useMemo(() => computeSlabIssues(rules), [rules]);
@@ -30,32 +40,46 @@ export default function SlabTimelinePreview({ rules }: SlabTimelinePreviewProps)
     .map((r, i) => ({ ...r, _index: i }))
     .sort((a, b) => a.startDay - b.startDay);
 
+  const hasIssues = overlapIndices.length > 0 || gaps.length > 0;
+
   return (
-    <Box sx={{ mb: 2 }}>
-      <Typography variant="caption" color="text.secondary" display="block" mb={0.5}>
-        Slab Timeline (Day 0 – {timelineEnd})
-        {(overlapIndices.length > 0 || gaps.length > 0) && (
-          <Box component="span" sx={{ color: 'error.main', fontWeight: 600, ml: 1 }}>
-            {overlapIndices.length > 0 && gaps.length > 0
-              ? 'Overlapping ranges and gaps detected'
-              : overlapIndices.length > 0
-                ? 'Overlapping ranges detected'
-                : 'Gaps in day coverage detected'}
-          </Box>
+    <Box sx={{ mb: 2.5 }}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ mb: 1 }}
+      >
+        <Typography variant="caption" fontWeight={600} color="text.secondary">
+          Slab Coverage Timeline (Day 0 – {timelineEnd})
+        </Typography>
+
+        {hasIssues && (
+          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: 'error.main' }}>
+            <Iconify icon={GlobalIcons.alertIcon} width={14} height={14} />
+            <Typography variant="caption" fontWeight={600} sx={{ fontSize: '0.72rem' }}>
+              {overlapIndices.length > 0 && gaps.length > 0
+                ? 'Overlaps & gaps detected'
+                : overlapIndices.length > 0
+                  ? 'Overlapping slabs detected'
+                  : 'Gaps between slabs detected'}
+            </Typography>
+          </Stack>
         )}
-      </Typography>
+      </Stack>
 
       <Stack
         direction="row"
         sx={{
           position: 'relative',
-          height: 28,
+          height: 32,
           width: '100%',
-          borderRadius: 1,
+          borderRadius: 1.5,
           overflow: 'hidden',
           border: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'action.hover',
+          borderColor: hasIssues ? 'error.light' : 'divider',
+          bgcolor: (theme) => alpha(theme.palette.background.default, 0.6),
+          boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
         }}
       >
         {sorted.map((slab, sortedIdx) => {
@@ -68,22 +92,61 @@ export default function SlabTimelinePreview({ rules }: SlabTimelinePreviewProps)
             <Tooltip
               key={slab._index}
               arrow
-              title={`Day ${slab.startDay} – ${slab.endDay ?? '∞'}: ${slab.calculationType === 'Flat' ? `₹${slab.value}` : `${slab.value}%`}${isOverlap ? ' (overlaps an adjacent slab)' : ''}`}
+              placement="top"
+              title={
+                <Box sx={{ p: 0.5, textAlign: 'center' }}>
+                  <Typography variant="caption" fontWeight={700} display="block">
+                    Day {slab.startDay} – {slab.endDay ?? '∞'}
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    Fee: {slab.calculationType === 'Flat' ? `₹${slab.value}` : `${slab.value}%`}
+                  </Typography>
+                  {isOverlap && (
+                    <Typography variant="caption" color="error.light" fontWeight={600} display="block">
+                      ⚠️ Overlaps adjacent slab!
+                    </Typography>
+                  )}
+                </Box>
+              }
             >
               <Box
                 sx={{
                   width: `${widthPct}%`,
-                  minWidth: 4,
+                  minWidth: 6,
                   height: '100%',
                   bgcolor: isOverlap ? 'error.main' : color,
                   backgroundImage: isOverlap
-                    ? 'repeating-linear-gradient(45deg, rgba(255,255,255,0.35) 0, rgba(255,255,255,0.35) 4px, transparent 4px, transparent 8px)'
+                    ? 'repeating-linear-gradient(45deg, rgba(255,255,255,0.3) 0, rgba(255,255,255,0.3) 5px, transparent 5px, transparent 10px)'
                     : undefined,
-                  borderRight: '1px solid',
+                  borderRight: '1.5px solid',
                   borderColor: 'background.paper',
-                  cursor: 'default',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'opacity 0.2s',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    opacity: 0.88,
+                  },
                 }}
-              />
+              >
+                {widthPct > 12 && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: '#ffffff',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      px: 0.5,
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {slab.calculationType === 'Flat' ? `₹${slab.value}` : `${slab.value}%`}
+                  </Typography>
+                )}
+              </Box>
             </Tooltip>
           );
         })}
@@ -95,17 +158,21 @@ export default function SlabTimelinePreview({ rules }: SlabTimelinePreviewProps)
             <Tooltip
               key={`gap-${i}`}
               arrow
-              title={`No slab covers day ${gap.afterDay + 1} – ${gap.beforeDay - 1}`}
+              placement="top"
+              title={`Gap: No slab defined for Day ${gap.afterDay + 1} – ${gap.beforeDay - 1}`}
             >
               <Box
                 sx={{
                   position: 'absolute',
                   left: `${leftPct}%`,
                   width: `${widthPct}%`,
-                  minWidth: 4,
+                  minWidth: 6,
                   height: '100%',
-                  bgcolor: 'grey.300',
-                  opacity: 0.7,
+                  bgcolor: 'warning.light',
+                  backgroundImage:
+                    'repeating-linear-gradient(45deg, rgba(255,255,255,0.4) 0, rgba(255,255,255,0.4) 3px, transparent 3px, transparent 6px)',
+                  opacity: 0.85,
+                  cursor: 'pointer',
                 }}
               />
             </Tooltip>

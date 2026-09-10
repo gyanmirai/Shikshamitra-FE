@@ -1,16 +1,22 @@
 'use client';
 
 import React from 'react';
-import { Add, Delete } from '@mui/icons-material';
+import { getIn } from 'formik';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import ShakingTextField from 'src/components/shaking-text-field';
 import {
   Box,
   Grid,
   Card,
   Paper,
   Table,
+  Stack,
   Switch,
   Select,
   Button,
+  Tooltip,
   Checkbox,
   MenuItem,
   TableRow,
@@ -23,9 +29,12 @@ import {
   IconButton,
   FormControl,
   Autocomplete,
+  FormHelperText,
   TableContainer,
+  InputAdornment,
   FormControlLabel,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 
 import SlabTimelinePreview from './SlabTimelinePreview';
 import HeadSelector from '../../../components/HeadSelector';
@@ -44,150 +53,306 @@ export default function CollectionLateFeeSection({
   addSlab,
   removeSlab,
 }: CollectionLateFeeSectionProps) {
+  const isLateFeeEnabled = Boolean(formik.values.enableLateFee);
   const { overlapIndices } = computeSlabIssues(formik.values.escalationRules);
 
   return (
     <SectionCard
       title="Late Fee Configuration"
-      subtitle="Setup late fee parameters, grace periods, and calculation methods."
+      subtitle="Setup grace periods, calculation types, escalation slabs, and runaway caps."
+      icon={GlobalIcons.receiptIcon}
+      action={
+        <Label color={isLateFeeEnabled ? 'warning' : 'default'} sx={{ height: 22 }}>
+          {isLateFeeEnabled ? 'Late Fee Active' : 'Disabled'}
+        </Label>
+      }
     >
       <Grid container spacing={2.5}>
+        {/* Enable / Disable Late Fee Toggle Banner */}
         <Grid size={{ xs: 12 }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={formik.values.enableLateFee}
-                onChange={(e) => formik.setFieldValue('enableLateFee', e.target.checked)}
-              />
-            }
-            label="Enable Late Fee"
-          />
+          <Card
+            variant="outlined"
+            sx={{
+              p: 2,
+              borderRadius: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              bgcolor: (theme) =>
+                isLateFeeEnabled
+                  ? alpha(theme.palette.warning.main, 0.05)
+                  : alpha(theme.palette.background.default, 0.4),
+              borderColor: (theme) =>
+                isLateFeeEnabled
+                  ? alpha(theme.palette.warning.main, 0.4)
+                  : theme.palette.divider,
+              boxShadow: (theme) =>
+                isLateFeeEnabled
+                  ? `0 0 0 1px ${alpha(theme.palette.warning.main, 0.2)}`
+                  : 'none',
+              transition: 'all 0.2s ease',
+              cursor: 'pointer',
+              '&:hover': {
+                borderColor: (theme) =>
+                  isLateFeeEnabled ? 'warning.main' : alpha(theme.palette.text.primary, 0.2),
+              },
+            }}
+            onClick={() => formik.setFieldValue('enableLateFee', !isLateFeeEnabled)}
+          >
+            <FormControlLabel
+              sx={{ m: 0, width: '100%', pointerEvents: 'none' }}
+              control={
+                <Switch
+                  size="small"
+                  checked={isLateFeeEnabled}
+                  color="warning"
+                  sx={{ mr: 1 }}
+                />
+              }
+              label={
+                <Box>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+                      Enable Late Fee Charges
+                    </Typography>
+                    {isLateFeeEnabled && (
+                      <Label color="warning" sx={{ height: 18, fontSize: '0.65rem' }}>
+                        Enabled
+                      </Label>
+                    )}
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
+                    Automatically calculate late charges on overdue unpaid fee heads once the grace period expires.
+                  </Typography>
+                </Box>
+              }
+            />
+          </Card>
         </Grid>
 
-        {formik.values.enableLateFee && (
+        {isLateFeeEnabled && (
           <>
-            {/* Grace Period */}
+            {/* Grace Period Days */}
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Grace Period (Days) *"
-                name="gracePeriodDays"
-                value={formik.values.gracePeriodDays}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
+              <ShakingTextField
                 error={formik.touched.gracePeriodDays && Boolean(formik.errors.gracePeriodDays)}
-                helperText={
-                  (formik.touched.gracePeriodDays && (formik.errors.gracePeriodDays as string)) ||
-                  'Days after due date before late fees start'
-                }
-              />
-            </Grid>
-
-            {/* Apply On Fee Heads */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Autocomplete
-                multiple
-                size="small"
-                options={feeHeads}
-                getOptionLabel={(option) => option.name || ''}
-                value={feeHeads.filter((h) => formik.values.lateFeeApplyOnFeeHeads?.includes(h.id))}
-                onChange={(_, newValue) => {
-                  formik.setFieldValue(
-                    'lateFeeApplyOnFeeHeads',
-                    newValue.map((v) => v.id)
-                  );
-                }}
-                disableCloseOnSelect
-                renderOption={(props, option, { selected }) => {
-                  const { key, ...optionProps } = props as any;
-                  return (
-                    <li key={key || option.id} {...optionProps}>
-                      <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
-                      {option.name}
-                    </li>
-                  );
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Apply On Fee Heads *"
-                    error={
-                      formik.touched.lateFeeApplyOnFeeHeads &&
-                      Boolean(formik.errors.lateFeeApplyOnFeeHeads)
-                    }
-                    helperText={
-                      formik.touched.lateFeeApplyOnFeeHeads &&
-                      (formik.errors.lateFeeApplyOnFeeHeads as any)
-                    }
-                  />
-                )}
-              />
-            </Grid>
-
-            {/* Calculation Type */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Calculation Type *</InputLabel>
-                <Select
-                  label="Calculation Type *"
-                  name="lateFeeType"
-                  value={formik.values.lateFeeType}
-                  onChange={(e) => {
-                    formik.handleChange(e);
-                    // Clear unused variables
-                    formik.setFieldValue('flatAmount', null);
-                    formik.setFieldValue('percentage', null);
-                    formik.setFieldValue('amountPerDay', null);
-                    formik.setFieldValue('amountPerWeek', null);
-                    formik.setFieldValue('amountPerMonth', null);
-                  }}
-                >
-                  <MenuItem value="Flat">Flat Amount</MenuItem>
-                  <MenuItem value="Percentage">Percentage Per Day</MenuItem>
-                  <MenuItem value="PerDay">Per Day</MenuItem>
-                  <MenuItem value="PerWeek">Per Week</MenuItem>
-                  <MenuItem value="PerMonth">Per Month</MenuItem>
-                  <MenuItem value="Compound">Compound</MenuItem>
-                  <MenuItem value="Slab">Slab Based</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            {/* Dynamic Fields */}
-            {formik.values.lateFeeType === 'Flat' && (
-              <Grid size={{ xs: 12, sm: 6 }}>
+              >
                 <TextField
                   fullWidth
                   size="small"
                   type="number"
-                  label="Late Fee Amount (₹) *"
-                  name="flatAmount"
-                  value={formik.values.flatAmount ?? ''}
+                  label="Grace Period *"
+                  placeholder="0"
+                  name="gracePeriodDays"
+                  value={formik.values.gracePeriodDays}
                   onChange={formik.handleChange}
-                  error={formik.touched.flatAmount && Boolean(formik.errors.flatAmount)}
-                  helperText={formik.touched.flatAmount && (formik.errors.flatAmount as string)}
+                  onBlur={formik.handleBlur}
+                  slotProps={{
+                    input: {
+                      endAdornment: <InputAdornment position="end">days</InputAdornment>,
+                    },
+                    htmlInput: { min: 0 },
+                  }}
+                  error={formik.touched.gracePeriodDays && Boolean(formik.errors.gracePeriodDays)}
+                  helperText={
+                    (formik.touched.gracePeriodDays && (formik.errors.gracePeriodDays as string)) ||
+                    'Number of buffer days after due date before late fees start accruing.'
+                  }
                 />
+              </ShakingTextField>
+            </Grid>
+
+            {/* Grace Day Type */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <ShakingTextField
+                error={formik.touched.gracePeriodType && Boolean(formik.errors.gracePeriodType)}
+              >
+                <FormControl
+                  fullWidth
+                  size="small"
+                  error={formik.touched.gracePeriodType && Boolean(formik.errors.gracePeriodType)}
+                >
+                  <InputLabel>Grace Day Calculation *</InputLabel>
+                  <Select
+                    label="Grace Day Calculation *"
+                    name="gracePeriodType"
+                    value={formik.values.gracePeriodType}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  >
+                    <MenuItem value="Calendar">
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Iconify icon={GlobalIcons.calendar} width={16} height={16} />
+                        <Typography variant="body2">Calendar Days (Standard)</Typography>
+                      </Stack>
+                    </MenuItem>
+                    <MenuItem value="WorkingDay">
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Iconify icon="solar:calendar-date-bold" width={16} height={16} />
+                        <Typography variant="body2">Working Days Only</Typography>
+                      </Stack>
+                    </MenuItem>
+                  </Select>
+                  {formik.touched.gracePeriodType && formik.errors.gracePeriodType && (
+                    <FormHelperText>{formik.errors.gracePeriodType as string}</FormHelperText>
+                  )}
+                </FormControl>
+              </ShakingTextField>
+            </Grid>
+
+            {/* Apply On Fee Heads */}
+            <Grid size={{ xs: 12 }}>
+              <ShakingTextField
+                error={
+                  formik.touched.lateFeeApplyOnFeeHeads &&
+                  Boolean(formik.errors.lateFeeApplyOnFeeHeads)
+                }
+              >
+                <Autocomplete
+                  multiple
+                  size="small"
+                  options={feeHeads}
+                  groupBy={(option) => option.feeCategoryName || 'Other'}
+                  getOptionLabel={(option) => option.name || ''}
+                  isOptionEqualToValue={(option, value) => option.id === value.id}
+                  value={feeHeads.filter((h) =>
+                    formik.values.lateFeeApplyOnFeeHeads?.includes(h.id)
+                  )}
+                  onChange={(_, newValue) => {
+                    formik.setFieldValue(
+                      'lateFeeApplyOnFeeHeads',
+                      newValue.map((v) => v.id)
+                    );
+                  }}
+                  disableCloseOnSelect
+                  renderOption={(props, option, { selected }) => {
+                    const { key, ...optionProps } = props as any;
+                    return (
+                      <li key={key || option.id} {...optionProps}>
+                        <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
+                        <Typography variant="body2">{option.name}</Typography>
+                      </li>
+                    );
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      name="lateFeeApplyOnFeeHeads"
+                      label="Apply Late Fee On Fee Heads *"
+                      placeholder="Select applicable fee heads..."
+                      onBlur={formik.handleBlur}
+                      error={
+                        formik.touched.lateFeeApplyOnFeeHeads &&
+                        Boolean(formik.errors.lateFeeApplyOnFeeHeads)
+                      }
+                      helperText={
+                        (formik.touched.lateFeeApplyOnFeeHeads &&
+                          (formik.errors.lateFeeApplyOnFeeHeads as string)) ||
+                        'Late fees are computed based only on unpaid balances of the selected fee heads.'
+                      }
+                    />
+                  )}
+                />
+              </ShakingTextField>
+            </Grid>
+
+            {/* Calculation Type */}
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <ShakingTextField
+                error={formik.touched.lateFeeType && Boolean(formik.errors.lateFeeType)}
+              >
+                <FormControl
+                  fullWidth
+                  size="small"
+                  error={formik.touched.lateFeeType && Boolean(formik.errors.lateFeeType)}
+                >
+                  <InputLabel>Calculation Type *</InputLabel>
+                  <Select
+                    label="Calculation Type *"
+                    name="lateFeeType"
+                    value={formik.values.lateFeeType}
+                    onChange={(e) => {
+                      formik.handleChange(e);
+                      // Reset type-specific fields
+                      formik.setFieldValue('flatAmount', null);
+                      formik.setFieldValue('percentage', null);
+                      formik.setFieldValue('amountPerDay', null);
+                      formik.setFieldValue('amountPerWeek', null);
+                      formik.setFieldValue('amountPerMonth', null);
+                    }}
+                    onBlur={formik.handleBlur}
+                  >
+                    <MenuItem value="Flat">Flat Fixed Amount (₹)</MenuItem>
+                    <MenuItem value="Percentage">Percentage Per Day (%)</MenuItem>
+                    <MenuItem value="PerDay">Daily Fixed Amount (₹/day)</MenuItem>
+                    <MenuItem value="PerWeek">Weekly Fixed Amount (₹/week)</MenuItem>
+                    <MenuItem value="PerMonth">Monthly Fixed Amount (₹/month)</MenuItem>
+                    <MenuItem value="Compound">Compound Interest</MenuItem>
+                    <MenuItem value="Slab">Escalation Slab Based</MenuItem>
+                  </Select>
+                  {formik.touched.lateFeeType && formik.errors.lateFeeType && (
+                    <FormHelperText>{formik.errors.lateFeeType as string}</FormHelperText>
+                  )}
+                </FormControl>
+              </ShakingTextField>
+            </Grid>
+
+            {/* Dynamic Type Fields */}
+            {formik.values.lateFeeType === 'Flat' && (
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ShakingTextField
+                  error={formik.touched.flatAmount && Boolean(formik.errors.flatAmount)}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Flat Late Fee Amount *"
+                    placeholder="0.00"
+                    name="flatAmount"
+                    value={formik.values.flatAmount ?? ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                      },
+                      htmlInput: { min: 0 },
+                    }}
+                    error={formik.touched.flatAmount && Boolean(formik.errors.flatAmount)}
+                    helperText={formik.touched.flatAmount && (formik.errors.flatAmount as string)}
+                  />
+                </ShakingTextField>
               </Grid>
             )}
 
             {(formik.values.lateFeeType === 'Percentage' ||
               formik.values.lateFeeType === 'Compound') && (
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Percentage (%) *"
-                  name="percentage"
-                  value={formik.values.percentage ?? ''}
-                  onChange={formik.handleChange}
-                  error={formik.touched.percentage && Boolean(formik.errors.percentage)}
-                  helperText={formik.touched.percentage && (formik.errors.percentage as string)}
-                />
-              </Grid>
-            )}
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <ShakingTextField
+                    error={formik.touched.percentage && Boolean(formik.errors.percentage)}
+                  >
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label="Interest Rate Percentage *"
+                      placeholder="0.00"
+                      name="percentage"
+                      value={formik.values.percentage ?? ''}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      slotProps={{
+                        input: {
+                          endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                        },
+                        htmlInput: { min: 0, max: 100, step: 0.01 },
+                      }}
+                      error={formik.touched.percentage && Boolean(formik.errors.percentage)}
+                      helperText={formik.touched.percentage && (formik.errors.percentage as string)}
+                    />
+                  </ShakingTextField>
+                </Grid>
+              )}
 
             {formik.values.lateFeeType === 'Percentage' && (
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -199,9 +364,9 @@ export default function CollectionLateFeeSection({
                     value={formik.values.percentageBase}
                     onChange={formik.handleChange}
                   >
-                    <MenuItem value="OutstandingAmount">Outstanding Amount</MenuItem>
-                    <MenuItem value="OriginalFee">Original Fee</MenuItem>
-                    <MenuItem value="RemainingBalance">Remaining Balance</MenuItem>
+                    <MenuItem value="OutstandingAmount">Outstanding Overdue Balance</MenuItem>
+                    <MenuItem value="OriginalFee">Original Fee Amount</MenuItem>
+                    <MenuItem value="RemainingBalance">Remaining Total Balance</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -217,9 +382,9 @@ export default function CollectionLateFeeSection({
                     value={formik.values.compoundFrequency}
                     onChange={formik.handleChange}
                   >
-                    <MenuItem value="Daily">Daily</MenuItem>
-                    <MenuItem value="Weekly">Weekly</MenuItem>
-                    <MenuItem value="Monthly">Monthly</MenuItem>
+                    <MenuItem value="Daily">Daily Compounding</MenuItem>
+                    <MenuItem value="Weekly">Weekly Compounding</MenuItem>
+                    <MenuItem value="Monthly">Monthly Compounding</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -227,202 +392,326 @@ export default function CollectionLateFeeSection({
 
             {formik.values.lateFeeType === 'PerDay' && (
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Amount Per Day (₹) *"
-                  name="amountPerDay"
-                  value={formik.values.amountPerDay ?? ''}
-                  onChange={formik.handleChange}
+                <ShakingTextField
                   error={formik.touched.amountPerDay && Boolean(formik.errors.amountPerDay)}
-                  helperText={formik.touched.amountPerDay && (formik.errors.amountPerDay as string)}
-                />
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Amount Per Day *"
+                    placeholder="0.00"
+                    name="amountPerDay"
+                    value={formik.values.amountPerDay ?? ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                        endAdornment: <InputAdornment position="end">/ day</InputAdornment>,
+                      },
+                      htmlInput: { min: 0 },
+                    }}
+                    error={formik.touched.amountPerDay && Boolean(formik.errors.amountPerDay)}
+                    helperText={formik.touched.amountPerDay && (formik.errors.amountPerDay as string)}
+                  />
+                </ShakingTextField>
               </Grid>
             )}
 
             {formik.values.lateFeeType === 'PerWeek' && (
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Amount Per Week (₹) *"
-                  name="amountPerWeek"
-                  value={formik.values.amountPerWeek ?? ''}
-                  onChange={formik.handleChange}
+                <ShakingTextField
                   error={formik.touched.amountPerWeek && Boolean(formik.errors.amountPerWeek)}
-                  helperText={
-                    formik.touched.amountPerWeek && (formik.errors.amountPerWeek as string)
-                  }
-                />
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Amount Per Week *"
+                    placeholder="0.00"
+                    name="amountPerWeek"
+                    value={formik.values.amountPerWeek ?? ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                        endAdornment: <InputAdornment position="end">/ week</InputAdornment>,
+                      },
+                      htmlInput: { min: 0 },
+                    }}
+                    error={formik.touched.amountPerWeek && Boolean(formik.errors.amountPerWeek)}
+                    helperText={formik.touched.amountPerWeek && (formik.errors.amountPerWeek as string)}
+                  />
+                </ShakingTextField>
               </Grid>
             )}
 
             {formik.values.lateFeeType === 'PerMonth' && (
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Amount Per Month (₹) *"
-                  name="amountPerMonth"
-                  value={formik.values.amountPerMonth ?? ''}
-                  onChange={formik.handleChange}
+                <ShakingTextField
                   error={formik.touched.amountPerMonth && Boolean(formik.errors.amountPerMonth)}
-                  helperText={
-                    formik.touched.amountPerMonth && (formik.errors.amountPerMonth as string)
-                  }
-                />
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Amount Per Month *"
+                    placeholder="0.00"
+                    name="amountPerMonth"
+                    value={formik.values.amountPerMonth ?? ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    slotProps={{
+                      input: {
+                        startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                        endAdornment: <InputAdornment position="end">/ month</InputAdornment>,
+                      },
+                      htmlInput: { min: 0 },
+                    }}
+                    error={formik.touched.amountPerMonth && Boolean(formik.errors.amountPerMonth)}
+                    helperText={formik.touched.amountPerMonth && (formik.errors.amountPerMonth as string)}
+                  />
+                </ShakingTextField>
               </Grid>
             )}
 
-            {/* Slab builder */}
+            {/* Slab Builder Section */}
             {formik.values.lateFeeType === 'Slab' && (
               <Grid size={{ xs: 12 }}>
-                <Box
+                <Paper
+                  variant="outlined"
                   sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    mb: 1,
+                    p: 2,
+                    borderRadius: 1.5,
+                    bgcolor: (theme) => alpha(theme.palette.background.default, 0.5),
+                    borderColor: 'divider',
                   }}
                 >
-                  <Typography variant="subtitle2">Interactive Slab Builder</Typography>
-                  <Button size="small" variant="outlined" startIcon={<Add />} onClick={addSlab}>
-                    Add Slab
-                  </Button>
-                </Box>
-                <SlabTimelinePreview rules={formik.values.escalationRules} />
-                {formik.values.escalationRules.length === 0 ? (
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2.5,
-                      textAlign: 'center',
-                      bgcolor: 'action.hover',
-                      borderStyle: 'dashed',
-                    }}
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{ mb: 1.5 }}
                   >
-                    <Typography variant="caption" color="text.secondary">
-                      No slabs built yet. Build slabs to specify charges for different late windows.
-                    </Typography>
-                  </Paper>
-                ) : (
-                  <TableContainer component={Paper} variant="outlined">
-                    <Table size="small">
-                      <TableHead>
-                        <TableRow>
-                          <TableCell sx={{ fontSize: '11px', py: 1 }}>From Day</TableCell>
-                          <TableCell sx={{ fontSize: '11px', py: 1 }}>To Day</TableCell>
-                          <TableCell sx={{ fontSize: '11px', py: 1 }}>Type</TableCell>
-                          <TableCell sx={{ fontSize: '11px', py: 1 }}>Value</TableCell>
-                          <TableCell sx={{ fontSize: '11px', py: 1 }} align="right">
-                            Actions
-                          </TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {formik.values.escalationRules.map((rule: any, idx: number) => (
-                          <TableRow
-                            key={idx}
-                            sx={
-                              overlapIndices.includes(idx)
-                                ? { bgcolor: 'error.lighter' }
-                                : undefined
-                            }
-                          >
-                            <TableCell sx={{ py: 0.5 }}>
-                              <TextField
-                                size="small"
-                                type="number"
-                                value={rule.startDay}
-                                onChange={(e) =>
-                                  formik.setFieldValue(
-                                    `escalationRules[${idx}].startDay`,
-                                    +e.target.value
-                                  )
-                                }
-                                sx={{ width: 80 }}
-                                slotProps={{
-                                  htmlInput: { style: { fontSize: '12px', padding: '4px 8px' } },
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ py: 0.5 }}>
-                              <TextField
-                                size="small"
-                                type="number"
-                                placeholder="Max"
-                                value={rule.endDay ?? ''}
-                                onChange={(e) =>
-                                  formik.setFieldValue(
-                                    `escalationRules[${idx}].endDay`,
-                                    e.target.value === '' ? null : +e.target.value
-                                  )
-                                }
-                                sx={{ width: 80 }}
-                                slotProps={{
-                                  htmlInput: { style: { fontSize: '12px', padding: '4px 8px' } },
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ py: 0.5 }}>
-                              <Select
-                                size="small"
-                                value={rule.calculationType}
-                                onChange={(e) =>
-                                  formik.setFieldValue(
-                                    `escalationRules[${idx}].calculationType`,
-                                    e.target.value
-                                  )
-                                }
-                                sx={{ width: 100, height: 28, fontSize: '12px' }}
-                              >
-                                <MenuItem value="Flat" sx={{ fontSize: '12px' }}>
-                                  Flat (₹)
-                                </MenuItem>
-                                <MenuItem value="Percentage" sx={{ fontSize: '12px' }}>
-                                  Percent (%)
-                                </MenuItem>
-                              </Select>
-                            </TableCell>
-                            <TableCell sx={{ py: 0.5 }}>
-                              <TextField
-                                size="small"
-                                type="number"
-                                value={rule.value}
-                                onChange={(e) =>
-                                  formik.setFieldValue(
-                                    `escalationRules[${idx}].value`,
-                                    +e.target.value
-                                  )
-                                }
-                                sx={{ width: 80 }}
-                                slotProps={{
-                                  htmlInput: { style: { fontSize: '12px', padding: '4px 8px' } },
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell sx={{ py: 0.5 }} align="right">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => removeSlab(idx)}
-                              >
-                                <Delete sx={{ fontSize: 16 }} />
-                              </IconButton>
+                    <Box>
+                      <Typography variant="subtitle2" fontWeight={700}>
+                        Escalation Slabs Builder
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Configure tiered late charges based on how many days overdue the payment is.
+                      </Typography>
+                    </Box>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+                      onClick={addSlab}
+                    >
+                      Add Slab
+                    </Button>
+                  </Stack>
+
+                  <SlabTimelinePreview rules={formik.values.escalationRules} />
+
+                  {formik.values.escalationRules.length === 0 ? (
+                    <Paper
+                      variant="outlined"
+                      sx={{
+                        p: 3,
+                        textAlign: 'center',
+                        bgcolor: 'background.paper',
+                        borderStyle: 'dashed',
+                        borderRadius: 1.5,
+                      }}
+                    >
+                      <Iconify
+                        icon="solar:chart-square-bold-duotone"
+                        width={36}
+                        height={36}
+                        sx={{ color: 'text.disabled', mb: 1 }}
+                      />
+                      <Typography variant="body2" fontWeight={600} color="text.secondary">
+                        No escalation slabs defined yet.
+                      </Typography>
+                      <Typography variant="caption" color="text.disabled" display="block">
+                        Click &quot;Add Slab&quot; above to create day ranges (e.g., Days 1–15: ₹50, Days 16–30: ₹100).
+                      </Typography>
+                    </Paper>
+                  ) : (
+                    <TableContainer
+                      component={Paper}
+                      variant="outlined"
+                      sx={{ borderRadius: 1.5, overflow: 'hidden' }}
+                    >
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08) }}>
+                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>From Day</TableCell>
+                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>To Day</TableCell>
+                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>Type</TableCell>
+                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>Value</TableCell>
+                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }} align="right">
+                              Action
                             </TableCell>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-                )}
+                        </TableHead>
+                        <TableBody>
+                          {formik.values.escalationRules.map((rule: any, idx: number) => {
+                            const isOverlap = overlapIndices.includes(idx);
+                            return (
+                              <TableRow
+                                key={idx}
+                                sx={{
+                                  bgcolor: isOverlap
+                                    ? (theme) => alpha(theme.palette.error.main, 0.06)
+                                    : 'transparent',
+                                  '&:hover': {
+                                    bgcolor: (theme) =>
+                                      isOverlap
+                                        ? alpha(theme.palette.error.main, 0.1)
+                                        : alpha(theme.palette.action.hover, 0.5),
+                                  },
+                                }}
+                              >
+                                <TableCell sx={{ py: 0.75 }}>
+                                  <TextField
+                                    size="small"
+                                    type="number"
+                                    name={`escalationRules[${idx}].startDay`}
+                                    value={rule.startDay}
+                                    onChange={(e) =>
+                                      formik.setFieldValue(
+                                        `escalationRules[${idx}].startDay`,
+                                        +e.target.value
+                                      )
+                                    }
+                                    onBlur={formik.handleBlur}
+                                    error={Boolean(
+                                      getIn(formik.touched, `escalationRules[${idx}].startDay`) &&
+                                      getIn(formik.errors, `escalationRules[${idx}].startDay`)
+                                    )}
+                                    sx={{ width: 85 }}
+                                    slotProps={{
+                                      htmlInput: {
+                                        min: 0,
+                                        style: { fontSize: '12px', padding: '5px 8px' },
+                                      },
+                                    }}
+                                  />
+                                </TableCell>
+                                <TableCell sx={{ py: 0.75 }}>
+                                  <TextField
+                                    size="small"
+                                    type="number"
+                                    placeholder="Open"
+                                    name={`escalationRules[${idx}].endDay`}
+                                    value={rule.endDay ?? ''}
+                                    onChange={(e) =>
+                                      formik.setFieldValue(
+                                        `escalationRules[${idx}].endDay`,
+                                        e.target.value === '' ? null : +e.target.value
+                                      )
+                                    }
+                                    onBlur={formik.handleBlur}
+                                    error={Boolean(
+                                      getIn(formik.touched, `escalationRules[${idx}].endDay`) &&
+                                      getIn(formik.errors, `escalationRules[${idx}].endDay`)
+                                    )}
+                                    sx={{ width: 85 }}
+                                    slotProps={{
+                                      htmlInput: {
+                                        min: 0,
+                                        style: { fontSize: '12px', padding: '5px 8px' },
+                                      },
+                                    }}
+                                  />
+                                </TableCell>
+                                <TableCell sx={{ py: 0.75 }}>
+                                  <FormControl size="small">
+                                    <Select
+                                      size="small"
+                                      name={`escalationRules[${idx}].calculationType`}
+                                      value={rule.calculationType}
+                                      onChange={(e) =>
+                                        formik.setFieldValue(
+                                          `escalationRules[${idx}].calculationType`,
+                                          e.target.value
+                                        )
+                                      }
+                                      onBlur={formik.handleBlur}
+                                      sx={{ width: 110, height: 32, fontSize: '12px' }}
+                                    >
+                                      <MenuItem value="Flat" sx={{ fontSize: '12px' }}>
+                                        Flat (₹)
+                                      </MenuItem>
+                                      <MenuItem value="Percentage" sx={{ fontSize: '12px' }}>
+                                        Percentage (%)
+                                      </MenuItem>
+                                    </Select>
+                                  </FormControl>
+                                </TableCell>
+                                <TableCell sx={{ py: 0.75 }}>
+                                  <TextField
+                                    size="small"
+                                    type="number"
+                                    name={`escalationRules[${idx}].value`}
+                                    value={rule.value}
+                                    onChange={(e) =>
+                                      formik.setFieldValue(
+                                        `escalationRules[${idx}].value`,
+                                        +e.target.value
+                                      )
+                                    }
+                                    onBlur={formik.handleBlur}
+                                    error={Boolean(
+                                      getIn(formik.touched, `escalationRules[${idx}].value`) &&
+                                      getIn(formik.errors, `escalationRules[${idx}].value`)
+                                    )}
+                                    sx={{ width: 90 }}
+                                    slotProps={{
+                                      htmlInput: {
+                                        min: 0,
+                                        style: { fontSize: '12px', padding: '5px 8px' },
+                                      },
+                                    }}
+                                  />
+                                </TableCell>
+                                <TableCell sx={{ py: 0.75 }} align="right">
+                                  <Tooltip title="Delete slab">
+                                    <IconButton
+                                      size="small"
+                                      color="error"
+                                      onClick={() => removeSlab(idx)}
+                                      sx={{
+                                        '&:hover': {
+                                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.1),
+                                        },
+                                      }}
+                                    >
+                                      <Iconify icon={GlobalIcons.delete} width={16} height={16} />
+                                    </IconButton>
+                                  </Tooltip>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  )}
+                  {formik.touched.escalationRules &&
+                    typeof formik.errors.escalationRules === 'string' && (
+                      <FormHelperText error sx={{ mx: 1.75, mt: 0.75 }}>
+                        {formik.errors.escalationRules}
+                      </FormHelperText>
+                    )}
+                </Paper>
               </Grid>
             )}
 
-            {/* Rounding Method & Consider as Income toggle */}
+            {/* Rounding Method */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth size="small">
                 <InputLabel>Rounding Method</InputLabel>
@@ -432,99 +721,152 @@ export default function CollectionLateFeeSection({
                   value={formik.values.roundingMethod}
                   onChange={formik.handleChange}
                 >
-                  <MenuItem value="None">None</MenuItem>
-                  <MenuItem value="RoundUp">Round Up</MenuItem>
-                  <MenuItem value="RoundDown">Round Down</MenuItem>
-                  <MenuItem value="NearestRupee">Nearest Rupee</MenuItem>
+                  <MenuItem value="None">None (Exact decimal)</MenuItem>
+                  <MenuItem value="RoundUp">Round Up (Ceil to ₹1)</MenuItem>
+                  <MenuItem value="RoundDown">Round Down (Floor to ₹1)</MenuItem>
+                  <MenuItem value="NearestRupee">Nearest Rupee (Half up)</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
 
-            {/* Runaway-charge protection: caps independent of the calculation formula */}
+            {/* Runaway Caps */}
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Maximum Late Fee Amount (₹)"
-                name="maximumLateFeeAmount"
-                value={formik.values.maximumLateFeeAmount ?? ''}
-                onChange={(e) =>
-                  formik.setFieldValue(
-                    'maximumLateFeeAmount',
-                    e.target.value === '' ? null : +e.target.value
-                  )
-                }
-                onBlur={formik.handleBlur}
+              <ShakingTextField
                 error={
                   formik.touched.maximumLateFeeAmount && Boolean(formik.errors.maximumLateFeeAmount)
                 }
-                helperText={
-                  (formik.touched.maximumLateFeeAmount &&
-                    (formik.errors.maximumLateFeeAmount as string)) ||
-                  'Optional absolute ceiling, regardless of formula'
-                }
-              />
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Maximum Late Fee Ceiling Amount"
+                  placeholder="No limit"
+                  name="maximumLateFeeAmount"
+                  value={formik.values.maximumLateFeeAmount ?? ''}
+                  onChange={(e) =>
+                    formik.setFieldValue(
+                      'maximumLateFeeAmount',
+                      e.target.value === '' ? null : +e.target.value
+                    )
+                  }
+                  onBlur={formik.handleBlur}
+                  slotProps={{
+                    input: {
+                      startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                    },
+                    htmlInput: { min: 0 },
+                  }}
+                  error={
+                    formik.touched.maximumLateFeeAmount &&
+                    Boolean(formik.errors.maximumLateFeeAmount)
+                  }
+                  helperText={
+                    (formik.touched.maximumLateFeeAmount &&
+                      (formik.errors.maximumLateFeeAmount as string)) ||
+                    'Optional cap: late fees will never exceed this total amount.'
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
             <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Maximum Charging Days"
-                name="maximumChargingDays"
-                value={formik.values.maximumChargingDays ?? ''}
-                onChange={(e) =>
-                  formik.setFieldValue(
-                    'maximumChargingDays',
-                    e.target.value === '' ? null : +e.target.value
-                  )
-                }
-                onBlur={formik.handleBlur}
+              <ShakingTextField
                 error={
                   formik.touched.maximumChargingDays && Boolean(formik.errors.maximumChargingDays)
                 }
-                helperText={
-                  (formik.touched.maximumChargingDays &&
-                    (formik.errors.maximumChargingDays as string)) ||
-                  'Optional cutoff — stop accruing after this many days late'
-                }
-              />
+              >
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Maximum Charging Days Cutoff"
+                  placeholder="No limit"
+                  name="maximumChargingDays"
+                  value={formik.values.maximumChargingDays ?? ''}
+                  onChange={(e) =>
+                    formik.setFieldValue(
+                      'maximumChargingDays',
+                      e.target.value === '' ? null : +e.target.value
+                    )
+                  }
+                  onBlur={formik.handleBlur}
+                  slotProps={{
+                    input: {
+                      endAdornment: <InputAdornment position="end">days</InputAdornment>,
+                    },
+                    htmlInput: { min: 0 },
+                  }}
+                  error={
+                    formik.touched.maximumChargingDays && Boolean(formik.errors.maximumChargingDays)
+                  }
+                  helperText={
+                    (formik.touched.maximumChargingDays &&
+                      (formik.errors.maximumChargingDays as string)) ||
+                    'Optional cutoff: stop accruing additional late fees after this many days.'
+                  }
+                />
+              </ShakingTextField>
             </Grid>
 
+            {/* Consider as Income Switch Card */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <Card
                 variant="outlined"
                 sx={{
-                  px: 2,
-                  py: 1,
+                  p: 1.75,
+                  borderRadius: 1.5,
                   display: 'flex',
                   alignItems: 'center',
-                  bgcolor: formik.values.considerAsIncome ? 'primary.lighter' : 'transparent',
-                  borderColor: formik.values.considerAsIncome ? 'primary.main' : 'divider',
+                  bgcolor: (theme) =>
+                    formik.values.considerAsIncome
+                      ? alpha(theme.palette.primary.main, 0.05)
+                      : alpha(theme.palette.background.default, 0.4),
+                  borderColor: (theme) =>
+                    formik.values.considerAsIncome
+                      ? alpha(theme.palette.primary.main, 0.4)
+                      : theme.palette.divider,
+                  boxShadow: (theme) =>
+                    formik.values.considerAsIncome
+                      ? `0 0 0 1px ${alpha(theme.palette.primary.main, 0.2)}`
+                      : 'none',
                   transition: 'all 0.2s ease',
                   cursor: 'pointer',
+                  '&:hover': {
+                    borderColor: (theme) =>
+                      formik.values.considerAsIncome
+                        ? 'primary.main'
+                        : alpha(theme.palette.text.primary, 0.2),
+                  },
                 }}
                 onClick={() =>
                   formik.setFieldValue('considerAsIncome', !formik.values.considerAsIncome)
                 }
               >
                 <FormControlLabel
-                  sx={{ m: 0, pointerEvents: 'none' }}
-                  control={<Switch size="small" checked={formik.values.considerAsIncome} />}
+                  sx={{ m: 0, width: '100%', pointerEvents: 'none' }}
+                  control={
+                    <Switch
+                      size="small"
+                      checked={Boolean(formik.values.considerAsIncome)}
+                      color="primary"
+                      sx={{ mr: 1 }}
+                    />
+                  }
                   label={
-                    <Box ml={0.5}>
-                      <Typography variant="body2" fontWeight={600} fontSize="0.8rem">
-                        Consider as Income
-                      </Typography>
-                      <Typography
-                        variant="caption"
-                        color="text.secondary"
-                        display="block"
-                        fontSize="0.68rem"
-                      >
-                        Treat late fee collection as operational income
+                    <Box>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Typography variant="subtitle2" fontWeight={600} color="text.primary">
+                          Consider as Income
+                        </Typography>
+                        {formik.values.considerAsIncome && (
+                          <Label color="success" sx={{ height: 18, fontSize: '0.65rem' }}>
+                            Income Accounted
+                          </Label>
+                        )}
+                      </Stack>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Treat late fee collections as recognized operational revenue.
                       </Typography>
                     </Box>
                   }
@@ -532,22 +874,30 @@ export default function CollectionLateFeeSection({
               </Card>
             </Grid>
 
-            {/* Late-Fee Income Head */}
+            {/* Income Head Selector */}
             {formik.values.considerAsIncome && (
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <HeadSelector
-                  headType="Income"
-                  label="Late-Fee Income Head *"
-                  value={formik.values.lateFeeIncomeHeadId}
-                  onChange={(val) => formik.setFieldValue('lateFeeIncomeHeadId', val)}
+              <Grid size={{ xs: 12 }}>
+                <ShakingTextField
                   error={
                     formik.touched.lateFeeIncomeHeadId && Boolean(formik.errors.lateFeeIncomeHeadId)
                   }
-                  helperText={
-                    formik.touched.lateFeeIncomeHeadId &&
-                    (formik.errors.lateFeeIncomeHeadId as string)
-                  }
-                />
+                >
+                  <HeadSelector
+                    headType="Income"
+                    label="Late-Fee Income Head *"
+                    value={formik.values.lateFeeIncomeHeadId}
+                    onChange={(val) => formik.setFieldValue('lateFeeIncomeHeadId', val)}
+                    error={
+                      formik.touched.lateFeeIncomeHeadId &&
+                      Boolean(formik.errors.lateFeeIncomeHeadId)
+                    }
+                    helperText={
+                      (formik.touched.lateFeeIncomeHeadId &&
+                        (formik.errors.lateFeeIncomeHeadId as string)) ||
+                      'Accounting income ledger head to credit for collected late fees.'
+                    }
+                  />
+                </ShakingTextField>
               </Grid>
             )}
           </>

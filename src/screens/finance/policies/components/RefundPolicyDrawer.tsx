@@ -2,491 +2,36 @@
 
 import type { RootState } from 'src/redux/store';
 
-import * as Yup from 'yup';
-import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import React, { useCallback } from 'react';
+import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useEffect } from 'react';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
-import {
-  useCreateFinancePolicyMutation,
-  useUpdateFinancePolicyMutation,
-} from 'src/redux/finance/financePolicy';
+import { financePermissions } from 'src/constants/finance-menu';
 import {
   Box,
-  Card,
-  Grid,
   Chip,
+  Alert,
   Stack,
-  Paper,
-  Button,
-  Select,
-  Switch,
   Drawer,
-  Divider,
-  MenuItem,
-  Checkbox,
-  TextField,
+  Button,
   Typography,
-  InputLabel,
-  FormControl,
-  Autocomplete,
-  InputAdornment,
-  FormControlLabel,
+  IconButton,
 } from '@mui/material';
 
-import HeadSelector from '../../components/HeadSelector';
-import { SectionCard } from '../../settings/PaymentTerm/Components/ui/SectionCard';
+import RefundFooterActions from './refund/RefundFooterActions';
+import RefundGeneralSection from './refund/RefundGeneralSection';
+import { useRefundPolicyForm } from '../hooks/useRefundPolicyForm';
+import RefundEligibilitySection from './refund/RefundEligibilitySection';
 
-import type { IFinancePolicyRow, IRefundPolicyFormValues } from '../types/finance-policy.types';
+import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
-// ─── Status Row Helper ────────────────────────────────────────────────────────
-function SummaryRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <Stack direction="row" justifyContent="space-between" alignItems="center">
-      <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{ fontSize: '0.7rem', flexShrink: 0 }}
-      >
-        {label}
-      </Typography>
-      {value}
-    </Stack>
-  );
-}
-
-// ─── ValidationCheck helper ──────────────────────────────────────────────────
-function ValidationCheck({ label, valid }: { label: string; valid: boolean }) {
-  return (
-    <Stack direction="row" spacing={0.75} alignItems="center" sx={{ py: 0.2 }}>
-      <Box
-        sx={{
-          width: 14,
-          height: 14,
-          borderRadius: '50%',
-          bgcolor: valid ? 'success.main' : 'action.disabled',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          transition: 'background-color 0.3s',
-        }}
-      >
-        {valid && (
-          <Typography sx={{ fontSize: '0.5rem', color: 'white', lineHeight: 1, fontWeight: 900 }}>
-            ✓
-          </Typography>
-        )}
-      </Box>
-      <Typography
-        variant="caption"
-        sx={{ fontSize: '0.7rem', color: valid ? 'text.primary' : 'text.disabled' }}
-      >
-        {label}
-      </Typography>
-    </Stack>
-  );
-}
-
-// ─── Initial values ───────────────────────────────────────────────────────────
-const getInitialValues = (
-  editData: IFinancePolicyRow | null | undefined,
-  academicYearId: string
-): IRefundPolicyFormValues => {
-  const data = editData as any;
-  return {
-    policyName: data?.policyName || '',
-    policyCode: data?.policyCode || '',
-    description: data?.description || '',
-    status: data?.status || 'Draft',
-    academicYearId: data?.academicYearId || academicYearId || '',
-    effectiveFrom: data?.effectiveFrom || null,
-    effectiveTo: data?.effectiveTo || null,
-    isDefault: data?.isDefault || false,
-    policyType: 'refund',
-
-    // Eligibility
-    applicableFeeHeads: data?.applicableFeeHeads || [],
-    refundOn: data?.refundOn || 'FullPayment',
-    enableRefundForCharge: data?.enableRefundForCharge ?? false,
-
-    // Payment Processing
-    refundDueWithin: data?.refundDueWithin ?? 7,
-    bankDetailsRequired: data?.bankDetailsRequired ?? true,
-
-    // Accounting
-    considerAsExpense: data?.considerAsExpense ?? false,
-    governmentComplianceCode: data?.governmentComplianceCode || '',
-    refundExpenseHeadId: data?.refundExpenseHeadId || '',
-    refundPayableHeadId: data?.refundPayableHeadId || '',
-    lateFeeClawback: data?.lateFeeClawback ?? false,
-
-    // Keep compatibility for unused fields
-    refundMethod: data?.refundMethod || 'BankTransfer',
-    processingDays: data?.processingDays ?? 7,
-    allowPartialRefund: data?.allowPartialRefund ?? false,
-    requireApproval: data?.requireApproval ?? false,
-    approvalRoleIds: data?.approvalRoleIds || [],
-    deductionRules: data?.deductionRules || [],
-  };
-};
-
-// ─── Validation Schema ────────────────────────────────────────────────────────
-const validationSchema = Yup.object().shape({
-  policyName: Yup.string()
-    .trim()
-    .required('Policy name is required')
-    .min(3, 'Must be at least 3 characters')
-    .max(100, 'Cannot exceed 100 characters'),
-  refundDueWithin: Yup.number()
-    .typeError('Refund due within must be a number')
-    .min(0, 'Must be 0 or greater')
-    .required('Refund due within is required'),
-  applicableFeeHeads: Yup.array().of(Yup.string()).min(1, 'Select at least one Fee Head'),
-});
-
-// ─── Sections ────────────────────────────────────────────────────────────────
-const SectionGeneral = ({ formik }: { formik: any }) => (
-  <Grid container spacing={2.5}>
-    <Grid size={{ xs: 12, sm: 8 }}>
-      <TextField
-        fullWidth
-        size="small"
-        label="Policy Name *"
-        name="policyName"
-        value={formik.values.policyName}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        error={formik.touched.policyName && Boolean(formik.errors.policyName)}
-        helperText={formik.touched.policyName && formik.errors.policyName}
-      />
-    </Grid>
-    <Grid size={{ xs: 12, sm: 4 }}>
-      <FormControl fullWidth size="small">
-        <InputLabel>Status *</InputLabel>
-        <Select
-          label="Status *"
-          name="status"
-          value={formik.values.status}
-          onChange={formik.handleChange}
-        >
-          <MenuItem value="Active">Active</MenuItem>
-          <MenuItem value="Archived">Archived</MenuItem>
-        </Select>
-      </FormControl>
-    </Grid>
-    <Grid size={{ xs: 12 }}>
-      <TextField
-        fullWidth
-        size="small"
-        multiline
-        rows={2}
-        label="Description"
-        name="description"
-        value={formik.values.description}
-        onChange={formik.handleChange}
-        error={Boolean(formik.errors.description)}
-        helperText={formik.errors.description || `${(formik.values.description || '').length}/500`}
-        inputProps={{ maxLength: 500 }}
-      />
-    </Grid>
-    <Grid size={{ xs: 12 }}>
-      <Card
-        variant="outlined"
-        sx={{
-          px: 2,
-          py: 1.25,
-          display: 'flex',
-          alignItems: 'center',
-          bgcolor: formik.values.isDefault ? 'primary.lighter' : 'transparent',
-          borderColor: formik.values.isDefault ? 'primary.main' : 'divider',
-          transition: 'all 0.2s ease',
-          cursor: 'pointer',
-        }}
-        onClick={() => formik.setFieldValue('isDefault', !formik.values.isDefault)}
-      >
-        <FormControlLabel
-          sx={{ m: 0, pointerEvents: 'none' }}
-          control={<Switch size="small" checked={formik.values.isDefault} />}
-          label={
-            <Box ml={0.5}>
-              <Typography variant="body2" fontWeight={600}>
-                Default Refund Policy
-              </Typography>
-              <Typography variant="caption" color="text.secondary" display="block">
-                Use this policy automatically when no refund policy is selected in the Fee
-                Structure.
-              </Typography>
-            </Box>
-          }
-        />
-      </Card>
-    </Grid>
-  </Grid>
-);
-
-const SectionEligibility = ({ formik, feeHeads }: { formik: any; feeHeads: any[] }) => (
-  <Grid container spacing={2.5}>
-    {/* Applicable Fee Heads */}
-    <Grid size={{ xs: 12 }}>
-      <Autocomplete
-        multiple
-        size="small"
-        options={feeHeads}
-        getOptionLabel={(option) => option.name}
-        value={feeHeads.filter((h) => formik.values.applicableFeeHeads?.includes(h.id))}
-        onChange={(_, newValue) => {
-          formik.setFieldValue(
-            'applicableFeeHeads',
-            newValue.map((v) => v.id)
-          );
-        }}
-        disableCloseOnSelect
-        renderOption={(props, option, { selected }) => (
-          <li {...props}>
-            <Checkbox size="small" style={{ marginRight: 8 }} checked={selected} />
-            {option.name}
-          </li>
-        )}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            label="Applicable Fee Heads *"
-            error={formik.touched.applicableFeeHeads && Boolean(formik.errors.applicableFeeHeads)}
-            helperText={
-              formik.touched.applicableFeeHeads && (formik.errors.applicableFeeHeads as any)
-            }
-          />
-        )}
-      />
-    </Grid>
-
-    {/* Refund On */}
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <FormControl fullWidth size="small">
-        <InputLabel>Refund On *</InputLabel>
-        <Select
-          label="Refund On *"
-          name="refundOn"
-          value={formik.values.refundOn}
-          onChange={formik.handleChange}
-        >
-          <MenuItem value="FullPayment">Full Payment</MenuItem>
-          <MenuItem value="PartialAndFullPayment">Partial Payment + Full Payment</MenuItem>
-        </Select>
-      </FormControl>
-    </Grid>
-
-    {/* Enable Refund for Charge Switch */}
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <Card
-        variant="outlined"
-        sx={{
-          px: 2,
-          py: 1,
-          display: 'flex',
-          alignItems: 'center',
-          bgcolor: formik.values.enableRefundForCharge ? 'primary.lighter' : 'transparent',
-          borderColor: formik.values.enableRefundForCharge ? 'primary.main' : 'divider',
-          transition: 'all 0.2s ease',
-          cursor: 'pointer',
-        }}
-        onClick={() =>
-          formik.setFieldValue('enableRefundForCharge', !formik.values.enableRefundForCharge)
-        }
-      >
-        <FormControlLabel
-          sx={{ m: 0, pointerEvents: 'none' }}
-          control={<Switch size="small" checked={formik.values.enableRefundForCharge} />}
-          label={
-            <Box ml={0.5}>
-              <Typography variant="body2" fontWeight={600} fontSize="0.8rem">
-                Enable Refund for Charge
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                fontSize="0.68rem"
-              >
-                Allow refunding of structural fine/late-fee charges
-              </Typography>
-            </Box>
-          }
-        />
-      </Card>
-    </Grid>
-  </Grid>
-);
-
-const SectionProcessing = ({ formik }: { formik: any }) => (
-  <Grid container spacing={2.5}>
-    {/* Refund Due Within */}
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <TextField
-        fullWidth
-        size="small"
-        type="number"
-        label="Refund Due Within (Days) *"
-        name="refundDueWithin"
-        value={formik.values.refundDueWithin}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        error={formik.touched.refundDueWithin && Boolean(formik.errors.refundDueWithin)}
-        helperText={
-          (formik.touched.refundDueWithin && formik.errors.refundDueWithin) ||
-          'Days to complete refund payments after policy triggers'
-        }
-        InputProps={{
-          endAdornment: <InputAdornment position="end">days</InputAdornment>,
-        }}
-      />
-    </Grid>
-
-    {/* Bank Details Required */}
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <Card
-        variant="outlined"
-        sx={{
-          px: 2,
-          py: 1,
-          display: 'flex',
-          alignItems: 'center',
-          bgcolor: formik.values.bankDetailsRequired ? 'info.lighter' : 'transparent',
-          borderColor: formik.values.bankDetailsRequired ? 'info.light' : 'divider',
-          transition: 'all 0.2s ease',
-          cursor: 'pointer',
-        }}
-        onClick={() =>
-          formik.setFieldValue('bankDetailsRequired', !formik.values.bankDetailsRequired)
-        }
-      >
-        <FormControlLabel
-          sx={{ m: 0, pointerEvents: 'none' }}
-          control={<Switch size="small" checked={formik.values.bankDetailsRequired} />}
-          label={
-            <Box ml={0.5}>
-              <Typography variant="body2" fontWeight={600} fontSize="0.8rem">
-                Bank Details Required
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                fontSize="0.68rem"
-              >
-                Mandate parents/students bank info for transactions
-              </Typography>
-            </Box>
-          }
-        />
-      </Card>
-    </Grid>
-  </Grid>
-);
-
-const SectionAccounting = ({ formik }: { formik: any }) => (
-  <Grid container spacing={2.5}>
-    {/* Consider as Expense */}
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <Card
-        variant="outlined"
-        sx={{
-          px: 2,
-          py: 1,
-          display: 'flex',
-          alignItems: 'center',
-          bgcolor: formik.values.considerAsExpense ? 'warning.lighter' : 'transparent',
-          borderColor: formik.values.considerAsExpense ? 'warning.light' : 'divider',
-          transition: 'all 0.2s ease',
-          cursor: 'pointer',
-        }}
-        onClick={() => formik.setFieldValue('considerAsExpense', !formik.values.considerAsExpense)}
-      >
-        <FormControlLabel
-          sx={{ m: 0, pointerEvents: 'none' }}
-          control={<Switch size="small" checked={formik.values.considerAsExpense} />}
-          label={
-            <Box ml={0.5}>
-              <Typography variant="body2" fontWeight={600} fontSize="0.8rem">
-                Consider as Expense
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                fontSize="0.68rem"
-              >
-                Account refund pay-out as operational school expense
-              </Typography>
-            </Box>
-          }
-        />
-      </Card>
-    </Grid>
-
-    {formik.values.considerAsExpense && (
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <HeadSelector
-          headType="Expense"
-          label="Refund Expense Head *"
-          value={formik.values.refundExpenseHeadId}
-          onChange={(val) => formik.setFieldValue('refundExpenseHeadId', val)}
-          error={formik.touched.refundExpenseHeadId && Boolean(formik.errors.refundExpenseHeadId)}
-          helperText={formik.touched.refundExpenseHeadId && formik.errors.refundExpenseHeadId}
-        />
-      </Grid>
-    )}
-
-    {/* Late-Fee Clawback */}
-    <Grid size={{ xs: 12, sm: 6 }}>
-      <Card
-        variant="outlined"
-        sx={{
-          px: 2,
-          py: 1,
-          display: 'flex',
-          alignItems: 'center',
-          bgcolor: formik.values.lateFeeClawback ? 'info.lighter' : 'transparent',
-          borderColor: formik.values.lateFeeClawback ? 'info.light' : 'divider',
-          transition: 'all 0.2s ease',
-          cursor: 'pointer',
-        }}
-        onClick={() => formik.setFieldValue('lateFeeClawback', !formik.values.lateFeeClawback)}
-      >
-        <FormControlLabel
-          sx={{ m: 0, pointerEvents: 'none' }}
-          control={<Switch size="small" checked={formik.values.lateFeeClawback} />}
-          label={
-            <Box ml={0.5}>
-              <Typography variant="body2" fontWeight={600} fontSize="0.8rem">
-                Late-Fee Clawback
-              </Typography>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                display="block"
-                fontSize="0.68rem"
-              >
-                Clawback any late fee collected from student
-              </Typography>
-            </Box>
-          }
-        />
-      </Card>
-    </Grid>
-  </Grid>
-);
-
-// ─── Main Drawer Component ───────────────────────────────────────────────────
-type SectionKey = 'general' | 'eligibility' | 'processing' | 'accounting';
+// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface RefundPolicyDrawerProps {
   open: boolean;
@@ -495,164 +40,96 @@ interface RefundPolicyDrawerProps {
   academicYearId?: string;
 }
 
-const RefundPolicyDrawer: React.FC<RefundPolicyDrawerProps> = ({
+// ─── Component ────────────────────────────────────────────────────────────────
+
+export default function RefundPolicyDrawer({
   open,
   onClose,
   editData,
   academicYearId = '',
-}) => {
-  const { currentYear, academicYears } = useSelector((state: RootState) => state.globalState);
-  const [expandedSections, setExpandedSections] = useState<Set<SectionKey>>(new Set(['general']));
-  const unsavedChangesDialog = useBoolean();
+}: RefundPolicyDrawerProps) {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const refundPermissions = financePermissions.policies.refundPolicyActions;
 
-  const handleCloseAttempt = () => {
-    if (formik.dirty) {
-      unsavedChangesDialog.onTrue();
-    } else {
-      onClose();
-    }
-  };
+  const canCreate = hasGrantedPermission(permissions, refundPermissions.create);
+  const canEdit = hasGrantedPermission(permissions, refundPermissions.edit);
+  const canActivate = editData ? canEdit : canCreate;
 
-  const toggleSection = (key: SectionKey) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
+  const {
+    formik,
+    activeEdit,
+    impact,
+    isImpactLoading,
+    feeHeads,
+    isFeeHeadsLoading,
+    isSaving,
+    isDetailLoading,
+    unsavedChangesDialog,
+    checks,
+    handleCloseAttempt,
+    handleCustomSubmit,
+  } = useRefundPolicyForm({ open, onClose, editData, academicYearId });
 
-  // Fetch fee heads list
-  const { data: feeHeadsData } = useGetFeeHeadsQuery({});
-  const feeHeads = feeHeadsData?.items || [];
-
-  const [createPolicy, { isLoading: isCreating }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useCreateFinancePolicyMutation,
-  });
-
-  const [updatePolicy, { isLoading: isUpdating }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateFinancePolicyMutation,
-  });
-
-  const isSaving = isCreating || isUpdating;
-
-  const formik = useFormik<IRefundPolicyFormValues>({
-    initialValues: getInitialValues(editData, academicYearId || currentYear?.id || ''),
-    validationSchema,
-    enableReinitialize: true,
-    onSubmit: async (values, { resetForm }) => {
-      // Handled manually by footer buttons to save and publish with right status
+  const isAlreadyActive = editData?.status === 'Active';
+  const selectedStatus = formik.values.status === 'Active' ? 'Active' : 'Draft';
+  const handleSubmit = useCallback(
+    (event?: React.FormEvent<HTMLFormElement>) => {
+      event?.preventDefault();
+      handleCustomSubmit(selectedStatus);
     },
-  });
+    [handleCustomSubmit, selectedStatus]
+  );
+  const submitLabel =
+    selectedStatus === 'Draft'
+      ? 'Save as Draft'
+      : isAlreadyActive
+        ? 'Save Changes'
+        : 'Activate Policy';
 
-  useEffect(() => {
-    if (!editData && formik.values.policyName) {
-      formik.setFieldValue(
-        'policyCode',
-        `RP-${formik.values.policyName.toUpperCase().replace(/\s+/g, '-').slice(0, 12)}-${Date.now().toString().slice(-4)}`
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.policyName, editData]);
-
-  // Live validation checks
-  const checks = useMemo(() => {
-    const v = formik.values;
-    const nameValid = v.policyName.trim().length >= 3;
-    const yearValid = !!v.academicYearId;
-    const headsValid = v.applicableFeeHeads.length >= 1;
-    const dueValid = typeof v?.refundDueWithin === 'number' && v.refundDueWithin >= 0;
-
-    const isReadyToPublish = nameValid && yearValid && headsValid && dueValid;
-
-    return {
-      nameValid,
-      yearValid,
-      headsValid,
-      dueValid,
-      isReadyToPublish,
-    };
-  }, [formik.values]);
-
-  const handleCustomSubmit = async (overrideStatus?: 'Draft' | 'Active' | 'Archived') => {
-    const errors = await formik.validateForm();
-    const hasErrors = Object.keys(errors).length > 0;
-    if (hasErrors) {
-      formik.setTouched({
-        policyName: true,
-        academicYearId: true,
-        refundDueWithin: true,
-        applicableFeeHeads: true,
-      });
-      shikshaMitraToast.error({ message: 'Fix all errors before saving.' });
-      return;
-    }
-
-    try {
-      const payload = {
-        ...formik.values,
-        status: overrideStatus || formik.values.status,
-        policyCode: formik.values.policyCode || `RP-${Date.now()}`,
-      };
-
-      if (editData?.id) {
-        await updatePolicy({ id: editData.id, body: payload });
-        shikshaMitraToast.success({ message: `Refund policy "${payload.policyName}" updated.` });
-      } else {
-        await createPolicy(payload);
-        shikshaMitraToast.success({ message: `Refund policy "${payload.policyName}" created.` });
+  // Keyboard shortcut Ctrl+Enter / Cmd+Enter to submit
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        if (checks.isReadyToPublish && canActivate) {
+          handleSubmit();
+        }
       }
-      formik.resetForm();
-      onClose();
-    } catch {
-      shikshaMitraToast.error({ message: 'Failed to save refund policy.' });
-    }
-  };
-
-  // Live Calculator Logic
-  const [calcAmount, setCalcAmount] = useState(5000);
-  const calculatedRefund = useMemo(() => calcAmount, [calcAmount]);
+    },
+    [checks.isReadyToPublish, canActivate, handleSubmit]
+  );
 
   if (!open) return null;
-
-  const sections: { key: SectionKey; label: string; content: React.ReactNode }[] = [
-    {
-      key: 'general',
-      label: 'General Information',
-      content: <SectionGeneral formik={formik} />,
-    },
-    {
-      key: 'eligibility',
-      label: 'Eligibility Rules',
-      content: <SectionEligibility formik={formik} feeHeads={feeHeads} />,
-    },
-    {
-      key: 'processing',
-      label: 'Payment Processing',
-      content: <SectionProcessing formik={formik} />,
-    },
-    {
-      key: 'accounting',
-      label: 'Accounting & Compliance',
-      content: <SectionAccounting formik={formik} />,
-    },
-  ];
 
   return (
     <Drawer
       anchor="right"
       open={open}
       onClose={handleCloseAttempt}
+      slotProps={{
+        backdrop: {
+          sx: {
+            bgcolor: 'rgba(15, 23, 42, 0.44)',
+            backdropFilter: 'blur(3px)',
+          },
+        },
+      }}
       PaperProps={{
         sx: {
-          width: { xs: '100%', lg: 'min(1100px, 95vw)' },
+          width: { xs: '100%', md: 'min(860px, 95vw)' },
           maxWidth: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+          boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
         },
       }}
     >
       <Box
+        component="form"
+        noValidate
+        onSubmit={handleSubmit}
+        onKeyDown={handleKeyDown}
         sx={{
           display: 'flex',
           flexDirection: 'column',
@@ -660,289 +137,149 @@ const RefundPolicyDrawer: React.FC<RefundPolicyDrawerProps> = ({
           bgcolor: 'background.paper',
         }}
       >
-        {/* Header */}
+        {/* ── Header ──────────────────────────────────────────────────────── */}
         <Box
           sx={{
-            px: 3,
+            px: { xs: 2, sm: 3 },
             py: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             borderBottom: '1px solid',
             borderColor: 'divider',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? alpha(theme.palette.background.default, 0.5)
+                : alpha(theme.palette.grey[50], 0.8),
             flexShrink: 0,
+            gap: 2,
           }}
         >
-          <Box>
-            <Typography variant="h6" fontWeight={700}>
-              {editData ? 'Edit Refund Policy' : 'Create Refund Policy'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Configure reusable refund criteria, eligibility requirements, compliance, and payment
-              rules.
-            </Typography>
-          </Box>
-          <Button
-            size="small"
-            onClick={handleCloseAttempt}
-            startIcon={<Iconify icon="mdi:close" />}
-            color="inherit"
-          >
-            Close
-          </Button>
-        </Box>
-
-        {/* Main Body */}
-        <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          {/* Scrollable Form */}
-          <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ p: 2, pb: 6 }}>
-              {sections.map((s) => (
-                <SectionCard key={s.key} title={s.label}>
-                  {s.content}
-                </SectionCard>
-              ))}
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 1.25,
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                color: 'primary.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Iconify
+                icon={editData ? GlobalIcons.edit : 'solar:card-recive-bold-duotone'}
+                width={22}
+                height={22}
+              />
             </Box>
-          </Scrollbar>
 
-          {/* Sticky Right Summary Panel */}
-          <Box
+            <Box sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+                <Typography variant="h6" fontWeight={700}>
+                  {editData ? 'Edit Refund Policy' : 'Create Refund Policy'}
+                </Typography>
+
+                <CustomTooltip
+                  title="Refund policies decide which settled payments and fee heads school staff may refund."
+                  placement="right"
+                  arrow
+                >
+                  <Iconify
+                    icon={GlobalIcons.info}
+                    color="info.main"
+                    width={16}
+                    height={16}
+                    sx={{ cursor: 'pointer' }}
+                  />
+                </CustomTooltip>
+
+                <Label
+                  color={formik.values.status === 'Active' ? 'success' : 'warning'}
+                  sx={{ height: 22, fontSize: '0.72rem', fontWeight: 700 }}
+                >
+                  {formik.values.status || 'Draft'}
+                </Label>
+
+                {editData?.version && (
+                  <Chip
+                    size="small"
+                    variant="outlined"
+                    label={`v${editData.version}`}
+                    sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}
+                  />
+                )}
+              </Stack>
+
+              <Typography variant="caption" color="text.secondary" display="block">
+                Choose which paid fees can be refunded and when.
+              </Typography>
+            </Box>
+          </Stack>
+
+          <IconButton
+            onClick={handleCloseAttempt}
             sx={{
-              width: 300,
-              flexShrink: 0,
-              display: { xs: 'none', lg: 'flex' },
-              flexDirection: 'column',
-              borderLeft: '1px solid',
-              borderColor: 'divider',
-              overflow: 'hidden',
-              bgcolor: (theme) =>
-                theme.palette.mode === 'dark' ? 'background.neutral' : 'grey.50',
+              p: 0.75,
+              color: 'text.secondary',
+              '&:hover': { bgcolor: 'action.hover' },
             }}
           >
-            <Scrollbar sx={{ flex: 1 }}>
-              <Box sx={{ p: 2 }}>
-                {/* Summary */}
-                <Typography
-                  variant="overline"
-                  sx={{
-                    fontSize: '0.6rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.1em',
-                    color: 'text.secondary',
-                  }}
-                >
-                  Live Summary
-                </Typography>
-                <Stack spacing={0.75} mt={1} mb={2.5}>
-                  <SummaryRow
-                    label="Policy Name"
-                    value={
-                      <Typography
-                        variant="caption"
-                        fontWeight={600}
-                        sx={{
-                          maxWidth: 140,
-                          textAlign: 'right',
-                          wordBreak: 'break-word',
-                          fontSize: '0.7rem',
-                        }}
-                      >
-                        {formik.values.policyName || '—'}
-                      </Typography>
-                    }
-                  />
-                  <SummaryRow
-                    label="Status"
-                    value={
-                      <Chip
-                        label={formik.values.status}
-                        size="small"
-                        color={formik.values.status === 'Active' ? 'success' : 'default'}
-                        sx={{ height: 18, fontSize: '0.6rem', fontWeight: 700 }}
-                      />
-                    }
-                  />
-                  <SummaryRow
-                    label="Refund On"
-                    value={
-                      <Typography variant="caption" fontWeight={600} fontSize="0.7rem">
-                        {formik.values.refundOn === 'FullPayment' ? 'Paid' : 'Partial + Paid'}
-                      </Typography>
-                    }
-                  />
-                  <SummaryRow
-                    label="Refund for Charges"
-                    value={
-                      <Chip
-                        label={formik.values.enableRefundForCharge ? 'Yes' : 'No'}
-                        size="small"
-                        color={formik.values.enableRefundForCharge ? 'primary' : 'default'}
-                        variant={formik.values.enableRefundForCharge ? 'filled' : 'outlined'}
-                        sx={{ height: 18, fontSize: '0.6rem' }}
-                      />
-                    }
-                  />
-                  <SummaryRow
-                    label="Due Within"
-                    value={
-                      <Typography variant="caption" fontWeight={600} fontSize="0.7rem">
-                        {formik.values.refundDueWithin} days
-                      </Typography>
-                    }
-                  />
-                  <SummaryRow
-                    label="Consider as Expense"
-                    value={
-                      <Chip
-                        label={formik.values.considerAsExpense ? 'Yes' : 'No'}
-                        size="small"
-                        color={formik.values.considerAsExpense ? 'warning' : 'default'}
-                        variant={formik.values.considerAsExpense ? 'filled' : 'outlined'}
-                        sx={{ height: 18, fontSize: '0.6rem' }}
-                      />
-                    }
-                  />
-                </Stack>
-
-                <Divider sx={{ my: 1.5 }} />
-
-                {/* Live Calculator */}
-                <Typography
-                  variant="overline"
-                  sx={{
-                    fontSize: '0.6rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.1em',
-                    color: 'text.secondary',
-                  }}
-                >
-                  Refund Simulation
-                </Typography>
-                <Stack spacing={1.5} mt={1} mb={2.5}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    type="number"
-                    label="Paid Amount (₹)"
-                    value={calcAmount}
-                    onChange={(e) => setCalcAmount(Math.max(0, +e.target.value))}
-                    inputProps={{ style: { fontSize: '11px', padding: '6px 8px' } }}
-                  />
-
-                  <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'action.hover' }}>
-                    <Stack spacing={0.5}>
-                      <Box display="flex" justifyContent="space-between">
-                        <Typography sx={{ fontSize: '11px' }}>Paid Amount:</Typography>
-                        <Typography sx={{ fontSize: '11px' }} fontWeight={700}>
-                          ₹{calcAmount}
-                        </Typography>
-                      </Box>
-                      <Box display="flex" justifyContent="space-between">
-                        <Typography sx={{ fontSize: '11px' }}>Refunding Fee Heads:</Typography>
-                        <Typography sx={{ fontSize: '11px' }} fontWeight={700}>
-                          {formik.values.applicableFeeHeads.length} item(s)
-                        </Typography>
-                      </Box>
-                      <Divider sx={{ my: 0.5 }} />
-                      <Box display="flex" justifyContent="space-between">
-                        <Typography sx={{ fontSize: '11px' }} fontWeight={600}>
-                          Estimated Refund:
-                        </Typography>
-                        <Typography sx={{ fontSize: '11px' }} fontWeight={700} color="success.main">
-                          ₹{calculatedRefund}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Paper>
-                </Stack>
-
-                <Divider sx={{ my: 1.5 }} />
-
-                {/* Validation panel */}
-                <Typography
-                  variant="overline"
-                  sx={{
-                    fontSize: '0.6rem',
-                    fontWeight: 800,
-                    letterSpacing: '0.1em',
-                    color: 'text.secondary',
-                  }}
-                >
-                  Validation Panel
-                </Typography>
-                <Stack spacing={0.5} mt={1}>
-                  <ValidationCheck label="General Info Completed" valid={checks.nameValid} />
-                  <ValidationCheck
-                    label="Applicable Fee Heads Selected"
-                    valid={checks.headsValid}
-                  />
-                  <ValidationCheck label="Payment Process Configured" valid={checks.dueValid} />
-                  {checks.isReadyToPublish ? (
-                    <Chip
-                      label="Ready to Publish"
-                      size="small"
-                      color="success"
-                      sx={{ mt: 1, height: 20, fontSize: '10px' }}
-                    />
-                  ) : (
-                    <Chip
-                      label="Requires Fields Completion"
-                      size="small"
-                      color="warning"
-                      sx={{ mt: 1, height: 20, fontSize: '10px' }}
-                    />
-                  )}
-                </Stack>
-              </Box>
-            </Scrollbar>
-          </Box>
+            <Iconify icon="mdi:close" width={20} height={20} />
+          </IconButton>
         </Box>
 
-        {/* Sticky Footer */}
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          spacing={1.5}
-          sx={{
-            px: { xs: 2, sm: 3 },
-            py: 1.5,
-            bgcolor: 'background.paper',
-            position: 'sticky',
-            bottom: 0,
-            zIndex: 1,
-          }}
-        >
-          <Button
-            variant="outlined"
-            color="inherit"
-            onClick={handleCloseAttempt}
-            size="small"
-            startIcon={<Iconify icon="basil:cross-solid" />}
-            disabled={isSaving}
-          >
-            Cancel
-          </Button>
-          <LoadingButton
-            variant="contained"
-            color="primary"
-            loading={isSaving}
-            onClick={() => handleCustomSubmit('Active')}
-            size="small"
-            startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
-            disabled={!checks.isReadyToPublish}
-            sx={{ minWidth: 90 }}
-          >
-            Submit
-          </LoadingButton>
-        </Stack>
+        {/* ── Main Body ──────────────────────────────────────────────────── */}
+        <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
+            <Box sx={{ p: { xs: 2, sm: 3 }, pb: 6 }}>
+              {isDetailLoading && (
+                <Alert severity="info" sx={{ mb: 2.5, borderRadius: 1.25 }}>
+                  Loading policy details from server...
+                </Alert>
+              )}
 
-        {/* Unsaved changes confirmation dialog */}
+              {/* Section 1: General Information */}
+              <RefundGeneralSection
+                formik={formik}
+                activeEdit={activeEdit}
+                impact={impact}
+                isImpactLoading={isImpactLoading}
+              />
+
+              {/* Section 2: Eligibility & Scope */}
+              <RefundEligibilitySection
+                formik={formik}
+                feeHeads={feeHeads}
+                isFeeHeadsLoading={isFeeHeadsLoading}
+              />
+
+              <Alert severity="info" sx={{ borderRadius: 1.25 }}>
+                {editData
+                  ? 'Saved calculation behavior is kept automatically. Refund amounts remain limited to the student’s eligible paid balance.'
+                  : 'Refund amounts are entered when a refund is processed and can never exceed the student’s eligible paid balance. New policies use no automatic deduction, cap, or rounding.'}
+              </Alert>
+            </Box>
+          </Scrollbar>
+        </Box>
+
+        {/* ── Sticky Footer Actions ──────────────────────────────────────── */}
+        <RefundFooterActions
+          isSaving={isSaving || isDetailLoading}
+          canSubmit={selectedStatus === 'Draft' || canActivate}
+          onCancel={handleCloseAttempt}
+          submitLabel={submitLabel}
+        />
+
+        {/* ── Unsaved Changes Confirmation Dialog ────────────────────────── */}
         <ConfirmDialog
           open={unsavedChangesDialog.value}
           icon="warning"
           onClose={unsavedChangesDialog.onFalse}
           title="Unsaved Changes"
-          content="You have unsaved changes in this policy form. Are you sure you want to discard them?"
+          content="You have unsaved changes in this refund policy form. Are you sure you want to discard them?"
           action={
             <Button
               variant="contained"
@@ -953,13 +290,11 @@ const RefundPolicyDrawer: React.FC<RefundPolicyDrawerProps> = ({
                 onClose();
               }}
             >
-              Discard
+              Discard Changes
             </Button>
           }
         />
       </Box>
     </Drawer>
   );
-};
-
-export default RefundPolicyDrawer;
+}

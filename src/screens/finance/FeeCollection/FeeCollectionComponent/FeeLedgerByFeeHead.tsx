@@ -164,6 +164,9 @@ const FeeHeadGroup = ({
                   item.installmentLabel ? `${FeeMonth[item.month]} ${item.year ?? year}` : undefined
                 }
                 total={item.total}
+                scheduledTotal={item.scheduledTotal}
+				prorationPolicyVersionId={item.prorationPolicyVersionId}
+                prorationExplanation={item.prorationExplanation}
                 paid={item.paid}
                 due={item.due}
                 reconciliationAmount={item.reconciliationAmount}

@@ -1,24 +1,26 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { LoadingButton } from '@mui/lab';
+import { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useCallback } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Switch, Typography } from '@mui/material';
-import { usePatchAccountHeadStatusMutation } from 'src/redux/finance/accountHeadApi';
+import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
+import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
+import {
+  useGetAccountHeadVersionsQuery,
+  usePatchAccountHeadStatusMutation,
+} from 'src/redux/finance/accountHeadApi';
 
-import { type IAccountHead, type IAccountHeadTableProps } from './type';
+import type { IAccountHead, IAccountHeadTableProps } from './type';
 
-const AccountHeadTable: React.FC<IAccountHeadTableProps> = ({
+const AccountHeadTable = ({
   data,
   onAddAccountHead,
-  editData,
-  open,
   setOpenDialog,
   setEditData,
   onDelete,
@@ -27,104 +29,68 @@ const AccountHeadTable: React.FC<IAccountHeadTableProps> = ({
   totalCount,
   onServerPagination,
   onServerSearch,
-}) => {
-  const [patchStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
+}: IAccountHeadTableProps) => {
+  const [patchStatus, statusState] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePatchAccountHeadStatusMutation,
   });
-
-  const statusConfirm = useBoolean();
-  const [statusData, setStatusData] = useState<null | IAccountHead>(null);
-
-  const handleOpenStatusConfirm = useCallback(
-    (row: IAccountHead) => {
-      setStatusData(row);
-      statusConfirm.onTrue();
-    },
-    [statusConfirm]
-  );
-
-  const nextStatus = statusData ? !statusData.isActive : false;
+  const access = useAccountSettingPermissions('AccountHead');
+  const confirm = useBoolean();
+  const [selected, setSelected] = useState<IAccountHead | null>(null);
+  const [reason, setReason] = useState('');
+  const [historyItem, setHistoryItem] = useState<IAccountHead | null>(null);
+  const history = useGetAccountHeadVersionsQuery(historyItem?.id || '', { skip: !historyItem });
+  const nextStatus = selected ? !selected.isActive : false;
 
   const columns: IColumn[] = useMemo(
     () => [
       {
         id: 'headName',
-        label: 'Head Name',
-        minWidth: 150,
-        sticky: true,
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px" fontWeight={500}>
-            {value}
-          </Typography>
+        label: 'Account Head',
+        minWidth: 180,
+        render: (value, row) => (
+          <Stack>
+            <Typography variant="caption" fontWeight={600}>
+              {value}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {(row as IAccountHead).parentAccountHeadName || 'Root account'}
+            </Typography>
+          </Stack>
         ),
       },
       {
         id: 'headType',
         label: 'Type',
-        minWidth: 120,
-        align: 'left',
-        render: (value) => <Chip label={value} size="small" variant="outlined" />,
-      },
-      {
-        id: 'nature',
-        label: 'Nature',
         minWidth: 100,
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
+        render: (value) => <Chip size="small" variant="outlined" label={value} />,
       },
-      {
-        id: 'linkedSources',
-        label: 'Linked Sources',
-        minWidth: 200,
-        align: 'left',
-        render: (value: string[]) => (
-          <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
-            {value?.slice(0, 2).map((src) => (
-              <Chip key={src} label={src} size="small" sx={{ height: 20, fontSize: '11px' }} />
-            ))}
-            {value?.length > 2 && (
-              <CustomTooltip title={value.join(', ')}>
-                <Chip
-                  label={`+${value.length - 2}`}
-                  size="small"
-                  sx={{ height: 20, fontSize: '11px' }}
-                />
-              </CustomTooltip>
-            )}
-          </Stack>
-        ),
-      },
-      {
-        id: 'runningBalance',
-        label: 'Balance',
-        minWidth: 70,
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px" fontWeight={600}>
-            {typeof value === 'number' ? `₹${value.toLocaleString('en-IN')}` : '-'}
-          </Typography>
-        ),
-      },
+      { id: 'nature', label: 'Nature', minWidth: 80 },
+      { id: 'version', label: 'Version', minWidth: 70, render: (value) => `v${value}` },
       {
         id: 'isActive',
         label: 'Status',
-        minWidth: 100,
+        minWidth: 135,
         sticky: true,
-        render(value, row) {
-          const accHead = row as IAccountHead;
+        render: (_value, row) => {
+          const item = row as IAccountHead;
           return (
-            <Stack direction="row" spacing={1} alignItems="center">
+            <Stack direction="row" alignItems="center">
+              <Chip
+                size="small"
+                label={item.isActive ? 'Active' : 'Inactive'}
+                color={item.isActive ? 'success' : 'default'}
+                variant="soft"
+              />
               <Switch
                 size="small"
-                checked={accHead.isActive || false}
-                onClick={(event) => event.stopPropagation()}
-                onChange={() => handleOpenStatusConfirm(accHead)}
+                disabled={!access.canChangeStatus}
+                checked={item.isActive}
+                onChange={() => {
+                  setSelected(item);
+                  setReason('');
+                  confirm.onTrue();
+                }}
               />
             </Stack>
           );
@@ -133,54 +99,37 @@ const AccountHeadTable: React.FC<IAccountHeadTableProps> = ({
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 50,
-        align: 'left',
-        isSort: false,
+        minWidth: 70,
         sticky: true,
+        isSort: false,
         isFilter: false,
-        render(value, row) {
+        render: (_value, row) => {
+          const item = row as IAccountHead;
           return (
             <ThreeDotsActions
               showThreeDots={false}
-              placement="right-top"
-              showDeleteIcon
+              showViewIcon
+              viewLabel="Version history"
+              viewIcon="solar:history-bold"
               showEditIcon
-              handleDeleteClick={() => onDelete(row as IAccountHead)}
-              handleEditClick={() => onEdit(row as IAccountHead)}
+              showDeleteIcon
+              handleViewClick={() => setHistoryItem(item)}
+              disableEditIcon={!access.canEdit}
+              disableDeleteIcon={!access.canDelete || !item.canDelete}
+              handleEditClick={() => onEdit(item)}
+              handleDeleteClick={() => onDelete(item)}
             />
           );
         },
       },
     ],
-    [handleOpenStatusConfirm, onDelete, onEdit]
+    [access.canChangeStatus, access.canDelete, access.canEdit, confirm, onDelete, onEdit]
   );
 
   return (
     <>
       <CustomizableTable
         tableId="account-head-master-table"
-        noDataText={
-          <>
-            Account Heads Not Found{' '}
-            <Box
-              onClick={() => {
-                onAddAccountHead.onTrue();
-                setOpenDialog(true);
-                setEditData(null);
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add Account Head
-            </Box>
-          </>
-        }
         columns={columns}
         data={data || []}
         isLoading={isLoading}
@@ -189,51 +138,85 @@ const AccountHeadTable: React.FC<IAccountHeadTableProps> = ({
         totalCount={totalCount}
         onServerPagination={onServerPagination}
         onServerSearch={onServerSearch}
+        noDataText={
+          <>
+            Account Heads Not Found{' '}
+            <Box
+              component="span"
+              color="primary.main"
+              fontWeight={600}
+              sx={{ cursor: 'pointer' }}
+              onClick={() => {
+                onAddAccountHead.onTrue();
+                setOpenDialog(true);
+                setEditData(null);
+              }}
+            >
+              Add Account Head
+            </Box>
+          </>
+        }
       />
       <ConfirmDialog
-        open={statusConfirm.value}
-        onClose={() => {
-          statusConfirm.onFalse();
-          setStatusData(null);
-        }}
+        open={confirm.value}
+        onClose={() => confirm.onFalse()}
         title={nextStatus ? 'Activate Account Head' : 'Deactivate Account Head'}
         content={
-          <Typography variant="body2">
-            Are you sure you want to {nextStatus ? 'activate' : 'deactivate'} Account Head{' '}
-            <Box component="span" fontWeight="bold" color="text.primary">
-              {statusData?.headName}
-            </Box>
-            ?
-          </Typography>
+          <Stack spacing={2}>
+            <Typography variant="body2">
+              {nextStatus ? 'Activate' : 'Deactivate'} <strong>{selected?.headName}</strong>?
+            </Typography>
+            {!nextStatus && (
+              <TextField
+                size="small"
+                multiline
+                minRows={2}
+                required
+                label="Deactivation reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            )}
+          </Stack>
         }
         action={
           <LoadingButton
-            loading={isStatusLoading}
+            loading={statusState.isLoading}
+            disabled={!nextStatus && !reason.trim()}
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
             onClick={async () => {
-              if (!statusData) return;
+              if (!selected) return;
               try {
                 await patchStatus({
-                  id: statusData.id,
+                  id: selected.id,
                   body: {
                     isActive: nextStatus,
+                    deactivationReason: nextStatus ? null : reason.trim(),
+                    concurrencyStamp: selected.concurrencyStamp,
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
-                  message: `Account Head ${nextStatus ? 'activated' : 'deactivated'} successfully`,
+                  message: `Account head ${nextStatus ? 'activated' : 'deactivated'}`,
                 });
-                statusConfirm.onFalse();
-                setStatusData(null);
+                confirm.onFalse();
+                setSelected(null);
               } catch {
-                // Ignore error
+                /* API toast handles details */
               }
             }}
           >
             {nextStatus ? 'Activate' : 'Deactivate'}
           </LoadingButton>
         }
+      />
+      <AccountSettingVersionDialog
+        open={Boolean(historyItem)}
+        title={historyItem?.headName || 'Account head'}
+        data={history.data}
+        isLoading={history.isLoading}
+        onClose={() => setHistoryItem(null)}
       />
     </>
   );

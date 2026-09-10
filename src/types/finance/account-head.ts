@@ -1,30 +1,27 @@
-// ── Account Head ──
-export type AccountHeadType = 'Income' | 'Expense' | 'Bank-Cash' | 'Liability';
-export type AccountHeadNature = 'Credit' | 'Debit' | 'Asset';
-export type AccountHeadLinkedSource =
-  | 'FeeHead'
-  | 'ChargeCategory'
-  | 'IncomeCategory'
-  | 'ExpenseCategory'
-  | 'BankAccount'
-  | 'PayrollComponent'
-  | 'Manual';
+export type AccountHeadType = 'Asset' | 'Liability' | 'Equity' | 'Income' | 'Expense';
+
+export interface IAccountHeadOption {
+  id: string;
+  name: string;
+  headType: AccountHeadType;
+  displayName: string;
+}
 
 export interface IAccountHead {
   id: string;
-  headName: string;
-  headCode: string;
-  headType: AccountHeadType;
-  nature: AccountHeadNature; // derived: Income/Liability → Credit, Expense → Debit, Bank-Cash → Asset
-  linkedSources: AccountHeadLinkedSource[];
-  linkedSourceIds?: string[]; // FK references
-  openingBalance?: number;
-  runningBalance?: number;
-  notes?: string;
-  isActive: boolean;
   academicYearId: string;
-  createdAt?: string;
-  updatedAt?: string;
+  headName: string;
+  headType: AccountHeadType;
+  nature: 'Debit' | 'Credit';
+  parentAccountHeadId?: string | null;
+  parentAccountHeadName?: string | null;
+  notes?: string | null;
+  isActive: boolean;
+  deactivationReason?: string | null;
+  version: number;
+  concurrencyStamp: string;
+  isUsedInDownstream: boolean;
+  canDelete: boolean;
 }
 
 // ── Posting ──

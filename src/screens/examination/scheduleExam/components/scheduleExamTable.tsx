@@ -46,6 +46,7 @@ import {
 
 import { EXAM_STATUS_META } from '../scheduleExamStatus';
 import ScheduleExamKpiStrip from './ScheduleExamKpiStrip';
+import { formatExamDateRange } from '../schedule-exam-date-range';
 import ScheduleExamPreviewDrawer from './ScheduleExamPreviewDrawer';
 import { getScheduleExamPrimaryAction } from '../schedule-exam-primary-action';
 
@@ -577,12 +578,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               label: 'Date Range',
               align: 'left',
               filterType: 'date',
-              render: (_value, row) => {
-                if (!row.startDate) return 'Not scheduled';
-                const start = dayjs(row.startDate).format('DD-MM-YYYY');
-                const end = row.endDate ? dayjs(row.endDate).format('DD-MM-YYYY') : start;
-                return start === end ? start : `${start} - ${end}`;
-              },
+              render: (_value, row) =>
+                formatExamDateRange(row.startDate, row.endDate) || 'Not scheduled',
             },
             {
               id: 'issueCount',

@@ -5,18 +5,26 @@ export enum BankAccountType {
 
 export interface IBankAccount {
   id: string;
+  code?: string;
+  accountHeadId?: string;
+  accountHeadName?: string;
   bankName: string;
   branchName: string;
   branchAddress?: string;
   accountHolderName: string;
   accountType: BankAccountType;
-  accountNumber: string;
+  accountNumber?: string;
+  maskedAccountNumber: string;
   purpose?: string;
   ifscCode: string;
   upiId?: string;
-  bankHeadId?: string;
-  isUsedInDownstream?: boolean;
-  isActive?: boolean;
+  effectiveFrom?: string;
+  effectiveTo?: string | null;
+  concurrencyStamp: string;
+  version: number;
+  canDelete: boolean;
+  isUsedInDownstream: boolean;
+  isActive: boolean;
   deactivationReason?: string | null;
 }
 

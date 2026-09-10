@@ -1,11 +1,14 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Drawer, Button, Typography } from '@mui/material';
-
+import { Box, Stack, Drawer, Button, Tooltip, Typography, IconButton } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import CollectionSummaryPanel from './collection/CollectionSummaryPanel';
 import { useCollectionPolicyForm } from '../hooks/useCollectionPolicyForm';
 import CollectionWaiverSection from './collection/CollectionWaiverSection';
@@ -15,6 +18,7 @@ import CollectionGeneralSection from './collection/CollectionGeneralSection';
 import CollectionLateFeeSection from './collection/CollectionLateFeeSection';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
+import { Close } from '@mui/icons-material';
 
 interface CollectionPolicyDrawerProps {
   open: boolean;
@@ -55,20 +59,11 @@ export default function CollectionPolicyDrawer({
     editData,
     academicYearId,
   });
-
-  /**
-   * Memoization Justification:
-   * Prevents creating a new slab adder closure on every form render,
-   * keeping references stable for children components.
-   */
+  const theme = useTheme();
   const handleAddSlab = useCallback(() => {
     addSlab();
   }, [addSlab]);
 
-  /**
-   * Memoization Justification:
-   * Stabilizes reference of slab remover callback passed to Slab builder lists.
-   */
   const handleRemoveSlab = useCallback(
     (idx: number) => {
       removeSlab(idx);
@@ -76,13 +71,18 @@ export default function CollectionPolicyDrawer({
     [removeSlab]
   );
 
-  /**
-   * Memoization Justification:
-   * Avoids recreating submission callback on every keystroke.
-   */
-  const handleSubmit = useCallback(() => {
-    handleCustomSubmit('Active');
-  }, [handleCustomSubmit]);
+  const isAlreadyActive = editData?.status === 'Active';
+  const selectedStatus = formik.values.status === 'Active' ? 'Active' : 'Draft';
+  const handleSubmit = useCallback(
+    (event?: React.FormEvent<HTMLFormElement>) => {
+      event?.preventDefault();
+      handleCustomSubmit(selectedStatus);
+    },
+    [handleCustomSubmit, selectedStatus]
+  );
+
+  const submitLabel =
+    selectedStatus === 'Draft' ? 'Save as Draft' : isAlreadyActive ? 'Save Changes' : 'Activate Policy';
 
   if (!open) return null;
 
@@ -93,12 +93,15 @@ export default function CollectionPolicyDrawer({
       onClose={handleCloseAttempt}
       PaperProps={{
         sx: {
-          width: { xs: '100%', lg: 'min(1100px, 95vw)' },
+          width: { xs: '100%', md: '90vw', lg: 'min(1180px, 95vw)' },
           maxWidth: '100%',
         },
       }}
     >
       <Box
+        component="form"
+        noValidate
+        onSubmit={handleSubmit}
         sx={{
           display: 'flex',
           flexDirection: 'column',
@@ -106,46 +109,89 @@ export default function CollectionPolicyDrawer({
           bgcolor: 'background.paper',
         }}
       >
-        {/* Header */}
+        {/* Drawer Header */}
         <Box
           sx={{
-            px: 3,
+            px: { xs: 2, sm: 3 },
             py: 2,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             borderBottom: '1px solid',
             borderColor: 'divider',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'dark'
+                ? alpha(theme.palette.background.default, 0.4)
+                : alpha(theme.palette.grey[50], 0.6),
             flexShrink: 0,
           }}
         >
-          <Box>
-            <Typography variant="h6" fontWeight={700}>
-              {editData ? 'Edit Collection Policy' : 'Create Collection Policy'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Configure fee collection restrictions, grace days, waivers, and late fee
-              configurations.
-            </Typography>
-          </Box>
-          <Button
-            size="small"
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 1.25,
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                color: 'primary.main',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <Iconify
+                icon={editData ? GlobalIcons.edit : GlobalIcons.addIcon}
+                width={22}
+                height={22}
+              />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                <Typography variant="h6" fontWeight={700} noWrap>
+                  {editData ? 'Edit Collection Policy' : 'Create Collection Policy'}
+                </Typography>
+                {editData?.policyCode && (
+                  <Label color="default" sx={{ height: 20, fontSize: '0.7rem' }}>
+                    {editData.policyCode}
+                  </Label>
+                )}
+                <Label
+                  color={formik.values.status === 'Active' ? 'success' : 'warning'}
+                  sx={{ height: 20, fontSize: '0.7rem' }}
+                >
+                  {formik.values.status}
+                </Label>
+              </Stack>
+              <Typography variant="caption" color="text.secondary" display="block">
+                Define grace period days, late fee computation slabs, waiver workflows, and online payment options.
+              </Typography>
+            </Box>
+          </Stack>
+          <IconButton
+            aria-label="close"
             onClick={handleCloseAttempt}
-            startIcon={<Iconify icon="mdi:close" />}
-            color="inherit"
+            sx={{
+              transition: 'all 0.2s',
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+                transform: 'scale(1.1)',
+              },
+            }}
           >
-            Close
-          </Button>
+            <Close sx={{ fontSize: 20 }} />
+          </IconButton>
         </Box>
 
         {/* Main Body */}
         <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {/* Scrollable Form */}
           <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ p: 3, pb: 6 }}>
+            <Box sx={{ p: { xs: 2, sm: 3 }, pb: 6 }}>
               <CollectionGeneralSection
                 formik={formik}
                 otherDefaultPolicyName={otherDefaultPolicyName}
+                activeEdit={isAlreadyActive}
               />
               <CollectionLateFeeSection
                 formik={formik}
@@ -178,8 +224,7 @@ export default function CollectionPolicyDrawer({
         <CollectionFooterActions
           isSaving={isSaving}
           onCancel={handleCloseAttempt}
-          onSubmit={handleSubmit}
-          isSubmitDisabled={!checks.isReadyToPublish}
+          submitLabel={submitLabel}
         />
 
         {/* Unsaved changes confirmation dialog */}
@@ -187,8 +232,8 @@ export default function CollectionPolicyDrawer({
           open={unsavedChangesDialog.value}
           icon="warning"
           onClose={unsavedChangesDialog.onFalse}
-          title="Unsaved Changes"
-          content="You have unsaved changes in this policy form. Are you sure you want to discard them?"
+          title="Discard Unsaved Changes?"
+          content="You have unsaved modifications in this Collection Policy form. Closing will discard all current changes."
           action={
             <Button
               variant="contained"
@@ -199,7 +244,7 @@ export default function CollectionPolicyDrawer({
                 onClose();
               }}
             >
-              Discard
+              Discard Changes
             </Button>
           }
         />

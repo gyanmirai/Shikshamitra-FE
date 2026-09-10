@@ -79,12 +79,11 @@ export const statusColor = (status?: string) => {
 };
 
 export const getChapterProgress = (chapter: IChapter) => {
-  const start = parseChapterDate(chapter.chapterStartTime);
-  const end = parseChapterDate(chapter.chapterEndTime);
-  if (!start.isValid() || !end.isValid()) return 0;
-  const totalDays = Math.max(end.diff(start, 'day'), 1);
-  const elapsedDays = dayjs().diff(start, 'day');
-  return Math.max(0, Math.min(100, Math.round((elapsedDays / totalDays) * 100)));
+  // The API aggregates recorded teaching progress; elapsed schedule time is not completion.
+  const progress = chapter.progressPercentage;
+  return typeof progress === 'number' && Number.isFinite(progress)
+    ? Math.max(0, Math.min(100, progress))
+    : 0;
 };
 
 export const getCoverageStatus = (chapter: IChapter) => {

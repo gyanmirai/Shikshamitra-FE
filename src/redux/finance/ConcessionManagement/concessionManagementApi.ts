@@ -14,6 +14,15 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.concessionRequest],
     }),
 
+    previewConcessionRequest: builder.mutation({
+      query: ({ academicYearId, ...body }) => ({
+        url: '/concession-request/preview',
+        method: 'POST',
+        params: { academicYearId },
+        body,
+      }),
+    }),
+
     updateConcessionRequest: builder.mutation({
       query: ({ concessionRequestId, academicYearId, ...body }) => ({
         url: `/concession-request/${concessionRequestId}`,
@@ -135,6 +144,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
 
 export const {
   useCreateConcessionRequestMutation,
+  usePreviewConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
   useUploadConcessionDocumentsMutation,
   useUploadConcessionDocumentFileMutation,

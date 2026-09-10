@@ -5,9 +5,8 @@ import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
-import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
@@ -16,14 +15,13 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Box, Stack, Button, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { academicPermissions, academicPaths } from 'src/constants/academic-menu';
-import { Box, Paper, Stack, Button, Typography, IconButton } from '@mui/material';
+import { academicPaths, academicPermissions } from 'src/constants/academic-menu';
 import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   gradeScalingApi,
@@ -34,6 +32,7 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 
 import GradeForm from './gradeScaleForm';
+import { GradeScaleRowActions } from './GradeScaleRowActions';
 import GradeScaleDetailsDrawer from './gradeScaleDetailsDrawer';
 
 import type { IGrade } from './type';
@@ -333,61 +332,40 @@ const GradingScale = () => {
             isSort: false,
             sticky: true,
             stickyPosition: 'right',
-            minWidth: 50,
-            width: 50,
-            align: 'left',
+            minWidth: 176,
+            width: 176,
+            align: 'center',
             isFilter: false,
             render(value, row) {
-              const scale = row as any;
-              const isArchived = scale.status === 3 || scale.status === 'Archived';
               return (
-                <Stack direction="row" spacing={1} justifyContent="center">
-                  {isArchived ? (
-                    <ArchiveActionButton
-                      title="Restore grade scale"
-                      icon="solar:restart-bold"
-                      color="success"
-                      disabled={!canAdd || isRestoreLoading}
-                      onClick={() => {
-                        setSelectedGrade(row as any);
-                        restoreDialog.onTrue();
-                      }}
-                    />
-                  ) : (
-                    <>
-                      <ThreeDotsActions
-                        showThreeDots={false}
-                        placement="right-top"
-                        showViewIcon={canView}
-                        handleViewClick={() => {
-                          viewDialog.onTrue();
-                          setSelectedGrade(row as any);
-                        }}
-                        showEditIcon={canAdd}
-                        showDeleteIcon={canDelete}
-                        disableDeleteIcon={(scale.usageCount || 0) > 0}
-                        handleDeleteClick={() => {
-                          setSelectedGrade(row as any);
-                          deleteConfirmDialog.onTrue();
-                        }}
-                        handleEditClick={() => {
-                          setSelectedGrade(row as any);
-                          addGradeScalingDialog.onTrue();
-                        }}
-                      />
-                      <ArchiveActionButton
-                        title="Archive grade scale"
-                        icon="solar:archive-bold"
-                        color="warning"
-                        disabled={!canDelete || isArchiveLoading}
-                        onClick={() => {
-                          setSelectedGrade(row as any);
-                          archiveDialog.onTrue();
-                        }}
-                      />
-                    </>
-                  )}
-                </Stack>
+                <GradeScaleRowActions
+                  scale={row as IGrade}
+                  canView={canView}
+                  canAdd={canAdd}
+                  canDelete={canDelete}
+                  isArchiveLoading={isArchiveLoading}
+                  isRestoreLoading={isRestoreLoading}
+                  onView={() => {
+                    viewDialog.onTrue();
+                    setSelectedGrade(row as IGrade);
+                  }}
+                  onEdit={() => {
+                    setSelectedGrade(row as IGrade);
+                    addGradeScalingDialog.onTrue();
+                  }}
+                  onDelete={() => {
+                    setSelectedGrade(row as IGrade);
+                    deleteConfirmDialog.onTrue();
+                  }}
+                  onArchive={() => {
+                    setSelectedGrade(row as IGrade);
+                    archiveDialog.onTrue();
+                  }}
+                  onRestore={() => {
+                    setSelectedGrade(row as IGrade);
+                    restoreDialog.onTrue();
+                  }}
+                />
               );
             },
           },
@@ -591,35 +569,3 @@ const GradingScale = () => {
 };
 
 export default GradingScale;
-
-const ArchiveActionButton = ({
-  title,
-  icon,
-  color,
-  disabled = false,
-  onClick,
-}: {
-  title: string;
-  icon: string;
-  color: 'success' | 'warning';
-  disabled?: boolean;
-  onClick: () => void;
-}) => (
-  <CustomTooltip title={title} arrow placement="top">
-    <span>
-      <IconButton
-        size="small"
-        color={color}
-        disabled={disabled}
-        aria-label={title}
-        onClick={(event) => {
-          event.stopPropagation();
-          onClick();
-        }}
-        sx={{ width: 18, height: 18, p: 0 }}
-      >
-        <Iconify icon={icon} width={16} height={16} />
-      </IconButton>
-    </span>
-  </CustomTooltip>
-);

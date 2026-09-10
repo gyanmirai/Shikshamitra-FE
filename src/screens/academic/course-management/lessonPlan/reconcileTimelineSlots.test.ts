@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
 
 import { reconcileTimelineSlots } from './reconcileTimelineSlots';
@@ -137,15 +138,10 @@ describe('reconcileTimelineSlots', () => {
   });
 
   it('normalizes ISO timestamps to the selected calendar date', () => {
-    const plan = createPlan({ plannedDate: '2026-08-21T00:00:00+00:00' });
+    const plan = createPlan({ plannedDate: dayjs('2026-08-21').toISOString() });
     const slots = [{ timetableSlotId: 'slot-1', lessonPlan: null }];
 
-    const result = reconcileTimelineSlots(
-      slots,
-      [plan],
-      '2026-08-21T00:00:00+05:30',
-      'teacher-1'
-    );
+    const result = reconcileTimelineSlots(slots, [plan], '2026-08-21T00:00:00+05:30', 'teacher-1');
 
     expect(result[0].lessonPlan).toBe(plan);
   });
