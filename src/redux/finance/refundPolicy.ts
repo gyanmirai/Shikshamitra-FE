@@ -3,6 +3,9 @@ import type { IRefundPolicy } from 'src/screens/finance/policies/types/finance-p
 import { financePolicyType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
+import { policyCacheTags } from './policyCacheTags';
+
+const policyTags = policyCacheTags(financePolicyType.refundPolicy);
 
 export interface RefundPolicyListArgs {
   academicYearId: string;
@@ -95,22 +98,22 @@ export const refundPolicyApi = api.injectEndpoints({
           maxResultCount: pageSize,
         },
       }),
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.list,
     }),
     getRefundPolicyById: builder.query<IRefundPolicy, string>({
       query: (id) => `/finance/refund-policies/${id}`,
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
     createRefundPolicy: builder.mutation<IRefundPolicy, RefundPolicySavePayload>({
       query: (body) => ({ url: '/finance/refund-policies', method: 'POST', body }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     updateRefundPolicy: builder.mutation<
       IRefundPolicy,
       { id: string; body: RefundPolicySavePayload }
     >({
       query: ({ id, body }) => ({ url: `/finance/refund-policies/${id}`, method: 'PUT', body }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     cloneRefundPolicy: builder.mutation<
       IRefundPolicy,
@@ -121,26 +124,26 @@ export const refundPolicyApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     archiveRefundPolicy: builder.mutation<void, string>({
       query: (id) => ({ url: `/finance/refund-policies/${id}`, method: 'DELETE' }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     unarchiveRefundPolicy: builder.mutation<IRefundPolicy, string>({
       query: (id) => ({ url: `/finance/refund-policies/${id}/unarchive`, method: 'POST' }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
     getRefundPolicyVersions: builder.query<
       { totalCount: number; items: RefundPolicyVersionResponse[] },
       string
     >({
       query: (id) => `/finance/refund-policies/${id}/versions`,
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
     getRefundPolicyImpact: builder.query<RefundPolicyImpactResponse, string>({
       query: (id) => `/finance/refund-policies/${id}/impact`,
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
     simulateRefundPolicy: builder.mutation<
       RefundPolicySimulationResponse,

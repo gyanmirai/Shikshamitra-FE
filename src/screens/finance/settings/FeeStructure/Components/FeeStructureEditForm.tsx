@@ -1,14 +1,18 @@
+import type { RootState } from 'src/redux/store';
+
 import { motion } from 'framer-motion';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { useDispatch, useSelector } from 'react-redux';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { financePermissions } from 'src/constants/finance-menu';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import {
-  Box,
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box ,
+  Alert,
   Button,
   Skeleton,
   Typography,
@@ -26,6 +30,18 @@ import type { IFeeStructureEditFormProps } from '../type';
 // ---------------------------------------------------------------------------
 const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, onClose }) => {
   const theme = useTheme();
+  const dispatch = useDispatch();
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canAdd = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.settings.feeStructureActions.create
+  );
+  useEffect(
+    () => () => {
+      dispatch(setIsChanges(false));
+    },
+    [dispatch]
+  );
   const [classList, setClassList] = useState<any[]>([]);
   const [selectedClassId, setSelectedClassId] = useState('');
   const [pendingClassId, setPendingClassId] = useState<string | null>(null);
@@ -38,24 +54,17 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
     addNewFnRef.current = fn;
   }, []);
 
-  const [
-    getClassByMedium,
-    { data: classes, isLoading: isLoadingClasses, isFetching: isFetchingClasses },
-  ] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetClassByMediumQuery,
-  });
+  const {classes} = editData;
+  const isLoadingClasses = false;
+  const isFetchingClasses = false;
+  const classesError = !Array.isArray(classes);
 
   useEffect(() => {
-    if (editData?.mediumId) {
-      getClassByMedium(editData.mediumId);
-    }
-  }, [editData?.mediumId, getClassByMedium]);
-
-  useEffect(() => {
-    if (classes?.length > 0) {
+    if (Array.isArray(classes)) {
       setClassList(classes);
-      setSelectedClassId((prev) => prev || classes[0].id);
+      setSelectedClassId((prev) =>
+        classes.some((item) => item.id === prev) ? prev : (classes[0]?.id ?? '')
+      );
     }
   }, [classes]);
 
@@ -81,13 +90,20 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
       {/* ── Outer flex column: fills the card height ─────────────────────── */}
       <Box display="flex" flexDirection="column" height="100%" overflow="hidden">
         {/* ── Main two-panel area (fills all remaining space) ───────────── */}
-        <Box display="flex" flex={1} minHeight={0} overflow="hidden">
+        <Box
+          display="flex"
+          flexDirection={{ xs: 'column', md: 'row' }}
+          flex={1}
+          minHeight={0}
+          overflow="hidden"
+        >
           {/* ══════════════════════════════════════════════════════════════
               LEFT SIDEBAR — clean class navigation (Report panel style)
           ══════════════════════════════════════════════════════════════ */}
           <Box
             sx={{
-              width: 150,
+              width: { xs: '100%', md: 150 },
+              maxHeight: { xs: 140, md: 'none' },
               flexShrink: 0,
               display: 'flex',
               flexDirection: 'column',
@@ -240,25 +256,24 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
               </Box>
 
               {/* Right: Add Fee Structure button */}
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon="lucide:plus" />}
-                onClick={() => addNewFnRef.current?.()}
-                disabled={!selectedClassId}
-                sx={{
-                  borderRadius: 1.5,
-                  fontWeight: 700,
-                  px: 2,
-                  bgcolor: 'grey.900',
-                  color: '#fff',
-                  flexShrink: 0,
-                  '&:hover': { bgcolor: 'grey.800' },
-                  '&.Mui-disabled': { opacity: 0.45 },
-                }}
-              >
-                Add Fee Structure
-              </Button>
+              {canAdd && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Iconify icon="lucide:plus" />}
+                  onClick={() => addNewFnRef.current?.()}
+                  disabled={!selectedClassId}
+                  sx={{
+                    borderRadius: 1.5,
+                    fontWeight: 700,
+                    px: 2,
+                    flexShrink: 0,
+                    '&.Mui-disabled': { opacity: 0.45 },
+                  }}
+                >
+                  Add Fee Structure
+                </Button>
+              )}
             </Box>
 
             {/* ── Scrollable content ────────────────────────────────────── */}
@@ -291,6 +306,11 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
                   <Iconify icon="svg-spinners:3-dots-fade" width={20} />
                   <Typography variant="body2">Loading classes…</Typography>
                 </Box>
+              ) : classesError ? (
+                <Alert severity="error">
+                  The workspace has no scoped class data. Return to Fee Structure and refresh the
+                  list.
+                </Alert>
               ) : classes?.length === 0 ? (
                 <Box
                   display="flex"
@@ -308,6 +328,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
                     feeStructureMetaDataId={editData.id}
                     onDirtyChange={(dirty) => {
                       isDirtyRef.current = dirty;
+                      dispatch(setIsChanges(dirty));
                     }}
                     onRegisterAddNew={handleRegisterAddNew}
                   />
@@ -355,6 +376,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
             onClick={() => {
               if (pendingClassId) {
                 isDirtyRef.current = false;
+                dispatch(setIsChanges(false));
                 setSelectedClassId(pendingClassId);
               }
               setPendingClassId(null);

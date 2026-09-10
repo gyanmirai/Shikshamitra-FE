@@ -1,6 +1,7 @@
 import type { FormikProps } from 'formik';
 import type { FeeMonth } from 'src/enums/fee-collection-type';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
+import type { StructureRecord } from 'src/redux/finance/feeStructureWorkspace';
 import type { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 
 // ---------------------------------------------------------------------------
@@ -64,6 +65,8 @@ export interface IClassWiseFeeData {
  * Each card owns its _id, classId, feeStructureId, and lock status.
  */
 export interface IClassWiseFeeStructureCard {
+	/** Canonical workspace response; preserve all versions and schedule overrides. */
+	record?: StructureRecord;
   _id?: string; // undefined = unsaved (new draft)
   name: string;
   feeHeads: IClassWiseFeeItem[];
@@ -81,6 +84,7 @@ export interface IClassWiseFeeStructureCard {
 }
 
 export interface IFeeStructure {
+  classes?: { id: string; name: string }[];
   id: any;
   name: string;
   status?: number;

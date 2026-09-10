@@ -58,7 +58,7 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                   {index + 1}.
                 </Typography>
               </Grid>
-              <Grid size={6.2} sx={{ pr: 1 }}>
+              <Grid size={7.7} sx={{ pr: 1 }}>
                 <Typography variant="body2" noWrap>
                   {item.feeHeadName}
                 </Typography>
@@ -108,50 +108,6 @@ const FeeStructureCard: React.FC<FeeStructureCardProps> = ({
                     )
                   }
                 />
-              </Grid>
-
-              {/* One Time Fee Toggle */}
-              <Grid size={1.5} display="flex" justifyContent="center">
-                <Box
-                  component="div"
-                  onClick={() => {
-                    formik.setFieldValue(
-                      `feeStructureClasses.${className}[${structureIndex}].feeHeads[${index}].isOneTime`,
-                      !item.isOneTime
-                    );
-                  }}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    cursor: 'pointer',
-                    color: item.isOneTime ? 'primary.main' : 'text.disabled',
-                    bgcolor: item.isOneTime
-                      ? (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08)
-                      : 'transparent',
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: item.isOneTime
-                      ? (theme) => varAlpha(theme.palette.primary.mainChannel, 0.2)
-                      : 'transparent',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.12),
-                    },
-                  }}
-                >
-                  <Iconify
-                    icon={
-                      item.isOneTime ? 'solar:calendar-date-bold' : 'solar:calendar-date-outline'
-                    }
-                    width={16}
-                  />
-                  <Typography variant="caption" fontWeight={600}>
-                    One Time
-                  </Typography>
-                </Box>
               </Grid>
 
               {/* Optional Fee Toggle */}

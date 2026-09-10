@@ -13,6 +13,8 @@ audience: humans-and-agents
 TL;DR: Finance clients live mostly under `src/redux/finance/**`.
 Several older fee and receipt surfaces still use shared clients outside that folder.
 
+Active Fee Structure editor, typed client and browser checks: [workspace implementation](./references/fee-structure-workspace.md).
+
 ## Client map
 
 Use this table to find the first integration file.

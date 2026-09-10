@@ -454,6 +454,10 @@ export const paymentTermType = {
 
 // ===== Finance Policy API (reducerPath: api) =====
 export const financePolicyType = {
+  collectionPolicy: 'Collection-Policy',
+  concessionPolicy: 'Concession-Policy',
+  prorationPolicy: 'Proration-Policy',
+  refundPolicy: 'Refund-Policy',
   financePolicy: 'Finance-Policy',
 } as const;
 

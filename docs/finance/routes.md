@@ -13,6 +13,8 @@ audience: humans-and-agents
 TL;DR: Finance routes are owned by `src/constants/finance-menu.ts` and `src/app/(auth-route)/finance/**`.
 Use the menu source to decide whether a route is active navigation.
 
+Active Fee Structure editor, typed client and browser checks: [workspace implementation](./references/fee-structure-workspace.md).
+
 ## Active menu routes
 
 Use this table for visible Finance navigation.

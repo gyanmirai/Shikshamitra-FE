@@ -57,3 +57,30 @@ it('preserves the existing action names for other modules', () => {
     'Delete',
   ]);
 });
+
+describe.each([
+  'Settings.FeeStructure',
+  'Policies.CollectionPolicy',
+  'Policies.ConcessionPolicy',
+  'Policies.RefundPolicy',
+  'Policies.ProrationPolicy',
+])('%s configuration permissions', (module) => {
+  const base = `Finance.${module}`;
+  const catalog = ['View', 'Add', 'Delete'].map((action) => ({
+    name: `${base}.${action}`,
+    isGranted: true,
+  }));
+  it('resolves the API grants and updates exactly the three canonical keys', () => {
+    expect(getActionPermissionBase(`${base}.View`)).toBe(base);
+    const names = getNodeActionPermissionNames({ permissionName: `${base}.View` }, catalog);
+    expect(names).toEqual(catalog.map((item) => item.name));
+    const revoked = setPermissionGrants(catalog, names, false);
+    expect(getChangedPermissionGrants(revoked, catalog)).toHaveLength(3);
+    expect(revoked.every((item) => !item.isGranted)).toBe(true);
+    expect(setPermissionGrants(revoked, names, true)).toEqual(catalog);
+  });
+  it('never creates fake switches for permissions missing in an older API response', () => {
+    expect(getNodePermissionActions(`${base}.View`, catalog.slice(0, 2))).toEqual(['View', 'Add']);
+    expect(getNodeActionPermissionNames({ permissionName: `${base}.View` }, [])).toEqual([]);
+  });
+});

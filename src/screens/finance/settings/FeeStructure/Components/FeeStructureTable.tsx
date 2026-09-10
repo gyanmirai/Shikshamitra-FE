@@ -3,10 +3,12 @@
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { Stack } from '@mui/material';
-import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
+import React, { useMemo, useState } from 'react';
+import { Alert, Stack, Button } from '@mui/material';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -25,16 +27,27 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
   onView,
 }) => {
   const theme = useTheme();
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState('');
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canEdit = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.settings.feeStructureActions.edit
+  );
 
   const {
     data: feeStructureData,
     isLoading,
     isFetching,
+    isError,
+    refetch,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeStructuresQuery,
-    params: { academicYearId: currentYear?.id },
+    params: { academicYearId: currentYear?.id, page: page + 1, pageSize, search },
+    options: { skip: !currentYear?.id },
   });
 
   const tableData = useMemo(
@@ -85,7 +98,7 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         render: (value, row) => (
           <ThreeDotsActions
             showThreeDots={false}
-            showEditIcon
+            showEditIcon={canEdit}
             showViewIcon
             handleViewClick={() => onView?.(row as IFeeStructure)}
             handleEditClick={() => onEdit?.(row as IFeeStructure)}
@@ -94,17 +107,49 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [theme, onToggle, onView, onEdit]
+    [theme, onToggle, onView, onEdit, canEdit]
   );
 
   return (
-    <CustomizableTable
-      tableId="fee-structure-table"
-      isLoading={isLoading || isFetching}
-      noDataText="No Fee Structure data found"
-      columns={columns}
-      data={tableData}
-    />
+    <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
+      {!currentYear?.id && (
+        <Alert severity="info">Select an academic year to manage Fee Structures.</Alert>
+      )}
+      {isError && (
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Fee Structure workspaces could not be loaded.
+        </Alert>
+      )}
+      <CustomizableTable
+        tableId="fee-structure-table"
+        serverSidePagination
+        serverSideSearch
+        isFilter={false}
+        page={page}
+        rowsPerPage={pageSize}
+        totalCount={feeStructureData?.totalCount ?? 0}
+        maxServerRowsPerPage={100}
+        onServerPagination={(nextPage, size) => {
+          setPage(nextPage);
+          setPageSize(size);
+        }}
+        onServerSearch={(value) => {
+          setSearch(value);
+          setPage(0);
+        }}
+        isLoading={isLoading || isFetching}
+        noDataText="No Fee Structure data found"
+        columns={columns}
+        data={tableData}
+      />
+    </Stack>
   );
 };
 

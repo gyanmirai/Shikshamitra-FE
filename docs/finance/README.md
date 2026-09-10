@@ -13,6 +13,8 @@ audience: humans-and-agents
 TL;DR: use this page as the entrypoint for Finance routes, screens, clients, workflows, and frontend validation.
 Backend Finance docs own product and API truth at [Finance backend docs](../../../Shikshamitra-BE/docs/modules/finance/README.md).
 
+Active Fee Structure editor, typed client and browser checks: [workspace implementation](./references/fee-structure-workspace.md).
+
 ## Read order
 
 Follow this order when changing Finance frontend behavior:

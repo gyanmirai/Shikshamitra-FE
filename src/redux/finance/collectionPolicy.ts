@@ -1,6 +1,9 @@
 import { financePolicyType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
+import { policyCacheTags } from './policyCacheTags';
+
+const policyTags = policyCacheTags(financePolicyType.collectionPolicy);
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 // Mirrors ICollectionPolicy (screens/finance/policies/types/finance-policy.types.ts)
@@ -54,7 +57,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         items: response.items,
         totalCount: response.totalCount,
       }),
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.list,
     }),
 
     getCollectionPolicyById: builder.query({
@@ -62,7 +65,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         url: `/finance/collection-policies/${id}`,
         method: 'GET',
       }),
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
 
     createCollectionPolicy: builder.mutation({
@@ -71,7 +74,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
 
     updateCollectionPolicy: builder.mutation({
@@ -80,7 +83,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         method: 'PUT',
         body,
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
 
     cloneCollectionPolicy: builder.mutation({
@@ -95,7 +98,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
 
     archiveCollectionPolicy: builder.mutation({
@@ -103,7 +106,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         url: `/finance/collection-policies/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
 
     unarchiveCollectionPolicy: builder.mutation({
@@ -111,7 +114,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         url: `/finance/collection-policies/${id}/unarchive`,
         method: 'POST',
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: policyTags.changed,
     }),
 
     getCollectionPolicyVersions: builder.query<
@@ -123,7 +126,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: policyTags.detail,
     }),
 
     // ── Exception Windows (Phase 4j) ──────────────────────────────────────────
@@ -136,7 +139,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         method: 'GET',
         params,
       }),
-      providesTags: [financePolicyType.financePolicy],
+      providesTags: [{ type: financePolicyType.collectionPolicy, id: 'exception-windows' }],
     }),
 
     createExceptionWindow: builder.mutation({
@@ -145,7 +148,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: [{ type: financePolicyType.collectionPolicy, id: 'exception-windows' }],
     }),
 
     deleteExceptionWindow: builder.mutation({
@@ -153,7 +156,7 @@ export const CollectionPolicyApi = api.injectEndpoints({
         url: `/finance/collection-policies/exception-windows/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: [financePolicyType.financePolicy],
+      invalidatesTags: [{ type: financePolicyType.collectionPolicy, id: 'exception-windows' }],
     }),
   }),
 });
