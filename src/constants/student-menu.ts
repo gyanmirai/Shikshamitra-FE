@@ -20,6 +20,11 @@ export const studentPaths = {
       forms: '/student/admissions/settings/forms',
     },
   },
+  onboarding: {
+    root: '/student/onboarding',
+    queue: '/student/onboarding',
+    settings: '/student/onboarding/settings',
+  },
   records: {
     root: '',
     studentList: '/student/profile',
@@ -68,6 +73,17 @@ export const studentPermissions = {
       workflows: `${defaultStudentPermissionName}Admissions.Workflows.View`,
       forms: `${defaultStudentPermissionName}Admissions.Forms.View`,
     },
+  },
+  onboarding: {
+    root: [
+      `${defaultStudentPermissionName}Onboarding.View`,
+      `${defaultStudentPermissionName}Onboarding.Configure`,
+    ],
+    queue: `${defaultStudentPermissionName}Onboarding.View`,
+    settings: [
+      `${defaultStudentPermissionName}Onboarding.Configure`,
+      `${defaultStudentPermissionName}Onboarding.Repair`,
+    ],
   },
   records: {
     root: [
@@ -273,6 +289,29 @@ const studentModule = (isDdvs: boolean) => ({
                   icon: menuIconView('mdi:form-select'),
                 },
               ],
+            },
+          ],
+        },
+        {
+          title: 'Student Onboarding',
+          path: studentPaths.onboarding.root,
+          _action: 'student-onboarding',
+          permissionName: studentPermissions.onboarding.root,
+          icon: menuIconView('mdi:account-arrow-right-outline'),
+          children: [
+            {
+              title: 'Onboarding Queue',
+              path: studentPaths.onboarding.queue,
+              _action: 'student-onboarding-queue',
+              permissionName: studentPermissions.onboarding.queue,
+              icon: menuIconView('mdi:clipboard-account-outline'),
+            },
+            {
+              title: 'Onboarding Settings',
+              path: studentPaths.onboarding.settings,
+              _action: 'student-onboarding-settings',
+              permissionName: studentPermissions.onboarding.settings,
+              icon: menuIconView('mdi:cog-outline'),
             },
           ],
         },

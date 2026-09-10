@@ -2,8 +2,7 @@
 
 import type { ICity, IState, ICountry } from 'country-state-city';
 
-import { TextField } from '@mui/material';
-import PhoneInput from 'src/components/phone-input';
+import { TextField, InputAdornment } from '@mui/material';
 import OtpInputField from 'src/components/otp-input-field';
 import CityComponent from 'src/components/stardard-address/city-component';
 import StateComponent from 'src/components/stardard-address/state-component';
@@ -49,13 +48,21 @@ export function AdmissionSpecializedRuntimeField({
 
   if (configuration.format === 'phone' || field.fieldType === 4)
     return (
-      <PhoneInput
+      <TextField
         {...commonProps}
+        fullWidth
+        size="small"
+        type="tel"
         label={field.label}
         required={field.required}
         disabled={disabled}
-        value={value}
-        onChange={(nextValue) => onChange(nextValue ?? '')}
+        value={readNationalPhone(value)}
+        placeholder={field.placeholder ?? undefined}
+        slotProps={{
+          htmlInput: { inputMode: 'numeric', maxLength: 10 },
+          input: { startAdornment: <InputAdornment position="start">+91</InputAdornment> },
+        }}
+        onChange={(event) => onChange(event.target.value.replace(/\D/g, '').slice(0, 10))}
       />
     );
   if (configuration.format === 'aadhaar')
@@ -160,4 +167,9 @@ function readLocation<T>(value?: string): Partial<T> | undefined {
 
 function writeLocation(value: unknown) {
   return value && typeof value === 'object' ? JSON.stringify(value) : '';
+}
+
+function readNationalPhone(value: string) {
+  const digits = value.replace(/\D/g, '');
+  return digits.length > 10 && digits.startsWith('91') ? digits.slice(2, 12) : digits.slice(0, 10);
 }

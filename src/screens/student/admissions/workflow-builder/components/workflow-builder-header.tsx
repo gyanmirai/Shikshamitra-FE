@@ -57,15 +57,22 @@ export function WorkflowBuilderHeader({
           { name: `Version ${workflow.version}` },
         ]}
         action={
-          <Stack direction="row" spacing={1}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            justifyContent="flex-end"
+            sx={{ '& .MuiButton-root': { minHeight: 44 } }}
+          >
             {!readOnly && (
               <Button
                 size="small"
                 variant="outlined"
-                startIcon={<Iconify icon="mdi:source-branch-sync" />}
+                startIcon={<Iconify icon="mdi:auto-fix" />}
                 onClick={onApplyTemplate}
               >
-                Use admissions workflow
+                Apply standard journey
               </Button>
             )}
             <Button
@@ -112,7 +119,7 @@ export function WorkflowBuilderHeader({
           </Stack>
         }
       />
-      <Stack direction="row" alignItems="center" spacing={1}>
+      <Stack direction="row" alignItems="center" spacing={1} useFlexGap flexWrap="wrap">
         <Label color={WORKFLOW_STATUS_COLORS[workflow.status]}>
           {WORKFLOW_STATUS_LABELS[workflow.status]}
         </Label>

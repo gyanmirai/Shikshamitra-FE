@@ -18,7 +18,12 @@ export type WorkflowFilters = {
 };
 
 const readStatus = (value: string | null): WorkflowFilters['status'] =>
-  value === '0' || value === '1' || value === '2' ? Number(value) as AdmissionWorkflowStatus : 'all';
+  value === '0' || value === '1' || value === '2'
+    ? (Number(value) as AdmissionWorkflowStatus)
+    : 'all';
+
+const areFiltersEqual = (current: WorkflowFilters, next: WorkflowFilters) =>
+  (Object.keys(next) as (keyof WorkflowFilters)[]).every((key) => current[key] === next[key]);
 
 export function useWorkflowFilters() {
   const router = useRouter();
@@ -28,9 +33,10 @@ export function useWorkflowFilters() {
     search: searchParams.get('search') ?? '',
     status: readStatus(searchParams.get('status')),
     version: searchParams.get('version') ?? '',
-    usage: searchParams.get('usage') === 'used' || searchParams.get('usage') === 'unused'
-      ? searchParams.get('usage') as 'used' | 'unused'
-      : 'all',
+    usage:
+      searchParams.get('usage') === 'used' || searchParams.get('usage') === 'unused'
+        ? (searchParams.get('usage') as 'used' | 'unused')
+        : 'all',
     createdFrom: searchParams.get('from') ?? '',
     createdTo: searchParams.get('to') ?? '',
     page: Math.max(Number(searchParams.get('page') ?? 1) - 1, 0),
@@ -38,6 +44,8 @@ export function useWorkflowFilters() {
   }));
 
   const commit = (next: WorkflowFilters) => {
+    if (areFiltersEqual(filters, next)) return;
+
     setFilters(next);
     const params = new URLSearchParams();
     const values: Record<string, string> = {
@@ -55,7 +63,17 @@ export function useWorkflowFilters() {
   };
   const update = (changes: Partial<WorkflowFilters>) =>
     commit({ ...filters, ...changes, page: changes.page ?? 0 });
-  const clear = () => commit({ search: '', status: 'all', version: '', usage: 'all', createdFrom: '', createdTo: '', page: 0, rowsPerPage: filters.rowsPerPage });
+  const clear = () =>
+    commit({
+      search: '',
+      status: 'all',
+      version: '',
+      usage: 'all',
+      createdFrom: '',
+      createdTo: '',
+      page: 0,
+      rowsPerPage: filters.rowsPerPage,
+    });
 
   return {
     filters,

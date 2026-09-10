@@ -2,9 +2,10 @@
 
 import type { RootState } from 'src/redux/store';
 
+import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'next/navigation';
-import { Box, Card, Stack, Skeleton } from '@mui/material';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useGetAdmissionFormsQuery } from 'src/redux/student/admissions/admission-forms-api';
 import {
@@ -17,17 +18,19 @@ import {
 import { duplicateStage } from './workflow-builder-utils';
 import { AdmissionQueryError } from './admission-query-error';
 import { WorkflowSidePanel } from './workflow-builder/components/workflow-side-panel';
-import { WorkflowStageList } from './workflow-builder/components/workflow-stage-list';
 import { useWorkflowBuilderDraft } from './workflow-builder/hooks/use-workflow-builder-draft';
+import { WorkflowBuilderCanvas } from './workflow-builder/components/workflow-builder-canvas';
 import { WorkflowBuilderHeader } from './workflow-builder/components/workflow-builder-header';
-import { WorkflowTransitionList } from './workflow-builder/components/workflow-transition-list';
+import { WorkflowBuilderLoading } from './workflow-builder/components/workflow-builder-loading';
 import { WorkflowBuilderEditors } from './workflow-builder/components/workflow-builder-editors';
 import { useWorkflowBuilderCommands } from './workflow-builder/hooks/use-workflow-builder-commands';
+import { WorkflowStandardTemplateDialog } from './workflow-builder/components/workflow-standard-template-dialog';
 
 type Props = { workflowId: string };
 
 export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const searchParams = useSearchParams();
+  const standardTemplateDialog = useBoolean();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canEdit = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Edit');
   const canValidate = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Validate');
@@ -47,12 +50,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const readOnly = !canEdit || workflow?.status !== 0;
 
   if (workflowQuery.isLoading) {
-    return (
-      <Stack spacing={2}>
-        <Skeleton height={80} />
-        <Skeleton variant="rounded" height={420} />
-      </Stack>
-    );
+    return <WorkflowBuilderLoading />;
   }
   if (workflowQuery.isError || !workflow) {
     return <AdmissionQueryError onRetry={() => workflowQuery.refetch()} />;
@@ -74,53 +72,44 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         onValidate={commands.validateSavedWorkflow}
         onPublish={commands.publish}
         onOpenPanel={draft.setSidePanel}
-        onApplyTemplate={() => draft.applyRegistrationTemplate(formsQuery.data?.items[0]?.id)}
+        onApplyTemplate={standardTemplateDialog.onTrue}
       />
-      <Card
-        variant="outlined"
-        sx={{
-          flex: 1,
-          minHeight: 0,
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', md: 'minmax(320px, 1fr) minmax(320px, 1fr)' },
-          overflow: 'hidden',
+      <WorkflowBuilderCanvas
+        stages={draft.stages}
+        transitions={draft.transitions}
+        readOnly={readOnly}
+        loadingStageTypes={stageTypesQuery.isLoading}
+        issueCountByStage={draft.issueCountByStage}
+        onAddStage={() => draft.addStage(stageTypesQuery.data ?? [])}
+        onEditStage={(stage) => {
+          draft.setEditingStage(stage);
+          draft.setStageDrawerOpen(true);
         }}
-      >
-        <WorkflowStageList
-          stages={draft.stages}
-          readOnly={readOnly}
-          loadingStageTypes={stageTypesQuery.isLoading}
-          issueCountByStage={draft.issueCountByStage}
-          onAdd={() => draft.addStage(stageTypesQuery.data ?? [])}
-          onEdit={(stage) => {
-            draft.setEditingStage(stage);
-            draft.setStageDrawerOpen(true);
-          }}
-          onDuplicate={(stage) => {
-            draft.setStages((current) => duplicateStage(current, stage.id));
-            draft.setDirty(true);
-          }}
-          onDelete={draft.setStageToDelete}
-          onDragEnd={draft.handleDragEnd}
-        />
-        <WorkflowTransitionList
-          stages={draft.stages}
-          transitions={draft.transitions}
-          readOnly={readOnly}
-          onAdd={() => {
-            draft.setEditingTransition(null);
-            draft.setTransitionDrawerOpen(true);
-          }}
-          onEdit={(transition) => {
-            draft.setEditingTransition(transition);
-            draft.setTransitionDrawerOpen(true);
-          }}
-          onDelete={(id) => {
-            draft.setTransitions((current) => current.filter((item) => item.id !== id));
-            draft.setDirty(true);
-          }}
-        />
-      </Card>
+        onDuplicateStage={(stage) => {
+          draft.setStages((current) => duplicateStage(current, stage.id));
+          draft.setDirty(true);
+        }}
+        onDeleteStage={draft.setStageToDelete}
+        onDragEnd={draft.handleDragEnd}
+        onAddTransition={() => {
+          draft.setEditingTransition(null);
+          draft.setTransitionDrawerOpen(true);
+        }}
+        onEditTransition={(transition) => {
+          draft.setEditingTransition(transition);
+          draft.setTransitionDrawerOpen(true);
+        }}
+        onDeleteTransition={(id) => {
+          draft.setTransitions((current) => current.filter((item) => item.id !== id));
+          draft.setDirty(true);
+        }}
+      />
+      <WorkflowStandardTemplateDialog
+        open={standardTemplateDialog.value}
+        forms={formsQuery.data?.items ?? []}
+        onClose={standardTemplateDialog.onFalse}
+        onApply={draft.applyRegistrationTemplate}
+      />
       <WorkflowBuilderEditors
         stageOpen={draft.stageDrawerOpen}
         transitionOpen={draft.transitionDrawerOpen}

@@ -111,3 +111,27 @@ export const getTransitionLabel = (
   const to = stages.find((stage) => stage.id === transition.toStageId)?.name ?? 'Unknown';
   return `${from} → ${to}`;
 };
+
+export const orderTransitionsByJourney = (
+  transitions: AdmissionWorkflowTransition[],
+  stages: AdmissionWorkflowStage[]
+) => {
+  const displayOrderByStage = new Map(stages.map((stage) => [stage.id, stage.displayOrder]));
+  return [...transitions].sort(
+    (left, right) =>
+      (displayOrderByStage.get(left.fromStageId) ?? Number.MAX_SAFE_INTEGER) -
+        (displayOrderByStage.get(right.fromStageId) ?? Number.MAX_SAFE_INTEGER) ||
+      left.priority - right.priority ||
+      (displayOrderByStage.get(left.toStageId) ?? Number.MAX_SAFE_INTEGER) -
+        (displayOrderByStage.get(right.toStageId) ?? Number.MAX_SAFE_INTEGER)
+  );
+};
+
+export const getTransitionStepLabel = (
+  transition: AdmissionWorkflowTransition,
+  stages: AdmissionWorkflowStage[]
+) => {
+  const from = stages.find((stage) => stage.id === transition.fromStageId)?.displayOrder;
+  const to = stages.find((stage) => stage.id === transition.toStageId)?.displayOrder;
+  return from === undefined || to === undefined ? 'Unmapped' : `Step ${from + 1} → ${to + 1}`;
+};

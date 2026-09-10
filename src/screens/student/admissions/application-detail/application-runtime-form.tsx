@@ -6,9 +6,9 @@ import type {
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useLazyGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
 import {
-  Box,
   Card,
   Grid,
   Step,
@@ -27,7 +27,10 @@ import AdmissionRuntimeField from '../admission-runtime-field';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import {
+  parseRuntimeOptionsSource,
+  resolveRuntimeOptionsJson,
+} from './application-runtime-options';
 
 type Props = {
   application: AdmissionApplication;
@@ -103,7 +106,7 @@ export function ApplicationRuntimeForm({
       form.definition.sections
         .flatMap((section) => section.fields)
         .reduce<RuntimeOptionRequest[]>((requests, field) => {
-          const source = parseOptionsSource(field.optionsJson);
+          const source = parseRuntimeOptionsSource(field.optionsJson);
           if (source)
             requests.push({
               code: field.code,
@@ -113,7 +116,7 @@ export function ApplicationRuntimeForm({
             });
           return requests;
         }, []),
-    [form.definition.sections, values]
+    [form.academicYearId, form.definition.sections, values]
   );
   const optionRequestKey = JSON.stringify(optionRequests);
   useEffect(() => {
@@ -161,9 +164,12 @@ export function ApplicationRuntimeForm({
             <AdmissionRuntimeField
               field={{
                 ...field,
-                optionsJson:
-                  resolvedOptions[field.code] ??
-                  (parseOptionsSource(field.optionsJson) ? '[]' : field.optionsJson),
+                optionsJson: resolveRuntimeOptionsJson({
+                  configuredOptionsJson: field.optionsJson,
+                  resolvedOptionsJson: resolvedOptions[field.code],
+                  currentValue: values[field.code] ?? '',
+                  multiple: field.fieldType === 7,
+                }),
               }}
               value={values[field.code] ?? ''}
               disabled={field.readOnly || application.status !== 0}
@@ -176,7 +182,6 @@ export function ApplicationRuntimeForm({
         ))}
     </SectionCard>
   );
-
 
   return (
     <>
@@ -306,20 +311,3 @@ type RuntimeOptionRequest = {
   parentId?: string;
   academicYearId: string;
 };
-
-function parseOptionsSource(
-  value?: string | null
-): { source: string; parentField?: string } | null {
-  if (!value) return null;
-  try {
-    const parsed = JSON.parse(value) as { source?: unknown; parentField?: unknown };
-    return typeof parsed?.source === 'string'
-      ? {
-          source: parsed.source,
-          parentField: typeof parsed.parentField === 'string' ? parsed.parentField : undefined,
-        }
-      : null;
-  } catch {
-    return null;
-  }
-}

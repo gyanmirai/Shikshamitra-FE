@@ -5,22 +5,13 @@ import type { AdmissionApplication } from 'src/redux/student/admissions/admissio
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import {
-  Card,
-  Chip,
-  Alert,
-  Stack,
-  Button,
-  Divider,
-  Typography,
-  CardContent,
-} from '@mui/material';
+import { Card, Chip, Alert, Stack, Button, Divider, Typography, CardContent } from '@mui/material';
 
 import { ApplicationDecisionDialog } from './application-decision-dialog';
+import { ApplicationDecisionStatus } from './application-decision-status';
 import { ApplicationDecisionActions } from './application-decision-actions';
 import { ApplicationDecisionHistory } from './application-decision-history';
-import { ApplicationEnrollmentDialog } from './application-enrollment-dialog';
-import { formatWorkflowDateTime } from '../workflow-list/workflow-list-format';
+import { ApplicationFinalizationDialog } from './application-finalization-dialog';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
@@ -44,9 +35,9 @@ const ACTIONS: AdmissionDecisionAction[] = [
 
 export function ApplicationDecisionCard({ application }: Props) {
   const decisions = useAdmissionApplicationDecisions(application.id, application.status);
-  const enrollmentDialog = useBoolean();
+  const finalizationDialog = useBoolean();
   const [action, setAction] = useState<AdmissionDecisionAction | null>(null);
-  const { canDecide, canOffer, canEnroll } = decisions;
+  const { canDecide, canOffer, canFinalize } = decisions;
   const visibleActions = ACTIONS.filter((item) => {
     if (!canPerformAdmissionDecision(application.status, item)) return false;
     if (item === 'offer' || item === 'accept' || item === 'decline') return canOffer;
@@ -54,13 +45,14 @@ export function ApplicationDecisionCard({ application }: Props) {
   });
 
   return (
-    <Card>
+    <Card id="admission-decision">
       <CardContent>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
           <Stack spacing={0.5}>
             <Typography variant="h6">Admission decision</Typography>
             <Typography variant="body2" color="text.secondary">
-              Move this application through review, offer, and enrollment with an auditable history.
+              Move this application through review, offer, and admission finalization with an
+              auditable history.
             </Typography>
           </Stack>
           <Chip
@@ -69,21 +61,7 @@ export function ApplicationDecisionCard({ application }: Props) {
             size="small"
           />
         </Stack>
-        {application.decisionReason && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            Latest note: {application.decisionReason}
-          </Alert>
-        )}
-        {application.offerExpiresAt && application.status === 7 && (
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            Offer expires {formatWorkflowDateTime(application.offerExpiresAt)}.
-          </Alert>
-        )}
-        {application.status === 10 && application.enrolledStudentId && (
-          <Alert severity="success" sx={{ mt: 2 }}>
-            Enrolled student record: {application.enrolledStudentId}
-          </Alert>
-        )}
+        <ApplicationDecisionStatus application={application} />
         {visibleActions.length > 0 && (
           <ApplicationDecisionActions
             actions={visibleActions}
@@ -91,11 +69,12 @@ export function ApplicationDecisionCard({ application }: Props) {
             onSelect={setAction}
           />
         )}
-        {application.status === 8 && canEnroll && (
+        {application.status === 8 && canFinalize && (
           <>
             <Divider sx={{ my: 2 }} />
             <Typography variant="body2" color="text.secondary">
-              The offer is accepted. Select a division and create the operational student enrollment record.
+              The offer is accepted. Finalize Admissions to link the Student identity and start
+              onboarding. Placement and enrollment happen later.
             </Typography>
             <Button
               variant="contained"
@@ -103,18 +82,23 @@ export function ApplicationDecisionCard({ application }: Props) {
               size="small"
               disabled={decisions.isBusy}
               startIcon={<Iconify icon="mdi:school-outline" />}
-              onClick={enrollmentDialog.onTrue}
+              onClick={finalizationDialog.onTrue}
               sx={{ mt: 1, alignSelf: 'flex-start' }}
             >
-              Complete enrollment
+              Finalize admission
             </Button>
           </>
         )}
-        {!canDecide && !canOffer && !canEnroll && application.status !== 10 && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            Decision actions are not available for your role. You can still review the application details.
-          </Alert>
-        )}
+        {!canDecide &&
+          !canOffer &&
+          !canFinalize &&
+          application.status !== 10 &&
+          application.status !== 11 && (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Decision actions are not available for your role. You can still review the application
+              details.
+            </Alert>
+          )}
         <ApplicationDecisionHistory
           isLoading={decisions.historyQuery.isLoading}
           isError={decisions.historyQuery.isError}
@@ -130,19 +114,19 @@ export function ApplicationDecisionCard({ application }: Props) {
         onClose={() => setAction(null)}
         onSubmit={(input) => decisions.runDecision(action as AdmissionDecisionAction, input)}
       />
-      <ApplicationEnrollmentDialog
-        open={enrollmentDialog.value}
+      <ApplicationFinalizationDialog
+        open={finalizationDialog.value}
+        applicantId={application.applicantId}
         busy={decisions.isBusy}
-        options={decisions.enrollmentOptionsQuery.data}
+        preview={decisions.finalizationPreviewQuery.data}
         loading={
-          decisions.enrollmentOptionsQuery.isLoading || decisions.enrollmentOptionsQuery.isFetching
+          decisions.finalizationPreviewQuery.isLoading ||
+          decisions.finalizationPreviewQuery.isFetching
         }
-        hasError={decisions.enrollmentOptionsQuery.isError}
-        onRetry={() => decisions.enrollmentOptionsQuery.refetch()}
-        onClose={enrollmentDialog.onFalse}
-        onSubmit={(divisionId) =>
-          decisions.runEnrollment(application.concurrencyStamp, divisionId)
-        }
+        hasError={decisions.finalizationPreviewQuery.isError}
+        onRetry={() => decisions.finalizationPreviewQuery.refetch()}
+        onClose={finalizationDialog.onFalse}
+        onSubmit={(value) => decisions.runFinalization(application.concurrencyStamp, value)}
       />
     </Card>
   );

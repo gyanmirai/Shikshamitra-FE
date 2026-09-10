@@ -6,13 +6,20 @@ import type {
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import * as Yup from 'yup';
+import dayjs from 'dayjs';
 import { useFormik } from 'formik';
+import { DateTimePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
 
 import type { AdmissionDecisionAction } from './use-admission-application-decisions';
+import {
+  ADMISSION_DECISION_ACTION_LABELS,
+  admissionDecisionRequiresReason,
+  isDangerousAdmissionDecision,
+} from './application-decision-model';
 
 type Props = {
   open: boolean;
@@ -23,16 +30,6 @@ type Props = {
   onSubmit: (input: AdmissionApplicationDecisionInput) => Promise<boolean>;
 };
 
-const ACTION_LABELS: Record<AdmissionDecisionAction, string> = {
-  review: 'Move to review',
-  approve: 'Approve application',
-  reject: 'Reject application',
-  waitlist: 'Waitlist application',
-  offer: 'Issue admission offer',
-  accept: 'Accept offer',
-  decline: 'Decline offer',
-};
-
 export function ApplicationDecisionDialog({
   open,
   action,
@@ -41,7 +38,7 @@ export function ApplicationDecisionDialog({
   onClose,
   onSubmit,
 }: Props) {
-  const requiresReason = action === 'reject' || action === 'waitlist' || action === 'decline';
+  const requiresReason = admissionDecisionRequiresReason(action);
   const requiresExpiry = action === 'offer';
   const formik = useFormik({
     enableReinitialize: true,
@@ -50,13 +47,15 @@ export function ApplicationDecisionDialog({
       reason: Yup.string()
         .trim()
         .max(512, 'Use 512 characters or fewer')
-        .test('required-reason', 'Reason is required for this decision', (value) =>
-          !requiresReason || Boolean(value?.trim()),
+        .test(
+          'required-reason',
+          'Reason is required for this decision',
+          (value) => !requiresReason || Boolean(value?.trim())
         ),
       offerExpiresAt: Yup.string().test(
         'future-offer-expiry',
         'Offer expiry must be in the future',
-        (value) => !requiresExpiry || Boolean(value && new Date(value).getTime() > Date.now()),
+        (value) => !requiresExpiry || Boolean(value && new Date(value).getTime() > Date.now())
       ),
     }),
     onSubmit: async (values, helpers) => {
@@ -75,28 +74,47 @@ export function ApplicationDecisionDialog({
   });
 
   if (!action) return null;
-  const isDangerous = action === 'reject' || action === 'decline';
+  const isDangerous = isDangerousAdmissionDecision(action);
+  const concurrencyUnavailable = !application.concurrencyStamp;
 
   return (
-    <CustomDialog open={open} handleClose={onClose} title={ACTION_LABELS[action]} maxWidth="sm">
+    <CustomDialog
+      open={open}
+      handleClose={onClose}
+      title={ADMISSION_DECISION_ACTION_LABELS[action]}
+      maxWidth="sm"
+    >
       <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
         <Stack spacing={2}>
           <Alert severity={isDangerous ? 'warning' : 'info'}>
             <Typography variant="body2">
-              This decision is recorded in the application history for {application.applicationNumber}.
+              This decision is recorded in the application history for{' '}
+              {application.applicationNumber}.
             </Typography>
           </Alert>
+          {concurrencyUnavailable && (
+            <Alert severity="warning">
+              The application is still loading or has changed. Refresh before recording a decision.
+            </Alert>
+          )}
           {requiresExpiry && (
-            <TextField
-              fullWidth
-              required
-              size="small"
-              type="datetime-local"
+            <DateTimePicker
               label="Offer expires at"
-              InputLabelProps={{ shrink: true }}
-              {...formik.getFieldProps('offerExpiresAt')}
-              error={Boolean(formik.touched.offerExpiresAt && formik.errors.offerExpiresAt)}
-              helperText={formik.touched.offerExpiresAt && formik.errors.offerExpiresAt}
+              value={formik.values.offerExpiresAt ? dayjs(formik.values.offerExpiresAt) : null}
+              minDateTime={dayjs()}
+              onChange={(value) =>
+                formik.setFieldValue('offerExpiresAt', value?.isValid() ? value.toISOString() : '')
+              }
+              slotProps={{
+                textField: {
+                  fullWidth: true,
+                  required: true,
+                  size: 'small',
+                  onBlur: () => formik.setFieldTouched('offerExpiresAt', true),
+                  error: Boolean(formik.touched.offerExpiresAt && formik.errors.offerExpiresAt),
+                  helperText: formik.touched.offerExpiresAt && formik.errors.offerExpiresAt,
+                },
+              }}
             />
           )}
           {action !== 'accept' && (
@@ -126,15 +144,14 @@ export function ApplicationDecisionDialog({
         <LoadingButton
           variant="contained"
           size="small"
-          disabled={busy}
+          disabled={busy || concurrencyUnavailable}
           color={isDangerous ? 'warning' : 'primary'}
           startIcon={<Iconify icon="mdi:check-circle-outline" />}
           onClick={() => formik.handleSubmit()}
         >
-          {ACTION_LABELS[action]}
+          {ADMISSION_DECISION_ACTION_LABELS[action]}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>
   );
 }
-

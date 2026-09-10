@@ -19,6 +19,11 @@ export type AdmissionOfferingFilters = {
   rowsPerPage: number;
 };
 
+const areFiltersEqual = (current: AdmissionOfferingFilters, next: AdmissionOfferingFilters) =>
+  (Object.keys(next) as (keyof AdmissionOfferingFilters)[]).every(
+    (key) => current[key] === next[key]
+  );
+
 export function useAdmissionOfferingFilters() {
   const router = useRouter();
   const pathname = usePathname();
@@ -40,6 +45,8 @@ export function useAdmissionOfferingFilters() {
   }));
 
   const commit = (next: AdmissionOfferingFilters) => {
+    if (areFiltersEqual(filters, next)) return;
+
     setFilters(next);
     const params = new URLSearchParams();
     const values: Record<string, string> = {

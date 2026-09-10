@@ -8,6 +8,39 @@ type WorkflowTemplate = {
   transitions: AdmissionWorkflowTransition[];
 };
 
+export const STANDARD_ADMISSION_JOURNEY = [
+  {
+    code: 'BASIC_INQUIRY',
+    name: 'Basic inquiry received',
+    stageType: 0,
+    description: 'Capture the learner and guardian contact details and confirm their interest.',
+  },
+  {
+    code: 'PHYSICAL_FORM_ISSUED',
+    name: 'Physical registration form issued',
+    stageType: 11,
+    description: 'Record whether the printed registration form was issued to the parent.',
+  },
+  {
+    code: 'ENTRANCE_EXAM_PASSED',
+    name: 'Entrance exam scheduled and passed',
+    stageType: 2,
+    description: 'Schedule the entrance exam and continue only after the learner passes.',
+  },
+  {
+    code: 'DETAILED_REGISTRATION',
+    name: 'Detailed registration completed',
+    stageType: 1,
+    description: 'Collect and submit the complete five-step student registration form.',
+  },
+  {
+    code: 'VERIFY_APPROVE_ADMISSION',
+    name: 'Verify and approve admission',
+    stageType: 7,
+    description: 'Verify the submitted record, approve the application, and close the journey.',
+  },
+] as const;
+
 const stage = (
   code: string,
   name: string,
@@ -44,42 +77,14 @@ const transition = (
 
 export function getRegistrationWorkflowTemplate(formDefinitionId?: string): WorkflowTemplate {
   const formConfiguration = formDefinitionId ? JSON.stringify({ formDefinitionId }) : undefined;
-  const stages = [
-    stage('INQUIRY', 'Inquiry', 0, 0, { isEntryStage: true }),
-    stage('REGISTRATION_FORM_INITIAL', 'Registration form', 1, 1, {
-      configurationJson: formConfiguration,
-      description: 'Collect the student registration details before the entrance exam.',
-    }),
-    stage('REGISTRATION_FEE', 'Registration fee', 4, 2, {
-      configurationJson: JSON.stringify({ paymentPurpose: 'registration_fee', required: true }),
-    }),
-    stage('ENTRANCE_EXAM', 'Entrance exam', 2, 3, {
-      configurationJson: JSON.stringify({ scoreField: 'assessment.score', maximumScore: 100 }),
-    }),
-    stage('ELIGIBILITY', 'Eligibility', 3, 4, {
-      configurationJson: JSON.stringify({ rule: 'assessment.score >= 90' }),
-    }),
-    stage('REGISTRATION_FORM_FINAL', 'Registration form', 1, 5, {
-      configurationJson: formConfiguration,
-      description: 'Collect the remaining registration details from the eligible applicant.',
-    }),
-    stage('DOCUMENT_VERIFICATION', 'Document verification', 5, 6),
-    stage('THREE_MONTH_FEES', 'First three months fees', 4, 7, {
-      configurationJson: JSON.stringify({
-        paymentPurpose: 'first_three_months_fees',
-        required: true,
-      }),
-    }),
-    stage('ADMISSION_DONE', 'Admission done', 10, 8, {
-      isTerminalStage: true,
-      description: 'Admission is completed after the first three months fees are paid.',
-    }),
-    stage('NOT_ELIGIBLE', 'Not eligible', 11, 9, {
-      isTerminalStage: true,
-      isRequired: false,
-      description: 'The entrance exam score is below the 90% eligibility threshold.',
-    }),
-  ];
+  const stages = STANDARD_ADMISSION_JOURNEY.map((item, index) =>
+    stage(item.code, item.name, item.stageType, index, {
+      description: item.description,
+      isEntryStage: index === 0,
+      isTerminalStage: index === STANDARD_ADMISSION_JOURNEY.length - 1,
+      configurationJson: item.code === 'DETAILED_REGISTRATION' ? formConfiguration : undefined,
+    })
+  );
 
   const byCode = (code: string) => stages.find((item) => item.code === code)!.id;
   const defaultTransition = (from: string, to: string, priority: number) =>
@@ -88,43 +93,10 @@ export function getRegistrationWorkflowTemplate(formDefinitionId?: string): Work
   return {
     stages,
     transitions: [
-      defaultTransition('INQUIRY', 'REGISTRATION_FORM_INITIAL', 0),
-      defaultTransition('REGISTRATION_FORM_INITIAL', 'REGISTRATION_FEE', 0),
-      transition(byCode('REGISTRATION_FEE'), byCode('ENTRANCE_EXAM'), 0, {
-        isDefault: false,
-        conditionRuleJson: JSON.stringify({
-          field: 'payment.registration_fee_status',
-          operator: 'Equals',
-          value: 'Paid',
-        }),
-      }),
-      transition(byCode('ENTRANCE_EXAM'), byCode('ELIGIBILITY'), 0, {
-        isDefault: false,
-        conditionRuleJson: JSON.stringify({
-          field: 'assessment.score',
-          operator: 'GreaterThanOrEqual',
-          value: '90',
-        }),
-      }),
-      transition(byCode('ENTRANCE_EXAM'), byCode('NOT_ELIGIBLE'), 1, {
-        isDefault: false,
-        conditionRuleJson: JSON.stringify({
-          field: 'assessment.score',
-          operator: 'LessThan',
-          value: '90',
-        }),
-      }),
-      defaultTransition('ELIGIBILITY', 'REGISTRATION_FORM_FINAL', 0),
-      defaultTransition('REGISTRATION_FORM_FINAL', 'DOCUMENT_VERIFICATION', 0),
-      defaultTransition('DOCUMENT_VERIFICATION', 'THREE_MONTH_FEES', 0),
-      transition(byCode('THREE_MONTH_FEES'), byCode('ADMISSION_DONE'), 0, {
-        isDefault: false,
-        conditionRuleJson: JSON.stringify({
-          field: 'payment.first_three_months_fees_status',
-          operator: 'Equals',
-          value: 'Paid',
-        }),
-      }),
+      defaultTransition('BASIC_INQUIRY', 'PHYSICAL_FORM_ISSUED', 0),
+      defaultTransition('PHYSICAL_FORM_ISSUED', 'ENTRANCE_EXAM_PASSED', 0),
+      defaultTransition('ENTRANCE_EXAM_PASSED', 'DETAILED_REGISTRATION', 0),
+      defaultTransition('DETAILED_REGISTRATION', 'VERIFY_APPROVE_ADMISSION', 0),
     ],
   };
 }

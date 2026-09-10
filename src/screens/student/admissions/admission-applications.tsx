@@ -116,7 +116,8 @@ export default function AdmissionApplicationsScreen({
           <MenuItem value="7">Offer issued</MenuItem>
           <MenuItem value="8">Offer accepted</MenuItem>
           <MenuItem value="9">Offer declined</MenuItem>
-          <MenuItem value="10">Enrolled</MenuItem>
+          <MenuItem value="10">Enrolled (legacy)</MenuItem>
+          <MenuItem value="11">Admission finalized</MenuItem>
         </TextField>
         <TextField
           size="small"

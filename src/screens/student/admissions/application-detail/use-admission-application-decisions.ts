@@ -2,10 +2,12 @@
 
 import type { RootState } from 'src/redux/store';
 import type {
+  FinalizeAdmissionInput,
   AdmissionApplicationStatus,
   AdmissionApplicationDecisionInput,
 } from 'src/redux/student/admissions/admission-applications-api';
 
+import { useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -14,33 +16,27 @@ import {
   useIssueAdmissionOfferMutation,
   useAcceptAdmissionOfferMutation,
   useDeclineAdmissionOfferMutation,
-  useEnrollAdmissionApplicationMutation,
-  useGetAdmissionEnrollmentOptionsQuery,
   useRejectAdmissionApplicationMutation,
   useApproveAdmissionApplicationMutation,
+  useFinalizeAdmissionApplicationMutation,
+  useGetAdmissionFinalizationPreviewQuery,
   useWaitlistAdmissionApplicationMutation,
   useMarkAdmissionApplicationInReviewMutation,
   useGetAdmissionApplicationDecisionHistoryQuery,
 } from 'src/redux/student/admissions/admission-applications-api';
 
 export type AdmissionDecisionAction =
-  | 'review'
-  | 'approve'
-  | 'reject'
-  | 'waitlist'
-  | 'offer'
-  | 'accept'
-  | 'decline';
+  'review' | 'approve' | 'reject' | 'waitlist' | 'offer' | 'accept' | 'decline';
 
-export function useAdmissionApplicationDecisions(
-  id: string,
-  status?: AdmissionApplicationStatus,
-) {
+export function useAdmissionApplicationDecisions(id: string, status?: AdmissionApplicationStatus) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const historyQuery = useGetAdmissionApplicationDecisionHistoryQuery(id);
-  const canEnroll = hasGrantedPermission(permissions, 'Students.Admissions.Applications.Enroll');
-  const enrollmentOptionsQuery = useGetAdmissionEnrollmentOptionsQuery(id, {
-    skip: !canEnroll || status !== 8,
+  const canFinalize = hasGrantedPermission(
+    permissions,
+    'Students.Admissions.Applications.Finalize'
+  );
+  const finalizationPreviewQuery = useGetAdmissionFinalizationPreviewQuery(id, {
+    skip: !canFinalize || status !== 8,
   });
   const [markInReview, reviewState] = useMarkAdmissionApplicationInReviewMutation();
   const [approve, approveState] = useApproveAdmissionApplicationMutation();
@@ -49,12 +45,19 @@ export function useAdmissionApplicationDecisions(
   const [issueOffer, offerState] = useIssueAdmissionOfferMutation();
   const [acceptOffer, acceptState] = useAcceptAdmissionOfferMutation();
   const [declineOffer, declineState] = useDeclineAdmissionOfferMutation();
-  const [enroll, enrollState] = useEnrollAdmissionApplicationMutation();
+  const [finalizeAdmission, finalizeState] = useFinalizeAdmissionApplicationMutation();
+  const finalizationKey = useRef<string | null>(null);
 
   const runDecision = async (
     action: AdmissionDecisionAction,
-    input: AdmissionApplicationDecisionInput,
+    input: AdmissionApplicationDecisionInput
   ): Promise<boolean> => {
+    if (!input.concurrencyStamp) {
+      shikshaMitraToast.error({
+        message: 'The application changed or is still loading. Refresh it before continuing.',
+      });
+      return false;
+    }
     try {
       const request = {
         id,
@@ -77,17 +80,28 @@ export function useAdmissionApplicationDecisions(
     }
   };
 
-  const runEnrollment = async (
-    concurrencyStamp?: string | null,
-    divisionId?: string | null,
+  const runFinalization = async (
+    concurrencyStamp: string | null | undefined,
+    value: Omit<FinalizeAdmissionInput, 'concurrencyStamp' | 'idempotencyKey'>
   ): Promise<boolean> => {
+    if (!concurrencyStamp) {
+      shikshaMitraToast.error({
+        message: 'The application changed or is still loading. Refresh it before finalizing.',
+      });
+      return false;
+    }
     try {
-      await enroll({ id, concurrencyStamp, divisionId }).unwrap();
-      shikshaMitraToast.success({ message: 'Applicant enrolled successfully' });
+      finalizationKey.current ??= crypto.randomUUID();
+      await finalizeAdmission({
+        id,
+        input: { ...value, concurrencyStamp, idempotencyKey: finalizationKey.current },
+      }).unwrap();
+      finalizationKey.current = null;
+      shikshaMitraToast.success({ message: 'Admission finalized; Student Onboarding is ready' });
       return true;
     } catch (error) {
       shikshaMitraToast.error({
-        message: parseApiProblemDetail(error).detail || 'Unable to enroll the applicant',
+        message: parseApiProblemDetail(error).detail || 'Unable to finalize the admission',
       });
       return false;
     }
@@ -95,9 +109,9 @@ export function useAdmissionApplicationDecisions(
 
   return {
     historyQuery,
-    enrollmentOptionsQuery,
+    finalizationPreviewQuery,
     runDecision,
-    runEnrollment,
+    runFinalization,
     isBusy:
       reviewState.isLoading ||
       approveState.isLoading ||
@@ -106,16 +120,16 @@ export function useAdmissionApplicationDecisions(
       offerState.isLoading ||
       acceptState.isLoading ||
       declineState.isLoading ||
-      enrollState.isLoading,
+      finalizeState.isLoading,
     canDecide: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Decide'),
     canOffer: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Offer'),
-    canEnroll,
+    canFinalize,
   };
 }
 
 export function canPerformAdmissionDecision(
   status: AdmissionApplicationStatus,
-  action: AdmissionDecisionAction,
+  action: AdmissionDecisionAction
 ): boolean {
   if (action === 'review') return status === 1;
   if (action === 'approve') return status === 1 || status === 4 || status === 5;

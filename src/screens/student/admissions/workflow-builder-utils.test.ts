@@ -3,13 +3,15 @@ import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admiss
 import { it, expect, describe } from 'vitest';
 import { normalizeAdmissionWorkflowStageType } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { getRegistrationFormTemplate } from './form-dialog/registration-form-template';
 import {
   reorderStages,
   duplicateStage,
   parseSimpleCondition,
+  getTransitionStepLabel,
   serializeSimpleCondition,
+  orderTransitionsByJourney,
 } from './workflow-builder-utils';
-import { getRegistrationFormTemplate } from './form-dialog/registration-form-template';
 
 const stage = (id: string, displayOrder: number): AdmissionWorkflowStage => ({
   id,
@@ -83,6 +85,20 @@ describe('workflow builder utilities', () => {
     expect(normalizeAdmissionWorkflowStageType(10)).toBe(10);
     expect(normalizeAdmissionWorkflowStageType('Enrollment')).toBe(10);
     expect(normalizeAdmissionWorkflowStageType('document-verification')).toBe(5);
+  });
+
+  it('orders transitions by the visible admission journey', () => {
+    const stages = [stage('one', 0), stage('two', 1), stage('three', 2)];
+    const transitions = [
+      { id: 'later', fromStageId: 'two', toStageId: 'three', priority: 0, isDefault: true },
+      { id: 'first', fromStageId: 'one', toStageId: 'two', priority: 0, isDefault: true },
+    ];
+
+    expect(orderTransitionsByJourney(transitions, stages).map((item) => item.id)).toEqual([
+      'first',
+      'later',
+    ]);
+    expect(getTransitionStepLabel(transitions[1], stages)).toBe('Step 1 → 2');
   });
 
   it('keeps the built-in registration template publishable with supported fields', () => {

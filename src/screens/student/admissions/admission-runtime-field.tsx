@@ -4,10 +4,10 @@ import type { ReactNode } from 'react';
 
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
-import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
-import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
+import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 
 import { parseFieldConfiguration } from './form-dialog/form-field-presets';
 import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtime-field';
@@ -15,6 +15,7 @@ import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtim
 type Field = {
   code: string;
   label: string;
+  bindingKey?: string | null;
   fieldType: number;
   required: boolean;
   readOnly: boolean;
@@ -45,13 +46,24 @@ const fieldRendererRegistry: Partial<Record<number, FieldRenderer>> = {
   12: renderStatic,
 };
 
+const GENDER_OPTIONS: ChoiceOption[] = [
+  { value: 'Male', label: 'Male' },
+  { value: 'Female', label: 'Female' },
+];
+
 export default function AdmissionRuntimeField(props: AdmissionRuntimeFieldProps) {
   const { field, formValues } = props;
   if (parseFieldConfiguration(field.validationJson).format || field.fieldType === 4) {
     return <AdmissionSpecializedRuntimeField {...props} formValues={formValues ?? {}} />;
   }
   const renderer = fieldRendererRegistry[field.fieldType] ?? renderInput;
-  return renderer({ ...props, options: readOptions(field.optionsJson) });
+  return renderer({
+    ...props,
+    options:
+      field.bindingKey === 'Applicant.Gender' || field.code === 'Gender'
+        ? GENDER_OPTIONS
+        : readOptions(field.optionsJson),
+  });
 }
 
 function renderStatic({ field, value }: RendererProps) {

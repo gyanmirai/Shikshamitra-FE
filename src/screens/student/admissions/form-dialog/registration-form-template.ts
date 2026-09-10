@@ -16,7 +16,7 @@ const options = (items: string[]) =>
   JSON.stringify(items.map((label) => ({ value: label, label })));
 
 const yesNo = options(['Yes', 'No']);
-const gender = options(['Male', 'Female', 'Other']);
+const gender = options(['Male', 'Female']);
 const category = options(['General', 'OBC', 'SC', 'ST', 'EWS', 'Other']);
 const classOptions = options([
   'Nursery',

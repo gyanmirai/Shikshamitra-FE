@@ -5,11 +5,30 @@ import type {
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { Iconify } from 'src/components/iconify';
-import { Card, Chip, Alert, Stack, Button, Typography, CardContent } from '@mui/material';
+import {
+  Box,
+  Card,
+  Chip,
+  Alert,
+  Stack,
+  Divider,
+  Typography,
+  CardContent,
+  LinearProgress,
+} from '@mui/material';
 
-import { getAdmissionApplicationStatusLabel } from '../application-status';
-
-const STAGE_STATUS: Record<number, string> = { 0: 'Pending', 1: 'Active', 2: 'Completed', 3: 'Skipped', 4: 'Failed', 5: 'Cancelled' };
+import { ApplicationCurrentTask } from './application-current-task';
+import { ApplicationStageJourney } from './application-stage-journey';
+import {
+  getAdmissionApplicationStatusColor,
+  getAdmissionApplicationStatusLabel,
+} from '../application-status';
+import {
+  isApprovalStage,
+  getWorkflowProgress,
+  APPLICATION_APPROVED_STATUS,
+  canCompleteStageFromProgress,
+} from './application-progress-model';
 
 type Props = {
   application: AdmissionApplication;
@@ -24,37 +43,85 @@ type Props = {
   onOverride: () => void;
 };
 
-export function ApplicationProgressCard({ application, workflow, currentStage, canAdvance, canSkip, canOverride, advancing, onAdvance, onSkip, onOverride }: Props) {
-  const active = application.status === 1 && workflow?.status === 0 && workflow.currentStageInstanceId;
+export function ApplicationProgressCard({
+  application,
+  workflow,
+  currentStage,
+  canAdvance,
+  canSkip,
+  canOverride,
+  advancing,
+  onAdvance,
+  onSkip,
+  onOverride,
+}: Props) {
+  const stages = workflow?.stages ?? [];
+  const progress = getWorkflowProgress(stages);
+  const active = workflow?.status === 0 && Boolean(workflow.currentStageInstanceId);
+  const canComplete = canCompleteStageFromProgress(currentStage, application.status, canAdvance);
+  const awaitingDecision =
+    isApprovalStage(currentStage) && application.status !== APPLICATION_APPROVED_STATUS;
+
   return (
-    <Card><CardContent>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Typography variant="h6">Application progress</Typography>
-        <Chip size="small" label={getAdmissionApplicationStatusLabel(application.status)} />
-      </Stack>
-      {currentStage && workflow?.status === 0 && (
-        <Alert severity="info" sx={{ mt: 2 }}>
-          <Typography variant="subtitle2">Current stage: {currentStage.name}</Typography>
-          <Typography variant="body2">Next required action: {workflow.nextRequiredAction ?? 'Complete the current workflow stage'}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            Entered: {currentStage.enteredAt ? new Date(currentStage.enteredAt).toLocaleString() : 'Not recorded'}
-            {currentStage.completionReason ? ` · Reason: ${currentStage.completionReason}` : ''}
-          </Typography>
-        </Alert>
-      )}
-      <Stack direction="row" spacing={1} sx={{ mt: 2, overflowX: 'auto' }}>
-        {(workflow?.stages ?? []).map((stage) => (
-          <Chip key={stage.id} size="small" label={`${stage.name} · ${STAGE_STATUS[stage.status] ?? 'Unknown'}`} color={stage.status === 1 ? 'primary' : stage.status === 2 ? 'success' : stage.status === 3 ? 'warning' : 'default'} variant={stage.status === 1 ? 'filled' : 'outlined'} />
-        ))}
-      </Stack>
-      {active && (canAdvance || canSkip || canOverride) && (
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 2 }}>
-          {canAdvance && <Button size="small" variant="contained" disabled={advancing} startIcon={<Iconify icon="mdi:arrow-right-circle-outline" />} onClick={onAdvance}>Complete current stage</Button>}
-          {canSkip && currentStage?.allowManualSkip && <Button size="small" variant="outlined" color="warning" startIcon={<Iconify icon="mdi:skip-next-outline" />} onClick={onSkip}>Skip stage</Button>}
-          {canOverride && Boolean(workflow?.availableTransitions.length) && <Button size="small" variant="outlined" color="warning" startIcon={<Iconify icon="mdi:shield-alert-outline" />} onClick={onOverride}>Override transition</Button>}
+    <Card variant="outlined">
+      <CardContent>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+        >
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="h6">Admission journey</Typography>
+            <Typography variant="body2" color="text.secondary">
+              {progress.completed} of {progress.total} steps completed
+            </Typography>
+          </Box>
+          <Chip
+            size="small"
+            label={getAdmissionApplicationStatusLabel(application.status)}
+            color={getAdmissionApplicationStatusColor(application.status)}
+          />
+          <Typography variant="subtitle2">{progress.percentage}%</Typography>
         </Stack>
-      )}
-      {workflow?.status === 1 && <Alert severity="success" sx={{ mt: 2 }}>Admission workflow completed.</Alert>}
-    </CardContent></Card>
+        <LinearProgress
+          variant="determinate"
+          value={progress.percentage}
+          aria-label={`${progress.percentage}% of the admission journey completed`}
+          sx={{ height: 8, mt: 1.5, borderRadius: 1 }}
+        />
+        {currentStage && workflow?.status === 0 && (
+          <ApplicationCurrentTask
+            stage={currentStage}
+            applicationStatus={application.status}
+            nextRequiredAction={workflow.nextRequiredAction}
+            active={active}
+            awaitingDecision={awaitingDecision}
+            canComplete={canComplete}
+            canSkip={canSkip}
+            canOverride={canOverride}
+            hasAlternativeRoutes={Boolean(workflow.availableTransitions.length)}
+            advancing={advancing}
+            onAdvance={onAdvance}
+            onSkip={onSkip}
+            onOverride={onOverride}
+          />
+        )}
+        {stages.length > 0 && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <ApplicationStageJourney
+              stages={stages}
+              currentStageId={workflow?.currentStageInstanceId}
+            />
+          </>
+        )}
+        {workflow?.status === 1 && (
+          <Alert severity="success" icon={<Iconify icon="mdi:check-decagram" />} sx={{ mt: 2 }}>
+            Admission workflow completed. The decision and full audit history remain available
+            below.
+          </Alert>
+        )}
+      </CardContent>
+    </Card>
   );
 }

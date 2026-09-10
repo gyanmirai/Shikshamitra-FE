@@ -40,7 +40,6 @@ export default function AdmissionWorkflowsScreen() {
     onArchive: (workflow) => actions.setPendingConfirmation({ workflow, action: 'archive' }),
     onDelete: (workflow) => actions.setPendingConfirmation({ workflow, action: 'delete' }),
   });
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs

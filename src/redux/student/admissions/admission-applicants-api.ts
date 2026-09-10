@@ -1,16 +1,24 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
+export type AdmissionApplicantProfile = {
+  id: string;
+  familyId: string;
+  firstName: string;
+  middleName?: string | null;
+  lastName?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
+};
+export type UpdateAdmissionApplicantProfile = {
+  firstName: string;
+  middleName?: string | null;
+  lastName?: string | null;
+  dateOfBirth: string;
+  gender: 'Male' | 'Female';
+};
 export type AdmissionApplicant360 = {
-  applicant: {
-    id: string;
-    familyId: string;
-    firstName: string;
-    middleName?: string | null;
-    lastName?: string | null;
-    dateOfBirth?: string | null;
-    gender?: string | null;
-  };
+  applicant: AdmissionApplicantProfile;
   family?: { id: string; familyNumber: string };
   primaryGuardian?: {
     firstName: string;
@@ -58,6 +66,23 @@ export const admissionApplicantsApi = api.injectEndpoints({
         unwrap(response),
       providesTags: [studentAdmissionsCrmType.admissionApplicant],
     }),
+    updateAdmissionApplicantProfile: builder.mutation<
+      AdmissionApplicantProfile,
+      { applicantId: string; body: UpdateAdmissionApplicantProfile }
+    >({
+      query: ({ applicantId, body }) => ({
+        url: `/student/enrollment/admissions/applicants/${applicantId}/profile`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (
+        response: Result<AdmissionApplicantProfile> | AdmissionApplicantProfile
+      ) => unwrap(response),
+      invalidatesTags: [
+        studentAdmissionsCrmType.admissionApplicant,
+        studentAdmissionsCrmType.admissionApplication,
+      ],
+    }),
     createAdmissionApplicantNote: builder.mutation<
       AdmissionApplicantNote,
       { applicantId: string; text: string }
@@ -88,6 +113,7 @@ export const admissionApplicantsApi = api.injectEndpoints({
 });
 export const {
   useGetAdmissionApplicant360Query,
+  useUpdateAdmissionApplicantProfileMutation,
   useCreateAdmissionApplicantNoteMutation,
   useUpdateAdmissionApplicantNoteMutation,
 } = admissionApplicantsApi;

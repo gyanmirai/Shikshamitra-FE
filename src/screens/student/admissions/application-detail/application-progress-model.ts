@@ -1,0 +1,73 @@
+import type {
+  AdmissionApplicationStage,
+  AdmissionApplicationStatus,
+} from 'src/redux/student/admissions/admission-applications-api';
+
+export const APPLICATION_APPROVED_STATUS: AdmissionApplicationStatus = 6;
+
+export const STAGE_STATUS_LABELS: Record<number, string> = {
+  0: 'Not started',
+  1: 'Current step',
+  2: 'Completed',
+  3: 'Skipped',
+  4: 'Failed',
+  5: 'Cancelled',
+};
+
+export function getWorkflowProgress(stages: AdmissionApplicationStage[]) {
+  const total = stages.length;
+  const completed = stages.filter((stage) => stage.status === 2 || stage.status === 3).length;
+  return {
+    total,
+    completed,
+    percentage: total === 0 ? 0 : Math.round((completed / total) * 100),
+  };
+}
+
+export function isApprovalStage(stage?: AdmissionApplicationStage) {
+  return stage?.stageType === 7 || stage?.code === 'VERIFY_APPROVE_ADMISSION';
+}
+
+export function isFormStage(stage?: AdmissionApplicationStage) {
+  return stage?.stageType === 1;
+}
+
+export function canCompleteStageFromProgress(
+  stage: AdmissionApplicationStage | undefined,
+  applicationStatus: AdmissionApplicationStatus,
+  canAdvance: boolean
+) {
+  if (!stage || !canAdvance || isFormStage(stage)) return false;
+  return !isApprovalStage(stage) || applicationStatus === APPLICATION_APPROVED_STATUS;
+}
+
+export function getStageActionLabel(stage?: AdmissionApplicationStage) {
+  if (!stage) return 'Complete current step';
+  if (stage.stageType === 2 || stage.code === 'ENTRANCE_EXAM_PASSED') {
+    return 'Record entrance exam result';
+  }
+  if (stage.code === 'PHYSICAL_FORM_ISSUED') return 'Confirm physical form issued';
+  if (isApprovalStage(stage)) return 'Finish admission workflow';
+  return `Complete ${stage.name}`;
+}
+
+export function getStageGuidance(
+  stage: AdmissionApplicationStage | undefined,
+  applicationStatus: AdmissionApplicationStatus,
+  nextRequiredAction?: string | null
+) {
+  if (!stage) return 'No action is currently required.';
+  if (isFormStage(stage)) {
+    return 'Complete the five registration sections below, save each step, then submit the application.';
+  }
+  if (isApprovalStage(stage) && applicationStatus !== APPLICATION_APPROVED_STATUS) {
+    return 'Review the submitted details, then approve or reject the application in Admission decision.';
+  }
+  if (stage.code === 'PHYSICAL_FORM_ISSUED') {
+    return 'Confirm that the printed form was handed to the parent and record its reference number.';
+  }
+  if (stage.stageType === 2 || stage.code === 'ENTRANCE_EXAM_PASSED') {
+    return 'Record the exam schedule and marks. The learner must meet the pass mark to continue.';
+  }
+  return nextRequiredAction || 'Complete this step to continue the admission journey.';
+}

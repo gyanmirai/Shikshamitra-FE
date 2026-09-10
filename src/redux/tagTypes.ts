@@ -524,6 +524,7 @@ export const studentAdmissionsCrmType = {
   admissionForm: 'AdmissionForm',
   admissionApplication: 'AdmissionApplication',
   admissionApplicant: 'AdmissionApplicant',
+  studentOnboarding: 'StudentOnboarding',
   lead: 'Student-Admissions-Crm-Lead',
   configuration: 'Student-Admissions-Crm-Configuration',
   task: 'Student-Admissions-Crm-Task',
@@ -565,7 +566,6 @@ export const studentGrNumberType = {
 export const studentGroupType = {
   studentGroup: 'studentGroup',
 } as const;
-
 
 // ===== Student Invoice API (reducerPath: StudentInvoiceApi) =====
 export const studentInvoiceType = {

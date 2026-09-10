@@ -2,6 +2,7 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 import type { FormikProps } from 'formik';
 
 import { useState } from 'react';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
   Card,
   Grid,
@@ -20,7 +21,6 @@ import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
 import { getDynamicAdmissionValidationErrors } from '../admission-form-validation';
-import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 type Props = {
   form: AdmissionForm;
@@ -28,11 +28,7 @@ type Props = {
   resolvedOptions: Record<string, string>;
 };
 
-export function FormPreviewContent({
-  form,
-  formik,
-  resolvedOptions,
-}: Props) {
+export function FormPreviewContent({ form, formik, resolvedOptions }: Props) {
   const fieldsPerRow = form.fieldsPerRow ?? 1;
   const { values } = formik;
   const [activeStep, setActiveStep] = useState(0);
@@ -53,10 +49,10 @@ export function FormPreviewContent({
     ? (visibleSteps[safeActiveStep]?.sections.map(({ section }) => section) ?? [])
     : visibleSections;
   const updateField = (code: string, value: string) => {
-    void formik.setFieldValue(code, value);
-    getDependentAdmissionFieldCodes(fields, code).forEach((dependentCode) =>
-      void formik.setFieldValue(dependentCode, '')
-    );
+    formik.setFieldValue(code, value).catch(() => undefined);
+    getDependentAdmissionFieldCodes(fields, code).forEach((dependentCode) => {
+      formik.setFieldValue(dependentCode, '').catch(() => undefined);
+    });
   };
 
   return (
@@ -92,11 +88,14 @@ export function FormPreviewContent({
                         value={values[field.code] ?? ''}
                         disabled={field.readOnly}
                         error={
-                          formik.touched[field.code] && typeof formik.errors[field.code] === 'string'
+                          formik.touched[field.code] &&
+                          typeof formik.errors[field.code] === 'string'
                             ? formik.errors[field.code]
                             : undefined
                         }
-                        onBlur={() => void formik.setFieldTouched(field.code, true)}
+                        onBlur={() =>
+                          formik.setFieldTouched(field.code, true).catch(() => undefined)
+                        }
                         formValues={values}
                         onChange={(value) => updateField(field.code, value)}
                       />
@@ -130,9 +129,7 @@ export function FormPreviewContent({
               type="button"
               variant="outlined"
               disabled={safeActiveStep === visibleSteps.length - 1}
-              onClick={() =>
-                setActiveStep((step) => Math.min(step + 1, visibleSteps.length - 1))
-              }
+              onClick={() => setActiveStep((step) => Math.min(step + 1, visibleSteps.length - 1))}
             >
               Next
             </Button>
@@ -141,9 +138,9 @@ export function FormPreviewContent({
         {Object.values(formik.errors)
           .filter((error): error is string => typeof error === 'string')
           .map((error) => (
-          <Alert severity="error" key={error} sx={{ mt: 2 }}>
-            {error}
-          </Alert>
+            <Alert severity="error" key={error} sx={{ mt: 2 }}>
+              {error}
+            </Alert>
           ))}
         <Button size="small" type="submit" variant="contained" sx={{ mt: 3 }}>
           Validate preview

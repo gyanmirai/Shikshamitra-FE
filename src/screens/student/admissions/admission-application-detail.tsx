@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Stack, Skeleton } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -11,23 +12,48 @@ import { TransitionHistoryCard } from './application-detail/transition-history-c
 import { ApplicationRuntimeForm } from './application-detail/application-runtime-form';
 import { ApplicationProgressCard } from './application-detail/application-progress-card';
 import { ApplicationDecisionCard } from './application-detail/application-decision-card';
+import { requiresStageCompletionDetails } from './application-detail/admission-stage-completion';
 import { AdmissionWorkflowRuntimeActionDialog } from './admission-workflow-runtime-action-dialog';
+import { AdmissionStageCompletionDialog } from './application-detail/admission-stage-completion-dialog';
 
 export default function AdmissionApplicationDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const detail = useApplicationDetail(id);
+  const completionDialog = useBoolean();
   const { applicationQuery, formQuery, workflowQuery } = detail;
   const application = applicationQuery.data;
   const form = formQuery.data;
   const workflow = workflowQuery.data;
 
   if (applicationQuery.isLoading || formQuery.isLoading || workflowQuery.isLoading) {
-    return <Stack spacing={2}><Skeleton height={80} /><Skeleton variant="rounded" height={180} /><Skeleton variant="rounded" height={360} /></Stack>;
+    return (
+      <Stack spacing={2}>
+        <Skeleton height={80} />
+        <Skeleton variant="rounded" height={180} />
+        <Skeleton variant="rounded" height={360} />
+      </Stack>
+    );
   }
-  if (applicationQuery.isError || formQuery.isError || workflowQuery.isError || !application || !form) {
-    return <AdmissionQueryError onRetry={() => { applicationQuery.refetch(); formQuery.refetch(); workflowQuery.refetch(); }} />;
+  if (
+    applicationQuery.isError ||
+    formQuery.isError ||
+    workflowQuery.isError ||
+    !application ||
+    !form
+  ) {
+    return (
+      <AdmissionQueryError
+        onRetry={() => {
+          applicationQuery.refetch();
+          formQuery.refetch();
+          workflowQuery.refetch();
+        }}
+      />
+    );
   }
-  const currentStage = workflow?.stages.find((stage) => stage.id === workflow.currentStageInstanceId);
+  const currentStage = workflow?.stages.find(
+    (stage) => stage.id === workflow.currentStageInstanceId
+  );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -50,7 +76,10 @@ export default function AdmissionApplicationDetailScreen() {
         canSkip={detail.canSkip}
         canOverride={detail.canOverride}
         advancing={detail.advanceState.isLoading}
-        onAdvance={() => detail.advance()}
+        onAdvance={() => {
+          if (requiresStageCompletionDetails(currentStage)) completionDialog.onTrue();
+          else detail.advance();
+        }}
         onSkip={() => detail.setRuntimeAction('skip')}
         onOverride={() => detail.setRuntimeAction('override')}
       />
@@ -64,7 +93,7 @@ export default function AdmissionApplicationDetailScreen() {
         errors={detail.errors}
         fieldErrors={detail.fieldErrors}
         saving={detail.updateState.isLoading}
-        submitting={detail.submitState.isLoading}
+        submitting={detail.submitState.isLoading || detail.updateState.isLoading}
         onChange={detail.setFieldValue}
         onBlur={detail.setFieldTouched}
         onValidateStep={detail.validateStep}
@@ -74,6 +103,15 @@ export default function AdmissionApplicationDetailScreen() {
         reopening={detail.reopenState.isLoading}
         onReopen={detail.reopenApplication}
       />
+      {completionDialog.value && currentStage && (
+        <AdmissionStageCompletionDialog
+          open
+          stage={currentStage}
+          loading={detail.advanceState.isLoading}
+          onClose={completionDialog.onFalse}
+          onSubmit={(reason) => detail.advance({ reason })}
+        />
+      )}
       {detail.runtimeAction && workflow && (
         <AdmissionWorkflowRuntimeActionDialog
           open
@@ -81,11 +119,13 @@ export default function AdmissionApplicationDetailScreen() {
           transitions={workflow.availableTransitions}
           loading={detail.advanceState.isLoading}
           onClose={() => detail.setRuntimeAction(null)}
-          onSubmit={(value) => detail.advance({
-            ...value,
-            skipCurrentStage: detail.runtimeAction === 'skip',
-            adminOverride: detail.runtimeAction === 'override',
-          })}
+          onSubmit={async (value) => {
+            await detail.advance({
+              ...value,
+              skipCurrentStage: detail.runtimeAction === 'skip',
+              adminOverride: detail.runtimeAction === 'override',
+            });
+          }}
         />
       )}
     </Box>

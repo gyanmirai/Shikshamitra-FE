@@ -27,7 +27,7 @@ export const admissionCampusesApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getAdmissionCampuses: builder.query<AdmissionCampusListResult, void>({
       query: () => ({
-        url: '/student/enrollment/admissions/campuses',
+        url: '/app/admission-campus',
         params: { isActive: true, skipCount: 0, maxResultCount: 100 },
       }),
       transformResponse: (

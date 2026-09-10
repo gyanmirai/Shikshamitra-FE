@@ -1,7 +1,7 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
-export type AdmissionApplicationStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+export type AdmissionApplicationStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 export type AdmissionApplication = {
   id: string;
   concurrencyStamp?: string | null;
@@ -18,6 +18,9 @@ export type AdmissionApplication = {
   decisionAt?: string | null;
   offerExpiresAt?: string | null;
   offerAcceptedAt?: string | null;
+  studentId?: string | null;
+  onboardingCaseId?: string | null;
+  finalizedAt?: string | null;
   enrolledStudentId?: string | null;
   studentEnrollmentId?: string | null;
   currentStageInstanceId?: string | null;
@@ -114,7 +117,12 @@ export type AdmissionApplicationForm = {
   status: 0 | 1 | 2;
   submittedAt?: string | null;
   academicYearId: string;
-  definition: { name: string; layoutType: number; fieldsPerRow: 1 | 2 | 3 | 4; sections: AdmissionFormSection[] };
+  definition: {
+    name: string;
+    layoutType: number;
+    fieldsPerRow: 1 | 2 | 3 | 4;
+    sections: AdmissionFormSection[];
+  };
   values: { fieldCode: string; valueJson?: string | null }[];
 };
 export type AdmissionFormChangeHistory = {
@@ -155,6 +163,40 @@ export type AdmissionEnrollmentDivisionOption = {
 export type AdmissionEnrollmentOptions = {
   standardId: string;
   divisions: AdmissionEnrollmentDivisionOption[];
+};
+export type AdmissionFinalizationReadinessItem = {
+  key: string;
+  label: string;
+  passed: boolean;
+  detail: string;
+};
+export type AdmissionStudentMatch = {
+  studentId: string;
+  studentName: string;
+  dateOfBirth?: string | null;
+  status: number;
+  grNumber?: string | null;
+  academicYearId?: string | null;
+};
+export type AdmissionFinalizationPreview = {
+  applicationId: string;
+  isReady: boolean;
+  linkedStudentId?: string | null;
+  items: AdmissionFinalizationReadinessItem[];
+  possibleMatches: AdmissionStudentMatch[];
+};
+export type FinalizeAdmissionInput = {
+  concurrencyStamp: string;
+  idempotencyKey: string;
+  existingStudentId?: string | null;
+  confirmCreateNew: boolean;
+  confirmGuardianContactVerified: boolean;
+};
+export type AdmissionFinalizationResult = {
+  application: AdmissionApplication;
+  studentId: string;
+  onboardingCaseId: string;
+  reusedExistingStudent: boolean;
 };
 type Result<T> = { data?: T };
 const unwrap = <T>(response: Result<T> | T): T =>
@@ -269,8 +311,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       query: (id) => `/student/enrollment/admissions/applications/${id}/decision-history`,
       transformResponse: (
         response:
-          | Result<AdmissionApplicationDecisionHistory[]>
-          | AdmissionApplicationDecisionHistory[]
+          Result<AdmissionApplicationDecisionHistory[]> | AdmissionApplicationDecisionHistory[]
       ) => unwrap(response),
       providesTags: [studentAdmissionsCrmType.admissionApplication],
     }),
@@ -365,28 +406,30 @@ export const admissionApplicationsApi = api.injectEndpoints({
         unwrap(response),
       invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
     }),
-    enrollAdmissionApplication: builder.mutation<
-      AdmissionEnrollmentResult,
-      { id: string; concurrencyStamp?: string | null; divisionId?: string | null }
+    getAdmissionFinalizationPreview: builder.query<AdmissionFinalizationPreview, string>({
+      query: (id) => `/student/enrollment/admissions/applications/${id}/finalization-preview`,
+      transformResponse: (
+        response: Result<AdmissionFinalizationPreview> | AdmissionFinalizationPreview
+      ) => unwrap(response),
+      providesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    finalizeAdmissionApplication: builder.mutation<
+      AdmissionFinalizationResult,
+      { id: string; input: FinalizeAdmissionInput }
     >({
-      query: ({ id, ...body }) => ({
-        url: `/student/enrollment/admissions/applications/${id}/enroll`,
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/finalize`,
         method: 'POST',
-        body,
+        body: input,
       }),
-      transformResponse: (response: Result<AdmissionEnrollmentResult> | AdmissionEnrollmentResult) =>
-        unwrap(response),
+      transformResponse: (
+        response: Result<AdmissionFinalizationResult> | AdmissionFinalizationResult
+      ) => unwrap(response),
       invalidatesTags: [
         studentAdmissionsCrmType.admissionApplication,
         studentAdmissionsCrmType.admissionApplicant,
+        studentAdmissionsCrmType.studentOnboarding,
       ],
-    }),
-    getAdmissionEnrollmentOptions: builder.query<AdmissionEnrollmentOptions, string>({
-      query: (id) => `/student/enrollment/admissions/applications/${id}/enrollment-options`,
-      transformResponse: (
-        response: Result<AdmissionEnrollmentOptions> | AdmissionEnrollmentOptions,
-      ) => unwrap(response),
-      providesTags: [studentAdmissionsCrmType.admissionApplication],
     }),
     advanceAdmissionApplicationWorkflow: builder.mutation<
       AdmissionApplicationWorkflow,
@@ -431,7 +474,7 @@ export const {
   useIssueAdmissionOfferMutation,
   useAcceptAdmissionOfferMutation,
   useDeclineAdmissionOfferMutation,
-  useEnrollAdmissionApplicationMutation,
-  useGetAdmissionEnrollmentOptionsQuery,
+  useGetAdmissionFinalizationPreviewQuery,
+  useFinalizeAdmissionApplicationMutation,
   useAdvanceAdmissionApplicationWorkflowMutation,
 } = admissionApplicationsApi;
