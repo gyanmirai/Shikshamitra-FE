@@ -5,6 +5,15 @@ import menuIconView from './icon-view';
 const defaultStudentPermissionName = 'Students.';
 export const defaultModulePermissionName = 'ShikshaMitra.Module.';
 
+export const studentVisibilityPermissions = {
+  dashboard: `${defaultModulePermissionName}Students.Dashboard`,
+  records: `${defaultModulePermissionName}Students.Records`,
+  admissions: `${defaultModulePermissionName}Students.Enrollment`,
+  onboarding: `${defaultModulePermissionName}Students.Onboarding`,
+  attendance: `${defaultModulePermissionName}Students.Attendance`,
+  notification: `${defaultModulePermissionName}Students.Notification`,
+} as const;
+
 export const studentPaths = {
   dashboard: '/student/dashboard',
   enrollment: {
@@ -51,7 +60,7 @@ export const studentPaths = {
 
 export const studentPermissions = {
   root: `${defaultModulePermissionName}Students`,
-  dashboard: `${defaultModulePermissionName}Students`,
+  dashboard: `${defaultStudentPermissionName}Dashboard.View`,
   enrollment: {
     root: [
       `${defaultStudentPermissionName}Admissions.View`,
@@ -83,13 +92,10 @@ export const studentPermissions = {
   onboarding: {
     root: [
       `${defaultStudentPermissionName}Onboarding.View`,
-      `${defaultStudentPermissionName}Onboarding.Configure`,
+      `${defaultStudentPermissionName}Onboarding.Add`,
     ],
     queue: `${defaultStudentPermissionName}Onboarding.View`,
-    settings: [
-      `${defaultStudentPermissionName}Onboarding.Configure`,
-      `${defaultStudentPermissionName}Onboarding.Repair`,
-    ],
+    settings: `${defaultStudentPermissionName}Onboarding.View`,
   },
   records: {
     root: [
@@ -122,7 +128,13 @@ export const studentPermissions = {
       leaveType: `${defaultStudentPermissionName}Attendance.Setting.LeaveType`,
     },
   },
-  notification: `${defaultStudentPermissionName}Notification`,
+  notification: [
+    `${defaultStudentPermissionName}Notification.InquiryManagement.View`,
+    `${defaultStudentPermissionName}Notification.RegistrationManagement.View`,
+    `${defaultStudentPermissionName}Notification.AdmissionManagement.View`,
+    `${defaultStudentPermissionName}Notification.StudentRecordManagement.View`,
+    `${defaultStudentPermissionName}Notification.AttendanceManagement.View`,
+  ],
 };
 
 const studentModule = (isDdvs: boolean) => ({
@@ -135,6 +147,7 @@ const studentModule = (isDdvs: boolean) => ({
           path: studentPaths.dashboard,
           _action: 'student-dashboard',
           permissionName: studentPermissions.dashboard,
+          visibilityPermissionName: studentVisibilityPermissions.dashboard,
 
           shortcutKey: 'Alt+S+1',
           shortcutKeyName: 'Alt+S+1',
@@ -148,6 +161,7 @@ const studentModule = (isDdvs: boolean) => ({
           shortcutKeyName: 'Alt+S+R',
 
           permissionName: studentPermissions.records.root,
+          visibilityPermissionName: studentVisibilityPermissions.records,
           icon: menuIconView('mdi:folder-account-outline'),
           children: [
             {
@@ -211,6 +225,7 @@ const studentModule = (isDdvs: boolean) => ({
           path: studentPaths.enrollment.root,
           _action: 'student-admissions',
           permissionName: studentPermissions.enrollment.root,
+          visibilityPermissionName: studentVisibilityPermissions.admissions,
           icon: menuIconView('mdi:account-school-outline'),
           children: [
             {
@@ -317,6 +332,7 @@ const studentModule = (isDdvs: boolean) => ({
           path: studentPaths.onboarding.root,
           _action: 'student-onboarding',
           permissionName: studentPermissions.onboarding.root,
+          visibilityPermissionName: studentVisibilityPermissions.onboarding,
           icon: menuIconView('mdi:account-arrow-right-outline'),
           children: [
             {
@@ -341,6 +357,7 @@ const studentModule = (isDdvs: boolean) => ({
           _action: 'student-attendance',
 
           permissionName: studentPermissions.attendance.root,
+          visibilityPermissionName: studentVisibilityPermissions.attendance,
           icon: menuIconView('mdi:calendar-check-outline'),
           children: [
             {
@@ -400,6 +417,29 @@ const studentModule = (isDdvs: boolean) => ({
           shortcutKeyName: 'Alt+S+N',
 
           permissionName: studentPermissions.notification,
+          visibilityPermissionName: studentVisibilityPermissions.notification,
+          permissionChildren: [
+            {
+              title: 'Inquiry Management',
+              permissionName: `${defaultStudentPermissionName}Notification.InquiryManagement`,
+            },
+            {
+              title: 'Registration Management',
+              permissionName: `${defaultStudentPermissionName}Notification.RegistrationManagement`,
+            },
+            {
+              title: 'Admission Management',
+              permissionName: `${defaultStudentPermissionName}Notification.AdmissionManagement`,
+            },
+            {
+              title: 'Student Record Management',
+              permissionName: `${defaultStudentPermissionName}Notification.StudentRecordManagement`,
+            },
+            {
+              title: 'Attendance Management',
+              permissionName: `${defaultStudentPermissionName}Notification.AttendanceManagement`,
+            },
+          ],
           icon: menuIconView('mdi:bell-outline'),
         },
       ],

@@ -53,8 +53,10 @@ export type NavItemBaseProps = {
   info?: string[] | React.ReactNode;
   style?: any;
   submodule?: any;
+  permissionChildren?: NavItemBaseProps[];
   visibility?: boolean;
   permissionName?: PermissionName;
+  visibilityPermissionName?: string;
 };
 
 export type NavItemProps = ButtonBaseProps & NavItemStateProps & NavItemBaseProps;

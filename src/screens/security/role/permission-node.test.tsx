@@ -31,9 +31,17 @@ describe('Accounts permission controls', () => {
   it('renders separate Edit and Change Status switches using the exact permission base', () => {
     const onToggle = renderNode(['View', 'Add', 'Edit', 'ChangeStatus', 'Delete']);
     fireEvent.click(screen.getByLabelText('Edit'));
-    expect(onToggle).toHaveBeenLastCalledWith(base, 'Edit', false);
+    expect(onToggle).toHaveBeenLastCalledWith(
+      expect.objectContaining({ permissionName: `${base}.View` }),
+      'Edit',
+      false
+    );
     fireEvent.click(screen.getByLabelText('ChangeStatus'));
-    expect(onToggle).toHaveBeenLastCalledWith(base, 'ChangeStatus', false);
+    expect(onToggle).toHaveBeenLastCalledWith(
+      expect.objectContaining({ permissionName: `${base}.View` }),
+      'ChangeStatus',
+      false
+    );
     expect(screen.queryByText(/permissions are missing/)).not.toBeInTheDocument();
   });
 
@@ -58,8 +66,74 @@ it('toggles all three Fee Structure switches against canonical API names', () =>
   ['View', 'Add', 'Delete'].forEach((action) => {
     expect(screen.getByLabelText(action)).toBeChecked();
     fireEvent.click(screen.getByLabelText(action));
-    expect(toggle).toHaveBeenLastCalledWith(root, action, true);
+    expect(toggle).toHaveBeenLastCalledWith(
+      expect.objectContaining({ permissionName: `${root}.View` }),
+      action,
+      true
+    );
   });
   expect(screen.queryByLabelText('Edit')).not.toBeInTheDocument();
   expect(screen.queryByLabelText('Publish')).not.toBeInTheDocument();
+});
+
+it('shows only View, Add, and Delete for specialized Student Admissions actions', () => {
+  const root = 'Students.Admissions.Inquiries';
+  const toggle = vi.fn();
+  const actions = ['View', 'Add', 'Delete', 'Manage', 'Create', 'Edit', 'Assign'];
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <PermissionNode
+        node={{ title: 'Inquiries', permissionName: `${root}.View` }}
+        moduleTitle="Student"
+        submoduleTitle="Admissions"
+        permissions={actions.map((action) => ({
+          name: `${root}.${action}`,
+          isGranted: false,
+        }))}
+        onToggle={toggle}
+        onSelectAll={vi.fn()}
+        setPermission={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+
+  expect(screen.queryByLabelText('Manage')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Create')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Edit')).not.toBeInTheDocument();
+  expect(screen.queryByLabelText('Assign')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('View')).toBeEnabled();
+  expect(screen.getByLabelText('Add')).toBeEnabled();
+  expect(screen.getByLabelText('Delete')).toBeEnabled();
+  fireEvent.click(screen.getByLabelText('Add'));
+  expect(toggle).toHaveBeenLastCalledWith(
+    expect.objectContaining({ permissionName: `${root}.View` }),
+    'Add',
+    false
+  );
+});
+
+it('keeps every Student Dashboard permission switch enabled', () => {
+  const root = 'Students.Dashboard';
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <PermissionNode
+        node={{ title: 'Dashboard', permissionName: `${root}.View` }}
+        moduleTitle="Student"
+        submoduleTitle="Dashboard"
+        permissions={['View', 'Add', 'Delete'].map((action) => ({
+          name: `${root}.${action}`,
+          isGranted: false,
+        }))}
+        onToggle={vi.fn()}
+        onSelectAll={vi.fn()}
+        setPermission={vi.fn()}
+      />
+    </ThemeProvider>
+  );
+
+  ['View', 'Add', 'Delete'].forEach((action) => {
+    expect(screen.getByLabelText(action)).toBeEnabled();
+  });
+  expect(screen.getByRole('button', { name: 'Grant All' })).toBeEnabled();
+  expect(screen.queryByText(/permissions are missing/)).not.toBeInTheDocument();
 });

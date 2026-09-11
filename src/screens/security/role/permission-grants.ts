@@ -3,6 +3,17 @@ export type PermissionGrant = {
   isGranted: boolean;
 };
 
+export type PermissionNavigationItem = {
+  permissionName?: string | string[];
+  visibilityPermissionName?: string;
+};
+
+export const getVisibilityPermissionName = (
+  item: PermissionNavigationItem
+): string | undefined =>
+  item.visibilityPermissionName ??
+  (typeof item.permissionName === 'string' ? item.permissionName : undefined);
+
 export const getChangedPermissionGrants = (
   current: PermissionGrant[],
   initial: PermissionGrant[]

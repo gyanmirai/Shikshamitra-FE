@@ -37,4 +37,24 @@ describe('hasGrantedPermission', () => {
 
     expect(hasGrantedPermission([], 'Students.Records.StudentList')).toBe(false);
   });
+
+  it('maps legacy Student workflow actions to the three canonical permissions', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    const permissions = [
+      { name: 'Students.Admissions.Applications.View', isGranted: true },
+      { name: 'Students.Admissions.Applications.Add', isGranted: true },
+      { name: 'Students.Admissions.Applicants.Add', isGranted: true },
+      { name: 'Students.Onboarding.Delete', isGranted: true },
+    ];
+
+    expect(hasGrantedPermission(permissions, 'Students.Admissions.Applications.View')).toBe(true);
+    expect(hasGrantedPermission(permissions, 'Students.Admissions.Applications.Submit')).toBe(true);
+    expect(hasGrantedPermission(permissions, 'Students.Admissions.Applicants.Notes.Create')).toBe(
+      true
+    );
+    expect(hasGrantedPermission(permissions, 'Students.Onboarding.Cancel')).toBe(true);
+    expect(hasGrantedPermission(permissions, 'Students.Admissions.Applications.Delete')).toBe(
+      false
+    );
+  });
 });

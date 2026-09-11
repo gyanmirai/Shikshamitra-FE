@@ -15,7 +15,7 @@ import {
   LinearProgress,
 } from '@mui/material';
 
-import { setPermissionGrants } from './permission-grants';
+import { setPermissionGrants, getVisibilityPermissionName } from './permission-grants';
 
 // ----------------------------------------------------------------------
 
@@ -36,8 +36,11 @@ const SubmoduleItem = ({
 }) => {
   const theme = useTheme();
 
+  const permissionName = getVisibilityPermissionName(submodule);
+
   const isVisible =
-    submoduleVisibility.find((t) => t.name === submodule.permissionName)?.isGranted || false;
+    (permissionName && submoduleVisibility.find((t) => t.name === permissionName)?.isGranted) ||
+    false;
 
   return (
     <Box sx={{ pl: level * 3 }}>
@@ -58,7 +61,7 @@ const SubmoduleItem = ({
           mb: 1,
           cursor: 'pointer',
         }}
-        onClick={(e) => onToggleSubmodule(submodule.permissionName)}
+        onClick={() => permissionName && onToggleSubmodule(permissionName)}
       >
         <Typography
           variant="body2"
@@ -92,6 +95,11 @@ const Visibility = ({
 
   const theme = useTheme();
 
+  /**
+   * Memoization Justification:
+   * - The complete navigation tree includes constructed icon elements and is static for this dialog.
+   * - Keeping one reference avoids rebuilding the full tree on every permission toggle.
+   */
   const data = useMemo(() => fullSecurityNavData().flatMap((item) => item.items), []);
 
   // ============================================================
@@ -131,17 +139,15 @@ const Visibility = ({
     }
   };
 
-  const handleToggleAllSubmodules = (moduleVisibility: string, allSubmodules: any[]) => {
-    const validSubmodules = allSubmodules.filter((sub) => sub.permissionName);
-    const isAllVisible = validSubmodules.every(
-      (submodule) => !!visibility.find((t) => t.name === submodule.permissionName)?.isGranted
+  const handleToggleAllSubmodules = (allSubmodules: any[]) => {
+    const permissionNames = allSubmodules
+      .map(getVisibilityPermissionName)
+      .filter((permissionName): permissionName is string => Boolean(permissionName));
+    const isAllVisible = permissionNames.every(
+      (permissionName) => !!visibility.find((t) => t.name === permissionName)?.isGranted
     );
     setVisibility(
-      setPermissionGrants(
-        visibility,
-        validSubmodules.map((submodule) => submodule.permissionName),
-        !isAllVisible
-      )
+      setPermissionGrants(visibility, permissionNames, !isAllVisible)
     );
   };
 
@@ -185,17 +191,17 @@ const Visibility = ({
             {data.map((item, index) => {
               const isUnlocked = visibility.find((t) => t.name === item.permissionName)?.isGranted;
               const isSelected = currentSelected?.title === item.title;
-              const submodulesWithPermission = (item.submodule || []).filter(
-                (sub: any) => sub.permissionName
-              );
-              const totalSubmodules = submodulesWithPermission.length;
+              const submodulePermissionNames = (item.submodule || [])
+                .map(getVisibilityPermissionName)
+                .filter((permissionName): permissionName is string => Boolean(permissionName));
+              const totalSubmodules = submodulePermissionNames.length;
               // Count rendered sub-module rows, not permission records. Some navigation
               // entries intentionally share one permission key (for example Dashboard and
               // Student Academic 360), so filtering the permission array under-counts them.
-              const visibleSubmodules = submodulesWithPermission.filter(
-                (submodule: any) =>
-                  visibility.find((permission) => permission.name === submodule.permissionName)
-                    ?.isGranted === true
+              const visibleSubmodules = submodulePermissionNames.filter(
+                (permissionName) =>
+                  visibility.find((permission) => permission.name === permissionName)?.isGranted ===
+                  true
               ).length;
 
               const progress = !isUnlocked
@@ -441,16 +447,16 @@ const Visibility = ({
                     </Typography>
                     <Switch
                       checked={currentSelected.submodule
-                        .filter((sub: any) => sub.permissionName)
+                        .map(getVisibilityPermissionName)
+                        .filter((permissionName: string | undefined): permissionName is string =>
+                          Boolean(permissionName)
+                        )
                         .every(
-                          (submodule: any) =>
-                            visibility.find((t) => t.name === submodule.permissionName)?.isGranted
+                          (permissionName: string) =>
+                            visibility.find((t) => t.name === permissionName)?.isGranted
                         )}
                       onChange={() =>
-                        handleToggleAllSubmodules(
-                          currentSelected.permissionName,
-                          currentSelected.submodule
-                        )
+                        handleToggleAllSubmodules(currentSelected.submodule)
                       }
                     />
                   </Paper>

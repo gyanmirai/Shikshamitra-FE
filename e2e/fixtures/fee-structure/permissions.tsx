@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ThemeProvider } from '@mui/material/styles';
-import { Box, Alert, CssBaseline, Typography } from '@mui/material';
 import { createTheme } from 'src/theme/create-theme';
-import { defaultSettings } from 'src/components/settings/config-settings';
 import financeModule from 'src/constants/finance-menu';
+import { Box, Alert, Typography, CssBaseline } from '@mui/material';
 import PermissionNode from 'src/screens/security/role/permission-node';
-import { getNodeActionPermissionNames } from 'src/screens/security/role/account-settings-permissions';
+import { defaultSettings } from 'src/components/settings/config-settings';
 import {
   setPermissionGrants,
   getChangedPermissionGrants,
 } from 'src/screens/security/role/permission-grants';
+import {
+  getNodeActionPermissionNames,
+  getAffectedNodePermissionNames,
+} from 'src/screens/security/role/account-settings-permissions';
+
 const findNodes = (nodes: any[]): any[] =>
   nodes.flatMap((node) => [node, ...findNodes(node.children ?? [])]);
 const nodes = findNodes(
@@ -53,8 +57,14 @@ function Fixture() {
             submoduleTitle="Configuration"
             permissions={grants}
             setPermission={setGrants}
-            onToggle={(root, action, current) =>
-              setGrants((old) => setPermissionGrants(old, [`${root}.${action}`], !current))
+            onToggle={(selected, action, current) =>
+              setGrants((old) =>
+                setPermissionGrants(
+                  old,
+                  [...getAffectedNodePermissionNames(selected, action, !current, old)],
+                  !current
+                )
+              )
             }
             onSelectAll={(selected, value) =>
               setGrants((old) =>
