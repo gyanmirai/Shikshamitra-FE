@@ -642,7 +642,7 @@ const FeeStructureStep = ({
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Add fee heads to this class's fee structure. You can specify the amount, and whether it's a one-time or optional fee."
+              title="Add fee heads to this class's fee structure. Specify the amount and whether the fee is optional."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

@@ -18,6 +18,9 @@ export type RefundPayoutMethod = 'Cash' | 'Cheque' | 'DemandDraft' | 'BankTransf
 // ─── Common fields shared by all policy types ─────────────────────────────────
 
 export interface IFinancePolicyBase {
+  currentVersionId?: string | null;
+  currentVersionNumber?: number;
+  isAttachable?: boolean;
   id?: string;
   policyName: string;
   policyCode: string;

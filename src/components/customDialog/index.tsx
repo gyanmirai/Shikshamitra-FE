@@ -21,8 +21,8 @@ type CustomDialogProps = Omit<DialogProps, 'title'> & {
   paperProps?: PaperProps;
   hasForm?: boolean;
   disableClose?: boolean;
-  /** When supplied, this dialog owns its dirty state and leaves the page guard unchanged. */
-  hasUnsavedChanges?: boolean;
+  /** Use a local close handler without clearing the parent form's dirty state. */
+  guardUnsavedChanges?: boolean;
 };
 
 const CustomDialog = ({
@@ -33,7 +33,7 @@ const CustomDialog = ({
   paperProps,
   hasForm = true,
   disableClose = false,
-  hasUnsavedChanges,
+  guardUnsavedChanges = true,
   maxWidth = 'xs',
   ...props
 }: CustomDialogProps) => {
@@ -54,10 +54,8 @@ const CustomDialog = ({
   const handleCloseDialog = (e: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
     if (shouldBlockCustomDialogClose(disableClose)) return;
     if (reason === 'backdropClick') return;
-    if (hasUnsavedChanges !== undefined) {
-      if (!hasUnsavedChanges || window.confirm('You have unsaved changes. Do you want to discard them?')) {
-        handleClose(e, reason);
-      }
+    if (!guardUnsavedChanges) {
+      handleClose(e, reason);
       return;
     }
     if (isChanges && window.confirm('Are you sure you want to leave this page?')) {

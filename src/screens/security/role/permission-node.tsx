@@ -14,6 +14,7 @@ import {
   getActionPermissionBase,
   getNodePermissionActions,
   isAccountSettingPermission,
+  isFinanceConfigurationPermission,
 } from './account-settings-permissions';
 
 import type { PermissionType } from './utils';
@@ -44,9 +45,10 @@ export default function PermissionNode({
   );
   const nodeKey = getActionPermissionBase(node.permissionName);
   const actions = getNodePermissionActions(node.permissionName, permissions);
-  const incompleteAccountPermissions =
-    isAccountSettingPermission(node.permissionName) &&
-    actions.length < ACCOUNT_SETTING_ACTIONS.length;
+  const incompletePermissions =
+    (isAccountSettingPermission(node.permissionName) &&
+      actions.length < ACCOUNT_SETTING_ACTIONS.length) ||
+    (isFinanceConfigurationPermission(node.permissionName) && actions.length < 3);
   const hasChildren = node.children && node.children.length > 0;
 
   // Check if all permissions for this node are active
@@ -117,7 +119,7 @@ export default function PermissionNode({
               <Typography variant="subtitle2" sx={{ fontWeight: isNodeFullySelected ? 700 : 600 }}>
                 {node.title}
               </Typography>
-              {incompleteAccountPermissions && (
+              {incompletePermissions && (
                 <Typography variant="caption" color="error">
                   Some permissions are missing from the server. Update the backend permission
                   definitions.

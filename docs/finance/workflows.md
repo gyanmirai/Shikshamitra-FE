@@ -63,7 +63,7 @@ Use `src/constants/finance-menu.ts` to confirm active visibility before changing
 1. The drawer exposes the same editable lifecycle as HR Attendance Policy: `Draft` or `Active`. Archive remains a separate guarded action.
 2. Saving as `Draft` keeps the schedule unassignable. Saving as `Active` atomically publishes an immutable version; the backend derives its activation date inside the selected board period.
 3. Every installment period and due date must be inside the selected board's own start/end dates, which may be narrower than the academic year. Dates are entered as `DD/MM/YYYY`.
-4. Fee Structure lists only active terms whose current version is `Published`, and stores that exact version id.
+4. Fee Structure lists published and superseded versions of active terms and stores the explicitly selected version ID. Existing pins never upgrade automatically; see [the active workspace flow](./references/fee-structure-workspace.md).
 5. Student fee assignment creates immutable DueFee schedule snapshots for the full year.
 6. Only one Payment Term may be selected as the default for a board in an academic year. The flag may be set while the term is a draft, but the term remains unavailable to Fee Structures until activation. Selecting a new default clears the previous default in the same transaction, and a filtered unique database index enforces the invariant.
 7. The list separates current and archived records and presents one user-facing status: `Draft`, `Active`, or `Archived`. Internal version lifecycle states remain available in version history and assignment checks.
@@ -75,7 +75,7 @@ The four bill-generation rules are: installment start date, X days before due da
 
 ### Collection Policy history and audit
 
-1. The row action menu exposes Audit Trail and Version History only when Collection Policy `ViewVersions` is granted.
+1. The row action menu exposes Audit Trail and Version History only when Collection Policy `View` is granted.
 2. Both drawers lazily load the immutable Collection Policy version stream when opened.
 3. Version History compares each snapshot with its predecessor and shows field-level changes, actor, timestamp, action, status, and reason when present.
 4. Audit Trail presents those same immutable records as create, update, clone, archive, and unarchive lifecycle events, so policy audit evidence cannot drift from version history.

@@ -5,6 +5,10 @@ import type { PermissionGrant } from './permission-grants';
 
 const ACCOUNT_SETTING_ROOT =
   /^Finance\.Accounts\.Settings\.(AccountHead|IncomeCategory|ExpenseCategory|BankAccount)(\.View)?$/;
+const FINANCE_CONFIGURATION_ROOT =
+  /^Finance\.(Settings\.FeeStructure|Policies\.(ConcessionPolicy|RefundPolicy|CollectionPolicy|ProrationPolicy))(\.View)?$/;
+export const isFinanceConfigurationPermission = (name: string = '') =>
+  FINANCE_CONFIGURATION_ROOT.test(name);
 export const ACCOUNT_SETTING_ACTIONS: PermissionType[] = [
   'View',
   'Add',
@@ -16,15 +20,19 @@ export const ACCOUNT_SETTING_ACTIONS: PermissionType[] = [
 export const isAccountSettingPermission = (name: string = '') => ACCOUNT_SETTING_ROOT.test(name);
 
 export const getActionPermissionBase = (name: string = '') =>
-  isAccountSettingPermission(name) ? name.replace(/\.View$/, '') : name;
+  isAccountSettingPermission(name) || isFinanceConfigurationPermission(name)
+    ? name.replace(/\.View$/, '')
+    : name;
 
 export const getNodePermissionActions = (
   name: string,
   permissions: PermissionGrant[]
 ): PermissionType[] => {
-  if (!isAccountSettingPermission(name)) return PERMISSIONS;
+  if (!isAccountSettingPermission(name) && !isFinanceConfigurationPermission(name))
+    return PERMISSIONS;
   const base = getActionPermissionBase(name);
-  return ACCOUNT_SETTING_ACTIONS.filter((action) =>
+  const actions = isAccountSettingPermission(name) ? ACCOUNT_SETTING_ACTIONS : PERMISSIONS;
+  return actions.filter((action) =>
     permissions.some((permission) => permission.name === `${base}.${action}`)
   );
 };

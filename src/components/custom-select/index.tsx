@@ -1,16 +1,18 @@
 import type { SxProps, SelectProps, FormControlProps, FormHelperTextProps } from '@mui/material';
 
-import React, { useId } from 'react';
+import React, { useId, useState } from 'react';
 import {
   Chip,
   Select,
   MenuItem,
   Checkbox,
   Skeleton,
+  TextField,
   InputLabel,
   Typography,
   FormControl,
   ListItemText,
+  ListSubheader,
   FormHelperText,
 } from '@mui/material';
 
@@ -64,8 +66,19 @@ const CustomSelect = <T extends string, J extends boolean>({
   inputProps,
   ...props
 }: CustomSelectProps<T, J>): React.ReactElement => {
-  const generatedLabelId = React.useId();
-  const labelId = props.labelId ?? generatedLabelId;
+  const [search, setSearch] = useState('');
+  const normalizedSearch = search.trim().toLocaleLowerCase();
+  const filteredOptions = (options ?? []).filter(
+    (option) =>
+      !isSearch ||
+      !normalizedSearch ||
+      String(option[labelKey]).toLocaleLowerCase().includes(normalizedSearch) ||
+      (Array.isArray(value)
+        ? value.includes(option[valueKey] as never)
+        : option[valueKey] === value)
+  );
+  const generatedId = useId();
+  const labelId = props.labelId ?? `${generatedId}-label`;
 
   const handleChange = (event: any) => {
     const selectedValue: J extends true ? string[] | number[] : string | number =
@@ -147,8 +160,29 @@ const CustomSelect = <T extends string, J extends boolean>({
                 }),
             })}
             {...props}
+            onClose={(event) => {
+              setSearch('');
+              props.onClose?.(event);
+            }}
           >
-            {options?.length === 0 ? (
+            {isSearch && (
+              <ListSubheader>
+                <TextField
+                  autoFocus
+                  fullWidth
+                  size="small"
+                  placeholder="Search options"
+                  inputProps={{ 'aria-label': `Search ${label || 'options'}` }}
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Escape') event.stopPropagation();
+                  }}
+                  sx={{ my: 1 }}
+                />
+              </ListSubheader>
+            )}
+            {filteredOptions.length === 0 ? (
               <MenuItem
                 disabled={typeof noOptionsMessage === 'string'}
                 onClick={(event) => {
@@ -168,10 +202,10 @@ const CustomSelect = <T extends string, J extends boolean>({
                       }
                 }
               >
-                {noOptionsMessage}
+                {normalizedSearch ? 'No matching options' : noOptionsMessage}
               </MenuItem>
             ) : (
-              options.map((option) => {
+              filteredOptions.map((option) => {
                 const isDisabled = disabledValues.includes(option[valueKey] as string | number);
                 return (
                   <MenuItem key={option[valueKey]} value={option[valueKey]} disabled={isDisabled}>

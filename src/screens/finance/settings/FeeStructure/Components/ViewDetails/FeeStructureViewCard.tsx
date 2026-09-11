@@ -6,7 +6,6 @@ import { formatNumber } from 'src/utils/formate_number';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { FeePaymentTypeOptions } from 'src/enums/fee-payment-type';
 import { FeeOptionalTypeOptions } from 'src/enums/fee-optional-type';
 import {
   Box,
@@ -98,23 +97,6 @@ const FeeStructureViewCard: React.FC<FeeStructureViewCardProps> = ({ className, 
                       />
                     </Typography>
                   ),
-                },
-                {
-                  id: 'isOneTime',
-                  label: 'Payment Type',
-                  align: 'left',
-                  filterType: 'enum',
-                  enumOptions: FeePaymentTypeOptions,
-                  render: (value) =>
-                    value ? (
-                      <Label color="info" variant="soft">
-                        One Time
-                      </Label>
-                    ) : (
-                      <Label color="default" variant="soft">
-                        Recurring
-                      </Label>
-                    ),
                 },
                 {
                   id: 'isOptional',

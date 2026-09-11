@@ -13,6 +13,8 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 // ----------------------------------------------------------------------
 
 export type CustomTabsProps = TabsProps & {
+  /** Disable only when tabs share one preserved form and its parent owns the leave guard. */
+  guardUnsavedChanges?: boolean;
   slotProps?: TabsProps['slotProps'] & {
     scroller?: SxProps<Theme>;
     indicator?: SxProps<Theme>;
@@ -29,6 +31,7 @@ export function CustomTabs({
   sx,
   onChange,
   orientation = 'horizontal',
+  guardUnsavedChanges = true,
   ...other
 }: CustomTabsProps) {
   const theme = useTheme();
@@ -101,6 +104,10 @@ export function CustomTabs({
         ...sx,
       }}
       onChange={(e, val) => {
+        if (!guardUnsavedChanges) {
+          onChange?.(e, val);
+          return;
+        }
         if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
           onChange?.(e, val);
           dispatch(setIsChanges(false));

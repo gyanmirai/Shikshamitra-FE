@@ -1,10 +1,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { EmptyContent } from 'src/components/empty-content';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Box, Stack, Skeleton, Typography, CircularProgress } from '@mui/material';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
+import { Box, Alert, Stack, Button, Skeleton, Typography, CircularProgress } from '@mui/material';
 
-import IndependentFeeStructureCard from './IndependentFeeStructureCard';
+import IndependentFeeStructureCard from './FeeStructureWorkspaceCard';
 import { useFetchStandardFeeStructures } from '../hooks/useClassWiseFeeStructureHooks';
 
 import type { IClassWiseFeeStructureCard } from '../type';
@@ -32,6 +32,7 @@ const mapToCardModel = (
   classId: string,
   feeStructureMetaDataId: string
 ): IClassWiseFeeStructureCard => ({
+  record: raw,
   _id: raw._id ?? raw.id,
   name: raw.name,
   feeHeads: (raw.feeHeads ?? []).map((fh: any) => ({
@@ -55,8 +56,8 @@ const mapToCardModel = (
   feeStructureMetaDataId,
   collectionPolicyId: raw.collectionPolicyId ?? undefined,
   concessionPolicyId: raw.concessionPolicyId ?? undefined,
-	concessionFeeHeadScope: raw.concessionFeeHeadScope ?? 'EntireFeeStructure',
-	concessionApplicableFeeHeadIds: raw.concessionApplicableFeeHeadIds ?? [],
+  concessionFeeHeadScope: raw.concessionFeeHeadScope ?? 'EntireFeeStructure',
+  concessionApplicableFeeHeadIds: raw.concessionApplicableFeeHeadIds ?? [],
 });
 
 // ---------------------------------------------------------------------------
@@ -89,7 +90,13 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
     [onDirtyChange]
   );
 
-  const { data: rawStructures, isLoading, isFetching } = useFetchStandardFeeStructures(classId);
+  const {
+    data: rawStructures,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useFetchStandardFeeStructures(classId);
 
   const rawServerStructures: any[] = Array.isArray(rawStructures)
     ? rawStructures
@@ -171,7 +178,19 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {allCards.length === 0 && (
+      {isError && (
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+        >
+          Fee Structures could not be refreshed. Saved data may be out of date.
+        </Alert>
+      )}
+      {!isError && allCards.length === 0 && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -193,6 +212,8 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
             initialData={card}
             index={idx}
             onSaved={() => {
+              dirtySet.current.delete(cardKey);
+              onDirtyChange?.(dirtySet.current.size > 0);
               if (isDraft) {
                 setLocalDrafts((prev) => prev.filter((d) => d.__draftId !== cardKey));
               }
