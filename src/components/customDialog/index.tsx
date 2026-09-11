@@ -45,11 +45,11 @@ const CustomDialog = ({
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (!open || !hasUnsavedChanges) return undefined;
+    if (!open || !guardUnsavedChanges) return undefined;
     const warn = (event: BeforeUnloadEvent) => event.preventDefault();
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [open, hasUnsavedChanges]);
+  }, [open, guardUnsavedChanges]);
 
   const handleCloseDialog = (e: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
     if (shouldBlockCustomDialogClose(disableClose)) return;
