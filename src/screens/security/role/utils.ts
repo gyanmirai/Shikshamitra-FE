@@ -75,9 +75,12 @@ export const calculateSecurityScore = (permissions: PermissionsMap) => {
   return Math.round((activePerms / totalPossiblePerms) * 100);
 };
 
+export const getPermissionChildren = (node: any): any[] =>
+  node?.permissionChildren ?? node?.children ?? [];
+
 export const getAllChildrenData = (node: any, list: any = []) => {
-  node?.children?.forEach((child: any) => {
-    if (child?.children?.length > 0) {
+  getPermissionChildren(node).forEach((child: any) => {
+    if (getPermissionChildren(child).length > 0) {
       list = [...list];
     } else {
       list.push(child);

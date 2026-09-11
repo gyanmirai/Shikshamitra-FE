@@ -18,13 +18,15 @@ import { useGetPermissionsQuery } from 'src/redux/permission/permissionApi';
 
 import { extractGrantedPermissions } from '.';
 import PermissionNode from './permission-node';
-import { getAllChildrenData, type PermissionType } from './utils';
+import { getVisibilityPermissionName } from './permission-grants';
+import { getAllChildrenData, type PermissionType, getPermissionChildren } from './utils';
 import {
   ACCOUNT_SETTING_ACTIONS,
   getActionPermissionBase,
   isAccountSettingPermission,
   getNodeActionPermissionNames,
-  isFinanceConfigurationPermission,
+  getAffectedNodePermissionNames,
+  getNodeActionPermissionNamesForAction,
 } from './account-settings-permissions';
 
 // ----------------------------------------------------------------------
@@ -48,6 +50,7 @@ export default function Permission({
     params: { providerName, providerKey: providerName === 'R' ? editData?.name : editData?.id },
     options: {
       skip: !editData,
+      refetchOnMountOrArgChange: true,
     },
   });
 
@@ -80,45 +83,13 @@ export default function Permission({
     setExpandedSubModule(value === expandedSubModule ? false : value);
   };
 
-  const handlePermissionToggle = (key: string, type: PermissionType) => {
-    const targetName = `${key}.${type}`;
-    const targetItem = permissionData.find((item) => item.name === targetName);
-    const newValue = targetItem ? !targetItem.isGranted : false;
-
-    if (isAccountSettingPermission(key)) {
-      setPermissionData(
-        permissionData.map((item) =>
-          item.name === targetName ? { ...item, isGranted: newValue } : item
-        )
-      );
-      return;
-    }
-
+  const handlePermissionToggle = (node: any, type: PermissionType, currentValue: boolean) => {
+    const newValue = !currentValue;
+    const affectedNames = getAffectedNodePermissionNames(node, type, newValue, permissionData);
     setPermissionData(
-      permissionData.map((item) => {
-        if (item.name === targetName) {
-          return { ...item, isGranted: newValue };
-        }
-
-        if (newValue) {
-          if (type === 'Add' && item.name === `${key}.View`) {
-            return { ...item, isGranted: true };
-          }
-          if (
-            type === 'Delete' &&
-            (item.name === `${key}.View` ||
-              (!isFinanceConfigurationPermission(key) && item.name === `${key}.Add`))
-          ) {
-            return { ...item, isGranted: true };
-          }
-        }
-        if (!newValue && type === 'View') {
-          if (item.name === `${key}.Add` || item.name === `${key}.Delete`) {
-            return { ...item, isGranted: false };
-          }
-        }
-        return item;
-      })
+      permissionData.map((item) =>
+        affectedNames.has(item.name) ? { ...item, isGranted: newValue } : item
+      )
     );
   };
 
@@ -133,7 +104,7 @@ export default function Permission({
     setPermissionData(newPermissions);
   };
 
-  const findVisibility = (name: string) =>
+  const findVisibility = (name: string | undefined) =>
     permissionData?.find((item) => item.name === name)?.isGranted;
 
   const renderModuleList = (
@@ -156,7 +127,7 @@ export default function Permission({
         <Stack spacing={0.5} sx={{ p: 1, pb: 8 }}>
           {modules.map((module) => {
             const isSelected = selectedModule.title === module.title;
-            const hasVisibility = findVisibility(module.permissionName);
+            const hasVisibility = findVisibility(getVisibilityPermissionName(module));
             return (
               <Tooltip
                 title={hasVisibility ? '' : 'Not Module visibility Accessible'}
@@ -216,7 +187,7 @@ export default function Permission({
           {selectedModule.submodule && selectedModule.submodule.length > 0 ? (
             selectedModule.submodule.map((subItem: any) => {
               const isSelected = expandedSubModule === subItem.title;
-              const hasVisibility = findVisibility(subItem.permissionName);
+              const hasVisibility = findVisibility(getVisibilityPermissionName(subItem));
               return (
                 <Tooltip
                   title={hasVisibility ? '' : 'Not Module visibility Accessible'}
@@ -275,8 +246,8 @@ export default function Permission({
   const selectedPermissionModule = selectedModule.submodule?.find(
     (item: any) => item.title === expandedSubModule
   );
-  const matrixActions = getAllChildrenData(selectedPermissionModule).some((item: any) =>
-    isAccountSettingPermission(item.permissionName)
+  const matrixActions: PermissionType[] = getAllChildrenData(selectedPermissionModule).some((item: any) =>
+    isAccountSettingPermission(getActionPermissionBase(item.permissionName))
   )
     ? ACCOUNT_SETTING_ACTIONS
     : ['View', 'Add', 'Delete'];
@@ -292,8 +263,7 @@ export default function Permission({
         overflow: 'hidden',
       }}
     >
-      {selectedModule.submodule?.find((s: any) => s.title === expandedSubModule)?.children?.length >
-        0 && (
+      {getPermissionChildren(selectedPermissionModule).length > 0 && (
         <Box
           sx={{
             p: 2.5,
@@ -321,23 +291,30 @@ export default function Permission({
                     (s: any) => s.title === expandedSubModule
                   );
                   const itemsToShow =
-                    (activeSubModule as any)?.children?.length > 0
+                    getPermissionChildren(activeSubModule).length > 0
                       ? getAllChildrenData(activeSubModule)
                       : [activeSubModule];
 
                   // Check if all items have this permission enabled
                   const availableItems = itemsToShow.filter((item: any) =>
-                    permissionData.some(
-                      (permission) =>
-                        permission.name ===
-                        `${getActionPermissionBase(item.permissionName)}.${type}`
-                    )
+                    getNodeActionPermissionNamesForAction(
+                      item.permissionName,
+                      type,
+                      permissionData
+                    ).length > 0
                   );
                   const isGlobalChecked =
                     availableItems.length > 0 &&
                     availableItems.every((item: any) => {
-                      const key = `${getActionPermissionBase(item.permissionName)}.${type}`;
-                      return !!permissionData?.find((i) => i.name === key)?.isGranted;
+                      const permissionNames = getNodeActionPermissionNamesForAction(
+                        item.permissionName,
+                        type,
+                        permissionData
+                      );
+                      return permissionNames.every(
+                        (permissionName) =>
+                          !!permissionData.find((i) => i.name === permissionName)?.isGranted
+                      );
                     });
 
                   return (
@@ -351,91 +328,22 @@ export default function Permission({
                         checked={isGlobalChecked}
                         onChange={(e) => {
                           const isChecked = e.target.checked;
-                          const newPermissions: { name: string; isGranted: boolean }[] = [
-                            ...permissionData,
-                          ];
-
+                          const affectedNames = new Set<string>();
                           availableItems.forEach((item: any) => {
-                            const key = `${getActionPermissionBase(item.permissionName)}.${type}`;
-                            const index = newPermissions.findIndex((i) => i.name === key);
-                            if (index !== -1) {
-                              newPermissions[index] = {
-                                ...newPermissions[index],
-                                isGranted: isChecked,
-                              };
-
-                              // Account settings have independent server actions; never infer extra grants.
-                              if (isAccountSettingPermission(item.permissionName)) return;
-
-                              if (isChecked) {
-                                if (type === 'Add') {
-                                  const viewIndex = newPermissions.findIndex(
-                                    (i) =>
-                                      i.name ===
-                                      `${getActionPermissionBase(item.permissionName)}.View`
-                                  );
-                                  if (viewIndex !== -1) {
-                                    newPermissions[viewIndex] = {
-                                      ...newPermissions[viewIndex],
-                                      isGranted: true,
-                                    };
-                                  }
-                                }
-                                if (type === 'Delete') {
-                                  const viewIndex = newPermissions.findIndex(
-                                    (i) =>
-                                      i.name ===
-                                      `${getActionPermissionBase(item.permissionName)}.View`
-                                  );
-                                  if (viewIndex !== -1) {
-                                    newPermissions[viewIndex] = {
-                                      ...newPermissions[viewIndex],
-                                      isGranted: true,
-                                    };
-                                  }
-                                  const addIndex = newPermissions.findIndex(
-                                    (i) =>
-                                      i.name ===
-                                      `${getActionPermissionBase(item.permissionName)}.Add`
-                                  );
-                                  if (
-                                    addIndex !== -1 &&
-                                    !isFinanceConfigurationPermission(item.permissionName)
-                                  ) {
-                                    newPermissions[addIndex] = {
-                                      ...newPermissions[addIndex],
-                                      isGranted: true,
-                                    };
-                                  }
-                                }
-                              } else if (type === 'View') {
-                                const addIndex = newPermissions.findIndex(
-                                  (i) =>
-                                    i.name === `${getActionPermissionBase(item.permissionName)}.Add`
-                                );
-                                if (addIndex !== -1) {
-                                  newPermissions[addIndex] = {
-                                    ...newPermissions[addIndex],
-                                    isGranted: false,
-                                  };
-                                }
-
-                                const deleteIndex = newPermissions.findIndex(
-                                  (i) =>
-                                    i.name ===
-                                    `${getActionPermissionBase(item.permissionName)}.Delete`
-                                );
-                                if (deleteIndex !== -1) {
-                                  newPermissions[deleteIndex] = {
-                                    ...newPermissions[deleteIndex],
-                                    isGranted: false,
-                                  };
-                                }
-                              }
-                            }
+                            getAffectedNodePermissionNames(
+                              item,
+                              type,
+                              isChecked,
+                              permissionData
+                            ).forEach((name) => affectedNames.add(name));
                           });
-
-                          setPermissionData(newPermissions);
+                          setPermissionData(
+                            permissionData.map((permission) =>
+                              affectedNames.has(permission.name)
+                                ? { ...permission, isGranted: isChecked }
+                                : permission
+                            )
+                          );
                         }}
                       />
                     </Stack>
@@ -460,9 +368,11 @@ export default function Permission({
               );
               // If submodule has children, show them. If not, show the submodule itself as a row.
               const itemsToShow =
-                (activeSubModule as any)?.children?.length > 0
-                  ? (activeSubModule as any).children
-                  : [];
+                getPermissionChildren(activeSubModule).length > 0
+                  ? getPermissionChildren(activeSubModule)
+                  : activeSubModule
+                    ? [activeSubModule]
+                    : [];
 
               return itemsToShow.length > 0 ? (
                 itemsToShow?.map((item: any, index: number) => {

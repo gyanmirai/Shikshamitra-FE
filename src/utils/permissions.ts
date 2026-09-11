@@ -8,6 +8,84 @@ export type PermissionName = string | string[];
 const FEE_ADJUSTMENT_PERMISSION = 'Finance.Fees.Adjustment';
 const FEE_ADJUSTMENT_LEGACY_PREFIX = 'Finance.Adjustment';
 const ADMISSIONS_PERMISSION_PREFIX = 'Students.Admissions';
+const STUDENT_ONBOARDING_PERMISSION_PREFIX = 'Students.Onboarding';
+const STUDENT_VIEW_ACTIONS = new Set(['View', 'ViewUsage', 'Download']);
+const STUDENT_ADD_ACTIONS = new Set([
+  'Add',
+  'Activate',
+  'Advance',
+  'AllocateIdentifier',
+  'AllocateSeat',
+  'Assign',
+  'Book',
+  'BulkCreate',
+  'Clone',
+  'Configure',
+  'Confirm',
+  'Create',
+  'CreateVersion',
+  'Decide',
+  'Edit',
+  'Enroll',
+  'Evaluate',
+  'Extend',
+  'Finalize',
+  'Issue',
+  'Manage',
+  'ManageCapacity',
+  'ManageSessions',
+  'Offer',
+  'OverrideCapacity',
+  'OverrideWorkflow',
+  'Publish',
+  'Record',
+  'RecordAttendance',
+  'RecordResults',
+  'Reissue',
+  'Renew',
+  'Repair',
+  'RequestException',
+  'Respond',
+  'Review',
+  'ReviewException',
+  'Reopen',
+  'Start',
+  'Submit',
+  'Upload',
+  'Validate',
+  'Verify',
+  'Waitlist',
+  'Waive',
+]);
+const STUDENT_DELETE_ACTIONS = new Set([
+  'Delete',
+  'Archive',
+  'Cancel',
+  'Close',
+  'Deactivate',
+  'Release',
+  'Reverse',
+  'Withdraw',
+]);
+
+const normalizeStudentPermission = (permissionName: string) => {
+  if (
+    !permissionName.startsWith(`${ADMISSIONS_PERMISSION_PREFIX}.`) &&
+    !permissionName.startsWith(`${STUDENT_ONBOARDING_PERMISSION_PREFIX}.`)
+  ) {
+    return permissionName;
+  }
+
+  const separatorIndex = permissionName.lastIndexOf('.');
+  const permissionBase = permissionName.startsWith('Students.Admissions.Applicants.Notes.')
+    ? 'Students.Admissions.Applicants'
+    : permissionName.slice(0, separatorIndex);
+  const action = permissionName.slice(separatorIndex + 1);
+  if (STUDENT_VIEW_ACTIONS.has(action)) return `${permissionBase}.View`;
+  if (STUDENT_DELETE_ACTIONS.has(action)) return `${permissionBase}.Delete`;
+  if (STUDENT_ADD_ACTIONS.has(action)) return `${permissionBase}.Add`;
+  return permissionName;
+};
 
 // TODO(admissions): Remove this development-only bypass after Admissions permissions are assigned to dev roles.
 const isDevelopmentAdmissionsPermission = (permissionName: string) =>
@@ -36,7 +114,7 @@ export const hasGrantedPermission = (
         permission.isGranted && (permission.name === name || permission.name === `${name}.View`)
     );
 
-  if (matches(permissionName)) {
+  if (matches(normalizeStudentPermission(permissionName))) {
     return true;
   }
 

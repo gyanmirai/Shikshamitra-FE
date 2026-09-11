@@ -15,6 +15,7 @@ import {
   getNodePermissionActions,
   isAccountSettingPermission,
   isFinanceConfigurationPermission,
+  getNodeActionPermissionNamesForAction,
 } from './account-settings-permissions';
 
 import type { PermissionType } from './utils';
@@ -24,7 +25,7 @@ interface PermissionNodeProps {
   moduleTitle: string;
   submoduleTitle: string;
   permissions: { name: string; isGranted: boolean }[];
-  onToggle: (key: string, type: PermissionType, currentValue: boolean) => void;
+  onToggle: (node: any, action: PermissionType, currentValue: boolean) => void;
   onSelectAll: (node: any, value: boolean, hasChildren: boolean) => void;
   depth?: number;
   setPermission: (data: any) => void;
@@ -40,21 +41,36 @@ export default function PermissionNode({
   depth = 0,
   setPermission,
 }: PermissionNodeProps) {
+  const permissionBase = getActionPermissionBase(node.permissionName);
   const [expanded, setExpanded] = useState(
     !!permissions.find((p) => p.name === node.permissionName)?.isGranted
   );
-  const nodeKey = getActionPermissionBase(node.permissionName);
   const actions = getNodePermissionActions(node.permissionName, permissions);
   const incompletePermissions =
-    (isAccountSettingPermission(node.permissionName) &&
+    actions.length === 0 ||
+    (isAccountSettingPermission(permissionBase) &&
       actions.length < ACCOUNT_SETTING_ACTIONS.length) ||
-    (isFinanceConfigurationPermission(node.permissionName) && actions.length < 3);
-  const hasChildren = node.children && node.children.length > 0;
+    (isFinanceConfigurationPermission(permissionBase) && actions.length < 3);
+  const children = node.permissionChildren ?? node.children ?? [];
+  const hasChildren = children.length > 0;
 
   // Check if all permissions for this node are active
   const isNodeFullySelected =
     actions.length > 0 &&
-    actions.every((perm) => !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)?.isGranted);
+    actions.every((action) => {
+      const permissionNames = getNodeActionPermissionNamesForAction(
+        node.permissionName,
+        action,
+        permissions
+      );
+      return (
+        permissionNames.length > 0 &&
+        permissionNames.every(
+          (permissionName) =>
+            !!permissions.find((permission) => permission.name === permissionName)?.isGranted
+        )
+      );
+    });
 
   const handleToggleExpand = (n: any) => {
     setPermission(
@@ -128,23 +144,36 @@ export default function PermissionNode({
             </Box>
             <Box
               sx={{
-                display: 'grid',
-                gridTemplateColumns: `repeat(${Math.max(actions.length, 1)}, 1fr)`,
+                display: 'flex',
+                flexWrap: 'wrap',
+                justifyContent: 'flex-end',
                 gap: 2,
               }}
             >
               {!hasChildren &&
                 actions.map((perm) => {
-                  const isChecked = !!permissions.find((p) => p.name === `${nodeKey}.${perm}`)
-                    ?.isGranted;
+                  const permissionNames = getNodeActionPermissionNamesForAction(
+                    node.permissionName,
+                    perm,
+                    permissions
+                  );
+                  const isChecked =
+                    permissionNames.length > 0 &&
+                    permissionNames.every(
+                      (permissionName) =>
+                        !!permissions.find((p) => p.name === permissionName)?.isGranted
+                    );
                   return (
                     <motion.div key={perm} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Box
-                        onClick={() => onToggle(nodeKey, perm, isChecked)}
+                        onClick={() =>
+                          permissionNames.length > 0 && onToggle(node, perm, isChecked)
+                        }
                         sx={{
                           p: 1,
                           borderRadius: 1,
-                          cursor: 'pointer',
+                          cursor: permissionNames.length > 0 ? 'pointer' : 'not-allowed',
+                          opacity: permissionNames.length > 0 ? 1 : 0.5,
                           border: '1px solid',
                           borderColor: isChecked ? 'primary.main' : 'divider',
                           bgcolor: isChecked
@@ -168,6 +197,7 @@ export default function PermissionNode({
                         <Switch
                           size="small"
                           checked={isChecked}
+                          disabled={permissionNames.length === 0}
                           slotProps={{ input: { 'aria-label': perm } }}
                         />
                       </Box>
@@ -210,7 +240,7 @@ export default function PermissionNode({
                   zIndex: 0,
                 }}
               />
-              {node.children.map((child: any) => (
+              {children.map((child: any) => (
                 <PermissionNode
                   key={child.title}
                   node={child}

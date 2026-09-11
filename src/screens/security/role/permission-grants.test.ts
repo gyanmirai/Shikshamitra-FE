@@ -1,8 +1,29 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
-import { getChangedPermissionGrants, setPermissionGrants } from './permission-grants';
+import {
+  setPermissionGrants,
+  getChangedPermissionGrants,
+  getVisibilityPermissionName,
+} from './permission-grants';
 
 describe('permission grant changes', () => {
+  it('uses a dedicated visibility permission without replacing action permissions', () => {
+    expect(
+      getVisibilityPermissionName({
+        permissionName: ['Students.Records.StudentList', 'Students.Records.StudentICard'],
+        visibilityPermissionName: 'ShikshaMitra.Module.Students.Records',
+      })
+    ).toBe('ShikshaMitra.Module.Students.Records');
+  });
+
+  it('falls back to a scalar permission for modules using the legacy shared key', () => {
+    expect(
+      getVisibilityPermissionName({
+        permissionName: 'ShikshaMitra.Module.Academics.Curriculum',
+      })
+    ).toBe('ShikshaMitra.Module.Academics.Curriculum');
+  });
+
   it('updates select-all grants without mutating the original permission snapshot', () => {
     const initial = [
       { name: 'ShikshaMitra.Module.HR.Dashboard', isGranted: false },
