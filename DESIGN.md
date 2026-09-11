@@ -22,13 +22,7 @@ Apply these priorities in order.
 | Full-height table workspace                  | `src/screens/classManagement/assignElectiveSubject/index.tsx`                       |
 | Persistent tab workspace                     | `src/screens/hr/policies/HRPolicyWorkspace.tsx`                                     |
 | Compact icon tab workspace                   | `src/screens/academic/course-management/lessonPlan/LessonPlanScreen.tsx`            |
-| Compact domain-filter navigator              | `src/screens/student/enrollment/admissions-crm/applicant-worklist-stage-filter.tsx` |
 | Shared table                                 | `src/components/customizabaleTable/index.tsx`                                       |
-| Enrollment page header                       | `src/screens/student/enrollment/admissions-crm/workspace-header.tsx`                |
-| Enrollment filters, empty states, and errors | `src/screens/student/enrollment/admissions-crm/workspace-table-patterns.tsx`        |
-| Enrollment settings task navigation          | `src/screens/student/enrollment/setting/enrollment-settings-page.tsx`               |
-| Guided settings editor drawer                | `src/screens/student/enrollment/setting/enrollment-settings-editor-drawer.tsx`      |
-| Public admissions shell                      | `src/screens/public/admissions-crm/public-admissions-shell.tsx`                     |
 
 These files are reference implementations, not exemptions from this contract.
 When a reference conflicts with this document, follow this document and improve the shared primitive.
@@ -60,6 +54,37 @@ Repeated actions use the same label, icon, order, and placement across related p
 Do not add a second page title inside the primary card.
 Do not place explanatory cards above a primary table when concise helper text or an information action is sufficient.
 Use progressive disclosure for advanced guidance and infrequent settings.
+
+## Strict screen ordering and table height
+
+- Always render `CustomBreadcrumbs` as the first visible content in the screen body, at the top of the page, before filters, tabs, cards, tables, charts, forms, or dialogs.
+- The breadcrumb must provide the page heading, meaningful `description`, real route links, and the appropriate page action or back behavior according to the Breadcrumb rules below.
+- Do not place a filter panel, alert, summary card, tab row, loading state, or table above the breadcrumb.
+- On a table-first screen, the layout must use a vertical flex chain: the breadcrumb/header remains at its natural height, optional context controls follow it, and the table wrapper fills all remaining available screen space.
+- The table wrapper and every flex parent between the screen root and `CustomizableTable` must use `minHeight: 0`; the table region must use `flex: 1` and `overflow: hidden` so the table owns scrolling.
+- `CustomizableTable` must fill the remaining height instead of using a fixed arbitrary height, leaving unused blank space, or pushing the page into document-level scrolling.
+- Do not use `calc(100vh - ...)`, fixed desktop `maxHeight`, or arbitrary minimum heights to imitate the available space. Use the shared shell’s available height and the documented flex-height pattern.
+- Mobile layouts may scroll naturally, but they must preserve the breadcrumb at the top of the content order and must not create horizontal document overflow.
+
+**Required table-screen shape**
+
+```tsx
+<Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
+  <CustomBreadcrumbs
+    heading="Records"
+    description="Review and manage records for this module."
+    links={[{ name: 'Module', href: modulePaths.dashboard }, { name: 'Records' }]}
+  />
+  <FilterPanel />
+  <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+    <CustomizableTable
+      wrapperProps={{ sx: { height: 1 } }}
+      tableContainerProps={{ sx: { height: 1 } }}
+      {...tableProps}
+    />
+  </Box>
+</Box>
+```
 
 ## Common implementation rules
 
@@ -937,7 +962,7 @@ Use `ThreeDotsActions` from `src/components/three-dots-actions/` for row actions
 | `data`           | Pass view-ready rows; map API records into the exact display shape required by the screen before rendering the table.                                             |
 | `filterType`     | Set the default filter type according to the field: `string`, `number`, `date`, `dateTime`, `enum`, or `formattedNumber`.                                         |
 | Status column    | Always set `sticky: true`, normally use `stickyPosition: 'right'`, set `filterType: 'enum'` when filterable, and render the value with `Label`.                   |
-| Action column    | Always set `sticky: true`, `stickyPosition: 'right'`, `isSort: false`, and `isFilter: false`; render row actions with `ThreeDotsActions`.                         |
+| Action column    | Always set `sticky: true`, `stickyPosition: 'right'`, `isSort: false`, and `isFilter: false`; always use the shared `ThreeDotsActions` component for its row actions. |
 | Server-side data | When the API supports server-side pagination, search, sorting, or filtering, enable the corresponding `serverSide*` props and provide the matching callbacks.     |
 | Loading          | Pass the API loading state through `isLoading`; retain the table geometry while the request is in progress.                                                       |
 | Pagination       | Use server-side pagination for API-backed collections that can grow; pass `totalCount` and handle `onServerPagination`.                                           |
@@ -1038,7 +1063,7 @@ When the API provides paging, search, sorting, or filtering, connect those capab
 - Do not allow the status or action column to disappear through default column visibility settings.
 - Always render status values with `Label`; do not use plain text, an unstyled `Chip`, or color alone for status presentation.
 - Use one consistent label and color mapping for the same domain status across related screens.
-- Always render row actions with `ThreeDotsActions`; do not create ad-hoc icon buttons or menus for standard view, edit, and delete actions.
+- Always use the shared `ThreeDotsActions` component in the action column; do not create ad-hoc icon buttons or menus for standard view, edit, and delete actions.
 - Give row actions specific accessible labels that identify the affected record, such as `Edit Spring admission cycle`, rather than repeating generic labels when the row context is available.
 - Stop row-action events from triggering row navigation; `ThreeDotsActions` handles event propagation for its built-in actions.
 - Hide or disable actions according to the screen’s permission and record-state rules, but do not treat hidden controls as authorization; backend permission checks remain authoritative.
@@ -1077,13 +1102,14 @@ Use `DialogScrollContent` from the same module for scrollable dialog bodies, esp
 | -------------- | ----------------------------------------------------------------------------------------------------------------------- |
 | `CustomDialog` | Always use the shared `CustomDialog` component for feature dialogs.                                                     |
 | `title`        | Always provide a clear, task-specific `title`; never leave the title empty or replace it with placeholder text.         |
+| Description    | Always include a concise description in the dialog body that explains the purpose, action, or expected outcome.        |
 | `open`         | Control visibility from the owning screen or workflow state.                                                            |
 | `handleClose`  | Pass the owning close handler so the dialog can reset state, clear selected data, and handle unsaved changes correctly. |
 | `maxWidth`     | Choose the smallest width that supports the content; use a larger width only when the form or content needs it.         |
 | `hasForm`      | Use the form-enabled default for Formik forms; set `hasForm={false}` only for content that is not submitted as a form.  |
 | `disableClose` | Use only when closing would be unsafe or unsupported; explain the reason through the owning workflow.                   |
 | Body           | Use `DialogScrollContent` for form or long content so the body owns scrolling and the header/footer remain stable.      |
-| Footer         | Use MUI `DialogActions` for form actions and keep Cancel before Submit.                                                 |
+| Footer         | Use MUI `DialogActions` for form actions, keep Cancel before Submit, and include a relevant icon in every footer button. |
 
 **Required form structure**
 
@@ -1126,6 +1152,7 @@ const formik = useFormik({
 
 - Always use `CustomDialog` from `src/components/customDialog` for feature dialogs.
 - Always pass the `title` prop with a specific description of the current action, such as `Add Employee`, `Edit Vehicle`, or `Change Status`.
+- Always add a meaningful, concise description inside the dialog body that explains what the dialog is for and what will happen after the user completes or confirms the action.
 - Keep the dialog title stable and update it only when the dialog’s task changes, such as add versus edit.
 - Always pass the real `handleClose` callback from the owning workflow; do not use an empty inline close handler that leaves selected records, form state, or dirty state behind.
 - Use `DialogScrollContent` as the body wrapper whenever the dialog contains a form or content that can exceed the available height.
@@ -1136,6 +1163,7 @@ const formik = useFormik({
 - Keep the submit button as `type="submit"` and connect it to `formik.handleSubmit` as required by the shared form-dialog pattern.
 - Use `LoadingButton` for submit actions and include all relevant request-loading states, such as `isLoading || isUpdateLoading`.
 - Keep `Cancel` before `Submit` in `DialogActions`; Cancel uses `variant="outlined"` and `size="small"`, while Submit uses `variant="contained"` and `size="small"`.
+- Always include a relevant `Iconify` icon in every dialog footer button through `startIcon` or `endIcon`; icon-only buttons must have an accessible `aria-label`.
 - Disable or prevent duplicate submission while the create or update request is loading.
 - Close the dialog only after a successful mutation unless the workflow explicitly supports closing during a recoverable state.
 - Reset form values, selected records, validation state, and dirty-change state when the dialog closes or after a successful submit.
@@ -1148,11 +1176,13 @@ const formik = useFormik({
 **Validation**
 
 - Verify every `CustomDialog` has a meaningful `title`.
+- Verify every dialog includes a meaningful description in its body, including confirmation and read-only dialogs.
 - Verify form dialogs use `DialogScrollContent` and keep `DialogActions` outside the scrolling body.
 - Verify every dialog form uses Formik and a Yup `validationSchema`.
 - Verify required, invalid, and server-error states prevent invalid submission and show actionable messages.
 - Verify Cancel closes safely and resets the owning workflow state.
 - Verify Submit shows loading state, prevents duplicate submission, and closes only after success.
+- Verify every dialog footer button includes a relevant icon and icon-only buttons have an accessible `aria-label`.
 - Verify long form content scrolls inside the dialog without moving the header or footer.
 - Verify keyboard focus, Escape/close behavior, mobile layout, and unsaved-change protection.
 
@@ -1188,6 +1218,23 @@ Use `ShakingTextField` to provide the shared validation feedback animation aroun
 | Country, state, and city address data                       | Standard address components from `src/components/stardard-address/`                      |
 | General date interval                                       | `CustomDateRangePicker` wrapped in `ShakingTextField` when validation feedback is needed |
 | Academic-calendar-aware date or date-time                   | `AcademicDatePicker` or its academic date-time variant, only inside the academic module  |
+
+**Date picker rules**
+
+- Always use the MUI X date picker components from `@mui/x-date-pickers` for date, time, date-time, and date-range fields; do not use native date inputs or another date-picker library.
+- Always use `dayjs` as the date adapter and field value type, including through `LocalizationProvider` with `AdapterDayjs` and shared date-picker wrappers.
+- Keep empty picker values as `null`, validate Dayjs values with the established form rules, and convert them to the API contract only at the submit or serialization boundary.
+- Reuse the documented shared date-picker wrapper when one exists; do not create a local picker abstraction that changes the MUI or Dayjs value contract.
+
+**Strict size rule**
+
+- Every form field must use the appropriate MUI field component or the documented shared field wrapper; do not use raw HTML inputs for application forms.
+- Every form field must use `size="small"`, including `TextField`, `Select`, `Autocomplete`, date pickers, numeric fields, search selects, and custom field wrappers.
+- Every form button must use `size="small"`, including `Button`, `LoadingButton`, icon buttons used inside form actions, and custom submit/cancel button wrappers.
+- Pass `size="small"` through the shared wrapper to the underlying MUI control. If a wrapper does not expose the size prop, extend the shared wrapper instead of omitting the rule in a feature.
+- Keep fields `fullWidth` when they occupy a form grid cell, and use the documented `Grid`/`Stack` layout with `spacing={1}`; do not compensate for the small control size with arbitrary margins.
+- Do not override a form field or button to `medium` or `large` for visual emphasis. Use layout, hierarchy, variant, label, or theme color to communicate importance.
+- Review every new form and dialog for missing `size="small"` before handoff; a field or form button without the small size is a contract violation.
 
 **Required form pattern**
 

@@ -78,13 +78,6 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     drilldownUrl: '/setting/basic-information',
     requiredPermissions: 'ShikshaMitra.Module.InstituteSetup',
   },
-  'leadership-admission-approvals': {
-    id: 'leadership-admission-approvals',
-    zone: DASHBOARD_ZONE_KEYS.actions,
-    owner: 'Admissions',
-    drilldownUrl: studentPaths.enrollment.activation,
-    requiredPermissions: studentPermissions.enrollment.activation,
-  },
   'leadership-payroll-review': {
     id: 'leadership-payroll-review',
     zone: DASHBOARD_ZONE_KEYS.actions,
@@ -128,12 +121,6 @@ export const dashboardWidgetRegistry: DashboardWidgetRegistry = {
     zone: DASHBOARD_ZONE_KEYS.kpis,
     drilldownUrl: academicPaths.curriculum.chaptersManagement,
     requiredPermissions: academicPermissions.curriculum.chaptersManagement,
-  },
-  'principal-pending-admissions': {
-    id: 'principal-pending-admissions',
-    zone: DASHBOARD_ZONE_KEYS.kpis,
-    drilldownUrl: studentPaths.enrollment.activation,
-    requiredPermissions: studentPermissions.enrollment.activation,
   },
   'principal-leave-approvals': {
     id: 'principal-leave-approvals',

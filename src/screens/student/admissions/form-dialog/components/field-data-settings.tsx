@@ -1,0 +1,77 @@
+import Stack from '@mui/material/Stack';
+import TextField from '@mui/material/TextField';
+import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
+import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
+
+import type { FieldSettingsProps } from '../types/field-settings';
+
+export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {
+  const field = formik.values.sections[sectionIndex].fields[fieldIndex];
+  const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
+  const { data: systemFields = [] } = useGetAdmissionFormSystemFieldsQuery();
+  const codeMeta = formik.getFieldMeta<string>(`${path}.code`);
+  const codeError = Boolean(codeMeta.touched && codeMeta.error);
+  return (
+    <Stack spacing={1.5}>
+      <ShakingTextField error={codeError}>
+        <TextField
+          fullWidth
+          required
+          size="small"
+          label="Field code"
+          name={`${path}.code`}
+          value={field.code}
+          error={codeError}
+          onBlur={formik.handleBlur}
+          helperText={
+            codeError
+              ? codeMeta.error
+              : 'Unique reference used by form rules. Generated automatically.'
+          }
+          onChange={(event) => {
+            const nextCode = event.target.value.toUpperCase();
+            formik.setFieldValue(`${path}.code`, nextCode);
+            if (field.bindingType === 1) formik.setFieldValue(`${path}.bindingKey`, nextCode);
+          }}
+        />
+      </ShakingTextField>
+      {field.fieldType !== 12 && (
+        <>
+          <CustomSelect
+            size="small"
+            label="Save answer to"
+            value={field.bindingType}
+            options={[
+              { value: 0, label: 'Student record' },
+              { value: 1, label: 'This admission form only' },
+            ]}
+            onChange={(value) => {
+              const nextBindingType = Number(value);
+              formik.setFieldValue(`${path}.bindingType`, nextBindingType);
+              formik.setFieldValue(
+                `${path}.bindingKey`,
+                nextBindingType === 1 ? field.code : undefined
+              );
+            }}
+          />
+          {field.bindingType === 0 && (
+            <CustomSelect
+              size="small"
+              label="Student record field"
+              value={field.bindingKey ?? ''}
+              options={systemFields.map((item) => ({ value: item.key, label: item.displayName }))}
+              helperText="The answer is linked to this field in the student record."
+              onChange={(value) => {
+                const selected = systemFields.find((item) => item.key === value);
+                formik.setFieldValue(`${path}.bindingKey`, value || undefined);
+                if (selected?.optionsJson)
+                  formik.setFieldValue(`${path}.optionsJson`, selected.optionsJson);
+              }}
+            />
+          )}
+        </>
+      )}
+    </Stack>
+  );
+}

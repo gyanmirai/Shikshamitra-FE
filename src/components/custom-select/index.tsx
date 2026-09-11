@@ -63,6 +63,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   addOtherItemOnClick,
   disabledValues = [],
   disabledLabel = 'Already configured',
+  inputProps,
   ...props
 }: CustomSelectProps<T, J>): React.ReactElement => {
   const [search, setSearch] = useState('');
@@ -124,6 +125,10 @@ const CustomSelect = <T extends string, J extends boolean>({
             onChange={handleChange}
             size="small"
             label={label}
+            inputProps={{
+              ...inputProps,
+              'aria-label': inputProps?.['aria-label'] ?? label,
+            }}
             disabled={disabled}
             renderValue={
               multiple

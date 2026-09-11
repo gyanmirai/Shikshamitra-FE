@@ -2,7 +2,7 @@
 
 import type { Division } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
-import type { IInquiryData } from 'src/types/student-enrollment';
+import type { IInquiryData } from 'src/types/student';
 
 import { LoadingButton } from '@mui/lab';
 import { Save } from '@mui/icons-material';

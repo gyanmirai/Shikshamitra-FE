@@ -1,0 +1,62 @@
+import * as Yup from 'yup';
+import { useFormik } from 'formik';
+import { Stack, Alert, Button, TextField, DialogActions } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+
+export function FormStageReasonDialog({
+  title,
+  description,
+  confirmLabel,
+  busy,
+  onClose,
+  onSubmit,
+}: {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  busy: boolean;
+  onClose: () => void;
+  onSubmit: (reason: string) => Promise<void>;
+}) {
+  const formik = useFormik({
+    initialValues: { reason: '' },
+    validationSchema: Yup.object({
+      reason: Yup.string().trim().required('Enter a clear reason.').max(512),
+    }),
+    onSubmit: async ({ reason }) => onSubmit(reason.trim()),
+  });
+  return (
+    <CustomDialog
+      open
+      title={title}
+      handleClose={onClose}
+      disableClose={busy}
+      hasUnsavedChanges={formik.dirty}
+    >
+      <DialogScrollContent onSubmit={formik.handleSubmit}>
+        <Stack spacing={2}>
+          <Alert severity="warning">{description}</Alert>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            size="small"
+            label="Reason *"
+            {...formik.getFieldProps('reason')}
+            disabled={busy}
+            error={Boolean(formik.touched.reason && formik.errors.reason)}
+            helperText={formik.touched.reason && formik.errors.reason}
+          />
+        </Stack>
+      </DialogScrollContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button variant="outlined" disabled={busy} onClick={onClose}>
+          Cancel
+        </Button>
+        <Button variant="contained" disabled={busy} onClick={() => formik.handleSubmit()}>
+          {busy ? 'Saving…' : confirmLabel}
+        </Button>
+      </DialogActions>
+    </CustomDialog>
+  );
+}

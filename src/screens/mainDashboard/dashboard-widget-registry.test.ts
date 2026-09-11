@@ -296,7 +296,6 @@ const mustHaveWidgetIdsByTemplate = {
     'principal-student-attendance',
     'principal-teacher-attendance',
     'principal-curriculum',
-    'principal-pending-admissions',
     'principal-academic-dashboard',
   ],
   teacher: [

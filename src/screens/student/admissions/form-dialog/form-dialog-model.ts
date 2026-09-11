@@ -1,0 +1,171 @@
+import type {
+  AdmissionForm,
+  AdmissionFormField,
+  CreateUpdateAdmissionForm,
+} from 'src/redux/student/admissions/admission-forms-api';
+
+import * as Yup from 'yup';
+
+import type { AdmissionFieldPreset } from './form-field-presets';
+
+const admissionFormFieldSchema = Yup.object({
+  id: Yup.string().required(),
+  sectionId: Yup.string().nullable().optional(),
+  code: Yup.string()
+    .trim()
+    .matches(/^[A-Z][A-Z0-9_-]*$/, 'Use uppercase letters, numbers, hyphens, or underscores')
+    .required('Field code is required'),
+  label: Yup.string().trim().required('Field label is required'),
+  fieldType: Yup.number().integer().min(0).max(12).required(),
+  bindingType: Yup.number().oneOf([0, 1]).required(),
+  bindingKey: Yup.string().nullable().optional(),
+  placeholder: Yup.string().nullable().optional(),
+  helpText: Yup.string().nullable().optional(),
+  defaultValue: Yup.string().nullable().optional(),
+  optionsJson: Yup.string().nullable().optional(),
+  required: Yup.boolean().required(),
+  readOnly: Yup.boolean().required(),
+  displayOrder: Yup.number().integer().min(0).required(),
+  validationJson: Yup.string().nullable().optional(),
+  visibilityRuleJson: Yup.string().nullable().optional(),
+  requiredRuleJson: Yup.string().nullable().optional(),
+});
+
+const admissionFormSectionSchema = Yup.object({
+  id: Yup.string().required(),
+  code: Yup.string()
+    .trim()
+    .matches(/^[A-Z][A-Z0-9_-]*$/, 'Use uppercase letters, numbers, hyphens, or underscores')
+    .required('Section code is required'),
+  name: Yup.string().trim().required('Section name is required'),
+  displayOrder: Yup.number().integer().min(0).required(),
+  stepId: Yup.string().nullable().optional(),
+  stepCode: Yup.string().nullable().optional(),
+  stepName: Yup.string().nullable().optional(),
+  stepDisplayOrder: Yup.number().nullable().optional(),
+  stepVisibilityRuleJson: Yup.string().nullable().optional(),
+  visibilityRuleJson: Yup.string().nullable().optional(),
+  requiredRuleJson: Yup.string().nullable().optional(),
+  fields: Yup.array().of(admissionFormFieldSchema).min(1, 'Add at least one field'),
+});
+
+export const admissionFormSchema = Yup.object({
+  name: Yup.string().trim().max(128).required('Form name is required'),
+  code: Yup.string()
+    .trim()
+    .uppercase()
+    .matches(/^[A-Z][A-Z0-9_-]*$/, 'Use uppercase letters, numbers, hyphens, or underscores')
+    .max(64)
+    .required('Form code is required'),
+  layoutType: Yup.number().oneOf([0, 1]).required('Choose a form layout'),
+  fieldsPerRow: Yup.number().oneOf([1, 2, 3, 4]).required('Choose fields per row'),
+  sections: Yup.array().of(admissionFormSectionSchema).min(1, 'Add at least one section'),
+});
+
+export const FIELD_TYPES: [string, AdmissionFormField['fieldType']][] = [
+  ['Text', 0],
+  ['Textarea', 1],
+  ['Number', 2],
+  ['Email', 3],
+  ['Phone', 4],
+  ['Date', 5],
+  ['Select', 6],
+  ['Multi-select', 7],
+  ['Radio', 8],
+  ['Checkbox', 9],
+  ['File placeholder', 10],
+  ['Address group', 11],
+  ['Static text', 12],
+];
+
+const FIELD_TYPE_ICONS: Record<AdmissionFormField['fieldType'], string> = {
+  0: 'mdi:form-textbox',
+  1: 'mdi:text-long',
+  2: 'mdi:numeric',
+  3: 'mdi:email-outline',
+  4: 'mdi:phone-outline',
+  5: 'mdi:calendar-outline',
+  6: 'mdi:form-dropdown',
+  7: 'mdi:format-list-checks',
+  8: 'mdi:radiobox-marked',
+  9: 'mdi:checkbox-marked-outline',
+  10: 'mdi:paperclip',
+  11: 'mdi:map-marker-outline',
+  12: 'mdi:text-box-outline',
+};
+
+export const fieldTypeIcon = (fieldType: AdmissionFormField['fieldType']) =>
+  FIELD_TYPE_ICONS[fieldType];
+
+export function nextFieldOrder(sections: CreateUpdateAdmissionForm['sections']) {
+  const fieldCodes = new Set(
+    sections.flatMap((section) => section.fields.map((field) => field.code.toUpperCase()))
+  );
+  let order = 0;
+  while (fieldCodes.has(`FIELD_${order + 1}`)) order += 1;
+  return order;
+}
+
+export function hasSystemBinding(
+  sections: CreateUpdateAdmissionForm['sections'],
+  bindingKey?: string
+) {
+  if (!bindingKey) return false;
+  return sections.some((section) =>
+    section.fields.some(
+      (field) => field.bindingType === 0 && field.bindingKey === bindingKey
+    )
+  );
+}
+
+export const newField = (
+  sectionId: string,
+  order: number,
+  fieldType: AdmissionFormField['fieldType'] = 0,
+  preset?: AdmissionFieldPreset
+): AdmissionFormField => ({
+  id: crypto.randomUUID(),
+  sectionId,
+  code: `FIELD_${order + 1}`,
+  label:
+    preset?.label ??
+    FIELD_TYPES.find(([, value]) => value === fieldType)?.[0] ??
+    `Field ${order + 1}`,
+  fieldType: preset?.fieldType ?? fieldType,
+  bindingType: 1,
+  bindingKey: `FIELD_${order + 1}`,
+  required: false,
+  readOnly: false,
+  displayOrder: order,
+  placeholder: preset?.placeholder,
+  helpText: preset?.description,
+  validationJson: preset ? JSON.stringify(preset.validation) : undefined,
+});
+
+export function getAdmissionFormInitialValues(
+  editing?: AdmissionForm | null
+): CreateUpdateAdmissionForm {
+  const sectionId = editing?.sections[0]?.id ?? crypto.randomUUID();
+  const stepId = editing?.sections[0]?.stepId ?? crypto.randomUUID();
+  return {
+    name: editing?.name ?? '',
+    code: editing?.code ?? '',
+    description: editing?.description ?? '',
+    concurrencyStamp: editing?.concurrencyStamp,
+    layoutType: editing?.layoutType ?? 1,
+    fieldsPerRow: editing?.fieldsPerRow ?? 1,
+    sections: editing?.sections ?? [
+      {
+        id: sectionId,
+        code: 'SECTION_1',
+        name: 'Student Details',
+        displayOrder: 0,
+        stepId,
+        stepCode: 'STEP_1',
+        stepName: 'Student details',
+        stepDisplayOrder: 0,
+        fields: [newField(sectionId, 0)],
+      },
+    ],
+  };
+}

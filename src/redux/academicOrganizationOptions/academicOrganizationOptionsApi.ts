@@ -12,6 +12,16 @@ export type AcademicOrganizationOption = {
   academicYearId: string;
 };
 
+type ResultEnvelope<T> = { data?: T };
+
+const unwrapResult = <T>(response: ResultEnvelope<T> | T): T => {
+  if (typeof response === 'object' && response !== null && 'data' in response) {
+    const envelope = response as ResultEnvelope<T>;
+    if (envelope.data !== undefined) return envelope.data;
+  }
+  return response as T;
+};
+
 export const academicOrganizationOptionsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getAcademicOrganizationOptions: builder.query<
@@ -22,6 +32,13 @@ export const academicOrganizationOptionsApi = api.injectEndpoints({
         url: '/app/academic-organization-options',
         params: { academicYearId },
       }),
+      transformResponse: (
+        response:
+          | ResultEnvelope<{ items: AcademicOrganizationOption[] }>
+          | {
+              items: AcademicOrganizationOption[];
+            }
+      ) => unwrapResult(response),
       providesTags: [organizationType.academicOrganizationOptions],
     }),
   }),

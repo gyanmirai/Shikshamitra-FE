@@ -1,10 +1,10 @@
 import type { RootState } from 'src/redux/store';
 import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material';
 
-import React, { useRef } from 'react';
 import { CONFIG } from 'src/config-global';
 import { Close } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import React, { useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Dialog, IconButton, Typography, DialogContent } from '@mui/material';
@@ -38,9 +38,18 @@ const CustomDialog = ({
   ...props
 }: CustomDialogProps) => {
   const theme = useTheme();
+  const generatedTitleId = React.useId();
+  const titleId = props['aria-labelledby'] ?? generatedTitleId;
   const { sx, ...paper } = paperProps || {};
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (!open || !hasUnsavedChanges) return undefined;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [open, hasUnsavedChanges]);
 
   const handleCloseDialog = (e: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
     if (shouldBlockCustomDialogClose(disableClose)) return;
@@ -60,6 +69,7 @@ const CustomDialog = ({
   const FormComponent = hasForm ? 'form' : Box;
   return (
     <Dialog
+      aria-labelledby={titleId}
       open={open}
       onClose={handleCloseDialog}
       fullWidth
@@ -109,7 +119,7 @@ const CustomDialog = ({
             boxShadow: 'var(--shadows-3)',
           }} // Increased padding for header
         >
-          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+          <Typography id={titleId} variant="h6" sx={{ fontWeight: 700 }}>
             {title}
           </Typography>
           <IconButton

@@ -3,76 +3,53 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-08-10
+updated_on: 2026-08-14
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Understand Student frontend integration
 
-TL;DR: use this page as the entrypoint for Student routes, screens, clients, workflows, and frontend validation.
-Student Enrollment uses Admission Year Setup and a six-step Applicant Stepper, with Pipeline as the source of truth before activation.
+TL;DR: use this page as the entrypoint for Student routes, clients, workflows, and validation, including the individual Enrollment Admissions CRM project.
 
 ## Read order
 
-Follow this order when changing Student frontend behavior:
-
-| Step | File | Use it to |
-|---|---|---|
-| 1 | [routes.md](./routes.md) | Confirm visible routes, menu status, and permission gates |
-| 2 | [workflows.md](./workflows.md) | Trace Enrollment, records, attendance, reports, and notification flows |
-| 3 | [clients.md](./clients.md) | Find Redux Toolkit Query clients and backend contract ownership |
-| 4 | [testing.md](./testing.md) | Pick frontend docs, unit, contract, and browser checks |
-| 5 | [Backend Enrollment product rules](../../../Shikshamitra-BE/docs/modules/student/product.md) | Confirm Enrollment boundaries, capabilities, and integrity rules |
-
-## Ownership boundary
-
-Frontend Student docs own visible navigation, App Router pages, screen folders, client integration, cache behavior, and browser workflows.
-Backend Student docs own product rules, endpoint contracts, permissions, errors, domain invariants, and data integrity.
-Finance owns payment posting, receipts, reconciliation, settlement, concessions, and refunds.
-Institute Setup and Class Management own academic structure and capacity truth that Enrollment consumes for placement.
-Student Records owns the active student lifecycle after activation.
+| Step | File                                                                                 | Use it to                                                                              |
+| ---- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| 1    | [routes.md](./routes.md)                                                             | Confirm Student and Enrollment Admissions routes, menu ownership, and permission gates |
+| 2    | [clients.md](./clients.md)                                                           | Find Student RTK Query clients and backend ownership                                   |
+| 3    | [workflows.md](./workflows.md)                                                       | Trace screen-level Student and Admissions workflows                                    |
+| 4    | [references/enrollment-admissions-crm.md](./references/enrollment-admissions-crm.md) | Understand the implemented Enrollment Admissions CRM project as an individual project  |
+| 5    | [testing.md](./testing.md)                                                           | Choose documentation, type, lint, unit, and browser checks                             |
 
 ## Source of truth
 
-Use these paths before searching broadly:
-
-| Need | Source |
-|---|---|
-| Visible navigation | `src/constants/student-menu.ts` |
-| App Router pages | `src/app/(auth-route)/student/**` |
-| Screens and components | `src/screens/student/**` |
-| Student API clients | `src/redux/student/**` |
-| Admissions CRM clients | `src/redux/student/admissions-crm/core-leads-api.ts`, `setup-playbooks-api.ts`, `registration-documents-api.ts`, `communication-exams-events-api.ts`, `final-admission-api.ts`, `operations-governance-api.ts`, and `public-admissions-api.ts` in the same directory |
-| Student tests | `src/constants/student-menu.permissions.test.ts`, `src/redux/student/student-api.production.test.ts`, `src/screens/student/**/*.test.ts`, `e2e/student/**` |
-| Backend docs | `../../../Shikshamitra-BE/docs/modules/student/README.md` |
-| Backend Enrollment product rules | `../../../Shikshamitra-BE/docs/modules/student/product.md` and `../../../Shikshamitra-BE/docs/modules/student/workflows.md` |
-| Backend contracts | `../../../Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Students/**` |
+| Need                               | Source                                                                                               |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Student navigation and permissions | `src/constants/student-menu.ts`                                                                      |
+| Enrollment Admissions routes       | `src/app/(auth-route)/student/admissions/**/page.tsx`                                                |
+| Enrollment Admissions screens      | `src/screens/student/admissions/**`                                                                  |
+| Enrollment Admissions clients      | `src/redux/student/admissions/**`                                                                    |
+| Backend Admissions implementation  | `../../../Shikshamitra-BE/src/ShikshaMitra.Application/Students/StudentEnrollments/Admissions/**`    |
+| Backend Admissions contracts       | `../../../Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Students/Enrollments/Admissions/**` |
 
 ## For agents
 
-Use this table before code search:
-
-| Question | First file |
-|---|---|
-| Which Student route or menu item is active? | [routes.md](./routes.md) |
-| Which Enrollment workflow should I test? | [workflows.md](./workflows.md) |
-| Which API client owns a call? | [clients.md](./clients.md) |
-| Which command should I run? | [testing.md](./testing.md) |
-| Which backend API behavior is canonical? | `../../../Shikshamitra-BE/docs/modules/student/api.md` |
-| Which Enrollment product behavior is current? | `../../../Shikshamitra-BE/docs/modules/student/product.md` and `../../../Shikshamitra-BE/docs/modules/student/workflows.md` |
+| Question                                     | First file                                                                           |
+| -------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Which Student or Admissions route is active? | [routes.md](./routes.md)                                                             |
+| Which client owns an Admissions request?     | [clients.md](./clients.md)                                                           |
+| How does the Admissions demo flow work?      | [references/enrollment-admissions-crm.md](./references/enrollment-admissions-crm.md) |
+| Which frontend checks should run?            | [testing.md](./testing.md)                                                           |
 
 ## Validation
 
-Run these commands from the `Shikshamitra-FE` repo root:
+Run these commands from the `Shikshamitra-FE` repository root:
 
 ```bash
-node scripts/docs/validate-docs.mjs --module student
 npm run docs:check
 git diff --check
 ```
 
-## Source inspection rule
-
-Use the files listed above and current source paths for Student frontend behavior.
-Do not restore old plans, generated notes, or phase docs under `docs/`.
+Frontend docs own route, screen, client, cache, and browser behavior.
+Backend Admissions rules, contracts, permissions, errors, and data integrity remain owned by the backend source paths linked above.

@@ -110,26 +110,6 @@ const kpiData = [
       },
     },
   },
-  {
-    id: 'PENDING_ADMISSIONS',
-    title: 'Pending Admissions',
-    value: '42',
-    // icon: 'solar:document-add-bold',
-    status: 'secondary' as const,
-    path: studentPaths.enrollment.activation,
-    tooltip: 'This Session · 5 applications waiting > 3 days',
-    chart: {
-      type: 'bar' as const,
-      series: [158, 42] as any,
-      colors: ['#00A76F', '#FFAB00'],
-      labels: ['Approved', 'Pending'],
-      width: 30,
-      height: 40,
-      options: {
-        plotOptions: { bar: { distributed: true, borderRadius: 2, columnWidth: '55%' } },
-      },
-    },
-  },
 ];
 
 // ----------------------------------------------------------------------

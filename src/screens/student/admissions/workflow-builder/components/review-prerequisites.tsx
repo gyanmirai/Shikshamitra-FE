@@ -1,0 +1,90 @@
+import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
+import type { AdmissionReviewPrerequisite } from 'src/redux/student/admissions/admission-review-policy';
+
+import { Alert, Stack, Button, Checkbox, Typography, FormControlLabel } from '@mui/material';
+
+import { getReviewPrerequisiteKind } from '../review-stage-prerequisites';
+
+export function ReviewPrerequisites({
+  value,
+  stages,
+  stageOrder,
+  disabled,
+  onChange,
+}: {
+  value: AdmissionReviewPrerequisite[];
+  stages: AdmissionWorkflowStage[];
+  stageOrder: number;
+  disabled: boolean;
+  onChange: (value: AdmissionReviewPrerequisite[]) => void;
+}) {
+  const options = stages.filter(
+    (stage) => stage.displayOrder < stageOrder && getReviewPrerequisiteKind(stage)
+  );
+  const missing = value.filter(
+    (item) =>
+      !options.some(
+        (stage) =>
+          stage.code === item.sourceStageCode && getReviewPrerequisiteKind(stage) === item.kind
+      )
+  );
+  return (
+    <Stack spacing={1}>
+      <Typography variant="subtitle2">Evidence to review</Typography>
+      <Typography variant="body2" color="text.secondary">
+        Choose earlier checks that must be current before a decision. Approval requires them to
+        pass.
+      </Typography>
+      {!options.length && (
+        <Alert severity="info">
+          Configure earlier Assessment, Document verification, or Eligibility stages to use their
+          results here. You can review the application without these prerequisites.
+        </Alert>
+      )}
+      {options.map((stage) => {
+        const checked = value.some((item) => item.sourceStageCode === stage.code);
+        return (
+          <FormControlLabel
+            key={stage.id}
+            label={stage.name}
+            control={
+              <Checkbox
+                size="small"
+                checked={checked}
+                disabled={disabled || (!checked && value.length >= 20)}
+                onChange={(_, selected) => {
+                  const kind = getReviewPrerequisiteKind(stage);
+                  if (kind)
+                    onChange(
+                      selected
+                        ? [...value, { kind, sourceStageCode: stage.code }]
+                        : value.filter((item) => item.sourceStageCode !== stage.code)
+                    );
+                }}
+              />
+            }
+          />
+        );
+      })}
+      {missing.map((item) => (
+        <Alert
+          key={item.sourceStageCode}
+          severity="error"
+          action={
+            !disabled && (
+              <Button
+                size="small"
+                onClick={() => onChange(value.filter((entry) => entry !== item))}
+              >
+                Remove
+              </Button>
+            )
+          }
+        >
+          {item.sourceStageCode} is no longer an earlier configured {item.kind} stage. Choose a
+          valid source.
+        </Alert>
+      ))}
+    </Stack>
+  );
+}

@@ -2,42 +2,28 @@
 
 import type { RootState } from 'src/redux/store';
 import type { UseTabsReturn } from 'src/hooks/use-tabs';
-import type { IInquiryData } from 'src/types/student-enrollment';
 import type { Division, Standards, Organization } from 'src/types/school';
+import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import calculateAge from 'src/utils/calculate-age';
 import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import { FormSlider } from 'src/components/form-slider';
 import { Label, LabelColor } from 'src/components/label';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { GenderType, GenderOptions } from 'src/enums/gender';
 import { convertBase64Format } from 'src/utils/base64Formate';
-import { LoadingScreen } from 'src/components/loading-screen';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetStudentByIdQuery, useGetStudentsByDivisionQuery } from 'src/redux/student';
+import { Box, Paper, Avatar, MenuList, MenuItem, Typography } from '@mui/material';
 import FeeStructureAssignmentForm from 'src/screens/finance/FeeStructureAssign/Components/StudentFeeStructureAssignmentForm';
-import {
-  Box,
-  Tab,
-  Tabs,
-  Paper,
-  Avatar,
-  Divider,
-  MenuList,
-  MenuItem,
-  Typography,
-} from '@mui/material';
 import {
   StudentStatusOptions,
   RegistrationStatusType,
@@ -55,6 +41,8 @@ import StudentDashboard from './studentDashboard';
 import StudentTransportProfile from './transport';
 import { StudentInformation } from './information';
 import ChangeStudentStatusForm from './change-status-form';
+import { StudentProfileView } from './student-profile-view';
+import { StudentProfileDataBoundary } from './student-profile-data-boundary';
 
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;
@@ -67,7 +55,7 @@ const TABS = [
     value: 'dashboard',
     label: 'Dashboard',
     icon: <Iconify icon="lucide:layout-dashboard" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <StudentDashboard {...props} />
     ),
   },
@@ -75,7 +63,7 @@ const TABS = [
     value: 'information',
     label: 'Information',
     icon: <Iconify icon="et:documents" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <StudentInformation {...props} />
     ),
   },
@@ -83,7 +71,7 @@ const TABS = [
     value: 'attendance',
     label: 'Attendance',
     icon: <Iconify icon="solar:calendar-mark-outline" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <Attendance {...props} />
     ),
   },
@@ -91,7 +79,7 @@ const TABS = [
     value: 'academic',
     label: 'Academic',
     icon: <Iconify icon="solar:square-academic-cap-2-broken" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <Academic {...props} />
     ),
   },
@@ -99,13 +87,13 @@ const TABS = [
   //   value: 'records',
   //   label: 'Records',
   //   icon: <Iconify icon="vaadin:records" width={20} />,
-  //   component: (props: { tabs: UseTabsReturn; student: IInquiryData }) => <Records {...props} />,
+  //   component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile }) => <Records {...props} />,
   // },
   {
     value: 'finance',
     label: 'Finance',
     icon: <Iconify icon="lucide:landmark" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <Finance {...props} />
     ),
   },
@@ -113,7 +101,7 @@ const TABS = [
     value: 'documents',
     label: 'Documents',
     icon: <Iconify icon="solar:document-text-outline" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <Document {...props} />
     ),
   },
@@ -121,7 +109,7 @@ const TABS = [
     value: 'communications',
     label: 'Communications',
     icon: <Iconify icon="fluent-mdl2:office-chat" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <Communication {...props} />
     ),
   },
@@ -129,7 +117,7 @@ const TABS = [
     value: 'transportation',
     label: 'Transportation',
     icon: <Iconify icon="gis:route" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <StudentTransportProfile {...props} />
     ),
   },
@@ -137,7 +125,7 @@ const TABS = [
     value: 'library',
     label: 'Library',
     icon: <Iconify icon="ph:books-light" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <Library {...props} />
     ),
   },
@@ -145,7 +133,7 @@ const TABS = [
     value: 'calender',
     label: 'Calendar',
     icon: <Iconify icon="radix-icons:calendar" width={20} />,
-    component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+    component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
       <StudentCalendar {...props} />
     ),
   },
@@ -153,7 +141,7 @@ const TABS = [
   //   value: 'hostel',
   //   label: 'Hostel',
   //   icon: <Iconify icon="mdi:home-city-outline" width={20} />,
-  //   component: (props: { tabs: UseTabsReturn; student: IInquiryData; refetch: any }) => (
+  //   component: (props: { tabs: UseTabsReturn; student: StudentRecordProfile; refetch: any }) => (
   //     <HostelRoomMate {...props} />
   //   ),
   //   disibled: true,
@@ -603,277 +591,14 @@ export function StudentProfile() {
         </>
       )}
 
-      {currentStudent && <StudentProfileView />}
+      {currentStudent && (
+        <StudentProfileDataBoundary studentId={searchParams.student}>
+          {(student, refetch) => (
+            <StudentProfileView student={student} refetch={refetch} sections={TABS} />
+          )}
+        </StudentProfileDataBoundary>
+      )}
       {/* </Box> */}
     </Box>
   );
 }
-
-const StudentProfileView = () => {
-  const tabs = useTabs('dashboard');
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isBackClick, setIsBackClick] = useState(false);
-
-  const currentActiveComponent = useMemo(
-    () => TABS.find((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
-  const currentIndex = useMemo(
-    () => TABS.findIndex((tab) => tab.value === tabs.value),
-    [tabs.value]
-  );
-  const { getAllParams } = useCustomSearchParams();
-  const searchParams = getAllParams();
-  const {
-    data: currentStudent,
-    isLoading,
-    refetch,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentByIdQuery,
-    params: searchParams?.student,
-    options: { skip: !searchParams?.student },
-  });
-
-  // eslint-disable-next-line consistent-return
-  useEffect(() => {
-    const handleScroll = (e: Event) => {
-      const target = e.target as HTMLElement;
-      if (target.scrollTop > 50) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    const scrollContainer = document.querySelector('[data-scroll-container]');
-    if (scrollContainer) {
-      scrollContainer.addEventListener('scroll', handleScroll);
-      return () => scrollContainer.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
-
-  return isLoading ? (
-    <LoadingScreen />
-  ) : (
-    <>
-      <Paper
-        sx={{
-          mb: 1,
-          borderTopLeftRadius: 0,
-          borderTopRightRadius: 0,
-          boxShadow: 'var(--shadows-4)',
-        }}
-      >
-        <Paper
-          sx={{
-            py: isScrolled ? 0.5 : 0.75,
-            px: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderLeft: (theme) => `4px solid ${theme.vars.palette.success.main}`,
-            borderRadius: 1,
-            transition: 'all 0.3s ease-in-out',
-          }}
-        >
-          <Box
-            display="flex"
-            gap={isScrolled ? 1.5 : 2}
-            alignItems="center"
-            sx={{ transition: 'gap 0.3s ease-in-out' }}
-          >
-            {!isScrolled && (
-              <Avatar
-                src={convertBase64Format(currentStudent?.profilePicture)}
-                alt={`${currentStudent?.firstName} ${currentStudent?.lastName}`}
-                sx={{
-                  width: 40,
-                  height: 40,
-                  transition: 'all 0.3s ease-in-out',
-                  opacity: isScrolled ? 0 : 1,
-                }}
-              />
-            )}
-            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{
-                  fontSize: isScrolled ? '10px' : '12px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                Name
-              </Typography>
-              <Typography
-                fontWeight={500}
-                variant="body2"
-                sx={{
-                  fontSize: isScrolled ? '12px' : '14px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                {[currentStudent?.lastName, currentStudent?.firstName, currentStudent?.middleName]
-                  .filter(Boolean)
-                  .join(' ') || '-'}
-              </Typography>
-            </Box>
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
-            />
-            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{
-                  fontSize: isScrolled ? '10px' : '12px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                Gr No.
-              </Typography>
-              <Typography
-                fontWeight={500}
-                variant="body2"
-                sx={{
-                  fontSize: isScrolled ? '12px' : '14px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                {currentStudent?.grNoRecord || '-'}
-              </Typography>
-            </Box>
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
-            />
-            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{
-                  fontSize: isScrolled ? '10px' : '12px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                Roll No.
-              </Typography>
-              <Typography
-                fontWeight={500}
-                variant="body2"
-                sx={{
-                  fontSize: isScrolled ? '12px' : '14px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                {currentStudent?.rollNo || '-'}
-              </Typography>
-            </Box>
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
-            />
-            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{
-                  fontSize: isScrolled ? '10px' : '12px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                Class
-              </Typography>
-              <Typography
-                fontWeight={500}
-                variant="body2"
-                sx={{
-                  fontSize: isScrolled ? '12px' : '14px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                {currentStudent?.standard?.name || '-'}-{currentStudent?.division?.name || '-'}
-              </Typography>
-            </Box>
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ my: isScrolled ? '6px' : '8px', transition: 'margin 0.3s ease-in-out' }}
-            />
-            <Box sx={{ transition: 'all 0.3s ease-in-out' }}>
-              <Typography
-                variant="caption"
-                color="text.secondary"
-                sx={{
-                  fontSize: isScrolled ? '10px' : '12px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                Medium
-              </Typography>
-              <Typography
-                fontWeight={500}
-                variant="body2"
-                sx={{
-                  fontSize: isScrolled ? '12px' : '14px',
-                  transition: 'font-size 0.3s ease-in-out',
-                }}
-              >
-                {currentStudent?.educationMedium?.name || '-'}
-              </Typography>
-            </Box>
-          </Box>
-        </Paper>
-      </Paper>
-      <Paper elevation={2} sx={{ px: 2, mb: 1 }}>
-        <Tabs
-          value={tabs.value}
-          onChange={(...rest) => {
-            const newIndex = TABS.findIndex((tab) => tab.value === rest[1]);
-            if (currentIndex > newIndex) {
-              setIsBackClick(true);
-            } else {
-              setIsBackClick(false);
-            }
-            tabs.onChange(...rest);
-          }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 2 } }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab
-              sx={{ fontSize: '12px' }}
-              key={tab.value}
-              value={tab.value}
-              icon={tab.icon}
-              label={tab.label}
-              role="tab"
-            />
-          ))}
-        </Tabs>
-      </Paper>
-
-      <FormSlider
-        steps={TABS}
-        isBackClick={isBackClick}
-        step={currentIndex}
-        containerProps={{ sx: { p: 0, minHeight: 0 } }}
-      >
-        <Box sx={{ height: '100%' }}>
-          {currentActiveComponent?.component && (
-            <currentActiveComponent.component
-              tabs={tabs}
-              student={currentStudent}
-              refetch={refetch}
-            />
-          )}
-        </Box>
-      </FormSlider>
-    </>
-  );
-};

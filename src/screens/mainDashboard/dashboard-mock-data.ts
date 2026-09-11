@@ -101,16 +101,6 @@ export const dashboardMockDataByTemplate: Record<DashboardTemplate, DashboardDat
     ],
     actionItems: [
       {
-        id: 'leadership-admission-approvals',
-        title: 'Admission approvals',
-        count: 14,
-        subtitle: 'Waiting for leadership review',
-        owner: 'Admissions',
-        status: 'info',
-        drilldownUrl: studentPaths.enrollment.activation,
-        requiredPermissions: studentPermissions.enrollment.activation,
-      },
-      {
         id: 'leadership-payroll-review',
         title: 'Payroll review',
         count: 3,
@@ -187,15 +177,6 @@ export const dashboardMockDataByTemplate: Record<DashboardTemplate, DashboardDat
         status: 'warning',
         drilldownUrl: academicPaths.curriculum.chaptersManagement,
         requiredPermissions: academicPermissions.curriculum.chaptersManagement,
-      },
-      {
-        id: 'principal-pending-admissions',
-        title: 'Pending Admissions',
-        value: 42,
-        subtitle: '5 waiting more than 3 days',
-        status: 'secondary',
-        drilldownUrl: studentPaths.enrollment.activation,
-        requiredPermissions: studentPermissions.enrollment.activation,
       },
     ],
     actionItems: [

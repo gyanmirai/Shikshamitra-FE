@@ -31,7 +31,7 @@ export const StudentAdmissionApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getStudentAdmission: builder.query({
       query: ({ AcademicMediumId, approvalStatus, sorting, skipCount, maxResultCount }) => ({
-        url: `/students/admissions`,
+        url: '/students/admissions',
         method: 'GET',
         params: {
           AcademicMediumId,
@@ -45,9 +45,9 @@ export const StudentAdmissionApi = api.injectEndpoints({
     }),
     changeAdmissionStatus: builder.mutation({
       query: ({ body }) => ({
-        url: `/students/admissions/status`,
+        url: '/students/admissions/status',
         method: 'POST',
-        data: { items: body },
+        body: { items: body },
       }),
       invalidatesTags: [studentAdmissionType.studentAdmission],
     }),
@@ -59,7 +59,6 @@ export const StudentAdmissionApi = api.injectEndpoints({
       }),
       invalidatesTags: [studentAdmissionType.studentAdmission],
     }),
-
     getDivisionForStandard: builder.query({
       query: (standardId) => ({
         url: `/app/standard/${standardId}`,
@@ -77,7 +76,7 @@ export const StudentAdmissionApi = api.injectEndpoints({
     }),
     assignFeeStructure: builder.mutation({
       query: ({ body }) => ({
-        url: `/student-fee-structure/assign`,
+        url: '/student-fee-structure/assign',
         method: 'POST',
         body,
       }),
@@ -95,7 +94,7 @@ export const StudentAdmissionApi = api.injectEndpoints({
     }),
     assignBulkFeeStructure: builder.mutation({
       query: ({ body }) => ({
-        url: `/student-fee-structure/assign-bulk`,
+        url: '/student-fee-structure/assign-bulk',
         method: 'POST',
         body,
       }),

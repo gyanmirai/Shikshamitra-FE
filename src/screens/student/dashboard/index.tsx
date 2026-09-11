@@ -66,9 +66,6 @@ const kpiIcon = (id: string) => {
   const icons: Record<string, string> = {
     'total-students': 'solar:users-group-rounded-bold-duotone',
     'enrolled-students': 'solar:user-check-rounded-bold-duotone',
-    inquiries: 'solar:chat-round-check-bold-duotone',
-    registrations: 'solar:clipboard-list-bold-duotone',
-    'pending-admissions': 'solar:user-plus-rounded-bold-duotone',
     'attendance-rate': 'solar:chart-square-bold-duotone',
   };
 

@@ -229,7 +229,7 @@ export const SectionCard = ({
         )}
         {headerContent}
       </Box>
-      <Grid container spacing={3} sx={{ ...gridProps.sx }}>
+      <Grid container {...gridProps} spacing={gridProps.spacing ?? 3} sx={{ ...gridProps.sx }}>
         {children}
       </Grid>
     </Paper>

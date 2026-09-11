@@ -1,0 +1,91 @@
+import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
+import TextField from '@mui/material/TextField';
+import Typography from '@mui/material/Typography';
+import CustomSelect from 'src/components/custom-select';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import ShakingTextField from 'src/components/shaking-text-field';
+
+import { FIELD_TYPES } from './form-dialog-model';
+import { FieldChoiceSettings } from './components/field-choice-settings';
+
+import type { FieldSettingsProps } from './types/field-settings';
+
+export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {
+  const field = formik.values.sections[sectionIndex].fields[fieldIndex];
+  const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
+  const isChoice = field.fieldType === 6 || field.fieldType === 7 || field.fieldType === 8;
+  const isStatic = field.fieldType === 12;
+  const labelMeta = formik.getFieldMeta<string>(`${path}.label`);
+  const labelError = Boolean(labelMeta.touched && labelMeta.error);
+  return (
+    <Stack spacing={1.5}>
+      <ShakingTextField error={labelError}>
+        <TextField
+          fullWidth
+          required
+          size="small"
+          label="Field label"
+          value={field.label}
+          name={`${path}.label`}
+          onBlur={formik.handleBlur}
+          error={labelError}
+          onChange={(event) => formik.setFieldValue(`${path}.label`, event.target.value)}
+          helperText={labelError ? labelMeta.error : 'The question or label applicants will see.'}
+        />
+      </ShakingTextField>
+      <CustomSelect
+        size="small"
+        label="Field type"
+        value={field.fieldType}
+        options={FIELD_TYPES.map(([label, value]) => ({ label, value }))}
+        onChange={(value) => formik.setFieldValue(`${path}.fieldType`, Number(value))}
+      />
+      {!isStatic && (
+        <FormControlLabel
+          labelPlacement="start"
+          sx={{
+            m: 0,
+            p: 1.25,
+            borderRadius: 1,
+            bgcolor: 'action.hover',
+            justifyContent: 'space-between',
+            gap: 1,
+          }}
+          control={
+            <Switch
+              size="small"
+              checked={field.required}
+              onChange={(event) => formik.setFieldValue(`${path}.required`, event.target.checked)}
+            />
+          }
+          label={
+            <Stack>
+              <Typography variant="body2" fontWeight={600}>
+                Required field
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Applicants must answer before submitting.
+              </Typography>
+            </Stack>
+          }
+        />
+      )}
+      <TextField
+        fullWidth
+        size="small"
+        label="Help text (optional)"
+        value={field.helpText ?? ''}
+        multiline
+        minRows={2}
+        helperText="A short instruction shown below the field."
+        onChange={(event) =>
+          formik.setFieldValue(`${path}.helpText`, event.target.value || undefined)
+        }
+      />
+      {isChoice && (
+        <FieldChoiceSettings formik={formik} sectionIndex={sectionIndex} fieldIndex={fieldIndex} />
+      )}
+    </Stack>
+  );
+}

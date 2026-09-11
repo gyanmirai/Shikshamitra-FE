@@ -1,7 +1,7 @@
 'use client';
 
 import type { Standards } from 'src/types/school';
-import type { IInquiryData } from 'src/types/student-enrollment';
+import type { IInquiryData } from 'src/types/student';
 
 import { Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';

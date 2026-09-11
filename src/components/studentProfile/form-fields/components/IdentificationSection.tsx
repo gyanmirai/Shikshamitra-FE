@@ -12,8 +12,6 @@ import {
   CardActions,
 } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
-import RenderInquiryPrefrance from '../RenderInquiryPrefrance';
-
 import type { SectionProps } from './section-types';
 
 // ── Slot: single character box ────────────────────────────────────────────────
@@ -288,17 +286,6 @@ const IdentificationSection: React.FC<SectionProps> = ({
           }}
           disabled={!isEdit.value}
         />
-      </ShakingTextField>
-    </Grid>
-
-    <Grid size={{ xs: 12, md: 3 }}>
-      <ShakingTextField
-        error={
-          (formik.touched as any).inquiryPreference &&
-          Boolean((formik.errors as any).inquiryPreference)
-        }
-      >
-        <RenderInquiryPrefrance formik={formik} disabled={!isEdit.value} />
       </ShakingTextField>
     </Grid>
 
