@@ -82,7 +82,8 @@ export function buildAdmissionInquiryPayload(
   values: AdmissionInquiryFormValues,
   fields: AdmissionFormField[],
   existingFamilyId?: string | null,
-  createSeparateFamily = false
+  createSeparateFamily = false,
+  duplicateOverrideReason?: string
 ): CreateAdmissionInquiry {
   const applicantFirstName = boundValue(
     values,
@@ -99,6 +100,7 @@ export function buildAdmissionInquiryPayload(
     admissionOfferingId: values.offeringId || null,
     existingFamilyId,
     createSeparateFamily,
+    duplicateOverrideReason: duplicateOverrideReason?.trim() || null,
     applicantName: [applicantFirstName, applicantLastName].filter(Boolean).join(' '),
     phone: guardianPhone,
     email: guardianEmail || null,

@@ -81,6 +81,13 @@ describe('admission inquiry model', () => {
     expect(errors.fields).toEqual({ GENDER: 'GENDER is required' });
   });
 
+  it('sends a trimmed duplicate override only when a separate family is requested', () => {
+    const payload = buildAdmissionInquiryPayload(values, fields, null, true, '  Different guardian  ');
+
+    expect(payload.createSeparateFamily).toBe(true);
+    expect(payload.duplicateOverrideReason).toBe('Different guardian');
+  });
+
   it('adds the guardian name required by the domain when a legacy form omits it', () => {
     const legacyForm = {
       sections: [{ fields: [field('GUARDIAN_MOBILE', 'Guardian.Mobile', 4, true)] }],

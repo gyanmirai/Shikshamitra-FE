@@ -28,6 +28,7 @@ export type StudentOnboardingEvent = {
 
 export type StudentOnboardingCase = {
   id: string;
+  documentUploadsEnabled?: boolean;
   concurrencyStamp: string;
   applicationId: string;
   applicationNumber: string;

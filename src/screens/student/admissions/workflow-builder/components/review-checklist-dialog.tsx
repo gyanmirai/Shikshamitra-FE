@@ -1,0 +1,110 @@
+import type { AdmissionReviewChecklistItem } from 'src/redux/student/admissions/admission-review-policy';
+
+import { useFormik } from 'formik';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { reviewChecklistItemSchema } from 'src/redux/student/admissions/admission-review-validation';
+import {
+  Box,
+  Alert,
+  Stack,
+  Button,
+  Switch,
+  TextField,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
+
+export function ReviewChecklistDialog({
+  initial,
+  existingCodes,
+  onSave,
+  onClose,
+  context = 'review',
+}: {
+  initial: AdmissionReviewChecklistItem;
+  existingCodes: string[];
+  onSave: (item: AdmissionReviewChecklistItem) => void;
+  onClose: () => void;
+  context?: 'review' | 'qualification';
+}) {
+  const formik = useFormik({
+    initialValues: initial,
+    validationSchema: reviewChecklistItemSchema,
+    validate: (values) =>
+      existingCodes.includes(values.code) ? { code: 'This checklist code is already in use' } : {},
+    onSubmit: (values) => {
+      onSave({ ...values, name: values.name.trim() });
+      onClose();
+    },
+  });
+  const requestClose = () => {
+    if (!formik.dirty || window.confirm('You have unsaved changes. Do you want to discard them?'))
+      onClose();
+  };
+  return (
+    <CustomDialog
+      open
+      hasForm={false}
+      hasUnsavedChanges={formik.dirty}
+      title={`Configure ${context} checklist item`}
+      handleClose={onClose}
+      maxWidth="sm"
+    >
+      <Box
+        component="form"
+        noValidate
+        onSubmit={(event) => {
+          event.stopPropagation();
+          formik.handleSubmit(event);
+        }}
+      >
+        <DialogScrollContent>
+          <Stack spacing={2}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Checklist item name *"
+              {...formik.getFieldProps('name')}
+              error={Boolean(formik.touched.name && formik.errors.name)}
+              helperText={formik.touched.name && formik.errors.name}
+            />
+            <TextField
+              fullWidth
+              size="small"
+              label="Checklist code *"
+              {...formik.getFieldProps('code')}
+              error={Boolean(formik.touched.code && formik.errors.code)}
+              helperText={formik.touched.code && formik.errors.code}
+            />
+            <FormControlLabel
+              label={
+                context === 'review'
+                  ? 'Required before submitting a recommendation'
+                  : 'Required before qualifying the inquiry'
+              }
+              control={
+                <Switch
+                  size="small"
+                  checked={formik.values.required}
+                  onChange={(_, checked) => formik.setFieldValue('required', checked)}
+                />
+              }
+            />
+            <Alert severity="info">
+              Staff can record notes for each item. Required items must pass before a qualified
+              outcome can be saved.
+            </Alert>
+          </Stack>
+        </DialogScrollContent>
+        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+          <Button size="small" variant="outlined" onClick={requestClose}>
+            Cancel
+          </Button>
+          <Button size="small" variant="contained" type="submit">
+            Save checklist item
+          </Button>
+        </DialogActions>
+      </Box>
+    </CustomDialog>
+  );
+}

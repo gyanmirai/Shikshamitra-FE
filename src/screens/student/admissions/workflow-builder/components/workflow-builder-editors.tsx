@@ -42,7 +42,7 @@ export function WorkflowBuilderEditors({ stageOpen, transitionOpen, editingStage
 
   return (
     <>
-      <AdmissionWorkflowStageDrawer open={stageOpen} stage={editingStage} stageTypes={stageTypes} forms={forms} readOnly={readOnly} onClose={onCloseStage} onSave={onSaveStage} />
+      <AdmissionWorkflowStageDrawer open={stageOpen} stage={editingStage} stageTypes={stageTypes} forms={forms} stages={stages} readOnly={readOnly} onClose={onCloseStage} onSave={onSaveStage} />
       <AdmissionWorkflowTransitionDrawer open={transitionOpen} transition={editingTransition} stages={stages} readOnly={readOnly} onClose={onCloseTransition} onSave={onSaveTransition} />
       <ConfirmDialog
         open={Boolean(stageToDelete)}

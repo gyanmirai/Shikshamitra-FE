@@ -1,8 +1,11 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
+import type { ReviewDecisionCapabilities } from './admission-review-types';
+
 export type AdmissionApplicationStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
 export type AdmissionApplication = {
+  reviewDecision?: ReviewDecisionCapabilities | null;
   id: string;
   concurrencyStamp?: string | null;
   applicationNumber: string;
@@ -38,6 +41,14 @@ export type AdmissionApplicationListInput = {
   currentStageSearch?: string;
 };
 export type AdmissionApplicationStage = {
+  formStageEnabled?: boolean;
+  paymentStageEnabled?: boolean;
+  offerStageEnabled?: boolean;
+  seatStageEnabled?: boolean;
+  reviewEnabled?: boolean;
+  assessmentEnabled?: boolean;
+  documentVerificationEnabled?: boolean;
+  eligibilityEnabled?: boolean;
   id: string;
   definitionStageId: string;
   code: string;
@@ -459,6 +470,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
 export const {
   useGetAdmissionApplicationsQuery,
   useGetAdmissionApplicationQuery,
+  useLazyGetAdmissionApplicationQuery,
   useStartAdmissionApplicationMutation,
   useGetAdmissionApplicationWorkflowQuery,
   useGetAdmissionApplicationFormQuery,

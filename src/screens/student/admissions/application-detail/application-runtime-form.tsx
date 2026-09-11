@@ -45,6 +45,9 @@ type Props = {
   onSave: () => Promise<void>;
   onValidateStep: (sectionId: string) => boolean;
   onSubmit: () => void;
+  showSaveDraft: boolean;
+  canSubmitForm: boolean;
+  managedFormStage: boolean;
   canReopen: boolean;
   reopening: boolean;
   onReopen: () => void;
@@ -63,6 +66,9 @@ export function ApplicationRuntimeForm({
   onSave,
   onValidateStep,
   onSubmit,
+  showSaveDraft,
+  canSubmitForm,
+  managedFormStage,
   canReopen,
   reopening,
   onReopen,
@@ -244,19 +250,21 @@ export function ApplicationRuntimeForm({
                   Previous
                 </Button>
                 <Stack direction="row" spacing={1}>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    disabled={saving || application.status !== 0}
-                    onClick={async () => {
-                      if (currentSections.every((section) => onValidateStep(section.id))) {
-                        await onSave();
-                        moveToNextStep(true);
-                      }
-                    }}
-                  >
-                    Save &amp; continue
-                  </Button>
+                  {showSaveDraft && (
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      disabled={saving || application.status !== 0}
+                      onClick={async () => {
+                        if (currentSections.every((section) => onValidateStep(section.id))) {
+                          await onSave();
+                          moveToNextStep(true);
+                        }
+                      }}
+                    >
+                      Save &amp; continue
+                    </Button>
+                  )}
                   <Button
                     size="small"
                     disabled={activeStep === visibleSteps.length - 1}
@@ -269,25 +277,27 @@ export function ApplicationRuntimeForm({
             </Stack>
           )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 3 }}>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:content-save-outline" />}
-              disabled={saving || application.status !== 0}
-              onClick={onSave}
-            >
-              Save draft
-            </Button>
+            {showSaveDraft && (
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:content-save-outline" />}
+                disabled={saving || application.status !== 0}
+                onClick={onSave}
+              >
+                Save draft
+              </Button>
+            )}
             <Button
               size="small"
               variant="contained"
               startIcon={<Iconify icon="mdi:send-outline" />}
-              disabled={submitting || application.status !== 0}
+              disabled={submitting || application.status !== 0 || !canSubmitForm}
               onClick={onSubmit}
             >
               Submit application
             </Button>
-            {application.status === 1 && canReopen && (
+            {application.status === 1 && canReopen && !managedFormStage && (
               <Button
                 size="small"
                 variant="outlined"

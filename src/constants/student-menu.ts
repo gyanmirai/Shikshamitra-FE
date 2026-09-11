@@ -12,6 +12,8 @@ export const studentPaths = {
     inquiries: '/student/admissions/inquiries',
     pipeline: '/student/admissions/pipeline',
     applications: '/student/admissions/applications',
+    assessments: '/student/admissions/assessments',
+    reviews: '/student/admissions/reviews',
     settings: {
       root: '/student/admissions/settings/cycles',
       cycles: '/student/admissions/settings/cycles',
@@ -55,12 +57,16 @@ export const studentPermissions = {
       `${defaultStudentPermissionName}Admissions.View`,
       `${defaultStudentPermissionName}Admissions.Inquiries.View`,
       `${defaultStudentPermissionName}Admissions.Applications.View`,
+      `${defaultStudentPermissionName}Admissions.Assessments.View`,
+      `${defaultStudentPermissionName}Admissions.Reviews.View`,
       `${defaultStudentPermissionName}Admissions.Offerings.View`,
       `${defaultStudentPermissionName}Admissions.Workflows.View`,
       `${defaultStudentPermissionName}Admissions.Forms.View`,
     ],
     inquiries: `${defaultStudentPermissionName}Admissions.Inquiries.View`,
     applications: `${defaultStudentPermissionName}Admissions.Applications.View`,
+    assessments: `${defaultStudentPermissionName}Admissions.Assessments.View`,
+    reviews: `${defaultStudentPermissionName}Admissions.Reviews.View`,
     settings: {
       root: [
         `${defaultStudentPermissionName}Admissions.View`,
@@ -241,7 +247,7 @@ const studentModule = (isDdvs: boolean) => ({
               title: 'Applications',
               path: studentPaths.enrollment.applications,
               _action: 'student-admissions-applications',
-              permissionName: studentPermissions.enrollment.applications,
+              permissionName: [studentPermissions.enrollment.applications, studentPermissions.enrollment.assessments, studentPermissions.enrollment.reviews],
               icon: menuIconView('mdi:application-edit-outline'),
               children: [
                 {
@@ -250,6 +256,20 @@ const studentModule = (isDdvs: boolean) => ({
                   _action: 'student-admissions-applications-all',
                   permissionName: studentPermissions.enrollment.applications,
                   icon: menuIconView('mdi:format-list-bulleted'),
+                },
+                {
+                  title: 'Assessments',
+                  path: studentPaths.enrollment.assessments,
+                  _action: 'student-admissions-assessments',
+                  permissionName: studentPermissions.enrollment.assessments,
+                  icon: menuIconView('mdi:clipboard-clock-outline'),
+                },
+                {
+                  title: 'Review queue',
+                  path: studentPaths.enrollment.reviews,
+                  _action: 'student-admissions-reviews',
+                  permissionName: studentPermissions.enrollment.reviews,
+                  icon: menuIconView('mdi:clipboard-check-outline'),
                 },
               ],
             },

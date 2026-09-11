@@ -134,6 +134,8 @@ function AdmissionInquiryDialogContent({
             busy={controller.busy}
             onUseExisting={controller.useExistingFamily}
             onCreateSeparate={controller.createSeparateFamily}
+            overrideReason={controller.duplicateOverrideReason}
+            onOverrideReasonChange={controller.setDuplicateOverrideReason}
           />
           {controller.requestError && <Alert severity="error">{controller.requestError}</Alert>}
           {formik.submitCount > 0 && validationMessages.length > 0 && (

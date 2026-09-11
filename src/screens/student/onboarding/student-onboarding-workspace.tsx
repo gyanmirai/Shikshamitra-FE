@@ -53,6 +53,7 @@ import {
   isOnboardingStepSatisfied,
   ONBOARDING_STEP_STATUS_LABELS,
 } from './student-onboarding-status';
+import { OnboardingDocuments } from './onboarding-documents';
 
 type StepEdit = { key: string; label: string; status: StudentOnboardingStepStatus; detail: string };
 
@@ -303,6 +304,7 @@ export default function StudentOnboardingWorkspaceScreen() {
                       )}
                     </Stack>
                   </Stack>
+                  {step.key === 'documents' && onboardingCase.documentUploadsEnabled && <OnboardingDocuments caseId={id} />}
                 </CardContent>
               </Card>
             );

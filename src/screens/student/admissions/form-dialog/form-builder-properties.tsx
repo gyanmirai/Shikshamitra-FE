@@ -1,14 +1,19 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
+import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Chip, Stack, Typography } from '@mui/material';
 
-import { FIELD_TYPES } from './form-dialog-model';
 import { FormFieldCoreFields } from './form-field-core-fields';
+import { FieldDataSettings } from './components/field-data-settings';
 import { FormFieldAdvancedFields } from './form-field-advanced-fields';
+import { FieldSettingsGroup } from './components/field-settings-group';
 import { FormFieldLocationSettings } from './form-field-location-settings';
+import { FieldPropertiesHeader } from './components/field-properties-header';
+import { FieldGuidanceSettings } from './components/field-guidance-settings';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -16,63 +21,71 @@ type Props = {
 };
 
 export function FormBuilderProperties({ formik, selectedLocation }: Props) {
-  if (!selectedLocation) {
+  const section = selectedLocation
+    ? formik.values.sections[selectedLocation.sectionIndex]
+    : undefined;
+  const field = selectedLocation ? section?.fields[selectedLocation.fieldIndex] : undefined;
+  if (!selectedLocation || !field) {
     return (
-      <Stack
-        sx={{
-          height: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-          p: 3,
-          textAlign: 'center',
-          bgcolor: 'background.paper',
-        }}
-      >
-        <Iconify icon="mdi:form-select" width={40} sx={{ color: 'text.disabled', mb: 1.5 }} />
-        <Typography variant="subtitle2">Select a field</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-          Choose a field in the canvas to edit its label, data source, behavior, and rules.
-        </Typography>
+      <Stack sx={{ height: 1, p: 2, bgcolor: 'background.paper' }}>
+        <Typography variant="subtitle1">Field settings</Typography>
+        <Stack
+          spacing={1}
+          alignItems="center"
+          justifyContent="center"
+          sx={{ flex: 1, py: 4, textAlign: 'center' }}
+        >
+          <Box sx={{ display: 'flex', p: 2, bgcolor: 'action.hover', borderRadius: 2, mb: 0.5 }}>
+            <Iconify
+              icon="mdi:cursor-default-click-outline"
+              width={32}
+              sx={{ color: 'text.secondary' }}
+            />
+          </Box>
+          <Typography variant="subtitle2">Choose a field to customize</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Select any field in your form to change its label, make it required, or add
+            instructions.
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            New fields are selected automatically.
+          </Typography>
+        </Stack>
       </Stack>
     );
   }
-
-  const field =
-    formik.values.sections[selectedLocation.sectionIndex].fields[selectedLocation.fieldIndex];
-  const fieldType = FIELD_TYPES.find(([, value]) => value === field.fieldType)?.[0] ?? 'Field';
+  const settingsProps = { formik, ...selectedLocation };
+  const codeMeta = formik.getFieldMeta<string>(
+    `sections[${selectedLocation.sectionIndex}].fields[${selectedLocation.fieldIndex}].code`
+  );
   return (
     <Stack sx={{ height: 1, minHeight: 0, bgcolor: 'background.paper' }}>
-      <Box sx={{ p: 1.5, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="subtitle1">Field settings</Typography>
-        <Typography variant="caption" color="text.secondary">
-          Changes apply to the selected field immediately.
-        </Typography>
-        <Stack direction="row" spacing={0.75} sx={{ mt: 1 }}>
-          <Chip size="small" label={fieldType} variant="outlined" />
-          <Chip
-            size="small"
-            label={field.bindingType === 0 ? 'Student field' : 'Custom field'}
-            color={field.bindingType === 0 ? 'info' : 'default'}
-          />
-        </Stack>
-      </Box>
+      <FieldPropertiesHeader field={field} sectionName={section?.name} />
       <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
-        <Stack spacing={2} sx={{ p: 1.5 }}>
-          <FormFieldCoreFields
-            formik={formik}
-            sectionIndex={selectedLocation.sectionIndex}
-            fieldIndex={selectedLocation.fieldIndex}
-          />
-          <FormFieldLocationSettings
-            formik={formik}
-            sectionIndex={selectedLocation.sectionIndex}
-            fieldIndex={selectedLocation.fieldIndex}
-          />
-          <FormFieldAdvancedFields
-            formik={formik}
-            sectionIndex={selectedLocation.sectionIndex}
-            fieldIndex={selectedLocation.fieldIndex}
-          />
+        <Stack key={field.id} spacing={1.5} sx={{ p: 1.5 }}>
+          <FormFieldCoreFields {...settingsProps} />
+          <FormFieldLocationSettings {...settingsProps} />
+          <FieldSettingsGroup
+            title="More field settings"
+            description="Placeholder, default value, and read-only access."
+          >
+            <FieldGuidanceSettings {...settingsProps} />
+          </FieldSettingsGroup>
+          <FieldSettingsGroup
+            title="Data connection & code"
+            description={
+              field.bindingType === 0
+                ? 'Connected to the student record.'
+                : 'Saved with this admission form.'
+            }
+            forceExpanded={Boolean(codeMeta.touched && codeMeta.error)}
+          >
+            <FieldDataSettings {...settingsProps} />
+          </FieldSettingsGroup>
+          <FormFieldAdvancedFields {...settingsProps} />
+          <Typography variant="caption" color="text.secondary">
+            Changes stay in this draft until you save.
+          </Typography>
         </Stack>
       </Scrollbar>
     </Stack>

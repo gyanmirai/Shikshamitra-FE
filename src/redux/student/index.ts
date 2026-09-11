@@ -1,6 +1,10 @@
 import { api } from 'src/redux/service';
 import { studentType } from 'src/redux/tagTypes';
 
+import { unwrapStudentRecordProfile } from './student-profile-types';
+
+import type { StudentRecordProfile } from './student-profile-types';
+
 export const StudentApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getFilterStudents: builder.query({
@@ -51,11 +55,12 @@ export const StudentApi = api.injectEndpoints({
       }),
       providesTags: [studentType.student],
     }),
-    getStudentById: builder.query({
+    getStudentById: builder.query<StudentRecordProfile | null, string>({
       query: (id) => ({
-        url: `/app/student/${id}`,
+        url: `/students/records/${encodeURIComponent(id)}/profile`,
         method: 'GET',
       }),
+      transformResponse: unwrapStudentRecordProfile,
       providesTags: [studentType.student],
     }),
     getStudentsByDivision: builder.query({

@@ -1,12 +1,14 @@
 import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inquiries-api';
 
-import { Alert, Stack, Button } from '@mui/material';
+import { Alert, Stack, Button, TextField } from '@mui/material';
 
 type Props = {
   matches: DuplicateMatch[];
   busy: boolean;
   onUseExisting: (familyId: string) => void;
   onCreateSeparate: () => void;
+  overrideReason: string;
+  onOverrideReasonChange: (value: string) => void;
 };
 
 export function AdmissionInquiryDuplicateMatches({
@@ -14,6 +16,8 @@ export function AdmissionInquiryDuplicateMatches({
   busy,
   onUseExisting,
   onCreateSeparate,
+  overrideReason,
+  onOverrideReasonChange,
 }: Props) {
   if (!matches.length) return null;
   return (
@@ -31,7 +35,22 @@ export function AdmissionInquiryDuplicateMatches({
           Possible existing family: {match.applicantName} · {match.guardianPhone ?? '—'}
         </Alert>
       ))}
-      <Button variant="outlined" disabled={busy} onClick={onCreateSeparate}>
+      <TextField
+        fullWidth
+        size="small"
+        multiline
+        minRows={2}
+        label="Reason for creating a separate family"
+        value={overrideReason}
+        onChange={(event) => onOverrideReasonChange(event.target.value)}
+        slotProps={{ htmlInput: { maxLength: 512 } }}
+        helperText="Some managed workflows require this explanation."
+      />
+      <Button
+        variant="outlined"
+        disabled={busy}
+        onClick={onCreateSeparate}
+      >
         Create separate family
       </Button>
     </Stack>

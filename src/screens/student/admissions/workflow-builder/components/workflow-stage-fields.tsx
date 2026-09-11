@@ -5,178 +5,109 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Iconify } from 'src/components/iconify';
-import ShakingTextField from 'src/components/shaking-text-field';
-import { Alert, Stack, Switch, MenuItem, TextField, FormControlLabel } from '@mui/material';
+import { Stack, Divider } from '@mui/material';
+
+import { WorkflowStageForm } from './workflow-stage-form';
+import { WorkflowStageBasics } from './workflow-stage-basics';
+import { WorkflowFormSettings } from './workflow-form-settings';
+import { WorkflowSeatSettings } from './workflow-seat-settings';
+import { WorkflowStageBehavior } from './workflow-stage-behavior';
+import { WorkflowOfferSettings } from './workflow-offer-settings';
+import { WorkflowReviewSettings } from './workflow-review-settings';
+import { WorkflowPaymentSettings } from './workflow-payment-settings';
+import { WorkflowInquirySettings } from './workflow-inquiry-settings';
+import { WorkflowDocumentSettings } from './workflow-document-settings';
+import { WorkflowAssessmentSettings } from './workflow-assessment-settings';
+import { WorkflowEligibilitySettings } from './workflow-eligibility-settings';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   metadata?: AdmissionWorkflowStageTypeMetadata;
   stageTypes: AdmissionWorkflowStageTypeMetadata[];
   forms: AdmissionForm[];
+  stages: AdmissionWorkflowStage[];
   formDefinitionId: string;
   readOnly: boolean;
 };
 
-export function WorkflowStageFields({
-  formik,
-  metadata,
-  stageTypes,
-  forms,
-  formDefinitionId,
-  readOnly,
-}: Props) {
+export function WorkflowStageFields(props: Props) {
+  const { formik, metadata, readOnly, forms, stages, formDefinitionId } = props;
   return (
-    <Stack spacing={2} sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
-      <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
-        <TextField
-          fullWidth
-          size="small"
-          label="Stage name *"
-          disabled={readOnly}
-          {...formik.getFieldProps('name')}
-          error={Boolean(formik.touched.name && formik.errors.name)}
-          helperText={formik.touched.name && formik.errors.name}
+    <Stack spacing={2} sx={{ p: 2, flex: 1, minHeight: 0, overflowY: 'auto' }}>
+      <WorkflowStageBasics {...props} />
+      {metadata?.supportsFormAttachment && <WorkflowStageForm {...props} />}
+      {formik.values.stageType === 1 && (
+        <WorkflowFormSettings
+          formik={formik}
+          forms={forms}
+          formDefinitionId={formDefinitionId}
+          readOnly={readOnly}
+          available={metadata?.supportedConfiguration?.includes('form') === true}
         />
-      </ShakingTextField>
-      <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
-        <TextField
-          fullWidth
-          size="small"
-          label="Stage code *"
-          disabled={readOnly}
-          {...formik.getFieldProps('code')}
-          onChange={(event) => formik.setFieldValue('code', event.target.value.toUpperCase())}
-          error={Boolean(formik.touched.code && formik.errors.code)}
-          helperText={formik.touched.code && formik.errors.code}
+      )}
+      {formik.values.stageType === 0 && (
+        <WorkflowInquirySettings
+          formik={formik}
+          stages={stages}
+          readOnly={readOnly}
+          available={metadata?.supportedConfiguration?.includes('inquiry') === true}
         />
-      </ShakingTextField>
-      <TextField
-        select
-        fullWidth
-        size="small"
-        label="Stage type *"
-        disabled={readOnly}
-        value={String(formik.values.stageType)}
-        onChange={(event) => {
-          const nextStageType = stageTypes.find(
-            (item) => String(item.type) === String(event.target.value)
-          )?.type;
-
-          if (nextStageType === undefined) return;
-
-          formik.setFieldValue('stageType', nextStageType);
-          formik.setFieldValue('configurationJson', undefined);
-        }}
-        helperText={metadata?.description}
-      >
-        {stageTypes.map((item) => (
-          <MenuItem key={item.type} value={String(item.type)}>
-            <Iconify icon={item.icon} sx={{ mr: 1 }} /> {item.displayName}
-            {!item.isRuntimeReady ? ' (configuration only)' : ''}
-          </MenuItem>
-        ))}
-      </TextField>
-      {metadata && !metadata.isRuntimeReady && (
-        <Alert severity="warning">
-          This stage can be configured and published, but its runtime handler is not available yet.
-          Applications will not be able to complete it automatically.
-        </Alert>
       )}
-      <TextField
-        fullWidth
-        multiline
-        minRows={3}
-        size="small"
-        label="Description"
-        disabled={readOnly}
-        {...formik.getFieldProps('description')}
-        error={Boolean(formik.touched.description && formik.errors.description)}
-        helperText={formik.touched.description && formik.errors.description}
-      />
-      {metadata?.supportsFormAttachment && (
-        <ShakingTextField
-          error={Boolean(formik.touched.configurationJson && formik.errors.configurationJson)}
-        >
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Published form version *"
-            disabled={readOnly}
-            value={formDefinitionId}
-            onChange={(event) =>
-              formik.setFieldValue(
-                'configurationJson',
-                JSON.stringify({ formDefinitionId: event.target.value.trim() })
-              )
-            }
-            error={Boolean(formik.touched.configurationJson && formik.errors.configurationJson)}
-            helperText={
-              (formik.touched.configurationJson && formik.errors.configurationJson) ||
-              (forms.length === 0
-                ? 'Publish a form before attaching it to this stage.'
-                : 'The selected immutable form version is frozen with the workflow.')
-            }
-          >
-            {forms.map((form) => (
-              <MenuItem key={form.id} value={form.id}>
-                {form.name} · v{form.version}
-              </MenuItem>
-            ))}
-          </TextField>
-        </ShakingTextField>
+      {formik.values.stageType === 2 && (
+        <WorkflowAssessmentSettings
+          formik={formik}
+          readOnly={readOnly}
+          available={metadata?.supportedConfiguration?.includes('assessment') === true}
+        />
       )}
-      <StageSwitch
-        label="Required stage"
-        checked={formik.values.isRequired}
-        disabled={readOnly}
-        onChange={(value) => formik.setFieldValue('isRequired', value)}
-      />
-      <StageSwitch
-        label="Allow authorized manual skip"
-        checked={formik.values.allowManualSkip}
-        disabled={readOnly}
-        onChange={(value) => formik.setFieldValue('allowManualSkip', value)}
-      />
-      <StageSwitch
-        label="Entry stage"
-        checked={formik.values.isEntryStage}
-        disabled={readOnly || !metadata?.canBeEntryStage}
-        onChange={(value) => formik.setFieldValue('isEntryStage', value)}
-      />
-      <StageSwitch
-        label="Terminal stage"
-        checked={formik.values.isTerminalStage}
-        disabled={readOnly || !metadata?.canBeTerminalStage}
-        onChange={(value) => formik.setFieldValue('isTerminalStage', value)}
-      />
+      {formik.values.stageType === 5 && (
+        <WorkflowDocumentSettings
+          formik={formik}
+          forms={forms}
+          readOnly={readOnly}
+          available={metadata?.supportedConfiguration?.includes('documentVerification') === true}
+        />
+      )}
+      {formik.values.stageType === 3 && (
+        <WorkflowEligibilitySettings
+          formik={formik}
+          forms={forms}
+          stages={stages}
+          readOnly={readOnly}
+          available={metadata?.supportedConfiguration?.includes('eligibility') === true}
+        />
+      )}
+      {formik.values.stageType === 4 && (
+        <WorkflowPaymentSettings
+          formik={formik}
+          readOnly={readOnly}
+          available={metadata?.supportedConfiguration?.includes('payment') === true}
+        />
+      )}
+      {formik.values.stageType === 8 && (
+        <WorkflowOfferSettings
+          formik={formik}
+          readOnly={readOnly}
+          available={metadata?.supportedConfiguration?.includes('offer') === true}
+        />
+      )}
+      {formik.values.stageType === 9 && (
+        <WorkflowSeatSettings
+          formik={formik}
+          readOnly={readOnly}
+          available={metadata?.supportedConfiguration?.includes('seat') === true}
+        />
+      )}
+      {formik.values.stageType === 6 && (
+        <WorkflowReviewSettings
+          formik={formik}
+          stages={stages}
+          readOnly={readOnly}
+          available={metadata?.supportedConfiguration?.includes('review') === true}
+        />
+      )}
+      <Divider />
+      <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} />
     </Stack>
-  );
-}
-
-function StageSwitch({
-  label,
-  checked,
-  disabled,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  disabled: boolean;
-  onChange: (value: boolean) => void;
-}) {
-  return (
-    <FormControlLabel
-      control={
-        <Switch
-          size="small"
-          checked={checked}
-          disabled={disabled}
-          onChange={(_, value) => onChange(value)}
-        />
-      }
-      label={label}
-    />
   );
 }

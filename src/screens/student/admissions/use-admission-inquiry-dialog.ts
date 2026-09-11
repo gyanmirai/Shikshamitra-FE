@@ -26,6 +26,7 @@ import {
 export function useAdmissionInquiryDialog(onClose: () => void) {
   const [matches, setMatches] = useState<DuplicateMatch[]>([]);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [duplicateOverrideReason, setDuplicateOverrideReason] = useState('');
   const [create, createState] = useCreateAdmissionInquiryMutation();
   const [checkDuplicates, duplicateState] = useCheckAdmissionInquiryDuplicatesMutation();
   const formik = useFormik({
@@ -68,7 +69,13 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     setRequestError(null);
     try {
       await create(
-        buildAdmissionInquiryPayload(formik.values, fields, existingFamilyId, createSeparateFamily)
+        buildAdmissionInquiryPayload(
+          formik.values,
+          fields,
+          existingFamilyId,
+          createSeparateFamily,
+          duplicateOverrideReason
+        )
       ).unwrap();
       shikshaMitraToast.success({ message: 'Inquiry created' });
       onClose();
@@ -84,6 +91,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     fields,
     matches,
     requestError,
+    duplicateOverrideReason,
+    setDuplicateOverrideReason,
     offerings: offerings?.items ?? [],
     offeringsLoading,
     formLoading,

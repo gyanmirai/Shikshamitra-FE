@@ -3,15 +3,17 @@
 import type { AdmissionApplication } from 'src/redux/student/admissions/admission-applications-api';
 
 import { useState } from 'react';
-import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Card, Chip, Alert, Stack, Button, Divider, Typography, CardContent } from '@mui/material';
+import { Card, Chip, Alert, Stack, Typography, CardContent } from '@mui/material';
+import { useLazyGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
 
 import { ApplicationDecisionDialog } from './application-decision-dialog';
 import { ApplicationDecisionStatus } from './application-decision-status';
+import { ReviewDecisionGuidance } from '../review/review-decision-guidance';
 import { ApplicationDecisionActions } from './application-decision-actions';
 import { ApplicationDecisionHistory } from './application-decision-history';
 import { ApplicationFinalizationDialog } from './application-finalization-dialog';
+import { ApplicationFinalizationCallout } from './application-finalization-callout';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
@@ -22,7 +24,7 @@ import {
   useAdmissionApplicationDecisions,
 } from './use-admission-application-decisions';
 
-type Props = { application: AdmissionApplication };
+type Props = { application: AdmissionApplication; managedOffer?: boolean };
 const ACTIONS: AdmissionDecisionAction[] = [
   'review',
   'approve',
@@ -33,13 +35,26 @@ const ACTIONS: AdmissionDecisionAction[] = [
   'decline',
 ];
 
-export function ApplicationDecisionCard({ application }: Props) {
+export function ApplicationDecisionCard({ application, managedOffer }: Props) {
   const decisions = useAdmissionApplicationDecisions(application.id, application.status);
   const finalizationDialog = useBoolean();
+  const [reloadApplication] = useLazyGetAdmissionApplicationQuery();
   const [action, setAction] = useState<AdmissionDecisionAction | null>(null);
+  const [decisionApplication, setDecisionApplication] = useState(application);
+  const reaffirmApproval = Boolean(
+    application.reviewDecision?.managedReviewEnabled &&
+    !application.reviewDecision.isSatisfied &&
+    application.reviewDecision.canApprove &&
+    [6, 7, 8].includes(application.status)
+  );
   const { canDecide, canOffer, canFinalize } = decisions;
   const visibleActions = ACTIONS.filter((item) => {
-    if (!canPerformAdmissionDecision(application.status, item)) return false;
+	if (managedOffer && (item === 'offer' || item === 'accept' || item === 'decline')) return false;
+    if (
+      !canPerformAdmissionDecision(application.status, item) &&
+      !(item === 'approve' && reaffirmApproval)
+    )
+      return false;
     if (item === 'offer' || item === 'accept' || item === 'decline') return canOffer;
     return canDecide;
   });
@@ -62,32 +77,25 @@ export function ApplicationDecisionCard({ application }: Props) {
           />
         </Stack>
         <ApplicationDecisionStatus application={application} />
+        <ReviewDecisionGuidance capabilities={application.reviewDecision} />
         {visibleActions.length > 0 && (
           <ApplicationDecisionActions
             actions={visibleActions}
             busy={decisions.isBusy}
-            onSelect={setAction}
+            reviewDecision={application.reviewDecision}
+            reaffirmApproval={reaffirmApproval}
+            onSelect={(next) => {
+              setDecisionApplication(application);
+              setAction(next);
+            }}
           />
         )}
         {application.status === 8 && canFinalize && (
-          <>
-            <Divider sx={{ my: 2 }} />
-            <Typography variant="body2" color="text.secondary">
-              The offer is accepted. Finalize Admissions to link the Student identity and start
-              onboarding. Placement and enrollment happen later.
-            </Typography>
-            <Button
-              variant="contained"
-              color="success"
-              size="small"
-              disabled={decisions.isBusy}
-              startIcon={<Iconify icon="mdi:school-outline" />}
-              onClick={finalizationDialog.onTrue}
-              sx={{ mt: 1, alignSelf: 'flex-start' }}
-            >
-              Finalize admission
-            </Button>
-          </>
+          <ApplicationFinalizationCallout
+            application={application}
+            busy={decisions.isBusy}
+            onOpen={finalizationDialog.onTrue}
+          />
         )}
         {!canDecide &&
           !canOffer &&
@@ -107,9 +115,11 @@ export function ApplicationDecisionCard({ application }: Props) {
         />
       </CardContent>
       <ApplicationDecisionDialog
+        key={action ?? 'closed'}
         open={Boolean(action)}
         action={action}
-        application={application}
+        application={decisionApplication}
+        onReload={() => reloadApplication(application.id).unwrap()}
         busy={decisions.isBusy}
         onClose={() => setAction(null)}
         onSubmit={(input) => decisions.runDecision(action as AdmissionDecisionAction, input)}

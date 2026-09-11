@@ -51,6 +51,7 @@ build-*/
 
 # misc
 .DS_Store
+.certs/
 .vercel
 .netlify
 .vscode

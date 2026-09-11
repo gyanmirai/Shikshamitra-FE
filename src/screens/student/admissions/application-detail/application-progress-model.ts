@@ -37,7 +37,19 @@ export function canCompleteStageFromProgress(
   applicationStatus: AdmissionApplicationStatus,
   canAdvance: boolean
 ) {
-  if (!stage || !canAdvance || isFormStage(stage)) return false;
+  if (
+    !stage ||
+    !canAdvance ||
+    isFormStage(stage) ||
+    stage.assessmentEnabled ||
+    stage.documentVerificationEnabled ||
+    stage.eligibilityEnabled ||
+    stage.reviewEnabled ||
+    stage.paymentStageEnabled ||
+    stage.offerStageEnabled ||
+    stage.seatStageEnabled
+  )
+    return false;
   return !isApprovalStage(stage) || applicationStatus === APPLICATION_APPROVED_STATUS;
 }
 
@@ -57,6 +69,16 @@ export function getStageGuidance(
   nextRequiredAction?: string | null
 ) {
   if (!stage) return 'No action is currently required.';
+  if (stage.reviewEnabled)
+    return 'Review the evidence and checklist below, submit a recommendation, then record an authorized admission decision before continuing.';
+  if (stage.seatStageEnabled)
+    return 'Manage the admission capacity below. Confirm a current reservation or record another configured outcome before continuing.';
+  if (stage.eligibilityEnabled)
+    return 'Check the eligibility results below. Resolve missing information or an authorized exception before continuing.';
+  if (stage.documentVerificationEnabled)
+    return 'Review the document checklist below. Resolve every required document before continuing.';
+  if (stage.assessmentEnabled)
+    return 'Manage the assessment below. The configured requirements determine when this step can continue.';
   if (isFormStage(stage)) {
     return 'Complete the five registration sections below, save each step, then submit the application.';
   }

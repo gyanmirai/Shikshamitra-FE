@@ -1,10 +1,10 @@
 import type { RootState } from 'src/redux/store';
 import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material';
 
-import React, { useRef } from 'react';
 import { CONFIG } from 'src/config-global';
 import { Close } from '@mui/icons-material';
 import { useTheme } from '@mui/material/styles';
+import React, { useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Dialog, IconButton, Typography, DialogContent } from '@mui/material';
@@ -21,6 +21,8 @@ type CustomDialogProps = Omit<DialogProps, 'title'> & {
   paperProps?: PaperProps;
   hasForm?: boolean;
   disableClose?: boolean;
+  /** When supplied, this dialog owns its dirty state and leaves the page guard unchanged. */
+  hasUnsavedChanges?: boolean;
 };
 
 const CustomDialog = ({
@@ -31,6 +33,7 @@ const CustomDialog = ({
   paperProps,
   hasForm = true,
   disableClose = false,
+  hasUnsavedChanges,
   maxWidth = 'xs',
   ...props
 }: CustomDialogProps) => {
@@ -41,9 +44,22 @@ const CustomDialog = ({
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    if (!open || !hasUnsavedChanges) return undefined;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [open, hasUnsavedChanges]);
+
   const handleCloseDialog = (e: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
     if (shouldBlockCustomDialogClose(disableClose)) return;
     if (reason === 'backdropClick') return;
+    if (hasUnsavedChanges !== undefined) {
+      if (!hasUnsavedChanges || window.confirm('You have unsaved changes. Do you want to discard them?')) {
+        handleClose(e, reason);
+      }
+      return;
+    }
     if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
       handleClose(e, reason);
       dispatch(setIsChanges(false));

@@ -1,10 +1,22 @@
 import type { FormikProps } from 'formik';
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
-import ShakingTextField from 'src/components/shaking-text-field';
-import { Stack, Switch, MenuItem, TextField, FormControlLabel } from '@mui/material';
+import { Stack, Switch, TextField, FormControlLabel } from '@mui/material';
+import { readAdmissionReviewPolicy } from 'src/redux/student/admissions/admission-review-policy';
+import { readAdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
+import { readAdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
+import { readAdmissionEligibilityPolicy } from 'src/redux/student/admissions/admission-eligibility-policy';
 
-import { WORKFLOW_CONDITION_OPERATORS } from '../workflow-transition-form';
+import { WorkflowPreservedCondition } from './workflow-preserved-condition';
+import { WorkflowTransitionStageSelect } from './workflow-transition-stage-select';
+import { WorkflowReviewRoute, isReviewOutcomeCondition } from './workflow-review-route';
+import { WorkflowTransitionConditionFields } from './workflow-transition-condition-fields';
+import { WorkflowDocumentRoute, isDocumentOutcomeCondition } from './workflow-document-route';
+import { WorkflowAssessmentRoute, isAssessmentOutcomeCondition } from './workflow-assessment-route';
+import {
+  WorkflowEligibilityRoute,
+  isEligibilityOutcomeCondition,
+} from './workflow-eligibility-route';
 
 import type { WorkflowTransitionFormValues } from '../workflow-transition-form';
 
@@ -15,45 +27,89 @@ type Props = {
 };
 
 export function WorkflowTransitionFields({ formik, stages, readOnly }: Props) {
-  const needsValue = !['IsEmpty', 'IsNotEmpty'].includes(formik.values.conditionOperator);
+  const from = stages.find((stage) => stage.id === formik.values.fromStageId);
+  const assessment =
+    from?.stageType === 2 &&
+    readAdmissionAssessmentPolicy(from.configurationJson)?.enabled === true;
+  const documents =
+    from?.stageType === 5 && readAdmissionDocumentPolicy(from.configurationJson)?.enabled === true;
+  const eligibility =
+    from?.stageType === 3 &&
+    readAdmissionEligibilityPolicy(from.configurationJson)?.enabled === true;
+  const review =
+    from?.stageType === 6 && readAdmissionReviewPolicy(from.configurationJson)?.enabled === true;
+  const showCondition =
+    formik.values.hasCondition &&
+    !formik.values.preserveCondition &&
+    (!assessment || !isAssessmentOutcomeCondition(formik.values)) &&
+    (!documents || !isDocumentOutcomeCondition(formik.values)) &&
+    (!eligibility || !isEligibilityOutcomeCondition(formik.values)) &&
+    (!review || !isReviewOutcomeCondition(formik.values));
   return (
     <Stack spacing={2} sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
-      <StageSelect formik={formik} field="fromStageId" label="From stage *" stages={stages} readOnly={readOnly} />
-      <StageSelect formik={formik} field="toStageId" label="To stage *" stages={stages} readOnly={readOnly} />
-      <TextField fullWidth size="small" type="number" label="Priority *" disabled={readOnly} {...formik.getFieldProps('priority')} />
-      <FormControlLabel
-        control={<Switch size="small" checked={formik.values.hasCondition} disabled={readOnly} onChange={(_, value) => { formik.setFieldValue('hasCondition', value); if (value) formik.setFieldValue('isDefault', false); }} />}
-        label="Use a condition"
+      <WorkflowTransitionStageSelect
+        formik={formik}
+        field="fromStageId"
+        label="From stage *"
+        stages={stages}
+        readOnly={readOnly}
       />
-      {formik.values.hasCondition ? (
-        <>
-          <ShakingTextField error={Boolean(formik.touched.conditionField && formik.errors.conditionField)}>
-            <TextField fullWidth size="small" label="Application field *" disabled={readOnly} {...formik.getFieldProps('conditionField')} error={Boolean(formik.touched.conditionField && formik.errors.conditionField)} helperText={formik.touched.conditionField && formik.errors.conditionField} />
-          </ShakingTextField>
-          <TextField select fullWidth size="small" label="Operator *" disabled={readOnly} {...formik.getFieldProps('conditionOperator')}>
-            {WORKFLOW_CONDITION_OPERATORS.map((operator) => <MenuItem key={operator} value={operator}>{operator}</MenuItem>)}
-          </TextField>
-          {needsValue && (
-            <ShakingTextField error={Boolean(formik.touched.conditionValue && formik.errors.conditionValue)}>
-              <TextField fullWidth size="small" label="Value *" disabled={readOnly} {...formik.getFieldProps('conditionValue')} error={Boolean(formik.touched.conditionValue && formik.errors.conditionValue)} helperText={formik.touched.conditionValue && formik.errors.conditionValue} />
-            </ShakingTextField>
-          )}
-        </>
+      <WorkflowTransitionStageSelect
+        formik={formik}
+        field="toStageId"
+        label="To stage *"
+        stages={stages}
+        readOnly={readOnly}
+      />
+      <TextField
+        fullWidth
+        size="small"
+        type="number"
+        label="Priority *"
+        disabled={readOnly}
+        {...formik.getFieldProps('priority')}
+      />
+      {formik.values.preserveCondition ? (
+        <WorkflowPreservedCondition json={formik.values.conditionRuleJson ?? ''} />
+      ) : assessment ? (
+        <WorkflowAssessmentRoute formik={formik} readOnly={readOnly} />
+      ) : documents ? (
+        <WorkflowDocumentRoute formik={formik} readOnly={readOnly} />
+      ) : eligibility ? (
+        <WorkflowEligibilityRoute formik={formik} readOnly={readOnly} />
+      ) : review ? (
+        <WorkflowReviewRoute formik={formik} readOnly={readOnly} />
       ) : (
-        <FormControlLabel control={<Switch size="small" checked={formik.values.isDefault} disabled={readOnly} onChange={(_, value) => formik.setFieldValue('isDefault', value)} />} label="Default route" />
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={formik.values.hasCondition}
+              disabled={readOnly}
+              onChange={(_, value) => {
+                formik.setFieldValue('hasCondition', value);
+                if (value) formik.setFieldValue('isDefault', false);
+              }}
+            />
+          }
+          label="Use a condition"
+        />
       )}
+      {showCondition ? (
+        <WorkflowTransitionConditionFields formik={formik} readOnly={readOnly} />
+      ) : !assessment && !documents && !eligibility && !review && !formik.values.hasCondition ? (
+        <FormControlLabel
+          control={
+            <Switch
+              size="small"
+              checked={formik.values.isDefault}
+              disabled={readOnly}
+              onChange={(_, value) => formik.setFieldValue('isDefault', value)}
+            />
+          }
+          label="Default route"
+        />
+      ) : null}
     </Stack>
-  );
-}
-
-function StageSelect({ formik, field, label, stages, readOnly }: Props & { field: 'fromStageId' | 'toStageId'; label: string }) {
-  const touched = formik.touched[field];
-  const error = formik.errors[field];
-  return (
-    <ShakingTextField error={Boolean(touched && error)}>
-      <TextField select fullWidth size="small" label={label} disabled={readOnly} {...formik.getFieldProps(field)} error={Boolean(touched && error)} helperText={touched && error}>
-        {stages.map((stage) => <MenuItem key={stage.id} value={stage.id}>{stage.name}</MenuItem>)}
-      </TextField>
-    </ShakingTextField>
   );
 }

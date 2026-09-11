@@ -32,6 +32,7 @@ export type CreateAdmissionInquiry = {
   admissionOfferingId?: string | null;
   existingFamilyId?: string | null;
   createSeparateFamily?: boolean;
+  duplicateOverrideReason?: string | null;
   applicantName: string;
   phone: string;
   email?: string | null;

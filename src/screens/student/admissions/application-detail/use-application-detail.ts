@@ -6,9 +6,11 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { skipToken } from '@reduxjs/toolkit/query';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useGetAdmissionFormStageQuery } from 'src/redux/student/admissions/admission-form-stage-api';
 import {
   useGetAdmissionApplicationQuery,
   useGetAdmissionApplicationFormQuery,
@@ -28,6 +30,7 @@ import {
 
 export type RuntimeAction = 'skip' | 'override' | null;
 export type AdvanceOptions = {
+	concurrencyStamp?: string;
   reason?: string;
   transitionDefinitionId?: string;
   skipCurrentStage?: boolean;
@@ -38,6 +41,12 @@ export function useApplicationDetail(id: string) {
   const applicationQuery = useGetAdmissionApplicationQuery(id);
   const formQuery = useGetAdmissionApplicationFormQuery(id);
   const workflowQuery = useGetAdmissionApplicationWorkflowQuery(id);
+  const currentFormStage = workflowQuery.data?.stages.find(
+    (stage) => stage.id === workflowQuery.data?.currentStageInstanceId && stage.formStageEnabled
+  );
+  const formStageQuery = useGetAdmissionFormStageQuery(
+    currentFormStage ? { applicationId: id, stageId: currentFormStage.id } : skipToken
+  );
   const formHistoryQuery = useGetAdmissionApplicationFormHistoryQuery(id);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const [updateValues, updateState] = useUpdateAdmissionApplicationFormValuesMutation();
@@ -199,6 +208,7 @@ export function useApplicationDetail(id: string) {
     applicationQuery,
     formQuery,
     workflowQuery,
+    formStageQuery,
     formHistoryQuery,
     currentValues,
     errors,

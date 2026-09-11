@@ -12,6 +12,7 @@ import { TransitionHistoryCard } from './application-detail/transition-history-c
 import { ApplicationRuntimeForm } from './application-detail/application-runtime-form';
 import { ApplicationProgressCard } from './application-detail/application-progress-card';
 import { ApplicationDecisionCard } from './application-detail/application-decision-card';
+import { ApplicationManagedStages } from './application-detail/application-managed-stages';
 import { requiresStageCompletionDetails } from './application-detail/admission-stage-completion';
 import { AdmissionWorkflowRuntimeActionDialog } from './admission-workflow-runtime-action-dialog';
 import { AdmissionStageCompletionDialog } from './application-detail/admission-stage-completion-dialog';
@@ -72,9 +73,19 @@ export default function AdmissionApplicationDetailScreen() {
         application={application}
         workflow={workflow}
         currentStage={currentStage}
-        canAdvance={detail.canAdvance}
-        canSkip={detail.canSkip}
-        canOverride={detail.canOverride}
+        canAdvance={
+          detail.canAdvance &&
+          !currentStage?.formStageEnabled &&
+          !currentStage?.paymentStageEnabled &&
+          !currentStage?.offerStageEnabled &&
+          !currentStage?.seatStageEnabled &&
+          !currentStage?.assessmentEnabled &&
+          !currentStage?.documentVerificationEnabled &&
+          !currentStage?.eligibilityEnabled &&
+          !currentStage?.reviewEnabled
+        }
+        canSkip={detail.canSkip && !currentStage?.reviewEnabled && !currentStage?.paymentStageEnabled && !currentStage?.offerStageEnabled && !currentStage?.seatStageEnabled}
+        canOverride={detail.canOverride && !currentStage?.reviewEnabled && !currentStage?.paymentStageEnabled && !currentStage?.offerStageEnabled && !currentStage?.seatStageEnabled}
         advancing={detail.advanceState.isLoading}
         onAdvance={() => {
           if (requiresStageCompletionDetails(currentStage)) completionDialog.onTrue();
@@ -83,7 +94,16 @@ export default function AdmissionApplicationDetailScreen() {
         onSkip={() => detail.setRuntimeAction('skip')}
         onOverride={() => detail.setRuntimeAction('override')}
       />
-      <ApplicationDecisionCard application={application} />
+      <ApplicationManagedStages
+        application={application}
+        workflow={workflow}
+        canAdvance={detail.canAdvance}
+        advancing={detail.advanceState.isLoading}
+        onComplete={(concurrencyStamp) => {
+          detail.advance(concurrencyStamp ? { concurrencyStamp } : undefined);
+        }}
+      />
+      <ApplicationDecisionCard application={application} managedOffer={currentStage?.offerStageEnabled} />
       <TransitionHistoryCard workflow={workflow} />
       <FormHistoryCard history={detail.formHistoryQuery.data ?? []} />
       <ApplicationRuntimeForm
@@ -99,6 +119,9 @@ export default function AdmissionApplicationDetailScreen() {
         onValidateStep={detail.validateStep}
         onSave={detail.save}
         onSubmit={detail.submitApplication}
+        showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
+        canSubmitForm={detail.formStageQuery.currentData?.canSubmit ?? application.status === 0}
+        managedFormStage={Boolean(currentStage?.formStageEnabled)}
         canReopen={detail.canReopen}
         reopening={detail.reopenState.isLoading}
         onReopen={detail.reopenApplication}

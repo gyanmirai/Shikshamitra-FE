@@ -50,14 +50,13 @@ export function useFormListActions() {
     }
   };
   const save = async (values: CreateUpdateAdmissionForm) => {
-    const saved = await run(
-      () => editingId ? update({ id: editingId, body: values }).unwrap() : create(values).unwrap(),
-      'Form draft saved'
-    );
-    if (saved) {
-      dialog.onFalse();
-      setEditingId(null);
-    }
+    // Let the form dialog handle failures so it keeps the user's draft available for retry.
+    await (editingId
+      ? update({ id: editingId, body: values }).unwrap()
+      : create(values).unwrap());
+    shikshaMitraToast.success({ message: 'Form draft saved' });
+    dialog.onFalse();
+    setEditingId(null);
   };
   const close = () => { dialog.onFalse(); setEditingId(null); };
   const edit = (id: string) => { setEditingId(id); dialog.onTrue(); };
