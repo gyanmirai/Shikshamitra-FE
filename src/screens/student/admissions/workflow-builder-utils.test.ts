@@ -11,6 +11,7 @@ import {
   getTransitionStepLabel,
   serializeSimpleCondition,
   orderTransitionsByJourney,
+  normalizeAdmissionWorkflowFormStages,
 } from './workflow-builder-utils';
 
 const stage = (id: string, displayOrder: number): AdmissionWorkflowStage => ({
@@ -79,6 +80,23 @@ describe('workflow builder utilities', () => {
     expect(copy.isEntryStage).toBe(false);
     expect(copy.isTerminalStage).toBe(false);
     expect(result.map((item) => item.displayOrder)).toEqual([0, 1, 2]);
+  });
+
+  it('upgrades only legacy Form stages before saving or validating a workflow', () => {
+    const legacyForm = {
+      ...stage('form', 0),
+      stageType: 1 as const,
+      configurationJson: '{"formDefinitionId":"form-1","custom":{"kept":true}}',
+    };
+    const custom = { ...stage('custom', 1), configurationJson: '{"custom":true}' };
+    const result = normalizeAdmissionWorkflowFormStages([legacyForm, custom]);
+
+    expect(JSON.parse(result[0].configurationJson ?? '')).toMatchObject({
+      formDefinitionId: 'form-1',
+      custom: { kept: true },
+      form: { version: 1, enabled: false },
+    });
+    expect(result[1]).toBe(custom);
   });
 
   it('normalizes numeric and named stage types from the API', () => {

@@ -528,7 +528,6 @@ export const studentAdmissionsCrmType = {
   admissionForm: 'AdmissionForm',
   admissionApplication: 'AdmissionApplication',
   admissionApplicant: 'AdmissionApplicant',
-  studentOnboarding: 'StudentOnboarding',
   lead: 'Student-Admissions-Crm-Lead',
   configuration: 'Student-Admissions-Crm-Configuration',
   task: 'Student-Admissions-Crm-Task',

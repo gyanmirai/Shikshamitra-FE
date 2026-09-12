@@ -3,6 +3,8 @@ import type {
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { ensureAdmissionFormStageConfiguration } from 'src/redux/student/admissions/admission-form-stage-policy';
+
 type WorkflowTemplate = {
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
@@ -76,7 +78,9 @@ const transition = (
 });
 
 export function getRegistrationWorkflowTemplate(formDefinitionId?: string): WorkflowTemplate {
-  const formConfiguration = formDefinitionId ? JSON.stringify({ formDefinitionId }) : undefined;
+  const formConfiguration = formDefinitionId
+    ? ensureAdmissionFormStageConfiguration(JSON.stringify({ formDefinitionId }))
+    : undefined;
   const stages = STANDARD_ADMISSION_JOURNEY.map((item, index) =>
     stage(item.code, item.name, item.stageType, index, {
       description: item.description,

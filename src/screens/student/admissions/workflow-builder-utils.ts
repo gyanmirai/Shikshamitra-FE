@@ -4,6 +4,8 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { ensureAdmissionFormStageConfiguration } from 'src/redux/student/admissions/admission-form-stage-policy';
+
 export type SimpleTransitionCondition = {
   field: string;
   operator:
@@ -37,6 +39,15 @@ export const createStage = (
   isEntryStage,
   isTerminalStage: false,
 });
+
+export const normalizeAdmissionWorkflowFormStages = (
+  stages: AdmissionWorkflowStage[]
+): AdmissionWorkflowStage[] =>
+  stages.map((stage) => {
+    if (stage.stageType !== 1) return stage;
+    const configurationJson = ensureAdmissionFormStageConfiguration(stage.configurationJson);
+    return configurationJson === stage.configurationJson ? stage : { ...stage, configurationJson };
+  });
 
 export const reorderStages = (
   stages: AdmissionWorkflowStage[],

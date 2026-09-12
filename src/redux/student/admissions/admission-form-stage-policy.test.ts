@@ -1,14 +1,15 @@
-import { describe, expect, it } from 'vitest';
-
-import type { AdmissionForm } from './admission-forms-api';
+import { it, expect, describe } from 'vitest';
 
 import {
   DEFAULT_FORM_STAGE_POLICY,
   readAdmissionFormStagePolicy,
   writeAdmissionFormStagePolicy,
   writeAdmissionFormDefinitionId,
+  ensureAdmissionFormStageConfiguration,
   getAdmissionFormStageConfigurationError,
 } from './admission-form-stage-policy';
+
+import type { AdmissionForm } from './admission-forms-api';
 
 const form = {
   id: '4f3dcb27-9c94-4907-8a71-0839efed22c8',
@@ -25,13 +26,25 @@ const form = {
 } as AdmissionForm;
 
 describe('managed Form stage policy', () => {
-  it('keeps Basic mode compatible when no policy exists', () => {
-    expect(readAdmissionFormStagePolicy(JSON.stringify({ formDefinitionId: form.id }))).toBeNull();
-    expect(getAdmissionFormStageConfigurationError(JSON.stringify({ formDefinitionId: form.id }), [form])).toBeUndefined();
+  it('upgrades a legacy Basic configuration to an explicit disabled policy', () => {
+    const legacy = JSON.stringify({ formDefinitionId: form.id });
+    const upgraded = ensureAdmissionFormStageConfiguration(legacy);
+
+    expect(readAdmissionFormStagePolicy(legacy)).toBeNull();
+    expect(getAdmissionFormStageConfigurationError(legacy, [form])).toBeUndefined();
+    expect(JSON.parse(upgraded ?? '')).toEqual({
+      formDefinitionId: form.id,
+      form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: false },
+    });
   });
 
   it('preserves unrelated settings when selecting a form and editing its policy', () => {
     const selected = writeAdmissionFormDefinitionId(JSON.stringify({ custom: { kept: true } }), form.id);
+    expect(JSON.parse(selected)).toEqual({
+      custom: { kept: true },
+      formDefinitionId: form.id,
+      form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: false },
+    });
     const managed = writeAdmissionFormStagePolicy(selected, DEFAULT_FORM_STAGE_POLICY);
     expect(JSON.parse(managed)).toMatchObject({
       formDefinitionId: form.id,

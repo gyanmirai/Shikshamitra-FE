@@ -8,7 +8,7 @@ export type PermissionName = string | string[];
 const FEE_ADJUSTMENT_PERMISSION = 'Finance.Fees.Adjustment';
 const FEE_ADJUSTMENT_LEGACY_PREFIX = 'Finance.Adjustment';
 const ADMISSIONS_PERMISSION_PREFIX = 'Students.Admissions';
-const STUDENT_ONBOARDING_PERMISSION_PREFIX = 'Students.Onboarding';
+const STUDENT_ONBOARDING_PERMISSION_PREFIX = 'Students.Enrollment.AdmissionsCrm';
 const STUDENT_VIEW_ACTIONS = new Set(['View', 'ViewUsage', 'Download']);
 const STUDENT_ADD_ACTIONS = new Set([
   'Add',
@@ -69,10 +69,7 @@ const STUDENT_DELETE_ACTIONS = new Set([
 ]);
 
 const normalizeStudentPermission = (permissionName: string) => {
-  if (
-    !permissionName.startsWith(`${ADMISSIONS_PERMISSION_PREFIX}.`) &&
-    !permissionName.startsWith(`${STUDENT_ONBOARDING_PERMISSION_PREFIX}.`)
-  ) {
+  if (!permissionName.startsWith(`${ADMISSIONS_PERMISSION_PREFIX}.`)) {
     return permissionName;
   }
 
@@ -87,11 +84,14 @@ const normalizeStudentPermission = (permissionName: string) => {
   return permissionName;
 };
 
-// TODO(admissions): Remove this development-only bypass after Admissions permissions are assigned to dev roles.
-const isDevelopmentAdmissionsPermission = (permissionName: string) =>
+// TODO(student): Remove this development-only bypass after Admissions and Onboarding permissions
+// are assigned to local development roles.
+const isDevelopmentStudentPermission = (permissionName: string) =>
   process.env.NODE_ENV === 'development' &&
   (permissionName === ADMISSIONS_PERMISSION_PREFIX ||
-    permissionName.startsWith(`${ADMISSIONS_PERMISSION_PREFIX}.`));
+    permissionName.startsWith(`${ADMISSIONS_PERMISSION_PREFIX}.`) ||
+    permissionName === STUDENT_ONBOARDING_PERMISSION_PREFIX ||
+    permissionName.startsWith(`${STUDENT_ONBOARDING_PERMISSION_PREFIX}.`));
 
 export const hasGrantedPermission = (
   permissions: GrantedPermission[] | undefined,
@@ -102,7 +102,7 @@ export const hasGrantedPermission = (
     return permissionName.some((name) => hasGrantedPermission(permissions, name));
   }
 
-  if (isDevelopmentAdmissionsPermission(permissionName)) {
+  if (isDevelopmentStudentPermission(permissionName)) {
     return true;
   }
 

@@ -1,5 +1,5 @@
-import StudentOnboardingSettingsScreen from 'src/screens/student/onboarding/student-onboarding-settings';
+import OnboardingSettingsPage from 'src/screens/student/onboarding/setting/onboarding-settings-page';
 
-export default function Page() {
-  return <StudentOnboardingSettingsScreen />;
+export default function StudentOnboardingSettingsRoute() {
+  return <OnboardingSettingsPage />;
 }

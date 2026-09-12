@@ -20,7 +20,7 @@ TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query c
 | `admission-offerings-api.ts`    | Offering list, detail, CRUD, explicit state commands, clone, readiness, availability, and bulk preview or commit | Offerings, inquiry selection, Applicant 360 |
 | `admission-workflows-api.ts`    | Workflow CRUD, graph save, stage metadata, validation, publish, archive, clone, versions, and usage              | Workflow list and dedicated builder         |
 | `admission-forms-api.ts`        | Form definitions, sections, fields, clone, publish, validation, preview                                          | Form builder and preview                    |
-| `admission-inquiries-api.ts`    | Server-paged inquiry list, create, duplicate check, and basic contacted action                                    | Inquiry CRM and inquiry dialog              |
+| `admission-inquiries-api.ts`    | Server-paged inquiry list, create, duplicate check, and basic contacted action                                   | Inquiry CRM and inquiry dialog              |
 | `admission-applicants-api.ts`   | Applicant 360, notes, activities                                                                                 | Applicant 360                               |
 | `admission-applications-api.ts` | Start application, list, frozen workflow, form values, draft save, submit, stage advance, and transition history | Application list and detail                 |
 
@@ -31,7 +31,6 @@ Applicant bookings, attendance, results, review, cancellation, retakes, and waiv
 The shared response types are in `src/redux/student/admissions/admission-assessment-types.ts`.
 Assessment stage configuration uses `src/redux/student/admissions/admission-assessment-policy.ts`, preserving unrelated stage configuration and keeping legacy workflows opted out by default.
 Document stage configuration uses `admission-document-policy.ts`, `admission-document-policy-validation.ts`, and `admission-condition-rule.ts`. The editor preserves unrelated settings and rejects unsupported policy versions. `admission-document-settings-api.ts` loads optional student document categories using workflow-view access.
-`student-onboarding-documents-api.ts` reads effective document requirements and uploads files through an active onboarding case. Uploads invalidate onboarding readiness, student records, and student-document queries. The optional case response flag `documentUploadsEnabled` controls mounting the panel when frontend and backend releases differ.
 Both clients use the existing global RTK Query API and refresh assessment/application data after mutations; workflow or offering changes also invalidate assessment scope choices.
 Server-provided assessment capabilities determine available applicant actions, while the existing workflow-advance client remains responsible for progression.
 

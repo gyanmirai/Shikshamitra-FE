@@ -97,7 +97,7 @@ export function useAdmissionApplicationDecisions(id: string, status?: AdmissionA
         input: { ...value, concurrencyStamp, idempotencyKey: finalizationKey.current },
       }).unwrap();
       finalizationKey.current = null;
-      shikshaMitraToast.success({ message: 'Admission finalized; Student Onboarding is ready' });
+      shikshaMitraToast.success({ message: 'Admission finalized' });
       return true;
     } catch (error) {
       shikshaMitraToast.error({

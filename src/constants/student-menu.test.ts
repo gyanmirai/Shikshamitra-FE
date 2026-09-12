@@ -31,10 +31,28 @@ describe('student navigation', () => {
       Dashboard: studentVisibilityPermissions.dashboard,
       'Student Records': studentVisibilityPermissions.records,
       Admissions: studentVisibilityPermissions.admissions,
-      'Student Onboarding': studentVisibilityPermissions.onboarding,
+      'Student Onboarding': studentVisibilityPermissions.admissions,
       Attendance: studentVisibilityPermissions.attendance,
       Notification: studentVisibilityPermissions.notification,
     });
+  });
+
+  it('exposes the Student Onboarding setup and settings hierarchy', () => {
+    const sections = Object.values(studentModule(true));
+    const items = sections.flatMap((section) => section.flatMap((group) => group.items));
+    const onboarding = items.find((item) => item.title === 'Student Onboarding') as
+      NestedMenuItem | undefined;
+
+    expect(onboarding?.path).toBe('/student/onboarding');
+    expect(onboarding?.children?.map((item) => item.title)).toEqual(['Student Setup', 'Settings']);
+    expect(onboarding?.children?.find((item) => item.title === 'Student Setup')?.path).toBe(
+      '/student/onboarding/setup'
+    );
+    expect(
+      onboarding?.children
+        ?.find((item) => item.title === 'Settings')
+        ?.children?.map((item) => item.title)
+    ).toEqual(['Readiness & Access', 'Numbering & Placement']);
   });
 
   it('exposes all notification permission groups in the permission editor', () => {

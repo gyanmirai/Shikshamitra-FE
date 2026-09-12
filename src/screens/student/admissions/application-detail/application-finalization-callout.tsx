@@ -18,8 +18,8 @@ export function ApplicationFinalizationCallout({
     <>
       <Divider sx={{ my: 2 }} />
       <Typography variant="body2" color="text.secondary">
-        The offer is accepted. Finalize Admissions to link the Student identity and start
-        onboarding. Placement and enrollment happen later.
+        The offer is accepted. Finalize Admissions to create or link the Student identity. Placement
+        and enrollment happen later.
       </Typography>
       <Button
         variant="contained"

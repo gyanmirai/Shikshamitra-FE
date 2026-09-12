@@ -58,8 +58,6 @@ A Document verification stage keeps **Basic completion (existing process)** unti
 
 Editing requirements does not rewrite existing application evidence. See the [backend student module](../../../Shikshamitra-BE/docs/modules/student/README.md) for policy validation, permissions, completion gates, and handoff rules.
 
-The onboarding case's Documents step also shows required student uploads and any accepted admission evidence that already satisfies them. Authorized staff can supply missing files from an active case. Uploads refresh case readiness and preserve the admission evidence history; errors retain the selected file. The panel appears only when the backend advertises document-upload support, preserving compatibility with older servers.
-
 ## Eligibility setup
 
 An Eligibility stage keeps **Basic completion (existing process)** until an administrator chooses **Check eligibility rules** in a draft workflow.
@@ -99,20 +97,20 @@ The queue offers assigned-to-me and overdue filters with server pagination. Opti
 The full-screen editor in `src/screens/student/admissions/admission-form-dialog.tsx` uses the shared `CustomStepperWithFormik` for three ordered stages.
 The shared stepper owns one Formik state across the stages; **Back** preserves entered values and **Next** validates the current stage without saving.
 
-| Stage | User interaction |
-| --- | --- |
-| **Form details** | Enter the name, code, description, and applicant layout; a new form can start from **Use registration template**. |
-| **Build form** | Use the complete field library, form structure, and selected-field settings workspace. |
+| Stage             | User interaction                                                                                                                                                       |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Form details**  | Enter the name, code, description, and applicant layout; a new form can start from **Use registration template**.                                                      |
+| **Build form**    | Use the complete field library, form structure, and selected-field settings workspace.                                                                                 |
 | **Review & save** | Review identity, layout, field counts, ordered sections, and advisory publishing checks; return through **Edit details** or **Edit fields**, or choose **Save draft**. |
 
 Details validation checks name, code, layout, and fields per row; the builder stage checks the section and field schema.
 The final save validates the complete draft schema and is the only wizard action that persists the form.
 Publishing checks in the review are advisory and do not add a separate draft-save gate.
 
-| Workspace area | User interaction |
-| --- | --- |
-| **Add fields** | Search student fields or choose a custom field; the destination section is displayed above the library and each field has an explicit add action. |
-| **Your form** | Arrange steps, sections, and fields; select a field to customize it. |
+| Workspace area     | User interaction                                                                                                                                                                                                     |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Add fields**     | Search student fields or choose a custom field; the destination section is displayed above the library and each field has an explicit add action.                                                                    |
+| **Your form**      | Arrange steps, sections, and fields; select a field to customize it.                                                                                                                                                 |
 | **Field settings** | See the selected field and its section, then edit its label, type, required state, and help text; expand additional settings for defaults, read-only access, data connection, codes, visibility, and advanced rules. |
 
 Within **Build form**, desktop shows all three workspace areas together; narrower screens use **Add fields**, **Your form**, and **Field settings** tabs.

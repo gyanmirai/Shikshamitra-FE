@@ -22,7 +22,6 @@ export type AdmissionApplication = {
   offerExpiresAt?: string | null;
   offerAcceptedAt?: string | null;
   studentId?: string | null;
-  onboardingCaseId?: string | null;
   finalizedAt?: string | null;
   enrolledStudentId?: string | null;
   studentEnrollmentId?: string | null;
@@ -206,7 +205,6 @@ export type FinalizeAdmissionInput = {
 export type AdmissionFinalizationResult = {
   application: AdmissionApplication;
   studentId: string;
-  onboardingCaseId: string;
   reusedExistingStudent: boolean;
 };
 type Result<T> = { data?: T };
@@ -439,7 +437,6 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: [
         studentAdmissionsCrmType.admissionApplication,
         studentAdmissionsCrmType.admissionApplicant,
-        studentAdmissionsCrmType.studentOnboarding,
       ],
     }),
     advanceAdmissionApplicationWorkflow: builder.mutation<

@@ -34,15 +34,15 @@ For browser validation, use the Codex in-app browser after automated checks when
 
 ## Coverage map
 
-| Change area             | First checks                                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Cycles or offerings     | `admission-cycles-api.ts`, `admission-offerings-api.ts`, offering model tests, cycles and offerings screens, route/menu review |
-| Workflow builder        | `admission-workflows-api.ts`, list and builder screens, graph utilities, publish, validation, preview, versions, and usage     |
+| Change area             | First checks                                                                                                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cycles or offerings     | `admission-cycles-api.ts`, `admission-offerings-api.ts`, offering model tests, cycles and offerings screens, route/menu review                                  |
+| Workflow builder        | `admission-workflows-api.ts`, list and builder screens, graph utilities, publish, validation, preview, versions, and usage                                      |
 | Dynamic form builder    | `admission-forms-api.ts`, shared Formik wizard, stage validation, responsive builder panels/tabs, review, draft recovery, preview rules, and runtime validation |
-| Form builder or preview | `admission-forms-api.ts`, form screen, preview and field visibility checks                                                     |
-| Inquiry CRM             | `admission-inquiries-api.ts`, inquiry screen, duplicate and contacted workflows                                                |
-| Applicant 360           | `admission-applicants-api.ts`, Applicant 360 screen, notes and activity states                                                 |
-| Application runtime     | `admission-applications-api.ts`, application detail, draft, concurrency, field validation, and submit flow                     |
+| Form builder or preview | `admission-forms-api.ts`, form screen, preview and field visibility checks                                                                                      |
+| Inquiry CRM             | `admission-inquiries-api.ts`, inquiry screen, duplicate and contacted workflows                                                                                 |
+| Applicant 360           | `admission-applicants-api.ts`, Applicant 360 screen, notes and activity states                                                                                  |
+| Application runtime     | `admission-applications-api.ts`, application detail, draft, concurrency, field validation, and submit flow                                                      |
 
 ## Managed assessment checks
 
@@ -69,8 +69,6 @@ Stage editor coverage is in `workflow-document-editor.test.tsx`, with transition
 
 Browser setup checks should include adding a standard and custom document, invalid conditional input, cancellation with unsaved changes, independent review, a waiver transition, and reopening a published workflow read-only.
 
-`src/screens/student/onboarding/onboarding-documents.test.tsx` covers multipart case uploads, checklist and readiness invalidation, accepted admission evidence, read-only access, and retaining the selected file after a failed request. `npm run test:admissions` includes these onboarding checks.
-
 Managed document runtime regressions are included in `npm run test:admissions`.
 They exercise actual RTK Query requests with network fixtures: multipart boundaries, application concurrency stamps, cache refresh after conflicts, authorized private downloads and URL cleanup, checklist completion gating, replacement reasons, local dirty-dialog recovery, file restrictions, and lazy history without mutation controls.
 
@@ -83,7 +81,7 @@ node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/v
 The final document browser smoke should cover file selection and failed-upload recovery, original checks, reviewer decisions and replacement history, an authorized waiver, completion blockers, and the read-only student Documents handoff at the three supported viewports.
 A network-fixture test proves frontend behavior; backend tests remain responsible for private storage, authorization, tenant scope, file validation, immutable evidence, and finalization.
 
-Document verification evidence recorded on 2026-09-10: the consolidated admissions/onboarding run passed 48 files and 214 tests. One subsequently added custom conditional original-document creation regression also passed with the requirement-editor file (3 tests). TypeScript, focused ESLint, and the student documentation validator passed. The Codex in-app browser exercised the real components with isolated network fixtures: basic-to-managed configuration, a conditional custom requirement, independent-review and waiver settings, original-only and upload-plus-original acceptance, required replacement/waiver reasons, progress and completion gates, retained history, and onboarding upload limits. Actual multipart uploads and failed-upload recovery were covered by automated network-fixture tests; they were not manually uploaded in that browser run. Existing live Assessments still displayed its normal setup state. The local database migration was applied and verified; authenticated verification was then awaiting an API restart. The external restart and subsequent live reads are recorded in the 11 September follow-up below.
+Document verification evidence recorded on 2026-09-10: the Admissions document suite, TypeScript, focused ESLint, and the student documentation validator passed. The Codex in-app browser exercised the real components with isolated network fixtures: basic-to-managed configuration, a conditional custom requirement, independent-review and waiver settings, original-only and upload-plus-original acceptance, required replacement and waiver reasons, progress and completion gates, and retained history. Existing live Assessments still displayed its normal setup state. The local database migration was applied and verified; authenticated verification was then awaiting an API restart. The external restart and subsequent live reads are recorded in the 11 September follow-up below.
 
 ## Managed eligibility checks
 
@@ -100,7 +98,7 @@ Full integration, backend enforcement, migration, and authenticated browser chec
 
 Configuration tests cover basic/managed compatibility, unsupported settings, age limits and cutoff dates, actual published answer selection, exception roles, published read-only views, and dirty-dialog preservation.
 Transition tests cover eligibility presets, source changes, and exact preservation of complex or unsupported saved rule JSON.
-Run these together with existing admission and onboarding regressions using `npm run test:admissions`.
+Run these together with existing Admissions regressions using `npm run test:admissions`.
 On 2026-09-10, the consolidated suite passed 61 files and 272 tests; a subsequent numeric-list selection regression passed with its 3-test answer-editor file.
 Global TypeScript and focused ESLint passed after correcting test-fixture type errors.
 The final Codex browser review used real components with isolated local API fixtures: editing age/answer/assessment/document criteria, required exception reasons, retained input after failure, independent review, explicit continuation, missing-information guidance, stale rechecks, and earlier evaluation history passed.
@@ -113,17 +111,17 @@ Verify that checking eligibility does not automatically advance the workflow and
 
 ## Managed Review checks
 
-Run `npm run test:admissions` for the combined admissions, onboarding, RTK Query and shared-dialog regressions, followed by `npm run ts`. Review coverage lives in `src/screens/student/admissions/review`, the workflow builder's `workflow-review-*` and `review-*` tests, and `src/redux/student/admissions/admission-review-*.test.ts`.
+Run `npm run test:admissions` for the combined Admissions, RTK Query and shared-dialog regressions, followed by `npm run ts`. Review coverage lives in `src/screens/student/admissions/review`, the workflow builder's `workflow-review-*` and `review-*` tests, and `src/redux/student/admissions/admission-review-*.test.ts`.
 
-| Surface | Required checks |
-| --- | --- |
-| Optional setup | Basic completion preserves legacy behavior; managed settings retain unrelated configuration, reject unsupported versions, and prevent duplicate managed Review stages. |
-| Responsibility | Role/reviewer search uses the real client; Enter searches without saving the parent form. Changing the role clears an incompatible selection. |
-| Prerequisites and routes | Only earlier managed stages are selectable. Removed sources show actionable validation. Decision routes preserve complex conditions. |
-| Review workspace | Required checklist items and a reason gate submission; incomplete drafts remain available. Submitting a recommendation does not record an admission decision. |
-| Recovery | Draft, assignment, correction and final-decision requests retain input after errors. Reloading current data requires explicit confirmation before discarding unsaved input. |
-| Queue | Server pagination and assigned/overdue filters retain the expected page convention, reset on filter changes, and link to the existing application. Permission denial skips the read. |
-| Decisions | Existing Approve/Reject/Waitlist controls follow server capabilities. Stale evidence blocks progression, offer and finalization; historical re-review supports reaffirming approval. |
+| Surface                  | Required checks                                                                                                                                                                      |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Optional setup           | Basic completion preserves legacy behavior; managed settings retain unrelated configuration, reject unsupported versions, and prevent duplicate managed Review stages.               |
+| Responsibility           | Role/reviewer search uses the real client; Enter searches without saving the parent form. Changing the role clears an incompatible selection.                                        |
+| Prerequisites and routes | Only earlier managed stages are selectable. Removed sources show actionable validation. Decision routes preserve complex conditions.                                                 |
+| Review workspace         | Required checklist items and a reason gate submission; incomplete drafts remain available. Submitting a recommendation does not record an admission decision.                        |
+| Recovery                 | Draft, assignment, correction and final-decision requests retain input after errors. Reloading current data requires explicit confirmation before discarding unsaved input.          |
+| Queue                    | Server pagination and assigned/overdue filters retain the expected page convention, reset on filter changes, and link to the existing application. Permission denial skips the read. |
+| Decisions                | Existing Approve/Reject/Waitlist controls follow server capabilities. Stale evidence blocks progression, offer and finalization; historical re-review supports reaffirming approval. |
 
 Perform the final visual smoke in the Codex browser after automated checks. Inspect a 30-item checklist at 390 pixels, including wrapped labels, scrollable content and reachable footer actions. Check Basic/managed setup, source selection, discard, reload recovery, recommendation history and the queue. An isolated fixture harness proves component interactions only; it must not be described as authenticated backend execution.
 
@@ -155,17 +153,17 @@ npx eslint src/screens/student/admissions/admission-form-dialog.tsx src/screens/
 Run automated checks first, then perform the final smoke test in the Codex in-app browser when an authenticated tenant is available.
 Validate at 390 × 844, 768 × 1024, and 1440 × 900; confirm the footer actions remain reachable and the editor does not create horizontal page overflow.
 
-| Surface | Browser acceptance checks |
-| --- | --- |
+| Surface           | Browser acceptance checks                                                                                                                                                                    |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Wizard navigation | **Form details**, **Build form**, and **Review & save** use the shared stepper's single Formik state; **Back** and review edit links retain values, and **Next** never sends a save request. |
-| Stage validation | Invalid name/code blocks leaving details without validating unfinished fields; invalid section/field schema blocks leaving the builder; final **Save draft** validates the complete draft. |
-| Form details | The registration template is available for new forms in the first stage; moving forward retains identity, layout, description, and template content. |
-| Workspace | The second stage provides all builder controls; desktop shows three panels and narrow-screen tabs preserve field selection and entered values. |
-| Field editing | Add a field to the displayed section, edit its label and required state, and reopen optional settings without losing defaults, data connections, or rules. |
-| Form structure | Reorder fields and sections, confirm deletion, and verify step membership and the selected field remain correct. |
-| Draft protection | Reject discard and template-replacement confirmations and verify entered values remain; accept replacement and verify the template appears. |
-| Review | The final stage displays identity, layout, counts, and ordered structure; publishing checks are advisory and do not block a schema-valid draft save. |
-| Save recovery | A failed request retains the editor and values; retry saves the same draft successfully and closes the editor. |
+| Stage validation  | Invalid name/code blocks leaving details without validating unfinished fields; invalid section/field schema blocks leaving the builder; final **Save draft** validates the complete draft.   |
+| Form details      | The registration template is available for new forms in the first stage; moving forward retains identity, layout, description, and template content.                                         |
+| Workspace         | The second stage provides all builder controls; desktop shows three panels and narrow-screen tabs preserve field selection and entered values.                                               |
+| Field editing     | Add a field to the displayed section, edit its label and required state, and reopen optional settings without losing defaults, data connections, or rules.                                   |
+| Form structure    | Reorder fields and sections, confirm deletion, and verify step membership and the selected field remain correct.                                                                             |
+| Draft protection  | Reject discard and template-replacement confirmations and verify entered values remain; accept replacement and verify the template appears.                                                  |
+| Review            | The final stage displays identity, layout, counts, and ordered structure; publishing checks are advisory and do not block a schema-valid draft save.                                         |
+| Save recovery     | A failed request retains the editor and values; retry saves the same draft successfully and closes the editor.                                                                               |
 
 Supporting browser automation does not replace the final in-app browser check; record an unavailable session or tool as a validation limitation.
 

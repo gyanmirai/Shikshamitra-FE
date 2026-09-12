@@ -20,6 +20,17 @@ describe('hasGrantedPermission', () => {
     ).toBe(true);
   });
 
+  it('temporarily grants Student Onboarding permissions in development', () => {
+    vi.stubEnv('NODE_ENV', 'development');
+
+    expect(
+      hasGrantedPermission(undefined, 'Students.Enrollment.AdmissionsCrm.ViewActivation')
+    ).toBe(true);
+    expect(hasGrantedPermission([], 'Students.Enrollment.AdmissionsCrm.ManageConfiguration')).toBe(
+      true
+    );
+  });
+
   it('does not bypass Admissions permissions outside development', () => {
     vi.stubEnv('NODE_ENV', 'production');
 
@@ -30,6 +41,9 @@ describe('hasGrantedPermission', () => {
         'Students.Admissions.View'
       )
     ).toBe(false);
+    expect(hasGrantedPermission([], 'Students.Enrollment.AdmissionsCrm.ViewActivation')).toBe(
+      false
+    );
   });
 
   it('keeps unrelated permissions protected in development', () => {
@@ -44,7 +58,6 @@ describe('hasGrantedPermission', () => {
       { name: 'Students.Admissions.Applications.View', isGranted: true },
       { name: 'Students.Admissions.Applications.Add', isGranted: true },
       { name: 'Students.Admissions.Applicants.Add', isGranted: true },
-      { name: 'Students.Onboarding.Delete', isGranted: true },
     ];
 
     expect(hasGrantedPermission(permissions, 'Students.Admissions.Applications.View')).toBe(true);
@@ -52,7 +65,6 @@ describe('hasGrantedPermission', () => {
     expect(hasGrantedPermission(permissions, 'Students.Admissions.Applicants.Notes.Create')).toBe(
       true
     );
-    expect(hasGrantedPermission(permissions, 'Students.Onboarding.Cancel')).toBe(true);
     expect(hasGrantedPermission(permissions, 'Students.Admissions.Applications.Delete')).toBe(
       false
     );
