@@ -47,3 +47,7 @@ Add or update tests when a change affects these areas.
 | Approval or rejection behavior | Screen or client mutation test |
 | Audit Trail mapping | Mapper test |
 | Route-level behavior | Playwright test before release sign-off |
+
+## Student fee assignment
+
+The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).

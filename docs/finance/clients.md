@@ -72,3 +72,7 @@ Keep these rules when changing Finance clients.
 | Use exact query args for cache updates       | Optimistic updates need the same cache key as the query                |
 | Keep mutation invalidation predictable       | Financial records must refresh after status changes                    |
 | Keep backend DTO changes as the fallback     | Prefer frontend mappers unless the backend contract blocks correctness |
+
+## Student fee assignment
+
+The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).

@@ -79,3 +79,7 @@ git diff --check
 
 Use the files listed above and current source paths for Finance behavior.
 Do not restore old integration plans under `docs/`.
+
+## Student fee assignment
+
+The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).

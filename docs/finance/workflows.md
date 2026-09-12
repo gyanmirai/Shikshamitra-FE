@@ -79,3 +79,7 @@ The four bill-generation rules are: installment start date, X days before due da
 2. Both drawers lazily load the immutable Collection Policy version stream when opened.
 3. Version History compares each snapshot with its predecessor and shows field-level changes, actor, timestamp, action, status, and reason when present.
 4. Audit Trail presents those same immutable records as create, update, clone, archive, and unarchive lifecycle events, so policy audit evidence cannot drift from version history.
+
+## Student fee assignment
+
+The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).
