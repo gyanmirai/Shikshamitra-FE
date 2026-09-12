@@ -2060,7 +2060,6 @@ const LessonPlanScreen = () => {
               onReject={handleReject}
               onRequestChanges={handleRequestChanges}
               onViewDetails={openDetails}
-              onRevisePlan={openEditLesson}
               isApproving={isApproving}
               isRejecting={isRejecting}
               isRequesting={isRequestingPlanChanges}

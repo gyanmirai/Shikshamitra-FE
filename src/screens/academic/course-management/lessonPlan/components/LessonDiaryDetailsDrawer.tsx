@@ -318,7 +318,10 @@ const LessonDiaryDetailsDrawer = ({ open, plan, diary, onClose }: Props) => {
           <ProgressRow label="Planned Completion" value={plan.plannedCompletionPercentage} />
 
           {planReviewRemarks ? (
-            <LessonReviewComment remarks={planReviewRemarks} />
+            <LessonReviewComment
+              remarks={planReviewRemarks}
+              reviewerName={plan.reviewedByName}
+            />
           ) : null}
         </AccordionCard>
 

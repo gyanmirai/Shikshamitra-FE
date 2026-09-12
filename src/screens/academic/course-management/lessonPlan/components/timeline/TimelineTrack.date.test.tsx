@@ -65,6 +65,7 @@ describe('daily timeline date navigation', () => {
       { timetableSlotId: 'slot-5', subjectName: 'English', lessonPlan: null },
     ];
     const onSubmitDiary = vi.fn();
+    const onViewDetails = vi.fn();
     const theme = createTheme(defaultSettings);
     const timeline = (date: string) => (
       <ThemeProvider theme={theme}>
@@ -73,7 +74,7 @@ describe('daily timeline date navigation', () => {
           selectedDate={dayjs(date)}
           onAddLesson={vi.fn()}
           onEditLesson={vi.fn()}
-          onViewDetails={vi.fn()}
+          onViewDetails={onViewDetails}
           onSubmitDiary={onSubmitDiary}
           onSubmitPlan={vi.fn()}
         />
@@ -86,6 +87,13 @@ describe('daily timeline date navigation', () => {
 
     rerender(timeline('2026-09-09'));
     expect(screen.getByText('Topic two')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'View' }));
+    expect(onViewDetails).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        period: 'Period 4',
+        plannedTime: '08:30 AM - 09:00 AM',
+      })
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Record Diary' }));
     expect(onSubmitDiary).toHaveBeenCalledExactlyOnceWith(expect.objectContaining(futurePlan));
 

@@ -439,7 +439,8 @@ export const LessonTimelineCard: React.FC<LessonTimelineCardProps> = ({
                   borderColor: 'warning.main',
                 }}
               >
-                <strong>HOD Remarks:</strong> {plan.reviewRemarks}
+                <strong>{plan.reviewedByName?.trim() || 'Reviewer'} requested:</strong>{' '}
+                {plan.reviewRemarks}
               </Alert>
             )}
             {plan.insightMessage && (

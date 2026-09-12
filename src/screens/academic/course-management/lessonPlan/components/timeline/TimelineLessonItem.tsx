@@ -67,6 +67,10 @@ export const TimelineLessonItem: React.FC<Props> = ({
         className: plan.className || plan.standardName || slot.standardName,
         divisionName: plan.divisionName || slot.divisionName,
         subjectName: plan.subjectName || slot.subjectName,
+        period: plan.period || plan.periodName || slot.periodName,
+        plannedTime:
+          plan.plannedTime ||
+          (slot.startTime && slot.endTime ? `${slot.startTime} - ${slot.endTime}` : ''),
       }
     : null;
 
@@ -312,6 +316,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
             <LessonReviewComment
               inline
               remarks={plan.reviewRemarks}
+              reviewerName={plan.reviewedByName}
               severity={statusConfig.stateKey === 'rejected' ? 'error' : 'warning'}
             />
           </Box>
@@ -479,16 +484,20 @@ export const TimelineLessonItem: React.FC<Props> = ({
                   >
                     Edit
                   </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    color="inherit"
-                    startIcon={<Iconify icon="solar:plain-bold" width={15} />}
-                    onClick={() => onSubmitPlan(plan.id || plan.Id)}
-                    sx={actionButtonSx}
-                  >
-                    Submit
-                  </Button>
+                  <Tooltip title="Edit and save changes before resubmitting." arrow>
+                    <Box component="span">
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        color="inherit"
+                        disabled
+                        startIcon={<Iconify icon="solar:plain-bold" width={15} />}
+                        sx={actionButtonSx}
+                      >
+                        Submit
+                      </Button>
+                    </Box>
+                  </Tooltip>
                 </>
               )}
 

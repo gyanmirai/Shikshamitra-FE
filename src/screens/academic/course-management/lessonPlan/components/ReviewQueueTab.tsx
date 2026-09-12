@@ -1,50 +1,45 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
-import type { LessonPlanRow } from '../lessonPlanData';
-import type { ReviewDateFilterMode } from './review-queue/FilterToolbar';
 
 import dayjs from 'dayjs';
-import React, { useMemo, useState } from 'react';
 import Box from '@mui/material/Box';
+import Chip from '@mui/material/Chip';
 import Card from '@mui/material/Card';
+import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
 import TextField from '@mui/material/TextField';
+import React, { useMemo, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import DialogActions from '@mui/material/DialogActions';
-import FormControlLabel from '@mui/material/FormControlLabel';
 import { alpha, useTheme } from '@mui/material/styles';
-
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import { Label } from 'src/components/label';
-import { shikshaMitraToast } from 'src/components/toast';
+import DialogActions from '@mui/material/DialogActions';
 import SubmitButton from 'src/components/submit-button';
 import CancelButton from 'src/components/cancel-button';
-import { EmptyContent } from 'src/components/empty-content';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { EmptyContent } from 'src/components/empty-content';
+import FormControlLabel from '@mui/material/FormControlLabel';
 import ThreeDotsActions from 'src/components/three-dots-actions';
-import Paper from '@mui/material/Paper';
-import Chip from '@mui/material/Chip';
-import { academicPaths } from 'src/constants/academic-menu';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { ReviewCard, type ReviewItem } from './review-queue/ReviewCard';
 import { useReviewSubmissionLock } from '../hooks/use-review-submission-lock';
-import StatusBadge from './review-queue/StatusBadge';
-import MetricCard from './review-queue/MetricCard';
-import ReviewCard, { type ReviewItem } from './review-queue/ReviewCard';
-import FilterToolbar from './review-queue/FilterToolbar';
-import { SkeletonCardGrid, SkeletonTable } from './review-queue/SkeletonLoader';
-import ReviewStatusTabs, { type ReviewStatusFilter } from './ReviewStatusTabs';
+import { ReviewStatusTabs, type ReviewStatusFilter } from './ReviewStatusTabs';
+import { SkeletonTable, SkeletonCardGrid } from './review-queue/SkeletonLoader';
+import { FilterToolbar, type ReviewDateFilterMode } from './review-queue/FilterToolbar';
+
+import type { LessonPlanRow } from '../lessonPlanData';
 
 type ReviewTarget = { type: 'plan'; id: string };
 
@@ -115,7 +110,6 @@ type Props = {
   onReject: (target: ReviewTarget, comment: string) => Promise<boolean>;
   onRequestChanges: (target: ReviewTarget, comment: string) => Promise<boolean>;
   onViewDetails?: (plan: LessonPlanRow) => void;
-  onRevisePlan?: (plan: LessonPlanRow) => void;
   isApproving?: boolean;
   isRejecting?: boolean;
   isRequesting?: boolean;
@@ -131,7 +125,6 @@ export const ReviewQueueTab = ({
   onReject,
   onRequestChanges,
   onViewDetails,
-  onRevisePlan,
   isApproving = false,
   isRejecting = false,
   isRequesting = false,
@@ -189,7 +182,7 @@ export const ReviewQueueTab = ({
 
   const submitReview = async () => {
     if (!review.target) return;
-    const target = review.target;
+    const { target } = review;
     if (commentRequired && !review.comment.trim()) {
       setReviewCommentTouched(true);
       return;
@@ -311,44 +304,46 @@ export const ReviewQueueTab = ({
   );
 
   // Filtering Logic
-  const filteredReviewRows = useMemo(() => {
-    return reviewRows.filter((row) => {
-      if (statusFilter !== 'all' && row.status !== statusFilter) return false;
+  const filteredReviewRows = useMemo(
+    () =>
+      reviewRows.filter((row) => {
+        if (statusFilter !== 'all' && row.status !== statusFilter) return false;
 
-      const searchTxt = teacherSearch.trim().toLowerCase();
-      if (searchTxt && !row.teacherName.toLowerCase().includes(searchTxt)) {
-        return false;
-      }
+        const searchTxt = teacherSearch.trim().toLowerCase();
+        if (searchTxt && !row.teacherName.toLowerCase().includes(searchTxt)) {
+          return false;
+        }
 
-      if (selectedClass && row.classDivision !== selectedClass) return false;
-      if (selectedSubject && row.subjectName !== selectedSubject) return false;
-      if (selectedReviewer && row.reviewedByName !== selectedReviewer) return false;
+        if (selectedClass && row.classDivision !== selectedClass) return false;
+        if (selectedSubject && row.subjectName !== selectedSubject) return false;
+        if (selectedReviewer && row.reviewedByName !== selectedReviewer) return false;
 
-      const submittedDate = dayjs(row.submittedDate);
-      if (!submittedDate.isValid() || dateFilterMode === 'all') return true;
+        const submittedDate = dayjs(row.submittedDate);
+        if (!submittedDate.isValid() || dateFilterMode === 'all') return true;
 
-      if (dateFilterMode === 'day') {
-        return filterDate ? submittedDate.isSame(filterDate, 'day') : true;
-      }
+        if (dateFilterMode === 'day') {
+          return filterDate ? submittedDate.isSame(filterDate, 'day') : true;
+        }
 
-      const start = rangeStart?.startOf('day');
-      const end = rangeEnd?.endOf('day');
-      if (start && submittedDate.isBefore(start, 'day')) return false;
-      if (end && submittedDate.isAfter(end, 'day')) return false;
-      return true;
-    });
-  }, [
-    reviewRows,
-    statusFilter,
-    teacherSearch,
-    selectedClass,
-    selectedSubject,
-    selectedReviewer,
-    dateFilterMode,
-    filterDate,
-    rangeStart,
-    rangeEnd,
-  ]);
+        const start = rangeStart?.startOf('day');
+        const end = rangeEnd?.endOf('day');
+        if (start && submittedDate.isBefore(start, 'day')) return false;
+        if (end && submittedDate.isAfter(end, 'day')) return false;
+        return true;
+      }),
+    [
+      reviewRows,
+      statusFilter,
+      teacherSearch,
+      selectedClass,
+      selectedSubject,
+      selectedReviewer,
+      dateFilterMode,
+      filterDate,
+      rangeStart,
+      rangeEnd,
+    ]
+  );
 
   const isFiltered =
     dateFilterMode !== 'all' ||
@@ -513,11 +508,6 @@ export const ReviewQueueTab = ({
                 onRequestChanges={() => openReview({ type: 'plan', id: row.id }, 'changes')}
                 onReject={() => openReview({ type: 'plan', id: row.id }, 'reject')}
                 onViewDetails={sourcePlan && onViewDetails ? () => onViewDetails(sourcePlan) : undefined}
-                onRevisePlan={
-                  sourcePlan && onRevisePlan && ['changes', 'rejected'].includes(row.status)
-                    ? () => onRevisePlan(sourcePlan)
-                    : undefined
-                }
               />
             );
           })}
@@ -759,8 +749,8 @@ export const ReviewQueueTab = ({
                   sx={{
                     p: 1.5,
                     borderRadius: 1.5,
-                    bgcolor: (theme) => alpha(theme.palette.text.primary, 0.03),
-                    borderColor: (theme) => alpha(theme.palette.divider, 0.8),
+                    bgcolor: (currentTheme) => alpha(currentTheme.palette.text.primary, 0.03),
+                    borderColor: (currentTheme) => alpha(currentTheme.palette.divider, 0.8),
                   }}
                 >
                   <Stack spacing={0.5}>

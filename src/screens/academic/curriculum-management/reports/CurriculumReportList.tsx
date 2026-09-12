@@ -1,14 +1,15 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { AcademicReportExportJobResponse } from 'src/redux/academicAPI/AcademicReportApi';
 
 import dayjs from 'dayjs';
-import { toast } from 'sonner';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -19,11 +20,12 @@ import { Box, Chip, Button, Tooltip, IconButton } from '@mui/material';
 import { CurriculumReportApiTypeMap } from 'src/enums/curriuculum-reports';
 import {
   useGetAcademicReportExportsQuery,
-  useLazyDownloadAcademicReportQuery,
   useLazyGetAcademicReportExportJobQuery,
 } from 'src/redux/academicAPI/AcademicReportApi';
 
 import CurriculumReports from './CurriculumReports';
+import { startAcademicReportDownload } from './ai-report-utils';
+import ShikshaMitraAiReportDrawer from './ShikshaMitraAiReportDrawer';
 import CurriculumReportPreviewDrawer from './CurriculumReportPreviewDrawer';
 
 const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
@@ -35,6 +37,7 @@ const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' |
 
 const CurriculumReportList = () => {
   const addReportDialog = useBoolean(false);
+  const aiReportDialog = useBoolean(false);
   const { permissions } = useSelector((state: RootState) => state.auth);
 
   const canAdd = hasGrantedPermission(permissions, `${academicPermissions.curriculum.reports}.Add`);
@@ -49,7 +52,6 @@ const CurriculumReportList = () => {
   });
 
   const [pollJobStatus] = useLazyGetAcademicReportExportJobQuery();
-  const [triggerDownload] = useLazyDownloadAcademicReportQuery();
 
   const stopPolling = useCallback(() => {
     if (pollIntervalRef.current !== null) {
@@ -58,26 +60,6 @@ const CurriculumReportList = () => {
     }
   }, []);
 
-  const saveFile = useCallback(
-    (data: { bytes: string; contentType?: string | null; fileName?: string | null }) => {
-      const byteChars = atob(data.bytes);
-      const byteArr = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i += 1) {
-        byteArr[i] = byteChars.charCodeAt(i);
-      }
-      const blob = new Blob([byteArr], { type: data.contentType || 'application/pdf' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = data.fileName || 'report.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    },
-    []
-  );
-
   const handleDownload = useCallback(
     async (jobId: string, currentStatus: string) => {
       if (downloadingJobId) return;
@@ -85,12 +67,12 @@ const CurriculumReportList = () => {
       if (currentStatus === 'Completed') {
         setDownloadingJobId(jobId);
         try {
-          const dlResult = await triggerDownload({ jobId }, false);
-          if ('data' in dlResult && dlResult.data?.bytes) {
-            saveFile(dlResult.data);
-          }
-        } catch {
-          toast.error('Download failed. Please try again.');
+          startAcademicReportDownload(jobId);
+        } catch (error: unknown) {
+          shikshaMitraToast.error({
+            message:
+              error instanceof Error ? error.message : 'Download failed. Please try again.',
+          });
         } finally {
           setDownloadingJobId(null);
         }
@@ -107,29 +89,32 @@ const CurriculumReportList = () => {
           if (status === 'Completed') {
             stopPolling();
             try {
-              const dlResult = await triggerDownload({ jobId }, false);
-              if ('data' in dlResult && dlResult.data?.bytes) {
-                saveFile(dlResult.data);
-              }
-            } catch {
-              toast.error('Download failed. Please try again.');
+              startAcademicReportDownload(jobId);
+            } catch (error: unknown) {
+              shikshaMitraToast.error({
+                message:
+                  error instanceof Error ? error.message : 'Download failed. Please try again.',
+              });
             } finally {
               setDownloadingJobId(null);
             }
           } else if (status === 'Failed') {
             stopPolling();
             setDownloadingJobId(null);
-            toast.error(statusResult.data.errorMessage || 'Export job failed');
+            shikshaMitraToast.error({
+              message: statusResult.data.errorMessage || 'Export job failed',
+            });
           }
         } catch {
           // transient error — retry on next tick
         }
       }, 2000);
     },
-    [downloadingJobId, pollJobStatus, saveFile, stopPolling, triggerDownload]
+    [downloadingJobId, pollJobStatus, stopPolling]
   );
 
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewExportJobId, setPreviewExportJobId] = useState<string | null>(null);
   const [selectedReportRequest, setSelectedReportRequest] = useState<any>(null);
   const [selectedReportTitle, setSelectedReportTitle] = useState('');
   const handleView = (row: any) => {
@@ -145,17 +130,24 @@ const CurriculumReportList = () => {
         requestPayload.filters = {};
       }
       setSelectedReportRequest(requestPayload);
+      setPreviewExportJobId(row.status === 'Completed' ? row.id : null);
       setSelectedReportTitle(row.reportType);
       setPreviewOpen(true);
     } catch (e) {
-      toast.error('Failed to parse report parameters.');
+      shikshaMitraToast.error({ message: 'Failed to parse report parameters.' });
     }
   };
 
   const rows = useMemo(() => {
-    const allExports = Array.isArray(exportsData) ? exportsData : [];
-    const curriculumReportTypes = Object.values(CurriculumReportApiTypeMap);
-    return allExports.filter((job: any) => curriculumReportTypes.includes(job.reportType));
+    const allExports: AcademicReportExportJobResponse[] = Array.isArray(exportsData)
+      ? exportsData
+      : [];
+    const curriculumReportTypes: string[] = Object.values(CurriculumReportApiTypeMap);
+    return allExports.filter(
+      (job) =>
+        curriculumReportTypes.includes(job.reportType) ||
+        (job.isDynamic && job.module === 'Curriculum')
+    );
   }, [exportsData]);
 
   return (
@@ -172,14 +164,24 @@ const CurriculumReportList = () => {
           ]}
           action={
             canAdd ? (
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<Add />}
-                onClick={addReportDialog.onTrue}
-              >
-                Report
-              </Button>
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Add />}
+                  onClick={addReportDialog.onTrue}
+                >
+                  Report
+                </Button>
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<Iconify icon="solar:magic-stick-3-bold" />}
+                  onClick={aiReportDialog.onTrue}
+                >
+                  Generate report using ShikshaMitra AI
+                </Button>
+              </Box>
             ) : null
           }
         />
@@ -273,13 +275,15 @@ const CurriculumReportList = () => {
                   row.status === 'Processing';
                 return (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Tooltip title="View">
-                      <span>
-                        <IconButton size="small" onClick={() => handleView(row)} sx={{ mr: 0.5 }}>
-                          <Iconify icon={GlobalIcons.eye} />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
+                    {!row.isDynamic && (
+                      <Tooltip title="View">
+                        <span>
+                          <IconButton size="small" onClick={() => handleView(row)} sx={{ mr: 0.5 }}>
+                            <Iconify icon={GlobalIcons.eye} />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    )}
                     <Tooltip
                       title={
                         row.status === 'Failed'
@@ -319,7 +323,9 @@ const CurriculumReportList = () => {
         onClose={() => setPreviewOpen(false)}
         reportRequest={selectedReportRequest}
         reportTitle={selectedReportTitle}
+        existingExportJobId={previewExportJobId}
       />
+      <ShikshaMitraAiReportDrawer open={aiReportDialog.value} onClose={aiReportDialog.onFalse} />
     </Box>
   );
 };

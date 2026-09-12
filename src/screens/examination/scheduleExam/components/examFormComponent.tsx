@@ -237,18 +237,22 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
   const [addExamBasicDetails] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddExamBasicDetailsMutation,
+    popupConfig: { error: false },
   });
   const [updateExamBasicDetails] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateExamBasicDetailsMutation,
+    popupConfig: { error: false },
   });
   const [updateExamSchedule] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateExamScheduleMutation,
+    popupConfig: { error: false },
   });
   const [updateExamRoomAssignment] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateExamRoomAssignmentMutation,
+    popupConfig: { error: false },
   });
 
   const handleBasicDetails = useCallback(

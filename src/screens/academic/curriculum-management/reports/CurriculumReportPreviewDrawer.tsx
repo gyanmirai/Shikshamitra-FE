@@ -19,11 +19,11 @@ import {
 } from '@mui/material';
 import {
   usePreviewAcademicReportMutation,
-  useLazyDownloadAcademicReportQuery,
   useCreateAcademicReportExportMutation,
   useLazyGetAcademicReportExportJobQuery,
 } from 'src/redux/academicAPI/AcademicReportApi';
 
+import { startAcademicReportDownload } from './ai-report-utils';
 import { CurriculumReportPreviewTable } from './CurriculumReportPreviewTable';
 
 import type {
@@ -37,34 +37,19 @@ interface CurriculumReportPreviewDrawerProps {
   onClose: () => void;
   reportRequest: AcademicReportRequestDto | null;
   reportTitle: string;
+  existingExportJobId?: string | null;
 }
 
 const PAGE_SIZE_OPTIONS = [10, 25, 50];
 
 type DownloadPhase = 'idle' | 'creating' | 'polling' | 'downloading';
 
-function saveFile(data: { bytes: string; contentType?: string | null; fileName?: string | null }) {
-  const byteChars = atob(data.bytes);
-  const byteArr = new Uint8Array(byteChars.length);
-  for (let index = 0; index < byteChars.length; index += 1) {
-    byteArr[index] = byteChars.charCodeAt(index);
-  }
-  const blob = new Blob([byteArr], { type: data.contentType || 'application/pdf' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = data.fileName || 'report.pdf';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
-
 const CurriculumReportPreviewDrawer = ({
   open,
   onClose,
   reportRequest,
   reportTitle,
+  existingExportJobId,
 }: CurriculumReportPreviewDrawerProps) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -90,7 +75,6 @@ const CurriculumReportPreviewDrawer = ({
   });
 
   const [pollJobStatus] = useLazyGetAcademicReportExportJobQuery();
-  const [triggerDownload] = useLazyDownloadAcademicReportQuery();
 
   /**
    * Memoization Justification:
@@ -125,6 +109,19 @@ const CurriculumReportPreviewDrawer = ({
   const handleDownload = async () => {
     if (!reportRequest || downloadPhase !== 'idle') return;
 
+    if (existingExportJobId) {
+      setDownloadPhase('downloading');
+      try {
+        startAcademicReportDownload(existingExportJobId);
+      } catch {
+        toast.error('Download failed. Please try again.');
+      } finally {
+        setDownloadPhase('idle');
+        setJobStatusLabel('');
+      }
+      return;
+    }
+
     setDownloadPhase('creating');
     setJobStatusLabel('');
 
@@ -150,10 +147,7 @@ const CurriculumReportPreviewDrawer = ({
           stopPolling();
           setDownloadPhase('downloading');
           try {
-            const dlResult = await triggerDownload({ jobId }, false);
-            if ('data' in dlResult && dlResult.data?.bytes) {
-              saveFile(dlResult.data);
-            }
+            startAcademicReportDownload(jobId);
           } catch {
             toast.error('Download failed. Please try again.');
           } finally {

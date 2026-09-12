@@ -32,8 +32,11 @@ describe('lesson-plan completion minimum', () => {
       const { unmount } = renderProgressModal({ onSave });
       await waitFor(() => expect(screen.getByRole('button', { name: action })).toBeEnabled());
       const slider = screen.getByRole('slider', { name: 'Target Chapter Completion' });
-      expect(slider).toHaveAttribute('min', '30');
+      expect(slider).toHaveAttribute('min', '0');
       expect(slider).toHaveValue('30');
+      expect(screen.getByText('0%')).toBeVisible();
+      expect(screen.getByText('50%')).toBeVisible();
+      expect(screen.getByText('100%')).toBeVisible();
       fireEvent.change(slider, { target: { value: '20' } });
       expect(slider).toHaveValue('30');
       fireEvent.click(screen.getByRole('button', { name: action }));
@@ -84,7 +87,7 @@ describe('lesson-plan completion minimum', () => {
       } as unknown as LessonPlanRow,
     });
     await waitFor(() => expect(screen.getByRole('button', { name: 'Draft' })).toBeEnabled());
-    expect(screen.getByRole('slider')).toHaveAttribute('min', '33');
+    expect(screen.getByRole('slider')).toHaveAttribute('min', '0');
     fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ plannedCompletionPercentage: 33 }),

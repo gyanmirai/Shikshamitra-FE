@@ -3,11 +3,19 @@ import { Alert, Typography } from '@mui/material';
 
 type Props = {
   remarks: string;
+  reviewerName?: string | null;
   inline?: boolean;
   severity?: 'warning' | 'error';
 };
 
-export function LessonReviewComment({ remarks, inline = false, severity = 'warning' }: Props) {
+export function LessonReviewComment({
+  remarks,
+  reviewerName,
+  inline = false,
+  severity = 'warning',
+}: Props) {
+  const reviewerLabel = reviewerName?.trim() || 'Reviewer';
+
   return (
     <Alert
       severity={severity}
@@ -23,12 +31,12 @@ export function LessonReviewComment({ remarks, inline = false, severity = 'warni
     >
       {inline ? (
         <Typography component="span" color="inherit" sx={{ fontSize: 11.5 }}>
-          <strong>HOD requested:</strong> {remarks}
+          <strong>{reviewerLabel} requested:</strong> {remarks}
         </Typography>
       ) : (
         <>
           <Typography variant="caption" color="inherit">
-            Admin Comment
+            {reviewerLabel} comment
           </Typography>
           <Typography
             variant="body2"

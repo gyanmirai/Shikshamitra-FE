@@ -107,7 +107,7 @@ export const LESSON_STATUS_CONFIG: Record<LessonVisualStateKey, LessonStatusConf
     showProgress: true,
     progressColor: 'warning',
     isActionable: true,
-    actionableReason: 'HOD requested changes',
+    actionableReason: 'Reviewer requested changes',
     primaryActionLabel: 'Review Changes',
     primaryActionIcon: 'solar:pen-bold',
     primaryActionVariant: 'contained',

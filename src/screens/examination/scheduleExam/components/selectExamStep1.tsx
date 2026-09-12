@@ -11,19 +11,12 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
+import { Box, Grid, Checkbox, TextField, Typography, Autocomplete } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
-import {
-  Box,
-  Grid,
-  Checkbox,
-  TextField,
-  Typography,
-  Autocomplete,
-} from '@mui/material';
 import { useGetExaminationTypesQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 import { useGetGradeScalingsQuery } from 'src/redux/academicAPI/ExaminationApi/examSetting/grade-scalling-api';
 import { useGetExamSubjectsLookupQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
@@ -32,19 +25,17 @@ import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-managem
 import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
 import { pruneRoomDetails } from './initialValues';
-import {
-  resolveDivisionSelection,
-  getDisplayedDivisionSelection,
-} from './division-selection';
+import { resolveDivisionSelection, getDisplayedDivisionSelection } from './division-selection';
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
+import {
+  normalizeSubjectId,
+  getSubjectSelectionKey,
+  getUncachedElectiveGroupIds,
+  normalizeSelectedExamSubjects,
+} from './exam-subject-selection';
 
 import type { IExamFormValues } from '../type';
-
-type ElectiveReadiness = {
-  isReady: boolean;
-  message?: string;
-  assignedCounts: Record<string, number>;
-};
+import type { ElectiveReadiness, SubjectSelectionOption } from './exam-subject-selection';
 
 type StudentElectiveAssignmentsResponse = {
   records?: Array<{ selectedSubjectId?: string | null }>;
@@ -52,21 +43,6 @@ type StudentElectiveAssignmentsResponse = {
     records?: Array<{ selectedSubjectId?: string | null }>;
   };
 };
-
-const normalizeSubjectId = (value?: string | null) => value?.trim().toLowerCase() ?? '';
-
-// Core lookup entries keep their subject identity in the nested subject record,
-// while elective options expose it as selectedElectiveSubjectId. Use the same
-// identity for Autocomplete equality and form normalization so MUI can keep the
-// checkbox state in sync with Formik's selected values.
-const getSubjectSelectionKey = (subject: any) =>
-  normalizeSubjectId(
-    subject?.selectedElectiveSubjectId ??
-    subject?.subjects?.[0]?.subjectId ??
-    subject?.subjectId ??
-    subject?.id ??
-    subject?.electiveGroupId
-  );
 
 const getStudentElectiveRecords = (response: StudentElectiveAssignmentsResponse) =>
   response.records ?? response.data?.records ?? [];
@@ -103,6 +79,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const [electiveReadiness, setElectiveReadiness] = useState<Record<string, ElectiveReadiness>>({});
   const [checkElectiveAssignments] = useLazyGetStudentElectiveAssignmentsQuery();
+  const selectionVersionRef = useRef(0);
+  const readinessRequestsRef = useRef(new Map<string, Promise<ElectiveReadiness>>());
 
   // Update classes when organization changes
   useEffect(() => {
@@ -202,11 +180,16 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   );
 
   useEffect(() => {
+    selectionVersionRef.current += 1;
+    readinessRequestsRef.current.clear();
     setElectiveReadiness({});
   }, [formik.values.className, formik.values.divisions]);
 
-  const getElectiveReadiness = useCallback(
-    async (electiveGroupId: string): Promise<ElectiveReadiness> => {
+  const getElectiveReadiness = (electiveGroupId: string): Promise<ElectiveReadiness> => {
+    const existingRequest = readinessRequestsRef.current.get(electiveGroupId);
+    if (existingRequest) return existingRequest;
+
+    const request = (async () => {
       if (!medium?.id || !formik.values.className || selectedDivisionIds.length === 0) {
         return {
           isReady: false,
@@ -217,13 +200,17 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
 
       try {
         const assignments = await Promise.all(
-          selectedDivisionIds.map((divisionId) =>
-            checkElectiveAssignments({
-              academicMediumId: medium.id,
-              classId: formik.values.className,
-              divisionId,
-              electiveGroupId,
-            }).unwrap() as Promise<StudentElectiveAssignmentsResponse>
+          selectedDivisionIds.map(
+            (divisionId) =>
+              checkElectiveAssignments(
+                {
+                  academicMediumId: medium.id,
+                  classId: formik.values.className,
+                  divisionId,
+                  electiveGroupId,
+                },
+                true
+              ).unwrap() as Promise<StudentElectiveAssignmentsResponse>
           )
         );
 
@@ -245,118 +232,84 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
           assignedCounts: {},
         };
       }
-    },
-    [checkElectiveAssignments, formik.values.className, medium?.id, selectedDivisionIds]
-  );
+    })();
 
-  const handleSubjectsChange = useCallback(
-    async (value: any[]) => {
-      const selectedType = examTypeOptions.find((item: any) => item.id === formik.values.examType);
-      const defaultGradeScaleId =
-        formik.values.gradingScaleId || selectedType?.defaultGradeScaleId || null;
-      const selectedGradeScale = gradeScalingOptions.find(
-        (item: any) => String(item.id) === String(defaultGradeScaleId)
-      );
-      const defaultTotalMarks =
-        selectedGradeScale?.totalMarks ?? selectedType?.defaultTotalMarks ?? '';
-      const defaultPassingMarks = selectedGradeScale?.passMarks ?? '';
-      const nextReadiness = { ...electiveReadiness };
-      const uniqueValue = value.filter(
-        (subject, index, subjects) =>
-          getSubjectSelectionKey(subject) &&
-          subjects.findIndex(
-            (candidate) => getSubjectSelectionKey(candidate) === getSubjectSelectionKey(subject)
-          ) === index
-      );
-      const normalizedResults = await Promise.all(
-        uniqueValue.map(async (sub) => {
-          const isElective = !!sub.electiveGroupId;
-          let readiness = sub.electiveGroupId ? nextReadiness[sub.electiveGroupId] : undefined;
+    readinessRequestsRef.current.set(electiveGroupId, request);
+    request.finally(() => {
+      if (readinessRequestsRef.current.get(electiveGroupId) === request) {
+        readinessRequestsRef.current.delete(electiveGroupId);
+      }
+    });
+    return request;
+  };
 
-          if (isElective && sub.electiveGroupId) {
-            readiness = await getElectiveReadiness(sub.electiveGroupId);
-            nextReadiness[sub.electiveGroupId] = readiness;
-            if (!readiness.isReady) {
-              shikshaMitraToast.error({
-                message: readiness.message ?? 'Elective assignment is pending.',
-              });
-              formik.setFieldError('subjects', readiness.message);
-              return null;
-            }
-          }
+  const commitSubjectSelection = (subjects: IExamFormValues['subjects']) => {
+    formik.setFormikState((currentState) => ({
+      ...currentState,
+      values: {
+        ...currentState.values,
+        subjects,
+        roomDetails: pruneRoomDetails(
+          currentState.values.roomDetails,
+          subjects,
+          currentState.values.divisions
+        ),
+      },
+      touched: { ...currentState.touched, subjects: [] },
+    }));
+  };
 
-          const electiveGroupName = isElective
-            ? sub.electiveGroupName || sub.optionGroup || undefined
-            : undefined;
+  const handleSubjectsChange = async (value: SubjectSelectionOption[]) => {
+    selectionVersionRef.current += 1;
+    const selectionVersion = selectionVersionRef.current;
+    const selectedType = examTypeOptions.find((item: any) => item.id === formik.values.examType);
+    const defaultGradeScaleId =
+      formik.values.gradingScaleId || selectedType?.defaultGradeScaleId || null;
+    const selectedGradeScale = gradeScalingOptions.find(
+      (item: any) => String(item.id) === String(defaultGradeScaleId)
+    );
+    const defaultTotalMarks =
+      selectedGradeScale?.totalMarks ?? selectedType?.defaultTotalMarks ?? '';
+    const defaultPassingMarks = selectedGradeScale?.passMarks ?? '';
+    const defaults = {
+      totalMarks: defaultTotalMarks,
+      passingMarks: defaultPassingMarks,
+      gradeScalingId: defaultGradeScaleId,
+    };
 
-          const assignedElectiveSubjects = isElective
-            ? (sub.subjects ?? [])
-              .filter((subjectItem: any) => {
-                const subjectId = normalizeSubjectId(subjectItem.subjectId ?? subjectItem.id);
-                return (readiness?.assignedCounts?.[subjectId] ?? 0) > 0;
-              })
-              .map((subjectItem: any) => {
-                const subjectId = normalizeSubjectId(subjectItem.subjectId ?? subjectItem.id);
-                const assignedStudentCount = readiness?.assignedCounts?.[subjectId] ?? 0;
-                return {
-                  ...subjectItem,
-                  assignedStudentCount,
-                  isExamSelectionDisabled: false,
-                  subjectColor: subjectItem.color || subjectItem.subjectColor || '#9E9E9E',
-                  examDate: subjectItem.examDate || null,
-                  startTime: subjectItem.startTime || null,
-                  endTime: subjectItem.endTime || null,
-                  totalMarks: subjectItem.totalMarks || defaultTotalMarks,
-                  passingMarks: subjectItem.passingMarks || defaultPassingMarks,
-                  notes: subjectItem.notes || '',
-                  gradeScalingId: subjectItem.gradeScalingId || defaultGradeScaleId,
-                  electiveGroupName,
-                };
-              })
-            : sub.subjects;
+    // Commit before starting readiness I/O so the controlled checkbox paints on the click frame.
+    commitSubjectSelection(normalizeSelectedExamSubjects(value, defaults, electiveReadiness));
 
-          return {
-            ...sub,
-            subjectId:
-              sub.selectedElectiveSubjectId ||
-              sub?.subjects?.[0]?.subjectId ||
-              sub.subjectId ||
-              sub.electiveGroupId,
-            subjectName:
-              sub?.subjects?.[0]?.subjectName ||
-              sub.subjectName ||
-              sub?.electiveGroupName ||
-              '',
-            electiveGroupId: sub.electiveGroupId || undefined,
-            electiveGroupName,
-            examDate: sub?.examDate || null,
-            startTime: sub?.startTime || null,
-            endTime: sub?.endTime || null,
-            totalMarks: sub?.totalMarks || defaultTotalMarks,
-            passingMarks: sub?.passingMarks || defaultPassingMarks,
-            notes: sub?.notes || '',
-            gradeScalingId: sub?.gradeScalingId || defaultGradeScaleId,
-            subjectCode: isElective ? '' : sub?.subjects?.[0]?.subjectCode || sub.subjectCode || '',
-            subjectColor: sub?.color || sub?.subjectColor || '#9E9E9E',
-            schedulingMode: sub.schedulingMode ?? (isElective ? 'separate' : undefined),
-            subjects: assignedElectiveSubjects,
-          };
-        })
-      );
+    const groupIds = getUncachedElectiveGroupIds(value, electiveReadiness);
+    if (groupIds.length === 0) return;
 
-      setElectiveReadiness(nextReadiness);
-      const nextSubjects = normalizedResults.filter(Boolean);
-      const nextRoomDetails = pruneRoomDetails(
-        formik.values.roomDetails,
-        nextSubjects,
-        formik.values.divisions
-      );
-      formik.setFieldValue('subjects', nextSubjects);
-      formik.setFieldValue('roomDetails', nextRoomDetails);
-      formik.setFieldTouched('subjects', false);
-    },
-    [electiveReadiness, examTypeOptions, formik, getElectiveReadiness, gradeScalingOptions]
-  );
+    const readinessEntries = await Promise.all(
+      groupIds.map(async (groupId) => [groupId, await getElectiveReadiness(groupId)] as const)
+    );
+    if (selectionVersion !== selectionVersionRef.current) return;
+
+    const nextReadiness = { ...electiveReadiness, ...Object.fromEntries(readinessEntries) };
+    setElectiveReadiness(nextReadiness);
+
+    const failedGroupIds = new Set(
+      readinessEntries.filter(([, readiness]) => !readiness.isReady).map(([groupId]) => groupId)
+    );
+    readinessEntries.forEach(([, readiness]) => {
+      if (!readiness.isReady) {
+        shikshaMitraToast.error({
+          message: readiness.message ?? 'Elective assignment is pending.',
+        });
+      }
+    });
+
+    const validOptions = value.filter(
+      (option) => !option.electiveGroupId || !failedGroupIds.has(option.electiveGroupId)
+    );
+    commitSubjectSelection(normalizeSelectedExamSubjects(validOptions, defaults, nextReadiness));
+    if (failedGroupIds.size > 0) {
+      formik.setFieldError('subjects', 'One or more elective assignments could not be loaded.');
+    }
+  };
 
   return (
     <Grid container>
@@ -446,7 +399,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     <ExamTypeForm
                       onClose={examTypeDialog.onFalse}
                       data={null}
-                      onSubmit={() => { }}
+                      onSubmit={() => {}}
                       isEdit={false}
                     />
                   </CustomDialog>
@@ -621,7 +574,13 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         <li key={params.key}>
                           <Typography
                             variant="caption"
-                            sx={{ display: 'block', px: 1.5, py: 0.75, fontWeight: 700, color: 'text.secondary' }}
+                            sx={{
+                              display: 'block',
+                              px: 1.5,
+                              py: 0.75,
+                              fontWeight: 700,
+                              color: 'text.secondary',
+                            }}
                           >
                             {params.group}
                           </Typography>
@@ -630,7 +589,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       )}
                       value={formik.values.subjects}
                       onChange={(_event, value) => {
-                        handleSubjectsChange(value);
+                        handleSubjectsChange(value as SubjectSelectionOption[]);
                       }}
                       slotProps={{
                         chip: {
@@ -756,7 +715,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                   </ShakingTextField>
                 </motion.div>
               </Grid>
-
 
               {/* <Grid size={{ xs: 12 }}>
                 <motion.div variants={formItemVariants} style={{ width: '100%' }}>
@@ -945,7 +903,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                             .join(' · ')}
                         </strong>
                         {formik.values.subjects.length > 0 &&
-                          ` · ${formik.values.subjects.length} subject${formik.values.subjects.length !== 1 ? 's' : ''
+                          ` · ${formik.values.subjects.length} subject${
+                            formik.values.subjects.length !== 1 ? 's' : ''
                           }`}
                       </Typography>
                     </Box>

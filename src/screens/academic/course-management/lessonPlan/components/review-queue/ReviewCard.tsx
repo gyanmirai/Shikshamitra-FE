@@ -1,22 +1,21 @@
 'use client';
 
 import React from 'react';
+import dayjs from 'dayjs';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
-import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { alpha, useTheme } from '@mui/material/styles';
-import dayjs from 'dayjs';
-
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { GlobalIcons } from 'src/utils/icons';
 
 export type ReviewItem = {
   id: string;
@@ -74,7 +73,6 @@ type ReviewCardProps = {
   onRequestChanges?: () => void;
   onReject?: () => void;
   onViewDetails?: () => void;
-  onRevisePlan?: () => void;
 };
 
 export const ReviewCard = ({
@@ -89,7 +87,6 @@ export const ReviewCard = ({
   onRequestChanges,
   onReject,
   onViewDetails,
-  onRevisePlan,
 }: ReviewCardProps) => {
   const theme = useTheme();
 
@@ -213,18 +210,6 @@ export const ReviewCard = ({
             onClick={onViewDetails}
           >
             View
-          </Button>
-        )}
-
-        {!isPending && onRevisePlan && ['changes', 'rejected'].includes(item.status) && (
-          <Button
-            size="small"
-            variant="contained"
-            color="warning"
-            startIcon={<Iconify icon="solar:pen-bold" width={16} />}
-            onClick={onRevisePlan}
-          >
-            Revise
           </Button>
         )}
 
