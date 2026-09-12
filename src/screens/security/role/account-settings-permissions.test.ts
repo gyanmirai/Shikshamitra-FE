@@ -79,17 +79,6 @@ it('groups specialized Student Admissions actions behind View, Add, and Delete',
   );
 });
 
-it('groups Student Onboarding configuration actions under Add', () => {
-  const permissionName = ['Students.Onboarding.Configure', 'Students.Onboarding.Repair'];
-  const catalog = permissionName.map((name) => ({ name, isGranted: false }));
-
-  expect(getNodePermissionActions(permissionName, catalog)).toEqual(['View', 'Add', 'Delete']);
-  expect(getNodeActionPermissionNamesForAction(permissionName, 'Add', catalog)).toEqual(
-    permissionName
-  );
-  expect(getNodeActionPermissionNames({ permissionName }, catalog)).toEqual(permissionName);
-});
-
 it('grants the Student View group when Add is enabled', () => {
   const base = 'Students.Admissions.Inquiries';
   const catalog = ['View', 'Manage', 'Create', 'Edit', 'Assign'].map((action) => ({

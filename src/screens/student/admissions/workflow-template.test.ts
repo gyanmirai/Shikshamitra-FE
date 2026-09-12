@@ -1,4 +1,5 @@
 import { it, expect, describe } from 'vitest';
+import { DEFAULT_FORM_STAGE_POLICY } from 'src/redux/student/admissions/admission-form-stage-policy';
 
 import { getRegistrationWorkflowTemplate } from './workflow-template';
 
@@ -25,7 +26,10 @@ describe('standard admissions workflow template', () => {
     );
     const stageIndex = new Map(template.stages.map((stage, index) => [stage.id, index]));
 
-    expect(detailedRegistration?.configurationJson).toBe('{"formDefinitionId":"form-1"}');
+    expect(JSON.parse(detailedRegistration?.configurationJson ?? '')).toEqual({
+      formDefinitionId: 'form-1',
+      form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: false },
+    });
     expect(template.transitions).toHaveLength(4);
     expect(
       template.transitions.map((item) => [

@@ -87,7 +87,7 @@ export function DocumentRequirementCollection({ formik, documentTypes }: Props) 
         helperText={
           touched.documentTypeId && errors.documentTypeId
             ? errors.documentTypeId
-            : 'Evidence is linked to the student when admission is finalized. A category also connects accepted uploads to onboarding requirements.'
+            : 'Evidence is linked to the student when admission is finalized. A category also connects accepted uploads to the student record.'
         }
       />
       {incompatible && (
@@ -105,7 +105,7 @@ export function DocumentRequirementCollection({ formik, documentTypes }: Props) 
       {values.documentTypeId && (
         <Alert severity="info">
           Uploads must also meet this student document category’s file limits. Waivers and original
-          checks do not replace a required onboarding upload.
+          checks do not replace a required file upload.
         </Alert>
       )}
     </Stack>

@@ -1,0 +1,517 @@
+'use client';
+
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useRef, useState, useEffect, type ReactNode } from 'react';
+import {
+  Box,
+  Card,
+  Stack,
+  Alert,
+  Avatar,
+  Button,
+  Drawer,
+  Divider,
+  IconButton,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
+
+import { defaultReadinessAccessRules } from '../onboarding-settings-model';
+import {
+  accountStatusMeta,
+  onboardingCheckMeta,
+  onboardingStageMeta,
+  getReadinessSummary,
+} from './student-onboarding-model';
+
+import type { StudentOnboardingItem } from './student-onboarding-model';
+import type { ReadinessAccessRules } from '../onboarding-settings-model';
+
+type StudentSetupDrawerProps = {
+  open: boolean;
+  student: StudentOnboardingItem | null;
+  readinessRules?: ReadinessAccessRules;
+  onClose: () => void;
+  onAssignDivision?: () => void;
+  onAssignGrNumber?: () => void;
+  onAssignRollNumber?: () => void;
+};
+
+const displayValue = (value?: string | number | null) =>
+  value === undefined || value === null || value === '' ? '—' : value;
+
+const primaryActions = {
+  'to-prepare': { label: 'Run Readiness Check', icon: 'mdi:clipboard-check-outline' },
+  'awaiting-approval': { label: 'Review Approval', icon: 'mdi:account-check-outline' },
+  'ready-to-activate': { label: 'Activate Student', icon: 'mdi:account-arrow-right-outline' },
+  'action-required': { label: 'Repair Activation', icon: 'mdi:wrench-outline' },
+  completed: { label: 'View Student Record', icon: 'mdi:open-in-new' },
+} as const;
+
+function SectionCard({
+  icon,
+  title,
+  description,
+  children,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
+  return (
+    <Card variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
+      <Stack spacing={1.5}>
+        <Stack direction="row" spacing={1} alignItems="flex-start">
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: 1,
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: 'background.neutral',
+              color: 'text.secondary',
+              flexShrink: 0,
+            }}
+          >
+            <Iconify icon={icon} width={20} />
+          </Box>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography component="h3" variant="subtitle2">
+              {title}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {description}
+            </Typography>
+          </Box>
+        </Stack>
+        {children}
+      </Stack>
+    </Card>
+  );
+}
+
+function KeyValueGrid({ items }: { items: Array<[string, ReactNode]> }) {
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+        gap: 1,
+      }}
+    >
+      {items.map(([label, value]) => (
+        <Box
+          key={label}
+          sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+        >
+          <Typography variant="caption" color="text.secondary">
+            {label}
+          </Typography>
+          <Typography variant="body2" fontWeight={600} sx={{ mt: 0.25 }}>
+            {value}
+          </Typography>
+        </Box>
+      ))}
+    </Box>
+  );
+}
+
+export default function StudentSetupDrawer({
+  open,
+  student,
+  readinessRules = defaultReadinessAccessRules,
+  onClose,
+  onAssignDivision,
+  onAssignGrNumber,
+  onAssignRollNumber,
+}: StudentSetupDrawerProps) {
+  const lastStudentRef = useRef(student);
+  if (student) {
+    lastStudentRef.current = student;
+  }
+  const activeStudent = student || lastStudentRef.current;
+  const [showAlert, setShowAlert] = useState(true);
+
+  useEffect(() => {
+    if (student) {
+      setShowAlert(true);
+    }
+  }, [student]);
+
+  if (!activeStudent) return null;
+
+  const status = onboardingStageMeta[activeStudent.status];
+  const readiness = getReadinessSummary(activeStudent);
+  const primaryAction =
+    activeStudent.status === 'awaiting-approval' && !readinessRules.requireApproval
+      ? primaryActions['ready-to-activate']
+      : primaryActions[activeStudent.status];
+  const accountRows = [
+    ['Student account', activeStudent.studentAccountStatus] as const,
+    ['Guardian account', activeStudent.guardianAccountStatus] as const,
+  ];
+
+  return (
+    <Drawer
+      anchor="right"
+      open={open}
+      onClose={onClose}
+      transitionDuration={{ enter: 300, exit: 250 }}
+      PaperProps={{
+        sx: {
+          width: { xs: '100%', sm: 'min(760px, 95vw)' },
+          maxWidth: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          overscrollBehavior: 'contain',
+        },
+      }}
+    >
+      <Stack
+        component="header"
+        direction="row"
+        justifyContent="space-between"
+        alignItems="flex-start"
+        spacing={2}
+        sx={{
+          p: { xs: 1.5, sm: 2 },
+          flexShrink: 0,
+          bgcolor: 'background.paper',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+          <Avatar
+            sx={{ bgcolor: 'action.selected', color: 'text.secondary', width: 44, height: 44 }}
+          >
+            {activeStudent.studentName.charAt(0).toUpperCase()}
+          </Avatar>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography component="h2" variant="subtitle1" fontWeight={700} noWrap>
+              {activeStudent.studentName}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {activeStudent.applicationNumber} · {activeStudent.standardName} / {activeStudent.divisionName}
+            </Typography>
+          </Box>
+        </Stack>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Label color={status.color} variant="outlined">
+            {status.label}
+          </Label>
+          <IconButton
+            aria-label="Close Student Setup"
+            onClick={onClose}
+            sx={{ minWidth: 44, minHeight: 44 }}
+          >
+            <Iconify icon="mdi:close" width={20} />
+          </IconButton>
+        </Stack>
+      </Stack>
+
+      <Scrollbar sx={{ p: { xs: 1.5, sm: 2 }, flex: 1, minHeight: 0 }}>
+        <Stack spacing={1.5}>
+          {showAlert ? (
+            <Alert
+              severity={activeStudent.source === 'preview' ? 'info' : 'warning'}
+              variant="outlined"
+              onClose={() => setShowAlert(false)}
+            >
+              {activeStudent.source === 'preview'
+                ? 'Frontend preview data is active. The layout and workflow are ready, but actions are not persisted.'
+                : 'This compatibility view uses Student Records. Admission readiness, approvals and account state require the Onboarding API.'}
+            </Alert>
+          ) : null}
+
+          <Card variant="outlined" sx={{ p: 1.5 }}>
+            <Stack spacing={1}>
+              <Stack direction="row" justifyContent="space-between" gap={1} alignItems="center">
+                <Box>
+                  <Typography variant="subtitle2">Onboarding readiness</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {readiness.passedCount} of {readiness.requiredCount} required checks passed
+                  </Typography>
+                </Box>
+                <Label color={readiness.blockingCount ? 'warning' : 'success'}>
+                  {readiness.blockingCount
+                    ? `${readiness.blockingCount} blocker${readiness.blockingCount === 1 ? '' : 's'}`
+                    : 'Ready'}
+                </Label>
+              </Stack>
+              <LinearProgress
+                variant="determinate"
+                value={readiness.progress}
+                aria-label={`Student readiness ${readiness.progress} percent`}
+                sx={{ height: 6, borderRadius: 1 }}
+              />
+            </Stack>
+          </Card>
+
+          <SectionCard
+            icon="mdi:file-check-outline"
+            title="Admission handoff"
+            description="Read-only admission context handed over from Enrollment."
+          >
+            <KeyValueGrid
+              items={[
+                ['Application number', activeStudent.applicationNumber],
+                ['Admission reference', displayValue(activeStudent.admissionReference)],
+                ['Admission route', activeStudent.admissionRoute],
+                ['Admission date', displayValue(activeStudent.admissionDate)],
+                ['Owner', activeStudent.ownerName],
+                ['Source', activeStudent.source === 'preview' ? 'Frontend preview' : 'Student Records'],
+              ]}
+            />
+          </SectionCard>
+
+          <SectionCard
+            icon="mdi:account-school-outline"
+            title="Placement"
+            description="Review the academic placement that will become active after activation."
+          >
+            <KeyValueGrid
+              items={[
+                ['Board', activeStudent.boardName],
+                ['Medium', activeStudent.mediumName],
+                ['Class', activeStudent.standardName],
+                ['Division', activeStudent.divisionName],
+              ]}
+            />
+            <Stack direction="row" justifyContent="flex-end">
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Iconify icon="mdi:google-classroom" width={18} />}
+                onClick={onAssignDivision}
+              >
+                {activeStudent.divisionName && activeStudent.divisionName !== '—'
+                  ? 'Change Division'
+                  : 'Assign Division'}
+              </Button>
+            </Stack>
+          </SectionCard>
+
+          <SectionCard
+            icon="mdi:identifier"
+            title="Identifiers"
+            description="Review the configured GR preview and roll number assignment."
+          >
+            <KeyValueGrid
+              items={[
+                ['GR number', displayValue(activeStudent.grNo)],
+                ['GR preview', displayValue(activeStudent.grPreview)],
+                ['Roll number', displayValue(activeStudent.rollNo)],
+                ['Assignment', activeStudent.grNo ? 'Assigned' : 'Pending activation'],
+              ]}
+            />
+            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="flex-end" spacing={1}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Iconify icon="mdi:identifier" width={18} />}
+                onClick={onAssignGrNumber}
+              >
+                {activeStudent.grNo ? 'Change GR No.' : 'Assign GR No.'}
+              </Button>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Iconify icon="mdi:format-list-numbered" width={18} />}
+                onClick={onAssignRollNumber}
+              >
+                {activeStudent.rollNo !== undefined && activeStudent.rollNo !== null
+                  ? 'Change Roll No.'
+                  : 'Assign Roll No.'}
+              </Button>
+            </Stack>
+          </SectionCard>
+
+          <SectionCard
+            icon="mdi:file-document-check-outline"
+            title="Documents"
+            description="Document verification remains owned by Enrollment Documents."
+          >
+            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+              <Box>
+                <Typography variant="body2" fontWeight={600}>
+                  {activeStudent.documentsRequired
+                    ? `${activeStudent.documentsPassed} of ${activeStudent.documentsRequired} verified`
+                    : 'Document summary unavailable'}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Corrections and uploads should open the owning document workflow.
+                </Typography>
+              </Box>
+              <Label
+                color={
+                  activeStudent.documentsRequired && activeStudent.documentsPassed === activeStudent.documentsRequired
+                    ? 'success'
+                    : activeStudent.documentsRequired
+                      ? 'warning'
+                      : 'default'
+                }
+              >
+                {activeStudent.documentsRequired && activeStudent.documentsPassed === activeStudent.documentsRequired
+                  ? 'Verified'
+                  : activeStudent.documentsRequired
+                    ? 'Pending'
+                    : 'Not connected'}
+              </Label>
+            </Stack>
+          </SectionCard>
+
+          <SectionCard
+            icon="mdi:account-key-outline"
+            title="Accounts & access"
+            description="Review student and guardian account provisioning without duplicating family identities."
+          >
+            <Stack spacing={1}>
+              {accountRows.map(([label, value]) => {
+                const meta = accountStatusMeta[value];
+                return (
+                  <Stack
+                    key={label}
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    gap={1}
+                    sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+                  >
+                    <Typography variant="body2">{label}</Typography>
+                    <Label color={meta.color}>{meta.label}</Label>
+                  </Stack>
+                );
+              })}
+              <KeyValueGrid
+                items={[
+                  [
+                    'Verified guardian contact',
+                    readinessRules.verifiedGuardianContact ? 'Required' : 'Optional',
+                  ],
+                  [
+                    'Credential release',
+                    readinessRules.deliveryTiming === 'after-activation'
+                      ? 'After activation'
+                      : 'Manual release',
+                  ],
+                ]}
+              />
+            </Stack>
+          </SectionCard>
+
+          <SectionCard
+            icon="mdi:clipboard-check-outline"
+            title="Readiness & activation"
+            description={
+              readinessRules.blockActivation
+                ? 'Blocking checks must pass before the activation action becomes available.'
+                : 'Blocking checks remain visible, but authorized activation is allowed by policy.'
+            }
+          >
+            <Stack spacing={1}>
+              {activeStudent.readinessItems.map((check) => {
+                const meta = onboardingCheckMeta[check.status];
+                return (
+                  <Stack
+                    key={check.key}
+                    direction={{ xs: 'column', sm: 'row' }}
+                    justifyContent="space-between"
+                    alignItems={{ sm: 'center' }}
+                    gap={1}
+                    sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ minWidth: 0 }}>
+                      <Iconify
+                        icon={meta.icon}
+                        width={18}
+                        sx={{ mt: 0.25, color: 'text.secondary' }}
+                      />
+                      <Box sx={{ minWidth: 0 }}>
+                        <Typography variant="body2" fontWeight={600}>
+                          {check.label}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {check.detail} · Owner: {check.owner}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                    <Label color={meta.color}>{meta.label}</Label>
+                  </Stack>
+                );
+              })}
+            </Stack>
+          </SectionCard>
+
+          <SectionCard
+            icon="mdi:history"
+            title="Activity & audit"
+            description="A chronological record of preparation, approval and activation events."
+          >
+            <Stack spacing={1}>
+              {activeStudent.activity.map((event) => (
+                <Stack key={event.id} direction="row" spacing={1} alignItems="flex-start">
+                  <Box
+                    sx={{
+                      width: 8,
+                      height: 8,
+                      mt: 0.75,
+                      borderRadius: '50%',
+                      bgcolor: 'text.disabled',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography variant="body2" fontWeight={600}>
+                      {event.title}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {event.detail}
+                    </Typography>
+                  </Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ flexShrink: 0 }}>
+                    {event.occurredAt}
+                  </Typography>
+                </Stack>
+              ))}
+            </Stack>
+          </SectionCard>
+        </Stack>
+      </Scrollbar>
+
+      <Divider />
+      <Stack
+        component="footer"
+        direction={{ xs: 'column', sm: 'row' }}
+        alignItems={{ sm: 'center' }}
+        justifyContent="space-between"
+        gap={1}
+        sx={{ px: 2, py: 1.25, flexShrink: 0, bgcolor: 'background.paper' }}
+      >
+        <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
+          {activeStudent.source === 'preview'
+            ? 'This action is disabled because preview changes are not persisted.'
+            : 'Connect the Onboarding activation contract to enable this action.'}
+        </Typography>
+        <Stack direction="row" justifyContent="flex-end" gap={1} sx={{ flexShrink: 0 }}>
+          <Button variant="outlined" size="small" onClick={onClose}>
+            Close
+          </Button>
+          <Button
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon={primaryAction.icon} />}
+            disabled
+          >
+            {primaryAction.label}
+          </Button>
+        </Stack>
+      </Stack>
+    </Drawer>
+  );
+}
+

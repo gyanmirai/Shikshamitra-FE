@@ -1,6 +1,6 @@
 import type { AdmissionApplication } from 'src/redux/student/admissions/admission-applications-api';
 
-import { Alert, Button } from '@mui/material';
+import { Alert } from '@mui/material';
 
 import { formatWorkflowDateTime } from '../workflow-list/workflow-list-format';
 
@@ -22,17 +22,9 @@ export function ApplicationDecisionStatus({ application }: { application: Admiss
           Historical enrollment record: {application.enrolledStudentId}
         </Alert>
       )}
-      {application.status === 11 && application.studentId && application.onboardingCaseId && (
+      {application.status === 11 && application.studentId && (
         <Alert severity="success" sx={{ mt: 2 }}>
-          Admission finalized. Student identity {application.studentId} is now in Student
-          Onboarding.
-          <Button
-            href={`/student/onboarding/${application.onboardingCaseId}`}
-            size="small"
-            sx={{ ml: 1 }}
-          >
-            Open onboarding
-          </Button>
+          Admission finalized. Student identity: {application.studentId}.
         </Alert>
       )}
     </>

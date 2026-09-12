@@ -10,6 +10,8 @@ import {
   useValidateAdmissionWorkflowMutation,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { normalizeAdmissionWorkflowFormStages } from '../../workflow-builder-utils';
+
 import type { useWorkflowBuilderDraft } from './use-workflow-builder-draft';
 
 type Draft = ReturnType<typeof useWorkflowBuilderDraft>;
@@ -29,6 +31,7 @@ export function useWorkflowBuilderCommands(
   const saveDraft = async () => {
     if (!workflow) return null;
     try {
+      const stages = normalizeAdmissionWorkflowFormStages(draft.stages);
       const result = await updateWorkflow({
         id: workflow.id,
         body: {
@@ -36,7 +39,7 @@ export function useWorkflowBuilderCommands(
           code: workflow.code,
           description: workflow.description,
           concurrencyStamp: draft.loadedStamp || workflow.concurrencyStamp,
-          stages: draft.stages,
+          stages,
           transitions: draft.transitions,
         },
       }).unwrap();
@@ -52,7 +55,11 @@ export function useWorkflowBuilderCommands(
     }
   };
   const validateSavedWorkflow = async () => {
-    if (draft.dirty && !(await saveDraft())) return null;
+    const normalizedStages = normalizeAdmissionWorkflowFormStages(draft.stages);
+    const requiresFormStageUpgrade = normalizedStages.some(
+      (stage, index) => stage !== draft.stages[index]
+    );
+    if ((draft.dirty || requiresFormStageUpgrade) && !(await saveDraft())) return null;
     try {
       const result = await validateWorkflow(workflowId).unwrap();
       draft.setValidation(result);

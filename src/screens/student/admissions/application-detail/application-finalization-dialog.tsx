@@ -65,9 +65,8 @@ function OpenApplicationFinalizationDialog({
       <DialogScrollContent>
         <Stack spacing={2}>
           <Alert severity="info" icon={<Iconify icon="mdi:account-check-outline" />}>
-            This closes Admissions, creates or links one Student identity, and opens Student
-            Onboarding. It does not assign a class division, seat, GR number, roll number, fees, or
-            login account.
+            This closes Admissions and creates or links one Student identity. It does not assign a
+            class division, seat, GR number, roll number, fees, or login account.
           </Alert>
           <ApplicationFinalizationReadiness
             applicantId={applicantId}

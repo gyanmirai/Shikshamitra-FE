@@ -72,7 +72,26 @@ export function writeAdmissionFormStagePolicy(
 export function writeAdmissionFormDefinitionId(json: string | undefined, formDefinitionId: string) {
   const configuration = readStageConfiguration(json);
   if (!configuration) throw new Error('The stage settings could not be read. Reopen the stage.');
-  return JSON.stringify({ ...configuration, formDefinitionId: formDefinitionId.trim() });
+  const updated = JSON.stringify({
+    ...configuration,
+    formDefinitionId: formDefinitionId.trim(),
+  });
+  return ensureAdmissionFormStageConfiguration(updated) ?? updated;
+}
+
+export function ensureAdmissionFormStageConfiguration(json?: string): string | undefined {
+  const configuration = readStageConfiguration(json);
+  if (!configuration || configuration.form !== undefined) return json;
+  const formDefinitionId =
+    typeof configuration.formDefinitionId === 'string'
+      ? configuration.formDefinitionId.trim()
+      : '';
+  if (!formDefinitionId) return json;
+  return JSON.stringify({
+    ...configuration,
+    formDefinitionId,
+    form: { ...DEFAULT_FORM_STAGE_POLICY, enabled: false },
+  });
 }
 
 export function getAdmissionFormStageConfigurationError(

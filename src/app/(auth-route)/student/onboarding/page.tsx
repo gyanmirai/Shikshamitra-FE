@@ -1,5 +1,6 @@
-import StudentOnboardingQueueScreen from 'src/screens/student/onboarding/student-onboarding-queue';
+import { redirect } from 'next/navigation';
+import { studentPaths } from 'src/constants/student-menu';
 
-export default function Page() {
-  return <StudentOnboardingQueueScreen />;
+export default function StudentOnboardingPage() {
+  redirect(studentPaths.onboarding.setup);
 }
