@@ -33,6 +33,13 @@ vi.mock('src/components/custom-tooltip', () => ({
   default: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  },
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 vi.mock('src/redux/customQueryAndMutation', () => ({
   default: () => mocks.queryResult,
 }));
