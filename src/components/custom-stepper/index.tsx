@@ -91,6 +91,7 @@ interface CustomStepperWithFormikProps {
   showSaveButton?: boolean;
   disableSubmit?: boolean;
   saveButtonProps?: ButtonProps;
+  backButtonProps?: ButtonProps;
   saveAndNextButtonProps?: ButtonProps;
   validateFinalStep?: boolean;
   validateForwardStepClick?: boolean;
@@ -282,6 +283,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   nextButtonLabel = 'Save & Next',
   finalButtonLabel = 'Submit',
   saveButtonProps = {},
+  backButtonProps = {},
   saveAndNextButtonProps = {},
   validateFinalStep = true,
   validateForwardStepClick = false,
@@ -559,12 +561,13 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
         <Button
           size="small"
           variant="outlined"
-          disabled={activeStep === 0 || isBusy}
+          startIcon={<Iconify icon="mdi:arrow-left" width={20} />}
+          {...backButtonProps}
+          disabled={activeStep === 0 || isBusy || Boolean(backButtonProps.disabled)}
           onClick={() => {
             setIsBackClick(true);
             handleBack();
           }}
-          startIcon={<Iconify icon="ic:round-arrow-back" width={20} />}
         >
           Back
         </Button>

@@ -1,24 +1,16 @@
 import type { RootState } from 'src/redux/store';
-import type { LabelColor } from 'src/components/label';
+import type { IData } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
+import { useState, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
-import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { EmptyContent } from 'src/components/empty-content';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { Box, Card, Button, Checkbox, MenuList, MenuItem } from '@mui/material';
-import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
+import { useAssignmentStudentsQuery } from 'src/redux/finance/studentFeeAssignment';
+import { Box, Stack, Alert, Paper, Button, Checkbox, Typography } from '@mui/material';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
-import {
-  FeeCollectionStatusType,
-  FeeCollectionStatusOptions,
-  FeeCollectionStatusTypeColors,
-} from 'src/enums/fee-collection-type';
 import {
   ALL_CLASS_OPTION,
   ALL_DIVISION_OPTION,
@@ -27,422 +19,221 @@ import {
 
 import type { IFeeStructureData, IFeeStructureTableProps } from './type';
 
-const FeeStructureAssignTable: React.FC<IFeeStructureTableProps> = ({
+export default function FeeStructureAssignTable({
   onAssignStructure,
-  onEdit,
   onBulkAssign,
-}) => {
+}: IFeeStructureTableProps) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const {
-    boards,
-    mediums,
-    selectedBoard,
-    selectedMedium,
-    selectedStandardId,
-    selectedDivisionId,
-    isReady,
-    classOptions,
-    divisionOptions,
-    isDivisionDisabled,
-    filterPayload,
-    setSelectedBoard,
-    setSelectedMedium,
-    setSelectedStandardId,
-    setSelectedDivisionId,
-    classesLoading,
-  } = useFinanceAcademicFilters();
-
-  const [feeStructureParams, setFeeStructureParams] = useState({
-    page: 1,
-    pageSize: 10,
-    search: '',
-  });
-
-  const [standardIdState, setStandardIdState] = useState(selectedStandardId);
-  const [divisionIdState, setDivisionIdState] = useState(selectedDivisionId);
-  const [selectedStudents, setSelectedStudents] = useState<IFeeStructureData[]>([]);
-
-  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
-    setFeeStructureParams((pre) => ({ ...pre, page, pageSize: rowsPerPage }));
-  }, []);
-
-  const handleServerSearch = useCallback((search: string) => {
-    setFeeStructureParams((pre) => ({ ...pre, page: 1, search }));
-  }, []);
-
-  // Filter out "All" options for class and division
-  const filteredClassOptions = useMemo(
-    () => classOptions.filter((opt) => opt.id !== ALL_CLASS_OPTION.id),
-    [classOptions]
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canView = hasGrantedPermission(
+    permissions,
+    `${financePermissions.fees.structureAssign}.View`
   );
-
-  const filteredDivisionOptions = useMemo(
-    () => divisionOptions.filter((opt) => opt.id !== ALL_DIVISION_OPTION.id),
-    [divisionOptions]
+  const canAssign = hasGrantedPermission(
+    permissions,
+    `${financePermissions.fees.structureAssign}.Add`
   );
-
-  useEffect(() => {
-    setStandardIdState(selectedStandardId);
-  }, [selectedStandardId]);
-
-  useEffect(() => {
-    setDivisionIdState(selectedDivisionId);
-  }, [selectedDivisionId]);
-
-  useEffect(() => {
-    if (!filteredClassOptions.length) return;
-    const isSelectedClassValid = filteredClassOptions.some((opt) => opt.id === standardIdState);
-    if (isSelectedClassValid) return;
-
-    const firstClassId = filteredClassOptions[0]?.id;
-    if (!firstClassId) return;
-    setStandardIdState(firstClassId);
-    setSelectedStandardId(firstClassId);
-  }, [filteredClassOptions, standardIdState, setSelectedStandardId]);
-
-  useEffect(() => {
-    if (!filteredDivisionOptions.length) return;
-    const isSelectedDivisionValid = filteredDivisionOptions.some(
-      (opt) => opt.id === divisionIdState
-    );
-    if (isSelectedDivisionValid) return;
-
-    const firstDivisionId = filteredDivisionOptions[0]?.id;
-    if (!firstDivisionId) return;
-    setDivisionIdState(firstDivisionId);
-    setSelectedDivisionId(firstDivisionId);
-  }, [filteredDivisionOptions, divisionIdState, setSelectedDivisionId]);
-
-  const {
-    data: feeStructureData,
-    isLoading: feeStructureLoading,
-    isFetching: feeStructureFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeCollectionListQuery,
-    params: {
-      AcademicYearId: currentYear?.id,
-      BoardId: filterPayload?.boardId,
-      EducationMediumId: filterPayload?.educationMediumId,
-      StandardId: filterPayload?.standardId,
-      DivisionId: filterPayload?.divisionId,
-      MaxResultCount: feeStructureParams.pageSize,
-      SkipCount: (feeStructureParams.page - 1) * feeStructureParams.pageSize,
-      Search: feeStructureParams.search || undefined,
+  const context = useFinanceAcademicFilters();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState('');
+  const [selected, setSelected] = useState<IFeeStructureData[]>([]);
+  const standardId =
+    context.selectedStandardId === ALL_CLASS_OPTION.id
+      ? undefined
+      : context.selectedStandardId || undefined;
+  const divisionId =
+    context.selectedDivisionId === ALL_DIVISION_OPTION.id
+      ? undefined
+      : context.selectedDivisionId || undefined;
+  const query = useAssignmentStudentsQuery(
+    {
+      academicYearId: currentYear?.id ?? '',
+      standardId,
+      divisionId,
+      boardId: context.selectedBoard,
+      educationMediumId: context.selectedMedium,
+      search,
+      skipCount: (page - 1) * pageSize,
+      maxResultCount: pageSize,
     },
-    options: {
-      skip:
-        !currentYear?.id ||
-        !isReady ||
-        !selectedStandardId ||
-        !selectedDivisionId ||
-        selectedStandardId === ALL_CLASS_OPTION.id ||
-        selectedDivisionId === ALL_DIVISION_OPTION.id,
-    },
-  });
-
+    { skip: !currentYear?.id || !canView || !context.isReady }
+  );
   useEffect(() => {
-    setFeeStructureParams((prev) => ({ ...prev, page: 1 }));
-    setSelectedStudents([]);
-  }, [selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
-
-  const tableData = useMemo(
-    () =>
-      feeStructureData?.items?.map((item: any) => ({
-        ...item,
-        id: item.studentId,
-        name: `${item.studentName || '-'}${item.grNumber ? ` (${item.grNumber})` : ''}`,
-        standardDivision: item.standardDivision || '-',
-        rollNumber: item.rollNumber || '-',
-        totalFees: item.totalFees ?? 0,
-        paidFees: item.paidFees ?? 0,
-        pendingFees: item.pendingFees ?? 0,
-        overdueFees: item.overdueFees ?? 0,
-        totalCharges: item.totalCharges ?? 0,
-        pendingCharges: item.pendingCharges ?? 0,
-        // Consider fee structure assigned if totalFees > 0 or explicit flag from API
-        isFeeStructureAssigned: item.isFeeStructureAssigned ?? (item.totalFees ?? 0) > 0,
-      })),
-    [feeStructureData?.items]
-  );
-
-  // Only selectable students (without an existing fee structure)
-  const selectableTableData = useMemo(
-    () => (tableData ?? []).filter((row: any) => !row.isFeeStructureAssigned),
-    [tableData]
-  );
-
-  const isReadyToDisplay =
-    selectedMedium &&
-    selectedStandardId &&
-    selectedDivisionId &&
-    selectedStandardId !== ALL_CLASS_OPTION.id &&
-    selectedDivisionId !== ALL_DIVISION_OPTION.id;
-
+    setPage(1);
+    setSelected([]);
+  }, [
+    currentYear?.id,
+    standardId,
+    divisionId,
+    context.selectedBoard,
+    context.selectedMedium,
+    search,
+  ]);
+  const rows = (query.currentData?.items ?? []).map((student) => ({
+    ...student,
+    id: student.enrollmentId,
+  }));
+  const eligible = rows.filter((r) => r.isActive && !r.isFeeStructureAssigned);
   return (
-    <>
-      <Card sx={{ p: 1, mb: 1, overflow: 'visible' }}>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+    <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+      <Typography variant="subtitle2">
+        Academic year: {currentYear?.name || 'Select an academic year'}
+      </Typography>
+      <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, flexShrink: 0 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <FinanceAcademicContextFilter
-            boards={boards}
-            mediums={mediums}
-            selectedBoard={selectedBoard}
-            selectedMedium={selectedMedium}
-            onBoardChange={setSelectedBoard}
-            onMediumChange={setSelectedMedium}
-            selectSx={{ maxWidth: '248px', width: '100%' }}
+            boards={context.boards}
+            mediums={context.mediums}
+            selectedBoard={context.selectedBoard}
+            selectedMedium={context.selectedMedium}
+            onBoardChange={context.setSelectedBoard}
+            onMediumChange={context.setSelectedMedium}
+            selectSx={{ width: '100%', minWidth: 0 }}
           />
-          <Box sx={{ maxWidth: '248px', width: '100%' }}>
-            <CustomSelect
-              label="Class"
-              options={filteredClassOptions}
-              value={standardIdState}
-              onChange={(value) => {
-                const nextStandardId = String(value);
-                setStandardIdState(nextStandardId);
-                setSelectedStandardId(nextStandardId);
-              }}
-              labelKey="name"
-              valueKey="id"
-              isLoading={classesLoading}
-              fullWidth
-            />
-          </Box>
-          <Box sx={{ maxWidth: '248px', width: '100%' }}>
-            <CustomSelect
-              label="Division"
-              options={filteredDivisionOptions}
-              value={divisionIdState}
-              onChange={(value) => {
-                const nextDivisionId = String(value);
-                setDivisionIdState(nextDivisionId);
-                setSelectedDivisionId(nextDivisionId);
-              }}
-              labelKey="name"
-              valueKey="id"
-              disabled={isDivisionDisabled}
-              fullWidth
-            />
-          </Box>
-        </Box>
-      </Card>
-
-      {selectedStudents.length > 0 && onBulkAssign && (
-        <Box sx={{ display: 'flex', gap: 1, mb: 1, justifyContent: 'flex-end' }}>
+          <CustomSelect
+            label="Class"
+            options={context.classOptions}
+            value={context.selectedStandardId}
+            onChange={(v) => context.setSelectedStandardId(String(v))}
+            labelKey="name"
+            valueKey="id"
+            isLoading={context.classesLoading}
+          />
+          <CustomSelect
+            label="Division"
+            options={context.divisionOptions}
+            value={context.selectedDivisionId}
+            onChange={(v) => context.setSelectedDivisionId(String(v))}
+            labelKey="name"
+            valueKey="id"
+            disabled={context.isDivisionDisabled}
+          />
+        </Stack>
+      </Paper>
+      {query.isError && (
+        <Alert
+          severity="error"
+          action={
+            <Button
+              size="small"
+              startIcon={<Iconify icon="mdi:refresh" />}
+              onClick={() => query.refetch()}
+            >
+              Retry
+            </Button>
+          }
+        >
+          Student assignments could not be loaded for this year and scope.
+        </Alert>
+      )}
+      {selected.length > 0 && canAssign && (
+        <Box>
           <Button
-            variant="contained"
-            startIcon={<Iconify icon="mdi:file-document-outline" />}
-            onClick={() => onBulkAssign(selectedStudents, standardIdState)}
             size="small"
+            startIcon={<Iconify icon="mdi:account-multiple-plus-outline" />}
+            variant="contained"
+            onClick={() => onBulkAssign?.(selected, standardId ?? '')}
           >
-            Assign Structure ({selectedStudents.length})
+            Assign structure ({selected.length})
           </Button>
         </Box>
       )}
-
-      {isReadyToDisplay ? (
-        <CustomizableTable
-          tableId="fee-structure-assign-table"
-          noDataText={<>Fee Structure Assignment Data Not Found </>}
-          isLoading={feeStructureLoading || feeStructureFetching}
-          serverSidePagination
-          totalCount={feeStructureData?.totalCount || 0}
-          onServerPagination={handleServerPagination}
-          serverSideSearch
-          onServerSearch={handleServerSearch}
-          columns={[
-            {
-              id: 'checkBox',
-              align: 'center',
-              minWidth: '60px',
-              maxWidth: '70px',
-              width: '60px',
-              isSort: false,
-              sticky: true,
-              isFilter: false,
-              label: '',
-              renderColumn() {
-                return (
+      <CustomizableTable
+        tableId="fee-structure-assignment"
+        tableTitle="Student fee structure assignments"
+        isLoading={query.isFetching}
+        data={rows}
+        noDataText="No enrolled students in this academic context"
+        wrapperProps={{ sx: { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' } }}
+        tableContainerProps={{
+          sx: { height: '100%' },
+          'aria-label': 'Student fee structure assignments',
+        }}
+        serverSidePagination
+        maxServerRowsPerPage={100}
+        page={page - 1}
+        rowsPerPage={pageSize}
+        totalCount={query.currentData?.totalCount ?? 0}
+        onServerPagination={(nextPage, size) => {
+          setPage(nextPage);
+          setPageSize(size);
+          setSelected([]);
+        }}
+        serverSideSearch
+        onServerSearch={(value) => setSearch(value)}
+        columns={[
+          ...(canAssign
+            ? [
+              {
+                id: 'select',
+                label: '',
+                width: 64,
+                isSort: false,
+                renderColumn: () => (
                   <Checkbox
-                    checked={
-                      selectableTableData?.length > 0 &&
-                      selectedStudents?.length === selectableTableData?.length
-                    }
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedStudents((selectableTableData as IFeeStructureData[]) || []);
-                      } else {
-                        setSelectedStudents([]);
-                      }
-                    }}
-                    sx={{ mx: 0.2 }}
+                    inputProps={{ 'aria-label': 'Select eligible students on this page' }}
+                    checked={eligible.length > 0 && selected.length === eligible.length}
+                    onChange={(_, checked) => setSelected(checked ? eligible : [])}
                   />
-                );
-              },
-              render(value, row) {
-                const isAssigned = Boolean((row as any).isFeeStructureAssigned);
-                return (
-                  <Checkbox
-                    checked={selectedStudents.some((i: any) => i.id === row.id)}
-                    disabled={isAssigned}
-                    onChange={(e) => {
-                      if (isAssigned) return;
-                      if (e.target.checked) {
-                        setSelectedStudents([...selectedStudents, row as IFeeStructureData]);
-                      } else {
-                        setSelectedStudents(selectedStudents.filter((i: any) => i.id !== row.id));
+                ),
+                render: (_value: unknown, rawRow: IData) => {
+                  const row = rawRow as IFeeStructureData & { isActive?: boolean };
+                  return (
+                    <Checkbox
+                      inputProps={{ 'aria-label': `Select ${row.studentName}` }}
+                      checked={selected.some((s) => s.studentId === row.studentId)}
+                      disabled={!row.isActive || row.isFeeStructureAssigned}
+                      onChange={(_, checked) =>
+                        setSelected((previous) =>
+                          checked
+                            ? [...previous, row]
+                            : previous.filter((s) => s.studentId !== row.studentId)
+                        )
                       }
-                    }}
-                  />
-                );
+                    />
+                  );
+                },
               },
+            ]
+            : []),
+          { id: 'studentName', label: 'Student', minWidth: 220 },
+          {
+            id: 'isActive',
+            label: 'Enrollment',
+            render: (value: unknown) => (value ? 'Active' : 'Inactive — review required'),
+          },
+          {
+            id: 'isFeeStructureAssigned',
+            label: 'Assignment for selected year',
+            render: (value: unknown) => (value ? 'Assigned' : 'Unassigned'),
+          },
+          {
+            id: 'action',
+            label: 'Action',
+            isSort: false,
+            sticky: true,
+            stickyPosition: 'right',
+            render: (_value: unknown, rawRow: IData) => {
+              const row = rawRow as IFeeStructureData & { isActive?: boolean };
+              return row.isFeeStructureAssigned || canAssign ? (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={
+                    <Iconify icon={row.isFeeStructureAssigned ? 'mdi:eye-outline' : 'mdi:plus'} />
+                  }
+                  disabled={!row.isFeeStructureAssigned && !row.isActive}
+                  onClick={() => onAssignStructure(row)}
+                  aria-label={`${row.isFeeStructureAssigned ? 'View assignment for' : 'Assign structure to'} ${row.studentName}`}
+                >
+                  {row.isFeeStructureAssigned ? 'View assignment' : 'Assign structure'}
+                </Button>
+              ) : null;
             },
-            {
-              id: 'name',
-              label: 'Name(Gr No.)',
-              align: 'left',
-              isFilter: true,
-              width: 200,
-              minWidth: 200,
-              maxWidth: 500,
-              sticky: true,
-            },
-            {
-              id: 'standardDivision',
-              label: 'Class/Div',
-              align: 'left',
-              width: 150,
-              minWidth: 100,
-              maxWidth: 150,
-            },
-            {
-              id: 'rollNumber',
-              label: 'Roll No.',
-              align: 'left',
-              isFilter: true,
-              width: 100,
-              minWidth: 100,
-              maxWidth: 150,
-            },
-            {
-              id: 'totalFees',
-              label: 'Total Fees',
-              align: 'left',
-              isFilter: true,
-              filterType: 'number',
-              width: 130,
-              minWidth: 110,
-              maxWidth: 160,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
-            },
-            {
-              id: 'paidFees',
-              label: 'Paid Fees',
-              align: 'left',
-              isFilter: true,
-              filterType: 'number',
-              width: 130,
-              minWidth: 110,
-              maxWidth: 160,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
-            },
-            {
-              id: 'pendingFees',
-              label: 'Pending Fees',
-              filterType: 'number',
-              align: 'left',
-              isFilter: true,
-              width: 140,
-              minWidth: 120,
-              maxWidth: 170,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
-            },
-            {
-              id: 'overdueFees',
-              label: 'Overdue Fees',
-              filterType: 'number',
-              align: 'left',
-              isFilter: true,
-              width: 140,
-              minWidth: 120,
-              maxWidth: 170,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
-            },
-            {
-              id: 'totalCharges',
-              label: 'Total Charges',
-              align: 'left',
-              isFilter: true,
-              filterType: 'number',
-              width: 150,
-              minWidth: 130,
-              maxWidth: 180,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
-            },
-            {
-              id: 'pendingCharges',
-              label: 'Pending Charges',
-              align: 'left',
-              isFilter: true,
-              filterType: 'number',
-              width: 150,
-              minWidth: 130,
-              maxWidth: 180,
-              render: (value: any) => `₹ ${formatNumber(value ?? 0)}`,
-            },
-            {
-              id: 'status',
-              label: 'Status',
-              align: 'left',
-              isFilter: true,
-              filterType: 'enum',
-              enumOptions: FeeCollectionStatusOptions,
-              sticky: true,
-              width: 100,
-              minWidth: 84,
-              maxWidth: 130,
-              render(value) {
-                const statusValue = value as FeeCollectionStatusType;
-                const color = FeeCollectionStatusTypeColors[statusValue] as LabelColor;
-                return <Label color={color}>{FeeCollectionStatusType[statusValue]}</Label>;
-              },
-            },
-            {
-              id: 'action',
-              label: 'Actions',
-              width: 96,
-              minWidth: 80,
-              align: 'left',
-              isSort: false,
-              sticky: true,
-              isFilter: false,
-              render(value, row) {
-                return (
-                  <MenuList sx={{ display: 'flex', flexDirection: 'row', p: 0, minWidth: 'auto' }}>
-                    <CustomTooltip title="Assign/Update Structure">
-                      <MenuItem
-                        onClick={() =>
-                          onAssignStructure({
-                            ...row,
-                            id: row.studentId ?? row.id,
-                          } as IFeeStructureData)
-                        }
-                      >
-                        <Iconify icon="mdi:cash-plus" sx={{ height: '16px', width: '16px' }} />
-                      </MenuItem>
-                    </CustomTooltip>
-                  </MenuList>
-                );
-              },
-            },
-          ]}
-          data={tableData || []}
-        />
-      ) : (
-        <EmptyContent title="Please select board, medium, class and division to view students." />
-      )}
-    </>
+          },
+        ]}
+      />
+    </Stack>
   );
-};
-
-export default FeeStructureAssignTable;
+}

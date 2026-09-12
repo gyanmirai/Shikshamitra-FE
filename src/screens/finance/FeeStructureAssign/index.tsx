@@ -1,123 +1,50 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { useState } from 'react';
-import { Box, Typography } from '@mui/material';
-import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CustomDialog from 'src/components/customDialog';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box } from '@mui/material';
+import { useSelector } from 'react-redux';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
+import AssignmentDrawer from './Components/AssignmentDrawer';
 import FeeStructureAssignTable from './Components/FeeStructureAssignTable';
-import FeeStructureAssignmentForm from './Components/StudentFeeStructureAssignmentForm';
-import BulkFeeStructureAssignmentForm from './Components/BulkFeeStructureAssignmentForm';
 
 import type { IFeeStructureData } from './Components/type';
 
-const FeeStructureAssign = () => {
-  const assignDialog = useBoolean();
-  const bulkAssignDialog = useBoolean();
-  const [selectedStudent, setSelectedStudent] = useState<IFeeStructureData | null>(null);
-  const [selectedStudents, setSelectedStudents] = useState<IFeeStructureData[]>([]);
-  const [bulkStandardId, setBulkStandardId] = useState('');
-
-  const handleAssignClose = () => {
-    assignDialog.onFalse();
-    setSelectedStudent(null);
-  };
-
-  const handleBulkAssignClose = () => {
-    bulkAssignDialog.onFalse();
-    setSelectedStudents([]);
-    setBulkStandardId('');
-  };
-
+export default function FeeStructureAssign() {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [students, setStudents] = useState<IFeeStructureData[]>([]);
+  const close = () => setStudents([]);
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box
+      sx={{
+        height: '100%',
+        minHeight: 0,
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
       <CustomBreadcrumbs
         heading="Fee Structure Assignment"
-        description="Select class and division to view students. Assign fee structures to students to define their fee breakdown."
+        description="Review each student's fee heads, service period and installment schedule before assigning."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/fee-collection' },
-          { name: 'Fee Structure Assign' },
+          { name: 'Fee Structure Assignment' },
         ]}
       />
-
       <FeeStructureAssignTable
-        onAssignStructure={(row) => {
-          assignDialog.onTrue();
-          setSelectedStudent(row);
-        }}
-        onBulkAssign={(rows, standardId) => {
-          bulkAssignDialog.onTrue();
-          setSelectedStudents(rows);
-          setBulkStandardId(standardId);
-        }}
+        onAssignStructure={(student) => setStudents([student])}
+        onBulkAssign={(selected) => setStudents(selected)}
       />
-
-      <CustomDialog
-        open={assignDialog.value}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Assign/Update Fee Structure</Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Assign a fee structure to the student based on their selected class for accurate fee management and billing."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        maxWidth="md"
-        transitionDuration={{ enter: 0, exit: 0 }}
-        handleClose={() => {
-          handleAssignClose();
-        }}
-      >
-        {selectedStudent && (
-          <FeeStructureAssignmentForm
-            student={selectedStudent as any}
-            handleClose={handleAssignClose}
-          />
-        )}
-      </CustomDialog>
-
-      <CustomDialog
-        open={bulkAssignDialog.value}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              Bulk Assign Fee Structure ({selectedStudents.length} students)
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title="Assign the same fee structure to multiple students at once based on their class for efficient bulk fee management."
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        maxWidth="md"
-        transitionDuration={{ enter: 0, exit: 0 }}
-        handleClose={() => {
-          handleBulkAssignClose();
-        }}
-      >
-        {selectedStudents.length > 0 && (
-          <BulkFeeStructureAssignmentForm
-            students={selectedStudents}
-            standardId={bulkStandardId}
-            handleClose={handleBulkAssignClose}
-          />
-        )}
-      </CustomDialog>
+      <AssignmentDrawer
+        students={students}
+        academicYearId={currentYear?.id ?? ''}
+        academicYearName={currentYear?.name}
+        onClose={close}
+      />
     </Box>
   );
-};
-
-export default FeeStructureAssign;
+}

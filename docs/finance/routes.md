@@ -62,3 +62,7 @@ These routes or path constants exist but should not be treated as active menu na
 | ----------------------- | -------------------------------------------------------------------------------- |
 | Receipt Book menu child | Commented in `finance-menu.ts`, although a page folder exists                    |
 | Budgeting path          | `financePaths.budgeting` exists, but active navigation needs source confirmation |
+
+## Student fee assignment
+
+The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).

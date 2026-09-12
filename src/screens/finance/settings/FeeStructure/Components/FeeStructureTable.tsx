@@ -9,6 +9,8 @@ import React, { useMemo, useState } from 'react';
 import { Alert, Stack, Button } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -119,7 +121,11 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         <Alert
           severity="error"
           action={
-            <Button size="small" onClick={() => refetch()}>
+            <Button
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.refresh} />}
+              onClick={() => refetch()}
+            >
               Retry
             </Button>
           }

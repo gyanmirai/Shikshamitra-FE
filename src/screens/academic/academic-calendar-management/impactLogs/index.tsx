@@ -646,24 +646,11 @@ const CalendarImpactLogs = () => {
         columns={columns}
         data={logs}
         noDataText={
-          <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
-            <Box
-              sx={{
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                backgroundColor: varAlpha(theme.palette.success.mainChannel, 0.1),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Iconify icon="mdi:check-circle-outline" width={32} color="success.main" />
-            </Box>
-            <Typography variant="subtitle2" color="text.secondary">
+          <Box width="100%" display="flex" flexDirection="column">
+            <Typography variant="body2" color="text.secondary">
               All clear! No impact logs found
             </Typography>
-          </Stack>
+          </Box>
         }
       />
 

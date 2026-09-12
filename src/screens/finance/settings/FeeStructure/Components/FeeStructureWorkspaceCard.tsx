@@ -70,6 +70,7 @@ import type { StructurePolicyFamily } from '../feeStructureModel';
 interface Props {
   initialData: IClassWiseFeeStructureCard;
   index: number;
+  viewOnly?: boolean;
   onSaved?: (saved: IClassWiseFeeStructureCard) => void;
   onDeleted?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
@@ -107,6 +108,7 @@ const money = (value: number) =>
 export default function FeeStructureWorkspaceCard({
   initialData,
   index,
+  viewOnly = false,
   onSaved,
   onDeleted,
   onDirtyChange,
@@ -248,7 +250,8 @@ export default function FeeStructureWorkspaceCard({
     popupConfig: { error: false },
   });
   const busy = saving || publishing || revising || deleting;
-  const writable = editing && !locked && !busy && !!settings?.permissions[record ? 'edit' : 'add'];
+  const writable =
+    !viewOnly && editing && !locked && !busy && !!settings?.permissions[record ? 'edit' : 'add'];
   useEffect(() => {
     if (!writable || !terms.ready || terms.error || !settings?.permissions.termsRead) return;
     const pending = new Set(pendingTermDefaults.current);
@@ -495,7 +498,12 @@ export default function FeeStructureWorkspaceCard({
           <Label color={locked ? 'success' : 'warning'}>
             {locked ? 'Published' : 'Draft'} · v{record?.revisionNumber ?? 1}
           </Label>
-          {dirty && <Label color="info">Unsaved</Label>}
+          {dirty && !viewOnly && <Label color="info">Unsaved</Label>}
+          {viewOnly && (
+            <Label color="default" startIcon={<Iconify icon={GlobalIcons.eye} />}>
+              Read-only
+            </Label>
+          )}
         </Stack>
       </AccordionSummary>
       <AccordionDetails sx={{ p: 0 }}>
@@ -506,9 +514,13 @@ export default function FeeStructureWorkspaceCard({
           sx={{ px: 2.5, py: 1.5 }}
         >
           <Typography variant="body2" color="text.secondary" sx={{ flex: 1 }}>
-            {locked
-              ? 'Published configuration is protected. Create a revision to make changes.'
-              : 'Complete the required fields to save your draft. Review the setup before publishing.'}
+            {viewOnly
+              ? locked
+                ? 'Published configuration is protected (read-only view).'
+                : 'Draft configuration (read-only view).'
+              : locked
+                ? 'Published configuration is protected. Create a revision to make changes.'
+                : 'Complete the required fields to save your draft. Review the setup before publishing.'}
           </Typography>
           <Button
             size="small"
@@ -518,30 +530,37 @@ export default function FeeStructureWorkspaceCard({
               setPreview(undefined);
               refetch();
             }}
-            startIcon={<Iconify icon="solar:restart-bold" />}
+            startIcon={<Iconify icon={GlobalIcons.refresh} />}
           >
             Refresh context
           </Button>
-          {!locked && !editing && settings?.permissions.edit && (
-            <Button size="small" variant="outlined" onClick={() => setEditing(true)}>
+          {!viewOnly && !locked && !editing && settings?.permissions.edit && (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon={GlobalIcons.edit} />}
+              onClick={() => setEditing(true)}
+            >
               Edit draft
             </Button>
           )}
-          {locked && settings?.permissions.add && settings?.permissions.edit && (
+          {!viewOnly && locked && settings?.permissions.add && settings?.permissions.edit && (
             <LoadingButton
               size="small"
               variant="outlined"
               loading={revising}
+              startIcon={<Iconify icon="solar:pen-new-square-bold" />}
               onClick={() => setConfirmation('revision')}
             >
               Create revision
             </LoadingButton>
           )}
-          {!locked && settings?.permissions.delete && (
+          {!viewOnly && !locked && settings?.permissions.delete && (
             <Button
               size="small"
               color="error"
               disabled={busy}
+              startIcon={<Iconify icon={GlobalIcons.delete} />}
               onClick={() => setConfirmation('delete')}
             >
               Delete draft
@@ -616,7 +635,11 @@ export default function FeeStructureWorkspaceCard({
                     severity="warning"
                     action={
                       settings.permissions.headsRead ? (
-                        <Button size="small" onClick={() => heads.refetch()}>
+                        <Button
+                          size="small"
+                          startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                          onClick={() => heads.refetch()}
+                        >
                           Retry Fee Heads
                         </Button>
                       ) : undefined
@@ -631,7 +654,11 @@ export default function FeeStructureWorkspaceCard({
                   <Alert
                     severity="warning"
                     action={
-                      <Button size="small" onClick={terms.retry}>
+                      <Button
+                        size="small"
+                        startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                        onClick={terms.retry}
+                      >
                         Retry terms
                       </Button>
                     }
@@ -864,6 +891,7 @@ export default function FeeStructureWorkspaceCard({
                             />
                             <Button
                               size="small"
+                              startIcon={<Iconify icon={GlobalIcons.eye} />}
                               disabled={
                                 !row.paymentTermVersionId || !settings.permissions.termsRead
                               }
@@ -1091,14 +1119,16 @@ export default function FeeStructureWorkspaceCard({
                         <Stack direction="row" justifyContent="space-between">
                           <Button
                             size="small"
+                            startIcon={<Iconify icon={GlobalIcons.refresh} />}
                             disabled={!settings.permissions[`${key}Read`] || catalogs[key].loading}
                             onClick={catalogs[key].retry}
                           >
                             {catalogs[key].error ? 'Retry' : 'Refresh list'}
                           </Button>
-                          {candidate[versionKey] && (
+                          {!viewOnly && candidate[versionKey] && (
                             <Button
                               size="small"
+                              startIcon={<Iconify icon={GlobalIcons.cancel} />}
                               disabled={!writable || !settings.permissions[key]}
                               onClick={() => {
                                 defaultsHandled.current.add(key);
@@ -1132,7 +1162,12 @@ export default function FeeStructureWorkspaceCard({
                   <Typography variant="subtitle1" sx={{ flex: 1 }}>
                     Configuration readiness
                   </Typography>
-                  <LoadingButton size="small" loading={previewing} onClick={review}>
+                  <LoadingButton
+                    size="small"
+                    startIcon={<Iconify icon={GlobalIcons.refresh} />}
+                    loading={previewing}
+                    onClick={review}
+                  >
                     Recheck configuration
                   </LoadingButton>
                 </Stack>
@@ -1244,46 +1279,51 @@ export default function FeeStructureWorkspaceCard({
                 </Typography>
               </Stack>
             )}
-            <Stack
-              direction="row"
-              spacing={1}
-              justifyContent="flex-end"
-              sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.neutral' }}
-            >
-              {editing && (
-                <Button
-                  size="small"
-                  variant="outlined"
-                  disabled={busy}
-                  onClick={() => setConfirmation('discard')}
-                >
-                  Discard changes
-                </Button>
-              )}
-              {writable && (
-                <LoadingButton
-                  size="small"
-                  variant="contained"
-                  loading={saving}
-                  disabled={!record && families.some(({ key }) => catalogs[key].loading)}
-                  onClick={save}
-                >
-                  Save draft
-                </LoadingButton>
-              )}
-              {!locked && record && settings.permissions.publish && (
-                <LoadingButton
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  loading={publishing}
-                  disabled={busy || dirty || !preview?.isReady}
-                  onClick={() => setConfirmation('publish')}
-                >
-                  Publish structure
-                </LoadingButton>
-              )}
-            </Stack>
+            {!viewOnly && (
+              <Stack
+                direction="row"
+                spacing={1}
+                justifyContent="flex-end"
+                sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.neutral' }}
+              >
+                {editing && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={busy}
+                    startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                    onClick={() => setConfirmation('discard')}
+                  >
+                    Discard changes
+                  </Button>
+                )}
+                {writable && (
+                  <LoadingButton
+                    size="small"
+                    variant="contained"
+                    startIcon={<Iconify icon={GlobalIcons.submit} />}
+                    loading={saving}
+                    disabled={!record && families.some(({ key }) => catalogs[key].loading)}
+                    onClick={save}
+                  >
+                    Save draft
+                  </LoadingButton>
+                )}
+                {!locked && record && settings.permissions.publish && (
+                  <LoadingButton
+                    size="small"
+                    variant="contained"
+                    color="success"
+                    startIcon={<Iconify icon={GlobalIcons.publish} />}
+                    loading={publishing}
+                    disabled={busy || dirty || !preview?.isReady}
+                    onClick={() => setConfirmation('publish')}
+                  >
+                    Publish structure
+                  </LoadingButton>
+                )}
+              </Stack>
+            )}
           </>
         )}
         {selectedImpact && settings && (
@@ -1326,6 +1366,19 @@ export default function FeeStructureWorkspaceCard({
               size="small"
               variant="contained"
               color={confirmation === 'delete' ? 'error' : 'primary'}
+              startIcon={
+                <Iconify
+                  icon={
+                    confirmation === 'delete'
+                      ? GlobalIcons.delete
+                      : confirmation === 'publish'
+                        ? GlobalIcons.publish
+                        : confirmation === 'revision'
+                          ? 'solar:pen-new-square-bold'
+                          : GlobalIcons.submit
+                  }
+                />
+              }
               onClick={confirm}
             >
               Confirm
@@ -1345,6 +1398,7 @@ export default function FeeStructureWorkspaceCard({
             <Button
               size="small"
               variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.refresh} />}
               onClick={() => {
                 if (!pendingTerm) return;
                 const { headId, term } = pendingTerm;
@@ -1368,7 +1422,11 @@ export default function FeeStructureWorkspaceCard({
             severity={termDetail.isError || !termDetail.isFetching ? 'warning' : 'info'}
             sx={{ m: 2 }}
             action={
-              <Button size="small" onClick={() => setScheduleHead(undefined)}>
+              <Button
+                size="small"
+                startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                onClick={() => setScheduleHead(undefined)}
+              >
                 Close
               </Button>
             }

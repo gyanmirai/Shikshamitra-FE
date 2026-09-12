@@ -1364,6 +1364,7 @@ The fields inside `renderItem` must use the supplied `formik` object and the for
 - Keep `activeStep` state in the parent workflow so the parent can coordinate dialogs, drawers, routes, dirty-state protection, and successful submission.
 - Keep the stepper’s scrollable content region separate from its sticky action footer; long step forms must not push actions out of view.
 - Use `handleBack` for backward navigation and preserve entered values unless the workflow explicitly requires a reset.
+- Use optional `backButtonProps` for a workflow-specific icon or to disable backward navigation after a terminal result. The shared stepper still enforces first-step and busy-state disabling and owns the click handler.
 - Keep Save, Save & Next, Back, and Submit semantics clear; do not silently submit the entire workflow when the user selects Save for the current step.
 - Respect the component’s loading state and do not trigger duplicate next, save, or submit requests while it is busy.
 - Use a stepper only for a genuinely ordered sequence; use `CustomTabs` for peer views that can be visited independently.

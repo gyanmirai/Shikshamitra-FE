@@ -5,6 +5,8 @@ import type { RootState } from 'src/redux/store';
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Box, Card, Button } from '@mui/material';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -23,6 +25,7 @@ import type { IFeeStructure } from './type';
 
 export default function FeeStructure() {
   const [selected, setSelected] = useState<IFeeStructure | null>(null);
+  const [isViewOnly, setIsViewOnly] = useState(false);
   const confirmClose = useBoolean();
   const workspace = useBoolean();
   const dispatch = useDispatch();
@@ -35,6 +38,7 @@ export default function FeeStructure() {
   });
   const close = () => {
     setSelected(null);
+    setIsViewOnly(false);
     workspace.onFalse();
     confirmClose.onFalse();
     dispatch(setIsChanges(false));
@@ -43,17 +47,31 @@ export default function FeeStructure() {
     if (isChanges) confirmClose.onTrue();
     else close();
   };
-  const open = (data: IFeeStructure) => {
+  const openEdit = (data: IFeeStructure) => {
     setSelected(data);
+    setIsViewOnly(false);
+    workspace.onTrue();
+  };
+  const openView = (data: IFeeStructure) => {
+    setSelected(data);
+    setIsViewOnly(true);
     workspace.onTrue();
   };
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading={selected ? 'Manage Fee Structure' : 'Fee Structure'}
+        heading={
+          selected
+            ? isViewOnly
+              ? 'View Fee Structure'
+              : 'Manage Fee Structure'
+            : 'Fee Structure'
+        }
         description={
           selected
-            ? 'Configure class fees, published Payment Terms and policy versions. Review readiness before publication.'
+            ? isViewOnly
+              ? 'View class fee configurations, published Payment Terms and policy versions.'
+              : 'Configure class fees, published Payment Terms and policy versions. Review readiness before publication.'
             : 'Manage class fee configurations and protected revisions for the selected academic year.'
         }
         isBack={!!selected}
@@ -75,6 +93,7 @@ export default function FeeStructure() {
               variant="contained"
               loading={isLoading}
               disabled={!currentYear?.id}
+              startIcon={<Iconify icon={GlobalIcons.refresh} />}
               onClick={async () => {
                 try {
                   await generate({ academicYearId: currentYear.id }).unwrap();
@@ -91,15 +110,19 @@ export default function FeeStructure() {
       />
       {selected ? (
         <Card sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <FeeStructureEditForm editData={selected} onClose={requestClose} />
+          <FeeStructureEditForm
+            editData={selected}
+            onClose={requestClose}
+            viewOnly={isViewOnly}
+          />
         </Card>
       ) : (
         <FeeStructureTable
           addFeeStructure={workspace}
           editData={selected}
           setEditData={setSelected}
-          onEdit={open}
-          onView={open}
+          onEdit={openEdit}
+          onView={openView}
         />
       )}
       <ConfirmDialog
@@ -108,7 +131,13 @@ export default function FeeStructure() {
         title="Discard unsaved changes?"
         content="Your unsaved Fee Structure changes will be lost when you leave this workspace."
         action={
-          <Button size="small" color="error" variant="contained" onClick={close}>
+          <Button
+            size="small"
+            color="error"
+            variant="contained"
+            startIcon={<Iconify icon={GlobalIcons.delete} />}
+            onClick={close}
+          >
             Discard & leave
           </Button>
         }

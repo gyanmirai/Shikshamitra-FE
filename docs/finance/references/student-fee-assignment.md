@@ -1,0 +1,51 @@
+---
+module: finance
+domain: student-fee-assignment
+content_type: Reference
+status: canonical
+updated_on: 2026-09-10
+owner: frontend-team
+audience: humans-and-agents
+---
+
+# Student fee assignment workspace
+
+The `/finance/fee-structure-assign` route lists assignment status for the selected academic year and academic scope. The route/menu/table require `Finance.Fees.StructureAssign.View`; create controls additionally require `.Add`. Backend contracts and financial invariants belong to [the backend assignment reference](../../../../Shikshamitra-BE/docs/modules/finance/references/student-fee-assignment.md).
+
+## User flow
+
+1. Select academic context and students. Selection clears when context, search or page changes. Assigned students open a read view; inactive students cannot be selected for creation.
+2. Open the themed assignment drawer with the shared `DrawerHeader`. Select a published structure revision, then choose Next.
+3. Review each student's mandatory heads and select optional heads separately. Configure supported verified transport dates or authorized manual service dates. Amount overrides are permission-gated and require a reason.
+4. Preview. Each student receives an independent result/error. Review head totals, dates, preserved installment percentages, payment-term versions and policy treatment.
+5. Confirm successful previews. The server returns canonical results and the client preserves successful students when retrying failed items.
+6. Read assigned obligations with current paid/outstanding balances. A different revision or service correction cannot silently overwrite history.
+
+The compact academic filter card follows `DESIGN.md` with `Paper`, `p: 1` and `spacing={1}`. Board, medium, class and division fill the row on desktop and stack on mobile. The shared table fills the remaining height; its controlled page index is zero-based while its server callback is one-based.
+
+`CustomStepperWithFormik` owns the form values across Structure, Heads and service, Review and Results. Each step renders its own content. Back preserves values and invalidates the previous preview; another preview is required before confirmation. There is no draft-save action. Small themed buttons have leading Iconify icons, and the stepper owns scrolling and its action footer.
+
+Changing any input invalidates the previous preview. Late preview responses are discarded. Failed commits retain an actionable error; identical network retries use the backend's saved result. Results offers Review remaining students after partial success and Close when all students succeed. The drawer blocks closing during requests and uses the shared `ConfirmDialog` before discarding unassigned changes. Successful assignments remain intact.
+
+## Source and client ownership
+
+| File | Responsibility |
+|---|---|
+| `src/redux/finance/studentFeeAssignment.ts` | Typed queries and preview/commit contracts; invalidates student admission and fee collection tags on successful commits |
+| `src/screens/finance/FeeStructureAssign/index.tsx` | Page and year context |
+| `Components/AssignmentDrawer.tsx` | Themed drawer, shared header, busy guard and discard confirmation |
+| `Components/FeeStructureAssignTable.tsx` | Context filters, paging, eligible selection and year-specific assignment status |
+| `Components/AssignmentWorkflow.tsx` | Shared single/bulk review, dirty state, stale-response protection, canonical outcomes and retry handling |
+| `Components/AssignmentStudentInputs.tsx` | Optional heads, permitted amount/date inputs and verified transport record picker |
+| `Components/AssignmentReview.tsx` | Human-readable immutable evidence, totals, policies and balances |
+| `Components/StudentFeeStructureAssignmentForm.tsx` / `BulkFeeStructureAssignmentForm.tsx` | Compatibility wrappers for existing collection/profile entry points |
+
+The flow makes no concession-policy lookup or eligibility request. It does not fabricate verified service dates or expose technical UUIDs as picker labels. Legacy views label missing evidence instead of displaying a reconstructed price or percentage.
+
+## Checks
+
+- `npm run ts` for client/component types.
+- `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/finance/FeeStructureAssign/Components/AssignmentWorkflow.test.tsx src/components/custom-stepper/button-props.test.ts src/components/custom-stepper/formik-validation.test.ts --pool=threads` verifies required structure selection, Back/preview invalidation, busy navigation guards, token submission and failed-student-only bulk retry.
+- `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vite/bin/vite.js --config e2e/fixtures/fee-assignment/vite.config.mts` serves the synthetic component fixture on `127.0.0.1:4179` for in-app browser checks. It uses real workflow components and RTK Query against a synthetic base query; it is not full-stack or calculation evidence.
+- Verify light/dark themes, a narrow viewport, scrolling, optional-head preview changes, preserved 60/40 shares and canonical confirmation. The table should scroll locally on narrow screens and footer actions remain reachable.
+- Production sign-off still requires authenticated FE/API/PostgreSQL checks, tenant/permission isolation and the backend deployment gates. No live financial writes were made during component verification.

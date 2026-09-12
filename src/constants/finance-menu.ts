@@ -313,7 +313,7 @@ const financeModule = {
               _action: 'fee-structure-assign',
               shortcutKey: 'Alt+F+2+SA',
               shortcutKeyName: 'Alt+F+2+SA',
-              permissionName: financePermissions.fees.structureAssign,
+              permissionName: `${financePermissions.fees.structureAssign}.View`,
               icon: menuIconView('mdi:file-document-outline'),
             },
             {

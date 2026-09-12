@@ -126,6 +126,7 @@ export interface IFeeStructureFormProps {
 export interface IFeeStructureEditFormProps {
   editData: IFeeStructure;
   onClose: (e: any, isSubmit?: boolean) => void;
+  viewOnly?: boolean;
 }
 
 export interface FeeStructureCardProps {
