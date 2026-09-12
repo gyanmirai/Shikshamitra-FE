@@ -1,4 +1,5 @@
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { Box, Stack, Alert, Button, Slider, Typography, LinearProgress } from '@mui/material';
 
 type Props = {
@@ -21,7 +22,7 @@ export function ChapterCompletionSlider({
   onChange,
 }: Props) {
   const target = Math.min(100, Math.max(minimum, value));
-  const marks = [minimum, ...(minimum < 50 ? [50] : []), 100].map((percentage) => ({
+  const marks = [0, 50, 100].map((percentage) => ({
     value: percentage,
     label: `${percentage}%`,
   }));
@@ -62,16 +63,30 @@ export function ChapterCompletionSlider({
         <Slider
           aria-label="Target Chapter Completion"
           aria-describedby="chapter-completion-guidance"
-          min={minimum}
+          getAriaValueText={(percentage) => `${percentage}% target; minimum allowed ${minimum}%`}
+          min={0}
           max={100}
           step={5}
           size="small"
           value={target}
+          track={false}
           disabled={disabled || loading || !!error}
           onChange={(_, next) => onChange(Math.max(minimum, next as number))}
           valueLabelDisplay="auto"
           marks={marks}
-          sx={{ mt: 1 }}
+          sx={(theme) => ({
+            mt: 1,
+            '& .MuiSlider-rail': {
+              opacity: 1,
+              background: `linear-gradient(to right,
+                ${theme.palette.action.disabled} 0%,
+                ${theme.palette.action.disabled} ${minimum}%,
+                ${theme.palette.primary.main} ${minimum}%,
+                ${theme.palette.primary.main} ${target}%,
+                ${alpha(theme.palette.text.primary, 0.24)} ${target}%,
+                ${alpha(theme.palette.text.primary, 0.24)} 100%)`,
+            },
+          })}
         />
       )}
       <Typography id="chapter-completion-guidance" variant="caption" color="text.secondary">

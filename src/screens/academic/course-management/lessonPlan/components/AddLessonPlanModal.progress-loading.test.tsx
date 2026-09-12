@@ -68,7 +68,7 @@ describe('recorded chapter progress loading', () => {
     expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     await waitFor(() => expect(screen.getByRole('button', { name: 'Draft' })).toBeEnabled());
-    expect(screen.getByRole('slider')).toHaveAttribute('min', '60');
+    expect(screen.getByRole('slider')).toHaveAttribute('min', '0');
     expect(screen.getByRole('slider')).toHaveValue('60');
     unmount();
   });
@@ -86,7 +86,8 @@ describe('recorded chapter progress loading', () => {
     act(() => {
       store.dispatch(api.util.invalidateTags([academicType.teacherDiary]));
     });
-    await waitFor(() => expect(screen.getByRole('slider')).toHaveAttribute('min', '60'));
+    await waitFor(() => expect(screen.getByRole('slider')).toHaveAttribute('min', '0'));
+    expect(screen.getByRole('slider')).toHaveValue('60');
     fireEvent.click(screen.getByRole('button', { name: 'Draft' }));
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ plannedCompletionPercentage: 60 }),

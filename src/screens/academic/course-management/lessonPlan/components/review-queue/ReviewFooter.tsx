@@ -1,13 +1,12 @@
 'use client';
 
 import React from 'react';
-import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import Alert from '@mui/material/Alert';
-import Typography from '@mui/material/Typography';
+import Button from '@mui/material/Button';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import Typography from '@mui/material/Typography';
 
 type ReviewFooterProps = {
   status: string;
@@ -18,7 +17,6 @@ type ReviewFooterProps = {
   onRequestChanges?: () => void;
   onReject?: () => void;
   onViewDetails?: () => void;
-  onRevisePlan?: () => void;
 };
 
 export const ReviewFooter = ({
@@ -30,7 +28,6 @@ export const ReviewFooter = ({
   onRequestChanges,
   onReject,
   onViewDetails,
-  onRevisePlan,
 }: ReviewFooterProps) => {
   const isPending = status === 'pending';
 
@@ -59,18 +56,6 @@ export const ReviewFooter = ({
             onClick={onViewDetails}
           >
             View Details
-          </Button>
-        )}
-
-        {!isPending && onRevisePlan && ['changes', 'rejected'].includes(status) && (
-          <Button
-            size="small"
-            variant="contained"
-            color="warning"
-            startIcon={<Iconify icon="solar:pen-bold" width={16} />}
-            onClick={onRevisePlan}
-          >
-            Revise
           </Button>
         )}
 
