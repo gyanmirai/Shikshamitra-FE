@@ -464,24 +464,11 @@ const WorkingHourSettingsForm = ({ calendarId }: Props) => {
           columns={columns}
           data={tableData}
           noDataText={
-            <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
-              <Box
-                sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: '50%',
-                  backgroundColor: 'action.hover',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Iconify icon="mdi:clock-outline" width={32} color="text.disabled" />
-              </Box>
+            <Box width="100%" display="flex" flexDirection="column" alignItems="center">
               <Typography variant="subtitle2" color="text.secondary">
                 No classes configured for this medium
               </Typography>
-            </Stack>
+            </Box>
           }
         />
       )}

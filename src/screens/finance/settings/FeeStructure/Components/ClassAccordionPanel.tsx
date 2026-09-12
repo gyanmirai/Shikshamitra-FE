@@ -1,4 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
@@ -15,6 +17,7 @@ import type { IClassWiseFeeStructureCard } from '../type';
 interface ClassAccordionPanelProps {
   classId: string;
   feeStructureMetaDataId: string;
+  viewOnly?: boolean;
   /** Called whenever unsaved-changes state changes for any card in this panel */
   onDirtyChange?: (dirty: boolean) => void;
   /**
@@ -68,6 +71,7 @@ const mapToCardModel = (
 const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
   classId,
   feeStructureMetaDataId,
+  viewOnly = false,
   onDirtyChange,
   onRegisterAddNew,
 }) => {
@@ -182,7 +186,11 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
         <Alert
           severity="error"
           action={
-            <Button size="small" onClick={() => refetch()}>
+            <Button
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.refresh} />}
+              onClick={() => refetch()}
+            >
               Retry
             </Button>
           }
@@ -199,7 +207,11 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
           <EmptyContent
             filled
             title="No Fee Structures"
-            description="Click '+ Add Fee Structure' to create one for this class."
+            description={
+              viewOnly
+                ? 'This class currently has no fee structures configured.'
+                : "Click '+ Add Fee Structure' to create one for this class."
+            }
             sx={{ py: 8 }}
           />
         </motion.div>
@@ -211,6 +223,7 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
             key={cardKey}
             initialData={card}
             index={idx}
+            viewOnly={viewOnly}
             onSaved={() => {
               dirtySet.current.delete(cardKey);
               onDirtyChange?.(dirtySet.current.size > 0);

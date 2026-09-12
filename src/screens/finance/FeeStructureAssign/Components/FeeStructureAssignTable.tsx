@@ -165,37 +165,37 @@ export default function FeeStructureAssignTable({
         columns={[
           ...(canAssign
             ? [
-                {
-                  id: 'select',
-                  label: '',
-                  width: 64,
-                  isSort: false,
-                  renderColumn: () => (
+              {
+                id: 'select',
+                label: '',
+                width: 64,
+                isSort: false,
+                renderColumn: () => (
+                  <Checkbox
+                    inputProps={{ 'aria-label': 'Select eligible students on this page' }}
+                    checked={eligible.length > 0 && selected.length === eligible.length}
+                    onChange={(_, checked) => setSelected(checked ? eligible : [])}
+                  />
+                ),
+                render: (_value: unknown, rawRow: IData) => {
+                  const row = rawRow as IFeeStructureData & { isActive?: boolean };
+                  return (
                     <Checkbox
-                      inputProps={{ 'aria-label': 'Select eligible students on this page' }}
-                      checked={eligible.length > 0 && selected.length === eligible.length}
-                      onChange={(_, checked) => setSelected(checked ? eligible : [])}
+                      inputProps={{ 'aria-label': `Select ${row.studentName}` }}
+                      checked={selected.some((s) => s.studentId === row.studentId)}
+                      disabled={!row.isActive || row.isFeeStructureAssigned}
+                      onChange={(_, checked) =>
+                        setSelected((previous) =>
+                          checked
+                            ? [...previous, row]
+                            : previous.filter((s) => s.studentId !== row.studentId)
+                        )
+                      }
                     />
-                  ),
-                  render: (_value: unknown, rawRow: IData) => {
-                    const row = rawRow as IFeeStructureData & { isActive?: boolean };
-                    return (
-                      <Checkbox
-                        inputProps={{ 'aria-label': `Select ${row.studentName}` }}
-                        checked={selected.some((s) => s.studentId === row.studentId)}
-                        disabled={!row.isActive || row.isFeeStructureAssigned}
-                        onChange={(_, checked) =>
-                          setSelected((previous) =>
-                            checked
-                              ? [...previous, row]
-                              : previous.filter((s) => s.studentId !== row.studentId)
-                          )
-                        }
-                      />
-                    );
-                  },
+                  );
                 },
-              ]
+              },
+            ]
             : []),
           { id: 'studentName', label: 'Student', minWidth: 220 },
           {

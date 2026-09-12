@@ -28,14 +28,20 @@ import type { IFeeStructureEditFormProps } from '../type';
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, onClose }) => {
+const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({
+  editData,
+  onClose,
+  viewOnly = false,
+}) => {
   const theme = useTheme();
   const dispatch = useDispatch();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const canAdd = hasGrantedPermission(
-    permissions,
-    financePermissions.fees.settings.feeStructureActions.create
-  );
+  const canAdd =
+    !viewOnly &&
+    hasGrantedPermission(
+      permissions,
+      financePermissions.fees.settings.feeStructureActions.create
+    );
   useEffect(
     () => () => {
       dispatch(setIsChanges(false));
@@ -260,7 +266,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
                 <Button
                   variant="contained"
                   size="small"
-                  startIcon={<Iconify icon="lucide:plus" />}
+                  startIcon={<Iconify icon={GlobalIcons.addIcon} />}
                   onClick={() => addNewFnRef.current?.()}
                   disabled={!selectedClassId}
                   sx={{
@@ -326,6 +332,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
                     key={selectedClassId}
                     classId={selectedClassId}
                     feeStructureMetaDataId={editData.id}
+                    viewOnly={viewOnly}
                     onDirtyChange={(dirty) => {
                       isDirtyRef.current = dirty;
                       dispatch(setIsChanges(dirty));
@@ -373,6 +380,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({ editData, 
             variant="contained"
             color="error"
             size="small"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
             onClick={() => {
               if (pendingClassId) {
                 isDirtyRef.current = false;

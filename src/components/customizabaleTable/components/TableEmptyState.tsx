@@ -13,9 +13,9 @@ interface Props {
 export default function TableEmptyState({ noDataText, tableWidth }: Props) {
   const stickyWidth = tableWidth || '100%';
 
-  if (isValidElement(noDataText)) {
-    return <Box sx={{ width: stickyWidth, position: 'sticky', left: 0 }}>{noDataText}</Box>;
-  }
+  // if (isValidElement(noDataText)) {
+  //   return <Box sx={{ width: stickyWidth, position: 'sticky', left: 0 }}>{noDataText}</Box>;
+  // }
 
   return (
     <EmptyContent

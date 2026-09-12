@@ -257,33 +257,16 @@ const AuditLogsTable = ({
       data={logs}
       handleRowClick={(row) => onRowClick?.(row as unknown as AuditLog)}
       noDataText={
-        <Stack alignItems="center" spacing={1} sx={{ py: 6 }}>
-          <Box
-            sx={{
-              width: 64,
-              height: 64,
-              borderRadius: '50%',
-              backgroundColor: alpha(theme.palette.primary.main, 0.08),
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Iconify icon="mdi:history" width={32} color="text.disabled" />
-          </Box>
-          <Typography variant="subtitle2" color="text.secondary">
+        <Box width="100%" display="flex" flexDirection="column">
+          <Typography variant="body2" color="text.secondary">
             {hasActiveFilters ? 'No logs match your filters' : 'No audit logs found'}
           </Typography>
-          <Typography
-            variant="caption"
-            color="text.disabled"
-            sx={{ maxWidth: 360, textAlign: 'center' }}
-          >
+          <Typography variant="caption" color="text.disabled">
             {hasActiveFilters
               ? 'Try changing the date range, action, or search keyword.'
               : 'Audit logs will appear here when users create, update, delete, publish, or approve academic calendar records.'}
           </Typography>
-        </Stack>
+        </Box>
       }
       // expose pagination state to CustomizableTable so it reflects server rows
       {...({ page: page + 1, rowsPerPage } as any)}

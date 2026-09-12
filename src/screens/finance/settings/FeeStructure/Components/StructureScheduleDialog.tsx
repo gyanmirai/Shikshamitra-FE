@@ -7,6 +7,8 @@ import type {
 
 import dayjs from 'dayjs';
 import { useState } from 'react';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
@@ -189,16 +191,30 @@ export default function StructureScheduleDialog({ line, term, readOnly, onClose,
         </Stack>
         <DialogActions sx={{ p: 2 }}>
           {!readOnly && (
-            <Button size="small" onClick={() => onSave([], false)}>
+            <Button
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.refresh} />}
+              onClick={() => onSave([], false)}
+            >
               Restore inherited schedule
             </Button>
           )}
           <Box sx={{ flex: 1 }} />
-          <Button size="small" variant="outlined" onClick={onClose}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon={GlobalIcons.cancel} />}
+            onClick={onClose}
+          >
             {readOnly ? 'Close' : 'Cancel'}
           </Button>
           {!readOnly && (
-            <Button size="small" variant="contained" onClick={save}>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+              onClick={save}
+            >
               Use this schedule
             </Button>
           )}

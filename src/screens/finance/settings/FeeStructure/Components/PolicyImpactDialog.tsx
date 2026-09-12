@@ -1,5 +1,7 @@
 import { useId } from 'react';
 import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Stack, Alert, Button, Skeleton, Typography, DialogActions } from '@mui/material';
 
@@ -123,7 +125,12 @@ export default function PolicyImpactDialog({
         </Stack>
       </DialogScrollContent>
       <DialogActions>
-        <Button variant="outlined" size="small" onClick={onClose}>
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          onClick={onClose}
+        >
           Close
         </Button>
       </DialogActions>
