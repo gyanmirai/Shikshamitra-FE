@@ -66,7 +66,8 @@ export type EsiEmployeeImpact = {
   employeeName: string;
   isCovered: boolean;
   canCalculate: boolean;
-  coverageDecision: string;
+  coverageDecisionCode: string;
+  coverageDecisionLabel: string;
   statutoryWages: number;
   wageCeiling: number;
   employeeContribution: number;
@@ -76,7 +77,22 @@ export type EsiEmployeeImpact = {
   wageCeilingCategory: EsiEnrollment['wageCeilingCategory'];
   insuranceNumber?: string | null;
   contributionPeriodEnd?: string | null;
-  issueCodes: string[];
+  issues: EsiStatutoryIssue[];
+};
+
+export type EsiStatutoryIssue = {
+  code: string;
+  severity: 'blocking' | 'warning' | string;
+  title: string;
+  message: string;
+  resolutionTarget:
+    | 'establishment'
+    | 'earningClassifications'
+    | 'employeeEnrollment'
+    | 'compensationRevision'
+    | 'general'
+    | string;
+  affectedEmployeeCount: number;
 };
 
 export type EsiStatutoryOverride = {
@@ -96,22 +112,53 @@ export type EsiStatutoryOverride = {
 export type EsiImpactPreview = {
   schemeCode: 'ESI';
   monthYear: string;
-  employeeCount: number;
-  coveredEmployeeCount: number;
-  employeeContributionTotal: number;
-  employerContributionTotal: number;
-  governmentContributionTotal: number;
-  canActivate: boolean;
-  blockingIssueCodes: string[];
-  employees: EsiEmployeeImpact[];
+  summary: {
+    employeesNeedingAttention: number;
+    employeeCount: number;
+    coveredEmployeeCount: number;
+    employeeContributionTotal: number;
+    employerContributionTotal: number;
+    governmentContributionTotal: number;
+    canActivate: boolean;
+    blockingIssues: EsiStatutoryIssue[];
+  };
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  items: EsiEmployeeImpact[];
+  generatedAtUtc: string;
+  previewFingerprint: string;
+};
+
+export type EsiImpactPreviewRequest = {
+  monthYear: string;
+  search?: string;
+  coverage?: 'all' | 'covered' | 'notCovered';
+  readiness?: 'all' | 'ready' | 'needsAttention';
+  enrollmentStatuses?: EsiEnrollment['status'][];
+  page?: number;
+  pageSize?: 10 | 25 | 50 | 100;
+  sortBy?:
+    | 'employeeName'
+    | 'employeeIdentifier'
+    | 'statutoryWages'
+    | 'employeeContribution'
+    | 'employerContribution'
+    | 'readiness';
+  sortDirection?: 'asc' | 'desc';
 };
 
 export const esiStatutoryEndpoint = '/payroll/statutory-schemes/esi';
 
-export const buildEsiImpactPreviewRequest = (monthYear: string) => ({
+export const buildEsiImpactPreviewRequest = (body: EsiImpactPreviewRequest) => ({
   url: `${esiStatutoryEndpoint}/impact-preview`,
   method: 'POST' as const,
-  body: { monthYear },
+  body: {
+    ...body,
+    search: body.search?.trim() || undefined,
+    page: Math.max(0, body.page ?? 0),
+    pageSize: Math.min(100, Math.max(1, body.pageSize ?? 25)),
+  },
 });
 
 export const statutorySchemeApi = api.injectEndpoints({
@@ -205,10 +252,14 @@ export const statutorySchemeApi = api.injectEndpoints({
         { type: payrollStructureType.statutoryScheme, id: `override-${employeeId}` },
       ],
     }),
-    previewEsiImpact: builder.mutation<EsiImpactPreview, { monthYear: string }>({
-      query: ({ monthYear }) => buildEsiImpactPreviewRequest(monthYear),
+    previewEsiImpact: builder.query<EsiImpactPreview, EsiImpactPreviewRequest>({
+      query: (body) => buildEsiImpactPreviewRequest(body),
+      providesTags: [payrollStructureType.statutoryScheme],
     }),
-    activateEsi: builder.mutation<EsiEstablishment, { monthYear: string }>({
+    activateEsi: builder.mutation<
+      EsiEstablishment,
+      { monthYear: string; previewFingerprint: string }
+    >({
       query: (body) => ({ url: `${esiStatutoryEndpoint}/activate`, method: 'POST', body }),
       invalidatesTags: [payrollStructureType.statutoryScheme],
     }),
@@ -226,6 +277,6 @@ export const {
   useUpdateEsiEnrollmentMutation,
   useGetEsiOverridesQuery,
   useCreateEsiOverrideMutation,
-  usePreviewEsiImpactMutation,
+  usePreviewEsiImpactQuery,
   useActivateEsiMutation,
 } = statutorySchemeApi;
