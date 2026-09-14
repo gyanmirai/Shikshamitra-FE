@@ -43,6 +43,7 @@
   ],
   "exclude": [
     "node_modules",
+    ".artifacts",
     "**/route.ts",
     "**/overview/page.ts",
     "dist",

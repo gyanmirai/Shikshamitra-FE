@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-08-15
+updated_on: 2026-09-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -62,7 +62,7 @@ Use this table to choose validation:
 | Employee profile dashboard                         | `employeeApi.contract.test.ts`, `employee-dashboard-utils.test.ts`, and the employee profile browser flow                                                                                                                                                                                                                      |
 | Employee onboarding and public applications        | Status graph, full finalization validation, academic permission, explicit role-approval and employee-group audience, incompatible role-selection clearing, forward-step opt-in, busy-dialog close, public validation, table export, and shared-toast unit tests, plus `e2e/hr/employee-onboarding/employee-onboarding.spec.ts` |
 | Employee I-card designer or export                 | `src/screens/hr/i-card/i-card-builder-utils.test.ts`, I-card client contract tests, and `e2e/hr/employee/employee-email-icard-regression.spec.ts`                                                                                                                                                                              |
-| Payroll settings and component dependencies        | Earning and deduction component utility tests, salary-template editor utilities and client contracts, ESI statutory settings and client contract tests, and focused settings flows                                                                                                                                              |
+| Payroll settings and component dependencies        | Earning and deduction component utility tests, salary-template editor utilities and client contracts, ESI URL normalization, automatic preview, server query, stale activation, conditional enrollment, dirty-form, settings screen, and client contract tests, plus focused settings flows                                                                                       |
 | Compensation builder and revisions                 | Salary calculation contract tests, revision client tests, Gross, Take-home, and Employer Cost examples, effective-month behavior, separate approval, revision history, one-time component separation, and empty numeric component editing                                                                                         |
 | Payroll run, readiness, adjustment, lock, or slips | Payslip-selection tests, compensation provenance and drift display tests, ESI government-share display tests, `e2e/hr/hr-module-full-cycle.spec.ts`, and run payroll client tests                                                                                                                                                |
 | Attendance and imports                             | Attendance status-mapper tests, attendance client contract tests, attendance import month tests, and focused Playwright flows                                                                                                                                                                                                  |
@@ -72,6 +72,10 @@ Use this table to choose validation:
 | Reports                                            | `HrReportCenterEnhancements.test.tsx`, `index.test.tsx`, `useHrReportsCenterActions.test.ts`, `TableBody.empty-state.test.tsx`, `hrReportsApi.ts` tests, and report screen checks                                                                                                                                              |
 
 ## E2E environment
+
+ESI unsaved-navigation checks must cover sidebar links, workspace tabs, payroll-month changes, Keep editing, Discard changes, Escape, focus return, and browser back/forward.
+The workspace uses cancellable Navigation API traversal in supporting browsers and retains the native unload warning for page reload or exit.
+Run `esi-unsaved-navigation.test.tsx` and verify the current supported browser at 390x844, 768x1024, and 1440x900 without adding synthetic history entries.
 
 Use these environment variables for browser tests:
 

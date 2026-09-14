@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-08-13
+updated_on: 2026-09-13
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -25,8 +25,9 @@ Use this table before searching `src/redux`:
 | `employee-payroll-api.ts`          | Earning components, deduction components, provident fund, professional tax, pay elements      | HR payroll settings             |
 | `employee-salary-structure-api.ts` | Employee salary structure get and update                                                      | HR payroll salary structure     |
 | `compensation-revision-api.ts`     | Effective-dated recurring compensation create, submit, approve, reject, and history            | HR payroll compensation         |
-| `runPayrollApi.ts`                 | Payroll run, readiness, reviews, adjustments, salary slips, PDFs                              | HR payroll operations           |
-| `statutory-scheme-api.ts`          | ESI rule, establishment, wage mapping, enrollment, audited exceptions, preview, and activation | HR payroll statutory settings   |
+| `runPayrollApi.ts`                 | Generation-bound reviews and lock, adjustments, salary slips, PDFs                            | HR payroll operations           |
+| `payroll-preview-run-api.ts`       | Start/resume background calculation, status polling, and server-paged generation results       | HR payroll operations           |
+| `statutory-scheme-api.ts`          | ESI rule, establishment, earning classifications, enrollment, audited exceptions, preview, and activation | HR payroll statutory settings   |
 | `attendanceApi.ts`                 | Attendance tracking, employee attendance, import preview, confirm, template, register, adjust | HR attendance and leaves        |
 | `attendanceImportApi.ts`           | Automated attendance runs, rows, lock, unlock, save rows                                      | HR attendance imports           |
 | `leaveApi.ts`                      | Leave policies, leave requests, actions, balances                                             | HR attendance and leaves        |
@@ -51,9 +52,18 @@ Use these expectations when reviewing client behavior:
 
 ## Contract rule
 
+The durable payroll preview client is a pending coordinated release and requires the additive backend schema.
+`src/screens/hr/payroll/run-payroll/use-payroll-preview-run.ts` owns month/run URL state, bounded polling, debounced search, and late-response protection.
+The monthly workbench and Payroll Overview consume the same background-run contract instead of invoking synchronous readiness calculations.
+Only the requested employee page is fetched, and the backend summary remains unfiltered.
+The workbench keeps the last completed page visible during recalculation and disables review, adjustment, and locking until current results are available.
+Salary calculation errors use the shared problem-details parser so allocation discrepancies include the server's gross, allocated amount, and difference.
+
 Do not infer backend behavior from a client helper alone.
 Confirm request and response behavior in `../../../Shikshamitra-BE/docs/modules/hr/api.md` and backend `Application.Contracts/HR/**`.
 The salary-template RTK Query client is `src/redux/hr/salary-template-api.ts`.
 It owns template listing, the active component catalog, blank draft creation, draft updates, calculation, version creation, publishing, default selection, cloning, and archiving through the shared authenticated API service.
 The calculation contract includes Gross, Take-home, and Employer Cost quote bases, protection policy, effective month, optional employee context, target variance, and ESI preview details.
 The compensation-revision client stores recurring results through the employee-scoped revision endpoints and never converts system statutory preview lines into editable salary rows.
+The statutory-scheme client automatically posts URL-backed month, search, coverage, readiness, enrollment, paging, and single-sort state to the paged ESI preview endpoint.
+Its preview summary remains unfiltered, employee rows use server-authored issue and coverage labels, and activation submits the reviewed preview fingerprint.
