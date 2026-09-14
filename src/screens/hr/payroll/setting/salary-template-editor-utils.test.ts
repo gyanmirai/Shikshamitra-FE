@@ -20,6 +20,11 @@ const component = {
 };
 
 describe('salary template editor utilities', () => {
+  it('allows Basic at 100% with PF and no balancing earning', () => {
+    const basic = { ...applySemanticType(createTemplateRule(component, 0), 'BASIC'), value: 100 };
+    const pf = applySemanticType(createTemplateRule({ ...component, componentId: 'pf', lineKind: 'DEDUCTION' }, 1), 'EMPLOYEE_PROVIDENT_FUND');
+    expect(getPublishIssues([basic, pf])).toEqual([]);
+  });
   it('creates an ordinary fixed rule and applies constrained semantic formulas', () => {
     const ordinary = createTemplateRule(component, 0);
     const basic = applySemanticType(ordinary, 'BASIC');
@@ -67,18 +72,16 @@ describe('salary template editor utilities', () => {
     ]);
   });
 
-  it('requires exactly one Basic and one balancing earning before publishing', () => {
+  it('requires exactly one Basic and permits at most one balancing earning', () => {
     const basic = applySemanticType(createTemplateRule(component, 0), 'BASIC');
     const balance = applySemanticType(
       createTemplateRule({ ...component, componentId: 'earning-2', name: 'Special Allowance' }, 1),
       'BALANCING_EARNING'
     );
 
-    expect(getPublishIssues([])).toEqual([
-      'Add exactly one Basic earning.',
-      'Add exactly one auto-balancing earning.',
-    ]);
+    expect(getPublishIssues([])).toEqual(['Add exactly one Basic earning.']);
     expect(getPublishIssues([basic, balance])).toEqual([]);
+    expect(getPublishIssues([basic, balance, { ...balance, componentId: 'another' }])).not.toEqual([]);
   });
 
   it('reports missing basis and invalid percentage values', () => {

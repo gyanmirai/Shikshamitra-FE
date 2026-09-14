@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-08-23
+updated_on: 2026-09-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -137,7 +137,13 @@ Do not add a route to docs as active navigation until `src/constants/hr-menus.ts
 If a page exists but menu access is commented or unclear, mark the workflow as partial.
 The Payroll onboarding step and dedicated Payroll Structure screen reuse the same compensation builder.
 Salary templates explain that ESI is system-managed and link to the statutory setup workflow.
-The ESI workflow keeps establishment, wage mapping, employee readiness, and impact approval in a four-step URL-addressable workspace.
+The ESI workflow uses three URL-backed recurring work areas named Overview, Employees, and Settings, while preserving the `view=advanced` URL value.
+Legacy `tab=applicability|wages|employees|review` links normalize to setup readiness, earning classifications, Employees, and monthly impact respectively.
+Overview combines readiness tasks, the effective rate strip, unfiltered monthly totals, human-readable blockers, and fingerprinted activation review.
+Employees automatically loads the current-month preview with server-backed search, filters, sorting, and pagination, then opens contribution, enrollment, and override details in a responsive drawer.
+Settings shows only earning classifications needing attention by default and saves changed classifications for one effective payroll month.
+Workspace navigation and reloads warn about unsaved changes; application-wide browser-history protection remains an acceptance gap.
+Compensation-revision blockers link directly to Payroll Structure with an `employeeId` query parameter that preselects the employee.
 Authorized users can add dated, reasoned ESI exceptions from an employee impact row and review the immutable exception history before approval.
 PwD enrollment review can record a government-funded employer-share relief period only after the PwD category, start date, and disability evidence are supplied.
 The impact preview distinguishes employee, employer, and government ESI funding.

@@ -4,53 +4,29 @@ import { employeeApi } from '../hr/employeeApi';
 
 export const runPayrollApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
-    getRunPayrollPreview: builder.query({
-      query: ({ month, academicYearId, page, pageSize, forceRefresh }) => ({
-        url: '/payroll/run',
-        method: 'GET',
-        params: {
-          month,
-          ...(academicYearId ? { academicYearId } : {}),
-          ...(page !== undefined ? { page } : {}),
-          ...(pageSize !== undefined ? { pageSize } : {}),
-          ...(forceRefresh !== undefined ? { forceRefresh } : {}),
-        },
-      }),
-      providesTags: [employeeType.runPayroll],
-    }),
-
-    getRunPayrollReadiness: builder.query({
-      query: ({ month, academicYearId }) => ({
-        url: '/payroll/run/readiness',
-        method: 'GET',
-        params: { month, ...(academicYearId ? { academicYearId } : {}) },
-      }),
-      providesTags: [employeeType.runPayroll],
-    }),
-
     generateAndLockPayroll: builder.mutation({
-      query: ({ month, academicYearId, employeeIds }) => ({
+      query: ({ month, academicYearId, employeeIds, previewRunId }) => ({
         url: `/payroll/run`,
         method: 'POST',
-        body: { month, academicYearId, employeeIds },
+        body: { month, academicYearId, employeeIds, previewRunId },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),
 
     markPayrollReviewed: builder.mutation({
-      query: ({ month, academicYearId, employeeIds }) => ({
+      query: ({ month, academicYearId, employeeIds, previewRunId }) => ({
         url: `/payroll/run/reviews`,
         method: 'POST',
-        body: { month, academicYearId, employeeIds },
+        body: { month, academicYearId, employeeIds, previewRunId },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),
 
     unmarkPayrollReviewed: builder.mutation({
-      query: ({ month, academicYearId, employeeIds }) => ({
+      query: ({ month, academicYearId, employeeIds, previewRunId }) => ({
         url: `/payroll/run/reviews`,
         method: 'DELETE',
-        body: { month, academicYearId, employeeIds },
+        body: { month, academicYearId, employeeIds, previewRunId },
       }),
       invalidatesTags: [employeeType.runPayroll],
     }),
@@ -126,9 +102,6 @@ export const runPayrollApi = employeeApi.injectEndpoints({
 });
 
 export const {
-  useGetRunPayrollPreviewQuery,
-  useGetRunPayrollReadinessQuery,
-  useLazyGetRunPayrollPreviewQuery,
   useGenerateAndLockPayrollMutation,
   useMarkPayrollReviewedMutation,
   useUnmarkPayrollReviewedMutation,

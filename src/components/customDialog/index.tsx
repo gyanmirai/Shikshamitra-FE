@@ -21,6 +21,8 @@ type CustomDialogProps = Omit<DialogProps, 'title'> & {
   paperProps?: PaperProps;
   hasForm?: boolean;
   disableClose?: boolean;
+  /** Local form state, when supplied, must not consume or clear a parent form's dirty state. */
+  hasUnsavedChanges?: boolean;
   /** Use a local close handler without clearing the parent form's dirty state. */
   guardUnsavedChanges?: boolean;
 };
@@ -33,6 +35,7 @@ const CustomDialog = ({
   paperProps,
   hasForm = true,
   disableClose = false,
+  hasUnsavedChanges,
   guardUnsavedChanges = true,
   maxWidth = 'xs',
   ...props
@@ -43,13 +46,14 @@ const CustomDialog = ({
   const { sx, ...paper } = paperProps || {};
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const dispatch = useDispatch();
+  const isDirty = hasUnsavedChanges ?? isChanges;
 
   useEffect(() => {
-    if (!open || !guardUnsavedChanges) return undefined;
+    if (!open || !guardUnsavedChanges || !isDirty) return undefined;
     const warn = (event: BeforeUnloadEvent) => event.preventDefault();
     window.addEventListener('beforeunload', warn);
     return () => window.removeEventListener('beforeunload', warn);
-  }, [open, guardUnsavedChanges]);
+  }, [open, guardUnsavedChanges, isDirty]);
 
   const handleCloseDialog = (e: {}, reason: 'backdropClick' | 'escapeKeyDown') => {
     if (shouldBlockCustomDialogClose(disableClose)) return;
@@ -58,10 +62,10 @@ const CustomDialog = ({
       handleClose(e, reason);
       return;
     }
-    if (isChanges && window.confirm('Are you sure you want to leave this page?')) {
+    if (isDirty && window.confirm('Are you sure you want to leave this page?')) {
       handleClose(e, reason);
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
+      if (hasUnsavedChanges === undefined) dispatch(setIsChanges(false));
+    } else if (!isDirty) {
       handleClose(e, reason);
     }
   };

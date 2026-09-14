@@ -8,6 +8,7 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useSearchParams } from 'next/navigation';
 import { hrPermissions } from 'src/constants/hr-menus';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -16,11 +17,11 @@ import { LoadingScreen } from 'src/components/loading-screen';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { useLazyGetEmployeeQuery, useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { RenderComponents } from 'src/screens/hr/employee/employee-form-fields/PayrollFields';
 import { Box, Grid, Card, Alert, Paper, Button, Typography, DialogActions } from '@mui/material';
 import { useGetEffectiveCompensationRevisionQuery } from 'src/redux/hr/compensation-revision-api';
@@ -43,6 +44,8 @@ import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 import { getLocalMonthKey } from './salary-structure-builder-utils';
 
 const EmployeeSalaryStructureScreen = () => {
+  const searchParams = useSearchParams();
+  const requestedEmployeeId = searchParams.get('employeeId')?.trim() || '';
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canViewCompensationRevisions = hasGrantedPermission(
     permissions,
@@ -54,6 +57,24 @@ const EmployeeSalaryStructureScreen = () => {
   );
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { data: requestedEmployee } = useGetEmployeeByIdQuery(requestedEmployeeId, {
+    skip: !requestedEmployeeId,
+  });
+
+  useEffect(() => {
+    if (
+      !requestedEmployeeId ||
+      !requestedEmployee ||
+      selectedEmployee?.id === requestedEmployeeId
+    ) {
+      return;
+    }
+    setSelectedEmployee({
+      id: requestedEmployeeId,
+      label: requestedEmployee.fullName || requestedEmployee.employeeName || 'Selected employee',
+      status: requestedEmployee.status ?? requestedEmployee.employeeStatusType,
+    });
+  }, [requestedEmployee, requestedEmployeeId, selectedEmployee?.id]);
 
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
@@ -83,9 +104,7 @@ const EmployeeSalaryStructureScreen = () => {
       _raw: item,
     }));
     const earningRows = (structureData?.earningComponents || [])
-      .filter(
-        (item: any) => item.isTemp && isApplicableToMonth(item.applicableMonth, monthKey)
-      )
+      .filter((item: any) => item.isTemp && isApplicableToMonth(item.applicableMonth, monthKey))
       .map((item: any) => ({
         id: item?.id || item?.componentId,
         payElement: { name: `${item?.name || '-'} (one-time)` },
@@ -95,9 +114,7 @@ const EmployeeSalaryStructureScreen = () => {
       }));
 
     const deductionRows = (structureData?.deductionComponents || [])
-      .filter(
-        (item: any) => item.isTemp && isApplicableToMonth(item.applicableMonth, monthKey)
-      )
+      .filter((item: any) => item.isTemp && isApplicableToMonth(item.applicableMonth, monthKey))
       .map((item: any) => ({
         id: item?.id || item?.componentId,
         payElement: { name: `${item?.name || '-'} (one-time)` },

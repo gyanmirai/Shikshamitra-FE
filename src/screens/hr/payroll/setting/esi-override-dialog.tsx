@@ -2,8 +2,8 @@
 
 import type { EsiEmployeeImpact, EsiStatutoryOverride } from 'src/redux/hr/statutory-scheme-api';
 
-import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
 import {
   useGetEsiOverridesQuery,
   useCreateEsiOverrideMutation,
@@ -100,13 +100,13 @@ export default function EsiOverrideDialog({
           effectiveTo,
         },
       }).unwrap();
-      toast.success('Audited ESI exception added.');
+      shikshaMitraToast.success({ message: 'Audited ESI exception added.' });
       await onSaved();
       onClose();
     } catch {
-      toast.error(
-        'Unable to add the ESI exception. Review the dates and evidence, then try again.'
-      );
+      shikshaMitraToast.error({
+        message: 'Unable to add the ESI exception. Review the dates and evidence, then try again.',
+      });
     }
   };
 

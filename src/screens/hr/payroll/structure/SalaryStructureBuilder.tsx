@@ -12,6 +12,7 @@ import { hrPermissions } from 'src/constants/hr-menus';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { Calculate, ExpandMore, AutoAwesome } from '@mui/icons-material';
 import { useGetEsiEstablishmentQuery } from 'src/redux/hr/statutory-scheme-api';
 import {
@@ -512,8 +513,7 @@ export function SalaryStructureBuilder({ formik, employeeId }: Props) {
 
         {calculationState.isError && attemptedInputKey === currentInputKey && (
           <Alert severity="error" sx={{ mt: 2 }}>
-            Unable to calculate this salary structure. Review the amount, template, and statutory
-            rule selections.
+            {parseApiProblemDetail(calculationState.error).detail}
           </Alert>
         )}
 

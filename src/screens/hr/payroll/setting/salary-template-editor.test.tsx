@@ -130,7 +130,7 @@ describe('SalaryTemplateEditor', () => {
     expect(screen.queryByRole('button', { name: 'Add earning' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Save draft' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
-    expect(screen.getByText('This draft is ready to publish.')).toBeVisible();
+    expect(screen.getByText(/This draft is ready to publish\. A balancing earning is optional\./)).toBeVisible();
     expect(screen.queryByText(/Formulas configured here override/i)).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Publish' }));

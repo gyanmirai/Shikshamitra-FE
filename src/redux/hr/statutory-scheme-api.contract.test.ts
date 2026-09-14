@@ -8,10 +8,17 @@ describe('ESI statutory scheme API contract', () => {
   });
 
   it('sends payroll month in the backend contract format', () => {
-    expect(buildEsiImpactPreviewRequest('08-2026')).toEqual({
+    expect(
+      buildEsiImpactPreviewRequest({
+        monthYear: '08-2026',
+        search: '  Patel  ',
+        page: -2,
+        pageSize: 100,
+      })
+    ).toEqual({
       url: '/payroll/statutory-schemes/esi/impact-preview',
       method: 'POST',
-      body: { monthYear: '08-2026' },
+      body: { monthYear: '08-2026', search: 'Patel', page: 0, pageSize: 100 },
     });
   });
 });

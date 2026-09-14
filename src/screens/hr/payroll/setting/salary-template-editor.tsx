@@ -18,6 +18,7 @@ import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Add,
@@ -422,7 +423,7 @@ export default function SalaryTemplateEditor({
       if (showSuccess) toast.success('Draft saved.');
       return true;
     } catch (error: any) {
-      const message = error?.data?.error?.message || 'Unable to save the salary template draft.';
+      const message = parseApiProblemDetail(error).detail;
       setServerError(message);
       toast.error(message);
       return false;
@@ -440,7 +441,7 @@ export default function SalaryTemplateEditor({
       toast.success('Template published.');
       router.push(hrPaths.payroll.settings.salaryTemplates);
     } catch (error: any) {
-      const message = error?.data?.error?.message || 'Unable to publish the salary template.';
+      const message = parseApiProblemDetail(error).detail;
       setServerError(message);
       toast.error(message);
     }
@@ -542,7 +543,10 @@ export default function SalaryTemplateEditor({
           </Box>
         </Alert>
       ) : isDraft ? (
-        <Alert severity="success">This draft is ready to publish.</Alert>
+        <Alert severity="success">
+          This draft is ready to publish. A balancing earning is optional. Without one, earnings must
+          exactly equal gross salary when compensation is calculated. Basic at 100% needs no balancing allowance.
+        </Alert>
       ) : null}
 
       <Card variant="outlined">

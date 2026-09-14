@@ -127,7 +127,7 @@ export const getPublishIssues = (rules: SalaryTemplateRule[]) => {
   const ptCount = rules.filter((rule) => rule.semanticType === 'PROFESSIONAL_TAX').length;
 
   if (basicCount !== 1) issues.push('Add exactly one Basic earning.');
-  if (balanceCount !== 1) issues.push('Add exactly one auto-balancing earning.');
+  if (balanceCount > 1) issues.push('Keep at most one auto-balancing earning.');
   if (pfCount > 1) issues.push('Only one Employee PF deduction is allowed.');
   if (ptCount > 1) issues.push('Only one Professional Tax deduction is allowed.');
 

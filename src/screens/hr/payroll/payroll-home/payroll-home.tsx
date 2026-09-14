@@ -1,16 +1,17 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useRouter } from 'src/routes/hooks';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetRunPayrollReadinessQuery } from 'src/redux/runPayroll/runPayrollApi';
 import {
   Box,
   Card,
@@ -23,6 +24,7 @@ import {
   CardContent,
 } from '@mui/material';
 
+import { usePayrollPreviewRun } from '../run-payroll/use-payroll-preview-run';
 import { getSuggestedActiveStepIndex } from '../payroll-cycle/payroll-cycle-helpers';
 import PayrollAdvancedRoadmapCard from '../payroll-advanced-roadmap/PayrollAdvancedRoadmapCard';
 
@@ -31,10 +33,13 @@ const PayrollHome = () => {
   const [month, setMonth] = useState<Dayjs | null>(dayjs());
 
   const monthKey = month?.format('YYYY-MM') ?? '';
-  const { data, isLoading, isFetching, isError, refetch } = useGetRunPayrollReadinessQuery(
-    { month: monthKey },
-    { skip: !monthKey }
-  );
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const preview = usePayrollPreviewRun(monthKey, currentYear?.id || '');
+  const data = preview.data?.readiness;
+  const isLoading = !data && !preview.error;
+  const isFetching = preview.busy || preview.fetching;
+  const isError = Boolean(preview.error);
+  const refetch = () => preview.loadPreview(true);
 
   const stats = useMemo(() => {
     const total = Number(data?.employeeCount || 0);
@@ -69,6 +74,9 @@ const PayrollHome = () => {
         <Alert severity="error" sx={{ mb: 1 }}>
           Could not load payroll readiness for this month. Please refresh and try again.
         </Alert>
+      ) : null}
+      {!preview.isCurrent && data ? (
+        <Alert severity="info" sx={{ mb: 1 }}>These are the last completed results. Calculate and review the current month before locking.</Alert>
       ) : null}
 
       <Stack

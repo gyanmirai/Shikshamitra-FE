@@ -140,6 +140,8 @@ function NProgressDone() {
 
     // Handle the back button click by pushing the same state again
     const handlePopState = () => {
+      // Clean pages must not rewrite history or erase the forward destination.
+      if (!changes.current) return;
       // Show a custom alert or perform an action when trying to navigate back
       if (
         changes.current &&
