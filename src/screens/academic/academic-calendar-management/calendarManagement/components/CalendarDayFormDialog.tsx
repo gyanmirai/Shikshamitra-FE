@@ -1,9 +1,9 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { useEffect } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
+import { useMemo, useEffect } from 'react';
 import { RootState } from 'src/redux/store';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
@@ -59,22 +59,33 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { calendarDayInitialValues } from '../initialValues';
 import CalendarDayTextFields from './CalendarDayTextFields';
 import { normalizeCalendarDayTitle } from '../calendarDayText';
 import { calendarDayValidationSchema } from '../validationSchema';
+import { getSyncedExamId, calendarDayInitialValues } from '../initialValues';
+import {
+  getCalendarDayOptionLabel,
+  type CalendarDayNamedOption,
+  ensureSelectedCalendarDayOption,
+} from '../calendarDayOptions';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   calendarId: string;
   calendarStatus: CalendarStatus;
+  academicMediumId?: string;
   editData?: any;
   prefillDate?: string;
   canDelete?: boolean;
   deleting?: boolean;
   onDelete?: (editData: any) => void | Promise<void>;
-  standards?: { id: string; name: string; divisions?: { id: string; name: string }[] }[];
+  standards?: {
+    id: string;
+    name: string;
+    unavailable?: boolean;
+    divisions?: { id: string; name: string }[];
+  }[];
   divisions?: { id: string; name: string }[];
 }
 
@@ -89,11 +100,18 @@ const DAY_TYPE_ICONS: Record<DayType, string> = {
   [DayType.EmergencyClosure]: 'mdi:alert-octagon-outline',
 };
 
+interface CalendarExamOption extends CalendarDayNamedOption {
+  examTypeId?: string;
+  standardId?: string;
+  standardName?: string;
+}
+
 const CalendarDayFormDialog = ({
   open,
   onClose,
   calendarId,
   calendarStatus,
+  academicMediumId,
   editData,
   prefillDate,
   canDelete = false,
@@ -112,7 +130,7 @@ const CalendarDayFormDialog = ({
   const dispatch = useDispatch();
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
-  const mediumId = currentMedium?.id;
+  const mediumId = academicMediumId || currentMedium?.id;
 
   const handleCloseDialog = (_event?: {}, _reason?: 'backdropClick' | 'escapeKeyDown') => {
     onClose();
@@ -209,11 +227,50 @@ const CalendarDayFormDialog = ({
     { skip: Number(formik.values.dayType) !== DayType.PTM }
   );
 
-  const examTypes = examTypesResponse?.items ?? examTypesResponse ?? [];
-  const exams = examsResponse?.items ?? examsResponse ?? [];
-  const selectedExam = exams.find(
-    (exam: any) => (exam.examId || exam.id) === formik.values.linkedExamId
+  const examTypes = useMemo(
+    () =>
+      ensureSelectedCalendarDayOption(
+        (examTypesResponse?.items ?? examTypesResponse ?? []).map((examType: any) => ({
+          id: examType.id,
+          name: examType.examType || examType.name,
+        })),
+        formik.values.examTypeId,
+        editData?.examTypeName,
+        'Unavailable exam type'
+      ),
+    [editData?.examTypeName, examTypesResponse, formik.values.examTypeId]
   );
+  const exams = useMemo(
+    () =>
+      ensureSelectedCalendarDayOption<CalendarExamOption>(
+        (examsResponse?.items ?? examsResponse ?? []).map((exam: any) => ({
+          id: exam.examId || exam.id,
+          name: exam.examName || exam.name,
+          examTypeId: exam.examTypeId,
+          standardId: exam.standardId,
+          standardName: exam.standardName,
+        })),
+        formik.values.linkedExamId,
+        editData?.linkedExamName,
+        'Unavailable exam'
+      ),
+    [editData?.linkedExamName, examsResponse, formik.values.linkedExamId]
+  );
+  const availableStandards = useMemo(
+    () =>
+      ensureSelectedCalendarDayOption(
+        standards,
+        formik.values.standardIds[0],
+        editData?.standardName,
+        'Unavailable class'
+      ),
+    [editData?.standardName, formik.values.standardIds, standards]
+  );
+  const selectedExam = exams.find(
+    (exam) => exam.id === formik.values.linkedExamId
+  );
+  const persistedLinkedExamId =
+    editData?.linkedExamId || getSyncedExamId(editData?.description);
   const rooms = roomsResponse?.items ?? roomsResponse ?? [];
   const roomOptions = rooms.map((room: any) => {
     const labelParts = [room.buildingName, room.floorName, room.roomName || room.name].filter(
@@ -230,6 +287,10 @@ const CalendarDayFormDialog = ({
   useEffect(() => {
     if (!isExam || !formik.values.linkedExamId) return;
 
+    if (!formik.values.examTypeId && selectedExam?.examTypeId) {
+      formik.setFieldValue('examTypeId', selectedExam.examTypeId);
+    }
+
     if (!selectedExam?.standardId) return;
 
     formik.setFieldValue('appliesToAll', false);
@@ -239,6 +300,7 @@ const CalendarDayFormDialog = ({
 
   useEffect(() => {
     if (!isExam || !formik.values.linkedExamId) return;
+    if (persistedLinkedExamId === formik.values.linkedExamId) return;
 
     const subjects = examScheduleResponse?.subjects ?? examScheduleResponse?.Subjects ?? [];
     const scheduledSubject = [...subjects]
@@ -262,7 +324,7 @@ const CalendarDayFormDialog = ({
     formik.setFieldValue('date', dayjs(examDate));
     formik.setFieldValue('examStartTime', startTime ? dayjs(startTime).format('HH:mm:ss') : '');
     formik.setFieldValue('examEndTime', endTime ? dayjs(endTime).format('HH:mm:ss') : '');
-  }, [formik, examScheduleResponse, formik.values.linkedExamId, isExam]);
+  }, [formik, examScheduleResponse, formik.values.linkedExamId, isExam, persistedLinkedExamId]);
 
   const handleDayTypeChange = (value: DayType | '') => {
     formik.setFieldValue('dayType', value);
@@ -594,9 +656,9 @@ const CalendarDayFormDialog = ({
                         onChange={formik.handleChange}
                         onBlur={formik.handleBlur}
                       >
-                        {examTypes.map((examType: any) => (
+                        {examTypes.map((examType) => (
                           <MenuItem key={examType.id} value={examType.id}>
-                            {examType.examType || examType.name}
+                            {examType.name}
                           </MenuItem>
                         ))}
                       </Select>
@@ -625,9 +687,9 @@ const CalendarDayFormDialog = ({
                         }}
                       >
                         <MenuItem value="">None</MenuItem>
-                        {exams.map((exam: any) => (
-                          <MenuItem key={exam.examId || exam.id} value={exam.examId || exam.id}>
-                            {exam.examName || exam.name}
+                        {exams.map((exam) => (
+                          <MenuItem key={exam.id} value={exam.id}>
+                            {exam.name}
                           </MenuItem>
                         ))}
                       </Select>
@@ -866,12 +928,18 @@ const CalendarDayFormDialog = ({
                                 }}
                                 renderValue={(selected) =>
                                   (selected as string[])
-                                    .map((id) => standards.find((s) => s.id === id)?.name ?? id)
+                                    .map((id) =>
+                                      getCalendarDayOptionLabel(
+                                        availableStandards,
+                                        id,
+                                        'Unavailable class'
+                                      )
+                                    )
                                     .join(', ')
                                 }
                               >
-                                {standards.map((s) => (
-                                  <MenuItem key={s.id} value={s.id}>
+                                {availableStandards.map((s) => (
+                                  <MenuItem key={s.id} value={s.id} disabled={s.unavailable}>
                                     <Checkbox
                                       size="small"
                                       checked={formik.values.standardIds.includes(s.id)}

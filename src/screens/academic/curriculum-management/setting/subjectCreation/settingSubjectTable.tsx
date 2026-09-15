@@ -15,11 +15,12 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Stack, IconButton, Typography } from '@mui/material';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
-  TimetableSettingsSummaryCards,
   type ITimetableSummaryCard,
+  TimetableSettingsSummaryCards,
 } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import SubjectNameCell from './subjectNameCell';
+import { getSubjectMasterStatusLabel } from '../subjectMasterStatus';
 
 import type { ISubject, ISubjectTableProps } from './type';
 
@@ -56,10 +57,11 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
   const summary = useMemo(
     () => ({
       total: subjects.length,
-      active: subjects.filter((subject: ISubject) => getStatusLabel(subject.status) === 'Active')
-        .length,
+      active: subjects.filter(
+        (subject: ISubject) => getSubjectMasterStatusLabel(subject.status) === 'Active'
+      ).length,
       archived: subjects.filter(
-        (subject: ISubject) => getStatusLabel(subject.status) === 'Archived'
+        (subject: ISubject) => getSubjectMasterStatusLabel(subject.status) === 'Archived'
       ).length,
       usedInClasses: subjects.filter((subject: ISubject) => (subject.usedInClassesCount || 0) > 0)
         .length,
@@ -196,7 +198,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
           { label: 'Archived', value: 'Archived' },
         ],
         render: (value) => {
-          const label = getStatusLabel(value);
+          const label = getSubjectMasterStatusLabel(value);
           return (
             <Label
               color={label === 'Active' ? 'success' : label === 'Archived' ? 'warning' : 'default'}
@@ -219,7 +221,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         isFilter: false,
         render(value, row) {
           const subject = row as ISubject;
-          const isArchived = getStatusLabel(subject.status) === 'Archived';
+          const isArchived = getSubjectMasterStatusLabel(subject.status) === 'Archived';
           return (
             <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
               {canView && (
@@ -229,14 +231,14 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
                   onClick={() => onViewUsage(subject)}
                 />
               )}
-              {isArchived ? (
+              {isArchived && canAdd ? (
                 <SubjectActionButton
                   title="Restore subject"
                   icon="solar:restart-bold"
                   color="success"
                   onClick={() => onRestore(subject)}
                 />
-              ) : (
+              ) : !isArchived ? (
                 <>
                   {canAdd && (
                     <SubjectActionButton
@@ -267,7 +269,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
                     />
                   )}
                 </>
-              )}
+              ) : null}
             </Stack>
           );
         },
@@ -315,12 +317,6 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
 };
 
 export default SettingSubjectTable;
-
-const getStatusLabel = (status?: ISubject['status']) => {
-  if (status === 2 || status === 'Archived') return 'Archived';
-  if (status === 1 || status === 'Inactive') return 'Inactive';
-  return 'Active';
-};
 
 const SubjectActionButton = ({
   title,

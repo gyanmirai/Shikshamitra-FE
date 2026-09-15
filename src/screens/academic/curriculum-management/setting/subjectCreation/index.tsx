@@ -7,7 +7,6 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
-import { GlobalIcons } from 'src/utils/icons';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -15,20 +14,16 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Alert, Button, TextField, Typography } from '@mui/material';
 import { useGetSubjectUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
-import {
-  Box,
-  Alert,
-  Button,
-  TextField,
-  Typography,
-} from '@mui/material';
 
 import SettingSubjectForm from './subjectForm';
 import SubjectAddDrawer from './subjectAddDrawer';
-import SettingSubjectTable from './settingSubjectTable';
 import SubjectUsageDrawer from './subjectUsageDrawer';
+import SettingSubjectTable from './settingSubjectTable';
 import { useSubjectCreation } from './hooks/useSubjectCreation';
+
+import type { ISubject } from './type';
 
 const SubjectCreation = () => {
   const { permissions } = useSelector((state: RootState) => state.auth);
@@ -58,6 +53,7 @@ const SubjectCreation = () => {
     archiveDialog,
     isDeleteLoading,
     isArchiveLoading,
+    isRestoreLoading,
     currentMedium,
     selectedSubject,
     setSelectedSubject,
@@ -74,6 +70,22 @@ const SubjectCreation = () => {
     },
     { skip: !(currentMedium as any)?.id || !selectedSubject?.id || !usageDrawer.value }
   );
+
+  const handleRestoreSubject = async (subject: ISubject): Promise<boolean> => {
+    try {
+      await restoreSubject({
+        academicMediumId: (currentMedium as any).id,
+        id: subject.id,
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Subject restored successfully.' });
+      return true;
+    } catch (error: any) {
+      shikshaMitraToast.error({
+        message: error?.data?.message || 'Failed to restore subject.',
+      });
+      return false;
+    }
+  };
 
   return (
     <Box height="100%" display="flex" flexDirection="column">
@@ -127,19 +139,7 @@ const SubjectCreation = () => {
           setArchiveReason('');
           archiveDialog.onTrue();
         }}
-        onRestore={async (data) => {
-          try {
-            await restoreSubject({
-              academicMediumId: (currentMedium as any).id,
-              id: data.id,
-            }).unwrap();
-            shikshaMitraToast.success({ message: 'Subject restored successfully.' });
-          } catch (error: any) {
-            shikshaMitraToast.error({
-              message: error?.data?.message || 'Failed to restore subject.',
-            });
-          }
-        }}
+        onRestore={handleRestoreSubject}
         onDelete={(data) => {
           setSelectedSubject(data);
           deleteSubjectDialog.onTrue();
@@ -195,10 +195,12 @@ const SubjectCreation = () => {
         usageData={usageData}
         isLoading={isUsageFetching}
         canArchive={canAdd}
+        isRestoring={isRestoreLoading}
         onArchive={(subject) => {
           setSelectedSubject(subject);
           archiveDialog.onTrue();
         }}
+        onRestore={handleRestoreSubject}
       />
 
       <ConfirmDialog

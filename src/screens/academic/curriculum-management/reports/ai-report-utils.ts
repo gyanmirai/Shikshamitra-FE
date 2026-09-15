@@ -11,9 +11,7 @@ function base64ToBlob(bytes: string, contentType: string): Blob {
 
 export function saveAcademicReportFile(data: AcademicReportDownloadResponse): void {
   const contentType = data.contentType || 'application/pdf';
-  const fileBlob = data.bytes
-    ? base64ToBlob(data.bytes, contentType)
-    : data.blob;
+  const fileBlob = data.bytes ? base64ToBlob(data.bytes, contentType) : data.blob;
 
   if (!fileBlob || fileBlob.size === 0) {
     throw new Error('The report download did not contain file data.');
@@ -82,6 +80,14 @@ export function getAcademicReportErrorMessage(error: unknown, fallback: string):
       'The selected Academic Year, Board, and Medium are not a valid combination.',
     'Academic:Reports:AiFilterCouldNotBeResolved':
       'A requested report filter could not be matched. Check the class, division, subject, or chapter name and try again.',
+    'Academic:Reports:AiApprovalInvalid':
+      'This approval expired or the reviewed plan changed. Preview and approve the report again.',
+    'Academic:Reports:AiTooManyConditions':
+      'Use at most 8 advanced filter conditions in one report.',
+    'Academic:Reports:AiConditionNotAllowed':
+      'One comparison is not supported for the selected report field.',
+    'Academic:Reports:AiConditionValueInvalid':
+      'One comparison value does not match the selected field type.',
   };
   const errorCode = apiError.data?.error?.code;
   const apiMessage =
@@ -92,12 +98,13 @@ export function getAcademicReportErrorMessage(error: unknown, fallback: string):
   ) {
     const errorData = apiError.data?.error?.data;
     const requestedModule = errorData?.RequestedModule ?? errorData?.requestedModule;
-    const moduleLabel = typeof requestedModule === 'string' ? requestedModule : 'another Academic';
-    return `${moduleLabel} reports are not available from Curriculum Reports. Open the appropriate module to request that report.`;
+    const reportLabel =
+      typeof requestedModule === 'string'
+        ? `${requestedModule} reports`
+        : 'Reports from another module';
+    return `${reportLabel} are not available from Curriculum Reports. Open the appropriate module to request that report.`;
   }
   if (errorCode && knownMessages[errorCode]) return knownMessages[errorCode];
 
-  return (
-    apiMessage || fallback
-  );
+  return apiMessage || fallback;
 }

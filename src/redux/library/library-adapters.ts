@@ -310,11 +310,13 @@ export function buildReturnBookPayload(values: any, memberId: string) {
   return {
     accessionNo: values.accessionNo,
     memberId,
-    returnDate: values.returnDate ? dayjs(values.returnDate).toISOString() : undefined,
+    returnDate: values.returnDate ? dayjs(values.returnDate).format('YYYY-MM-DD') : undefined,
     chargeCategoryId: hasCharge ? values.chargeCategory : undefined,
     amount: hasCharge && values.amount !== '' ? Number(values.amount) : undefined,
     fineDueDate:
-      hasCharge && values.fineDueDate ? dayjs(values.fineDueDate).toISOString() : undefined,
+      hasCharge && values.fineDueDate
+        ? dayjs(values.fineDueDate).format('YYYY-MM-DD')
+        : undefined,
     copyStatus:
       values.copyStatus === '' || values.copyStatus === undefined
         ? undefined
@@ -486,6 +488,7 @@ export function mapLibraryReportOptionsDto(dto: any = {}) {
     issueStatuses: toArrayValue(dto?.issueStatuses).map(mapLibraryReportOptionDto),
     chargeStatuses: toArrayValue(dto?.chargeStatuses).map(mapLibraryReportOptionDto),
     formats: toArrayValue(dto?.formats).map(mapLibraryReportOptionDto),
+    academicYears: toArrayValue(dto?.academicYears).map(mapLibraryReportOptionDto),
   };
 }
 
@@ -536,8 +539,8 @@ export function buildLibraryReportRequestPayload(values: any) {
   const filters: Record<string, any> = {
     academicYearId: values.academicYearId || undefined,
     search: values.search || undefined,
-    fromDate: values.fromDate ? dayjs(values.fromDate).toISOString() : undefined,
-    toDate: values.toDate ? dayjs(values.toDate).toISOString() : undefined,
+    fromDate: values.fromDate ? dayjs(values.fromDate).format('YYYY-MM-DD') : undefined,
+    toDate: values.toDate ? dayjs(values.toDate).format('YYYY-MM-DD') : undefined,
     top: values.top ? Number(values.top) : undefined,
   };
 

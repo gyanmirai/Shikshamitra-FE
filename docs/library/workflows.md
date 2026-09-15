@@ -3,7 +3,7 @@ module: library
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-09-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -51,3 +51,12 @@ Reports and notifications have release-gate coverage.
 | Reports | `src/screens/library/reports/**` and `src/redux/library/reports-api.ts` |
 | Notifications | `src/screens/library/Notification/**` and `src/redux/library/notifications-api.ts` |
 | Settings | `src/screens/library/settings/**` and `src/redux/library/settingApi.tsx` |
+
+## Trace AI report generation
+
+1. `LibraryAiReportDrawer` collects the user's wording in English, Gujarati, Hindi, or mixed natural language.
+2. `useLibraryAiReport` calls the plan endpoint and renders material clarification questions when needed.
+3. A ready typed plan is sent to the normal preview endpoint.
+4. `LibraryAiReportPlanReview` shows the interpreted request, selected filters and columns, format, assumptions, permission summary, and live rows.
+5. Approval queues PDF or Excel generation through the normal Library export endpoint.
+6. The reports screen polls export status and refreshes the visible export list.

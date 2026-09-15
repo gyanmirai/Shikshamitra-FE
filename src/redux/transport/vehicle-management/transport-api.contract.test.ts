@@ -41,6 +41,7 @@ import {
 import {
   dashboardReportApi,
   buildTransportReportRowsRequest,
+  buildTransportAiReportPlanRequest,
   buildTransportReportExportRequest,
   buildTransportReportCatalogRequest,
   buildTransportDashboardAlertsRequest,
@@ -633,6 +634,24 @@ describe('transport stop and route API contracts', () => {
       expect.objectContaining({ academicMediumId: 'medium-1', format: 'csv' })
     );
     expect(exportRequest.responseHandler).toBeTruthy();
+
+    expect(
+      buildTransportAiReportPlanRequest({
+        prompt: 'Show active route capacity this month',
+        academicMediumId: 'medium-1',
+        academicYearId: 'year-1',
+        clarificationAnswers: [],
+      })
+    ).toEqual({
+      url: '/transport/reports/ai/plan',
+      method: 'POST',
+      body: {
+        prompt: 'Show active route capacity this month',
+        academicMediumId: 'medium-1',
+        academicYearId: 'year-1',
+        clarificationAnswers: [],
+      },
+    });
   });
 
   it('exposes transport dashboard and report endpoints', () => {
@@ -641,5 +660,6 @@ describe('transport stop and route API contracts', () => {
     expect(dashboardReportApi.endpoints.getTransportReportCatalog).toBeTruthy();
     expect(dashboardReportApi.endpoints.getTransportReport).toBeTruthy();
     expect(dashboardReportApi.endpoints.exportTransportReport).toBeTruthy();
+    expect(dashboardReportApi.endpoints.createTransportAiReportPlan).toBeTruthy();
   });
 });

@@ -1,3 +1,4 @@
+import type { AcademicDynamicReportSpec } from 'src/redux/academicAPI/AcademicReportApi';
 
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
@@ -9,6 +10,7 @@ import type { AiReportStage } from './hooks/useAiCurriculumReport';
 
 interface Props {
   stage: AiReportStage;
+  format?: AcademicDynamicReportSpec['format'];
   hasAcademicContext: boolean;
   isDownloading: boolean;
   onClose: () => void;
@@ -19,6 +21,7 @@ interface Props {
 
 export function AiReportDrawerActions({
   stage,
+  format = 'pdf',
   hasAcademicContext,
   isDownloading,
   onClose,
@@ -28,6 +31,7 @@ export function AiReportDrawerActions({
 }: Props) {
   const isWorking = isAiReportBusyStage(stage);
   if (isWorking) return null;
+  const formatLabel = format === 'excel' ? 'Excel' : format.toUpperCase();
 
   return (
     <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
@@ -64,7 +68,7 @@ export function AiReportDrawerActions({
             startIcon={<Iconify icon="solar:download-minimalistic-bold" />}
             onClick={onDownload}
           >
-            Download PDF
+            Download {formatLabel}
           </LoadingButton>
         ) : stage === 'planned' ? (
           <LoadingButton
@@ -74,9 +78,9 @@ export function AiReportDrawerActions({
             startIcon={<Iconify icon="solar:document-add-bold" />}
             onClick={onGenerate}
           >
-            Generate PDF
+            Approve & generate {formatLabel}
           </LoadingButton>
-        ) : (
+        ) : stage === 'clarifying' ? null : (
           <LoadingButton
             form="shikshamitra-ai-report-form"
             type="submit"

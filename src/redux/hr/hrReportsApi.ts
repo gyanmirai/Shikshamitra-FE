@@ -59,6 +59,34 @@ export type HrReportRequest = {
   filters?: HrReportFilter;
 };
 
+export type HrAiReportClarificationAnswer = {
+  question: string;
+  answer: string;
+};
+
+export type HrAiReportClarificationQuestion = {
+  id: string;
+  question: string;
+  options: string[];
+  recommendedOption: string;
+};
+
+export type HrAiReportPlanRequest = {
+  prompt: string;
+  clarificationAnswers: HrAiReportClarificationAnswer[];
+};
+
+export type HrAiReportPlanResponse = {
+  status: 'NeedsClarification' | 'Ready';
+  plan?: HrReportRequest;
+  interpretedRequest: string;
+  summary: string;
+  clarificationQuestions: HrAiReportClarificationQuestion[];
+  assumptions: string[];
+  confidence: number;
+  permissionSummary: string;
+};
+
 export type HrReportColumn = {
   id: string;
   label: string;
@@ -234,6 +262,13 @@ export const normalizeHrReportRequest = (request: HrReportRequest): HrReportRequ
 
 export const hrReportsApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    createHrAiReportPlan: builder.mutation<HrAiReportPlanResponse, HrAiReportPlanRequest>({
+      query: (body) => ({
+        url: '/hr/reports/ai/plan',
+        method: 'POST',
+        body,
+      }),
+    }),
     getHrReportOptions: builder.query<HrReportOptions, void>({
       query: () => ({
         url: '/hr/reports/options',
@@ -422,6 +457,7 @@ export const hrReportsApi = api.injectEndpoints({
 });
 
 export const {
+  useCreateHrAiReportPlanMutation,
   useGetHrReportOptionsQuery,
   useGetHrReportSourcesQuery,
   useGetHrReportTemplatesQuery,

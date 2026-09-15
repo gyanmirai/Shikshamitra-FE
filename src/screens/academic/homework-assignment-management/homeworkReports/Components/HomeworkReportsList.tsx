@@ -15,9 +15,9 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Button, Tooltip, IconButton } from '@mui/material';
 import { HomeworkReportApiTypeMap } from 'src/enums/homework-wise-reports';
 import { AssignmentReportApiTypeMap } from 'src/enums/assignment-wise-report';
+import { Box, Chip, Stack, Button, Tooltip, IconButton } from '@mui/material';
 import { HomeworkAssignmentAnalyticReportApiTypeMap } from 'src/enums/homeworkAssignmentAnalytic-report';
 import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 import {
@@ -27,6 +27,7 @@ import {
 } from 'src/redux/academicAPI/AcademicReportApi';
 
 import HomeworkAssignmentReports from '..';
+import { HomeworkAssignmentAiReportButton } from './HomeworkAssignmentAiReportButton';
 
 const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
   Queued: 'default',
@@ -165,7 +166,8 @@ const HomeworkReportsList = () => {
       (job: any) =>
         homeworkReportTypes.includes(job.reportType) ||
         assignmentReportTypes.includes(job.reportType) ||
-        analyticsReportTypes.includes(job.reportType)
+        analyticsReportTypes.includes(job.reportType) ||
+        (job.isDynamic && job.module === 'Homework & Assignment')
     );
   }, [exportsData]);
 
@@ -183,15 +185,18 @@ const HomeworkReportsList = () => {
           ]}
           action={
             canAdd ? (
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<Add />}
-                onClick={addReportDialog.onTrue}
-                sx={{ px: '32px' }}
-              >
-                Add Report
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <HomeworkAssignmentAiReportButton />
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={addReportDialog.onTrue}
+                  sx={{ px: '32px' }}
+                >
+                  Add Report
+                </Button>
+              </Stack>
             ) : null
           }
         />
@@ -285,13 +290,15 @@ const HomeworkReportsList = () => {
                   row.status === 'Processing';
                 return (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Tooltip title="View">
-                      <span>
-                        <IconButton size="small" onClick={() => handleView(row)} sx={{ mr: 0.5 }}>
-                          <Iconify icon={GlobalIcons.eye} />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
+                    {!row.isDynamic && (
+                      <Tooltip title="View">
+                        <span>
+                          <IconButton size="small" onClick={() => handleView(row)} sx={{ mr: 0.5 }}>
+                            <Iconify icon={GlobalIcons.eye} />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    )}
                     <Tooltip
                       title={
                         row.status === 'Failed'

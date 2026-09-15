@@ -52,6 +52,7 @@ describe('library RTK endpoint contracts', () => {
   it('exposes Phase 3A dashboard, report, and copy label endpoints', () => {
     expect(libraryDashboardApi.endpoints.getLibraryDashboardOverview).toBeTruthy();
     expect(libraryReportsApi.endpoints.getLibraryReportOptions).toBeTruthy();
+    expect(libraryReportsApi.endpoints.createLibraryAiReportPlan).toBeTruthy();
     expect(libraryReportsApi.endpoints.previewLibraryReport).toBeTruthy();
     expect(libraryReportsApi.endpoints.createLibraryReportExport).toBeTruthy();
     expect(libraryReportsApi.endpoints.getLibraryReportExports).toBeTruthy();

@@ -1,187 +1,99 @@
 'use client';
 
-import React from 'react';
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
+import { useState } from 'react';
 import { Add } from '@mui/icons-material';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Chip, Button, IconButton } from '@mui/material';
+import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Chip, Stack, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import FinanceReports from '../index';
+import { FinanceAiReportDrawer } from './FinanceAiReportDrawer';
+
+type QueuedReport = {
+  jobId: string;
+  reportName: string;
+  generatedDate: string;
+  status: string;
+};
+
+const columns: IColumn[] = [
+  { label: 'Report', id: 'reportName', minWidth: 220, align: 'left', filterType: 'string' },
+  { label: 'Requested at', id: 'generatedDate', minWidth: 170, align: 'left', filterType: 'dateTime' },
+  {
+    label: 'Status', id: 'status', minWidth: 110, align: 'center', filterType: 'enum', sticky: true,
+    render: (value) => <Chip size="small" color="info" variant="soft" label={String(value)} />,
+  },
+  { label: 'Job reference', id: 'jobId', minWidth: 280, align: 'left', filterType: 'string' },
+];
 
 const FinanceReportsList = () => {
   const addReportDialog = useBoolean(false);
+  const aiReportDrawer = useBoolean(false);
+  const [queuedReports, setQueuedReports] = useState<QueuedReport[]>([]);
+
+  const handleExportQueued = (jobId: string) => {
+    setQueuedReports((current) => [{
+      jobId,
+      reportName: 'AI-generated Finance report',
+      generatedDate: new Date().toISOString(),
+      status: 'Queued',
+    }, ...current]);
+    shikshaMitraToast.success({ message: 'Finance report export queued successfully.' });
+  };
+
+  if (addReportDialog.value) return <FinanceReports addReportDialog={addReportDialog} />;
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {!addReportDialog.value && (
-        <CustomBreadcrumbs
-          heading="Reports"
-          links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Reports' }]}
-          action={
-            <Button
-              size="small"
-              variant="contained"
-              startIcon={<Add />}
-              onClick={addReportDialog.onTrue}
-            >
-              Add Report
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, gap: 1 }}>
+      <CustomBreadcrumbs
+        heading="Reports"
+        description="Build permission-scoped finance reports manually or describe the outcome to ShikshaMitra AI."
+        links={[{ name: 'Finance', href: '/finance/dashboard' }, { name: 'Reports' }]}
+        action={
+          <Stack direction="row" spacing={1}>
+            <Button size="small" variant="soft" startIcon={<Iconify icon="solar:magic-stick-3-bold" />} onClick={aiReportDrawer.onTrue}>
+              Generate with AI
             </Button>
+            <Button size="small" variant="contained" startIcon={<Add />} onClick={addReportDialog.onTrue}>
+              Build manually
+            </Button>
+          </Stack>
+        }
+      />
+
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <CustomizableTable
+          tableId="finance-report-export-requests"
+          columns={columns}
+          data={queuedReports}
+          isPagination
+          isSearch
+          isFilter
+          wrapperProps={{ sx: { height: 1 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
+          noDataText={
+            <Box sx={{ py: 2, textAlign: 'center' }}>
+              <Typography variant="subtitle2">No report requested in this session</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Generate with AI or use the manual builder to create a report.
+              </Typography>
+            </Box>
           }
         />
-      )}
+      </Box>
 
-      {addReportDialog.value ? (
-        <FinanceReports addReportDialog={addReportDialog} />
-      ) : (
-        <CustomizableTable
-          tableId="homework-reports"
-          columns={[
-            {
-              label: 'Name',
-              id: 'reportName',
-              minWidth: '90px',
-              align: 'left',
-              sticky: true,
-            },
-            {
-              label: 'Category',
-              id: 'reportCategory',
-              minWidth: '90px',
-              align: 'left',
-            },
-            {
-              label: 'Description',
-              id: 'reportDescription',
-              minWidth: '170px',
-              align: 'left',
-            },
-            {
-              label: 'Generated Date',
-              id: 'generatedDate',
-              minWidth: '150px',
-              align: 'left',
-            },
-            {
-              label: 'Applied Filters',
-              id: 'appliedFilters',
-              align: 'left',
-              minWidth: '150px',
-              render(value, row) {
-                return (
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {row.appliedFilters?.map((filter: any) => (
-                      <Chip
-                        key={filter.name}
-                        size="small"
-                        variant="soft"
-                        label={`${filter.name}: ${filter.value}`}
-                      />
-                    ))}
-                  </Box>
-                );
-              },
-            },
-            {
-              label: 'Action',
-              id: 'reportAction',
-              minWidth: '40px',
-              align: 'left',
-              isFilter: false,
-              isSort: false,
-              sticky: true,
-              render() {
-                return (
-                  <IconButton size="small" onClick={() => {}}>
-                    <Iconify icon={GlobalIcons.report} />
-                  </IconButton>
-                );
-              },
-            },
-          ]}
-          data={[
-            {
-              reportName: 'Homework Issuance Report',
-              reportCategory: 'Homework',
-              reportSubCategory: 'Issuance',
-              reportDescription:
-                'Details of homework assigned to students within a selected date range',
-              generateReportDate: '01-12-2025',
-              appliedFilters: [
-                { name: 'From Date', value: '01-11-2025' },
-                { name: 'To Date', value: '30-11-2025' },
-                { name: 'Standard', value: '6th | 7th | 8th' },
-              ],
-              reportAction: 'View',
-            },
-            {
-              reportName: 'Homework Submission Report',
-              reportCategory: 'Homework',
-              reportSubCategory: 'Submission',
-              reportDescription:
-                'Track student homework submissions with status and late submission count',
-              generateReportDate: '01-12-2025',
-              appliedFilters: [
-                { name: 'Subject', value: 'Maths | Science' },
-                { name: 'Status', value: 'Submitted | Pending' },
-              ],
-              reportAction: 'View',
-            },
-            {
-              reportName: 'Pending Homework Report',
-              reportCategory: 'Homework',
-              reportSubCategory: 'Pending',
-              reportDescription: 'Students who have not submitted homework by the due date',
-              generateReportDate: '01-12-2025',
-              appliedFilters: [
-                { name: 'Division', value: 'A | B | C' },
-                { name: 'Due Date', value: '28-11-2025' },
-              ],
-              reportAction: 'View',
-            },
-            {
-              reportName: 'Subject-wise Homework Report',
-              reportCategory: 'Homework',
-              reportSubCategory: 'Subject-wise',
-              reportDescription:
-                'Breakdown of homework assigned for each subject in selected standard',
-              generateReportDate: '01-12-2025',
-              appliedFilters: [
-                { name: 'Standard', value: '9th' },
-                { name: 'Subject', value: 'English | Math | Science' },
-              ],
-              reportAction: 'View',
-            },
-            {
-              reportName: 'Teacher-wise Homework Report',
-              reportCategory: 'Homework',
-              reportSubCategory: 'Teacher-wise',
-              reportDescription: 'Homework created and assigned by individual teachers',
-              generateReportReportDate: '01-12-2025',
-              generateReportDate: '01-12-2025',
-              appliedFilters: [
-                { name: 'Teacher', value: 'Kiran Mam | Parth Sir' },
-                { name: 'Month', value: '11-2025' },
-              ],
-              reportAction: 'View',
-            },
-            {
-              reportName: 'Homework Evaluation Report',
-              reportCategory: 'Homework',
-              reportSubCategory: 'Evaluation',
-              reportDescription: 'Marks, feedback, and evaluation details of submitted homework',
-              generateReportDate: '01-12-2025',
-              appliedFilters: [
-                { name: 'Subject', value: 'Science' },
-                { name: 'Standard', value: '10th' },
-              ],
-              reportAction: 'View',
-            },
-          ]}
-        />
-      )}
+      <FinanceAiReportDrawer
+        open={aiReportDrawer.value}
+        onClose={aiReportDrawer.onFalse}
+        onExportQueued={handleExportQueued}
+      />
     </Box>
   );
 };
+
 export default FinanceReportsList;

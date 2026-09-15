@@ -16,19 +16,18 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
   scheduleExamApi,
-  useGetExamsQuery,
   useDeleteExamMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import NewExamForm from './components/examFormComponent';
 import ViewTimetableComp from './components/viewTimetableComp';
 import ScheduledExamTable from './components/scheduleExamTable';
+import { useScheduleExamListQuery } from './use-schedule-exam-list-query';
 
 import type { IExamFormValues } from './type';
 
@@ -45,8 +44,6 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
     dayjs().startOf('week'),
     dayjs().endOf('week'),
   ]);
-  const apiStatus = activeStatus;
-  const isPendingStatus = activeStatus === examScheduledStatus.Pending;
 
   // Redux selector to track unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -64,25 +61,14 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
   // Boolean hook to control time view dialog
   const viewTimeDialog = useBoolean(); // Dynamic breadcrumb navigation links based on current view (form or list)
 
-  const examQueryParams = {
-    AcademicMediumId: medium?.id,
-    Status: apiStatus,
-    StandardId: selectedClass !== 'all' && selectedClass ? selectedClass : undefined,
-    StartDate: !isPendingStatus && dateRange[0]?.isValid()
-      ? dateConvertor(dateRange[0].format(dateFormat))
-      : undefined,
-    EndDate: !isPendingStatus && dateRange[1]?.isValid()
-      ? dateConvertor(dateRange[1].format(dateFormat))
-      : undefined,
-    SkipCount: (examPagination.page - 1) * examPagination.pageSize,
-    MaxResultCount: examPagination.pageSize,
-  };
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const getExams = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetExamsQuery,
-    params: examQueryParams,
+  const { query: getExams, params: examQueryParams } = useScheduleExamListQuery({
+    mediumId: medium?.id,
+    activeStatus,
+    selectedClass,
+    dateRange,
+    page: examPagination.page,
+    pageSize: examPagination.pageSize,
   });
 
   const [deleteExam, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -97,17 +83,13 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       item: selectedExam,
       onOptimisticRemove: (dispatchFn, setDeleteIndex) =>
         dispatchFn(
-          scheduleExamApi.util.updateQueryData(
-            'getExams',
-            examQueryParams,
-            (draft: any) => {
-              const index = draft?.items?.findIndex(
-                (item: any) => item.examId === selectedExam?.examId
-              );
-              setDeleteIndex(index);
-              if (index !== -1) draft?.items?.splice(index, 1);
-            }
-          )
+          scheduleExamApi.util.updateQueryData('getExams', examQueryParams, (draft: any) => {
+            const index = draft?.items?.findIndex(
+              (item: any) => item.examId === selectedExam?.examId
+            );
+            setDeleteIndex(index);
+            if (index !== -1) draft?.items?.splice(index, 1);
+          })
         ),
       onUndoRestore: () => getExams.refetch(),
       onCommit: async () => {

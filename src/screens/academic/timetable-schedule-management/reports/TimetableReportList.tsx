@@ -15,8 +15,8 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Button, Tooltip, IconButton } from '@mui/material';
 import { TimetableReportApiTypeMap } from 'src/enums/timetable-reports';
+import { Box, Chip, Stack, Button, Tooltip, IconButton } from '@mui/material';
 import CurriculumReportPreviewDrawer from 'src/screens/academic/curriculum-management/reports/CurriculumReportPreviewDrawer';
 import {
   useGetAcademicReportExportsQuery,
@@ -25,6 +25,7 @@ import {
 } from 'src/redux/academicAPI/AcademicReportApi';
 
 import TimetableReports from './TimetableReports';
+import { TimetableAiReportButton } from './TimetableAiReportButton';
 
 const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
   Queued: 'default',
@@ -156,7 +157,11 @@ const TimetableReportList = () => {
   const rows = useMemo(() => {
     const allExports = Array.isArray(exportsData) ? exportsData : [];
     const timetableReportTypes = Object.values(TimetableReportApiTypeMap);
-    return allExports.filter((job: any) => timetableReportTypes.includes(job.reportType));
+    return allExports.filter(
+      (job: any) =>
+        timetableReportTypes.includes(job.reportType) ||
+        (job.isDynamic && job.module === 'Timetable')
+    );
   }, [exportsData]);
 
   return (
@@ -175,14 +180,17 @@ const TimetableReportList = () => {
           ]}
           action={
             canAdd ? (
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<Add />}
-                onClick={addReportDialog.onTrue}
-              >
-                Add Report
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <TimetableAiReportButton />
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={addReportDialog.onTrue}
+                >
+                  Add Report
+                </Button>
+              </Stack>
             ) : null
           }
         />
@@ -276,13 +284,15 @@ const TimetableReportList = () => {
                   row.status === 'Processing';
                 return (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Tooltip title="View">
-                      <span>
-                        <IconButton size="small" onClick={() => handleView(row)} sx={{ mr: 0.5 }}>
-                          <Iconify icon={GlobalIcons.eye} />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
+                    {!row.isDynamic && (
+                      <Tooltip title="View">
+                        <span>
+                          <IconButton size="small" onClick={() => handleView(row)} sx={{ mr: 0.5 }}>
+                            <Iconify icon={GlobalIcons.eye} />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    )}
                     <Tooltip
                       title={
                         row.status === 'Failed'

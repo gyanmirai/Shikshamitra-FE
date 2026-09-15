@@ -7,7 +7,13 @@ import type { AiReportBusyStage } from './ai-report-activity-config';
 
 const TYPING_DOTS = [0, 1, 2] as const;
 
-export function AiReportActivity({ stage }: { stage: AiReportBusyStage }) {
+export function AiReportActivity({
+  stage,
+  scopeMessage = 'Using only your selected academic context and permitted data.',
+}: {
+  stage: AiReportBusyStage;
+  scopeMessage?: string;
+}) {
   const copy = AI_REPORT_ACTIVITY_COPY[stage];
 
   return (
@@ -77,7 +83,7 @@ export function AiReportActivity({ stage }: { stage: AiReportBusyStage }) {
         <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 1 }}>
           <Iconify icon="solar:shield-check-bold" width={16} color="success.main" />
           <Typography variant="caption" color="text.secondary">
-            Using only your selected academic context and permitted data.
+            {scopeMessage}
           </Typography>
         </Stack>
       </Box>

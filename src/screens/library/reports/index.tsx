@@ -9,7 +9,7 @@ import CommonReport from 'src/components/common-report';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { Box, Chip, Alert, Button, IconButton, CircularProgress } from '@mui/material';
+import { Box, Chip, Alert, Stack, Button, IconButton, CircularProgress } from '@mui/material';
 import {
   useGetLibraryReportOptionsQuery,
   useGetLibraryReportExportsQuery,
@@ -17,6 +17,7 @@ import {
 } from 'src/redux/library/reports-api';
 
 import BackendReportPanel from './components/BackendReportPanel';
+import { LibraryAiReportDrawer } from './components/LibraryAiReportDrawer';
 
 const iconByCategory: Record<string, string> = {
   'Book & Inventory': 'mdi:book-multiple-outline',
@@ -32,6 +33,7 @@ const toCategoryId = (category: string) => category.replace(/\s+/g, '-');
 
 const LibraryReportsScreen = () => {
   const openGenerateReport = useBoolean();
+  const openAiReport = useBoolean();
   const {
     data: reportOptions,
     isLoading: optionsLoading,
@@ -41,9 +43,10 @@ const LibraryReportsScreen = () => {
     data: exportJobs,
     isLoading: exportsLoading,
     isError: exportsError,
+    refetch: refetchExports,
   } = useGetLibraryReportExportsQuery(
     { skipCount: 0, maxResultCount: 20 },
-    { refetchOnMountOrArgChange: true }
+    { refetchOnMountOrArgChange: true, pollingInterval: 5000 }
   );
   const [downloadExport, downloadState] = useLazyDownloadLibraryReportExportQuery();
 
@@ -113,15 +116,26 @@ const LibraryReportsScreen = () => {
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={
-          <Button
-            data-testid="library-reports-generate-button"
-            variant="contained"
-            size="small"
-            onClick={openGenerateReport.onTrue}
-            startIcon={<Iconify icon={GlobalIcons.report} />}
-          >
-            Generate Report
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              data-testid="library-reports-ai-button"
+              variant="soft"
+              size="small"
+              onClick={openAiReport.onTrue}
+              startIcon={<Iconify icon="solar:magic-stick-3-bold" />}
+            >
+              Generate with AI
+            </Button>
+            <Button
+              data-testid="library-reports-generate-button"
+              variant="contained"
+              size="small"
+              onClick={openGenerateReport.onTrue}
+              startIcon={<Iconify icon={GlobalIcons.report} />}
+            >
+              Build manually
+            </Button>
+          </Stack>
         }
       />
       {openGenerateReport.value ? (
@@ -243,6 +257,14 @@ const LibraryReportsScreen = () => {
           />
         </>
       )}
+      <LibraryAiReportDrawer
+        open={openAiReport.value}
+        onClose={openAiReport.onFalse}
+        onExportQueued={() => {
+          toast.success('Library report export queued successfully.');
+          refetchExports().catch(() => undefined);
+        }}
+      />
     </Box>
   );
 };

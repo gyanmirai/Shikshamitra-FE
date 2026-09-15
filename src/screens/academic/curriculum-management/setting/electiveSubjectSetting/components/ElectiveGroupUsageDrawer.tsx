@@ -1,15 +1,15 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
 import { useRouter } from 'src/routes/hooks';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useMemo, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
+import { alpha, useTheme } from '@mui/material/styles';
 import CancelButton from 'src/components/cancel-button';
 import CustomTooltip from 'src/components/custom-tooltip';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { academicPaths } from 'src/constants/academic-menu';
-import { alpha, useTheme } from '@mui/material/styles';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Card,
@@ -21,6 +21,8 @@ import {
   Typography,
   DialogActions,
 } from '@mui/material';
+
+import { getSubjectMasterStatusLabel } from '../../subjectMasterStatus';
 
 import type { IElectiveSubject } from '../type';
 
@@ -49,13 +51,6 @@ interface ElectiveGroupUsageDrawerProps {
 }
 
 // ----------------------------------------------------------------------
-
-const getStatusLabel = (status?: string | number): 'Active' | 'Inactive' | 'Archived' => {
-  if (status === 1 || status === '1' || status === 'Active') return 'Active';
-  if (status === 2 || status === '2' || status === 'Inactive') return 'Inactive';
-  if (status === 3 || status === '3' || status === 'Archived') return 'Archived';
-  return 'Active';
-};
 
 const getStatusColor = (status: string): 'success' | 'default' | 'warning' | 'error' => {
   switch (status) {
@@ -165,7 +160,7 @@ export default function ElectiveGroupUsageDrawer({
   const [showAllDistribution, setShowAllDistribution] = useState(false);
   const [showAllSubjects, setShowAllSubjects] = useState(false);
 
-  const statusLabel = getStatusLabel(selectedGroup?.status);
+  const statusLabel = getSubjectMasterStatusLabel(selectedGroup?.status);
   const groupColor = selectedGroup?.color || theme.palette.primary.main;
 
   // Normalized subjects list
@@ -190,7 +185,10 @@ export default function ElectiveGroupUsageDrawer({
   const studentSelections = usageData?.usage?.studentSelectionsCount ?? 0;
   const timetablePeriods = usageData?.usage?.timetablePeriodsCount ?? 0;
   const examSchedules = usageData?.usage?.examSchedulesCount ?? 0;
-  const subjectDistribution = usageData?.usage?.subjectWiseStudentCount ?? [];
+  const subjectDistribution = useMemo(
+    () => usageData?.usage?.subjectWiseStudentCount ?? [],
+    [usageData?.usage?.subjectWiseStudentCount]
+  );
 
   const totalStudents = useMemo(() => {
     if (subjectDistribution.length > 0) {
@@ -880,4 +878,3 @@ export default function ElectiveGroupUsageDrawer({
     </CustomDialog>
   );
 }
-
