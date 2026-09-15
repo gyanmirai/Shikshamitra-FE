@@ -43,10 +43,10 @@ describe('HrDashboardPreviewShell', () => {
     const breadcrumbs = screen.getByRole('navigation');
 
     expect(heading).toBeVisible();
-    expect(breadcrumbs.compareDocumentPosition(heading)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-    expect(shell.querySelector('[data-layout="stacked"]')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/dashboard');
-    expect(screen.getByText('HR/Staff')).toBeVisible();
+    expect(shell.querySelector('[data-layout="inline"]')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'HR/Staff' })).toHaveAttribute('href', '/hr/dashboard');
+    expect(within(breadcrumbs).getByText('HR Dashboard')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Page description' })).toBeVisible();
     expect(screen.getByLabelText('Dashboard freshness')).toHaveTextContent('Last refreshed:');
     expect(screen.getByLabelText('Dashboard freshness')).toHaveTextContent('Saved snapshot');
     expect(within(shell).queryByRole('link', { name: 'Onboard Employee' })).not.toBeInTheDocument();
