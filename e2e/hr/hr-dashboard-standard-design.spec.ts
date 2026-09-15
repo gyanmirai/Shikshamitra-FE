@@ -323,6 +323,12 @@ test.describe('HR dashboard standard design', () => {
       await expect(page.getByRole('heading', { level: 1, name: 'HR Dashboard' })).toBeVisible();
       await expect(page.getByRole('heading', { level: 2, name: 'Action Center' })).toBeVisible();
       await expect(page.getByRole('heading', { level: 2, name: 'People Updates' })).toBeVisible();
+      await expect(dashboard.locator('[data-layout="inline"]')).toBeVisible();
+      await expect(dashboard.getByRole('link', { name: 'HR/Staff' })).toHaveAttribute(
+        'href',
+        /\/hr\/dashboard\/?$/
+      );
+      await expect(breadcrumbs.getByText('HR Dashboard')).toBeVisible();
       await expect(page.getByRole('link', { name: 'Active Staff: 126' })).toHaveAttribute(
         'href',
         /\/hr\/employee\/?$/
@@ -331,11 +337,6 @@ test.describe('HR dashboard standard design', () => {
       await expect(dashboard.getByRole('link', { name: 'Reports' })).toHaveCount(0);
       await expect(dashboard.getByRole('separator')).toHaveCount(0);
       await expect(dashboard.getByText("7-day trend and today's attendance status")).toBeVisible();
-
-      const headerPositions = await Promise.all([breadcrumbs.boundingBox(), heading.boundingBox()]);
-      expect(headerPositions[0]).not.toBeNull();
-      expect(headerPositions[1]).not.toBeNull();
-      expect(headerPositions[0]!.y).toBeLessThan(headerPositions[1]!.y);
 
       const metricPositions = await dashboard
         .locator('[data-testid^="summary-metric-"]')
