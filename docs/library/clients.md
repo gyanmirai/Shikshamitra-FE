@@ -3,7 +3,7 @@ module: library
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-09-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -46,3 +46,10 @@ Keep these rules when changing Library clients.
 | Keep release-surface tests aligned with active routes | Prototype pages must not look shipped |
 | Keep report screens on backend-backed panels | Release gate checks this behavior |
 | Refresh affected lists after mutations | Catalog, issue, return, charge, and member state must stay consistent |
+| Keep AI output typed | The planner response must become `LibraryReportRequest`; screens must not execute model-created queries |
+
+## AI report client
+
+`reports-api.ts` owns plan, preview, export-queue, status, and download calls.
+`library-adapters.ts` keeps calendar-only filter dates as `YYYY-MM-DD` so local dates do not shift when serialized.
+The AI plan mutation returns either clarification questions or a typed request consumed by the same preview and export endpoints as manual reports.

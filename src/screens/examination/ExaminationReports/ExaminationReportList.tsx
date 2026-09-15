@@ -16,7 +16,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ExamReportApiTypeMap } from 'src/enums/examination-reports';
 import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Button, Tooltip, IconButton } from '@mui/material';
+import { Box, Chip, Stack, Button, Tooltip, IconButton } from '@mui/material';
 import {
   useGetAcademicReportExportsQuery,
   useLazyDownloadAcademicReportQuery,
@@ -24,6 +24,7 @@ import {
 } from 'src/redux/academicAPI/AcademicReportApi';
 
 import ExaminationReports from '.';
+import { ExaminationAiReportButton } from './ExaminationAiReportButton';
 import ExaminationReportPreviewDrawer from './ExaminationReportPreviewDrawer';
 
 const STATUS_COLOR: Record<string, 'default' | 'primary' | 'success' | 'error' | 'warning'> = {
@@ -159,7 +160,11 @@ const ExaminationReportsList = () => {
   const rows = useMemo(() => {
     const allExports = Array.isArray(exportsData) ? exportsData : [];
     const examReportTypes = Object.values(ExamReportApiTypeMap);
-    return allExports.filter((job: any) => examReportTypes.includes(job.reportType));
+    return allExports.filter(
+      (job: any) =>
+        examReportTypes.includes(job.reportType) ||
+        (job.isDynamic && job.module === 'Examination')
+    );
   }, [exportsData]);
 
   return (
@@ -176,14 +181,17 @@ const ExaminationReportsList = () => {
           ]}
           action={
             canAdd ? (
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<Add />}
-                onClick={addReportDialog.onTrue}
-              >
-                Report
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <ExaminationAiReportButton />
+                <Button
+                  size="small"
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={addReportDialog.onTrue}
+                >
+                  Report
+                </Button>
+              </Stack>
             ) : null
           }
         />
@@ -277,18 +285,20 @@ const ExaminationReportsList = () => {
                   row.status === 'Processing';
                 return (
                   <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Tooltip title="View">
-                      <span>
-                        <IconButton
-                          size="small"
-                          disabled={!row.requestJson}
-                          onClick={() => handleView(row)}
-                          sx={{ mr: 0.5 }}
-                        >
-                          <Iconify icon={GlobalIcons.eye} />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
+                    {!row.isDynamic && (
+                      <Tooltip title="View">
+                        <span>
+                          <IconButton
+                            size="small"
+                            disabled={!row.requestJson}
+                            onClick={() => handleView(row)}
+                            sx={{ mr: 0.5 }}
+                          >
+                            <Iconify icon={GlobalIcons.eye} />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                    )}
                     <Tooltip
                       title={
                         row.status === 'Failed'

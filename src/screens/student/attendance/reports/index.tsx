@@ -9,9 +9,11 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Button, IconButton, Typography } from '@mui/material';
 import { StudentRecordsReportTitle } from 'src/enums/studentRecordsReports';
+import { Box, Chip, Stack, Button, IconButton, Typography } from '@mui/material';
 import StudentRecordsReportForm from 'src/screens/student/reports/components/StudentRecordsReportForm';
+
+import { AttendanceAiReportButton } from './components/AttendanceAiReportButton';
 
 const AttendanceReportScreen = () => {
   const openGenerateReport = useBoolean();
@@ -33,14 +35,17 @@ const AttendanceReportScreen = () => {
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={openGenerateReport.onTrue}
-            startIcon={<Iconify icon={GlobalIcons.report} />}
-          >
-            Generate Report
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <AttendanceAiReportButton />
+            <Button
+              variant="contained"
+              size="small"
+              onClick={openGenerateReport.onTrue}
+              startIcon={<Iconify icon={GlobalIcons.report} />}
+            >
+              Generate Report
+            </Button>
+          </Stack>
         }
       />
       {openGenerateReport.value ? (

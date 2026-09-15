@@ -1,9 +1,9 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { Box, Button } from '@mui/material';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Box, Stack, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -16,6 +16,7 @@ import {
 
 import { hrReportToast } from './hr-report-notifications';
 import { HrReportCatalog } from './components/HrReportCatalog';
+import { HrAiReportDrawer } from './components/HrAiReportDrawer';
 import { HrReportsLandingTable } from './components/HrReportsLandingTable';
 import { useHrReportsCenterActions } from './hooks/useHrReportsCenterActions';
 import { getHrReportFormatLabel, isHrReportExportActive } from './hr-report-utils';
@@ -72,6 +73,7 @@ const buildExportDateParams = (filter: HrReportExportDateFilter) => {
 
 const ReportsScreen = () => {
   const openGenerateReport = useBoolean();
+  const openAiReport = useBoolean();
   const [directSelection, setDirectSelection] = useState<HrReportCatalogSelection | null>(null);
   const [activeCenterTab, setActiveCenterTab] = useState<HrReportsCenterTab>('exports');
   const [exportDateFilter, setExportDateFilter] =
@@ -174,15 +176,28 @@ const ReportsScreen = () => {
         onBack={actions.handleBack}
         action={
           !openGenerateReport.value ? (
-            <Button
-              data-testid="hr-reports-generate-button"
-              variant="contained"
-              size="small"
-              onClick={actions.handleGenerateReport}
-              startIcon={<Iconify icon={GlobalIcons.report} />}
-            >
-              {reportPermissions.canBuild ? 'Generate Report' : 'View Reports'}
-            </Button>
+            <Stack direction="row" spacing={1}>
+              {reportPermissions.canBuild && (
+                <Button
+                  data-testid="hr-reports-ai-button"
+                  variant="outlined"
+                  size="small"
+                  onClick={openAiReport.onTrue}
+                  startIcon={<Iconify icon="solar:magic-stick-3-bold" />}
+                >
+                  Ask AI
+                </Button>
+              )}
+              <Button
+                data-testid="hr-reports-generate-button"
+                variant="contained"
+                size="small"
+                onClick={actions.handleGenerateReport}
+                startIcon={<Iconify icon={GlobalIcons.report} />}
+              >
+                {reportPermissions.canBuild ? 'Generate Report' : 'View Reports'}
+              </Button>
+            </Stack>
           ) : null
         }
         sx={{ px: 2 }}
@@ -240,6 +255,18 @@ const ReportsScreen = () => {
         onClose={() => actions.setShareExportJobId(null)}
         onSubmit={actions.handleShareExport}
       />
+      {openAiReport.value && (
+        <HrAiReportDrawer
+          open
+          canBuild={reportPermissions.canBuild}
+          canExport={reportPermissions.canExport}
+          onClose={openAiReport.onFalse}
+          onExportQueued={(jobId) => {
+            revealQueuedExport(jobId);
+            refetchExports();
+          }}
+        />
+      )}
     </Box>
   );
 };

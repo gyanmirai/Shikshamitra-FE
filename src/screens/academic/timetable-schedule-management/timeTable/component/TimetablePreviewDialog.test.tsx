@@ -1,5 +1,5 @@
-import { vi, expect, describe, it } from 'vitest';
 import { screen } from '@testing-library/react';
+import { vi, it, expect, describe } from 'vitest';
 import { renderWithProviders } from 'src/test/test-utils';
 
 import { TimetablePreviewDialog } from './TimetablePreviewDialog';

@@ -1,5 +1,5 @@
 import { Iconify } from 'src/components/iconify';
-import { Box, Paper, Skeleton, Typography, LinearProgress } from '@mui/material';
+import { Box, Paper, Skeleton, Typography } from '@mui/material';
 
 import { AcademicSetupLevel } from './academic-setup-level';
 import {
@@ -40,16 +40,6 @@ export const AcademicSetupProgress = ({
       <Box
         sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
       >
-        <LinearProgress
-          aria-label={
-            isLoading
-              ? 'Loading academic hierarchy coverage'
-              : `Academic hierarchy coverage: ${coverage.percentage}%`
-          }
-          variant={isLoading ? 'indeterminate' : 'determinate'}
-          value={isLoading ? undefined : coverage.percentage}
-          sx={{ height: 6, borderRadius: 0 }}
-        />
         <Box
           component="ol"
           aria-label="Hierarchy levels"

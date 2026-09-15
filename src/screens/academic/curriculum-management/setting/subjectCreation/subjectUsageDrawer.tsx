@@ -23,6 +23,8 @@ import {
 } from '@mui/material';
 
 import { type ISubject, getSubjectIcon } from './type';
+import { getSubjectMasterStatusLabel } from '../subjectMasterStatus';
+import { SubjectLifecycleAction } from './components/SubjectLifecycleAction';
 import { SubjectImpactStatusCard } from './components/SubjectImpactStatusCard';
 
 // ----------------------------------------------------------------------
@@ -51,17 +53,12 @@ interface SubjectUsageDrawerProps {
   usageData?: SubjectUsageData | null;
   isLoading?: boolean;
   onArchive?: (subject: ISubject) => void;
+  onRestore?: (subject: ISubject) => Promise<boolean>;
   canArchive?: boolean;
+  isRestoring?: boolean;
 }
 
 // ----------------------------------------------------------------------
-
-const getStatusLabel = (status?: string | number): 'Active' | 'Inactive' | 'Archived' => {
-  if (status === 1 || status === '1' || status === 'Active') return 'Active';
-  if (status === 2 || status === '2' || status === 'Inactive') return 'Inactive';
-  if (status === 3 || status === '3' || status === 'Archived') return 'Archived';
-  return 'Active';
-};
 
 const getStatusColor = (status: string): 'success' | 'default' | 'warning' | 'error' => {
   switch (status) {
@@ -186,7 +183,9 @@ export default function SubjectUsageDrawer({
   usageData,
   isLoading = false,
   onArchive,
+  onRestore,
   canArchive = false,
+  isRestoring = false,
 }: SubjectUsageDrawerProps) {
   const theme = useTheme();
   const router = useRouter();
@@ -194,7 +193,7 @@ export default function SubjectUsageDrawer({
   const [showAllAllocations, setShowAllAllocations] = useState(false);
   const [showAllElectives, setShowAllElectives] = useState(false);
 
-  const statusLabel = getStatusLabel(selectedSubject?.status);
+  const statusLabel = getSubjectMasterStatusLabel(selectedSubject?.status);
   const subjectColor =
     selectedSubject?.color || (selectedSubject as any)?.subjectColor || theme.palette.primary.main;
 
@@ -809,21 +808,14 @@ export default function SubjectUsageDrawer({
         }}
       >
         <Box>
-          {canArchive && onArchive && statusLabel !== 'Archived' && selectedSubject && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="warning"
-              startIcon={<Iconify icon="solar:archive-bold" width={15} />}
-              onClick={() => {
-                onClose();
-                onArchive(selectedSubject);
-              }}
-              sx={{ fontWeight: 600, fontSize: '12px' }}
-            >
-              Archive Subject
-            </Button>
-          )}
+          <SubjectLifecycleAction
+            canManage={canArchive}
+            isRestoring={isRestoring}
+            selectedSubject={selectedSubject}
+            onArchive={onArchive}
+            onRestore={onRestore}
+            onClose={onClose}
+          />
         </Box>
 
         <CancelButton buttonText="Close" onClick={onClose} />

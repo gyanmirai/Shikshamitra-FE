@@ -9,14 +9,15 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Button, IconButton, Typography } from '@mui/material';
 import { StudentRecordsReportTitle } from 'src/enums/studentRecordsReports';
+import { Box, Chip, Stack, Button, IconButton, Typography } from '@mui/material';
 
 // ── Other categories — existing standalone components (unchanged) ──────────────
 import VerifyStudentData from './components/VerifyStudentData';
 // ── Student Lists — centralized form (Student Enrollment Reports pattern) ──────
 import StudentRecordsReportForm from './components/StudentRecordsReportForm';
 import AdmissionCategorywiseList from './components/AdmissionCategorywiseList';
+import { StudentRecordsAiReportButton } from './components/StudentRecordsAiReportButton';
 
 const StudentReportsScreen = () => {
   const openGenerateReport = useBoolean();
@@ -38,14 +39,17 @@ const StudentReportsScreen = () => {
         isBack={openGenerateReport.value}
         onBack={openGenerateReport.onFalse}
         action={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={openGenerateReport.onTrue}
-            startIcon={<Iconify icon={GlobalIcons.report} />}
-          >
-            Generate Report
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <StudentRecordsAiReportButton />
+            <Button
+              variant="contained"
+              size="small"
+              onClick={openGenerateReport.onTrue}
+              startIcon={<Iconify icon={GlobalIcons.report} />}
+            >
+              Generate Report
+            </Button>
+          </Stack>
         }
       />
       {openGenerateReport.value ? (

@@ -1,5 +1,18 @@
 import type { CalendarFormValues, CalendarDayFormValues } from './types';
 
+const EXAM_SYNC_DESCRIPTION_PREFIX = 'Auto-created from examination schedule. ExamId: ';
+
+export const getSyncedExamId = (description?: string): string => {
+  if (!description?.startsWith(EXAM_SYNC_DESCRIPTION_PREFIX)) return '';
+
+  const candidate = description.slice(EXAM_SYNC_DESCRIPTION_PREFIX.length).trim();
+  return /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(
+    candidate
+  )
+    ? candidate
+    : '';
+};
+
 export const calendarInitialValues = (data?: any): CalendarFormValues => ({
   academicMediumId: data?.academicMediumId ?? '',
   name: data?.name ?? '',
@@ -32,9 +45,10 @@ export const calendarDayInitialValues = (data?: any): CalendarDayFormValues => (
   endTime: data?.endTime ?? '',
   venue: data?.venue ?? '',
   examTypeId: data?.examTypeId ?? '',
-  linkedExamId: data?.linkedExamId ?? '',
-  examStartTime: data?.examStartTime ?? '',
-  examEndTime: data?.examEndTime ?? '',
+  linkedExamId: data?.linkedExamId ?? getSyncedExamId(data?.description),
+  // Older auto-generated exam markers stored their schedule in the generic time fields.
+  examStartTime: data?.examStartTime ?? data?.startTime ?? '',
+  examEndTime: data?.examEndTime ?? data?.endTime ?? '',
   ptmMode: data?.ptmMode ?? '',
   roomId: data?.roomId ?? '',
   meetingLink: data?.meetingLink ?? '',

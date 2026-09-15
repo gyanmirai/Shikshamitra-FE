@@ -1,3 +1,5 @@
+import { getSubjectMasterStatusLabel } from '../subjectMasterStatus';
+
 import type { ISubject } from './type';
 
 export const getSubjectInitialValues = (editData?: ISubject | null) => ({
@@ -7,12 +9,7 @@ export const getSubjectInitialValues = (editData?: ISubject | null) => ({
   subjectColor: editData?.color || '',
   icon: editData?.icon || '',
   description: editData?.description || '',
-  status:
-    editData?.status === 2 || editData?.status === 'Archived'
-      ? 'Archived'
-      : editData?.status === 1 || editData?.status === 'Inactive'
-        ? 'Inactive'
-        : 'Active',
+  status: getSubjectMasterStatusLabel(editData?.status),
   sortOrder: editData?.sortOrder ?? '',
 });
 

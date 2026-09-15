@@ -3,10 +3,53 @@ import { libraryModuleType } from 'src/redux/tagTypes';
 import { libraryModuleApi } from './libraryModuleApi';
 import {
   toLibraryPaginatedList,
+  type LibraryReportPreview,
   mapLibraryReportOptionsDto,
   mapLibraryReportPreviewDto,
   mapLibraryReportExportJobDto,
 } from './library-adapters';
+
+export type LibraryReportFormat = 'pdf' | 'excel';
+
+export type LibraryReportRequest = {
+  reportType: string;
+  format: LibraryReportFormat;
+  page: number;
+  pageSize: number;
+  columns?: string[];
+  sorts?: { field: string; direction: 'asc' | 'desc' }[];
+  filters: {
+    academicYearId?: string;
+    categoryIds?: string[];
+    sectionIds?: string[];
+    copyStatuses?: number[];
+    issueStatuses?: number[];
+    chargeStatuses?: number[];
+    memberRole?: number;
+    fromDate?: string;
+    toDate?: string;
+    search?: string;
+    top?: number;
+  };
+};
+
+export type LibraryAiClarificationAnswer = { question: string; answer: string };
+export type LibraryAiClarificationQuestion = {
+  id: string;
+  question: string;
+  options: string[];
+  recommendedOption: string;
+};
+export type LibraryAiPlanResponse = {
+  status: 'NeedsClarification' | 'Ready';
+  plan?: LibraryReportRequest;
+  interpretedRequest: string;
+  summary: string;
+  clarificationQuestions: LibraryAiClarificationQuestion[];
+  assumptions: string[];
+  confidence: number;
+  permissionSummary: string;
+};
 
 const readFileName = (contentDisposition: string | null) => {
   if (!contentDisposition) return 'library-report-export';
@@ -29,7 +72,18 @@ export const libraryReportsApi = libraryModuleApi.injectEndpoints({
       providesTags: [libraryModuleType.reports],
     }),
 
-    previewLibraryReport: builder.mutation({
+    createLibraryAiReportPlan: builder.mutation<
+      LibraryAiPlanResponse,
+      { prompt: string; clarificationAnswers: LibraryAiClarificationAnswer[] }
+    >({
+      query: (body) => ({
+        url: '/library/reports/ai/plan',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    previewLibraryReport: builder.mutation<LibraryReportPreview, LibraryReportRequest>({
       query: (body) => ({
         url: '/library/reports/preview',
         method: 'POST',
@@ -38,7 +92,10 @@ export const libraryReportsApi = libraryModuleApi.injectEndpoints({
       transformResponse: mapLibraryReportPreviewDto,
     }),
 
-    createLibraryReportExport: builder.mutation({
+    createLibraryReportExport: builder.mutation<
+      { jobId: string; status: string },
+      LibraryReportRequest
+    >({
       query: (body) => ({
         url: '/library/reports/exports',
         method: 'POST',
@@ -86,6 +143,7 @@ export const libraryReportsApi = libraryModuleApi.injectEndpoints({
 
 export const {
   useGetLibraryReportOptionsQuery,
+  useCreateLibraryAiReportPlanMutation,
   usePreviewLibraryReportMutation,
   useCreateLibraryReportExportMutation,
   useGetLibraryReportExportsQuery,

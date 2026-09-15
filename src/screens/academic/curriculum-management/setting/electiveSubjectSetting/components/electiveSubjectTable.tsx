@@ -16,8 +16,8 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Avatar, IconButton, Typography } from '@mui/material';
 import { useGetElectiveGroupsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 import {
-  TimetableSettingsSummaryCards,
   type ITimetableSummaryCard,
+  TimetableSettingsSummaryCards,
 } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 
 import type { IElectiveSubject, IElectiveSubjectTableProps } from '../type';

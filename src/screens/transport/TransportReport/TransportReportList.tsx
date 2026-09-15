@@ -1,7 +1,10 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { TransportReportCatalogItem } from 'src/redux/transport/vehicle-management/dashboard-report-api';
+import type {
+  TransportReportCatalogItem,
+  TransportAiReportExecutionPlan,
+} from 'src/redux/transport/vehicle-management/dashboard-report-api';
 
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
@@ -33,6 +36,8 @@ import {
   LinearProgress,
 } from '@mui/material';
 
+import { TransportAiReportDrawer } from './TransportAiReportDrawer';
+
 const pageSize = 25;
 
 const saveBlob = (blob: Blob, fileName: string) => {
@@ -52,6 +57,8 @@ const TransportReportList = () => {
   const [status, setStatus] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [aiDrawerOpen, setAiDrawerOpen] = useState(false);
+  const [aiPlan, setAiPlan] = useState<TransportAiReportExecutionPlan | null>(null);
 
   const catalogQuery = {
     academicMediumId: currentMedium?.id,
@@ -101,15 +108,17 @@ const TransportReportList = () => {
   }, [filteredCatalog, selectedReportKey]);
 
   const selectedReport = catalog.find((report) => report.key === selectedReportKey);
+  const activeAiQuery = aiPlan?.reportKey === selectedReportKey ? aiPlan.query : undefined;
   const reportArgs = {
+    ...activeAiQuery,
     reportKey: selectedReportKey,
     academicMediumId: currentMedium?.id,
     academicYearId: currentYear?.id,
     pageNumber,
     pageSize,
-    fromDate: fromDate || undefined,
-    toDate: toDate || undefined,
-    status: status || undefined,
+    fromDate: fromDate || activeAiQuery?.fromDate || undefined,
+    toDate: toDate || activeAiQuery?.toDate || undefined,
+    status: status || activeAiQuery?.status || undefined,
   };
   const { data: reportData, isFetching: isReportLoading } = useGetTransportReportQuery(reportArgs, {
     skip: !currentMedium?.id || !selectedReportKey,
@@ -127,6 +136,18 @@ const TransportReportList = () => {
     saveBlob(blob, `${selectedReportKey}.csv`);
   };
 
+  const handleAiGenerated = (plan: TransportAiReportExecutionPlan) => {
+    setSelectedCategory('All');
+    setSelectedReportKey(plan.reportKey);
+    setPageNumber(1);
+    setFromDate(plan.query.fromDate?.slice(0, 10) ?? '');
+    setToDate(plan.query.toDate?.slice(0, 10) ?? '');
+    setStatus(plan.query.status ?? '');
+    setAiPlan(plan);
+  };
+
+  const clearAiPlan = () => setAiPlan(null);
+
   if (!currentMedium?.id) {
     return (
       <Card sx={{ p: 3 }}>
@@ -143,6 +164,15 @@ const TransportReportList = () => {
       <CustomBreadcrumbs
         heading="Reports"
         links={[{ name: 'Transport', href: '/transport/dashboard/' }, { name: 'Reports' }]}
+        action={
+          <Button
+            variant="contained"
+            startIcon={<Iconify icon="solar:magic-stick-3-bold" />}
+            onClick={() => setAiDrawerOpen(true)}
+          >
+            Generate with AI
+          </Button>
+        }
       />
 
       {(isCatalogLoading || isReportLoading) && <LinearProgress />}
@@ -162,6 +192,7 @@ const TransportReportList = () => {
                 onChange={(event) => {
                   setSelectedCategory(event.target.value);
                   setPageNumber(1);
+                  clearAiPlan();
                 }}
               >
                 {categories.map((category) => (
@@ -180,6 +211,7 @@ const TransportReportList = () => {
                 onChange={(event) => {
                   setSelectedReportKey(event.target.value);
                   setPageNumber(1);
+                  clearAiPlan();
                 }}
               >
                 {filteredCatalog.map((report: TransportReportCatalogItem) => (
@@ -199,6 +231,7 @@ const TransportReportList = () => {
               onChange={(event) => {
                 setFromDate(event.target.value);
                 setPageNumber(1);
+                clearAiPlan();
               }}
               InputLabelProps={{ shrink: true }}
             />
@@ -210,6 +243,7 @@ const TransportReportList = () => {
               onChange={(event) => {
                 setToDate(event.target.value);
                 setPageNumber(1);
+                clearAiPlan();
               }}
               InputLabelProps={{ shrink: true }}
             />
@@ -220,6 +254,7 @@ const TransportReportList = () => {
               onChange={(event) => {
                 setStatus(event.target.value);
                 setPageNumber(1);
+                clearAiPlan();
               }}
             />
             <Button
@@ -318,6 +353,15 @@ const TransportReportList = () => {
           </>
         )}
       </Card>
+
+      <TransportAiReportDrawer
+        open={aiDrawerOpen}
+        academicMediumId={currentMedium.id}
+        academicYearId={currentYear?.id}
+        contextLabel={`${currentYear?.name || 'Current year'} / ${currentMedium?.name || 'Current medium'}`}
+        onClose={() => setAiDrawerOpen(false)}
+        onGenerated={handleAiGenerated}
+      />
     </Stack>
   );
 };

@@ -23,6 +23,10 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ heading }: { heading: string }) => <h1>{heading}</h1>,
 }));
 
+vi.mock('./TransportAiReportDrawer', () => ({
+  TransportAiReportDrawer: () => null,
+}));
+
 const mockedCatalogQuery = useGetTransportReportCatalogQuery as ReturnType<typeof vi.fn>;
 const mockedReportQuery = useGetTransportReportQuery as ReturnType<typeof vi.fn>;
 const mockedLazyExportQuery = useLazyExportTransportReportQuery as ReturnType<typeof vi.fn>;

@@ -7,7 +7,6 @@ import { alpha } from '@mui/material/styles';
 import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import LoadingButton from '@mui/lab/LoadingButton';
 import CustomSelect from 'src/components/custom-select';
 import { useState, useEffect, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -23,7 +22,6 @@ import {
   Drawer,
   Switch,
   Divider,
-  Tooltip,
   Skeleton,
   TextField,
   Typography,
@@ -33,6 +31,7 @@ import {
 } from '@mui/material';
 
 import { RoomStatusChip } from './RoomStatusChip';
+import { SuggestedRoomBookingButton } from './SuggestedRoomBookingButton';
 import { useRoomSuggestions, useCreateRoomReservation } from '../roomAvailability.hooks';
 import {
   validateRoomSearchRequirements,
@@ -157,6 +156,7 @@ export const SmartRoomReservationDrawer = ({
   });
   const [searched, setSearched] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [bookingRoomId, setBookingRoomId] = useState<string | null>(null);
 
   const suggestions = useRoomSuggestions();
   const { suggest } = suggestions;
@@ -207,10 +207,13 @@ export const SmartRoomReservationDrawer = ({
   };
 
   const handleBookRoom = async (room: SuggestedRoom) => {
+    if (bookingRoomId) return;
+
     const errors = validateRoomBookingRequirements(requirements);
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
+    setBookingRoomId(room.roomId);
     try {
       // Only admins can bypass approval if the room doesn't strictly need it
       const isApprovalRequired =
@@ -258,6 +261,8 @@ export const SmartRoomReservationDrawer = ({
     } catch (err: any) {
       const errorMsg = err?.data?.error?.message || 'Failed to create reservation.';
       shikshaMitraToast.error({ message: errorMsg });
+    } finally {
+      setBookingRoomId(null);
     }
   };
 
@@ -265,6 +270,7 @@ export const SmartRoomReservationDrawer = ({
     setRequirements({ ...defaultRequirements });
     setSearched(false);
     setFieldErrors({});
+    setBookingRoomId(null);
     suggestions.reset();
     onClose();
   };
@@ -1037,26 +1043,14 @@ export const SmartRoomReservationDrawer = ({
                             )}
 
                             {/* Book Action */}
-                            <Button
-                              variant={isWarning ? 'outlined' : 'contained'}
-                              color={isCritical ? 'inherit' : isWarning ? 'warning' : 'primary'}
-                              fullWidth
-                              size="medium"
-                              disabled={isCritical || createReservation.isLoading}
-                              onClick={() => handleBookRoom(room)}
-                              startIcon={
-                                createReservation.isLoading ? (
-                                  <CircularProgress size={16} color="inherit" />
-                                ) : undefined
-                              }
-                              sx={{ mt: 0.5, py: 1, fontWeight: 600, borderRadius: 1.5 }}
-                            >
-                              {isCritical
-                                ? 'Unavailable'
-                                : isWarning
-                                  ? 'Book (Requires Approval)'
-                                  : 'Book Instantly'}
-                            </Button>
+                            <SuggestedRoomBookingButton
+                              roomId={room.roomId}
+                              roomName={room.roomName}
+                              bookingRoomId={bookingRoomId}
+                              isCritical={isCritical}
+                              isWarning={isWarning}
+                              onBook={() => handleBookRoom(room)}
+                            />
                           </Box>
                         );
                       })}

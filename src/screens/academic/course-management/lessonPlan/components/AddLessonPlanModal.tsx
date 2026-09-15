@@ -10,7 +10,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
@@ -262,13 +262,11 @@ const AddLessonPlanModal = ({
   }, [currentTeacher]);
 
   const selectedTeacherId = form.teacherId;
-  const plannedDateStr = form.plannedDate
-    ? dateConvertor(form.plannedDate.startOf('day').format(dateFormat))
-    : '';
+  const plannedDateStr = datePickerToDateTimeOffset(form.plannedDate) || '';
 
   const { data: timelineData } = useGetLessonPlanTimelineQuery(
     {
-      date: plannedDateStr || dateConvertor(dayjs(todayIso).startOf('day').format(dateFormat)),
+      date: plannedDateStr || datePickerToDateTimeOffset(dayjs(todayIso)) || '',
       teacherId: selectedTeacherId,
     },
     {

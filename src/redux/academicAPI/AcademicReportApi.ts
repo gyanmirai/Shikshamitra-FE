@@ -2,13 +2,22 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
 
+export type AcademicAiReportModule =
+  | 'Curriculum'
+  | 'Timetable'
+  | 'Homework & Assignment'
+  | 'Examination'
+  | 'Student Records'
+  | 'Student Attendance';
+
 export interface AcademicAiReportExportRequest {
   prompt: string;
   academicYearId: string;
   educationBoardId: string;
   educationMediumId: string;
-  module: 'Curriculum';
+  module: AcademicAiReportModule;
   plan: AcademicDynamicReportSpec;
+  approvalToken: string;
 }
 
 export interface AcademicAiReportPlanRequest {
@@ -16,7 +25,20 @@ export interface AcademicAiReportPlanRequest {
   academicYearId: string;
   educationBoardId: string;
   educationMediumId: string;
-  module: 'Curriculum';
+  module: AcademicAiReportModule;
+  clarificationAnswers: AcademicAiReportClarificationAnswer[];
+}
+
+export interface AcademicAiReportClarificationAnswer {
+  question: string;
+  answer: string;
+}
+
+export interface AcademicAiReportClarificationQuestion {
+  id: string;
+  question: string;
+  options: string[];
+  recommendedOption: string;
 }
 
 export interface AcademicDynamicReportFilter {
@@ -31,6 +53,24 @@ export interface AcademicDynamicReportSort {
   direction: 'ascending' | 'descending';
 }
 
+export interface AcademicDynamicReportCondition {
+  field: string;
+  operator:
+    | 'eq'
+    | 'ne'
+    | 'contains'
+    | 'startsWith'
+    | 'in'
+    | 'gt'
+    | 'gte'
+    | 'lt'
+    | 'lte'
+    | 'between'
+    | 'isEmpty'
+    | 'isNotEmpty';
+  values: string[];
+}
+
 export interface AcademicDynamicReportAppliedFilter {
   type: 'class' | 'division' | 'subject' | 'chapter';
   label: string;
@@ -38,8 +78,20 @@ export interface AcademicDynamicReportAppliedFilter {
 }
 
 export interface AcademicDynamicReportSpec {
-  module: 'Curriculum';
-  dataset: 'curriculum.subjects' | 'curriculum.chapters' | 'curriculum.teachers';
+  module: AcademicAiReportModule;
+  dataset:
+    | 'curriculum.subjects'
+    | 'curriculum.chapters'
+    | 'curriculum.teachers'
+    | 'timetable.slots'
+    | 'student-records.students'
+    | 'student-attendance.entries'
+    | 'student-attendance.daily-summary'
+    | 'homework-assignment.homework'
+    | 'homework-assignment.assignments'
+    | 'examination.schedule'
+    | 'examination.marks'
+    | 'examination.results';
   title: string;
   summary: string;
   interpretedRequest: string;
@@ -47,11 +99,48 @@ export interface AcademicDynamicReportSpec {
   appliedFilters: AcademicDynamicReportAppliedFilter[];
   columns: string[];
   filters: AcademicDynamicReportFilter;
+  where: {
+    match: 'all' | 'any';
+    conditions: AcademicDynamicReportCondition[];
+  };
   sort: AcademicDynamicReportSort[];
+  format: 'pdf' | 'excel' | 'csv';
 }
 
 export interface AcademicAiReportPlanResponse {
+  status: 'NeedsClarification' | 'Ready';
+  plan?: AcademicDynamicReportSpec | null;
+  clarificationQuestions: AcademicAiReportClarificationQuestion[];
+  assumptions: string[];
+  confidence: number;
+  permissionSummary: string;
+  approvalToken?: string | null;
+}
+
+export interface AcademicAiReportPreviewRequest {
+  academicYearId: string;
+  educationBoardId: string;
+  educationMediumId: string;
+  module: AcademicAiReportModule;
   plan: AcademicDynamicReportSpec;
+}
+
+export interface AcademicReportPreview {
+  reportType: string;
+  generatedAtUtc: string;
+  filterSummary: string;
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  columns: Array<{ id: string; label: string }>;
+  rows: Array<Record<string, string | null>>;
+}
+
+export interface AcademicAiReportPreviewResponse {
+  plan: AcademicDynamicReportSpec;
+  preview: AcademicReportPreview;
+  permissionSummary: string;
+  approvalToken: string;
 }
 
 export interface AcademicAiReportExportResponse {
@@ -151,6 +240,18 @@ export const academicReportApi = api.injectEndpoints({
       }),
     }),
 
+    // POST /api/app/academic-report/ai/preview
+    createAcademicReportAiPreview: builder.mutation<
+      AcademicAiReportPreviewResponse,
+      AcademicAiReportPreviewRequest
+    >({
+      query: (body) => ({
+        url: '/app/academic-report/ai/preview',
+        method: 'POST',
+        body,
+      }),
+    }),
+
     // POST /api/app/academic-report/ai/exports
     createAcademicReportAiExport: builder.mutation<
       AcademicAiReportExportResponse,
@@ -208,6 +309,7 @@ export const {
   usePreviewAcademicReportMutation,
   useCreateAcademicReportExportMutation,
   useCreateAcademicReportAiPlanMutation,
+  useCreateAcademicReportAiPreviewMutation,
   useCreateAcademicReportAiExportMutation,
   useGetAcademicReportExportsQuery,
   useGetAcademicReportExportJobQuery,

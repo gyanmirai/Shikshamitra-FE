@@ -25,6 +25,7 @@ import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-managem
 import { useLazyGetStudentElectiveAssignmentsQuery } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
 import { pruneRoomDetails } from './initialValues';
+import { applyExamSubjectSelection } from './exam-subject-form-state';
 import { resolveDivisionSelection, getDisplayedDivisionSelection } from './division-selection';
 import ExamTypeForm from '../../settings/examAssessmentTypeSetting.tsx/examTypeSetting/examTypeForm';
 import {
@@ -244,19 +245,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
   };
 
   const commitSubjectSelection = (subjects: IExamFormValues['subjects']) => {
-    formik.setFormikState((currentState) => ({
-      ...currentState,
-      values: {
-        ...currentState.values,
-        subjects,
-        roomDetails: pruneRoomDetails(
-          currentState.values.roomDetails,
-          subjects,
-          currentState.values.divisions
-        ),
-      },
-      touched: { ...currentState.touched, subjects: [] },
-    }));
+    formik.setFormikState((currentState) => applyExamSubjectSelection(currentState, subjects));
   };
 
   const handleSubjectsChange = async (value: SubjectSelectionOption[]) => {
@@ -590,6 +579,9 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       value={formik.values.subjects}
                       onChange={(_event, value) => {
                         handleSubjectsChange(value as SubjectSelectionOption[]);
+                      }}
+                      onBlur={() => {
+                        formik.setFieldTouched('subjects', true, true);
                       }}
                       slotProps={{
                         chip: {

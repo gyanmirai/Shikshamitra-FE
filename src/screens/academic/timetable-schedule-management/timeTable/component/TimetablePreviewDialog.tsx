@@ -2,9 +2,9 @@ import type { TimetableBoardProps } from 'src/components/timetable/TimetableBoar
 
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import TimetableBoard from 'src/components/timetable/TimetableBoard';
-import CustomTooltip from 'src/components/custom-tooltip';
 import CustomDialog from 'src/components/customDialog';
+import CustomTooltip from 'src/components/custom-tooltip';
+import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { Box, IconButton, Typography, DialogContent } from '@mui/material';
 
 interface TimetablePreviewDialogProps

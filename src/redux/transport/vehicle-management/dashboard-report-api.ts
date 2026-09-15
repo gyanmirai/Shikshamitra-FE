@@ -121,6 +121,43 @@ export type TransportReportResult = {
   items: Record<string, string | null>[];
 };
 
+export type TransportAiClarificationAnswer = {
+  question: string;
+  answer: string;
+};
+
+export type TransportAiClarificationQuestion = {
+  id: string;
+  question: string;
+  options: string[];
+  recommendedOption: string;
+};
+
+export type TransportAiReportExecutionPlan = {
+  reportKey: string;
+  format: 'csv';
+  query: Required<Pick<TransportReportQuery, 'academicMediumId' | 'pageNumber' | 'pageSize'>> &
+    Omit<TransportReportQuery, 'reportKey' | 'academicMediumId' | 'pageNumber' | 'pageSize'>;
+};
+
+export type TransportAiReportPlanResponse = {
+  status: 'NeedsClarification' | 'Ready';
+  plan?: TransportAiReportExecutionPlan | null;
+  interpretedRequest: string;
+  summary: string;
+  clarificationQuestions: TransportAiClarificationQuestion[];
+  assumptions: string[];
+  confidence: number;
+  permissionSummary: string;
+};
+
+export type TransportAiReportPlanRequest = {
+  prompt: string;
+  academicMediumId: string;
+  academicYearId?: string;
+  clarificationAnswers: TransportAiClarificationAnswer[];
+};
+
 const unwrapResult = (response: any) =>
   response && Object.prototype.hasOwnProperty.call(response, 'data')
     ? response.data
@@ -189,6 +226,12 @@ export const buildTransportReportExportRequest = (params?: TransportReportQuery 
   responseHandler: (response: Response) => response.blob(),
 });
 
+export const buildTransportAiReportPlanRequest = (body: TransportAiReportPlanRequest) => ({
+  url: '/transport/reports/ai/plan',
+  method: 'POST',
+  body,
+});
+
 export const normalizeTransportPagedResponse = (response: any) => {
   const data = unwrapResult(response);
   return {
@@ -229,6 +272,13 @@ export const dashboardReportApi = transportApi.injectEndpoints({
       query: buildTransportReportExportRequest,
       providesTags: [transportType.transportReports],
     }),
+    createTransportAiReportPlan: builder.mutation<
+      TransportAiReportPlanResponse,
+      TransportAiReportPlanRequest
+    >({
+      query: buildTransportAiReportPlanRequest,
+      transformResponse: unwrapResult,
+    }),
   }),
 });
 
@@ -237,5 +287,7 @@ export const {
   useGetTransportDashboardAlertsQuery,
   useGetTransportReportCatalogQuery,
   useGetTransportReportQuery,
+  useLazyGetTransportReportQuery,
   useLazyExportTransportReportQuery,
+  useCreateTransportAiReportPlanMutation,
 } = dashboardReportApi;

@@ -20,7 +20,7 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
@@ -67,9 +67,13 @@ import TeachingKpiCards from './components/TeachingKpiCards';
 import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import { reconcileTimelineSlots } from './reconcileTimelineSlots';
-import { getLessonPlanTabQueryState } from './lessonPlanTabQueries';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
 import LessonDiaryDetailsDrawer from './components/LessonDiaryDetailsDrawer';
+import {
+  getLessonPlanListQuery,
+  getLessonPlanTabQueryState,
+  shouldSkipLessonPlanListQuery,
+} from './lessonPlanTabQueries';
 import {
   todayIso,
   weekStartIso,
@@ -464,8 +468,7 @@ const LessonPlanScreen = () => {
   const [selectedDate, setSelectedDate] = useState<Dayjs>(() => dayjs().startOf('day'));
 
   const timelineDateParam = useMemo(
-    () =>
-      selectedDate?.isValid() ? dateConvertor(selectedDate.startOf('day').format(dateFormat)) : '',
+    () => datePickerToDateTimeOffset(selectedDate) || '',
     [selectedDate]
   );
 
@@ -494,6 +497,13 @@ const LessonPlanScreen = () => {
     [timelineData, currentTeacherId]
   );
 
+  const lessonPlanListQuery = getLessonPlanListQuery(activeTab, {
+    academicYearId: currentYear?.id,
+    academicMediumId: currentMedium?.id,
+    teacherId: currentTeacherId,
+    canReviewSubmissions,
+  });
+
   const {
     data: lessonPlanList,
     refetch: refetchLessonPlans,
@@ -501,14 +511,12 @@ const LessonPlanScreen = () => {
     isFetching: isPlansFetching,
     isUninitialized: isLessonPlansUninitialized,
   } = useGetLessonPlansQuery(
+    lessonPlanListQuery,
     {
-      academicYearId: currentYear?.id,
-      academicMediumId: currentMedium?.id,
-      teacherId: !canReviewSubmissions && currentTeacherId ? currentTeacherId : undefined,
-      maxResultCount: 1000,
-    },
-    {
-      skip: !currentYear?.id || !currentMedium?.id || !activeTabQueries.lessonPlans,
+      skip: shouldSkipLessonPlanListQuery(activeTab, {
+        academicYearId: currentYear?.id,
+        academicMediumId: currentMedium?.id,
+      }),
     }
   );
 
@@ -1138,9 +1146,7 @@ const LessonPlanScreen = () => {
         return;
       }
 
-      const plannedDate = form.plannedDate
-        ? dateConvertor(form.plannedDate.format(dateFormat))
-        : dateConvertor(dayjs(todayIso).format(dateFormat));
+      const plannedDate = datePickerToDateTimeOffset(form.plannedDate || dayjs(todayIso));
 
       const planDetailsPayload = {
         chapterId: form.chapterId,
@@ -1234,9 +1240,7 @@ const LessonPlanScreen = () => {
         const existingDiary = getDiaryForLesson(form.lessonPlanId);
         const body = {
           lessonPlanId: form.lessonPlanId,
-          actualDate: form.actualDate
-            ? dateConvertor(form.actualDate.format(dateFormat))
-            : dateConvertor(dayjs(todayIso).format(dateFormat)),
+          actualDate: datePickerToDateTimeOffset(form.actualDate || dayjs(todayIso)),
           classConducted: form.classConducted,
           actualTopicCovered: form.classConducted ? form.actualTopicCovered : '',
           actualContentSummary: form.actualContentSummary,
@@ -1254,9 +1258,7 @@ const LessonPlanScreen = () => {
           remedialActionRequired: form.remedialActionRequired,
           homeworkAssigned: form.homeworkAssigned,
           missedReason: form.missedReason || null,
-          rescheduledToDate: form.rescheduledToDate
-            ? dateConvertor(form.rescheduledToDate.format(dateFormat))
-            : null,
+          rescheduledToDate: datePickerToDateTimeOffset(form.rescheduledToDate),
           isBackdated: form.isBackdated,
           backdatedReason: form.backdatedReason,
           teacherRemarks: form.teacherRemarks,

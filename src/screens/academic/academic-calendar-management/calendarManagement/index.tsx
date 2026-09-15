@@ -16,13 +16,13 @@ import CustomSelect from 'src/components/custom-select';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Tab, Paper, Stack, Avatar, Skeleton, Typography, Button } from '@mui/material';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { DayType, CalendarStatus, CalendarDayStatus } from 'src/enums/academic-calendar';
+import { Box, Tab, Paper, Stack, Avatar, Button, Skeleton, Typography } from '@mui/material';
 import {
   useGetCalendarsQuery,
   useGetCalendarDaysQuery,
@@ -706,6 +706,7 @@ const CalendarManagement = () => {
           }}
           calendarId={selectedCalendarId}
           calendarStatus={selectedCalendar.status}
+          academicMediumId={selectedCalendar.academicMediumId}
           editData={selectedDayEditData}
           prefillDate={selectedDayDate || undefined}
           canDelete={canDelete}

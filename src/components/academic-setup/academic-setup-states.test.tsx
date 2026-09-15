@@ -22,7 +22,7 @@ describe('academic setup states and actions', () => {
 
     expect(screen.getByText('3 of 5 hierarchy levels are in use')).toBeVisible();
     expect(screen.getByText('Select a stage and add its first standard.')).toBeVisible();
-    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '60');
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
     const levels = within(screen.getByRole('list', { name: 'Hierarchy levels' })).getAllByRole(
       'listitem'
     );
@@ -48,7 +48,7 @@ describe('academic setup states and actions', () => {
       'aria-busy',
       'true'
     );
-    expect(screen.getByRole('progressbar')).not.toHaveAttribute('aria-valuenow');
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
   });
 
   it('offers a recoverable error state', () => {
