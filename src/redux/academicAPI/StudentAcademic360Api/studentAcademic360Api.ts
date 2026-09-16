@@ -2,8 +2,79 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../academicApi';
 
+export type StudentAcademic360SmartFilter =
+  'All' | 'NeedsAttention' | 'LowAttendance' | 'OverdueHomework' | 'PerformanceDecline' | 'NoData';
+
+export type StudentAcademic360ListInput = {
+  academicYearId: string;
+  boardId: string;
+  educationMediumId: string;
+  standardId?: string;
+  divisionId?: string;
+  searchTerm?: string;
+  smartFilter: StudentAcademic360SmartFilter;
+  sorting?: string;
+  skipCount: number;
+  maxResultCount: number;
+};
+
+export type StudentAcademic360ListMetric = {
+  percentage?: number | null;
+  completed?: number | null;
+  total?: number | null;
+  pending?: number | null;
+  count?: number | null;
+  status?: string | null;
+};
+
+export type StudentAcademic360ListItem = {
+  studentId: string;
+  studentName: string;
+  photoUrl?: string | null;
+  grNo?: number | null;
+  rollNo?: number | null;
+  standardId?: string;
+  standardName: string;
+  divisionId?: string;
+  divisionName: string;
+  attendance?: StudentAcademic360ListMetric | null;
+  homework?: StudentAcademic360ListMetric | null;
+  examAverage?: StudentAcademic360ListMetric | null;
+  trend: string;
+  academicHealth: string;
+  academicHealthReasons: string[];
+  alertCount: number;
+  dataCompleteness: string;
+  lastUpdatedAt?: string | null;
+};
+
+export type StudentAcademic360ListSummary = {
+  totalStudents: number;
+  needsAttention: number;
+  averageAttendance?: number | null;
+  homeworkCompletion?: number | null;
+  averageExamScore?: number | null;
+};
+
+export type StudentAcademic360ListResult = {
+  totalCount: number;
+  items: StudentAcademic360ListItem[];
+  summary: StudentAcademic360ListSummary;
+};
+
 export const studentAcademic360Api = academicApi.injectEndpoints({
   endpoints: (builder) => ({
+    getStudentAcademic360List: builder.query<
+      StudentAcademic360ListResult,
+      StudentAcademic360ListInput
+    >({
+      query: (params) => ({
+        url: 'academics/student-academic-360',
+        method: 'GET',
+        params,
+      }),
+      providesTags: [academicType.academic360],
+    }),
     getStudentAcademic360: builder.query({
       query: ({
         studentId,
@@ -60,4 +131,8 @@ export const studentAcademic360Api = academicApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetStudentAcademic360Query, useGetStudentAcademic360TabQuery } = studentAcademic360Api;
+export const {
+  useGetStudentAcademic360ListQuery,
+  useGetStudentAcademic360Query,
+  useGetStudentAcademic360TabQuery,
+} = studentAcademic360Api;
