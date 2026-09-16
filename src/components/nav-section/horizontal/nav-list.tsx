@@ -7,7 +7,7 @@ import Popover from '@mui/material/Popover';
 import { usePathname } from 'src/routes/hooks';
 import { useTheme } from '@mui/material/styles';
 import { isExternalLink } from 'src/routes/utils';
-import { hasGrantedPermission } from 'src/utils/permissions';
+import { hasNavigationPermission } from 'src/utils/permissions';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
 import { NavItem } from './nav-item';
@@ -28,7 +28,7 @@ export function NavList({
 }: NavListProps) {
   const theme = useTheme();
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const isGranted = hasGrantedPermission(permissions, data.permissionName);
+  const isGranted = hasNavigationPermission(permissions, data.permissionName);
 
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');

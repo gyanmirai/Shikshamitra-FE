@@ -32,10 +32,10 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const searchParams = useSearchParams();
   const standardTemplateDialog = useBoolean();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canEdit = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Edit');
-  const canValidate = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Validate');
-  const canPublish = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Publish');
-  const canViewUsage = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.ViewUsage');
+  const canEdit = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add');
+  const canValidate = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add');
+  const canPublish = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add');
+  const canViewUsage = hasGrantedPermission(permissions, 'Students.Admissions.Workflows.View');
   const workflowQuery = useGetAdmissionWorkflowQuery(workflowId);
   const stageTypesQuery = useGetAdmissionWorkflowStageTypesQuery();
   const formsQuery = useGetAdmissionFormsQuery({ status: 1, maxResultCount: 100 });

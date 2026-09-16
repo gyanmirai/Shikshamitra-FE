@@ -4,6 +4,15 @@ ShikshaMitra frontend is a multi-tenant school operating UI built with Next.js, 
 
 ## Start here
 
+Before changing permissions, navigation guards, identity, scope, or security-related seeders, read [the canonical backend security standard](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency.md).
+Follow its mandatory checklist and [frontend Security documentation](docs/security/README.md).
+Require the Security Regression PR job and review incidental permission changes and reverts explicitly.
+For the security-permission-consistency release, preserve the existing Role and User UI, including separate Module Permission and Set Module Visibility dialogs.
+Do not reintroduce the catalogue-editor redesign without explicit approval.
+The user approved behavior fixes within that layout: render the full backend catalogue, toggle exact independent actions, include hidden/collapsed entries in bulk operations, and distinguish direct from inherited grants.
+Preserve drafts and verify changed-only saves through the shared permission form.
+Do not restore fixed CRUD lists or Student/Finance action bundles to imitate the old behavior.
+
 1. [DESIGN.md](DESIGN.md) is the canonical frontend interface contract.
 2. [docs/README.md](docs/README.md) is the frontend documentation map.
 3. [docs/module-docs-standard.md](docs/module-docs-standard.md) is the frontend module docs standard.

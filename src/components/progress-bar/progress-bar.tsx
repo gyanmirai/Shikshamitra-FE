@@ -136,7 +136,7 @@ function NProgressDone() {
 
   useEffect(() => {
     // Add a custom entry to the history stack
-    window.history.pushState(null, document.title, window.location.href);
+    window.history.pushState(window.history.state, document.title, window.location.href);
 
     // Handle the back button click by pushing the same state again
     const handlePopState = () => {
@@ -151,7 +151,7 @@ function NProgressDone() {
         dispatch(setIsChanges(false));
       } else {
         // Push a new state to override the back button
-        window.history.pushState(null, document.title, window.location.href);
+        window.history.pushState(window.history.state, document.title, window.location.href);
       }
     };
 

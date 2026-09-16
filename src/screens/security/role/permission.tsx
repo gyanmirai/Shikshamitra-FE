@@ -1,111 +1,90 @@
 'use client';
 
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import { motion } from 'framer-motion';
-import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
-import Button from '@mui/material/Button';
+import { useMemo, useState } from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import Typography from '@mui/material/Typography';
-import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Tooltip, CircularProgress } from '@mui/material';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { fullSecurityNavData } from 'src/layouts/config-nav-dashboard';
-import { useGetPermissionsQuery } from 'src/redux/permission/permissionApi';
+import { Box, Card, Alert, Stack, Button, TextField, Typography } from '@mui/material';
 
-import { extractGrantedPermissions } from '.';
 import PermissionNode from './permission-node';
-import { getVisibilityPermissionName } from './permission-grants';
-import { getAllChildrenData, type PermissionType, getPermissionChildren } from './utils';
 import {
-  ACCOUNT_SETTING_ACTIONS,
-  getActionPermissionBase,
-  isAccountSettingPermission,
-  getNodeActionPermissionNames,
-  getAffectedNodePermissionNames,
-  getNodeActionPermissionNamesForAction,
-} from './account-settings-permissions';
+  branchKey,
+  canManageGrant,
+  hasDirectGrant,
+  catalogueEntries,
+  inheritedSources,
+  branchPermissions,
+  buildPermissionPanels,
+  filterPermissionBranches,
+} from './permission-catalogue';
 
-// ----------------------------------------------------------------------
+import type {
+  GrantProvider,
+  PermissionBranch,
+  CataloguePermission,
+  PermissionCatalogue,
+} from './permission-catalogue';
 
 export default function Permission({
-  editData,
-  setPermissionData,
-  permissionData,
-  providerName,
-  initialData,
+  catalogue,
+  provider,
+  grants,
+  setGrants,
+  disabled = false,
 }: {
-  editData: any;
-  setPermissionData: (data: { name: string; isGranted: boolean }[]) => void;
-  permissionData: { name: string; isGranted: boolean }[];
-  providerName: string;
-  initialData: any;
+  catalogue: PermissionCatalogue;
+  provider: GrantProvider;
+  grants: Record<string, boolean>;
+  setGrants: (names: string[], value: boolean) => void;
+  disabled?: boolean;
 }) {
-  const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPermissionsQuery,
-    params: { providerName, providerKey: providerName === 'R' ? editData?.name : editData?.id },
-    options: {
-      skip: !editData,
-      refetchOnMountOrArgChange: true,
-    },
+  const navigation = useMemo(() => fullSecurityNavData().flatMap((group) => group.items), []);
+  const modules = useMemo(
+    () => buildPermissionPanels(catalogue, navigation),
+    [catalogue, navigation]
+  );
+  const [moduleName, setModuleName] = useState('');
+  const [submoduleName, setSubmoduleName] = useState('');
+  const [search, setSearch] = useState('');
+  const selectedModule = modules.find((module) => module.name === moduleName) ?? modules[0];
+  const selectedSubmodule = selectedModule?.submodule.find((sub) => sub.name === submoduleName);
+  const filteredRoots = selectedSubmodule
+    ? filterPermissionBranches(selectedSubmodule.roots, search)
+    : [];
+  const subtreeEntries = useMemo(() => {
+    const result = new Map<string, CataloguePermission[]>();
+    const visit = (items: PermissionBranch[]) =>
+      items.forEach((node) => {
+        result.set(branchKey(node), branchPermissions([node]));
+        visit(node.children);
+      });
+    modules.forEach((module) => module.submodule.forEach((sub) => visit(sub.roots)));
+    return result;
+  }, [modules]);
+  const eligible = branchPermissions(selectedSubmodule?.roots ?? []).filter((entry) =>
+    canManageGrant(entry, provider)
+  );
+  const entries = catalogueEntries(catalogue);
+  const missingVisibility = [selectedModule?.visibilityName, selectedSubmodule?.visibilityName]
+    .filter(Boolean)
+    .some((name) => {
+      const entry = entries.find((item) => item.name === name);
+      return (
+        entry && !hasDirectGrant(entry, provider) && inheritedSources(entry, provider).length === 0
+      );
+    });
+  const selectionStyle = (selected: boolean) => ({
+    justifyContent: 'flex-start',
+    px: 2.5,
+    py: 1.5,
+    borderRadius: 1.5,
+    minHeight: 44,
+    color: selected ? 'primary.main' : 'text.secondary',
+    bgcolor: selected
+      ? (theme: any) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
+      : 'transparent',
   });
-
-  useEffect(() => {
-    if (_permissionData?.groups?.length > 0) {
-      const init = extractGrantedPermissions(_permissionData?.groups);
-      setPermissionData(init);
-      initialData.current = init;
-    }
-  }, [_permissionData, initialData, setPermissionData]);
-
-  const navigationData = useMemo(() => fullSecurityNavData(), []);
-  const modules = useMemo(() => navigationData.flatMap((group) => group.items), [navigationData]);
-
-  const [selectedModule, setSelectedModule] = useState<any>(modules[0]);
-  const [expandedSubModule, setExpandedSubModule] = useState<string | false>(false);
-
-  // State for permissions: { [module_submodule_child]: { view: true, add: false, ... } }
-  // const [permissions, setPermissions] = useState<PermissionsMap>({});
-
-  // Gamification Stats
-  // const progress = calculateSecurityScore(permissionData);
-
-  const handleModuleClick = (module: any) => {
-    setSelectedModule(module);
-    setExpandedSubModule(false);
-  };
-
-  const handleSubModuleChange = (value: string) => {
-    setExpandedSubModule(value === expandedSubModule ? false : value);
-  };
-
-  const handlePermissionToggle = (node: any, type: PermissionType, currentValue: boolean) => {
-    const newValue = !currentValue;
-    const affectedNames = getAffectedNodePermissionNames(node, type, newValue, permissionData);
-    setPermissionData(
-      permissionData.map((item) =>
-        affectedNames.has(item.name) ? { ...item, isGranted: newValue } : item
-      )
-    );
-  };
-
-  const handleNodeSelectAll = (node: any, value: boolean) => {
-    if (!expandedSubModule) return;
-
-    const key = getNodeActionPermissionNames(node, permissionData);
-
-    const newPermissions = permissionData.map((item) =>
-      key.includes(item.name) ? { ...item, isGranted: value } : item
-    );
-    setPermissionData(newPermissions);
-  };
-
-  const findVisibility = (name: string | undefined) =>
-    permissionData?.find((item) => item.name === name)?.isGranted;
 
   const renderModuleList = (
     <Card
@@ -119,56 +98,33 @@ export default function Permission({
     >
       <Box sx={{ p: 2.5, bgcolor: 'background.neutral' }}>
         <Typography variant="h6">Modules</Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+        <Typography variant="body2" color="text.secondary">
           Select a module to manage
         </Typography>
       </Box>
       <Scrollbar>
         <Stack spacing={0.5} sx={{ p: 1, pb: 8 }}>
-          {modules.map((module) => {
-            const isSelected = selectedModule.title === module.title;
-            const hasVisibility = findVisibility(getVisibilityPermissionName(module));
-            return (
-              <Tooltip
-                title={hasVisibility ? '' : 'Not Module visibility Accessible'}
-                key={module.title}
-              >
-                <span key={module.title}>
-                  <Button
-                    key={module.title}
-                    fullWidth
-                    size="large"
-                    startIcon={module.icon}
-                    onClick={() => hasVisibility && handleModuleClick(module)}
-                    disabled={!hasVisibility}
-                    sx={{
-                      justifyContent: 'flex-start',
-                      px: 2.5,
-                      py: 1.5,
-                      borderRadius: 1.5,
-                      color: isSelected ? 'primary.main' : 'text.secondary',
-                      bgcolor: isSelected
-                        ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
-                        : 'transparent',
-                      '&:hover': {
-                        bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.04),
-                        // textDecoration: hasVisibility ? 'none' : 'line-through',
-                      },
-                      transition: 'all 0.2s',
-                      // textDecoration: hasVisibility ? 'none' : 'line-through',
-                    }}
-                  >
-                    <Box sx={{ flexGrow: 1, textAlign: 'left' }}>
-                      <Typography variant="subtitle2" sx={{ fontWeight: isSelected ? 700 : 500 }}>
-                        {module.title}
-                      </Typography>
-                    </Box>
-                    {isSelected && <Iconify icon="eva:arrow-ios-forward-fill" width={16} />}
-                  </Button>
-                </span>
-              </Tooltip>
-            );
-          })}
+          {modules.map((module) => (
+            <Button
+              key={module.name}
+              fullWidth
+              size="large"
+              startIcon={module.icon}
+              onClick={() => {
+                setModuleName(module.name);
+                setSubmoduleName('');
+                setSearch('');
+              }}
+              sx={selectionStyle(module.name === selectedModule?.name)}
+            >
+              <Typography variant="subtitle2" sx={{ flex: 1, textAlign: 'left' }}>
+                {module.title}
+              </Typography>
+              {module.name === selectedModule?.name && (
+                <Iconify icon="eva:arrow-ios-forward-fill" width={16} />
+              )}
+            </Button>
+          ))}
         </Stack>
       </Scrollbar>
     </Card>
@@ -176,82 +132,36 @@ export default function Permission({
   const renderSubModules = (
     <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2 }}>
       <Box sx={{ p: 2.5, borderBottom: '1px dashed', borderColor: 'divider' }}>
-        <Typography variant="h6">{selectedModule.title}</Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-          {selectedModule.submodule?.length || 0} Sub-modules available
+        <Typography variant="h6">{selectedModule?.title}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {selectedModule?.submodule.length ?? 0} Sub-modules available
         </Typography>
       </Box>
-
-      <Scrollbar sx={{ p: 2 }}>
-        <Stack spacing={1} sx={{ p: 1, pb: 8 }}>
-          {selectedModule.submodule && selectedModule.submodule.length > 0 ? (
-            selectedModule.submodule.map((subItem: any) => {
-              const isSelected = expandedSubModule === subItem.title;
-              const hasVisibility = findVisibility(getVisibilityPermissionName(subItem));
-              return (
-                <Tooltip
-                  title={hasVisibility ? '' : 'Not Module visibility Accessible'}
-                  key={subItem.title}
-                >
-                  <span key={subItem.title}>
-                    <Button
-                      fullWidth
-                      size="large"
-                      // startIcon={module.icon}
-                      disabled={!hasVisibility}
-                      onClick={() => hasVisibility && handleSubModuleChange(subItem.title)}
-                      sx={{
-                        justifyContent: 'flex-start',
-                        px: 2.5,
-                        py: 1.5,
-                        borderRadius: 1.5,
-                        color: isSelected ? 'primary.main' : 'text.secondary',
-                        bgcolor: isSelected
-                          ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
-                          : (theme) => theme.vars.palette.background.neutral,
-                        '&:hover': {
-                          bgcolor: (theme) =>
-                            varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
-                          // textDecoration: hasVisibility ? 'none' : 'line-through',
-                        },
-                        transition: 'all 0.2s',
-                      }}
-                    >
-                      <Box sx={{ flexGrow: 1, textAlign: 'left' }}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: isSelected ? 700 : 500 }}>
-                          {subItem.title}
-                        </Typography>
-                      </Box>
-                      {isSelected && <Iconify icon="eva:arrow-ios-forward-fill" width={16} />}
-                    </Button>
-                  </span>
-                </Tooltip>
-              );
-            })
-          ) : (
-            <Box sx={{ p: 3, textAlign: 'center', color: 'text.secondary' }}>
-              <Iconify
-                icon="solar:folder-with-files-broken"
-                width={48}
-                sx={{ mb: 1, opacity: 0.5 }}
-              />
-              <Typography variant="body2">No sub-modules found</Typography>
-            </Box>
-          )}
+      <Scrollbar>
+        <Stack spacing={1} sx={{ p: 2, pb: 8 }}>
+          {selectedModule?.submodule.map((sub) => (
+            <Button
+              key={sub.name}
+              fullWidth
+              size="large"
+              onClick={() => {
+                setSubmoduleName(sub.name);
+                setSearch('');
+              }}
+              sx={selectionStyle(sub.name === submoduleName)}
+            >
+              <Typography variant="subtitle2" sx={{ flex: 1, textAlign: 'left' }}>
+                {sub.title}
+              </Typography>
+              {sub.name === submoduleName && (
+                <Iconify icon="eva:arrow-ios-forward-fill" width={16} />
+              )}
+            </Button>
+          ))}
         </Stack>
       </Scrollbar>
     </Card>
   );
-
-  const selectedPermissionModule = selectedModule.submodule?.find(
-    (item: any) => item.title === expandedSubModule
-  );
-  const matrixActions: PermissionType[] = getAllChildrenData(selectedPermissionModule).some((item: any) =>
-    isAccountSettingPermission(getActionPermissionBase(item.permissionName))
-  )
-    ? ACCOUNT_SETTING_ACTIONS
-    : ['View', 'Add', 'Delete'];
-
   const renderPermissionMatrix = (
     <Card
       sx={{
@@ -259,190 +169,106 @@ export default function Permission({
         display: 'flex',
         flexDirection: 'column',
         borderRadius: 2,
-        position: 'relative',
         overflow: 'hidden',
       }}
     >
-      {getPermissionChildren(selectedPermissionModule).length > 0 && (
-        <Box
-          sx={{
-            p: 2.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px dashed',
-            borderColor: 'divider',
-            zIndex: 1,
-          }}
-        >
-          <Box>
-            <Typography variant="h6">Permissions</Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              Manage access & security
-            </Typography>
-          </Box>
-
-          {/* Gamification HUD & Global Actions */}
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            {expandedSubModule && (
-              <Stack direction="row" spacing={2} alignItems="center">
-                {matrixActions.map((type) => {
-                  const activeSubModule = selectedModule.submodule?.find(
-                    (s: any) => s.title === expandedSubModule
-                  );
-                  const itemsToShow =
-                    getPermissionChildren(activeSubModule).length > 0
-                      ? getAllChildrenData(activeSubModule)
-                      : [activeSubModule];
-
-                  // Check if all items have this permission enabled
-                  const availableItems = itemsToShow.filter((item: any) =>
-                    getNodeActionPermissionNamesForAction(
-                      item.permissionName,
-                      type,
-                      permissionData
-                    ).length > 0
-                  );
-                  const isGlobalChecked =
-                    availableItems.length > 0 &&
-                    availableItems.every((item: any) => {
-                      const permissionNames = getNodeActionPermissionNamesForAction(
-                        item.permissionName,
-                        type,
-                        permissionData
-                      );
-                      return permissionNames.every(
-                        (permissionName) =>
-                          !!permissionData.find((i) => i.name === permissionName)?.isGranted
-                      );
-                    });
-
-                  return (
-                    <Stack key={type} direction="row" spacing={1} alignItems="center">
-                      <Typography variant="subtitle2" sx={{ fontSize: '0.75rem' }}>
-                        {type === 'ChangeStatus' ? 'Change Status' : type}
-                      </Typography>
-                      <Switch
-                        size="small"
-                        disabled={availableItems.length === 0}
-                        checked={isGlobalChecked}
-                        onChange={(e) => {
-                          const isChecked = e.target.checked;
-                          const affectedNames = new Set<string>();
-                          availableItems.forEach((item: any) => {
-                            getAffectedNodePermissionNames(
-                              item,
-                              type,
-                              isChecked,
-                              permissionData
-                            ).forEach((name) => affectedNames.add(name));
-                          });
-                          setPermissionData(
-                            permissionData.map((permission) =>
-                              affectedNames.has(permission.name)
-                                ? { ...permission, isGranted: isChecked }
-                                : permission
-                            )
-                          );
-                        }}
-                      />
-                    </Stack>
-                  );
-                })}
-              </Stack>
-            )}
-            {/* <Box sx={{ width: 250 }}>
-              <SecurityScore score={progress} />
-            </Box> */}
+      {selectedSubmodule && (
+        <Box sx={{ p: 2.5, borderBottom: '1px dashed', borderColor: 'divider' }}>
+          <Typography variant="h6">Permissions</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage access &amp; security
+          </Typography>
+          <Stack direction="row" useFlexGap flexWrap="wrap" gap={1} sx={{ mt: 1 }}>
+            <TextField
+              label="Search permissions"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              size="small"
+            sx={{ flex: 1, minWidth: 160, '& .MuiInputBase-root': { minHeight: 44 } }}
+            />
+            <Button
+              disabled={disabled || eligible.length === 0}
+              onClick={() =>
+                setGrants(
+                  eligible.map((entry) => entry.name),
+                  true
+                )
+              }
+              sx={{ minHeight: 44 }}
+            >
+              Grant All ({eligible.length})
+            </Button>
+            <Button
+              color="error"
+              disabled={disabled || eligible.length === 0}
+              onClick={() =>
+                setGrants(
+                  eligible.map((entry) => entry.name),
+                  false
+                )
+              }
+              sx={{ minHeight: 44 }}
+            >
+              {provider.providerName === 'U' ? 'Remove direct grants' : 'Revoke All'} (
+              {eligible.length})
+            </Button>
           </Stack>
+          {missingVisibility && (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              Navigation is hidden for this role or user. You can still manage actions here. Use Set
+              Module Visibility to change navigation.
+            </Alert>
+          )}
         </Box>
       )}
-
-      <Scrollbar sx={{ p: 2.5, zIndex: 1 }}>
-        {expandedSubModule ? (
+      <Scrollbar sx={{ p: 2.5 }}>
+        {selectedSubmodule ? (
           <Stack spacing={1} sx={{ pb: 8 }}>
-            {/* Find the selected submodule object */}
-            {(() => {
-              const activeSubModule = selectedModule.submodule?.find(
-                (s: any) => s.title === expandedSubModule
-              );
-              // If submodule has children, show them. If not, show the submodule itself as a row.
-              const itemsToShow =
-                getPermissionChildren(activeSubModule).length > 0
-                  ? getPermissionChildren(activeSubModule)
-                  : activeSubModule
-                    ? [activeSubModule]
-                    : [];
-
-              return itemsToShow.length > 0 ? (
-                itemsToShow?.map((item: any, index: number) => {
-                  if (!item) return null;
-
-                  return (
-                    <motion.div
-                      key={item.title}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <PermissionNode
-                        node={item}
-                        moduleTitle={selectedModule.title}
-                        submoduleTitle={expandedSubModule}
-                        permissions={permissionData}
-                        setPermission={setPermissionData}
-                        onToggle={handlePermissionToggle}
-                        onSelectAll={handleNodeSelectAll}
-                      />
-                    </motion.div>
-                  );
-                })
-              ) : (
-                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                  No sub-modules found
-                </Typography>
-              );
-            })()}
+            {filteredRoots.map((node) => (
+              <PermissionNode
+                key={branchKey(node)}
+                node={node}
+                provider={provider}
+                grants={grants}
+                subtreeEntries={subtreeEntries}
+                disabled={disabled}
+                onToggle={(name, value) => setGrants([name], value)}
+                onBulk={(name, value) =>
+                  setGrants(
+                    (subtreeEntries.get(name) ?? []).map((entry) => entry.name),
+                    value
+                  )
+                }
+              />
+            ))}
+            {filteredRoots.length === 0 && (
+              <Typography color="text.secondary">
+                {search
+                  ? 'No matching permissions. Clear search to see all actions.'
+                  : 'No action permissions in this section. Check the additional catalogue sections.'}
+              </Typography>
+            )}
           </Stack>
         ) : (
           <Box
             sx={{
-              height: '100%',
+              minHeight: 300,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
               color: 'text.secondary',
-              minHeight: 300,
             }}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Box sx={{ position: 'relative', display: 'inline-flex', mb: 3 }}>
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    inset: 0,
-                    bgcolor: 'primary.main',
-                    opacity: 0.1,
-                    borderRadius: '50%',
-                    filter: 'blur(20px)',
-                  }}
-                />
-                <Iconify
-                  icon="solar:lock-password-unlocked-bold-duotone"
-                  width={80}
-                  sx={{ color: 'primary.main' }}
-                />
-              </Box>
-            </motion.div>
-            <Typography variant="h6" sx={{ opacity: 0.8, mb: 1 }}>
+            <Iconify
+              icon="solar:lock-password-unlocked-bold-duotone"
+              width={80}
+              sx={{ color: 'primary.main', mb: 3 }}
+            />
+            <Typography variant="h6" sx={{ mb: 1 }}>
               Select a Sub-module
             </Typography>
-            <Typography variant="body2" sx={{ opacity: 0.5, maxWidth: 300, textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ maxWidth: 300, textAlign: 'center' }}>
               Choose a sub-module from the middle panel to configure detailed permissions and
               security settings.
             </Typography>
@@ -451,38 +277,35 @@ export default function Permission({
       </Scrollbar>
     </Card>
   );
-
   return (
     <Stack
       direction={{ xs: 'column', md: 'row' }}
       spacing={2}
-      sx={{ height: 'calc(100vh - 100px)', p: 1 }}
+      sx={{ height: '100%', minHeight: 0, p: 1 }}
     >
-      {isPermissionLoading ? (
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flex: 1,
-            height: '100%',
-            width: '100%',
-            minHeight: 200,
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : (
-        <>
-          <Box sx={{ width: { xs: '100%', md: 280 }, flexShrink: 0, height: '100%' }}>
-            {renderModuleList}
-          </Box>
-          <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, height: '100%' }}>
-            {renderSubModules}
-          </Box>
-          <Box sx={{ flexGrow: 1, minWidth: 0, height: '100%' }}>{renderPermissionMatrix}</Box>
-        </>
-      )}
+      <Box
+        sx={{
+          width: { xs: '100%', md: 280 },
+          flexShrink: 0,
+          minHeight: { xs: 240, md: 0 },
+          height: '100%',
+        }}
+      >
+        {renderModuleList}
+      </Box>
+      <Box
+        sx={{
+          width: { xs: '100%', md: 320 },
+          flexShrink: 0,
+          minHeight: { xs: 240, md: 0 },
+          height: '100%',
+        }}
+      >
+        {renderSubModules}
+      </Box>
+      <Box sx={{ flexGrow: 1, minWidth: 0, minHeight: { xs: 400, md: 0 }, height: '100%' }}>
+        {renderPermissionMatrix}
+      </Box>
     </Stack>
   );
 }

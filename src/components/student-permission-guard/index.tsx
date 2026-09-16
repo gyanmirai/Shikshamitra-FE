@@ -6,7 +6,7 @@ import type { PermissionName } from 'src/utils/permissions';
 import { useSelector } from 'react-redux';
 import { View403 } from 'src/sections/error';
 import { SplashScreen } from 'src/components/loading-screen';
-import { hasGrantedPermission } from 'src/utils/permissions';
+import { hasNavigationPermission } from 'src/utils/permissions';
 
 interface Props {
   children: React.ReactNode;
@@ -18,7 +18,7 @@ const StudentPermissionGuard = ({ children, permissionKey }: Props) => {
     (state: RootState) => state.auth
   );
 
-  const hasPermission = hasGrantedPermission(permissions, permissionKey);
+  const hasPermission = hasNavigationPermission(permissions, permissionKey);
   if (loading || !permissionsInitialized) return <SplashScreen />;
   return hasPermission ? children : <View403 />;
 };

@@ -32,13 +32,13 @@ export function useWorkflowListActions() {
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingWorkflowConfirmation>(null);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const allowed = {
-    canCreate: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Create'),
-    canEdit: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Edit'),
+    canCreate: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add'),
+    canEdit: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add'),
     canDelete: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Delete'),
-    canClone: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Clone'),
-    canCreateVersion: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.CreateVersion'),
-    canArchive: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Archive'),
-    canViewUsage: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.ViewUsage'),
+    canClone: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add'),
+    canCreateVersion: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add'),
+    canArchive: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Delete'),
+    canViewUsage: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.View'),
   };
   const [createWorkflow, createState] = useCreateAdmissionWorkflowMutation();
   const [cloneWorkflow, cloneState] = useCloneAdmissionWorkflowMutation();

@@ -29,9 +29,14 @@ describe('ThreeDotsActions', () => {
 
     const moreActions = screen.getByRole('button', { name: 'More actions' });
     expect(moreActions).toHaveStyle({ width: '30px', height: '30px' });
+    expect(moreActions).toHaveAttribute('aria-haspopup', 'menu');
+    expect(moreActions).toHaveAttribute('aria-expanded', 'false');
+    // Decorative SVG children must not become separate pointer targets during icon hydration.
+    expect(moreActions.querySelector('[data-icon]')).toHaveStyle({ pointerEvents: 'none' });
     fireEvent.click(moreActions);
 
     expect(await screen.findByRole('menuitem', { name: 'Eligibility Handoff' })).toBeVisible();
+    expect(moreActions).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('does not bubble a popover action to its parent table row', async () => {
