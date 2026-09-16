@@ -16,7 +16,6 @@ import {
   Stack,
   Alert,
   Drawer,
-  Button,
   Divider,
   Skeleton,
   IconButton,
@@ -35,7 +34,6 @@ interface RoomDetailDrawerProps {
   open: boolean;
   room: RoomAvailabilityItem | null;
   onClose: () => void;
-  onReserve?: (room: RoomAvailabilityItem) => void;
   onViewFullSchedule?: (roomId: string) => void;
 }
 
@@ -43,7 +41,6 @@ export const RoomDetailDrawer = ({
   open,
   room,
   onClose,
-  onReserve,
   onViewFullSchedule,
 }: RoomDetailDrawerProps) => {
   const tabState = useBoolean(false); // false=schedule, true=audit
@@ -373,31 +370,6 @@ export const RoomDetailDrawer = ({
           </Box>
         )}
       </Box>
-
-      {/* Footer */}
-      <Divider />
-      <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ p: 2.5, bgcolor: 'background.paper' }}>
-        {onReserve && room && (
-          <Button
-            variant="contained"
-            color="primary"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-            onClick={() => onReserve(room)}
-          >
-            Reserve Room
-          </Button>
-        )}
-        <Button
-          variant="outlined"
-          color="inherit"
-          size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
-          onClick={onClose}
-        >
-          Close
-        </Button>
-      </Stack>
     </Drawer>
   );
 };

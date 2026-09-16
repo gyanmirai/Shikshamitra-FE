@@ -15,7 +15,6 @@ import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import TextField from '@mui/material/TextField';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
@@ -38,6 +37,7 @@ import { useReviewSubmissionLock } from '../hooks/use-review-submission-lock';
 import { ReviewStatusTabs, type ReviewStatusFilter } from './ReviewStatusTabs';
 import { SkeletonTable, SkeletonCardGrid } from './review-queue/SkeletonLoader';
 import { FilterToolbar, type ReviewDateFilterMode } from './review-queue/FilterToolbar';
+import { ReviewCommentField, REVIEW_COMMENT_MAX_LENGTH } from './review-queue/ReviewCommentField';
 
 import type { LessonPlanRow } from '../lessonPlanData';
 
@@ -178,12 +178,19 @@ export const ReviewQueueTab = ({
     (review.action === 'changes' && isRequesting);
 
   const commentRequired = review.action === 'reject' || review.action === 'changes';
-  const commentError = commentRequired && reviewCommentTouched && !review.comment.trim();
+  const commentTooLong = review.comment.length > REVIEW_COMMENT_MAX_LENGTH;
+  const commentError = commentTooLong
+    ? `Review remarks must be ${REVIEW_COMMENT_MAX_LENGTH} characters or fewer.`
+    : commentRequired && reviewCommentTouched && !review.comment.trim()
+      ? review.action === 'reject'
+        ? 'Rejection reason is required.'
+        : 'Please describe the changes required.'
+      : undefined;
 
   const submitReview = async () => {
     if (!review.target) return;
     const { target } = review;
-    if (commentRequired && !review.comment.trim()) {
+    if (commentTooLong || (commentRequired && !review.comment.trim())) {
       setReviewCommentTouched(true);
       return;
     }
@@ -810,23 +817,11 @@ export const ReviewQueueTab = ({
                 />
               )}
 
-              <TextField
-                label="Review Remarks / Comments"
-                multiline
-                rows={3}
-                fullWidth
-                size="small"
-                error={commentError}
-                helperText={
-                  commentError
-                    ? review.action === 'reject'
-                      ? 'Rejection reason is required.'
-                      : 'Please describe the changes required.'
-                    : undefined
-                }
+              <ReviewCommentField
+                errorMessage={commentError}
                 value={review.comment}
-                onChange={(e) => {
-                  setReview((prev) => ({ ...prev, comment: e.target.value }));
+                onChange={(comment) => {
+                  setReview((prev) => ({ ...prev, comment }));
                   if (!reviewCommentTouched) setReviewCommentTouched(true);
                 }}
                 onBlur={() => setReviewCommentTouched(true)}
@@ -844,7 +839,7 @@ export const ReviewQueueTab = ({
                     : 'Submit Request'
               }
               loading={isSubmitLoading}
-              disabled={isSubmitLoading}
+              disabled={isSubmitLoading || commentTooLong}
               onClick={submitReview}
             />
           </DialogActions>

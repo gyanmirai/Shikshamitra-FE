@@ -1,6 +1,9 @@
-import { academicCalendarType } from 'src/redux/tagTypes';
+import { academicType, academicCalendarType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../academicApi';
+
+// Calendar markers also determine curriculum date validation and timeline availability.
+const calendarDateRuleTags = [academicCalendarType.checkDate, academicType.lessonPlan];
 
 export const academicCalendarApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -91,6 +94,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        ...calendarDateRuleTags,
         academicCalendarType.calendarDay,
         academicCalendarType.calendar,
         academicCalendarType.auditLog,
@@ -104,6 +108,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        ...calendarDateRuleTags,
         academicCalendarType.calendarDay,
         academicCalendarType.calendar,
         academicCalendarType.auditLog,
@@ -117,6 +122,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        ...calendarDateRuleTags,
         academicCalendarType.calendarDay,
         academicCalendarType.calendar,
         academicCalendarType.auditLog,
@@ -129,6 +135,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         method: 'DELETE',
       }),
       invalidatesTags: [
+        ...calendarDateRuleTags,
         academicCalendarType.calendarDay,
         academicCalendarType.calendar,
         academicCalendarType.auditLog,
@@ -211,6 +218,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        ...calendarDateRuleTags,
         academicCalendarType.calendarDay,
         academicCalendarType.calendar,
         academicCalendarType.impactLog,
@@ -225,6 +233,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         method: 'POST',
       }),
       invalidatesTags: [
+        ...calendarDateRuleTags,
         academicCalendarType.calendarDay,
         academicCalendarType.impactLog,
         academicCalendarType.auditLog,
@@ -239,6 +248,7 @@ export const academicCalendarApi = academicApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        ...calendarDateRuleTags,
         academicCalendarType.calendarDay,
         academicCalendarType.calendar,
         academicCalendarType.impactLog,

@@ -502,10 +502,6 @@ const RoomAvailabilityScreen = () => {
         open={isDetailOpen}
         room={detailRoom}
         onClose={() => setDetailOpen(false)}
-        onReserve={(room) => {
-          setDetailOpen(false);
-          handleOpenReservation(room);
-        }}
         onViewFullSchedule={(roomId) => {
           setDetailOpen(false);
           setSelectedRoomId(roomId);

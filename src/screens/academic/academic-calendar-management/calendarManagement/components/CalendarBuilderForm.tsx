@@ -6,12 +6,9 @@ import dayjs from 'dayjs';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { shikshaMitraToast } from 'src/components/toast';
-import {
-  useCreateCalendarMutation,
-  useUpdateCalendarMutation,
-} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
+import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
   Grid,
@@ -22,6 +19,10 @@ import {
   Typography,
   FormControlLabel,
 } from '@mui/material';
+import {
+  useCreateCalendarMutation,
+  useUpdateCalendarMutation,
+} from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 
 import { calendarInitialValues } from '../initialValues';
 import { calendarValidationSchema } from '../validationSchema';
@@ -47,8 +48,8 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
     onSubmit: async (values) => {
       const payload = {
         ...values,
-        startDate: values.startDate ? dayjs(values.startDate).format('YYYY-MM-DDTHH:mm:ssZ') : null,
-        endDate: values.endDate ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ssZ') : null,
+        startDate: datePickerToDateTimeOffset(values.startDate ? dayjs(values.startDate) : null),
+        endDate: datePickerToDateTimeOffset(values.endDate ? dayjs(values.endDate) : null),
       };
 
       try {
@@ -92,7 +93,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
             label="Start Date *"
             value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
             blockedDayTypes={[]}
-            onChange={(val) => formik.setFieldValue('startDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
+            onChange={(val) => formik.setFieldValue('startDate', datePickerToDateTimeOffset(val))}
             slotProps={{
               textField: {
                 fullWidth: true,
@@ -111,7 +112,7 @@ const CalendarBuilderForm = ({ editData, onSuccess, onClose }: Props) => {
             value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
             minDate={formik.values.startDate ? dayjs(formik.values.startDate) : undefined}
             blockedDayTypes={[]}
-            onChange={(val) => formik.setFieldValue('endDate', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)}
+            onChange={(val) => formik.setFieldValue('endDate', datePickerToDateTimeOffset(val))}
             slotProps={{
               textField: {
                 fullWidth: true,

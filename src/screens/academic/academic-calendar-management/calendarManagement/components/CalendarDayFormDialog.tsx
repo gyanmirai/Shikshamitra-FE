@@ -17,6 +17,7 @@ import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
@@ -154,7 +155,7 @@ const CalendarDayFormDialog = ({
       const payload: any = {
         ...values,
         title: normalizeCalendarDayTitle(values.title),
-        date: values.date ? dayjs(values.date).format('YYYY-MM-DDTHH:mm:ssZ') : null,
+        date: datePickerToDateTimeOffset(values.date ? dayjs(values.date) : null),
         dayType: Number(values.dayType),
         holidayCategory: values.holidayCategory !== '' ? Number(values.holidayCategory) : null,
         standardIds: values.appliesToAll ? null : values.standardIds,
@@ -172,7 +173,7 @@ const CalendarDayFormDialog = ({
         meetingLink: isPtm ? values.meetingLink || null : null,
         endDate:
           dayType === DayType.Vacation && values.endDate
-            ? dayjs(values.endDate).format('YYYY-MM-DDTHH:mm:ssZ')
+            ? datePickerToDateTimeOffset(dayjs(values.endDate))
             : null,
       };
 
@@ -460,7 +461,7 @@ const CalendarDayFormDialog = ({
                   value={formik.values.date ? dayjs(formik.values.date) : null}
                   blockedDayTypes={[]}
                   onChange={(val) =>
-                    formik.setFieldValue('date', val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null)
+                    formik.setFieldValue('date', datePickerToDateTimeOffset(val))
                   }
                   slotProps={{
                     textField: {
@@ -514,10 +515,7 @@ const CalendarDayFormDialog = ({
                     minDate={formik.values.date ? dayjs(formik.values.date) : undefined}
                     blockedDayTypes={[]}
                     onChange={(val) =>
-                      formik.setFieldValue(
-                        'endDate',
-                        val ? val.format('YYYY-MM-DDTHH:mm:ssZ') : null
-                      )
+                      formik.setFieldValue('endDate', datePickerToDateTimeOffset(val))
                     }
                     slotProps={{
                       textField: {

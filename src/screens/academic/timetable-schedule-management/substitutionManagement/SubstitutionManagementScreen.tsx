@@ -15,8 +15,8 @@ import type {
 
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
-import { useSelector, useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
@@ -26,41 +26,32 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import { academicPaths, academicPermissions } from 'src/constants/academic-menu';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import {
-  TimetableSettingsSummaryCards,
-  type ITimetableSummaryCard,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { academicPaths, academicPermissions } from 'src/constants/academic-menu';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import {
-  substitutionManagementApi,
-  substitutionStatusInvalidationTags,
-} from 'src/redux/academicAPI/timetableApi/substitutionManagementApi';
-import {
   Add,
-  Save,
   Send,
-  Print,
-  MoreVert,
   FactCheck,
   PersonOff,
   AutoAwesome,
-  AssignmentInd,
   Close as CloseIcon,
   ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
+import {
+  type ITimetableSummaryCard,
+  TimetableSettingsSummaryCards,
+} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   Box,
   Tab,
@@ -68,7 +59,6 @@ import {
   Card,
   Chip,
   Menu,
-  Tabs,
   Alert,
   Stack,
   Drawer,
@@ -77,22 +67,25 @@ import {
   Tooltip,
   Divider,
   MenuItem,
+  Skeleton,
   TextField,
   Accordion,
   Typography,
   IconButton,
-  CardContent,
   ListItemIcon,
   ListItemText,
   InputAdornment,
-  Skeleton,
   LinearProgress,
   AccordionSummary,
   AccordionDetails,
   FormControlLabel,
-  DialogActions,
 } from '@mui/material';
 
+import { DutyActionDialog } from './components/DutyActionDialog';
+import { TeacherDutyActions } from './components/TeacherDutyActions';
+import { resolveDutyActionErrorMessage } from './services/duty-actions';
+import { useTeacherDutyActions } from './hooks/use-teacher-duty-actions';
+import { createSubstitutionSegments } from './services/create-substitution-action';
 import { SubstitutionCreationOverlay } from './components/SubstitutionCreationOverlay';
 import {
   getActiveFilters,
@@ -107,8 +100,8 @@ import {
   reasonOptions,
   periodTimeMap,
   teacherOptions,
-  conflictOptions,
   subjectOptions,
+  conflictOptions,
   priorityOptions,
   sourceTypeOptions,
   suggestedTeachers,
@@ -127,9 +120,9 @@ import {
   useDailySheetExcelLazyQuery,
   useEmployeeOptionsLazyQuery,
   useAffectedLecturesLazyQuery,
+  useAffectedLecturesDataQuery,
   useCompleteSubstitutionAction,
   useSuggestedTeachersDataQuery,
-  useRejectSubstitutionDutyAction,
   useTeacherAvailabilityDataQuery,
   useAcknowledgeSubstitutionAction,
   useMySubstitutionDutiesDataQuery,
@@ -137,12 +130,9 @@ import {
   useSendSubstitutionReminderAction,
   useSubstitutionDashboardDataQuery,
   useCreateTeacherAvailabilityAction,
-  useRequestSubstitutionChangeAction,
   useSubstitutionCreateMetadataDataQuery,
   useSuggestedTeachersByContextDataQuery,
-  useAffectedLecturesDataQuery,
 } from './substitutionManagement.hooks';
-import { createSubstitutionSegments } from './services/create-substitution-action';
 
 import type {
   ConflictStatus,
@@ -235,8 +225,6 @@ const sourceLabelMap: Record<number, SubstitutionRow['source']> = {
   5: 'Attendance',
   6: 'Auto Created',
 };
-
-const DUTY_ACTION_REASON_MIN_LENGTH = 5;
 
 const availabilityStatusLabelMap: Record<number, string> = {
   0: 'Unavailable',
@@ -691,23 +679,6 @@ const buildAudit = (action: string, actor = 'System') => ({
   action,
 });
 
-// Build a user-friendly message for a failed teacher duty action.
-// RTK Query rejects with a plain SerializedError/FetchBaseQueryError object
-// (never a real `Error`), so `error instanceof Error` never matches. Detect
-// network/CORS failures (status FETCH_ERROR or a raw fetch message) and
-// otherwise fall back to the backend ProblemDetails detail.
-const NETWORK_ERROR_PATTERN = /failed to fetch|networkerror|network error/i;
-const resolveDutyActionErrorMessage = (error: unknown, fallback = 'Unable to update duty.') => {
-  const anyError = error as { status?: unknown; message?: unknown };
-  const status = anyError?.status;
-  const message = typeof anyError?.message === 'string' ? anyError.message : '';
-  const isNetworkError = status === 'FETCH_ERROR' || NETWORK_ERROR_PATTERN.test(message);
-  if (isNetworkError) {
-    return 'Unable to reach the server. Please check your connection and try again.';
-  }
-  return parseApiProblemDetail(error).detail || fallback;
-};
-
 const uniqueLookupOptions = <T extends ApiLookupOption>(items: T[]): T[] => {
   const seen = new Set<string>();
   return items.filter((item) => {
@@ -718,7 +689,6 @@ const uniqueLookupOptions = <T extends ApiLookupOption>(items: T[]): T[] => {
 };
 
 const SubstitutionManagementScreen = () => {
-  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState('board');
   const isViewportTab = ['board', 'availability'].includes(activeTab);
   const [boardView, setBoardView] = useState<SubstitutionViewType>('table');
@@ -797,13 +767,6 @@ const SubstitutionManagementScreen = () => {
 
   const [actionAnchor, setActionAnchor] = useState<HTMLElement | null>(null);
   const [actionRowId, setActionRowId] = useState('');
-  const [dutyConfirmOpen, setDutyConfirmOpen] = useState(false);
-  const [dutyConfirmPayload, setDutyConfirmPayload] = useState<{
-    id: string;
-    action: 'accept' | 'reject' | 'change';
-  } | null>(null);
-  const [dutyConfirmNote, setDutyConfirmNote] = useState('');
-  const [shouldRefreshDuties, setShouldRefreshDuties] = useState(false);
   const [createFormDirty, setCreateFormDirty] = useState(false);
   const [createUnsavedConfirmOpen, setCreateUnsavedConfirmOpen] = useState(false);
   const [availabilityFormDirty, setAvailabilityFormDirty] = useState(false);
@@ -826,15 +789,14 @@ const SubstitutionManagementScreen = () => {
     academicMediumId: medium?.id || undefined,
   };
   const selectedFilterDate = filters.filterDate || dayjs(todayIso);
-  const {
-    data: substitutionResult,
-    isLoading: isSubstitutionsLoading,
-  } = useSubstitutionsDataQuery({
-    ...academicContextParams,
-    fromDate: toDateTimeOffset(selectedFilterDate.startOf('day')),
-    toDate: toDateTimeOffset(selectedFilterDate.endOf('day')),
-    maxResultCount: 200,
-  });
+  const { data: substitutionResult, isLoading: isSubstitutionsLoading } = useSubstitutionsDataQuery(
+    {
+      ...academicContextParams,
+      fromDate: toDateTimeOffset(selectedFilterDate.startOf('day')),
+      toDate: toDateTimeOffset(selectedFilterDate.endOf('day')),
+      maxResultCount: 200,
+    }
+  );
   const {
     data: dashboardResult,
     isLoading: isDashboardLoading,
@@ -853,15 +815,13 @@ const SubstitutionManagementScreen = () => {
     toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
     maxResultCount: 200,
   });
-  const {
-    data: availabilityResult,
-    isLoading: isAvailabilityLoading,
-  } = useTeacherAvailabilityDataQuery({
-    ...academicContextParams,
-    fromDate: toDateTimeOffset(availabilityDate.startOf('day')),
-    toDate: toDateTimeOffset(availabilityDate.endOf('day')),
-    maxResultCount: 200,
-  });
+  const { data: availabilityResult, isLoading: isAvailabilityLoading } =
+    useTeacherAvailabilityDataQuery({
+      ...academicContextParams,
+      fromDate: toDateTimeOffset(availabilityDate.startOf('day')),
+      toDate: toDateTimeOffset(availabilityDate.endOf('day')),
+      maxResultCount: 200,
+    });
   const {
     data: rawCreateMetadata,
     isLoading: isCreateMetadataLoading,
@@ -965,12 +925,13 @@ const SubstitutionManagementScreen = () => {
     useCompleteSubstitutionAction();
   const [cancelSubstitution, { isLoading: isCancellingSubstitution }] =
     useCancelSubstitutionAction();
-  const [acknowledgeSubstitution, { isLoading: isAcknowledging }] =
-    useAcknowledgeSubstitutionAction();
-  const [requestSubstitutionChange, { isLoading: isRequestingChange }] =
-    useRequestSubstitutionChangeAction();
-  const [rejectSubstitutionDuty, { isLoading: isRejectingDuty }] =
-    useRejectSubstitutionDutyAction();
+  const [
+    acknowledgeSubstitution,
+    { isLoading: isAcknowledging, originalArgs: acknowledgementArgs },
+  ] = useAcknowledgeSubstitutionAction();
+  const dutyActions = useTeacherDutyActions(
+    isAcknowledging && acknowledgementArgs ? { id: acknowledgementArgs.id, action: 'accept' } : null
+  );
   const [createTeacherAvailability, { isLoading: isCreatingAvailability }] =
     useCreateTeacherAvailabilityAction();
   const [downloadDailyPdf, { isLoading: isDownloadingPdf }] = useDailySheetPdfLazyQuery();
@@ -1981,95 +1942,6 @@ const SubstitutionManagementScreen = () => {
     );
   }, [availabilityForm, availabilityDialogOpen]);
 
-  /**
-   * Memoization Justification:
-   * - This handler is reused by repeated duty card actions.
-   * - Stable identity avoids rebuilding each card action handler when unrelated state changes.
-   * - It also keeps the teacher-response setting guard tied to one dependency.
-   */
-  const openDutyConfirmModal = useCallback((id: string, action: 'accept' | 'reject' | 'change') => {
-    setDutyConfirmPayload({ id, action });
-    setDutyConfirmNote('');
-    setDutyConfirmOpen(true);
-  }, []);
-
-  const closeDutyConfirmModal = useCallback(() => {
-    if (isAcknowledging || isRequestingChange || isRejectingDuty) return;
-    setDutyConfirmOpen(false);
-    setDutyConfirmPayload(null);
-    setDutyConfirmNote('');
-  }, [isAcknowledging, isRejectingDuty, isRequestingChange]);
-
-  useEffect(() => {
-    if (dutyConfirmOpen || !shouldRefreshDuties) return;
-
-    setShouldRefreshDuties(false);
-    // Invalidate only after the confirmation dialog has unmounted. The focused tags
-    // refresh status-dependent views without reopening unrelated form-data requests.
-    dispatch(
-      substitutionManagementApi.util.invalidateTags([...substitutionStatusInvalidationTags])
-    );
-  }, [dispatch, dutyConfirmOpen, shouldRefreshDuties]);
-
-  /**
-   * Memoization Justification:
-   * - This async action is consumed by the confirmation submit callback.
-   * - Stable identity keeps the submit callback from changing outside duty/action data updates.
-   * - It centralizes action gating before any duty mutation can run.
-   */
-  const handleTeacherDutyAction = useCallback(
-    async (id: string, action: 'accept' | 'reject' | 'change', reason: string) => {
-      try {
-        if (action === 'accept') {
-          await acknowledgeSubstitution({
-            id,
-            reason: reason || undefined,
-          }).unwrap();
-        } else if (action === 'reject') {
-          await rejectSubstitutionDuty({ id, reason }).unwrap();
-        } else {
-          await requestSubstitutionChange({ id, reason }).unwrap();
-        }
-        shikshaMitraToast.success({
-          message:
-            action === 'accept'
-              ? 'Substitution duty accepted successfully.'
-              : action === 'reject'
-                ? 'Substitution duty rejected and admin notified.'
-                : 'Substitution change request sent to admin successfully.',
-        });
-        return true;
-      } catch (error) {
-        const message = resolveDutyActionErrorMessage(
-          error,
-          action === 'accept'
-            ? 'Unable to accept substitution duty.'
-            : action === 'reject'
-              ? 'Unable to reject substitution duty.'
-              : 'Unable to request substitution change.'
-        );
-        shikshaMitraToast.error({ message });
-        return false;
-      }
-    },
-    [acknowledgeSubstitution, rejectSubstitutionDuty, requestSubstitutionChange]
-  );
-
-  const handleDutyConfirmSubmit = useCallback(async () => {
-    if (!dutyConfirmPayload) return;
-    const succeeded = await handleTeacherDutyAction(
-      dutyConfirmPayload.id,
-      dutyConfirmPayload.action,
-      dutyConfirmNote.trim()
-    );
-    if (succeeded) {
-      setDutyConfirmOpen(false);
-      setDutyConfirmPayload(null);
-      setDutyConfirmNote('');
-      setShouldRefreshDuties(true);
-    }
-  }, [dutyConfirmPayload, dutyConfirmNote, handleTeacherDutyAction]);
-
   const handleDownloadDailySheet = async (format: 'pdf' | 'excel') => {
     const params = {
       date: toDateTimeOffset((filters.filterDate || dayjs(todayIso)).startOf('day')),
@@ -2582,66 +2454,13 @@ const SubstitutionManagementScreen = () => {
       isSort: false,
       sticky: true,
       stickyPosition: 'right' as const,
-      render: (_value: any, item: any) => {
-        const isTerminal = ['Completed', 'Cancelled', 'Rejected'].includes(item.status);
-        const isAccepted = item.acknowledgementStatus === 'Accepted';
-        const isRejected = item.acknowledgementStatus === 'Rejected' || item.status === 'Rejected';
-        const isCardBusy = isAcknowledging || isRequestingChange || isRejectingDuty;
-        const isChangeRequested = item.acknowledgementStatus === 'Change Requested';
-
-        if (isTerminal) {
-          return (
-            <Typography variant="caption" color="text.secondary">
-              Duty {item.status.toLowerCase()}
-            </Typography>
-          );
-        }
-
-        if (!item.isResponseWindowOpen) {
-          return (
-            <Typography variant="caption" color="text.secondary">
-              Response window closed
-            </Typography>
-          );
-        }
-
-        const isActionDisabled = isAccepted || isRejected || isChangeRequested || isCardBusy;
-
-        return (
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <LoadingButton
-              size="small"
-              variant="contained"
-              color="success"
-              disabled={isActionDisabled}
-              startIcon={<Iconify icon="mdi:check" width={16} />}
-              onClick={() => openDutyConfirmModal(item.id, 'accept')}
-            >
-              {isAccepted ? 'Accepted' : 'Accept'}
-            </LoadingButton>
-            <LoadingButton
-              size="small"
-              variant="outlined"
-              color="warning"
-              disabled={isActionDisabled}
-              startIcon={<Iconify icon="mdi:swap-horizontal" width={16} />}
-              onClick={() => openDutyConfirmModal(item.id, 'change')}
-            >
-              {isChangeRequested ? 'Requested' : 'Change'}
-            </LoadingButton>
-            <LoadingButton
-              size="small"
-              variant="outlined"
-              color="error"
-              disabled={isActionDisabled}
-              startIcon={<Iconify icon="mdi:close" width={16} />}
-              onClick={() => openDutyConfirmModal(item.id, 'reject')}
-            >
-              Reject
-            </LoadingButton>
-          </Stack>
-        );
-      },
+      render: (_value: unknown, item: unknown) => (
+        <TeacherDutyActions
+          item={item as SubstitutionRow}
+          pendingAction={dutyActions.pendingAction}
+          onAction={dutyActions.open}
+        />
+      ),
     },
   ];
 
@@ -5286,115 +5105,7 @@ const SubstitutionManagementScreen = () => {
           </Stack>
         </CustomDialog>
 
-        {/* ── Duty Action Confirmation Modal ─────────────────── */}
-        <CustomDialog
-          open={dutyConfirmOpen}
-          handleClose={closeDutyConfirmModal}
-          disableClose={isAcknowledging || isRequestingChange || isRejectingDuty}
-          title={
-            <Box component="span" display="flex" alignItems="center" gap={1}>
-              <Box component="span">
-                {dutyConfirmPayload?.action === 'accept'
-                  ? 'Accept Duty'
-                  : dutyConfirmPayload?.action === 'reject'
-                    ? 'Reject Duty'
-                    : 'Request Change / Transfer'}
-              </Box>
-              <CustomTooltip
-                arrow
-                placement="right"
-                title={
-                  dutyConfirmPayload?.action === 'accept'
-                    ? 'Accept this substitution duty and optionally add a note.'
-                    : dutyConfirmPayload?.action === 'reject'
-                      ? 'Reject this substitution duty by providing a reason.'
-                      : 'Request a change or transfer by providing a reason.'
-                }
-              >
-                <Iconify
-                  icon={GlobalIcons.info}
-                  color="info.main"
-                  width={16}
-                  height={16}
-                  sx={{ cursor: 'pointer' }}
-                />
-              </CustomTooltip>
-            </Box>
-          }
-          maxWidth="xs"
-        >
-          <DialogScrollContent onSubmit={handleDutyConfirmSubmit}>
-            <TextField
-              autoFocus
-              fullWidth
-              multiline
-              size="small"
-              minRows={3}
-              maxRows={5}
-              placeholder={
-                dutyConfirmPayload?.action === 'accept'
-                  ? 'Add a note (optional)…'
-                  : 'Enter your reason…'
-              }
-              value={dutyConfirmNote}
-              onChange={(e) => setDutyConfirmNote(e.target.value)}
-              helperText={
-                dutyConfirmPayload?.action === 'accept'
-                  ? 'Optional'
-                  : `Minimum ${DUTY_ACTION_REASON_MIN_LENGTH} characters required`
-              }
-            />
-          </DialogScrollContent>
-
-          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.cancel} width={16} />}
-              onClick={closeDutyConfirmModal}
-            >
-              Cancel
-            </Button>
-            <LoadingButton
-              size="small"
-              variant="contained"
-              color={
-                dutyConfirmPayload?.action === 'accept'
-                  ? 'success'
-                  : dutyConfirmPayload?.action === 'reject'
-                    ? 'error'
-                    : 'warning'
-              }
-              disabled={
-                (dutyConfirmPayload?.action !== 'accept' &&
-                  dutyConfirmNote.trim().length < DUTY_ACTION_REASON_MIN_LENGTH) ||
-                isAcknowledging ||
-                isRequestingChange ||
-                isRejectingDuty
-              }
-              loading={isAcknowledging || isRequestingChange || isRejectingDuty}
-              onClick={handleDutyConfirmSubmit}
-              startIcon={
-                <Iconify
-                  icon={
-                    dutyConfirmPayload?.action === 'accept'
-                      ? 'mdi:check'
-                      : dutyConfirmPayload?.action === 'reject'
-                        ? 'mdi:close'
-                        : 'mdi:swap-horizontal'
-                  }
-                  width={16}
-                />
-              }
-            >
-              {dutyConfirmPayload?.action === 'accept'
-                ? 'Accept Duty'
-                : dutyConfirmPayload?.action === 'reject'
-                  ? 'Reject Duty'
-                  : 'Request Change'}
-            </LoadingButton>
-          </DialogActions>
-        </CustomDialog>
+        <DutyActionDialog controller={dutyActions} />
       </Scrollbar>
     </Box>
   );

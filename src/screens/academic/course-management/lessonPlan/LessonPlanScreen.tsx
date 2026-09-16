@@ -67,7 +67,9 @@ import TeachingKpiCards from './components/TeachingKpiCards';
 import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import { reconcileTimelineSlots } from './reconcileTimelineSlots';
+import { ReviewQueueTabLabel } from './components/ReviewQueueTabLabel';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
+import { usePendingReviewCount } from './hooks/use-pending-review-count';
 import LessonDiaryDetailsDrawer from './components/LessonDiaryDetailsDrawer';
 import {
   getLessonPlanListQuery,
@@ -452,6 +454,10 @@ const LessonPlanScreen = () => {
     const roleBasedCheck = readRoleNames(employee, user).some(canRoleReviewLessonPlans);
     return roleBasedCheck || Boolean(hasSubordinates);
   }, [employee, user, hasSubordinates]);
+  const pendingReviewCount = usePendingReviewCount({
+    academicYearId: currentYear?.id,
+    enabled: canReviewSubmissions,
+  });
   const [activeTab, setActiveTab] = useState<TabValue>('dailyTimeline');
   const activeTabQueries = getLessonPlanTabQueryState(activeTab);
   const [healthScore] = useState<TeachingHealthScore>(initialHealthScore);
@@ -1921,7 +1927,13 @@ const LessonPlanScreen = () => {
               <Tab
                 key={tab.value}
                 value={tab.value}
-                label={tab.label}
+                label={
+                  tab.value === 'reviewQueue' ? (
+                    <ReviewQueueTabLabel pendingCount={pendingReviewCount} />
+                  ) : (
+                    tab.label
+                  )
+                }
                 icon={<Iconify icon={tab.icon} width={20} />}
               />
             ))}
