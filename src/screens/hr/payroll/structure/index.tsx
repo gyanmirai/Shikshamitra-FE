@@ -46,15 +46,18 @@ import { getLocalMonthKey } from './salary-structure-builder-utils';
 const EmployeeSalaryStructureScreen = () => {
   const searchParams = useSearchParams();
   const requestedEmployeeId = searchParams.get('employeeId')?.trim() || '';
+  const openRequestedSalarySetup = searchParams.get('setup') === 'salary';
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canViewCompensationRevisions = hasGrantedPermission(
     permissions,
     hrPermissions.payroll.compensationRevisionActions.view
   );
-  const canEditPayrollStructure = hasGrantedPermission(
+  const canManageCompensation = hasGrantedPermission(
     permissions,
-    hrPermissions.payroll.payrollStructureActions.add
+    hrPermissions.payroll.compensationRevisionActions.manage
   );
+  const canReadCompensationRevisions =
+    canViewCompensationRevisions || canManageCompensation;
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const { data: requestedEmployee } = useGetEmployeeByIdQuery(requestedEmployeeId, {
@@ -74,7 +77,10 @@ const EmployeeSalaryStructureScreen = () => {
       label: requestedEmployee.fullName || requestedEmployee.employeeName || 'Selected employee',
       status: requestedEmployee.status ?? requestedEmployee.employeeStatusType,
     });
-  }, [requestedEmployee, requestedEmployeeId, selectedEmployee?.id]);
+    if (openRequestedSalarySetup) {
+      setEditDialogOpen(true);
+    }
+  }, [openRequestedSalarySetup, requestedEmployee, requestedEmployeeId, selectedEmployee?.id]);
 
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
@@ -92,7 +98,7 @@ const EmployeeSalaryStructureScreen = () => {
   const { data: effectiveRevision, isLoading: isRevisionLoading } =
     useGetEffectiveCompensationRevisionQuery(
       { employeeId, month },
-      { skip: !employeeId || !canViewCompensationRevisions }
+      { skip: !employeeId || !canReadCompensationRevisions }
     );
 
   const payrollStructureRows = useMemo(() => {
@@ -155,7 +161,6 @@ const EmployeeSalaryStructureScreen = () => {
                 page: 1,
                 pageSize: 500,
                 search: query,
-                status: EmployeeStatusType.Active,
               }).unwrap();
               const items: EmployeeOption[] = (Array.isArray(res) ? res : res?.items || []).map(
                 (item: any) => ({
@@ -194,7 +199,7 @@ const EmployeeSalaryStructureScreen = () => {
         </Paper>
       ) : (
         <>
-          {canEditPayrollStructure && (
+          {canManageCompensation && (
             <Box display="flex" justifyContent="flex-end" mt={1} mb={1}>
               <Button
                 variant="contained"
@@ -202,14 +207,14 @@ const EmployeeSalaryStructureScreen = () => {
                 startIcon={<Iconify icon="solar:pen-bold" />}
                 onClick={handleOpenEdit}
               >
-                Edit Salary Structure
+                {effectiveRevision ? 'Edit salary' : 'Set up salary'}
               </Button>
             </Box>
           )}
-          {canViewCompensationRevisions && !effectiveRevision && !isRevisionLoading && (
+          {canReadCompensationRevisions && !effectiveRevision && !isRevisionLoading && (
             <Alert severity="warning" sx={{ mb: 1 }}>
-              This employee has no approved compensation revision for the current month. Payroll
-              cannot be locked until the first revision is approved.
+              This employee has no effective compensation revision for the current month. Payroll
+              cannot be locked until salary is saved.
             </Alert>
           )}
           <Grid container spacing={1} alignItems="stretch">
@@ -237,7 +242,9 @@ const EmployeeSalaryStructureScreen = () => {
             handleClose={handleCloseEdit}
             title={
               <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-                <Typography variant="h5">Edit Salary Structure</Typography>
+                <Typography variant="h5">
+                  {effectiveRevision ? 'Edit salary' : 'Set up salary'}
+                </Typography>
                 <CustomTooltip
                   arrow
                   placement="right"
@@ -314,6 +321,11 @@ const SalaryStructureEdit = ({
     params: { employeeId },
     options: { skip: !employeeId },
   });
+  const { data: employee } = useGetEmployeeByIdQuery(employeeId, { skip: !employeeId });
+  const employeeStatus = employee?.employeeStatusType ?? employee?.status;
+  const employeeIsActive =
+    employeeStatus === EmployeeStatusType.Active ||
+    String(employeeStatus).toLowerCase() === 'active';
 
   const [updateSalaryStructure, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
@@ -438,7 +450,12 @@ const SalaryStructureEdit = ({
         ) : (
           <Paper elevation={2} sx={{ p: 1 }}>
             <Grid container spacing={3}>
-              <SalaryStructureBuilder formik={formik} employeeId={employeeId} />
+              <SalaryStructureBuilder
+                formik={formik}
+                employeeId={employeeId}
+                dateOfJoining={employee?.dateOfJoining ?? employee?.doj}
+                employeeIsActive={employeeIsActive}
+              />
               <Grid size={{ xs: 12, md: 6 }}>
                 <RenderComponents
                   formik={formik}

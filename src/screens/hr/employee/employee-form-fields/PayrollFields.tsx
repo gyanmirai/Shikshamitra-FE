@@ -41,7 +41,6 @@ import { RenderPfRules } from './RenderPfRules';
 import PayrollComponentDialog from './PayrollComponentDialog';
 import { CardActions, SectionCard } from './InformationFields';
 import PayrollTempComponentDialog from './PayrollTempComponentDialog';
-import { SalaryStructureBuilder } from '../../payroll/structure/SalaryStructureBuilder';
 import {
   isSalaryComponentFixed,
   formatApplicableMonthLabel,
@@ -1159,8 +1158,22 @@ const RenderPayrollFields = (props: any) => {
           </ShakingTextField>
         </Grid>
       </SectionCard>
-      <SectionCard title="Compensation Structure">
-        <SalaryStructureBuilder formik={formik} employeeId={values.employeeId || undefined} />
+      <SectionCard title="Payroll additions">
+        <Alert
+          severity="info"
+          action={
+            values.employeeId ? (
+              <Button
+                href={`/hr/payroll/structure?employeeId=${values.employeeId}&setup=salary`}
+                sx={{ minHeight: 44, whiteSpace: 'nowrap' }}
+              >
+                Set up salary
+              </Button>
+            ) : undefined
+          }
+        >
+          Salary is managed separately. The employee remains inactive until a valid salary is saved and an administrator activates the employee.
+        </Alert>
         <Grid size={{ xs: 12, md: 6 }}>
           <RenderComponents
             formik={formik}

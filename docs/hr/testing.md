@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-09-03
+updated_on: 2026-09-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -97,5 +97,5 @@ Each frontend HR change should satisfy these gates:
 | Backend contract                                                                                                                                                                                                                                                                          | Backend [api.md](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) is still accurate |
 | Test                                                                                                                                                                                                                                                                                      | Focused test or documented residual risk exists                                                                   |
 | Docs                                                                                                                                                                                                                                                                                      | `npm run docs:hr:check` passes                                                                                    |
-| Payroll compensation-builder tests should cover template defaults, Gross, Take-home, and Employer Cost requests, local and selected effective month, protection policy, employee statutory context, PF applicability, calculation summaries, ESI funding, target variance, permission-gated maker-checker actions, recoverable drafts, and month-scoped one-time components. |
-| Salary-template composer tests should cover blank and incomplete drafts, editable empty fixed and percentage values, calculated-automatically formulas, quote defaults, role-dependent formulas, duplicate special roles, ordering, removal, server validation, and Edit versus Publish permission behavior.             |
+| Payroll compensation-builder tests should cover the school default template, joining-month default, template switching, Gross, Take-home, and Employer Cost requests, protection policy, employee statutory context, PF applicability, controlled overrides, calculation summaries, ESI funding, target variance, direct save, activation readiness, immutable history, and month-scoped one-time components. |
+| Salary-template composer tests should cover complete active creation, Needs setup recovery, row-click edit mode, editable empty fixed and percentage values, calculated-automatically formulas, PF defaults, quote defaults, role-dependent formulas, duplicate special roles, ordering, removal, server validation, stale-save recovery, read-only archived state, and unsaved navigation. |

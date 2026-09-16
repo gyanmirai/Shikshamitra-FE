@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-09-03
+updated_on: 2026-09-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -149,19 +149,21 @@ PwD enrollment review can record a government-funded employer-share relief perio
 The impact preview distinguishes employee, employer, and government ESI funding.
 Run Payroll shows ESI wages, coverage decision, rule version, insurance number, contribution period, employee deduction, employer contribution, and government contribution.
 Users select a template, choose Gross, Take-home, or Employer Cost, select the protection policy and effective month, enter the quoted monthly amount, select PF applicability and rule, calculate, and review earnings, employee deductions, employer contributions, ESI, target variance, and the formula trace.
-Users can save or update a Draft compensation revision, then submit it for separate approval when ready.
-A failed submission leaves the saved Draft visible and recoverable from revision history.
-A different authorized user approves or rejects the recurring compensation revision from its history.
-Only approved revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
+New employees remain Inactive after direct creation or application finalization and show Payroll setup required.
+Salary setup preselects the school default template, the template basis and protection policy, the joining month, and the template PF defaults.
+Users calculate and save salary directly as an effective immutable revision without a draft or approval queue.
+A later save creates another revision, supersedes the previous effective revision for the same month, and keeps future-effective revisions scheduled.
+After salary is ready, users with Employee Edit permission activate the employee as a separate action.
+Only effective revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
 System-managed statutory lines stay visible in the calculation but are never persisted as editable employee components.
 Run Payroll and payslips show revision provenance and protected-target drift without silently changing salary or blocking lock.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
-Salary Template settings creates a blank draft and then opens the dedicated editor route.
-The Salary Template list opens in the standard table view, with an optional URL-backed Card view.
-Selecting a table row, template-name link, View action, or card opens the latest template version.
-Drafts remain editable only with Edit permission, while published and archived versions open read-only.
+Salary Template settings uses one full-height table for Active, Needs setup, and Archived templates.
+Selecting an editable table row, template-name link, or Edit action opens the URL-backed editor directly in edit mode.
+View-only users and archived templates open the same editor read-only.
 The editor adds, removes, configures, and reorders active earning and deduction components in separate sections.
-Incomplete drafts can be saved, while publishing requires one Basic earning and one remainder earning and shows an actionable validation summary.
+Save changes validates the complete template and atomically creates the next active immutable version.
+The review step explains that the new version applies to future salary setups while existing employees remain pinned to their saved version.
 Template formulas override component-master formulas only when the template generates an employee salary structure.
-Template versions define a default quote basis and default protection policy.
+Template versions define a default quote basis, protection policy, PF applicability, and PF rule.
 Fixed and percentage formulas keep an editable empty numeric value, while remainder and statutory formulas explicitly show that their value is calculated automatically.

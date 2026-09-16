@@ -119,7 +119,7 @@ export const normalizeRuleOrder = (rules: SalaryTemplateRule[]) => {
   return ordered.map((rule, displayOrder) => ({ ...rule, displayOrder }));
 };
 
-export const getPublishIssues = (rules: SalaryTemplateRule[]) => {
+export const getSaveIssues = (rules: SalaryTemplateRule[]) => {
   const issues: string[] = [];
   const basicCount = rules.filter((rule) => rule.semanticType === 'BASIC').length;
   const balanceCount = rules.filter((rule) => rule.semanticType === 'BALANCING_EARNING').length;

@@ -143,10 +143,7 @@ export const hrPermissions = {
     },
     compensationRevisionActions: {
       view: `${defaultHrPermissionName}PayrollManagement.CompensationRevisions.View`,
-      create: `${defaultHrPermissionName}PayrollManagement.CompensationRevisions.Create`,
-      edit: `${defaultHrPermissionName}PayrollManagement.CompensationRevisions.Edit`,
-      submit: `${defaultHrPermissionName}PayrollManagement.CompensationRevisions.Submit`,
-      approve: `${defaultHrPermissionName}PayrollManagement.CompensationRevisions.Approve`,
+      manage: `${defaultHrPermissionName}PayrollManagement.CompensationRevisions.Manage`,
       viewAudit: `${defaultHrPermissionName}PayrollManagement.CompensationRevisions.ViewAudit`,
     },
     settings: {

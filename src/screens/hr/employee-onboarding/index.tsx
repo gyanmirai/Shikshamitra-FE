@@ -49,6 +49,17 @@ import {
   shouldClearEmployeeRoleSelection,
 } from 'src/screens/hr/employee/employee-role-options';
 import {
+  useGetEmployeeApplicationQuery,
+  useGetEmployeeApplicationsQuery,
+  useDeleteEmployeeApplicationMutation,
+  useFinalizeEmployeeApplicationMutation,
+  useLazyGetEmployeeApplicationPhotoQuery,
+  useLazyGetEmployeeApplicationResumeQuery,
+  useCreateEmployeeApplicationInviteMutation,
+  useUpdateEmployeeApplicationStatusMutation,
+  useRegenerateEmployeeApplicationLinkMutation,
+} from 'src/redux/hr/employeeOnboardingApi';
+import {
   Box,
   Card,
   Chip,
@@ -80,17 +91,6 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
-import {
-  useGetEmployeeApplicationQuery,
-  useGetEmployeeApplicationsQuery,
-  useDeleteEmployeeApplicationMutation,
-  useFinalizeEmployeeApplicationMutation,
-  useLazyGetEmployeeApplicationPhotoQuery,
-  useLazyGetEmployeeApplicationResumeQuery,
-  useCreateEmployeeApplicationInviteMutation,
-  useUpdateEmployeeApplicationStatusMutation,
-  useRegenerateEmployeeApplicationLinkMutation,
-} from 'src/redux/hr/employeeOnboardingApi';
 
 import { getOnboardingErrorMessage } from './error-message';
 import { resolveCurrentEmployeeApplication } from './employee-application-query-state';
@@ -108,11 +108,11 @@ import {
   EMPLOYEE_APPLICATION_STATUSES,
   isEmployeeApplicationTerminal,
   canFinalizeEmployeeApplication,
+  canCopyEmployeeApplicationLink,
   getEmployeeApplicationStatusColor,
   getEmployeeApplicationStatusLabel,
   normalizeEmployeeApplicationStatus,
   canRegenerateEmployeeApplicationLink,
-  canCopyEmployeeApplicationLink,
 } from './status';
 
 import type { FinalizeFormState } from './finalize-validation';
@@ -132,6 +132,11 @@ type EmployeeOnboardingListParams = {
   pageSize: number;
   search: string;
   status: string;
+};
+
+type FinalizedEmployeeResult = {
+  id: string;
+  name: string;
 };
 
 const defaultInviteForm: InviteFormState = {
@@ -1072,10 +1077,12 @@ function FinalizeDialog({
   application,
   open,
   onClose,
+  onFinalized,
 }: {
   application?: EmployeeApplication;
   open: boolean;
   onClose: () => void;
+  onFinalized: (employee: FinalizedEmployeeResult) => void;
 }) {
   const theme = useTheme();
   const [step, setStep] = useState(0);
@@ -1237,7 +1244,7 @@ function FinalizeDialog({
 
     setFinalizeSaving(true);
     try {
-      await finalizeApplication({
+      const result = await finalizeApplication({
         id: application.id,
         body: {
           personalInfo: {
@@ -1289,8 +1296,18 @@ function FinalizeDialog({
         },
       }).unwrap();
 
-      shikshaMitraToast.success({ message: 'Employee finalized' });
-      onClose();
+      const employeeId = String(
+        result.employee.id || result.application.finalizedEmployeeId || ''
+      );
+      if (!employeeId) {
+        throw new Error('The employee was created, but the employee id was not returned.');
+      }
+
+      shikshaMitraToast.success({ message: 'Employee created as inactive' });
+      onFinalized({
+        id: employeeId,
+        name: String(result.employee.fullName || application.fullName || 'Employee'),
+      });
     } catch (error) {
       shikshaMitraToast.error({
         message: getOnboardingErrorMessage(error, 'Could not finalize onboarding'),
@@ -2639,6 +2656,7 @@ export default function EmployeeOnboardingScreen() {
   });
   const [inviteOpen, setInviteOpen] = useState(false);
   const [finalizeApplication, setFinalizeApplication] = useState<EmployeeApplication | undefined>();
+  const [finalizedEmployee, setFinalizedEmployee] = useState<FinalizedEmployeeResult>();
   const [pendingDeletion, setPendingDeletion] = useState<{
     application: EmployeeApplication;
     onDeleted?: () => void;
@@ -2752,6 +2770,47 @@ export default function EmployeeOnboardingScreen() {
       });
     }
   }, [deleteApplication, pendingDeletion]);
+
+  const handleFinalized = useCallback((employee: FinalizedEmployeeResult) => {
+    setFinalizeApplication(undefined);
+    setFinalizedEmployee(employee);
+  }, []);
+
+  const finalizationResult = (
+    <CustomDialog
+      open={Boolean(finalizedEmployee)}
+      handleClose={() => setFinalizedEmployee(undefined)}
+      title="Employee created"
+      maxWidth="sm"
+      hasForm={false}
+    >
+      <DialogContent>
+        <Stack spacing={2}>
+          <Alert severity="warning">
+            <Typography variant="subtitle2">Payroll setup required</Typography>
+            <Typography variant="body2">
+              {finalizedEmployee?.name || 'The employee'} is inactive. Set up a valid salary, then activate the employee as a separate action.
+            </Typography>
+          </Alert>
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          href={finalizedEmployee ? `${hrPaths.employee.list}?employee=${finalizedEmployee.id}` : undefined}
+          sx={{ minHeight: 44 }}
+        >
+          View employee
+        </Button>
+        <Button
+          href={finalizedEmployee ? `${hrPaths.payroll.structure}?employeeId=${finalizedEmployee.id}&setup=salary` : undefined}
+          variant="contained"
+          sx={{ minHeight: 44 }}
+        >
+          Set up salary
+        </Button>
+      </DialogActions>
+    </CustomDialog>
+  );
 
   const deleteConfirmation = (
     <ConfirmDialog
@@ -2998,7 +3057,9 @@ export default function EmployeeOnboardingScreen() {
           open={Boolean(currentFinalizeApplication)}
           application={currentFinalizeApplication}
           onClose={() => setFinalizeApplication(undefined)}
+          onFinalized={handleFinalized}
         />
+        {finalizationResult}
         {deleteConfirmation}
       </Box>
     );
@@ -3101,7 +3162,9 @@ export default function EmployeeOnboardingScreen() {
           open={Boolean(currentFinalizeApplication)}
           application={currentFinalizeApplication}
           onClose={() => setFinalizeApplication(undefined)}
+          onFinalized={handleFinalized}
         />
+        {finalizationResult}
         {deleteConfirmation}
       </Stack>
     </Box>

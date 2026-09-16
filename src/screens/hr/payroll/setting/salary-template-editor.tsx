@@ -10,29 +10,24 @@ import type {
 } from 'src/redux/hr/salary-template-api';
 
 import * as Yup from 'yup';
-import Link from 'next/link';
 import { toast } from 'sonner';
 import { useFormik } from 'formik';
-import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useGetPFQuery } from 'src/redux/PF/PFApi';
+import { hrPermissions } from 'src/constants/hr-menus';
+import { formatCurrency } from 'src/utils/cureencyFormater';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Add,
-  Save,
-  Delete,
-  Publish,
-  ArrowBack,
-  ArrowUpward,
-  ArrowDownward,
-} from '@mui/icons-material';
+import { Add, Close, Delete, ArrowUpward, ArrowDownward } from '@mui/icons-material';
 import {
   useGetSalaryTemplateQuery,
-  usePublishSalaryTemplateMutation,
-  useUpdateSalaryTemplateDraftMutation,
+  useCreateSalaryTemplateMutation,
+  useUpdateSalaryTemplateMutation,
+  useGetSalaryTemplateVersionsQuery,
+  useCalculateSalaryTemplateMutation,
   useGetSalaryTemplateComponentCatalogQuery,
 } from 'src/redux/hr/salary-template-api';
 import {
@@ -43,7 +38,7 @@ import {
   Alert,
   Button,
   Select,
-  Divider,
+  Switch,
   MenuItem,
   TextField,
   IconButton,
@@ -54,12 +49,13 @@ import {
   Autocomplete,
   DialogActions,
   CircularProgress,
+  FormControlLabel,
 } from '@mui/material';
 
 import {
+  getSaveIssues,
   getRoleOptions,
   formatRuleLabel,
-  getPublishIssues,
   applyFormulaType,
   getFormulaOptions,
   applySemanticType,
@@ -69,33 +65,36 @@ import {
   getAutomaticFormulaSemanticType,
 } from './salary-template-editor-utils';
 
+type EditorMode = 'create' | 'edit' | 'view';
 type EditorValues = {
   name: string;
   description: string;
   defaultSalaryBasis: SalaryBasis;
   defaultProtectionPolicy: ProtectionPolicy;
+  defaultPfApplicable: boolean;
+  defaultPfRuleId: string;
   rules: SalaryTemplateRule[];
 };
 
-type RuleSectionProps = {
-  title: string;
-  lineKind: SalaryTemplateRule['lineKind'];
-  formik: FormikProps<EditorValues>;
-  componentNames: Map<string, string>;
-  canEdit: boolean;
-  onAdd: () => void;
-  onMove: (componentId: string, direction: -1 | 1) => void;
-  onRemove: (componentId: string) => void;
+type Props = {
+  templateId?: string;
+  mode?: EditorMode;
+  onClose?: () => void;
+  onSaved?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
+const steps = ['Details', 'Earnings', 'Deductions and statutory setup', 'Review'];
 const editorSchema = Yup.object({
   name: Yup.string().trim().required('Template name is required.').max(160),
   description: Yup.string().trim().max(500),
   defaultSalaryBasis: Yup.string().required(),
   defaultProtectionPolicy: Yup.string().required(),
-  rules: Yup.array().required(),
+  defaultPfRuleId: Yup.string().when('defaultPfApplicable', {
+    is: true,
+    then: (schema) => schema.required('Choose the default PF rule.'),
+  }),
 });
-
 const uniqueRoles = new Set([
   'BASIC',
   'BALANCING_EARNING',
@@ -103,608 +102,660 @@ const uniqueRoles = new Set([
   'PROFESSIONAL_TAX',
 ]);
 
-function SalaryTemplateRuleSection({
+function operationKey() {
+  return globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
+}
+
+function RuleSection({
   title,
   lineKind,
   formik,
   componentNames,
-  canEdit,
+  readOnly,
   onAdd,
-  onMove,
-  onRemove,
-}: RuleSectionProps) {
+}: {
+  title: string;
+  lineKind: SalaryTemplateRule['lineKind'];
+  formik: FormikProps<EditorValues>;
+  componentNames: Map<string, string>;
+  readOnly: boolean;
+  onAdd: () => void;
+}) {
   const rules = formik.values.rules.filter((rule) => rule.lineKind === lineKind);
   const usedRoles = new Set(formik.values.rules.map((rule) => rule.semanticType));
-
-  const updateRule = (componentId: string, patch: Partial<SalaryTemplateRule>) => {
-    formik.setFieldValue(
-      'rules',
-      formik.values.rules.map((rule) =>
-        rule.componentId === componentId ? { ...rule, ...patch } : rule
-      )
-    );
+  const setRules = (rulesValue: SalaryTemplateRule[]) =>
+    formik.setFieldValue('rules', normalizeRuleOrder(rulesValue));
+  const updateRule = (componentId: string, updated: SalaryTemplateRule) =>
+    setRules(formik.values.rules.map((rule) => (rule.componentId === componentId ? updated : rule)));
+  const moveRule = (componentId: string, direction: -1 | 1) => {
+    const sameKind = formik.values.rules.filter((rule) => rule.lineKind === lineKind);
+    const index = sameKind.findIndex((rule) => rule.componentId === componentId);
+    const target = index + direction;
+    if (index < 0 || target < 0 || target >= sameKind.length) return;
+    [sameKind[index], sameKind[target]] = [sameKind[target], sameKind[index]];
+    const otherKind = formik.values.rules.filter((rule) => rule.lineKind !== lineKind);
+    setRules(lineKind === 'EARNING' ? [...sameKind, ...otherKind] : [...otherKind, ...sameKind]);
   };
 
   return (
-    <Card variant="outlined">
-      <CardContent>
-        <Box display="flex" alignItems="center" justifyContent="space-between" gap={2} mb={2}>
-          <Box>
-            <Typography variant="h6">{title}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              {rules.length} component{rules.length === 1 ? '' : 's'} configured
-            </Typography>
-          </Box>
-          {canEdit ? (
-            <Button variant="outlined" startIcon={<Add />} onClick={onAdd}>
-              Add {lineKind === 'EARNING' ? 'earning' : 'deduction'}
-            </Button>
-          ) : null}
+    <Box display="grid" gap={2}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+        <Box>
+          <Typography variant="h6">{title}</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {rules.length} component{rules.length === 1 ? '' : 's'} configured
+          </Typography>
         </Box>
-
-        {!rules.length ? (
-          <Alert severity="info">
-            No {lineKind === 'EARNING' ? 'earning' : 'deduction'} components have been added.
-          </Alert>
-        ) : (
-          <Box display="grid" gap={1.5}>
-            {rules.map((rule, sectionIndex) => {
-              const formulaOptions = getFormulaOptions(rule);
-              const acceptsValue = formulaAcceptsValue(rule.formulaType);
-              const basisOptions = formik.values.rules.filter(
-                (candidate) =>
-                  candidate.componentId !== rule.componentId &&
-                  candidate.lineKind === 'EARNING' &&
-                  candidate.displayOrder < rule.displayOrder
-              );
-
-              return (
-                <Card
-                  key={rule.componentId}
-                  variant="outlined"
-                  sx={{ bgcolor: 'background.neutral' }}
-                >
-                  <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                    <Grid container spacing={1.5} alignItems="center">
-                      <Grid size={{ xs: 12, lg: 2.5 }}>
-                        <Typography variant="subtitle2">
-                          {componentNames.get(rule.componentId) || 'Unavailable component'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatRuleLabel(rule.semanticType)}
-                        </Typography>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, lg: 2 }}>
-                        <FormControl fullWidth size="small" disabled={!canEdit}>
-                          <InputLabel id={`purpose-${rule.componentId}-label`}>Purpose</InputLabel>
-                          <Select
-                            id={`purpose-${rule.componentId}`}
-                            labelId={`purpose-${rule.componentId}-label`}
-                            label="Purpose"
-                            value={rule.semanticType}
-                            onChange={(event) => {
-                              const updated = applySemanticType(rule, event.target.value);
-                              updateRule(rule.componentId, updated);
-                            }}
-                          >
-                            {getRoleOptions(lineKind).map((role) => (
-                              <MenuItem
-                                key={role}
-                                value={role}
-                                disabled={
-                                  uniqueRoles.has(role) &&
-                                  role !== rule.semanticType &&
-                                  usedRoles.has(role)
-                                }
-                              >
-                                {formatRuleLabel(role)}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 6, lg: 2.5 }}>
-                        <FormControl fullWidth size="small" disabled={!canEdit}>
-                          <InputLabel id={`calculation-${rule.componentId}-label`}>
-                            Calculation
-                          </InputLabel>
-                          <Select
-                            id={`calculation-${rule.componentId}`}
-                            labelId={`calculation-${rule.componentId}-label`}
-                            label="Calculation"
-                            value={rule.formulaType}
-                            onChange={(event) => {
-                              const formulaType = event.target.value;
-                              updateRule(rule.componentId, applyFormulaType(rule, formulaType));
-                            }}
-                          >
-                            {formulaOptions.map((formula) => {
-                              const automaticSemanticType =
-                                getAutomaticFormulaSemanticType(formula);
-                              return (
-                                <MenuItem
-                                  key={formula}
-                                  value={formula}
-                                  disabled={
-                                    automaticSemanticType !== null &&
-                                    automaticSemanticType !== rule.semanticType &&
-                                    usedRoles.has(automaticSemanticType)
-                                  }
-                                >
-                                  {formatRuleLabel(formula)}
-                                </MenuItem>
-                              );
-                            })}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 4, lg: 1.5 }}>
-                        <TextField
-                          fullWidth
-                          size="small"
-                          type="number"
-                          label={
-                            acceptsValue
-                              ? rule.formulaType.startsWith('PERCENTAGE')
-                                ? 'Percent'
-                                : 'Amount'
-                              : 'Calculated automatically'
-                          }
-                          disabled={!canEdit || !acceptsValue}
-                          value={acceptsValue ? (rule.value ?? '') : ''}
-                          placeholder={acceptsValue ? undefined : 'Automatic'}
-                          helperText={
-                            canEdit && !acceptsValue
-                              ? 'This value is calculated by the selected formula.'
-                              : undefined
-                          }
-                          onChange={(event) =>
-                            updateRule(rule.componentId, {
-                              value: event.target.value === '' ? null : Number(event.target.value),
-                            })
-                          }
-                          slotProps={{
-                            htmlInput: {
-                              min: 0,
-                              max: rule.formulaType.startsWith('PERCENTAGE') ? 100 : undefined,
-                              step: 0.01,
-                            },
-                          }}
-                        />
-                      </Grid>
-                      <Grid size={{ xs: 12, sm: 8, lg: 2 }}>
-                        <FormControl
-                          fullWidth
-                          size="small"
-                          disabled={!canEdit || rule.formulaType !== 'PERCENTAGE_OF_COMPONENT'}
-                        >
-                          <InputLabel>Basis component</InputLabel>
-                          <Select
-                            label="Basis component"
-                            value={rule.basisComponentId || ''}
-                            onChange={(event) =>
-                              updateRule(rule.componentId, {
-                                basisComponentId: event.target.value || null,
-                              })
+        {!readOnly ? (
+          <Button variant="outlined" startIcon={<Add />} onClick={onAdd} sx={{ minHeight: 44 }}>
+            Add {lineKind === 'EARNING' ? 'earning' : 'deduction'}
+          </Button>
+        ) : null}
+      </Box>
+      {!rules.length ? (
+        <Alert severity="info">No {title.toLowerCase()} have been configured.</Alert>
+      ) : (
+        rules.map((rule, index) => {
+          const acceptsValue = formulaAcceptsValue(rule.formulaType);
+          const basisOptions = formik.values.rules.filter(
+            (candidate) =>
+              candidate.componentId !== rule.componentId &&
+              candidate.lineKind === 'EARNING' &&
+              candidate.displayOrder < rule.displayOrder
+          );
+          return (
+            <Card key={rule.componentId} variant="outlined">
+              <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                <Grid container spacing={1.5} alignItems="center">
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <Typography variant="subtitle2">
+                      {componentNames.get(rule.componentId) || 'Unavailable component'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatRuleLabel(rule.semanticType)}
+                    </Typography>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <FormControl fullWidth size="small" disabled={readOnly}>
+                      <InputLabel id={`purpose-${rule.componentId}`}>Purpose</InputLabel>
+                      <Select
+                        labelId={`purpose-${rule.componentId}`}
+                        label="Purpose"
+                        value={rule.semanticType}
+                        onChange={(event) =>
+                          updateRule(rule.componentId, applySemanticType(rule, event.target.value))
+                        }
+                      >
+                        {getRoleOptions(lineKind).map((role) => (
+                          <MenuItem
+                            key={role}
+                            value={role}
+                            disabled={
+                              uniqueRoles.has(role) && role !== rule.semanticType && usedRoles.has(role)
                             }
                           >
-                            {basisOptions.map((candidate) => (
-                              <MenuItem key={candidate.componentId} value={candidate.componentId}>
-                                {componentNames.get(candidate.componentId) ||
-                                  'Unavailable component'}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Grid>
-                      <Grid size={{ xs: 12, lg: 1.5 }}>
-                        <Box display="flex" justifyContent={{ xs: 'flex-end', lg: 'center' }}>
-                          <IconButton
-                            aria-label={`Move ${componentNames.get(rule.componentId)} up`}
-                            disabled={!canEdit || sectionIndex === 0}
-                            onClick={() => onMove(rule.componentId, -1)}
-                          >
-                            <ArrowUpward fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            aria-label={`Move ${componentNames.get(rule.componentId)} down`}
-                            disabled={!canEdit || sectionIndex === rules.length - 1}
-                            onClick={() => onMove(rule.componentId, 1)}
-                          >
-                            <ArrowDownward fontSize="small" />
-                          </IconButton>
-                          <IconButton
-                            aria-label={`Remove ${componentNames.get(rule.componentId)}`}
-                            color="error"
-                            disabled={!canEdit}
-                            onClick={() => onRemove(rule.componentId)}
-                          >
-                            <Delete fontSize="small" />
-                          </IconButton>
-                        </Box>
-                      </Grid>
+                            {formatRuleLabel(role)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6, md: 4 }}>
+                    <FormControl fullWidth size="small" disabled={readOnly}>
+                      <InputLabel id={`formula-${rule.componentId}`}>Calculation</InputLabel>
+                      <Select
+                        labelId={`formula-${rule.componentId}`}
+                        label="Calculation"
+                        value={rule.formulaType}
+                        onChange={(event) =>
+                          updateRule(rule.componentId, applyFormulaType(rule, event.target.value))
+                        }
+                      >
+                        {getFormulaOptions(rule).map((formula) => {
+                          const automaticRole = getAutomaticFormulaSemanticType(formula);
+                          return (
+                            <MenuItem
+                              key={formula}
+                              value={formula}
+                              disabled={
+                                automaticRole !== null &&
+                                automaticRole !== rule.semanticType &&
+                                usedRoles.has(automaticRole)
+                              }
+                            >
+                              {formatRuleLabel(formula)}
+                            </MenuItem>
+                          );
+                        })}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      type="number"
+                      label={acceptsValue ? (rule.formulaType.startsWith('PERCENTAGE') ? 'Percent' : 'Amount') : 'Automatic'}
+                      disabled={readOnly || !acceptsValue}
+                      value={acceptsValue ? (rule.value ?? '') : ''}
+                      onChange={(event) =>
+                        updateRule(rule.componentId, {
+                          ...rule,
+                          value: event.target.value === '' ? null : Number(event.target.value),
+                        })
+                      }
+                      slotProps={{ htmlInput: { min: 0, step: 0.01 } }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <FormControl
+                      fullWidth
+                      size="small"
+                      disabled={readOnly || rule.formulaType !== 'PERCENTAGE_OF_COMPONENT'}
+                    >
+                      <InputLabel>Basis component</InputLabel>
+                      <Select
+                        label="Basis component"
+                        value={rule.basisComponentId || ''}
+                        onChange={(event) =>
+                          updateRule(rule.componentId, {
+                            ...rule,
+                            basisComponentId: event.target.value || null,
+                          })
+                        }
+                      >
+                        {basisOptions.map((candidate) => (
+                          <MenuItem key={candidate.componentId} value={candidate.componentId}>
+                            {componentNames.get(candidate.componentId)}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  {!readOnly ? (
+                    <Grid size={{ xs: 12 }}>
+                      <Box display="flex" justifyContent="flex-end">
+                        <IconButton
+                          aria-label={`Move ${componentNames.get(rule.componentId)} up`}
+                          disabled={index === 0}
+                          onClick={() => moveRule(rule.componentId, -1)}
+                          sx={{ minWidth: 44, minHeight: 44 }}
+                        >
+                          <ArrowUpward fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          aria-label={`Move ${componentNames.get(rule.componentId)} down`}
+                          disabled={index === rules.length - 1}
+                          onClick={() => moveRule(rule.componentId, 1)}
+                          sx={{ minWidth: 44, minHeight: 44 }}
+                        >
+                          <ArrowDownward fontSize="small" />
+                        </IconButton>
+                        <IconButton
+                          aria-label={`Remove ${componentNames.get(rule.componentId)}`}
+                          color="error"
+                          onClick={() =>
+                            setRules(
+                              formik.values.rules.filter(
+                                (candidate) => candidate.componentId !== rule.componentId
+                              )
+                            )
+                          }
+                          sx={{ minWidth: 44, minHeight: 44 }}
+                        >
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </Grid>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </Box>
-        )}
-      </CardContent>
-    </Card>
+                  ) : null}
+                </Grid>
+              </CardContent>
+            </Card>
+          );
+        })
+      )}
+    </Box>
   );
 }
 
 export default function SalaryTemplateEditor({
   templateId,
-  versionId,
-}: {
-  templateId: string;
-  versionId: string;
-}) {
-  const router = useRouter();
+  mode = 'edit',
+  onClose,
+  onSaved,
+  onDirtyChange,
+}: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canAdd = hasGrantedPermission(
+    permissions,
+    hrPermissions.payroll.settings.salaryTemplateActions.add
+  );
   const canEdit = hasGrantedPermission(
     permissions,
     hrPermissions.payroll.settings.salaryTemplateActions.edit
   );
-  const canPublish = hasGrantedPermission(
-    permissions,
-    hrPermissions.payroll.settings.salaryTemplateActions.publish
-  );
+  const isCreate = mode === 'create';
   const {
     data: template,
     isLoading: templateLoading,
     isError: templateError,
-  } = useGetSalaryTemplateQuery(templateId);
-  const {
-    data: catalogData,
-    isLoading: catalogLoading,
-    isError: catalogError,
-  } = useGetSalaryTemplateComponentCatalogQuery();
-  const [updateDraft, updateState] = useUpdateSalaryTemplateDraftMutation();
-  const [publish, publishState] = usePublishSalaryTemplateMutation();
+    refetch,
+  } = useGetSalaryTemplateQuery(templateId || '', { skip: !templateId });
+  const { data: catalogData, isLoading: catalogLoading, isError: catalogError } =
+    useGetSalaryTemplateComponentCatalogQuery();
+  const { data: pfData, isError: pfError } = useGetPFQuery({});
+  const { data: versionData } = useGetSalaryTemplateVersionsQuery(templateId || '', {
+    skip: !templateId,
+  });
+  const [createTemplate, createState] = useCreateSalaryTemplateMutation();
+  const [updateTemplate, updateState] = useUpdateSalaryTemplateMutation();
+  const [calculate, calculationState] = useCalculateSalaryTemplateMutation();
+  const [activeStep, setActiveStep] = useState(0);
   const [addKind, setAddKind] = useState<SalaryTemplateRule['lineKind'] | null>(null);
   const [selectedComponent, setSelectedComponent] =
     useState<SalaryTemplateComponentCatalogItem | null>(null);
   const [serverError, setServerError] = useState('');
+  const [sampleAmount, setSampleAmount] = useState(50000);
+  const operationKeyRef = useRef('');
+  const readOnly = mode === 'view' || template?.status === 'ARCHIVED' || (isCreate ? !canAdd : !canEdit);
+  const version = template?.editableVersion;
   const initialValues = useMemo<EditorValues>(
     () => ({
       name: template?.name || '',
       description: template?.description || '',
-      defaultSalaryBasis: template?.latest.defaultSalaryBasis || 'EMPLOYER_COST',
-      defaultProtectionPolicy: template?.latest.defaultProtectionPolicy || 'PROTECT_EMPLOYER_COST',
-      rules: template?.latest.rules || [],
+      defaultSalaryBasis: version?.defaultSalaryBasis || 'EMPLOYER_COST',
+      defaultProtectionPolicy: version?.defaultProtectionPolicy || 'PROTECT_EMPLOYER_COST',
+      defaultPfApplicable: version?.defaultPfApplicable || false,
+      defaultPfRuleId: version?.defaultPfRuleId || '',
+      rules: version?.rules || [],
     }),
-    [template]
+    [template, version]
   );
-
   const formik = useFormik<EditorValues>({
     initialValues,
     enableReinitialize: true,
     validationSchema: editorSchema,
-    onSubmit: async (values) => {
-      await saveDraft(values, true);
-    },
+    onSubmit: () => undefined,
   });
+  const closeEditor = () => onClose?.();
   const componentNames = useMemo(
     () => new Map((catalogData?.items || []).map((item) => [item.componentId, item.name])),
     [catalogData]
   );
-  const publishIssues = getPublishIssues(formik.values.rules);
-  const isDraft = template?.latest.status === 'DRAFT';
-  const readOnly = !canEdit || !isDraft;
+  const pfRules = (pfData?.items || []).filter((rule: any) => rule.isActive);
   const selectedIds = new Set(formik.values.rules.map((rule) => rule.componentId));
   const availableComponents = (catalogData?.items || []).filter(
     (item) => item.lineKind === addKind && !selectedIds.has(item.componentId)
   );
+  const ruleIssues = getSaveIssues(formik.values.rules);
+  const pfFormulaPresent = formik.values.rules.some(
+    (rule) => rule.formulaType === 'EMPLOYEE_PROVIDENT_FUND'
+  );
+  const issues = [
+    ...ruleIssues,
+    ...(pfFormulaPresent && !formik.values.defaultPfRuleId
+      ? ['Choose an active PF rule for the PF formula.']
+      : []),
+    ...(formik.values.defaultPfApplicable && !pfFormulaPresent
+      ? ['Add a PF deduction when PF applies by default.']
+      : []),
+  ];
 
-  async function saveDraft(values: EditorValues, showSuccess: boolean) {
+  useEffect(() => {
+    if (!formik.values.defaultPfApplicable && !pfFormulaPresent) {
+      formik.setFieldValue('defaultPfRuleId', '', false);
+    }
+    // Formik is intentionally omitted to avoid resetting touched state when rules change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pfFormulaPresent]);
+
+  useEffect(() => onDirtyChange?.(formik.dirty), [formik.dirty, onDirtyChange]);
+
+  const save = async () => {
+    const errors = await formik.validateForm();
+    if (Object.keys(errors).length > 0 || issues.length > 0 || readOnly) {
+      formik.setTouched({ name: true, defaultPfRuleId: true });
+      return;
+    }
     setServerError('');
+    operationKeyRef.current ||= operationKey();
+    const body = {
+      name: formik.values.name.trim(),
+      description: formik.values.description.trim() || null,
+      defaultSalaryBasis: formik.values.defaultSalaryBasis,
+      defaultProtectionPolicy: formik.values.defaultProtectionPolicy,
+      defaultPfApplicable: formik.values.defaultPfApplicable,
+      defaultPfRuleId: formik.values.defaultPfRuleId || null,
+      rules: normalizeRuleOrder(formik.values.rules),
+      idempotencyKey: operationKeyRef.current,
+      expectedActiveVersionId: template?.activeVersion ? template.editableVersion.id : null,
+      concurrencyStamp: template?.concurrencyStamp || null,
+    };
     try {
-      const result = await updateDraft({
-        templateId,
-        versionId,
-        name: values.name.trim(),
-        description: values.description.trim() || null,
-        defaultSalaryBasis: values.defaultSalaryBasis,
-        defaultProtectionPolicy: values.defaultProtectionPolicy,
-        rules: normalizeRuleOrder(values.rules),
-      }).unwrap();
+      const result = isCreate
+        ? await createTemplate(body).unwrap()
+        : await updateTemplate({ templateId: templateId!, body }).unwrap();
+      operationKeyRef.current = '';
+      onDirtyChange?.(false);
       formik.resetForm({
         values: {
           name: result.name,
           description: result.description || '',
-          defaultSalaryBasis: result.latest.defaultSalaryBasis,
-          defaultProtectionPolicy: result.latest.defaultProtectionPolicy,
-          rules: result.latest.rules,
+          defaultSalaryBasis: result.editableVersion.defaultSalaryBasis,
+          defaultProtectionPolicy: result.editableVersion.defaultProtectionPolicy,
+          defaultPfApplicable: result.editableVersion.defaultPfApplicable,
+          defaultPfRuleId: result.editableVersion.defaultPfRuleId || '',
+          rules: result.editableVersion.rules,
         },
       });
-      if (showSuccess) toast.success('Draft saved.');
-      return true;
+      toast.success(
+        isCreate
+          ? 'Salary template is active for new salary setups.'
+          : `Version ${result.activeVersion} is active for new salary setups. Existing employees are unchanged.`
+      );
+      if (onSaved) onSaved();
+      else onClose?.();
     } catch (error: any) {
-      const message = parseApiProblemDetail(error).detail;
-      setServerError(message);
-      toast.error(message);
-      return false;
-    }
-  }
-
-  const handlePublish = async () => {
-    if (publishIssues.length) return;
-    if (canEdit && formik.dirty) {
-      const saved = await saveDraft(formik.values, false);
-      if (!saved) return;
-    }
-    try {
-      await publish({ templateId, versionId }).unwrap();
-      toast.success('Template published.');
-      router.push(hrPaths.payroll.settings.salaryTemplates);
-    } catch (error: any) {
-      const message = parseApiProblemDetail(error).detail;
-      setServerError(message);
-      toast.error(message);
+      const parsed = parseApiProblemDetail(error);
+      const conflict = error?.status === 409 || parsed.detail.toLowerCase().includes('conflict');
+      setServerError(
+        conflict
+          ? 'Another administrator changed this template. Reload the latest version, review your edits, and save again.'
+          : parsed.detail
+      );
     }
   };
 
-  const moveRule = (componentId: string, direction: -1 | 1) => {
-    const rule = formik.values.rules.find((item) => item.componentId === componentId);
-    if (!rule) return;
-    const sameKind = formik.values.rules.filter((item) => item.lineKind === rule.lineKind);
-    const index = sameKind.findIndex((item) => item.componentId === componentId);
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= sameKind.length) return;
-    [sameKind[index], sameKind[targetIndex]] = [sameKind[targetIndex], sameKind[index]];
-    const otherKind = formik.values.rules.filter((item) => item.lineKind !== rule.lineKind);
-    const nextRules =
-      rule.lineKind === 'EARNING' ? [...sameKind, ...otherKind] : [...otherKind, ...sameKind];
-    formik.setFieldValue('rules', normalizeRuleOrder(nextRules));
+  const runSample = async () => {
+    if (!version || template?.status !== 'ACTIVE') return;
+    await calculate({
+      templateVersionId: version.id,
+      salaryBasis: formik.values.defaultSalaryBasis,
+      protectionPolicy: formik.values.defaultProtectionPolicy,
+      monthlyAmount: sampleAmount,
+      effectiveMonth: `${new Date().toISOString().slice(0, 7)}-01T00:00:00.000Z`,
+      pfApplicable: formik.values.defaultPfApplicable,
+      pfRuleId: formik.values.defaultPfRuleId || null,
+      overrides: [],
+      customizationReason: null,
+    });
   };
 
-  const removeRule = (componentId: string) => {
-    formik.setFieldValue(
-      'rules',
-      normalizeRuleOrder(formik.values.rules.filter((rule) => rule.componentId !== componentId))
-    );
-  };
-
-  const closeAddDialog = () => {
-    setAddKind(null);
-    setSelectedComponent(null);
-  };
-
-  if (templateLoading || catalogLoading) {
+  if ((!isCreate && templateLoading) || catalogLoading) {
     return (
-      <Box display="flex" justifyContent="center" py={8}>
-        <CircularProgress />
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight={320}>
+        <CircularProgress aria-label="Loading salary template" />
       </Box>
     );
   }
-
-  if (templateError || catalogError || !template || template.latest.id !== versionId) {
-    return <Alert severity="error">Unable to load this salary template draft.</Alert>;
+  if ((!isCreate && (templateError || !template)) || catalogError) {
+    return <Alert severity="error">Unable to load the salary template. Try again.</Alert>;
   }
+
+  const renderStep = () => {
+    if (activeStep === 0) {
+      return (
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12 }}>
+            <Alert severity="info">
+              Saving creates a new active version for future salary setups. Existing employee salary revisions stay unchanged.
+            </Alert>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              autoFocus
+              label="Template name"
+              disabled={readOnly}
+              {...formik.getFieldProps('name')}
+              error={formik.touched.name && Boolean(formik.errors.name)}
+              helperText={formik.touched.name && formik.errors.name}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              label="Description"
+              disabled={readOnly}
+              {...formik.getFieldProps('description')}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormControl fullWidth disabled={readOnly}>
+              <InputLabel>Default salary basis</InputLabel>
+              <Select label="Default salary basis" {...formik.getFieldProps('defaultSalaryBasis')}>
+                <MenuItem value="EMPLOYER_COST">Employer cost</MenuItem>
+                <MenuItem value="GROSS">Gross salary</MenuItem>
+                <MenuItem value="TAKE_HOME">Take-home salary</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <FormControl fullWidth disabled={readOnly}>
+              <InputLabel>Protection policy</InputLabel>
+              <Select label="Protection policy" {...formik.getFieldProps('defaultProtectionPolicy')}>
+                <MenuItem value="PROTECT_EMPLOYER_COST">Protect employer cost</MenuItem>
+                <MenuItem value="PROTECT_GROSS">Protect gross salary</MenuItem>
+                <MenuItem value="PROTECT_TAKE_HOME">Protect take-home salary</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+      );
+    }
+    if (activeStep === 1) {
+      return (
+        <RuleSection
+          title="Earnings"
+          lineKind="EARNING"
+          formik={formik}
+          componentNames={componentNames}
+          readOnly={readOnly}
+          onAdd={() => setAddKind('EARNING')}
+        />
+      );
+    }
+    if (activeStep === 2) {
+      return (
+        <Box display="grid" gap={2.5}>
+          <RuleSection
+            title="Deductions"
+            lineKind="DEDUCTION"
+            formik={formik}
+            componentNames={componentNames}
+            readOnly={readOnly}
+            onAdd={() => setAddKind('DEDUCTION')}
+          />
+          <Card variant="outlined">
+            <CardContent>
+              <Typography variant="h6" mb={0.5}>Statutory defaults</Typography>
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                PF can default from this version. Professional Tax and ESI always use effective statutory rules.
+              </Typography>
+              <Grid container spacing={2}>
+                <Grid size={{ xs: 12, md: 5 }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formik.values.defaultPfApplicable}
+                        disabled={readOnly}
+                        onChange={(_, checked) => formik.setFieldValue('defaultPfApplicable', checked)}
+                        inputProps={{ 'aria-label': 'PF applicable by default' }}
+                      />
+                    }
+                    label="PF applicable by default"
+                  />
+                </Grid>
+                <Grid size={{ xs: 12, md: 7 }}>
+                  <FormControl fullWidth disabled={readOnly || !pfFormulaPresent || pfError}>
+                    <InputLabel>Default PF rule</InputLabel>
+                    <Select
+                      label="Default PF rule"
+                      {...formik.getFieldProps('defaultPfRuleId')}
+                      error={formik.touched.defaultPfRuleId && Boolean(formik.errors.defaultPfRuleId)}
+                    >
+                      {pfRules.map((rule: any) => (
+                        <MenuItem key={rule.id} value={rule.id}>{rule.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+              {pfError ? <Alert severity="error" sx={{ mt: 2 }}>PF rules could not be loaded.</Alert> : null}
+              <Alert severity="info" sx={{ mt: 2 }}>
+                ESI is system-managed. Eligibility and both contributions are recalculated from establishment, enrollment, wage classifications, effective month, and current rules. ESI cannot be edited here.
+              </Alert>
+            </CardContent>
+          </Card>
+        </Box>
+      );
+    }
+    const calculation = calculationState.data;
+    return (
+      <Box display="grid" gap={2}>
+        {serverError ? (
+          <Alert
+            severity="error"
+            action={templateId ? <Button onClick={() => refetch()}>Reload</Button> : undefined}
+          >
+            {serverError}
+          </Alert>
+        ) : null}
+        {issues.length ? (
+          <Alert severity="warning">
+            <Typography variant="subtitle2">Complete these items before saving:</Typography>
+            <Box component="ul" sx={{ pl: 2.5, mb: 0 }}>
+              {issues.map((issue) => <li key={issue}>{issue}</li>)}
+            </Box>
+          </Alert>
+        ) : (
+          <Alert severity="success">This template is ready to save as the active version.</Alert>
+        )}
+        <Card variant="outlined">
+          <CardContent>
+            <Typography variant="h6">Sample calculation</Typography>
+            <Typography variant="body2" color="text.secondary" mb={2}>
+              Check monthly and annual outcomes before saving. A new template can be sampled after its first save.
+            </Typography>
+            <Box display="flex" gap={1.5} flexWrap="wrap" alignItems="flex-start">
+              <TextField
+                label="Sample monthly amount"
+                type="number"
+                value={sampleAmount}
+                onChange={(event) => setSampleAmount(Number(event.target.value))}
+                slotProps={{ htmlInput: { min: 1, step: 100 } }}
+              />
+              <Button
+                variant="outlined"
+                onClick={runSample}
+                disabled={isCreate || template?.status !== 'ACTIVE' || calculationState.isLoading || sampleAmount <= 0}
+                sx={{ minHeight: 56 }}
+              >
+                Calculate
+              </Button>
+            </Box>
+            {calculation ? (
+              <Grid container spacing={1.5} mt={0.5} aria-live="polite">
+                {[
+                  ['Gross', calculation.grossSalary],
+                  ['Deductions', calculation.totalDeductions],
+                  ['Net salary', calculation.netSalary],
+                  ['Employer cost', calculation.employerCost],
+                ].map(([label, amount]) => (
+                  <Grid key={String(label)} size={{ xs: 6, md: 3 }}>
+                    <Typography variant="caption" color="text.secondary">{label}</Typography>
+                    <Typography variant="subtitle1">{formatCurrency(Number(amount))}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {formatCurrency(Number(amount) * 12)} yearly
+                    </Typography>
+                  </Grid>
+                ))}
+              </Grid>
+            ) : null}
+          </CardContent>
+        </Card>
+        {!isCreate && versionData?.items.length ? (
+          <Box>
+            <Typography variant="subtitle2" mb={1}>Version history</Typography>
+            <Box display="flex" gap={1} flexWrap="wrap">
+              {versionData.items.map((item) => (
+                <Chip key={item.id} label={`Version ${item.versionNumber} - ${formatRuleLabel(item.status)}`} />
+              ))}
+            </Box>
+          </Box>
+        ) : null}
+      </Box>
+    );
+  };
 
   return (
-    <Box display="grid" gap={2.5}>
-      <Box
-        display="flex"
-        alignItems={{ xs: 'stretch', md: 'center' }}
-        justifyContent="space-between"
-        gap={2}
-        flexDirection={{ xs: 'column', md: 'row' }}
-      >
-        <Button
-          startIcon={<ArrowBack />}
-          onClick={() => router.push(hrPaths.payroll.settings.salaryTemplates)}
-          sx={{ alignSelf: 'flex-start' }}
-        >
-          Salary templates
-        </Button>
-        <Box display="flex" gap={1} justifyContent="flex-end">
-          {canEdit ? (
-            <Button
-              variant="outlined"
-              startIcon={<Save />}
-              disabled={readOnly || updateState.isLoading}
-              onClick={() => formik.handleSubmit()}
-            >
-              Save draft
-            </Button>
-          ) : null}
-          {canPublish ? (
-            <Button
-              variant="contained"
-              startIcon={<Publish />}
-              disabled={
-                !isDraft ||
-                publishIssues.length > 0 ||
-                updateState.isLoading ||
-                publishState.isLoading
-              }
-              onClick={handlePublish}
-            >
-              Publish
-            </Button>
-          ) : null}
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <Box sx={{ px: { xs: 2, md: 3 }, py: 2, display: 'flex', alignItems: 'center', gap: 1, borderBottom: 1, borderColor: 'divider' }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
+            <Typography variant="h5">{isCreate ? 'Create salary template' : template?.name}</Typography>
+            {readOnly ? <Chip size="small" label="Read only" /> : null}
+            {template?.isDefault ? <Chip size="small" color="primary" label="School default" /> : null}
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            {template?.status === 'NEEDS_SETUP' ? 'Complete setup to create active version 1.' : 'Reusable salary setup for future employee assignments.'}
+          </Typography>
         </Box>
+        <IconButton aria-label="Close salary template" onClick={closeEditor} sx={{ minWidth: 44, minHeight: 44 }}>
+          <Close />
+        </IconButton>
       </Box>
-
-      {serverError ? <Alert severity="error">{serverError}</Alert> : null}
-      {isDraft && publishIssues.length ? (
-        <Alert severity="warning">
-          <Typography variant="subtitle2" mb={0.5}>
-            Complete these items before publishing:
-          </Typography>
-          <Box component="ul" sx={{ pl: 2.5, my: 0 }}>
-            {publishIssues.map((issue) => (
-              <li key={issue}>{issue}</li>
-            ))}
-          </Box>
-        </Alert>
-      ) : isDraft ? (
-        <Alert severity="success">
-          This draft is ready to publish. A balancing earning is optional. Without one, earnings must
-          exactly equal gross salary when compensation is calculated. Basic at 100% needs no balancing allowance.
-        </Alert>
-      ) : null}
-
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="h6" mb={2}>
-            Template details
-          </Typography>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <TextField
-                fullWidth
-                label="Template name"
-                disabled={readOnly}
-                {...formik.getFieldProps('name')}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 7 }}>
-              <TextField
-                fullWidth
-                label="Description"
-                disabled={readOnly}
-                {...formik.getFieldProps('description')}
-                error={formik.touched.description && Boolean(formik.errors.description)}
-                helperText={formik.touched.description && formik.errors.description}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth disabled={readOnly}>
-                <InputLabel>Default quote basis</InputLabel>
-                <Select label="Default quote basis" {...formik.getFieldProps('defaultSalaryBasis')}>
-                  <MenuItem value="EMPLOYER_COST">Employer cost</MenuItem>
-                  <MenuItem value="GROSS">Gross salary</MenuItem>
-                  <MenuItem value="TAKE_HOME">Take-home salary</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth disabled={readOnly}>
-                <InputLabel>Default protection</InputLabel>
-                <Select
-                  label="Default protection"
-                  {...formik.getFieldProps('defaultProtectionPolicy')}
-                >
-                  <MenuItem value="PROTECT_EMPLOYER_COST">Protect employer cost</MenuItem>
-                  <MenuItem value="PROTECT_GROSS">Protect gross salary</MenuItem>
-                  <MenuItem value="PROTECT_TAKE_HOME">Protect take-home salary</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
-        </CardContent>
-      </Card>
-
-      <SalaryTemplateRuleSection
-        title="Earnings"
-        lineKind="EARNING"
-        formik={formik}
-        componentNames={componentNames}
-        canEdit={!readOnly}
-        onAdd={() => setAddKind('EARNING')}
-        onMove={moveRule}
-        onRemove={removeRule}
-      />
-      <SalaryTemplateRuleSection
-        title="Deductions"
-        lineKind="DEDUCTION"
-        formik={formik}
-        componentNames={componentNames}
-        canEdit={!readOnly}
-        onAdd={() => setAddKind('DEDUCTION')}
-        onMove={moveRule}
-        onRemove={removeRule}
-      />
-
-      <Card variant="outlined">
-        <CardContent>
-          <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="flex-start"
-            gap={2}
-            flexWrap="wrap"
-          >
-            <Box>
-              <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                <Typography variant="h6">System-Managed Statutory Components</Typography>
-                <Chip size="small" color="info" label="Automatic" />
-              </Box>
-              <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 760 }}>
-                ESI is evaluated during payroll from statutory wages, employee coverage, and the
-                effective rule. It does not need to be copied into this template and cannot be
-                bypassed by removing a template row.
-              </Typography>
-            </Box>
-            <Button
-              component={Link}
-              href={hrPaths.payroll.settings.statutorySchemes}
-              variant="outlined"
-            >
-              Review ESI Setup
-            </Button>
-          </Box>
-        </CardContent>
-      </Card>
-
-      <Divider />
-      <Box display="flex" justifyContent="flex-end" gap={1} pb={2}>
-        <Button
-          variant="outlined"
-          onClick={() => router.push(hrPaths.payroll.settings.salaryTemplates)}
-        >
-          Back
-        </Button>
-        {canEdit ? (
-          <Button
-            variant="contained"
-            startIcon={<Save />}
-            disabled={readOnly || updateState.isLoading}
-            onClick={() => formik.handleSubmit()}
-          >
-            Save draft
-          </Button>
-        ) : null}
+      <Box sx={{ flex: 1, minHeight: 0 }}>
+        <CustomStepperWithFormik
+          scrollbarHeight="100%"
+          showSaveButton={false}
+          formikInstance={formik}
+          initialValues={initialValues}
+          validationSchema={editorSchema}
+          steps={steps}
+          activeStep={activeStep}
+          handleBack={() => setActiveStep((step) => Math.max(0, step - 1))}
+          handleNext={(isLastStep) => {
+            if (isLastStep) {
+              if (readOnly) closeEditor();
+              else save();
+            } else setActiveStep((step) => Math.min(steps.length - 1, step + 1));
+          }}
+          onStepClick={(index) => setActiveStep(index)}
+          isStepClickable={() => true}
+          validateForwardStepClick
+          validateFinalStep
+          finalButtonLabel={readOnly ? 'Close' : 'Save changes'}
+          disableSubmit={!readOnly && (issues.length > 0 || createState.isLoading || updateState.isLoading)}
+          saveAndNextButtonProps={{ sx: { minHeight: 44 } }}
+          backButtonProps={{ sx: { minHeight: 44 } }}
+          renderItem={() => (
+            <Box sx={{ p: { xs: 2, md: 3 }, pb: 10, maxWidth: 1100, mx: 'auto' }}>{renderStep()}</Box>
+          )}
+        />
       </Box>
 
       <CustomDialog
         open={Boolean(addKind)}
-        handleClose={closeAddDialog}
+        handleClose={() => { setAddKind(null); setSelectedComponent(null); }}
         title={`Add ${addKind === 'EARNING' ? 'earning' : 'deduction'} component`}
         maxWidth="sm"
         hasForm={false}
       >
         <DialogScrollContent>
-          <Typography variant="body2" color="text.secondary" mb={2}>
-            Select an active payroll component. Its formula will be defined only for this salary
-            template.
-          </Typography>
           <Autocomplete
             options={availableComponents}
             value={selectedComponent}
-            onChange={(_event, value) => setSelectedComponent(value)}
+            onChange={(_, value) => setSelectedComponent(value)}
             getOptionLabel={(option) => option.name}
             isOptionEqualToValue={(option, value) => option.componentId === value.componentId}
-            renderInput={(params) => (
-              <TextField {...params} label="Payroll component" placeholder="Search components" />
-            )}
-            noOptionsText="No available components"
+            renderInput={(params) => <TextField {...params} label="Payroll component" />}
           />
         </DialogScrollContent>
         <DialogActions>
-          <Button variant="outlined" size="small" onClick={closeAddDialog}>
-            Cancel
-          </Button>
+          <Button onClick={() => { setAddKind(null); setSelectedComponent(null); }}>Cancel</Button>
           <Button
             variant="contained"
-            size="small"
             disabled={!selectedComponent}
             onClick={() => {
               if (!selectedComponent) return;
@@ -715,7 +766,8 @@ export default function SalaryTemplateEditor({
                   createTemplateRule(selectedComponent, formik.values.rules.length),
                 ])
               );
-              closeAddDialog();
+              setAddKind(null);
+              setSelectedComponent(null);
             }}
           >
             Add component
