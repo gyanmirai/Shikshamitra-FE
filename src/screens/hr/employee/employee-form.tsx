@@ -390,7 +390,7 @@ const steps = [
   'Academic Permission',
 ];
 
-const EmployeeFrom = ({ editData, handleClose }: any) => {
+const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
   const dispatch = useDispatch();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -1082,6 +1082,13 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       }
       if (isLastStep && saveSucceeded) {
         setIsSubmitted(true);
+        if (!editData && resolvedEmployeeId && onCreated) {
+          onCreated({
+            id: resolvedEmployeeId,
+            name: [values.firstName, values.middleName, values.lastName].filter(Boolean).join(' '),
+          });
+          return;
+        }
         handleClose(null, true);
         return;
       }
@@ -1094,6 +1101,7 @@ const EmployeeFrom = ({ editData, handleClose }: any) => {
       currentYear?.id,
       handleBasicInformation,
       handleClose,
+      onCreated,
       handelUpdateEmployee,
       handleFamilyInformation,
       handleAdditionalDetails,

@@ -16,6 +16,13 @@ export type SalaryTemplateRule = {
   displayOrder: number;
 };
 
+export type SalaryRuleOverride = {
+  componentId: string;
+  formulaType: string;
+  value?: number | null;
+  basisComponentId?: string | null;
+};
+
 export type SalaryTemplateComponentCatalogItem = {
   componentId: string;
   name: string;
@@ -23,26 +30,42 @@ export type SalaryTemplateComponentCatalogItem = {
   lineKind: 'EARNING' | 'DEDUCTION';
 };
 
+export type SalaryTemplateVersion = {
+  id: string;
+  versionNumber: number;
+  status: 'ACTIVE' | 'REPLACED' | 'RECOVERED';
+  activatedAt?: string | null;
+  defaultSalaryBasis: SalaryBasis;
+  defaultProtectionPolicy: ProtectionPolicy;
+  defaultPfApplicable: boolean;
+  defaultPfRuleId?: string | null;
+  rules: SalaryTemplateRule[];
+};
+
 export type SalaryTemplate = {
   id: string;
   name: string;
   description?: string | null;
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  status: 'ACTIVE' | 'NEEDS_SETUP' | 'ARCHIVED';
   isDefault: boolean;
-  latestVersion: number;
-  publishedVersion?: number | null;
-  latest: SalaryTemplateVersion;
-  published?: SalaryTemplateVersion | null;
+  activeVersion?: number | null;
+  versionCount: number;
+  updatedAt: string;
+  concurrencyStamp: string;
+  editableVersion: SalaryTemplateVersion;
 };
 
-export type SalaryTemplateVersion = {
-  id: string;
-  versionNumber: number;
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
-  publishedAt?: string | null;
+export type SaveSalaryTemplate = {
+  name: string;
+  description?: string | null;
   defaultSalaryBasis: SalaryBasis;
   defaultProtectionPolicy: ProtectionPolicy;
+  defaultPfApplicable: boolean;
+  defaultPfRuleId?: string | null;
   rules: SalaryTemplateRule[];
+  idempotencyKey: string;
+  expectedActiveVersionId?: string | null;
+  concurrencyStamp?: string | null;
 };
 
 export type CalculatedSalaryLine = {
@@ -53,21 +76,15 @@ export type CalculatedSalaryLine = {
   semanticType: string;
   formulaType: string;
   isStatutory: boolean;
-  lineSource: 'TEMPLATE' | 'SYSTEM_STATUTORY';
+  lineSource: 'TEMPLATE' | 'CUSTOMIZED' | 'SYSTEM_STATUTORY';
   persistable: boolean;
-};
-
-export type SalaryTemplateTargetResult = {
-  requested: number;
-  achieved: number;
-  difference: number;
-  isExact: boolean;
 };
 
 export type SalaryTemplateEsiPreview = {
   isConfigured: boolean;
   isCovered: boolean;
   canCalculate: boolean;
+  registrationPending: boolean;
   coverageDecision?: string | null;
   statutoryWages: number;
   wageCeiling: number;
@@ -94,7 +111,7 @@ export type SalaryTemplateCalculation = {
   employerContributionTotal: number;
   employerCost: number;
   protectedMonthlyAmount: number;
-  targetResult: SalaryTemplateTargetResult;
+  targetResult: { requested: number; achieved: number; difference: number; isExact: boolean };
   employeeStateInsurance: SalaryTemplateEsiPreview;
   earnings: CalculatedSalaryLine[];
   deductions: CalculatedSalaryLine[];
@@ -110,23 +127,18 @@ export type SalaryTemplateCalculation = {
 export const salaryTemplateEndpoint = '/payroll/salary-templates';
 export const salaryTemplateComponentCatalogEndpoint = `${salaryTemplateEndpoint}/component-catalog`;
 
-export const buildCreateSalaryTemplateRequest = (body: {
-  name: string;
-  description?: string | null;
-}) => ({
-  url: salaryTemplateEndpoint,
-  method: 'POST' as const,
+export const buildSaveSalaryTemplateRequest = (
+  body: SaveSalaryTemplate,
+  templateId?: string
+) => ({
+  url: templateId ? `${salaryTemplateEndpoint}/${templateId}` : salaryTemplateEndpoint,
+  method: templateId ? ('PUT' as const) : ('POST' as const),
   body,
 });
 
 export const buildSalaryTemplateCalculationRequest = ({
   templateVersionId,
-  salaryBasis,
-  monthlyAmount,
-  protectionPolicy,
-  effectiveMonth,
-  employeeId,
-  pfRuleId,
+  ...body
 }: {
   templateVersionId: string;
   salaryBasis: SalaryBasis;
@@ -134,19 +146,14 @@ export const buildSalaryTemplateCalculationRequest = ({
   monthlyAmount: number;
   effectiveMonth: string;
   employeeId?: string | null;
+  pfApplicable: boolean;
   pfRuleId?: string | null;
+  overrides?: SalaryRuleOverride[];
+  customizationReason?: string | null;
 }) => ({
   url: `${salaryTemplateEndpoint}/versions/${templateVersionId}/calculate`,
   method: 'POST' as const,
-  body: {
-    salaryBasis,
-    protectionPolicy,
-    monthlyAmount,
-    effectiveMonth,
-    employeeId,
-    pfRuleId,
-    statutoryProfile: 'IN-GJ',
-  },
+  body: { ...body, statutoryProfile: 'IN-GJ' },
 });
 
 export const salaryTemplateApi = api.injectEndpoints({
@@ -155,8 +162,16 @@ export const salaryTemplateApi = api.injectEndpoints({
       query: () => salaryTemplateEndpoint,
       providesTags: [payrollStructureType.salaryTemplate],
     }),
+    getActiveSalaryTemplates: builder.query<{ items: SalaryTemplate[] }, void>({
+      query: () => `${salaryTemplateEndpoint}/active`,
+      providesTags: [payrollStructureType.salaryTemplate],
+    }),
     getSalaryTemplate: builder.query<SalaryTemplate, string>({
       query: (id) => `${salaryTemplateEndpoint}/${id}`,
+      providesTags: [payrollStructureType.salaryTemplate],
+    }),
+    getSalaryTemplateVersions: builder.query<{ items: SalaryTemplateVersion[] }, string>({
+      query: (id) => `${salaryTemplateEndpoint}/${id}/versions`,
       providesTags: [payrollStructureType.salaryTemplate],
     }),
     getSalaryTemplateComponentCatalog: builder.query<
@@ -166,83 +181,33 @@ export const salaryTemplateApi = api.injectEndpoints({
       query: () => salaryTemplateComponentCatalogEndpoint,
       providesTags: [payrollStructureType.salaryTemplate],
     }),
-    getPublishedSalaryTemplates: builder.query<{ items: SalaryTemplate[] }, void>({
-      query: () => `${salaryTemplateEndpoint}/published`,
-      providesTags: [payrollStructureType.salaryTemplate],
-    }),
     calculateSalaryTemplate: builder.mutation<
       SalaryTemplateCalculation,
-      {
-        templateVersionId: string;
-        salaryBasis: SalaryBasis;
-        protectionPolicy: ProtectionPolicy;
-        monthlyAmount: number;
-        effectiveMonth: string;
-        employeeId?: string | null;
-        pfRuleId?: string | null;
-      }
-    >({
-      query: buildSalaryTemplateCalculationRequest,
+      Parameters<typeof buildSalaryTemplateCalculationRequest>[0]
+    >({ query: buildSalaryTemplateCalculationRequest }),
+    createSalaryTemplate: builder.mutation<SalaryTemplate, SaveSalaryTemplate>({
+      query: (body) => buildSaveSalaryTemplateRequest(body),
+      invalidatesTags: [payrollStructureType.salaryTemplate],
     }),
-    createSalaryTemplate: builder.mutation<
+    updateSalaryTemplate: builder.mutation<
       SalaryTemplate,
-      { name: string; description?: string | null }
+      { templateId: string; body: SaveSalaryTemplate }
     >({
-      query: buildCreateSalaryTemplateRequest,
+      query: ({ templateId, body }) => buildSaveSalaryTemplateRequest(body, templateId),
       invalidatesTags: [payrollStructureType.salaryTemplate],
     }),
     setDefaultSalaryTemplate: builder.mutation<SalaryTemplate, string>({
-      query: (id) => ({
-        url: `/payroll/salary-templates/${id}/set-default`,
-        method: 'POST',
-      }),
+      query: (id) => ({ url: `${salaryTemplateEndpoint}/${id}/set-default`, method: 'POST' }),
       invalidatesTags: [payrollStructureType.salaryTemplate],
     }),
-    publishSalaryTemplate: builder.mutation<
-      SalaryTemplate,
-      { templateId: string; versionId: string }
+    archiveSalaryTemplate: builder.mutation<
+      void,
+      { id: string; replacementDefaultTemplateId?: string | null }
     >({
-      query: ({ templateId, versionId }) => ({
-        url: `/payroll/salary-templates/${templateId}/versions/${versionId}/publish`,
-        method: 'POST',
-      }),
-      invalidatesTags: [payrollStructureType.salaryTemplate],
-    }),
-    archiveSalaryTemplate: builder.mutation<void, string>({
-      query: (id) => ({ url: `/payroll/salary-templates/${id}`, method: 'DELETE' }),
-      invalidatesTags: [payrollStructureType.salaryTemplate],
-    }),
-    cloneSalaryTemplate: builder.mutation<SalaryTemplate, { id: string; name: string }>({
-      query: ({ id, name }) => ({
-        url: `/payroll/salary-templates/${id}/clone`,
-        method: 'POST',
-        params: { name },
-      }),
-      invalidatesTags: [payrollStructureType.salaryTemplate],
-    }),
-    createSalaryTemplateVersion: builder.mutation<SalaryTemplate, string>({
-      query: (id) => ({
-        url: `/payroll/salary-templates/${id}/versions`,
-        method: 'POST',
-      }),
-      invalidatesTags: [payrollStructureType.salaryTemplate],
-    }),
-    updateSalaryTemplateDraft: builder.mutation<
-      SalaryTemplate,
-      {
-        templateId: string;
-        versionId: string;
-        name: string;
-        description?: string | null;
-        defaultSalaryBasis: SalaryBasis;
-        defaultProtectionPolicy: ProtectionPolicy;
-        rules: SalaryTemplateRule[];
-      }
-    >({
-      query: ({ templateId, versionId, ...body }) => ({
-        url: `/payroll/salary-templates/${templateId}/versions/${versionId}`,
-        method: 'PUT',
-        body,
+      query: ({ id, replacementDefaultTemplateId }) => ({
+        url: `${salaryTemplateEndpoint}/${id}`,
+        method: 'DELETE',
+        params: replacementDefaultTemplateId ? { replacementDefaultTemplateId } : undefined,
       }),
       invalidatesTags: [payrollStructureType.salaryTemplate],
     }),
@@ -252,15 +217,13 @@ export const salaryTemplateApi = api.injectEndpoints({
 
 export const {
   useGetSalaryTemplatesQuery,
+  useGetActiveSalaryTemplatesQuery,
   useGetSalaryTemplateQuery,
+  useGetSalaryTemplateVersionsQuery,
   useGetSalaryTemplateComponentCatalogQuery,
-  useGetPublishedSalaryTemplatesQuery,
   useCreateSalaryTemplateMutation,
+  useUpdateSalaryTemplateMutation,
   useCalculateSalaryTemplateMutation,
   useSetDefaultSalaryTemplateMutation,
-  usePublishSalaryTemplateMutation,
   useArchiveSalaryTemplateMutation,
-  useCloneSalaryTemplateMutation,
-  useCreateSalaryTemplateVersionMutation,
-  useUpdateSalaryTemplateDraftMutation,
 } = salaryTemplateApi;

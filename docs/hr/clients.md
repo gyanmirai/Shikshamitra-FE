@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-13
+updated_on: 2026-09-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,7 +24,7 @@ Use this table before searching `src/redux`:
 | `employee-icard-template-api.ts`   | I-card templates, assets, and PDF download                                                    | HR employees and I-card         |
 | `employee-payroll-api.ts`          | Earning components, deduction components, provident fund, professional tax, pay elements      | HR payroll settings             |
 | `employee-salary-structure-api.ts` | Employee salary structure get and update                                                      | HR payroll salary structure     |
-| `compensation-revision-api.ts`     | Effective-dated recurring compensation create, submit, approve, reject, and history            | HR payroll compensation         |
+| `compensation-revision-api.ts`     | Direct effective-dated compensation save, history, and activation readiness                    | HR payroll compensation         |
 | `runPayrollApi.ts`                 | Generation-bound reviews and lock, adjustments, salary slips, PDFs                            | HR payroll operations           |
 | `payroll-preview-run-api.ts`       | Start/resume background calculation, status polling, and server-paged generation results       | HR payroll operations           |
 | `statutory-scheme-api.ts`          | ESI rule, establishment, earning classifications, enrollment, audited exceptions, preview, and activation | HR payroll statutory settings   |
@@ -43,7 +43,7 @@ Use these expectations when reviewing client behavior:
 | Mutation                                               | Expected invalidation                                                                        |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
 | Attendance save, import, lock, unlock, or adjust       | Attendance views and payroll preview assumptions                                             |
-| Compensation revision create, submit, approve, or reject | Salary structure, run payroll, and slips                                                     |
+| Compensation save or supersede                           | Salary structure, activation readiness, run payroll, and slips                               |
 | One-time salary component update                         | Salary structure, run payroll, and slips                                                     |
 | Payroll review, adjustment, or lock                    | Run payroll rows and salary slips                                                            |
 | Leave create, approve, reject, or cancel               | Leave lists, balances, HR dashboard, and payroll impact                                      |
@@ -62,8 +62,8 @@ Salary calculation errors use the shared problem-details parser so allocation di
 Do not infer backend behavior from a client helper alone.
 Confirm request and response behavior in `../../../Shikshamitra-BE/docs/modules/hr/api.md` and backend `Application.Contracts/HR/**`.
 The salary-template RTK Query client is `src/redux/hr/salary-template-api.ts`.
-It owns template listing, the active component catalog, blank draft creation, draft updates, calculation, version creation, publishing, default selection, cloning, and archiving through the shared authenticated API service.
+It owns the complete template list, active-template choices, active component catalog, atomic active create or update, calculation, version history, default selection, and archiving through the shared authenticated API service.
 The calculation contract includes Gross, Take-home, and Employer Cost quote bases, protection policy, effective month, optional employee context, target variance, and ESI preview details.
-The compensation-revision client stores recurring results through the employee-scoped revision endpoints and never converts system statutory preview lines into editable salary rows.
+The compensation-revision client saves recurring results directly through the employee-scoped compensation endpoint, reads immutable history and readiness, and never converts system statutory preview lines into editable salary rows.
 The statutory-scheme client automatically posts URL-backed month, search, coverage, readiness, enrollment, paging, and single-sort state to the paged ESI preview endpoint.
 Its preview summary remains unfiltered, employee rows use server-authored issue and coverage labels, and activation submits the reviewed preview fingerprint.

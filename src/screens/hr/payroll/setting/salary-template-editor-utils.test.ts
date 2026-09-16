@@ -3,7 +3,7 @@ import type { SalaryTemplateRule } from 'src/redux/hr/salary-template-api';
 import { it, expect, describe } from 'vitest';
 
 import {
-  getPublishIssues,
+  getSaveIssues,
   applyFormulaType,
   getFormulaOptions,
   applySemanticType,
@@ -23,7 +23,7 @@ describe('salary template editor utilities', () => {
   it('allows Basic at 100% with PF and no balancing earning', () => {
     const basic = { ...applySemanticType(createTemplateRule(component, 0), 'BASIC'), value: 100 };
     const pf = applySemanticType(createTemplateRule({ ...component, componentId: 'pf', lineKind: 'DEDUCTION' }, 1), 'EMPLOYEE_PROVIDENT_FUND');
-    expect(getPublishIssues([basic, pf])).toEqual([]);
+    expect(getSaveIssues([basic, pf])).toEqual([]);
   });
   it('creates an ordinary fixed rule and applies constrained semantic formulas', () => {
     const ordinary = createTemplateRule(component, 0);
@@ -79,9 +79,9 @@ describe('salary template editor utilities', () => {
       'BALANCING_EARNING'
     );
 
-    expect(getPublishIssues([])).toEqual(['Add exactly one Basic earning.']);
-    expect(getPublishIssues([basic, balance])).toEqual([]);
-    expect(getPublishIssues([basic, balance, { ...balance, componentId: 'another' }])).not.toEqual([]);
+    expect(getSaveIssues([])).toEqual(['Add exactly one Basic earning.']);
+    expect(getSaveIssues([basic, balance])).toEqual([]);
+    expect(getSaveIssues([basic, balance, { ...balance, componentId: 'another' }])).not.toEqual([]);
   });
 
   it('reports missing basis and invalid percentage values', () => {
@@ -91,8 +91,8 @@ describe('salary template editor utilities', () => {
       value: 101,
     };
 
-    expect(getPublishIssues([rule])).toContain('Percentage values cannot exceed 100%.');
-    expect(getPublishIssues([rule])).toContain(
+    expect(getSaveIssues([rule])).toContain('Percentage values cannot exceed 100%.');
+    expect(getSaveIssues([rule])).toContain(
       'Choose a basis component for every component percentage formula.'
     );
   });

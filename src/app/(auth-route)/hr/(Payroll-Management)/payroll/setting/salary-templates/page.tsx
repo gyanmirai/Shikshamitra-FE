@@ -9,7 +9,7 @@ export default function SalaryTemplatesPage() {
     <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Salary Templates"
-        description="Create versioned salary structure templates for employee payroll onboarding."
+        description="Configure reusable salary defaults for fast, consistent employee payroll setup."
         links={[
           { name: 'HR/Staff' },
           { name: 'Payroll Management' },

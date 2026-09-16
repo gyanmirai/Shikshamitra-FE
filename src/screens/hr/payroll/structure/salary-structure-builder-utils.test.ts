@@ -28,6 +28,7 @@ const calculation: SalaryTemplateCalculation = {
     isConfigured: false,
     isCovered: false,
     canCalculate: false,
+    registrationPending: false,
     statutoryWages: 0,
     wageCeiling: 0,
     employeeContribution: 0,

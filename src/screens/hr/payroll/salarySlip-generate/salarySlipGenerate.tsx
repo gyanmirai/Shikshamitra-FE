@@ -19,6 +19,11 @@ import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 import {
+  useGetEmployeeSalarySlipQuery,
+  useLazyGetEmployeeSalarySlipPdfQuery,
+  useLazyGetEmployeeSalarySlipPreviewPdfQuery,
+} from 'src/redux/runPayroll/runPayrollApi';
+import {
   Box,
   Card,
   Grid,
@@ -33,11 +38,6 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@mui/material';
-import {
-  useGetEmployeeSalarySlipQuery,
-  useLazyGetEmployeeSalarySlipPdfQuery,
-  useLazyGetEmployeeSalarySlipPreviewPdfQuery,
-} from 'src/redux/runPayroll/runPayrollApi';
 
 import PaySlipPrintView from './payslip-print-view';
 import { usePayslipActions, isOfficialPayslipStatus } from './use-payslip-actions';
@@ -616,8 +616,8 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
       {slip?.compensationTargetDifference ? (
         <Alert severity="warning">
           The normalized {formatMode(slip?.compensationProtectionPolicy)} result differs from the
-          approved protected amount by {formatCurrency(slip.compensationTargetDifference)}. This
-          payslip preserves the approved revision and records the variance for review.
+          saved protected amount by {formatCurrency(slip.compensationTargetDifference)}. This
+          payslip preserves the effective revision and records the variance for review.
         </Alert>
       ) : null}
 

@@ -47,6 +47,8 @@ import {
   Box,
   Card,
   Grid,
+  Alert,
+  Stack,
   Button,
   Avatar,
   Select,
@@ -56,15 +58,16 @@ import {
   Typography,
   FormControl,
   DialogActions,
+  DialogContent,
 } from '@mui/material';
 
 import EmployeeView from './employee-view';
-import { SalaryStructureBuilder } from '../payroll/structure/SalaryStructureBuilder';
 // eslint-disable-next-line import/no-named-as-default
 import EmployeeFrom from './employee-form';
 import ChangeStatusForm from './chnage-status-form';
 import { RenderComponents } from './employee-form-fields/PayrollFields';
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
+import { SalaryStructureBuilder } from '../payroll/structure/SalaryStructureBuilder';
 import {
   isSalaryComponentFixed,
   toApplicableMonthPayload,
@@ -98,6 +101,7 @@ const HrEmployee = () => {
     [setSearchParams, deleteParam]
   );
   const [editData, setEditData] = useState<any>(null);
+  const [createdEmployee, setCreatedEmployee] = useState<{ id: string; name: string }>();
 
   // Clear editData only after the form panel is gone, so the heading
   // never flips from "Update" to "Add" during the close transition.
@@ -207,6 +211,13 @@ const HrEmployee = () => {
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [dispatch, isChanges, deleteParam]
+  );
+  const handleEmployeeCreated = useCallback(
+    (created: { id: string; name: string }) => {
+      handleClose(null, true);
+      setCreatedEmployee(created);
+    },
+    [handleClose]
   );
   const handleCloseStatus = (): void => {
     statusDialog.onFalse();
@@ -461,7 +472,11 @@ const HrEmployee = () => {
           />
 
           <Card sx={{ height: '100%' }}>
-            <EmployeeFrom editData={editData} handleClose={handleClose} />
+            <EmployeeFrom
+              editData={editData}
+              handleClose={handleClose}
+              onCreated={handleEmployeeCreated}
+            />
           </Card>
         </Box>
       ) : !searchParams?.employee ? (
@@ -658,6 +673,39 @@ const HrEmployee = () => {
       ) : (
         <EmployeeView searchParams={searchParams} setSearchParams={setSearchParams} />
       )}
+      <CustomDialog
+        open={Boolean(createdEmployee)}
+        handleClose={() => setCreatedEmployee(undefined)}
+        title="Employee created"
+        maxWidth="sm"
+        hasForm={false}
+      >
+        <DialogContent>
+          <Stack spacing={2}>
+            <Alert severity="warning">
+              <Typography variant="subtitle2">Payroll setup required</Typography>
+              <Typography variant="body2">
+                {createdEmployee?.name || 'The employee'} is inactive. Set up salary, then activate the employee as a separate action.
+              </Typography>
+            </Alert>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            href={createdEmployee ? `${hrPaths.employee.list}?employee=${createdEmployee.id}` : undefined}
+            sx={{ minHeight: 44 }}
+          >
+            View employee
+          </Button>
+          <Button
+            href={createdEmployee ? `${hrPaths.payroll.structure}?employeeId=${createdEmployee.id}&setup=salary` : undefined}
+            variant="contained"
+            sx={{ minHeight: 44 }}
+          >
+            Set up salary
+          </Button>
+        </DialogActions>
+      </CustomDialog>
     </Box>
   );
 };
@@ -782,7 +830,15 @@ const SalaryStructure = ({ handleClose, editData }: { handleClose: () => void; e
         ) : (
           // <Paper elevation={0} sx={{ p: 2, border: (t: any) => `1px solid ${t.vars.palette.divider}`, borderRadius: 2 }}>
           <Grid container spacing={1}>
-            <SalaryStructureBuilder formik={formik} employeeId={editData?.id} />
+            <SalaryStructureBuilder
+              formik={formik}
+              employeeId={editData?.id}
+              dateOfJoining={editData?.doj}
+              employeeIsActive={
+                editData?.status === EmployeeStatusType.Active ||
+                String(editData?.status).toLowerCase() === 'active'
+              }
+            />
             <Grid size={{ xs: 12, md: 6 }}>
               <RenderComponents
                 formik={formik}

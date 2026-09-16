@@ -192,7 +192,7 @@ const ISSUE_LABELS: Record<
     color: 'warning',
   },
   COMPENSATION_REVISION_REQUIRED: {
-    label: 'Approved compensation revision required',
+    label: 'Effective salary setup required',
     severity: 'CRITICAL',
     color: 'error',
   },
@@ -1647,7 +1647,7 @@ const RunPayroll = () => {
                               Compensation Revision {activeRow.compensationRevisionNumber}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                              Approved recurring compensation source
+                              Effective recurring salary source
                             </Typography>
                           </Box>
                           <Chip
@@ -1708,7 +1708,7 @@ const RunPayroll = () => {
                         {activeRow.compensationTargetDifference ? (
                           <Alert severity="warning" sx={{ mt: 1.5 }}>
                             Review this variance before locking. Payroll has not changed the
-                            employee&apos;s approved compensation automatically.
+                            employee&apos;s effective salary automatically.
                           </Alert>
                         ) : null}
                       </Card>
