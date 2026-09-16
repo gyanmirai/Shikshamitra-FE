@@ -18,10 +18,10 @@ export default function SalaryTemplateEditorPage() {
           { name: 'Payroll Management' },
           { name: 'Settings' },
           { name: 'Salary Templates' },
-          { name: 'Edit Draft' },
+          { name: 'Edit template' },
         ]}
       />
-      <SalaryTemplateEditor templateId={params.templateId} versionId={params.versionId} />
+      <SalaryTemplateEditor templateId={params.templateId} mode="edit" />
     </Box>
   );
 }

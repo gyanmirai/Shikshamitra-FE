@@ -1,11 +1,21 @@
 import { employeeType } from 'src/redux/tagTypes';
 
-import type { ProtectionPolicy, SalaryBasis } from './salary-template-api';
-
 import { employeeApi } from './employeeApi';
 
-export type CompensationRevisionStatus =
-  'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'SUPERSEDED';
+import type {
+  SalaryBasis,
+  ProtectionPolicy,
+  SalaryRuleOverride,
+} from './salary-template-api';
+
+export type EmployeeActivationReadiness = {
+  canActivate: boolean;
+  requiredMonth: string;
+  compensationRevisionId?: string | null;
+  blockerCodes: string[];
+};
+
+export type CompensationRevisionStatus = 'EFFECTIVE' | 'SUPERSEDED' | 'LEGACY_NON_EFFECTIVE';
 
 export type CompensationRevisionLine = {
   id: string;
@@ -15,7 +25,7 @@ export type CompensationRevisionLine = {
   amount: number;
   isEarning: boolean;
   semanticType: string;
-  source: 'TEMPLATE' | 'SYSTEM_STATUTORY' | 'MANUAL';
+  source: 'TEMPLATE' | 'MANUAL' | 'LEGACY';
   displayOrder: number;
 };
 
@@ -25,6 +35,8 @@ export type CompensationRevision = {
   revisionNumber: number;
   effectiveMonth: string;
   status: CompensationRevisionStatus;
+  isCurrent: boolean;
+  isScheduled: boolean;
   salaryBasis: SalaryBasis;
   protectionPolicy: ProtectionPolicy;
   quotedMonthlyAmount: number;
@@ -37,52 +49,48 @@ export type CompensationRevision = {
   sourceSalaryTemplateVersion?: number | null;
   pfRuleId?: string | null;
   statutoryProfile: string;
+  isCustomized: boolean;
+  overrides: SalaryRuleOverride[];
+  customizationReason?: string | null;
+  warnings: string[];
+  activationReadiness: EmployeeActivationReadiness;
   creatorId?: string | null;
-  submittedByUserId?: string | null;
-  submittedAt?: string | null;
-  approvedByUserId?: string | null;
-  approvedAt?: string | null;
-  rejectedByUserId?: string | null;
-  rejectedAt?: string | null;
-  rejectionReason?: string | null;
+  savedByUserId?: string | null;
+  savedAt?: string | null;
   lines: CompensationRevisionLine[];
 };
 
-export type CompensationRevisionQuote = {
+export type SaveEmployeeCompensation = {
   templateVersionId: string;
   salaryBasis: SalaryBasis;
   protectionPolicy: ProtectionPolicy;
   monthlyAmount: number;
   effectiveMonth: string;
+  pfApplicable: boolean;
   pfRuleId?: string | null;
   statutoryProfile: 'IN-GJ';
+  overrides: SalaryRuleOverride[];
+  customizationReason?: string | null;
+  idempotencyKey: string;
+  expectedRevision?: number | null;
 };
 
-export const compensationRevisionEndpoint = (employeeId: string) =>
-  `/payroll/employees/${employeeId}/compensation-revisions`;
+export const compensationEndpoint = (employeeId: string) =>
+  `/payroll/employees/${employeeId}/compensation`;
 
-export const buildCreateCompensationRevisionRequest = (
+export const buildSaveEmployeeCompensationRequest = (
   employeeId: string,
-  quote: CompensationRevisionQuote
+  body: SaveEmployeeCompensation
 ) => ({
-  url: compensationRevisionEndpoint(employeeId),
-  method: 'POST' as const,
-  body: quote,
-});
-
-export const buildCompensationRevisionActionRequest = (
-  employeeId: string,
-  revisionId: string,
-  action: 'submit' | 'approve'
-) => ({
-  url: `${compensationRevisionEndpoint(employeeId)}/${revisionId}/${action}`,
-  method: 'POST' as const,
+  url: compensationEndpoint(employeeId),
+  method: 'PUT' as const,
+  body,
 });
 
 export const compensationRevisionApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
     getCompensationRevisions: builder.query<{ items: CompensationRevision[] }, string>({
-      query: compensationRevisionEndpoint,
+      query: compensationEndpoint,
       providesTags: [employeeType.salaryStructure],
     }),
     getEffectiveCompensationRevision: builder.query<
@@ -90,55 +98,21 @@ export const compensationRevisionApi = employeeApi.injectEndpoints({
       { employeeId: string; month: string }
     >({
       query: ({ employeeId, month }) => ({
-        url: `${compensationRevisionEndpoint(employeeId)}/effective`,
+        url: `${compensationEndpoint(employeeId)}/effective`,
         params: { month },
       }),
       providesTags: [employeeType.salaryStructure],
     }),
-    createCompensationRevision: builder.mutation<
+    saveEmployeeCompensation: builder.mutation<
       CompensationRevision,
-      { employeeId: string; quote: CompensationRevisionQuote }
+      { employeeId: string; body: SaveEmployeeCompensation }
     >({
-      query: ({ employeeId, quote }) => buildCreateCompensationRevisionRequest(employeeId, quote),
-      invalidatesTags: [employeeType.salaryStructure],
+      query: ({ employeeId, body }) => buildSaveEmployeeCompensationRequest(employeeId, body),
+      invalidatesTags: [employeeType.salaryStructure, employeeType.employee],
     }),
-    updateCompensationRevision: builder.mutation<
-      CompensationRevision,
-      { employeeId: string; revisionId: string; quote: CompensationRevisionQuote }
-    >({
-      query: ({ employeeId, revisionId, quote }) => ({
-        url: `${compensationRevisionEndpoint(employeeId)}/${revisionId}`,
-        method: 'PUT',
-        body: quote,
-      }),
-      invalidatesTags: [employeeType.salaryStructure],
-    }),
-    submitCompensationRevision: builder.mutation<
-      CompensationRevision,
-      { employeeId: string; revisionId: string }
-    >({
-      query: ({ employeeId, revisionId }) =>
-        buildCompensationRevisionActionRequest(employeeId, revisionId, 'submit'),
-      invalidatesTags: [employeeType.salaryStructure],
-    }),
-    approveCompensationRevision: builder.mutation<
-      CompensationRevision,
-      { employeeId: string; revisionId: string }
-    >({
-      query: ({ employeeId, revisionId }) =>
-        buildCompensationRevisionActionRequest(employeeId, revisionId, 'approve'),
-      invalidatesTags: [employeeType.salaryStructure],
-    }),
-    rejectCompensationRevision: builder.mutation<
-      CompensationRevision,
-      { employeeId: string; revisionId: string; reason: string }
-    >({
-      query: ({ employeeId, revisionId, reason }) => ({
-        url: `${compensationRevisionEndpoint(employeeId)}/${revisionId}/reject`,
-        method: 'POST',
-        body: { reason },
-      }),
-      invalidatesTags: [employeeType.salaryStructure],
+    getEmployeeActivationReadiness: builder.query<EmployeeActivationReadiness, string>({
+      query: (employeeId) => `/employees/${employeeId}/activation-readiness`,
+      providesTags: [employeeType.salaryStructure, employeeType.employee],
     }),
   }),
   overrideExisting: false,
@@ -147,9 +121,6 @@ export const compensationRevisionApi = employeeApi.injectEndpoints({
 export const {
   useGetCompensationRevisionsQuery,
   useGetEffectiveCompensationRevisionQuery,
-  useCreateCompensationRevisionMutation,
-  useUpdateCompensationRevisionMutation,
-  useSubmitCompensationRevisionMutation,
-  useApproveCompensationRevisionMutation,
-  useRejectCompensationRevisionMutation,
+  useSaveEmployeeCompensationMutation,
+  useGetEmployeeActivationReadinessQuery,
 } = compensationRevisionApi;

@@ -2,7 +2,7 @@ import { it, expect, describe } from 'vitest';
 
 import {
   salaryTemplateEndpoint,
-  buildCreateSalaryTemplateRequest,
+  buildSaveSalaryTemplateRequest,
   buildSalaryTemplateCalculationRequest,
   salaryTemplateComponentCatalogEndpoint,
 } from './salary-template-api';
@@ -15,13 +15,30 @@ describe('salary template API contract', () => {
     );
   });
 
-  it('creates a blank draft without accepting client-defined rules', () => {
+  it('creates a complete active template and updates through the same contract', () => {
+    const body = {
+      name: 'Gujarat Staff',
+      description: 'Reusable salary setup',
+      defaultSalaryBasis: 'EMPLOYER_COST' as const,
+      defaultProtectionPolicy: 'PROTECT_EMPLOYER_COST' as const,
+      defaultPfApplicable: false,
+      defaultPfRuleId: null,
+      rules: [],
+      idempotencyKey: 'operation-1',
+      expectedActiveVersionId: null,
+      concurrencyStamp: null,
+    };
     expect(
-      buildCreateSalaryTemplateRequest({ name: 'Gujarat Staff', description: 'Flexible draft' })
+      buildSaveSalaryTemplateRequest(body)
     ).toEqual({
       url: '/payroll/salary-templates',
       method: 'POST',
-      body: { name: 'Gujarat Staff', description: 'Flexible draft' },
+      body,
+    });
+    expect(buildSaveSalaryTemplateRequest(body, 'template-1')).toEqual({
+      url: '/payroll/salary-templates/template-1',
+      method: 'PUT',
+      body,
     });
   });
 
@@ -34,6 +51,7 @@ describe('salary template API contract', () => {
         monthlyAmount: 25990,
         effectiveMonth: '2026-08-01T00:00:00.000Z',
         employeeId: 'employee-1',
+        pfApplicable: true,
         pfRuleId: 'pf-rule-1',
       })
     ).toEqual({
@@ -45,6 +63,7 @@ describe('salary template API contract', () => {
         monthlyAmount: 25990,
         effectiveMonth: '2026-08-01T00:00:00.000Z',
         employeeId: 'employee-1',
+        pfApplicable: true,
         pfRuleId: 'pf-rule-1',
         statutoryProfile: 'IN-GJ',
       },
