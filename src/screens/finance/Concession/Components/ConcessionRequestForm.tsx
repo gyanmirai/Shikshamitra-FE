@@ -1,6 +1,10 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type {
+  ConcessionDraftCommand,
+  ConcessionRequestPreview,
+} from 'src/redux/finance/ConcessionManagement/types';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
@@ -14,14 +18,14 @@ import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { useGetConcessionTypesQuery } from 'src/redux/finance/concessionType';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 import {
   Box,
   Grid,
@@ -40,9 +44,12 @@ import {
 } from '@mui/material';
 import {
   useGetConcessionRequestByIdQuery,
+  useCreateConcessionDraftMutation,
   useCreateConcessionRequestMutation,
+  useSubmitConcessionRequestMutation,
   useUpdateConcessionRequestMutation,
   usePreviewConcessionRequestMutation,
+  useGetConcessionRequestContextQuery,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import ConcessionDocumentList from './ConcessionDocumentList';
@@ -95,6 +102,9 @@ function buildInitialValues(
     mediumId?: string;
     standardId?: string;
     divisionId?: string;
+    studentId?: string;
+    studentName?: string;
+    concessionTypeId?: string;
   }
 ): FormValues {
   if (detailData) {
@@ -151,10 +161,10 @@ function buildInitialValues(
     standardName: '',
     divisionId: defaults?.divisionId || '',
     divisionName: '',
-    studentId: '',
-    studentName: '',
+    studentId: defaults?.studentId || '',
+    studentName: defaults?.studentName || '',
     selectedStudent: null,
-    concessionTypeId: '',
+    concessionTypeId: defaults?.concessionTypeId || '',
     concessionTypeDocuments: [],
     selectedFeeHeads: {},
     valueEntries: {},
@@ -186,6 +196,7 @@ const buildFeeHeadConcessions = (values: FormValues) => {
 
 const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   onClose,
+  student,
   editData,
   defaultBoardId = '',
   defaultMediumId = '',
@@ -194,7 +205,24 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 }) => {
   const isEditMode = !!editData?.id;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const concessionPermissions = financePermissions.fees.concessionActions;
+  const canSaveDraft = hasGrantedPermission(
+    permissions,
+    isEditMode ? concessionPermissions.edit : concessionPermissions.add
+  );
+  const canSubmit =
+    hasGrantedPermission(permissions, concessionPermissions.submit) &&
+    (isEditMode
+      ? hasGrantedPermission(permissions, concessionPermissions.edit)
+      : hasGrantedPermission(permissions, concessionPermissions.add));
+  const canUploadDocuments = hasGrantedPermission(
+    permissions,
+    concessionPermissions.uploadDocument
+  );
+  const canViewDocuments = hasGrantedPermission(permissions, concessionPermissions.viewDocument);
   const theme = useTheme();
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
 
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
@@ -233,31 +261,24 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
   });
 
-  const { data: concessionTypes = [] } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetConcessionTypesQuery,
-    params: { academicYearId: currentYear?.id, includeInactive: isEditMode },
-    options: { skip: !currentYear?.id },
-  });
-
   const [createConcessionRequest, { isLoading: createLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateConcessionRequestMutation,
   });
-  const [
-    previewConcessionRequest,
-    {
-      data: previewResponse,
-      isLoading: previewLoading,
-      isError: previewIsError,
-      error: previewError,
-      reset: resetPreview,
-    },
-  ] = usePreviewConcessionRequestMutation();
+  const [createConcessionDraft, { isLoading: createDraftLoading }] =
+    useCreateConcessionDraftMutation();
+  const [submitConcessionRequest, { isLoading: submitLoading }] =
+    useSubmitConcessionRequestMutation();
+  const [previewConcessionRequest] = usePreviewConcessionRequestMutation();
+  const previewSequence = useRef(0);
+  const [authoritativePreview, setAuthoritativePreview] = useState<ConcessionRequestPreview | null>(
+    null
+  );
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState<unknown>(null);
+  const previewIsError = previewError !== null;
 
   // -- Derived lists ---------------------------------------------------------
-
-  const concessionTypesList = useMemo(() => concessionTypes?.data?.items || [], [concessionTypes]);
 
   const studentOptions = useMemo(
     () =>
@@ -267,6 +288,14 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       })) || [],
     [StudentsData?.items]
   );
+  const commandKeys = useRef<Record<string, string>>({});
+  const getCommandKey = useCallback((action: string) => {
+    commandKeys.current[action] ||= window.crypto.randomUUID();
+    return commandKeys.current[action];
+  }, []);
+  const clearCommandKey = useCallback((action: string) => {
+    delete commandKeys.current[action];
+  }, []);
 
   // -- Formik ----------------------------------------------------------------
 
@@ -277,8 +306,20 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         mediumId: defaultMediumId,
         standardId: defaultStandardId,
         divisionId: defaultDivisionId,
+        studentId: student?.studentId,
+        studentName: student?.studentName,
+        concessionTypeId: student?.concessionTypeId,
       }),
-    [concessionData, defaultBoardId, defaultMediumId, defaultStandardId, defaultDivisionId]
+    [
+      concessionData,
+      defaultBoardId,
+      defaultMediumId,
+      defaultStandardId,
+      defaultDivisionId,
+      student?.studentId,
+      student?.studentName,
+      student?.concessionTypeId,
+    ]
   );
 
   const formik = useFormik<FormValues>({
@@ -290,9 +331,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       try {
         const typeId = values.concessionTypeId;
         const feeHeadConcessions = buildFeeHeadConcessions(values);
-        await previewConcessionRequest({
-          academicYearId: currentYear?.id,
+        const latestPreview = await previewConcessionRequest({
+          academicYearId: currentYear?.id || '',
           studentId: values.studentId,
+          studentFeeStructureId: requestContext?.studentFeeStructureId,
           concessionTypeId: typeId,
           feeHeadConcessions,
         }).unwrap();
@@ -306,29 +348,43 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
             ?.filter((d: any) => d.url)
             .map((d: any) => ({ documentId: d.documentId, url: d.url, status: 1 })) || [];
 
+        const baseCommand: ConcessionDraftCommand = {
+          academicYearId: currentYear?.id || '',
+          studentId: values.studentId,
+          studentFeeStructureId: requestContext?.studentFeeStructureId,
+          concessionTypeId: typeId,
+          sourceRequestId: student?.sourceRequestId,
+          remarks: values.remarks,
+          feeHeadConcessions,
+          documents,
+        };
+
         if (isEditing) {
-          await updateConcessionRequest({
+          const updateResult = await updateConcessionRequest({
+            ...baseCommand,
             concessionRequestId: values.concessionRequestId,
-            academicYearId: currentYear?.id,
-            studentId: values.studentId,
-            concessionTypeId: typeId,
-            remarks: values.remarks,
-            feeHeadConcessions,
-            documents,
+            concurrencyStamp: concessionData?.data?.concurrencyStamp || '',
+            idempotencyKey: getCommandKey('update-draft'),
           }).unwrap();
+          clearCommandKey('update-draft');
+          await submitConcessionRequest({
+            concessionRequestId: values.concessionRequestId,
+            concurrencyStamp: updateResult.data.concurrencyStamp,
+            previewFingerprint: latestPreview.previewFingerprint,
+            idempotencyKey: getCommandKey('submit-draft'),
+          }).unwrap();
+          clearCommandKey('submit-draft');
         } else {
           await createConcessionRequest({
-            academicYearId: currentYear?.id,
-            studentId: values.studentId,
-            concessionTypeId: typeId,
-            remarks: values.remarks,
-            feeHeadConcessions,
-            documents,
+            ...baseCommand,
+            previewFingerprint: latestPreview.previewFingerprint,
+            idempotencyKey: getCommandKey('create-submit'),
           }).unwrap();
+          clearCommandKey('create-submit');
         }
 
         shikshaMitraToast.success({
-          message: `Concession request ${isEditing ? 'updated' : 'created'} successfully`,
+          message: 'Concession request submitted for approval.',
         });
         onClose(null, true);
       } catch (err: any) {
@@ -345,6 +401,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   });
   useEffect(() => {
     formik.resetForm();
+    setSelectedAssignmentId('');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear?.id]); // Log formik values on every change for debugging
 
@@ -353,40 +410,52 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   // -- Fee structure ---------------------------------------------------------
 
   const {
-    data: feeStructureData,
+    data: requestContext,
     isLoading: feeStructureLoading,
     isError: feeStructureIsError,
     error: feeStructureError,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentFeeStructureQuery,
-    params: { studentId: values.studentId, academicYearId: currentYear?.id },
-    options: { skip: !values.studentId || !currentYear?.id },
-    // Suppress automatic toast — we handle this error inline
-    popupConfig: { error: false },
-  }) as { data: any; isLoading: boolean; isError: boolean; error: any };
+  } = useGetConcessionRequestContextQuery(
+    {
+      studentId: values.studentId,
+      academicYearId: currentYear?.id || '',
+      studentFeeStructureId:
+        concessionData?.data?.studentFeeStructureId || selectedAssignmentId || undefined,
+    },
+    { skip: !values.studentId || !currentYear?.id }
+  );
 
-  const feeHeads: any[] = useMemo(() => {
-    const selected = feeStructureData?.feeHeads?.filter((item: any) => item.isSelected) || [];
-    if (feeStructureData?.concessionFeeHeadScope !== 'SelectedFeeHeads') return selected;
-    const eligible = new Set(feeStructureData?.concessionApplicableFeeHeadIds || []);
-    return selected.filter((item: any) => eligible.has(item.feeHeadId));
-  }, [feeStructureData]);
+  const hasResolvedAssignment = Boolean(requestContext?.studentFeeStructureId);
+
+  const concessionTypesList = useMemo(
+    () =>
+      (requestContext?.concessionTypes || []).map((type) => ({
+        ...type,
+        id: type.concessionTypeId,
+      })),
+    [requestContext?.concessionTypes]
+  );
+
+  const feeHeads: any[] = useMemo(
+    () =>
+      (requestContext?.feeHeads || []).map((item) => ({
+        ...item,
+        amount: item.eligibleOutstanding,
+      })),
+    [requestContext]
+  );
 
   // Detect the "no fee structure assigned" business-rule error
-  const noFeeStructureError: boolean =
-    feeStructureIsError &&
-    (feeStructureError?.data?.errorCode === 'No fee structure has been assigned to this student.' ||
-      feeStructureError?.data?.error?.code === 'Finance:ConcessionPolicy:010011');
+  const noFeeStructureError = feeStructureIsError;
 
   const previewRequest = useMemo(
     () => ({
-      academicYearId: currentYear?.id,
+      academicYearId: currentYear?.id || '',
       studentId: values.studentId,
+      studentFeeStructureId: requestContext?.studentFeeStructureId,
       concessionTypeId: values.concessionTypeId,
       feeHeadConcessions: buildFeeHeadConcessions(values),
     }),
-    [currentYear?.id, values]
+    [currentYear?.id, requestContext?.studentFeeStructureId, values]
   );
 
   const previewReady =
@@ -394,21 +463,41 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       previewRequest.academicYearId && previewRequest.studentId && previewRequest.concessionTypeId
     ) &&
     previewRequest.feeHeadConcessions.length > 0 &&
-    (feeStructureData?.concessionValueSource === 'PolicyFixed' ||
+    (requestContext?.valueSource === 'PolicyFixed' ||
       previewRequest.feeHeadConcessions.every((item) => Number(item.amount) > 0));
 
   useEffect(() => {
+    const requestSequence = previewSequence.current + 1;
+    previewSequence.current = requestSequence;
+    setAuthoritativePreview(null);
+    setPreviewError(null);
     if (!previewReady) {
-      resetPreview();
+      setPreviewLoading(false);
       return undefined;
     }
-    const timer = window.setTimeout(() => {
-      previewConcessionRequest(previewRequest).catch(() => undefined);
-    }, 400);
-    return () => window.clearTimeout(timer);
-  }, [previewConcessionRequest, previewReady, previewRequest, resetPreview]);
 
-  const authoritativePreview: any = (previewResponse as any)?.data ?? previewResponse;
+    const timer = window.setTimeout(() => {
+      setPreviewLoading(true);
+      previewConcessionRequest(previewRequest)
+        .unwrap()
+        .then((response) => {
+          if (requestSequence === previewSequence.current) {
+            setAuthoritativePreview(response);
+          }
+        })
+        .catch((error: unknown) => {
+          if (requestSequence === previewSequence.current) setPreviewError(error);
+        })
+        .finally(() => {
+          if (requestSequence === previewSequence.current) setPreviewLoading(false);
+        });
+    }, 400);
+    return () => {
+      window.clearTimeout(timer);
+      previewSequence.current += 1;
+    };
+  }, [previewConcessionRequest, previewReady, previewRequest]);
+
   const totalFees = Number(authoritativePreview?.totalEligibleBase ?? 0);
   const computedConcessionAmount = Number(authoritativePreview?.totalConcessionAmount ?? 0);
 
@@ -417,6 +506,24 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const selectedConcessionType = useMemo(
     () => concessionTypesList.find((ct: any) => ct.id === values.concessionTypeId),
     [concessionTypesList, values.concessionTypeId]
+  );
+  const selectedTypeRequirements = useMemo(
+    () =>
+      requestContext?.concessionTypes.find(
+        (type) => type.concessionTypeId === values.concessionTypeId
+      )?.documents || [],
+    [requestContext, values.concessionTypeId]
+  );
+  const submittedDocumentIds = useMemo(() => {
+    const block = values.concessionTypeDocuments?.find(
+      (item: any) => item.concessionTypeId === values.concessionTypeId
+    );
+    return new Set(
+      (block?.documents || []).filter((item: any) => item.url).map((item: any) => item.documentId)
+    );
+  }, [values.concessionTypeDocuments, values.concessionTypeId]);
+  const hasMissingRequiredDocuments = selectedTypeRequirements.some(
+    (requirement) => requirement.isRequired && !submittedDocumentIds.has(requirement.documentId)
   );
 
   const previewData = useMemo(() => {
@@ -440,6 +547,83 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       formik.handleSubmit();
     });
   }, [formik]);
+
+  const handleSaveDraft = useCallback(async () => {
+    const validationErrors = await formik.validateForm();
+    if (Object.keys(validationErrors).length > 0 || !hasResolvedAssignment || !requestContext) {
+      formik.setTouched({
+        boardId: true,
+        mediumId: true,
+        standardId: true,
+        divisionId: true,
+        studentId: true,
+        concessionTypeId: true,
+      });
+      shikshaMitraToast.error({
+        message: 'Select the student and concession type before saving.',
+      });
+      return;
+    }
+
+    const typeId = values.concessionTypeId;
+    const docBlock = values.concessionTypeDocuments?.find(
+      (item: any) => item.concessionTypeId === typeId
+    );
+    const documents = (docBlock?.documents || [])
+      .filter((item: any) => item.url)
+      .map((item: any) => ({ documentId: item.documentId, url: item.url, status: 1 as const }));
+    const command: ConcessionDraftCommand = {
+      academicYearId: currentYear?.id || '',
+      studentId: values.studentId,
+      studentFeeStructureId: requestContext.studentFeeStructureId,
+      concessionTypeId: typeId,
+      sourceRequestId: student?.sourceRequestId,
+      remarks: values.remarks,
+      feeHeadConcessions: buildFeeHeadConcessions(values),
+      documents,
+    };
+
+    try {
+      if (values.concessionRequestId) {
+        await updateConcessionRequest({
+          ...command,
+          concessionRequestId: values.concessionRequestId,
+          concurrencyStamp: concessionData?.data?.concurrencyStamp || '',
+          idempotencyKey: getCommandKey('update-draft'),
+        }).unwrap();
+        clearCommandKey('update-draft');
+      } else {
+        await createConcessionDraft({
+          ...command,
+          idempotencyKey: getCommandKey('create-draft'),
+        }).unwrap();
+        clearCommandKey('create-draft');
+      }
+      shikshaMitraToast.success({ message: 'Concession request saved as a draft.' });
+      onClose(null, true);
+    } catch (error: any) {
+      shikshaMitraToast.error({
+        message:
+          error?.data?.error?.message ||
+          error?.data?.message ||
+          error?.message ||
+          'Could not save the concession draft.',
+      });
+    }
+  }, [
+    clearCommandKey,
+    concessionData?.data?.concurrencyStamp,
+    createConcessionDraft,
+    currentYear?.id,
+    formik,
+    getCommandKey,
+    hasResolvedAssignment,
+    onClose,
+    requestContext,
+    student?.sourceRequestId,
+    updateConcessionRequest,
+    values,
+  ]);
 
   const handleFeeHeadToggle = useCallback(
     (concessionTypeId: string, feeHeadId: string) => {
@@ -750,6 +934,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               null
                             }
                             onChange={(_e, value: any) => {
+                              setSelectedAssignmentId('');
                               setFieldValue('studentId', value?.studentId || '');
                               setFieldTouched('studentId', false);
                               setFieldValue('studentName', value?.name || '');
@@ -777,6 +962,38 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     </Grid>
                   </Paper>
                 </Grid>
+                {requestContext?.assignmentSelectionRequired && (
+                  <Grid size={{ xs: 12 }}>
+                    <Paper variant="outlined" sx={paperSx}>
+                      <Alert severity="info" sx={{ mb: 1.5 }}>
+                        This student has more than one fee assignment. Select the assignment that
+                        owns the dues for this request; the assigned policy will be loaded
+                        automatically.
+                      </Alert>
+                      <CustomSelect
+                        label="Fee assignment *"
+                        options={requestContext.assignments.map((assignment) => ({
+                          ...assignment,
+                          displayName: `${assignment.feeStructureName} (${new Date(
+                            assignment.chargeStartDate
+                          ).toLocaleDateString('en-IN')} – ${new Date(
+                            assignment.chargeEndDate
+                          ).toLocaleDateString('en-IN')})`,
+                        }))}
+                        labelKey="displayName"
+                        valueKey="studentFeeStructureId"
+                        value={selectedAssignmentId}
+                        onChange={(value) => {
+                          setSelectedAssignmentId(String(value));
+                          setFieldValue('concessionTypeId', '');
+                          setFieldValue('selectedFeeHeads', {});
+                          setFieldValue('valueEntries', {});
+                          setFieldValue('concessionTypeDocuments', []);
+                        }}
+                      />
+                    </Paper>
+                  </Grid>
+                )}
                 {/* Fee structure loading skeleton */}
                 {values.studentId && feeStructureLoading && (
                   <Grid size={{ xs: 12 }}>
@@ -825,7 +1042,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       />
                       <Box>
                         <Typography variant="body2" color="text.secondary" mt={0.25}>
-                          {feeStructureError?.data?.errorCode ||
+                          {(feeStructureError as { data?: { errorCode?: string } } | undefined)
+                            ?.data?.errorCode ||
                             'No fee structure has been assigned to this student. Please assign a fee structure before creating a concession request.'}
                         </Typography>
                       </Box>
@@ -835,15 +1053,15 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
                 {values.studentId &&
                   !feeStructureLoading &&
-                  feeStructureData?.concessionPolicyName && (
+                  requestContext?.concessionPolicyName && (
                     <Grid size={{ xs: 12 }}>
                       <Alert severity="info" variant="outlined" sx={{ mb: 1.5 }}>
-                        Policy: <strong>{feeStructureData.concessionPolicyName}</strong> (
-                        {feeStructureData.concessionPolicyCode}, version{' '}
-                        {feeStructureData.concessionPolicyVersion}). It applies to{' '}
-                        {feeStructureData.concessionApplyOn === 'AllOutstanding'
+                        Policy: <strong>{requestContext.concessionPolicyName}</strong> (
+                        {requestContext.concessionPolicyCode}, version{' '}
+                        {requestContext.concessionPolicyVersion}). It applies to{' '}
+                        {requestContext.applyOn === 'AllOutstanding'
                           ? ' all outstanding installments'
-                          : feeStructureData.concessionApplyOn === 'CurrentInstallment'
+                          : requestContext.applyOn === 'CurrentInstallment'
                             ? ' the earliest unpaid installment'
                             : ' installments after the earliest unpaid installment'}
                         .
@@ -894,7 +1112,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         {
                           icon: 'mdi:cash-check',
                           title: 'Net Payable',
-                          value: Math.max(totalFees - computedConcessionAmount, 0),
+                          value: Number(authoritativePreview?.netPayable ?? 0),
                           color: 'success.main',
                           accentColor: '#2e7d32',
                           bgColor: 'rgba(46,125,50,0.06)',
@@ -1225,6 +1443,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                           },
                         }}
                         concessionTypes={concessionTypesList}
+                        requestContext={requestContext}
+                        preview={authoritativePreview ?? undefined}
                       />
                     </Paper>
                   </Grid>
@@ -1273,10 +1493,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                             letterSpacing={0.1}
                             color="text.primary"
                           >
-                            {selectedConcessionType?.concessionName ||
-                              selectedConcessionType?.name ||
-                              'Concession'}{' '}
-                            — Impact Summary
+                            {selectedConcessionType?.name || 'Concession'} — Impact Summary
                           </Typography>
                         </Box>
                         <Divider />
@@ -1348,14 +1565,19 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       <Divider sx={{ mb: 2 }} />
                       <ConcessionDocumentList
                         concessionId={values.concessionTypeId}
-                        concessionName={
-                          selectedConcessionType?.concessionName ||
-                          selectedConcessionType?.name ||
-                          ''
-                        }
+                        concessionName={selectedConcessionType?.name || ''}
                         submittedDocuments={getSubmittedDocs(values.concessionTypeId)}
                         onSave={(newDocs) => handleSaveDocs(values.concessionTypeId, newDocs)}
+                        requirements={selectedTypeRequirements}
+                        canUpload={canUploadDocuments}
+                        canView={canViewDocuments}
                       />
+                      {hasMissingRequiredDocuments && (
+                        <Alert severity="warning" sx={{ mt: 1.5 }}>
+                          Upload every document marked with * before submitting for approval. You
+                          can still save this request as a draft.
+                        </Alert>
+                      )}
                     </Paper>
                   </Grid>
                 )}
@@ -1390,24 +1612,49 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                 >
                   Cancel
                 </Button>
-                <LoadingButton
-                  type="button"
-                  variant="contained"
-                  size="small"
-                  disabled={
-                    createLoading ||
-                    updateLoading ||
-                    previewLoading ||
-                    !previewReady ||
-                    previewIsError ||
-                    !authoritativePreview
-                  }
-                  startIcon={<Iconify icon={GlobalIcons.submit} />}
-                  loading={createLoading || updateLoading || previewLoading}
-                  onClick={handleSubmit}
-                >
-                  {editData?.id ? 'Update' : 'Submit'}
-                </LoadingButton>
+                {canSaveDraft && (
+                  <LoadingButton
+                    type="button"
+                    variant="outlined"
+                    size="small"
+                    loading={createDraftLoading || updateLoading}
+                    disabled={!hasResolvedAssignment}
+                    startIcon={<Iconify icon="solar:diskette-bold" />}
+                    onClick={handleSaveDraft}
+                  >
+                    Save draft
+                  </LoadingButton>
+                )}
+                {canSubmit && (
+                  <LoadingButton
+                    type="button"
+                    variant="contained"
+                    size="small"
+                    disabled={
+                      createLoading ||
+                      formik.isSubmitting ||
+                      submitLoading ||
+                      updateLoading ||
+                      previewLoading ||
+                      !previewReady ||
+                      !authoritativePreview ||
+                      previewIsError ||
+                      hasMissingRequiredDocuments ||
+                      !hasResolvedAssignment
+                    }
+                    startIcon={<Iconify icon={GlobalIcons.submit} />}
+                    loading={
+                      formik.isSubmitting ||
+                      createLoading ||
+                      submitLoading ||
+                      updateLoading ||
+                      previewLoading
+                    }
+                    onClick={handleSubmit}
+                  >
+                    Submit for approval
+                  </LoadingButton>
+                )}
               </Stack>
             </Box>
           </Box>

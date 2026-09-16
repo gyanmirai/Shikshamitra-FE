@@ -48,7 +48,17 @@ export interface IConcessionRequestItem {
   updatedAt: string;
   message: string;
   approvedAt: string;
+  concurrencyStamp: string;
   isDocumentUploaded?: boolean;
+  availableActions?: string[];
+  timeline?: Array<{
+    action: string;
+    status: number;
+    actorId?: string | null;
+    occurredAt: string;
+    reason?: string | null;
+    amount?: number | null;
+  }>;
 }
 
 export interface IConcessionBasicDetail {
@@ -94,10 +104,11 @@ export interface IConcessionMonthItem {
   paid: number;
   due: number;
   concessionAmount: number;
+  suggestedConcessionAmount: number;
   appliedConcessionAmount?: number;
   reversedConcessionAmount?: number;
   reversibleConcessionAmount?: number;
-  status: FeeCollectionStatusType;
+  status: FeeCollectionStatusType | string;
   isSelectable?: boolean;
   year: number;
   concurrencyStamp: string;
@@ -109,6 +120,9 @@ export interface IConcessionFeeHeadWiseGroup {
   months: number;
   totalDue: number;
   concessionAmount: number;
+  requestedConcessionAmount: number;
+  liveMaximumConcessionAmount: number;
+  hasChangedSinceSubmission: boolean;
   isConcessionApply: boolean;
   items: IConcessionMonthItem[];
 }

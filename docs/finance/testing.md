@@ -3,7 +3,7 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-09-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -28,25 +28,26 @@ npm run docs:check
 
 Use these commands as the first validation set.
 
-| Risk area | Command |
-|---|---|
-| Charge client and mapper behavior | `npm run test -- src/redux/finance/ChargeManagement` |
-| Finance audit client contract | `npm run test -- src/redux/finance/audit/financeAuditApi.contract.test.ts` |
-| Finance audit UI utilities | `npm run test -- src/screens/finance/AuditTrail` |
-| Concession document constraints | `npm run test -- src/screens/finance/Concession/Components/concessionDocumentUpload.test.ts` |
-| TypeScript impact | `npm run ts` |
+| Risk area                         | Command                                                                                                                                                   |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Charge client and mapper behavior | `npm run test -- src/redux/finance/ChargeManagement`                                                                                                      |
+| Finance audit client contract     | `npm run test -- src/redux/finance/audit/financeAuditApi.contract.test.ts`                                                                                |
+| Finance audit UI utilities        | `npm run test -- src/screens/finance/AuditTrail`                                                                                                          |
+| Concession document constraints   | `npm run test -- src/screens/finance/Concession/Components/concessionDocumentUpload.test.ts`                                                              |
+| Concession request types and UI   | `npm run ts` plus focused ESLint on `src/screens/finance/Concession`, `src/screens/finance/ConcessionAdmin`, and `src/redux/finance/ConcessionManagement` |
+| TypeScript impact                 | `npm run ts`                                                                                                                                              |
 
 ## Add coverage when needed
 
 Add or update tests when a change affects these areas.
 
-| Change | Expected coverage |
-|---|---|
-| Charge request payload | Client or mapper test |
-| Optimistic cache update | Client cache test |
-| Approval or rejection behavior | Screen or client mutation test |
-| Audit Trail mapping | Mapper test |
-| Route-level behavior | Playwright test before release sign-off |
+| Change                                    | Expected coverage                              |
+| ----------------------------------------- | ---------------------------------------------- |
+| Charge request payload                    | Client or mapper test                          |
+| Optimistic cache update                   | Client cache test                              |
+| Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test |
+| Audit Trail mapping                       | Mapper test                                    |
+| Route-level behavior                      | Playwright test before release sign-off        |
 
 ## Student fee assignment
 

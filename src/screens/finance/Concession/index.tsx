@@ -9,10 +9,12 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { financePaths } from 'src/constants/finance-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { Box, Card, Button, Typography } from '@mui/material';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import ConcessionRequestForm from './Components/ConcessionRequestForm';
@@ -25,6 +27,8 @@ import type { IStudentInfo } from './type';
 const Concession = () => {
   // Redux state and dispatch
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canAdd = hasGrantedPermission(permissions, financePermissions.fees.concessionActions.add);
   // Redux dispatch function for dispatching actions to update the store
   const dispatch = useDispatch();
   // Boolean state to control the visibility of add concession request modal/form
@@ -36,23 +40,26 @@ const Concession = () => {
   const [selectedConcession, setSelectedConcession] = useState<IStudentInfo | null>(null);
 
   const onConfirmDialg = useBoolean();
+  const confirmClose = useBoolean();
   const [selectedMode, setSelectedMode] = useState('');
 
-  const handleClose = (_e: any, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      addConcessionRequest.onFalse();
-      viewConcessionRequest.onFalse();
-      setSelectedConcession(null);
-      dispatch(setIsChanges(false));
-      onConfirmDialg.onFalse();
-      setSelectedMode('');
-    } else if (!isChanges) {
-      addConcessionRequest.onFalse();
-      viewConcessionRequest.onFalse();
-      setSelectedConcession(null);
-      onConfirmDialg.onFalse();
-      setSelectedMode('');
+  const completeClose = () => {
+    addConcessionRequest.onFalse();
+    viewConcessionRequest.onFalse();
+    setSelectedConcession(null);
+    dispatch(setIsChanges(false));
+    onConfirmDialg.onFalse();
+    confirmClose.onFalse();
+    setSelectedMode('');
+  };
+
+  const handleClose = (_e?: unknown, isSubmit?: boolean) => {
+    if (!isSubmit && isChanges) {
+      confirmClose.onTrue();
+      return;
     }
+
+    completeClose();
   };
 
   // State to store the selected student concession data
@@ -65,7 +72,13 @@ const Concession = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {addConcessionRequest.value ? (
         <CustomBreadcrumbs
-          heading={selectedConcession ? 'Update Concession Request' : 'Concession Request'}
+          heading={
+            selectedConcession?.sourceRequestId
+              ? 'Replacement Concession Request'
+              : selectedConcession
+                ? 'Update Concession Request'
+                : 'Concession Request'
+          }
           description="View and manage student concession requests."
           links={[
             { name: 'Finance', href: financePaths.dashboard },
@@ -77,7 +90,13 @@ const Concession = () => {
                 handleClose(null, false);
               },
             },
-            { name: selectedConcession ? 'Update Concession Request' : 'Concession Request' },
+            {
+              name: selectedConcession?.sourceRequestId
+                ? 'Replacement Concession Request'
+                : selectedConcession
+                  ? 'Update Concession Request'
+                  : 'Concession Request',
+            },
           ]}
           isBack
           onBack={() => {
@@ -116,15 +135,17 @@ const Concession = () => {
             { name: 'Concessions', href: financePaths.concession },
           ]}
           action={
-            <Button
-              onClick={() => addConcessionRequest.onTrue()}
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              sx={{ px: '32px' }}
-            >
-              Request Concession
-            </Button>
+            canAdd ? (
+              <Button
+                onClick={() => addConcessionRequest.onTrue()}
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                sx={{ px: '32px' }}
+              >
+                Request Concession
+              </Button>
+            ) : undefined
           }
         />
       )}
@@ -158,7 +179,6 @@ const Concession = () => {
             addConcessionRequest.onTrue();
           }}
           onEditConcession={(data) => {
-            console.log('data---', data);
             setSelectedConcession(data);
             addConcessionRequest.onTrue();
           }}
@@ -232,6 +252,18 @@ const Concession = () => {
           selectedConcession={selectedConcession}
         />
       </CustomDialog>
+      <ConfirmDialog
+        open={confirmClose.value}
+        onClose={confirmClose.onFalse}
+        title="Discard unsaved changes?"
+        content="Your unsaved concession request changes will be lost when you leave this form."
+        icon="warning"
+        action={
+          <Button color="error" variant="contained" onClick={completeClose}>
+            Discard & leave
+          </Button>
+        }
+      />
     </Box>
   );
 };

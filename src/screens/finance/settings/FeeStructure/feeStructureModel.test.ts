@@ -78,6 +78,15 @@ describe('Fee Structure editor contract', () => {
   it('shows all server validation problems and explains stale writes', () => {
     expect(
       structureError({
+        data: {
+          errorCode: 'Finance:FeeStructure:InvalidConfiguration',
+          detail: 'One or more business rules were violated.',
+          data: { Errors: ['Select an active collection policy.'] },
+        },
+      })
+    ).toBe('Select an active collection policy.');
+    expect(
+      structureError({
         data: { error: { data: { Errors: ['Wrong academic year', 'Missing term'] } } },
       })
     ).toBe('Wrong academic year\nMissing term');

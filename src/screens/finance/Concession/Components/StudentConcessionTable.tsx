@@ -1,22 +1,41 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type { ConcessionApplication } from 'src/redux/finance/ConcessionManagement/types';
 
 import dayjs from 'dayjs';
-import React, { useMemo } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
+import React, { useRef, useMemo, useState } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ConcessionStatusType } from 'src/enums/concession-status-type';
-import { Box, Tab, Card, Tabs, Button, Typography } from '@mui/material';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
+import {
+  Box,
+  Tab,
+  Card,
+  Tabs,
+  Button,
+  MenuItem,
+  TextField,
+  Typography,
+  DialogActions,
+} from '@mui/material';
 import {
   useFinanceAcademicFilters,
   type UseFinanceAcademicFiltersResult,
@@ -24,6 +43,7 @@ import {
 import {
   concessionManagementApi,
   useGetConcessionApplicationsQuery,
+  useCancelConcessionRequestMutation,
   useDeleteConcessionApplicationMutation,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
@@ -74,13 +94,60 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
     classesLoading,
   } = filters;
   const tabs = useTabs(ConcessionStatusType.Pending);
-  const [selectedConcession, setSelectedConcession] = React.useState<IStudentInfo | null>(null);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const actions = financePermissions.fees.concessionActions;
+  const canAdd = hasGrantedPermission(permissions, actions.add);
+  const canEdit = hasGrantedPermission(permissions, actions.edit);
+  const canDelete = hasGrantedPermission(permissions, actions.delete);
+  const canCancel = hasGrantedPermission(permissions, actions.cancel);
+  const [selectedConcession, setSelectedConcession] = useState<ConcessionApplication | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReasonError, setCancelReasonError] = useState('');
+  const cancelCommandKey = useRef('');
+  const deleteCommandKey = useRef('');
   const removeConcessionDialog = useBoolean();
+  const cancelConcessionDialog = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
   const [deleteConcessionRequest] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteConcessionApplicationMutation,
   });
+  const [cancelConcessionRequest, { isLoading: isCancelling }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCancelConcessionRequestMutation,
+  });
+
+  const closeCancelDialog = () => {
+    cancelConcessionDialog.onFalse();
+    setSelectedConcession(null);
+    setCancelReason('');
+    setCancelReasonError('');
+    cancelCommandKey.current = '';
+  };
+
+  const handleCancelRequest = async () => {
+    const reason = cancelReason.trim();
+    if (reason.length < 10) {
+      setCancelReasonError('Reason must be at least 10 characters');
+      return;
+    }
+    if (!selectedConcession) return;
+    cancelCommandKey.current ||= window.crypto.randomUUID();
+    try {
+      await cancelConcessionRequest({
+        studentConcessionTypeRequestId: selectedConcession.id,
+        reason,
+        requestConcurrencyStamp: selectedConcession.concurrencyStamp,
+        idempotencyKey: cancelCommandKey.current,
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Concession request cancelled successfully' });
+      closeCancelDialog();
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: 'Unable to cancel the concession request. Refresh and try again.',
+      });
+    }
+  };
 
   const {
     data: allConcessionData,
@@ -89,9 +156,9 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetConcessionApplicationsQuery,
-		params: {
-			academicYearId: filterPayload?.academicYearId,
-			boardId: filterPayload?.boardId,
+    params: {
+      academicYearId: filterPayload?.academicYearId,
+      boardId: filterPayload?.boardId,
       educationMediumId: filterPayload?.educationMediumId,
       standardId:
         filterPayload?.standardId === 'All Classes' ? undefined : filterPayload?.standardId,
@@ -114,6 +181,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   const concessionCounts = useMemo(
     () => ({
       pending: allConcessionData?.pendingCount ?? 0,
+      draft: allConcessionData?.draftCount ?? 0,
       approved: allConcessionData?.approvedCount ?? 0,
       rejected: allConcessionData?.rejectedCount ?? 0,
       cancelled: allConcessionData?.cancelledCount ?? 0,
@@ -125,6 +193,12 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
 
   const TABS = useMemo(
     () => [
+      {
+        label: 'Draft',
+        value: ConcessionStatusType.Draft,
+        count: concessionCounts.draft,
+        color: 'default',
+      },
       {
         label: 'Pending',
         value: ConcessionStatusType.Pending,
@@ -308,23 +382,72 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
             isFilter: false,
             sticky: true,
             render: (value, row) => {
-              const isPending = row.status === ConcessionStatusType.Pending;
+              const isDraft = row.status === ConcessionStatusType.Draft;
+              const serverAllows = (action: string) =>
+                !row.availableActions?.length || row.availableActions.includes(action);
+              const canCancelRow =
+                canCancel &&
+                serverAllows('cancel') &&
+                (row.status === ConcessionStatusType.Draft ||
+                  row.status === ConcessionStatusType.Pending);
+              const canReplaceRow =
+                canAdd &&
+                serverAllows('create-replacement') &&
+                (row.status === ConcessionStatusType.Rejected ||
+                  row.status === ConcessionStatusType.Cancelled);
               return (
                 <ThreeDotsActions
                   placement="right-top"
                   showViewIcon
-                  showEditIcon={isPending}
+                  showEditIcon={isDraft && canEdit && serverAllows('edit')}
+                  showDeleteIcon={isDraft && canDelete && serverAllows('delete')}
                   handleDeleteClick={
-                    isPending
+                    isDraft && canDelete && serverAllows('delete')
                       ? () => {
-                          setSelectedConcession(row as IStudentInfo);
+                          setSelectedConcession(row as ConcessionApplication);
+                          deleteCommandKey.current = window.crypto.randomUUID();
                           removeConcessionDialog.onTrue();
                         }
                       : undefined
                   }
-                  showThreeDots={false}
+                  showThreeDots={canCancelRow || canReplaceRow}
+                  actions={({ popover }) => (
+                    <>
+                      {canCancelRow && (
+                        <MenuItem
+                          onClick={() => {
+                            popover.onClose();
+                            setSelectedConcession(row as ConcessionApplication);
+                            cancelConcessionDialog.onTrue();
+                          }}
+                        >
+                          <Iconify icon="solar:close-circle-bold" sx={{ mr: 1 }} />
+                          Cancel request
+                        </MenuItem>
+                      )}
+                      {canReplaceRow && (
+                        <MenuItem
+                          onClick={() => {
+                            popover.onClose();
+                            onRequestConcession?.({
+                              ...(row as unknown as IStudentInfo),
+                              id: undefined,
+                              concessionRequestId: undefined,
+                              studentConcessionTypeRequestId: undefined,
+                              sourceRequestId: row.id,
+                            });
+                          }}
+                        >
+                          <Iconify icon="solar:copy-bold" sx={{ mr: 1 }} />
+                          Create replacement
+                        </MenuItem>
+                      )}
+                    </>
+                  )}
                   handleEditClick={
-                    isPending ? () => onEditConcession?.(row as IStudentInfo) : undefined
+                    isDraft && canEdit && serverAllows('edit')
+                      ? () => onEditConcession?.(row as IStudentInfo)
+                      : undefined
                   }
                   handleViewClick={() => onViewConcession?.(row as IStudentInfo)}
                 />
@@ -336,17 +459,19 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
         noDataText={
           <>
             No Concessions Found{' '}
-            <Box
-              component="span"
-              onClick={onAddConcession}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': { cursor: 'pointer', textDecoration: 'underline' },
-              }}
-            >
-              Add Concession
-            </Box>
+            {canAdd && (
+              <Box
+                component="span"
+                onClick={onAddConcession}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': { cursor: 'pointer', textDecoration: 'underline' },
+                }}
+              >
+                Add Concession
+              </Box>
+            )}
           </>
         }
       />
@@ -396,7 +521,17 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                     setSelectedConcession(null);
                   },
                   onUndoRestore: () => {},
-                  onCommit: () => deleteConcessionRequest(selectedConcession.id),
+                  onCommit: () => {
+                    if (!deleteCommandKey.current) {
+                      deleteCommandKey.current = window.crypto.randomUUID();
+                    }
+
+                    return deleteConcessionRequest({
+                      concessionRequestId: selectedConcession.id,
+                      requestConcurrencyStamp: selectedConcession.concurrencyStamp,
+                      idempotencyKey: deleteCommandKey.current,
+                    });
+                  },
                 });
               }
             }}
@@ -405,6 +540,43 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
           </Button>
         }
       />
+      <CustomDialog
+        open={cancelConcessionDialog.value}
+        handleClose={closeCancelDialog}
+        title="Cancel concession request"
+        maxWidth="xs"
+      >
+        <DialogScrollContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            label="Cancellation reason *"
+            value={cancelReason}
+            error={Boolean(cancelReasonError)}
+            helperText={cancelReasonError || 'Enter 10 to 2000 characters.'}
+            slotProps={{ htmlInput: { maxLength: 2000 } }}
+            onChange={(event) => {
+              setCancelReason(event.target.value);
+              if (event.target.value.trim().length >= 10) setCancelReasonError('');
+            }}
+          />
+        </DialogScrollContent>
+        <DialogActions>
+          <Button variant="outlined" color="inherit" size="small" onClick={closeCancelDialog}>
+            Close
+          </Button>
+          <LoadingButton
+            loading={isCancelling}
+            variant="contained"
+            color="error"
+            size="small"
+            onClick={handleCancelRequest}
+          >
+            Cancel request
+          </LoadingButton>
+        </DialogActions>
+      </CustomDialog>
     </>
   );
 };

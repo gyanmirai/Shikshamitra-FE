@@ -8,16 +8,15 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { Cancel, ArrowBack, CheckCircle } from '@mui/icons-material';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
-import { calculatePerLineConcession } from 'src/utils/distributeConcession';
 import {
   Box,
   Chip,
+  Alert,
   Stack,
   Button,
   Divider,
@@ -32,6 +31,8 @@ import {
 import {
   useApproveConcessionRequestMutation,
   useReverseConcessionRequestMutation,
+  usePreviewConcessionApprovalMutation,
+  usePreviewConcessionReversalMutation,
   useGetConcessionApprovalContextQuery,
 } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
@@ -75,34 +76,61 @@ const getValidationToastMessage = (errors: unknown): string => {
 
 // ─── Distribution Utility ─────────────────────────────────────────────────────
 
-/**
- * Legacy utility for calculating per-line concession for display.
- * For actual distribution with proper integer allocation, use distributeConcessionAcrossDueFees.
- * @deprecated Use calculatePerLineConcession from distributeConcession.ts
- */
-const distributeMonthConcession = (totalConcession: number, selectedMonthCount: number): number =>
-  calculatePerLineConcession(totalConcession, selectedMonthCount);
-
 const distributeWithinOutstanding = (
   selectedDueFeeIds: string[],
   approvedAmount: number,
   items: IConcessionMonthItem[]
 ) => {
   const selectedItems = items.filter((item) => selectedDueFeeIds.includes(item.dueFeeId));
-  const totalOutstandingInCents = selectedItems.reduce(
-    (sum, item) => sum + Math.round(item.due * 100),
-    0
-  );
-  let remainingInCents = Math.min(
+  const capacities = selectedItems.map((item) => ({
+    item,
+    cents: Math.max(0, Math.round(item.due * 100)),
+  }));
+  const totalOutstandingInCents = capacities.reduce((sum, entry) => sum + entry.cents, 0);
+  const targetInCents = Math.min(
     Math.max(Math.round(approvedAmount * 100), 0),
     totalOutstandingInCents
   );
+  const serverSuggestedTotal = selectedItems.reduce(
+    (sum, item) => sum + Math.round(item.suggestedConcessionAmount * 100),
+    0
+  );
+  if (serverSuggestedTotal === targetInCents) {
+    return selectedItems.map((item) => ({
+      dueFeeId: item.dueFeeId,
+      concessionAmount: Math.round(item.suggestedConcessionAmount * 100) / 100,
+    }));
+  }
 
-  return selectedItems.map((item) => {
-    const concessionInCents = Math.min(Math.round(item.due * 100), remainingInCents);
-    remainingInCents -= concessionInCents;
-    return { dueFeeId: item.dueFeeId, concessionAmount: concessionInCents / 100 };
+  const candidates = capacities.map(({ item, cents }) => {
+    const exact =
+      totalOutstandingInCents > 0 ? (targetInCents * cents) / totalOutstandingInCents : 0;
+    const allocated = Math.min(cents, Math.floor(exact));
+    return { item, capacity: cents, allocated, remainder: exact - allocated };
   });
+  let remaining = targetInCents - candidates.reduce((sum, entry) => sum + entry.allocated, 0);
+  const eligible = [...candidates].sort(
+    (left, right) =>
+      right.remainder - left.remainder || left.item.dueFeeId.localeCompare(right.item.dueFeeId)
+  );
+  while (remaining > 0) {
+    let allocatedThisPass = false;
+    let index = 0;
+    while (index < eligible.length && remaining > 0) {
+      const entry = eligible[index];
+      if (remaining > 0 && entry.allocated < entry.capacity) {
+        entry.allocated += 1;
+        remaining -= 1;
+        allocatedThisPass = true;
+      }
+      index += 1;
+    }
+    if (!allocatedThisPass) break;
+  }
+  return candidates.map((entry) => ({
+    dueFeeId: entry.item.dueFeeId,
+    concessionAmount: entry.allocated / 100,
+  }));
 };
 
 const mapApprovalContextToGroups = (
@@ -121,7 +149,10 @@ const mapApprovalContextToGroups = (
           (sum: number, line: any) => sum + Number(line.reversibleConcessionAmount ?? 0),
           0
         )
-      : Number(g.requestedConcessionAmount),
+      : Number(g.suggestedConcessionAmount),
+    requestedConcessionAmount: Number(g.requestedConcessionAmount),
+    liveMaximumConcessionAmount: Number(g.liveMaximumConcessionAmount),
+    hasChangedSinceSubmission: Boolean(g.hasChangedSinceSubmission),
     isConcessionApply: g.dueFeeLines?.some((l: any) => l.isSelectable) ?? false,
     items: (g.dueFeeLines ?? []).map((l: any) => ({
       dueFeeId: l.dueFeeId,
@@ -131,11 +162,12 @@ const mapApprovalContextToGroups = (
       total: Number(l.originalAmount),
       paid: Number(l.paidAmount),
       due: Number(l.outstandingAmount),
-      concessionAmount: 0,
+      concessionAmount: Number(l.suggestedConcessionAmount ?? 0),
+      suggestedConcessionAmount: Number(l.suggestedConcessionAmount ?? 0),
       appliedConcessionAmount: Number(l.appliedConcessionAmount ?? 0),
       reversedConcessionAmount: Number(l.reversedConcessionAmount ?? 0),
       reversibleConcessionAmount: Number(l.reversibleConcessionAmount ?? 0),
-      status: FeeCollectionStatusType.Pending,
+      status: l.status,
       isSelectable: l.isSelectable,
       concurrencyStamp: l.concurrencyStamp,
     })),
@@ -296,7 +328,6 @@ const FeeHeadGroupHeader: React.FC<GroupHeaderProps> = ({
   ).length;
   const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
-  const perMonthConcession = distributeMonthConcession(group.concessionAmount, selectedCount);
 
   return (
     <Box
@@ -355,12 +386,6 @@ const FeeHeadGroupHeader: React.FC<GroupHeaderProps> = ({
       {group.isConcessionApply && group.concessionAmount > 0 && (
         <Typography variant="caption" fontWeight={700} color="success.main" sx={{ mr: 0.5 }}>
           Total: ₹{formatNumber(group.concessionAmount)}
-          {selectedCount > 0 && (
-            <Typography component="span" variant="caption" color="text.disabled" fontWeight={400}>
-              {' '}
-              (₹{formatNumber(Math.round(perMonthConcession * 100) / 100)}/month × {selectedCount})
-            </Typography>
-          )}
         </Typography>
       )}
 
@@ -442,8 +467,8 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
               label="Approved Amount"
               value={approvedAmount}
               onChange={(event) => onApprovedAmountChange(Math.max(0, Number(event.target.value)))}
-              inputProps={{ min: 0.01, max: group.concessionAmount, step: 0.01 }}
-              helperText={`Requested: ₹${formatNumber(group.concessionAmount)}. You may approve a lower amount.`}
+              inputProps={{ min: 0.01, max: group.liveMaximumConcessionAmount, step: 0.01 }}
+              helperText={`Requested: ₹${formatNumber(group.requestedConcessionAmount)} · Current maximum: ₹${formatNumber(group.liveMaximumConcessionAmount)}. You may approve a lower amount.`}
               sx={{ width: { xs: '100%', sm: 320 } }}
             />
           </Box>
@@ -533,6 +558,11 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
   onBack,
 }) => {
   const isApprove = mode === 'Approve';
+  const commandKeys = useRef<Record<string, string>>({});
+  const getCommandKey = (action: string) => {
+    commandKeys.current[action] ||= window.crypto.randomUUID();
+    return commandKeys.current[action];
+  };
 
   const [approveConcession, { isLoading: isApproving }] = useQueryAndMutation({
     type: 'mutation',
@@ -544,6 +574,12 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
     type: 'mutation',
     currentQueryAndMutation: useReverseConcessionRequestMutation,
   });
+  const [previewApproval, { isLoading: isPreviewingApproval }] =
+    usePreviewConcessionApprovalMutation();
+  const [previewReversal, { isLoading: isPreviewingReversal }] =
+    usePreviewConcessionReversalMutation();
+  const [confirmedPreviewKey, setConfirmedPreviewKey] = useState('');
+  const [serverPreviewTotal, setServerPreviewTotal] = useState<number | null>(null);
 
   const requestId = selectedItem.studentConcessionTypeRequestId || selectedItem.id || '';
 
@@ -575,7 +611,10 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
       Yup.object({
         description: Yup.string()
           .trim()
-          .required('Description / Reason is required')
+          .max(
+            isApprove ? 1000 : 2000,
+            `Reason cannot exceed ${isApprove ? 1000 : 2000} characters`
+          )
           .test(
             'reversal-reason-length',
             'Reversal reason must be at least 10 characters',
@@ -614,10 +653,10 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
                   .reduce((sum, item) => sum + item.due, 0);
                 const approvedAmount = Number(fh.approvedAmount ?? 0);
 
-                if (approvedAmount <= 0 || approvedAmount > group.concessionAmount) {
+                if (approvedAmount <= 0 || approvedAmount > group.liveMaximumConcessionAmount) {
                   // eslint-disable-next-line react/no-this-in-sfc
                   return this.createError({
-                    message: `For ${group.feeHeadName}, approved amount must be greater than zero and cannot exceed the requested amount (₹${formatNumber(group.concessionAmount)}).`,
+                    message: `For ${group.feeHeadName}, approved amount must be greater than zero and cannot exceed the current permitted maximum (₹${formatNumber(group.liveMaximumConcessionAmount)}).`,
                     path: 'feeHeads',
                   });
                 }
@@ -694,11 +733,21 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             };
           });
 
+          const approvalPreview = await previewApproval({
+            concessionRequestId: requestId,
+            body: {
+              requestConcurrencyStamp: resolvedApprovalContext?.requestConcurrencyStamp ?? '',
+              previewFingerprint: resolvedApprovalContext?.previewFingerprint ?? '',
+              feeHeadApprovals,
+            },
+          }).unwrap();
           await approveConcession({
             studentConcessionTypeRequestId: requestId,
             body: {
               message: values.description,
-              requestConcurrencyStamp: resolvedApprovalContext?.requestConcurrencyStamp ?? '',
+              requestConcurrencyStamp: approvalPreview.requestConcurrencyStamp,
+              previewFingerprint: approvalPreview.previewFingerprint,
+              idempotencyKey: getCommandKey('approve'),
               feeHeadApprovals,
             },
           }).unwrap();
@@ -713,13 +762,26 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
                   (item.reversibleConcessionAmount ?? 0) > 0
               )
               .map((item) => ({
-                concessionDueFeeAllocationId: item.concessionDueFeeAllocationId,
-                amount: item.reversibleConcessionAmount,
+                concessionDueFeeAllocationId: item.concessionDueFeeAllocationId!,
+                amount: item.reversibleConcessionAmount ?? 0,
+                concurrencyStamp: item.concurrencyStamp,
               }));
           });
+          const reversalPreview = await previewReversal({
+            concessionRequestId: requestId,
+            body: {
+              requestConcurrencyStamp: resolvedApprovalContext?.requestConcurrencyStamp ?? '',
+              lines,
+            },
+          }).unwrap();
           await reverseConcession({
             concessionRequestId: requestId,
-            body: { reason: values.description, lines },
+            body: {
+              reason: values.description,
+              requestConcurrencyStamp: reversalPreview.requestConcurrencyStamp,
+              idempotencyKey: getCommandKey('reverse'),
+              lines,
+            },
           }).unwrap();
         }
 
@@ -728,18 +790,16 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
         });
         onBack();
       } catch (error) {
-        if (isApprove) {
-          const parsed = parseApiProblemDetail(error);
-          const isConcurrencyConflict =
-            parsed.errorCode === 'Finance:Concession:030003' ||
-            parsed.detail.includes('Finance:Concession:030003');
-          shikshaMitraToast.error({
-            message: isConcurrencyConflict
-              ? 'The request or fee balances changed while you were reviewing them. The latest values have been reloaded; please review and approve again.'
-              : parsed.detail,
-          });
-          if (isConcurrencyConflict) await refetchApprovalContext();
-        }
+        const parsed = parseApiProblemDetail(error);
+        const isConcurrencyConflict =
+          parsed.errorCode === 'Finance:Concession:030003' ||
+          parsed.detail.includes('Finance:Concession:030003');
+        shikshaMitraToast.error({
+          message: isConcurrencyConflict
+            ? 'The request or fee balances changed while you were reviewing them. The latest values have been reloaded; please review again.'
+            : parsed.detail,
+        });
+        if (isConcurrencyConflict) await refetchApprovalContext();
       }
     },
   });
@@ -814,9 +874,37 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
     );
   }, 0);
 
-  const isSubmitting = isApproving || isReversing;
+  const reviewKey = JSON.stringify({
+    mode,
+    requestStamp: resolvedApprovalContext?.requestConcurrencyStamp,
+    previewFingerprint: resolvedApprovalContext?.previewFingerprint,
+    feeHeads: formik.values.feeHeads,
+  });
+
+  useEffect(() => {
+    setConfirmedPreviewKey('');
+    setServerPreviewTotal(null);
+  }, [reviewKey]);
+
+  const isSubmitting = isApproving || isReversing || isPreviewingApproval || isPreviewingReversal;
 
   const handleApprovalActionClick = async () => {
+    if (
+      isApprove &&
+      totalSelectedConcession <
+        Number(resolvedApprovalContext?.totalRequestedConcessionAmount ?? 0) &&
+      formik.values.description.trim().length < 10
+    ) {
+      formik.setFieldTouched('description', true);
+      formik.setFieldError(
+        'description',
+        'Give a reason of at least 10 characters for a reduced approval.'
+      );
+      shikshaMitraToast.error({
+        message: 'Give a reason of at least 10 characters for a reduced approval.',
+      });
+      return;
+    }
     formik.setTouched({
       description: true,
       feeHeads: formik.values.feeHeads.map(() => ({
@@ -830,6 +918,70 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
       shikshaMitraToast.error({
         message: getValidationToastMessage(errors),
       });
+      return;
+    }
+    if (confirmedPreviewKey !== reviewKey) {
+      const selectedFeeHeads = formik.values.feeHeads.filter(
+        (feeHead) => feeHead.selectedDueFeeIds.length > 0
+      );
+      try {
+        if (isApprove) {
+          const feeHeadApprovals = selectedFeeHeads.map((feeHead) => {
+            const group = groups.find((candidate) => candidate.feeHeadId === feeHead.feeHeadId)!;
+            return {
+              feeHeadId: feeHead.feeHeadId,
+              approvedConcessionAmount: feeHead.approvedAmount,
+              dueFeeAllocations: distributeWithinOutstanding(
+                feeHead.selectedDueFeeIds,
+                feeHead.approvedAmount,
+                group.items
+              ).map((allocation) => ({
+                ...allocation,
+                concurrencyStamp:
+                  group.items.find((item) => item.dueFeeId === allocation.dueFeeId)
+                    ?.concurrencyStamp ?? '',
+              })),
+            };
+          });
+          const result = await previewApproval({
+            concessionRequestId: requestId,
+            body: {
+              requestConcurrencyStamp: resolvedApprovalContext?.requestConcurrencyStamp ?? '',
+              previewFingerprint: resolvedApprovalContext?.previewFingerprint ?? '',
+              feeHeadApprovals,
+            },
+          }).unwrap();
+          setServerPreviewTotal(result.totalApprovedAmount);
+        } else {
+          const lines = selectedFeeHeads.flatMap((feeHead) => {
+            const group = groups.find((candidate) => candidate.feeHeadId === feeHead.feeHeadId);
+            return (group?.items ?? [])
+              .filter(
+                (item) =>
+                  feeHead.selectedDueFeeIds.includes(item.dueFeeId) &&
+                  item.concessionDueFeeAllocationId &&
+                  (item.reversibleConcessionAmount ?? 0) > 0
+              )
+              .map((item) => ({
+                concessionDueFeeAllocationId: item.concessionDueFeeAllocationId!,
+                amount: item.reversibleConcessionAmount ?? 0,
+                concurrencyStamp: item.concurrencyStamp,
+              }));
+          });
+          const result = await previewReversal({
+            concessionRequestId: requestId,
+            body: {
+              requestConcurrencyStamp: resolvedApprovalContext?.requestConcurrencyStamp ?? '',
+              lines,
+            },
+          }).unwrap();
+          setServerPreviewTotal(result.totalReversalAmount);
+        }
+        setConfirmedPreviewKey(reviewKey);
+      } catch (error) {
+        const parsed = parseApiProblemDetail(error);
+        shikshaMitraToast.error({ message: parsed.detail });
+      }
       return;
     }
     formik.handleSubmit();
@@ -880,6 +1032,20 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
       </Box>
 
       <Scrollbar sx={{ flex: 1, p: 1.5 }}>
+        {resolvedApprovalContext?.hasChangedSinceSubmission && (
+          <Alert severity="warning" sx={{ mb: 1.5 }}>
+            Fee balances changed after submission. The values below use the current eligible
+            balance; review the updated proposal before continuing.
+          </Alert>
+        )}
+        {confirmedPreviewKey === reviewKey && serverPreviewTotal !== null && (
+          <Alert severity="success" sx={{ mb: 1.5 }}>
+            The server validated a total of {formatNumber(serverPreviewTotal, 'INR')}. Confirm to
+            {isApprove
+              ? ' apply this concession to the selected dues.'
+              : ' reopen this obligation.'}
+          </Alert>
+        )}
         {/* ── Description Field ── */}
         <ShakingTextField error={!!formik.errors.description && formik.touched.description}>
           <TextField
@@ -887,7 +1053,13 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             multiline
             rows={2}
             size="small"
-            label="Description / Reason*"
+            label={
+              isApprove &&
+              totalSelectedConcession >=
+                Number(resolvedApprovalContext?.totalRequestedConcessionAmount ?? 0)
+                ? 'Approval message (optional)'
+                : 'Reason *'
+            }
             value={formik.values.description}
             onChange={(e) => formik.setFieldValue('description', e.target.value)}
             onBlur={formik.handleBlur}
@@ -998,7 +1170,7 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
             startIcon={isApprove ? <CheckCircle fontSize="small" /> : <Cancel fontSize="small" />}
             onClick={handleApprovalActionClick}
           >
-            {isApprove ? 'Approve' : 'Reverse'}
+            {confirmedPreviewKey === reviewKey ? 'Confirm and apply' : 'Review impact'}
           </LoadingButton>
         </Box>
       </Box>

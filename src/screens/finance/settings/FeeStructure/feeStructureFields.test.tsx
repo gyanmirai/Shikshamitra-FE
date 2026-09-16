@@ -5,6 +5,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
 
+import { structureCandidate } from './feeStructureModel';
 import FeeStructureWorkspaceCard from './Components/FeeStructureWorkspaceCard';
 
 const state = vi.hoisted(() => ({ lookups: {} as any, mutate: vi.fn() }));
@@ -79,7 +80,7 @@ const ui = (record?: any) => (
 
 beforeEach(() => {
   cleanup();
-  state.mutate.mockClear();
+  state.mutate.mockReset();
   state.lookups = {
     settings: {
       academicYearId: 'year',
@@ -104,6 +105,96 @@ async function addHead() {
   fireEvent.click(await screen.findByRole('option', { name: 'Tuition' }));
   fireEvent.click(screen.getByRole('button', { name: 'Add head' }));
 }
+
+it('saves the selected collection policy before allowing review and publication of the saved draft', async () => {
+  const record = {
+    ...structureCandidate(),
+    id: 'saved',
+    name: 'Annual fees',
+    concurrencyStamp: 'stamp-1',
+    status: 1,
+    revisionNumber: 1,
+  };
+  const policy = {
+    id: '3a23b6a9-b5c6-d770-f6b3-0a6beef1e6ad',
+    versionId: '3a23b6a9-b871-f152-9cb7-077f2314db92',
+    family: 'collection',
+    name: 'collection prerna policy',
+    versionNumber: 1,
+    isCurrent: true,
+  };
+  state.lookups.settings.policies = [policy];
+  Object.assign(state.lookups.settings.permissions, {
+    publish: true,
+    collection: true,
+    collectionRead: true,
+  });
+  const saved = {
+    ...record,
+    collectionPolicyId: policy.id,
+    collectionPolicyVersionId: policy.versionId,
+    concurrencyStamp: 'stamp-2',
+  };
+  const ready = {
+    isReady: true,
+    candidate: structureCandidate(saved),
+    errors: [],
+    warnings: [],
+    coverage: [],
+    schedules: [],
+  };
+  render(ui(record));
+  const publishButton = () =>
+    screen.getByRole('button', { name: 'Publish structure' }) as HTMLButtonElement;
+  expect(publishButton().disabled).toBe(true);
+  fireEvent.click(screen.getByRole('tab', { name: /Policies/i }));
+  expect(
+    screen.getByRole('combobox', { name: 'Collection Policy' }).getAttribute('aria-disabled')
+  ).toBe('true');
+  fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Collection Policy' }));
+  fireEvent.click(await screen.findByRole('option', { name: 'collection prerna policy · v1' }));
+  expect(publishButton().disabled).toBe(true);
+  expect(screen.getByText(/Save draft to attach your selected policies/)).toBeTruthy();
+  // Reviewing unsaved input must not permit publishing the older server record.
+  state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
+  fireEvent.click(screen.getByRole('tab', { name: /Review & Publish/i }));
+  fireEvent.click(screen.getByRole('button', { name: 'Recheck configuration' }));
+  await screen.findByText('All configuration checks passed.');
+  expect(publishButton().disabled).toBe(true);
+  state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(saved) });
+  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Save draft' })).toBeNull());
+  expect(state.mutate.mock.calls[1][0].changes).toEqual({
+    policies: { collection: { policyId: policy.id, policyVersionId: policy.versionId } },
+  });
+  expect(publishButton().disabled).toBe(true);
+  state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
+  fireEvent.click(screen.getByRole('button', { name: 'Recheck configuration' }));
+  await waitFor(() => expect(publishButton().disabled).toBe(false));
+  state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve({ ...saved, status: 0 }) });
+  fireEvent.click(publishButton());
+  fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
+  await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(4));
+  expect(state.mutate.mock.calls[3][0]).toEqual({
+    structureId: record.id,
+    standardId: 'class',
+    concurrencyStamp: 'stamp-2',
+  });
+});
+
+it.each(['collection', 'collectionRead'])(
+  'prevents policy selection without %s permission',
+  (permission) => {
+    Object.assign(state.lookups.settings.permissions, { collection: true, collectionRead: true });
+    state.lookups.settings.permissions[permission] = false;
+    render(ui());
+    fireEvent.click(screen.getByRole('tab', { name: /Policies/i }));
+    expect(
+      screen.getByRole('combobox', { name: 'Collection Policy' }).getAttribute('aria-disabled')
+    ).toBe('true');
+  }
+);
 
 it('offers only structure policies and preserves a legacy concession attachment when saving', async () => {
   const record = {
