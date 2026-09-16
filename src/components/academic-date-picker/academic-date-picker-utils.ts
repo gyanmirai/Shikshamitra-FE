@@ -1,6 +1,6 @@
 import type { Dayjs } from 'dayjs';
 
-import { CalendarDayStatus, DayType } from 'src/enums/academic-calendar';
+import { DayType, CalendarDayStatus } from 'src/enums/academic-calendar';
 
 import type { AcademicCalendarDay } from './types';
 
@@ -12,6 +12,7 @@ export const DEFAULT_BLOCKED_DAY_TYPES = [
 ];
 
 export const toDateKey = (date: Dayjs | string) =>
+  // Calendar records carry school dates, not instants to shift into the browser timezone.
   typeof date === 'string' ? date.slice(0, 10) : date.format('YYYY-MM-DD');
 
 export const isActiveCalendarDay = (day: AcademicCalendarDay) =>
