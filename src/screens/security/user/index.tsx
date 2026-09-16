@@ -2,42 +2,33 @@
 
 import type { RootState } from 'src/redux/store';
 
-import { LoadingButton } from '@mui/lab';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CancelButton from 'src/components/cancel-button';
-import { shikshaMitraToast } from 'src/components/toast';
+import CustomDialog from 'src/components/customDialog';
 import { useGetUsersQuery } from 'src/redux/user/userApi';
-import React, { useRef, useState, useEffect } from 'react';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { convertBase64Format } from 'src/utils/base64Formate';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  useGetPermissionsQuery,
-  useUpdatePermissionMutation,
-} from 'src/redux/permission/permissionApi';
 import {
   Box,
   Avatar,
-  Button,
   MenuList,
   MenuItem,
-  Typography,
-  DialogActions,
-  CircularProgress,
 } from '@mui/material';
 
-import Visibility from '../role/visibility';
+import { PermissionForm } from '../role';
 import { AccessControlForm } from '../accessControl';
-import { PermissionForm, extractGrantedPermissions } from '../role';
-import { getChangedPermissionGrants } from '../role/permission-grants';
+import PermissionAccessForm from '../role/permission-access-form';
 
 const UserManagementScreen = () => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canManagePermissions = hasGrantedPermission(permissions, 'AbpIdentity.Users.ManagePermissions');
+  const canManageScope = hasGrantedPermission(permissions, 'ShikshaMitra.UserScope.Manage');
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const yearSuffix = currentYear?.name ? ` - ${currentYear.name}` : '';
 
@@ -46,7 +37,7 @@ const UserManagementScreen = () => {
 
   // State to store selected user data
   const [user, setUser] = useState<any>(null);
-  const [permissioNData, setPermissionData] = useState<{ name: string; isGranted: boolean }[]>([]);
+  const [permissionBusy, setPermissionBusy] = useState(false);
 
   // Dialog control hook for academic permissions dialog
   const academicDialog = useBoolean();
@@ -112,9 +103,11 @@ const UserManagementScreen = () => {
             sticky: true,
             render: (value, data) => (
               <ThreeDotsActions
+                showThreeDots={canManagePermissions || canManageScope}
                 placement="right-center"
                 actions={({ popover }) => (
                   <MenuList>
+                    {canManagePermissions && <>
                     <MenuItem
                       onClick={() => {
                         setUser(data as any);
@@ -135,6 +128,8 @@ const UserManagementScreen = () => {
                       <Iconify icon="mdi:account-lock" />
                       Module Permission
                     </MenuItem>
+                    </>}
+                    {canManageScope &&
                     <MenuItem
                       onClick={() => {
                         setUser(data as any);
@@ -145,6 +140,7 @@ const UserManagementScreen = () => {
                       <Iconify icon="material-symbols:beenhere-outline" />
                       Academic Permission
                     </MenuItem>
+                    }
                   </MenuList>
                 )}
               />
@@ -156,12 +152,14 @@ const UserManagementScreen = () => {
         fullScreen
         title={`Permissions of ${user?.userName}`}
         open={dialog.value}
+        disableClose={permissionBusy}
+        paperProps={{ sx: { '& [aria-label="close"]': { minWidth: 44, minHeight: 44 } } }}
         handleClose={() => {
           dialog.onFalse();
           setUser(null);
         }}
       >
-        <PermissionForm editData={user} handleClose={dialog.onFalse} providerName="U" />
+        <PermissionForm editData={user} handleClose={dialog.onFalse} providerName="U" onBusyChange={setPermissionBusy} />
       </CustomDialog>
       <CustomDialog
         fullScreen
@@ -175,111 +173,17 @@ const UserManagementScreen = () => {
         fullScreen
         title="Set Visibility"
         open={visibilityDialog.value}
+        disableClose={permissionBusy}
+        paperProps={{ sx: { '& [aria-label="close"]': { minWidth: 44, minHeight: 44 } } }}
         handleClose={visibilityDialog.onFalse}
       >
-        <VisibilityForm editData={user} handleClose={visibilityDialog.onFalse} />
+        <VisibilityForm editData={user} handleClose={visibilityDialog.onFalse} onBusyChange={setPermissionBusy} />
       </CustomDialog>
     </Box>
   );
 };
 export default UserManagementScreen;
 
-const VisibilityForm = ({ editData, handleClose }: any) => {
-  const initialData = useRef<{ name: string; isGranted: boolean }[]>([]);
-  const [visibilityData, setVisibilityData] = useState<{ name: string; isGranted: boolean }[]>([]);
-  // Mutation hook to update permissions
-  const [updatePermission, { isLoading: isUpdatePermissionLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdatePermissionMutation,
-  });
-
-  // Query hook to fetch permission data based on role name
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPermissionsQuery,
-    params: { providerName: 'U', providerKey: editData?.id },
-    options: {
-      skip: !editData,
-    },
-  });
-  useEffect(() => {
-    if (_permissionData?.groups?.length > 0) {
-      const init = extractGrantedPermissions(_permissionData?.groups);
-      setVisibilityData(init);
-      initialData.current = init;
-    }
-  }, [_permissionData]);
-  return (
-    <>
-      <DialogScrollContent
-        sx={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
-        scrollBarProps={{
-          sx: {
-            overflow: 'hidden',
-            '.simplebar-content': {
-              height: '100%',
-            },
-          },
-        }}
-      >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', pt: 2 }}>
-          <Typography color="primary.main" variant="subtitle1">
-            Set Module Visibility
-          </Typography>
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Iconify icon="fluent:bot-sparkle-24-filled" />}
-            onClick={() => {
-              // setVisibilityOpen(true);
-            }}
-          >
-            MIRU Visibility
-          </Button>
-        </Box>
-        {isPermissionLoading ? (
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flex: 1,
-              height: '100%',
-              minHeight: 200,
-            }}
-          >
-            <CircularProgress />
-          </Box>
-        ) : (
-          <Visibility setVisibility={setVisibilityData} visibility={visibilityData} />
-        )}
-      </DialogScrollContent>
-      <DialogActions>
-        <CancelButton onClick={handleClose} />
-        <LoadingButton
-          size="small"
-          variant="contained"
-          loading={isUpdatePermissionLoading}
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-          onClick={async () => {
-            const diff = getChangedPermissionGrants(visibilityData, initialData.current);
-            await updatePermission({
-              providerName: 'U',
-              providerKey: editData?.id,
-              data: {
-                permissions: diff,
-              },
-            }).unwrap();
-            shikshaMitraToast.success({
-              message: 'Updated Visibility successfully',
-            });
-            handleClose();
-          }}
-        >
-          Submit
-        </LoadingButton>
-      </DialogActions>
-    </>
-  );
-};
+const VisibilityForm = (props: Omit<React.ComponentProps<typeof PermissionAccessForm>, 'providerName' | 'mode'>) => (
+  <PermissionAccessForm {...props} providerName="U" mode="visibility" />
+);

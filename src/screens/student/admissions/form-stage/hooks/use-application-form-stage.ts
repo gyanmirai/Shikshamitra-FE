@@ -88,7 +88,7 @@ export function useApplicationFormStage({
     query,
     verifySection,
     submitReason,
-    canEdit: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Edit'),
-    canReopen: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Reopen'),
+    canEdit: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Add'),
+    canReopen: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Add'),
   };
 }

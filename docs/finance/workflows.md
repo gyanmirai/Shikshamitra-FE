@@ -8,6 +8,13 @@ owner: frontend-team
 audience: humans-and-agents
 ---
 
+## Shared permission editing
+
+The original [Security editor layout](../security/workflows.md) is retained, with complete catalogue coverage and independent action toggles.
+Do not enumerate grants from a fixed CRUD list, infer action bundles, or restore revoked access through reseeding.
+The backend [security standard](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency.md) owns authorization and approved repair rules.
+Existing backend operations that share one permission identifier remain one capability until a separately approved domain change.
+
 # Trace Finance frontend workflows
 
 TL;DR: trace Finance workflows from the menu route to the App Router page, then screen folder, client, mapper, and backend contract.

@@ -1,262 +1,198 @@
 import { useState } from 'react';
-import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
-import Button from '@mui/material/Button';
-import Switch from '@mui/material/Switch';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import Typography from '@mui/material/Typography';
-import { Checkbox, IconButton } from '@mui/material';
-import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Box,
+  Card,
+  Stack,
+  Button,
+  Switch,
+  IconButton,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
 
 import {
-  ACCOUNT_SETTING_ACTIONS,
-  getActionPermissionBase,
-  getNodePermissionActions,
-  isAccountSettingPermission,
-  isFinanceConfigurationPermission,
-  getNodeActionPermissionNamesForAction,
-} from './account-settings-permissions';
+  branchKey,
+  branchLabel,
+  canManageGrant,
+  permissionLabel,
+  inheritedSources,
+} from './permission-catalogue';
 
-import type { PermissionType } from './utils';
+import type { GrantProvider, PermissionBranch, CataloguePermission } from './permission-catalogue';
 
-interface PermissionNodeProps {
-  node: any;
-  moduleTitle: string;
-  submoduleTitle: string;
-  permissions: { name: string; isGranted: boolean }[];
-  onToggle: (node: any, action: PermissionType, currentValue: boolean) => void;
-  onSelectAll: (node: any, value: boolean, hasChildren: boolean) => void;
+type Props = {
+  node: PermissionBranch;
+  provider: GrantProvider;
+  grants: Record<string, boolean>;
+  subtreeEntries: Map<string, CataloguePermission[]>;
+  onToggle: (name: string, granted: boolean) => void;
+  onBulk: (name: string, granted: boolean) => void;
+  disabled?: boolean;
   depth?: number;
-  setPermission: (data: any) => void;
-}
+};
 
 export default function PermissionNode({
   node,
-  moduleTitle,
-  submoduleTitle,
-  permissions,
+  provider,
+  grants,
+  subtreeEntries,
   onToggle,
-  onSelectAll,
+  onBulk,
+  disabled = false,
   depth = 0,
-  setPermission,
-}: PermissionNodeProps) {
-  const permissionBase = getActionPermissionBase(node.permissionName);
-  const [expanded, setExpanded] = useState(
-    !!permissions.find((p) => p.name === node.permissionName)?.isGranted
+}: Props) {
+  const [expanded, setExpanded] = useState(false);
+  const branches = node.children.filter((child) => child.children.length > 0);
+  const actions = [
+    ...(node.permission ? [node.permission] : []),
+    ...node.children
+      .filter((child) => child.children.length === 0)
+      .map((child) => child.permission)
+      .filter((entry): entry is CataloguePermission => !!entry),
+  ];
+  const prefix = actions[0]?.name.split('.').slice(0, -1) ?? [];
+  while (prefix.length && !actions.every((entry) => entry.name.startsWith(`${prefix.join('.')  }.`))) prefix.pop();
+  const actionContext = node.permission?.name ?? prefix.join('.');
+  const eligible = (subtreeEntries.get(branchKey(node)) ?? []).filter((entry) =>
+    canManageGrant(entry, provider)
   );
-  const actions = getNodePermissionActions(node.permissionName, permissions);
-  const incompletePermissions =
-    actions.length === 0 ||
-    (isAccountSettingPermission(permissionBase) &&
-      actions.length < ACCOUNT_SETTING_ACTIONS.length) ||
-    (isFinanceConfigurationPermission(permissionBase) && actions.length < 3);
-  const children = node.permissionChildren ?? node.children ?? [];
-  const hasChildren = children.length > 0;
-
-  // Check if all permissions for this node are active
-  const isNodeFullySelected =
-    actions.length > 0 &&
-    actions.every((action) => {
-      const permissionNames = getNodeActionPermissionNamesForAction(
-        node.permissionName,
-        action,
-        permissions
-      );
-      return (
-        permissionNames.length > 0 &&
-        permissionNames.every(
-          (permissionName) =>
-            !!permissions.find((permission) => permission.name === permissionName)?.isGranted
-        )
-      );
-    });
-
-  const handleToggleExpand = (n: any) => {
-    setPermission(
-      permissions.map((per) =>
-        per.name === n.permissionName ? { ...per, isGranted: !expanded } : per
-      )
-    );
-    setExpanded(!expanded);
-  };
-
+  const allSelected = eligible.length > 0 && eligible.every((entry) => grants[entry.name]);
+  const inheritedCount = eligible.filter(
+    (entry) => inheritedSources(entry, provider).length > 0
+  ).length;
   return (
-    <Box sx={{ pl: depth * 3, mb: 1 }}>
+    <Box sx={{ pl: { xs: 0, md: Math.min(depth, 3) * 2 }, mb: 1, minWidth: 0 }}>
       <Card
         variant="outlined"
         sx={{
           p: 2,
           borderRadius: 1.5,
-          borderColor: isNodeFullySelected ? 'primary.main' : 'divider',
-          bgcolor: isNodeFullySelected
+          borderColor: allSelected ? 'primary.main' : 'divider',
+          bgcolor: allSelected
             ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.04)
             : 'background.paper',
-          transition: 'all 0.2s',
-          '&:hover': {
-            borderColor: 'primary.main',
-            boxShadow: (theme) => theme.customShadows.z1,
-          },
         }}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            // mb: 2,
-            gap: 2,
-          }}
-        >
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexGrow: 1 }}>
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                flexGrow: 1,
-                // justifyContent: 'space-between',
-              }}
+        <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1} sx={{ mb: 1 }}>
+          {branches.length > 0 && (
+            <IconButton
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} ${branchLabel(node)}`}
+              aria-expanded={expanded}
+              onClick={() => setExpanded(!expanded)}
+              sx={{ minWidth: 44, minHeight: 44 }}
             >
-              {hasChildren && (
-                <Box
-                  sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
-                  onClick={() => handleToggleExpand(node)}
-                >
-                  <IconButton size="small">
-                    <Iconify
-                      icon={expanded ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
-                      width={16}
-                    />
-                  </IconButton>
-                  <Checkbox checked={expanded} />
-                </Box>
-              )}
-              <Typography variant="subtitle2" sx={{ fontWeight: isNodeFullySelected ? 700 : 600 }}>
-                {node.title}
-              </Typography>
-              {incompletePermissions && (
-                <Typography variant="caption" color="error">
-                  Some permissions are missing from the server. Update the backend permission
-                  definitions.
-                </Typography>
-              )}
-            </Box>
-            <Box
-              sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                justifyContent: 'flex-end',
-                gap: 2,
-              }}
-            >
-              {!hasChildren &&
-                actions.map((perm) => {
-                  const permissionNames = getNodeActionPermissionNamesForAction(
-                    node.permissionName,
-                    perm,
-                    permissions
-                  );
-                  const isChecked =
-                    permissionNames.length > 0 &&
-                    permissionNames.every(
-                      (permissionName) =>
-                        !!permissions.find((p) => p.name === permissionName)?.isGranted
-                    );
-                  return (
-                    <motion.div key={perm} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                      <Box
-                        onClick={() =>
-                          permissionNames.length > 0 && onToggle(node, perm, isChecked)
-                        }
-                        sx={{
-                          p: 1,
-                          borderRadius: 1,
-                          cursor: permissionNames.length > 0 ? 'pointer' : 'not-allowed',
-                          opacity: permissionNames.length > 0 ? 1 : 0.5,
-                          border: '1px solid',
-                          borderColor: isChecked ? 'primary.main' : 'divider',
-                          bgcolor: isChecked
-                            ? (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
-                            : 'transparent',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          transition: 'all 0.2s',
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontWeight: isChecked ? 600 : 400,
-                            color: isChecked ? 'primary.main' : 'text.secondary',
-                          }}
-                        >
-                          {perm === 'ChangeStatus' ? 'Change Status' : perm}
-                        </Typography>
-                        <Switch
-                          size="small"
-                          checked={isChecked}
-                          disabled={permissionNames.length === 0}
-                          slotProps={{ input: { 'aria-label': perm } }}
-                        />
-                      </Box>
-                    </motion.div>
-                  );
-                })}
-            </Box>
-          </Box>
-          {!hasChildren && (
-            <Button
-              size="small"
-              disabled={actions.length === 0}
-              color={isNodeFullySelected ? 'error' : 'primary'}
-              onClick={() => onSelectAll(node, !isNodeFullySelected, hasChildren)}
-            >
-              {isNodeFullySelected ? 'Revoke All' : 'Grant All'}
-            </Button>
-          )}
-        </Box>
-      </Card>
-
-      <AnimatePresence>
-        {hasChildren && expanded && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Box sx={{ mt: 1, position: 'relative' }}>
-              {/* Connector Line */}
-              <Box
-                sx={{
-                  position: 'absolute',
-                  top: 0,
-                  bottom: 20,
-                  left: depth * 3 + 12, // Adjust based on padding
-                  width: 2,
-                  bgcolor: 'divider',
-                  zIndex: 0,
-                }}
+              <Iconify
+                icon={expanded ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
+                width={16}
               />
-              {children.map((child: any) => (
-                <PermissionNode
-                  key={child.title}
-                  node={child}
-                  moduleTitle={moduleTitle}
-                  submoduleTitle={submoduleTitle}
-                  permissions={permissions}
-                  onToggle={onToggle}
-                  onSelectAll={onSelectAll}
-                  setPermission={setPermission}
-                  depth={depth + 1}
+            </IconButton>
+          )}
+          <Typography
+            variant="subtitle2"
+            sx={{ flex: 1, overflowWrap: 'anywhere', fontWeight: 600 }}
+          >
+            {branchLabel(node)}
+          </Typography>
+          <Button
+            size="small"
+            disabled={disabled || eligible.length === 0}
+            color={allSelected ? 'error' : 'primary'}
+            onClick={() => onBulk(branchKey(node), !allSelected)}
+            sx={{ minHeight: 44, minWidth: 44 }}
+          >
+            {allSelected
+              ? provider.providerName === 'U'
+                ? 'Remove direct grants'
+                : 'Revoke All'
+              : 'Grant All'}{' '}
+            ({eligible.length})
+          </Button>
+        </Stack>
+        <Stack direction="row" useFlexGap flexWrap="wrap" spacing={1}>
+          {actions.map((entry) => {
+            const inherited = inheritedSources(entry, provider);
+            const eligibleProvider = canManageGrant(entry, provider);
+            return (
+              <Box
+                key={entry.name}
+                sx={{
+                  p: 1,
+                  borderRadius: 1,
+                  border: '1px solid',
+                  maxWidth: '100%',
+                  borderColor: grants[entry.name] ? 'primary.main' : 'divider',
+                }}
+              >
+                <FormControlLabel
+                  sx={{ m: 0, minHeight: 44, gap: 1, maxWidth: '100%' }}
+                  label={
+                    <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
+                      {permissionLabel(entry, actionContext)}
+                    </Typography>
+                  }
+                  labelPlacement="start"
+                  control={
+                    <Switch
+                      size="small"
+                      checked={!!grants[entry.name]}
+                      disabled={disabled || !eligibleProvider}
+                      onChange={(_, value) => onToggle(entry.name, value)}
+                      slotProps={{
+                        input: {
+                          'aria-label': `${branchLabel(node)}: ${permissionLabel(entry, actionContext)}`,
+                        },
+                      }}
+                      sx={{ minWidth: 44, minHeight: 44, flexShrink: 0 }}
+                    />
+                  }
                 />
-              ))}
-            </Box>
-          </motion.div>
+                {inherited.length > 0 && (
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: 'block', maxWidth: 260 }}
+                  >
+                    Inherited from{' '}
+                    {inherited
+                      .map(
+                        (source) =>
+                          `${source.providerName === 'R' ? 'role' : source.providerName} ${source.providerKey}`
+                      )
+                      .join(', ')}
+                    . Remains effective.
+                  </Typography>
+                )}
+                {!eligibleProvider && (
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                    Managed through {entry.allowedProviders.join(', ')} only.
+                  </Typography>
+                )}
+              </Box>
+            );
+          })}
+        </Stack>
+        {inheritedCount > 0 && (
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+            Removing direct grants does not remove the {inheritedCount} inherited permission(s).
+          </Typography>
         )}
-      </AnimatePresence>
+      </Card>
+      {expanded &&
+        branches.map((child) => (
+          <PermissionNode
+            key={branchKey(child)}
+            node={child}
+            provider={provider}
+            grants={grants}
+            subtreeEntries={subtreeEntries}
+            onToggle={onToggle}
+            onBulk={onBulk}
+            disabled={disabled}
+            depth={depth + 1}
+          />
+        ))}
     </Box>
   );
 }

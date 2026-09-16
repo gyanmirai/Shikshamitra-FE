@@ -1,14 +1,17 @@
 import type { JSX } from 'react';
-import React, { isValidElement, cloneElement } from 'react';
 
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
+import Info from '@mui/icons-material/Info';
 import { GlobalIcons } from 'src/utils/icons';
+import Error from '@mui/icons-material/Error';
 import { useTheme } from '@mui/material/styles';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import React, { cloneElement, isValidElement } from 'react';
+import WarningAmber from '@mui/icons-material/WarningAmber';
 import { Box, Typography, DialogTitle } from '@mui/material';
-import { Info, Error, CheckCircle, WarningAmber } from '@mui/icons-material';
 
 import { Iconify } from '../iconify';
 

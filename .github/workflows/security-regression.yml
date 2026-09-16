@@ -1,0 +1,52 @@
+name: Security Regression
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: security-frontend-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  HUSKY: 0
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  security-frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Retained UI, exact-action, and wiring regressions
+        run: >-
+          npx vitest run src/screens/security/role
+          src/components/progress-bar/progress-bar.history.test.tsx
+          src/components/three-dots-actions/index.test.tsx
+          src/utils/permissions.test.ts
+      - name: Security lint
+        run: >-
+          npx eslint src/screens/security/role src/screens/security/user
+          src/components/progress-bar/progress-bar.tsx src/components/progress-bar/progress-bar.history.test.tsx
+          src/components/three-dots-actions/index.tsx src/components/three-dots-actions/index.test.tsx
+          src/utils/permissions.ts src/utils/permissions.test.ts
+      - name: TypeScript
+        run: npm run ts
+      - name: Security documentation
+        run: node scripts/docs/validate-docs.mjs --module security
+      - name: Production build
+        run: npm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+      - name: Diff whitespace
+        run: git diff --check

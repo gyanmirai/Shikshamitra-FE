@@ -9,6 +9,7 @@ import {
   Card,
   Paper,
   Stack,
+  Button,
   Switch,
   Tooltip,
   Typography,
@@ -16,6 +17,7 @@ import {
 } from '@mui/material';
 
 import { setPermissionGrants, getVisibilityPermissionName } from './permission-grants';
+import { buildVisibilityPanels, isVisibilityPermission } from './permission-catalogue';
 
 // ----------------------------------------------------------------------
 
@@ -25,12 +27,16 @@ const SubmoduleItem = ({
   moduleTitle,
   submoduleVisibility,
   onToggleSubmodule,
+  inherited,
+  disabled,
   level = 0,
 }: {
   submodule: any;
   moduleTitle: string;
   submoduleVisibility: { name: string; isGranted: boolean }[];
   onToggleSubmodule: (submoduleTitle: string) => void;
+  inherited?: string[];
+  disabled?: boolean;
 
   level?: number;
 }) => {
@@ -59,24 +65,31 @@ const SubmoduleItem = ({
             bgcolor: alpha(theme.palette.primary.main, 0.02),
           },
           mb: 1,
-          cursor: 'pointer',
         }}
-        onClick={() => permissionName && onToggleSubmodule(permissionName)}
       >
-        <Typography
-          variant="body2"
-          sx={{
-            fontWeight: 600,
-            color: 'text.primary',
-          }}
-        >
-          {submodule.title}
-        </Typography>
+        <Box>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              color: 'text.primary',
+            }}
+          >
+            {submodule.title}
+          </Typography>
+          {!!inherited?.length && (
+            <Typography variant="caption" color="text.secondary">
+              Inherited from {inherited.join(', ')} remains
+            </Typography>
+          )}
+        </Box>
         <Switch
           size="small"
           checked={isVisible}
-          // onChange={() => onToggleSubmodule(submodule.permissionName)}
-          // onClick={(e) => e.stopPropagation()}
+          onChange={() => permissionName && onToggleSubmodule(permissionName)}
+          disabled={disabled || !permissionName}
+          slotProps={{ input: { 'aria-label': `${submodule.title} visibility` } }}
+          sx={{ minWidth: 44, minHeight: 44 }}
         />
       </Paper>
     </Box>
@@ -86,12 +99,18 @@ const SubmoduleItem = ({
 const Visibility = ({
   visibility,
   setVisibility,
+  inherited = new Map<string, string[]>(),
+  manageableNames,
+  disabled = false,
 }: {
   visibility: { name: string; isGranted: boolean }[];
   setVisibility: (visibility: { name: string; isGranted: boolean }[]) => void;
+  inherited?: Map<string, string[]>;
+  manageableNames?: Set<string>;
+  disabled?: boolean;
 }) => {
   // const [submoduleVisibility, setSubmoduleVisibility] = useState<string[]>([]);
-  const [currentSelected, setCurrentSelected] = useState<any>(null);
+  const [selectedTitle, setSelectedTitle] = useState('');
 
   const theme = useTheme();
 
@@ -100,12 +119,25 @@ const Visibility = ({
    * - The complete navigation tree includes constructed icon elements and is static for this dialog.
    * - Keeping one reference avoids rebuilding the full tree on every permission toggle.
    */
-  const data = useMemo(() => fullSecurityNavData().flatMap((item) => item.items), []);
+  const navigation = useMemo(() => fullSecurityNavData().flatMap((item) => item.items), []);
+  const data = useMemo(
+    () => buildVisibilityPanels(visibility, navigation),
+    [visibility, navigation]
+  );
+  const currentSelected = data.find((item) => item.title === selectedTitle);
+  const canManage = (name?: string) =>
+    Boolean(
+      name &&
+      isVisibilityPermission(name) &&
+      !disabled &&
+      (!manageableNames || manageableNames.has(name))
+    );
 
   // ============================================================
   // HANDLE VISIBILITY TOGGLE
   // ============================================================
   const handleToggleVisibility = (permissionName: string) => {
+    if (!canManage(permissionName)) return;
     const isVisible = visibility.find((t) => t.name === permissionName)?.isGranted;
     if (isVisible) {
       setVisibility(
@@ -123,6 +155,7 @@ const Visibility = ({
   };
 
   const handleToggleSubmodule = (submoduleTitle: string) => {
+    if (!canManage(submoduleTitle)) return;
     const isVisible = visibility.find((t) => t.name === submoduleTitle)?.isGranted;
     if (isVisible) {
       setVisibility(
@@ -142,13 +175,11 @@ const Visibility = ({
   const handleToggleAllSubmodules = (allSubmodules: any[]) => {
     const permissionNames = allSubmodules
       .map(getVisibilityPermissionName)
-      .filter((permissionName): permissionName is string => Boolean(permissionName));
+      .filter((permissionName): permissionName is string => canManage(permissionName));
     const isAllVisible = permissionNames.every(
       (permissionName) => !!visibility.find((t) => t.name === permissionName)?.isGranted
     );
-    setVisibility(
-      setPermissionGrants(visibility, permissionNames, !isAllVisible)
-    );
+    setVisibility(setPermissionGrants(visibility, permissionNames, !isAllVisible));
   };
 
   return (
@@ -156,6 +187,7 @@ const Visibility = ({
       sx={{
         height: '100%',
         display: 'flex',
+        flexDirection: { xs: 'column', md: 'row' },
         gap: 3,
         minHeight: 0,
         p: 1,
@@ -168,7 +200,9 @@ const Visibility = ({
         elevation={0}
         sx={{
           height: '100%',
-          width: '340px',
+          width: { xs: '100%', md: 340 },
+          flexShrink: 0,
+          minHeight: { xs: 240, md: 0 },
           borderRadius: 3,
           display: 'flex',
           flexDirection: 'column',
@@ -189,7 +223,8 @@ const Visibility = ({
         <Scrollbar sx={{ px: 2, pb: 2 }}>
           <Stack spacing={1.5} sx={{ pb: 8 }}>
             {data.map((item, index) => {
-              const isUnlocked = visibility.find((t) => t.name === item.permissionName)?.isGranted;
+              const isUnlocked = !!visibility.find((t) => t.name === item.permissionName)
+                ?.isGranted;
               const isSelected = currentSelected?.title === item.title;
               const submodulePermissionNames = (item.submodule || [])
                 .map(getVisibilityPermissionName)
@@ -204,17 +239,18 @@ const Visibility = ({
                   true
               ).length;
 
-              const progress = !isUnlocked
-                ? 0
-                : totalSubmodules > 0
-                  ? (visibleSubmodules / totalSubmodules) * 100
-                  : 100;
+              const progress =
+                item.permissionName && !isUnlocked
+                  ? 0
+                  : totalSubmodules > 0
+                    ? (visibleSubmodules / totalSubmodules) * 100
+                    : 100;
               const isCompleted = progress === 100;
 
               return (
                 <Card
                   key={item.title + index}
-                  onClick={() => setCurrentSelected(item)}
+                  onClick={() => setSelectedTitle(item.title)}
                   sx={{
                     p: 2,
                     cursor: 'pointer',
@@ -275,16 +311,21 @@ const Visibility = ({
 
                     <Box flexGrow={1} minWidth={0}>
                       <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Typography
-                          variant="subtitle2"
-                          noWrap
+                        <Button
+                          color="inherit"
+                          onClick={() => setSelectedTitle(item.title)}
+                          aria-pressed={isSelected}
                           sx={{
+                            p: 0,
+                            minHeight: 44,
+                            minWidth: 44,
+                            justifyContent: 'flex-start',
                             fontWeight: isSelected ? 700 : 600,
                             color: isSelected ? 'primary.dark' : 'text.primary',
                           }}
                         >
                           {item.title}
-                        </Typography>
+                        </Button>
                         {isCompleted && (
                           <Tooltip title="Fully Visible">
                             <Iconify
@@ -327,12 +368,18 @@ const Visibility = ({
                     <Switch
                       checked={isUnlocked}
                       size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleVisibility(item.permissionName);
-                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={() => handleToggleVisibility(item.permissionName)}
+                      disabled={!canManage(item.permissionName)}
+                      slotProps={{ input: { 'aria-label': `${item.title} visibility` } }}
+                      sx={{ minWidth: 44, minHeight: 44 }}
                     />
                   </Stack>
+                  {!!inherited.get(item.permissionName)?.length && (
+                    <Typography variant="caption" color="text.secondary">
+                      Inherited from {inherited.get(item.permissionName)!.join(', ')} remains
+                    </Typography>
+                  )}
                 </Card>
               );
             })}
@@ -347,6 +394,8 @@ const Visibility = ({
         elevation={0}
         sx={{
           flexGrow: 1,
+          minWidth: 0,
+          minHeight: { xs: 280, md: 0 },
           height: '100%',
           borderRadius: 3,
           display: 'flex',
@@ -360,37 +409,8 @@ const Visibility = ({
           <EmptyContent
             title="Select a module"
             description="Choose a module from the sidebar to manage its visibility settings."
-            imgUrl={`${theme.palette.mode === 'dark' ? '/assets/icons/empty/ic_content_dark.svg' : '/assets/icons/empty/ic_content.svg'}`}
+            imgUrl="/assets/icons/empty/ic-content.svg"
           />
-        ) : !visibility.find((t) => t.name === currentSelected.permissionName)?.isGranted ? (
-          <Stack
-            alignItems="center"
-            justifyContent="center"
-            sx={{ flexGrow: 1, p: 3, textAlign: 'center' }}
-          >
-            <Box
-              sx={{
-                width: 80,
-                height: 80,
-                borderRadius: '50%',
-                bgcolor: alpha(theme.palette.error.main, 0.1),
-                color: 'error.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                mb: 2,
-              }}
-            >
-              <Iconify icon="solar:lock-password-bold-duotone" width={40} />
-            </Box>
-            <Typography variant="h6" gutterBottom>
-              Module Visibility
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 400 }}>
-              Enable the <strong>{currentSelected.title}</strong> module from the sidebar to
-              configure it&lsquo;s visibility settings.
-            </Typography>
-          </Stack>
         ) : (
           <>
             {/* HEADER */}
@@ -446,6 +466,13 @@ const Visibility = ({
                       Select All
                     </Typography>
                     <Switch
+                      disabled={disabled}
+                      slotProps={{
+                        input: {
+                          'aria-label': `Select all ${currentSelected.title} submodule visibility`,
+                        },
+                      }}
+                      sx={{ minWidth: 44, minHeight: 44 }}
                       checked={currentSelected.submodule
                         .map(getVisibilityPermissionName)
                         .filter((permissionName: string | undefined): permissionName is string =>
@@ -455,9 +482,7 @@ const Visibility = ({
                           (permissionName: string) =>
                             visibility.find((t) => t.name === permissionName)?.isGranted
                         )}
-                      onChange={() =>
-                        handleToggleAllSubmodules(currentSelected.submodule)
-                      }
+                      onChange={() => handleToggleAllSubmodules(currentSelected.submodule)}
                     />
                   </Paper>
                 )}
@@ -476,6 +501,8 @@ const Visibility = ({
                         moduleTitle={currentSelected.permissionName}
                         submoduleVisibility={visibility}
                         onToggleSubmodule={handleToggleSubmodule}
+                        inherited={inherited.get(getVisibilityPermissionName(sub) ?? '')}
+                        disabled={!canManage(getVisibilityPermissionName(sub))}
                         level={0}
                       />
                     ))}
