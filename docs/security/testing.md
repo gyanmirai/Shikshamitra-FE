@@ -64,12 +64,15 @@ Browser setup does not fabricate compensation approvals, alter payroll, or activ
 
 The focused retained-layout behavior suite passes 46 tests in eight files.
 Local evidence is `.artifacts/security-local/rc-0916-editor-unit-final.log`.
-The final Security/HR/shared regression run passes 636 tests in 109 files; its existing happy-dom network/teardown warnings remain documented.
+The pre-publication Security/HR/shared regression run passes 636 tests in 109 files; its existing happy-dom network/teardown warnings remain documented.
+After integrating main through `1f59f2a1`, the refreshed Security/HR/shared run passes 633 tests in 110 files, and standalone TypeScript passes.
+The changed test count comes from the upstream salary-template workflow suite, not skipped tests or weakened assertions in this patch.
 The final production build, standalone TypeScript check, and touched-file ESLint pass.
 Evidence is recorded in the `rc-0916-permissions-final-*` logs under ignored local artifacts.
 The five-browser acceptance run passes all 35 cases with zero failures, skips, retries, or flaky results.
 Its final log is `.artifacts/security-local/rc-0916-permissions-final-browser.log`.
-The JSON report is under ignored `e2e/security/.artifacts/security-browser/results.json`.
+The runner generates a local-only `results.json` in its ignored Security browser artifacts directory.
+That report is not a checked-in source file and is not expected in a clean CI checkout.
 Authenticated Codex in-app confirmation verifies the retained Role/User layout, separate visibility, all five ESI actions, inheritance labels, focus return, and footer bounds at all three requested viewport sizes.
 That confirmation is recorded in `.artifacts/security-local/rc-0916-permissions-final-codex.md`.
 Do not substitute the previous unchanged-UI or withdrawn-editor browser results for those gates.
