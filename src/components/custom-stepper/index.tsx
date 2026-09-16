@@ -8,7 +8,6 @@ import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { styled } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { stepConnectorClasses } from '@mui/material/StepConnector';
 import {
@@ -155,36 +154,23 @@ const ModernStepIcon = (props: StepIconProps) => {
         height: 24,
       }}
     >
-      <AnimatePresence>
-        {active && (
-          <Box
-            component={motion.div}
-            layoutId="active-step-indicator"
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
-            sx={{
-              position: 'absolute',
-              width: '100%',
-              height: '100%',
-              borderRadius: '50%',
-              bgcolor: (theme) => theme.palette.primary.main,
-              opacity: 0.15,
-              zIndex: 0,
-            }}
-          />
-        )}
-      </AnimatePresence>
+      <Box
+        aria-hidden
+        sx={{
+          position: 'absolute',
+          width: '100%',
+          height: '100%',
+          borderRadius: '50%',
+          bgcolor: (theme) => theme.palette.primary.main,
+          opacity: active ? 0.15 : 0,
+          transform: active ? 'scale(1)' : 'scale(0)',
+          transition: 'opacity 300ms ease-out, transform 300ms ease-out',
+          zIndex: 0,
+          '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
+        }}
+      />
 
       <Box
-        component={motion.div}
-        animate={{
-          scale: active ? 1.1 : 1,
-          backgroundColor: completed || active ? 'var(--palette-primary-main)' : 'rgba(0, 0, 0, 0)',
-          borderColor:
-            completed || active ? 'var(--palette-primary-main)' : 'var(--palette-grey-400)',
-        }}
         sx={{
           zIndex: 1,
           width: 24,
@@ -196,7 +182,11 @@ const ModernStepIcon = (props: StepIconProps) => {
           border: '2px solid',
           bgcolor: (theme) =>
             completed || active ? theme.palette.primary.main : 'rgba(0, 0, 0, 0)',
+          borderColor: completed || active ? 'primary.main' : 'grey.400',
           color: (theme) => (completed || active ? '#fff' : theme.palette.text.secondary),
+          transform: active ? 'scale(1.1)' : 'scale(1)',
+          transition: 'background-color 300ms ease-out, border-color 300ms ease-out, transform 300ms ease-out',
+          '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
         }}
       >
         {completed ? (
