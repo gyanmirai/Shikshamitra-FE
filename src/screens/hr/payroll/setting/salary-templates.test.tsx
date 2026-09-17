@@ -7,8 +7,6 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import SalaryTemplateSettings from './salary-templates';
 
 const mocks = vi.hoisted(() => ({
-  query: '',
-  pathname: '/hr/payroll/setting/salary-templates/',
   push: vi.fn(),
   permissions: new Set(['View', 'Add', 'Edit', 'SetDefault', 'Archive']),
   refetch: vi.fn(),
@@ -50,8 +48,6 @@ const mocks = vi.hoisted(() => ({
 vi.mock('react-redux', () => ({ useSelector: () => [], useDispatch: () => vi.fn() }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mocks.push }),
-  usePathname: () => mocks.pathname,
-  useSearchParams: () => new URLSearchParams(mocks.query),
 }));
 vi.mock('src/routes/components', () => ({
   RouterLink: ({ children, ...props }: React.ComponentProps<'a'>) => <a {...props}>{children}</a>,
@@ -64,10 +60,25 @@ vi.mock('src/utils/permissions', () => ({
     [...mocks.permissions].some((action) => permission.endsWith(`.${action}`)),
 }));
 vi.mock('src/components/three-dots-actions', () => ({
-  default: ({ showViewIcon, showEditIcon, viewLabel, editLabel, handleViewClick, handleEditClick }: any) => (
+  default: ({
+    showViewIcon,
+    showEditIcon,
+    viewLabel,
+    editLabel,
+    handleViewClick,
+    handleEditClick,
+  }: any) => (
     <div>
-      {showViewIcon ? <button type="button" aria-label={viewLabel} onClick={handleViewClick}>View</button> : null}
-      {showEditIcon ? <button type="button" aria-label={editLabel} onClick={handleEditClick}>Edit</button> : null}
+      {showViewIcon ? (
+        <button type="button" aria-label={viewLabel} onClick={handleViewClick}>
+          View
+        </button>
+      ) : null}
+      {showEditIcon ? (
+        <button type="button" aria-label={editLabel} onClick={handleEditClick}>
+          Edit
+        </button>
+      ) : null}
     </div>
   ),
 }));
@@ -75,7 +86,9 @@ vi.mock('src/components/customizabaleTable', () => ({
   default: ({ tableId, tableTitle, columns, data, rowProps, isLoading }: any) => (
     <section data-testid={tableId} aria-label={tableTitle} data-loading={String(isLoading)}>
       <div data-testid="salary-template-columns">
-        {columns.map((column: any) => <span key={column.id}>{column.label}</span>)}
+        {columns.map((column: any) => (
+          <span key={column.id}>{column.label}</span>
+        ))}
       </div>
       {data.map((row: SalaryTemplate, index: number) => {
         const configuredRowProps = rowProps?.(row, index) || {};
@@ -83,23 +96,15 @@ vi.mock('src/components/customizabaleTable', () => ({
           <div key={row.id} data-testid={`salary-template-row-${row.id}`} {...configuredRowProps}>
             {columns.map((column: any) => (
               <div key={column.id}>
-                {column.render ? column.render((row as any)[column.id], row) : (row as any)[column.id]}
+                {column.render
+                  ? column.render((row as any)[column.id], row)
+                  : (row as any)[column.id]}
               </div>
             ))}
           </div>
         );
       })}
     </section>
-  ),
-}));
-vi.mock('./salary-template-editor', () => ({
-  default: ({ templateId, mode, onDirtyChange, onSaved, onClose }: any) => (
-    <div data-testid="salary-template-editor">
-      {templateId || 'new'}:{mode}
-      <button type="button" onClick={() => onDirtyChange(true)}>Mark editor dirty</button>
-      <button type="button" onClick={onSaved}>Complete save</button>
-      <button type="button" onClick={onClose}>Close editor</button>
-    </div>
   ),
 }));
 vi.mock('src/redux/hr/salary-template-api', () => ({
@@ -113,13 +118,11 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
   useArchiveSalaryTemplateMutation: () => [mocks.archive, { isLoading: false }],
 }));
 
-const editorPath = (mode = 'edit') =>
-  `${mocks.pathname}?templateId=${mocks.template.id}&mode=${mode}`;
+const editorPath = `/hr/payroll/setting/salary-templates/${mocks.template.id}`;
 
 describe('SalaryTemplateSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.query = '';
     mocks.permissions = new Set(['View', 'Add', 'Edit', 'SetDefault', 'Archive']);
     mocks.template.status = 'ACTIVE';
     mocks.template.isDefault = true;
@@ -136,7 +139,7 @@ describe('SalaryTemplateSettings', () => {
     );
     expect(screen.getByRole('link', { name: 'Flexible Salary' })).toHaveAttribute(
       'href',
-      editorPath()
+      editorPath
     );
     expect(screen.getByText('Active')).toBeVisible();
   });
@@ -146,13 +149,13 @@ describe('SalaryTemplateSettings', () => {
     render(<SalaryTemplateSettings />);
 
     await user.click(screen.getByTestId('salary-template-row-template-1'));
-    expect(mocks.push).toHaveBeenLastCalledWith(editorPath());
+    expect(mocks.push).toHaveBeenLastCalledWith(editorPath);
 
     mocks.push.mockClear();
     screen.getByTestId('salary-template-row-template-1').focus();
     await user.keyboard('{Enter}');
     expect(mocks.push).toHaveBeenCalledTimes(1);
-    expect(mocks.push).toHaveBeenCalledWith(editorPath());
+    expect(mocks.push).toHaveBeenCalledWith(editorPath);
 
     mocks.push.mockClear();
     await user.click(screen.getByRole('button', { name: 'Edit Flexible Salary' }));
@@ -167,7 +170,7 @@ describe('SalaryTemplateSettings', () => {
     render(<SalaryTemplateSettings />);
 
     await user.click(screen.getByTestId('salary-template-row-template-1'));
-    expect(mocks.push).toHaveBeenCalledWith(editorPath('view'));
+    expect(mocks.push).toHaveBeenCalledWith(editorPath);
     expect(screen.getByRole('button', { name: 'View Flexible Salary' })).toBeVisible();
 
     cleanup();
@@ -176,35 +179,17 @@ describe('SalaryTemplateSettings', () => {
     mocks.permissions = new Set(['View']);
     render(<SalaryTemplateSettings />);
     await user.click(screen.getByTestId('salary-template-row-template-1'));
-    expect(mocks.push).toHaveBeenCalledWith(editorPath('view'));
+    expect(mocks.push).toHaveBeenCalledWith(editorPath);
     expect(screen.queryByRole('button', { name: 'Create template' })).not.toBeInTheDocument();
   });
 
-  it('opens new template creation in the same drawer route', async () => {
-    const user = userEvent.setup();
+  it('links template creation to the dedicated full-page route', () => {
     render(<SalaryTemplateSettings />);
 
-    await user.click(screen.getByRole('button', { name: 'Create template' }));
-    expect(mocks.push).toHaveBeenCalledWith(`${mocks.pathname}?mode=create`);
-
-    cleanup();
-    mocks.query = 'mode=create';
-    render(<SalaryTemplateSettings />);
-    expect(screen.getByTestId('salary-template-editor')).toHaveTextContent('new:create');
-  });
-
-  it('guards dirty closure but closes directly after a successful save', async () => {
-    const user = userEvent.setup();
-    mocks.query = `templateId=${mocks.template.id}&mode=edit`;
-    render(<SalaryTemplateSettings />);
-
-    await user.click(screen.getByRole('button', { name: 'Mark editor dirty' }));
-    await user.click(screen.getByRole('button', { name: 'Close editor' }));
-    expect(screen.getByRole('dialog', { name: 'Discard unsaved changes?' })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
-
-    await user.click(screen.getByRole('button', { name: 'Complete save' }));
-    expect(screen.queryByRole('dialog', { name: 'Discard unsaved changes?' })).not.toBeInTheDocument();
-    expect(mocks.push).toHaveBeenLastCalledWith(mocks.pathname);
+    expect(screen.getByRole('link', { name: 'Create template' })).toHaveAttribute(
+      'href',
+      '/hr/payroll/setting/salary-templates/new'
+    );
+    expect(screen.queryByTestId('salary-template-editor')).not.toBeInTheDocument();
   });
 });

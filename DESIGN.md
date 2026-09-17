@@ -237,6 +237,10 @@ Long policy and template editors use the shared right-side editor drawer.
 The drawer owns a stable title, concise description, ordered stepper, scrollable body, and sticky action footer.
 It becomes full width on small screens and keeps the underlying list in context on desktop.
 
+Use a dedicated URL-backed page when a comparative configuration task requires simultaneous editing of two peer collections, such as earnings and deductions.
+Keep one form-state owner, place the peer collections side by side only at desktop widths, stack them on smaller screens, and keep the primary actions in a sticky page footer.
+Use compact expandable rows for repeated rule editors so the page preserves comparison context without rendering every field at once.
+
 ## Loading contract
 
 Choose a loader that matches the scope of work.

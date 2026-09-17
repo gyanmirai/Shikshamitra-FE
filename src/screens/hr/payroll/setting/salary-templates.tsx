@@ -3,20 +3,23 @@
 import type { RootState } from 'src/redux/store';
 import type { MouseEvent, KeyboardEvent } from 'react';
 import type { SalaryTemplate } from 'src/redux/hr/salary-template-api';
-import type { IData, IColumn, CustomizableTableRowProps } from 'src/components/customizabaleTable/types';
+import type {
+  IData,
+  IColumn,
+  CustomizableTableRowProps,
+} from 'src/components/customizabaleTable/types';
 
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
-import { hrPermissions } from 'src/constants/hr-menus';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { useId, useMemo, useState, useCallback } from 'react';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   useGetSalaryTemplatesQuery,
@@ -27,7 +30,6 @@ import {
   Box,
   Link,
   Alert,
-  Drawer,
   Button,
   Select,
   MenuItem,
@@ -39,8 +41,6 @@ import {
   ListItemText,
   DialogActions,
 } from '@mui/material';
-
-import SalaryTemplateEditor from './salary-template-editor';
 
 type SalaryTemplateRow = SalaryTemplate & {
   defaultLabel: string;
@@ -63,8 +63,6 @@ const statusLabel: Record<SalaryTemplate['status'], string> = {
 
 export default function SalaryTemplateSettings() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canAdd = hasGrantedPermission(
     permissions,
@@ -87,19 +85,16 @@ export default function SalaryTemplateSettings() {
   const [archive, archiveState] = useArchiveSalaryTemplateMutation();
   const [archiveTarget, setArchiveTarget] = useState<SalaryTemplate | null>(null);
   const [replacementId, setReplacementId] = useState('');
-  const [editorDirty, setEditorDirty] = useState(false);
   const replacementLabelId = useId();
-  const selectedTemplateId = searchParams.get('templateId') || undefined;
-  const requestedMode = searchParams.get('mode');
-  const editorMode = requestedMode === 'create' ? 'create' : requestedMode === 'view' ? 'view' : 'edit';
-  const editorOpen = editorMode === 'create' || Boolean(selectedTemplateId);
   const templates = useMemo(() => data?.items || [], [data?.items]);
   const rows = useMemo<SalaryTemplateRow[]>(
     () =>
       templates.map((template) => ({
         ...template,
         defaultLabel: template.isDefault ? 'School default' : 'No',
-        activeVersionLabel: template.activeVersion ? `Version ${template.activeVersion}` : 'Not active',
+        activeVersionLabel: template.activeVersion
+          ? `Version ${template.activeVersion}`
+          : 'Not active',
         componentCount: template.editableVersion.rules.length,
         updatedLabel: new Intl.DateTimeFormat('en-IN', {
           day: '2-digit',
@@ -112,40 +107,16 @@ export default function SalaryTemplateSettings() {
   const busy = defaultState.isLoading || archiveState.isLoading;
 
   const editorHref = useCallback(
-    (template?: SalaryTemplate) => {
-      const params = new URLSearchParams(searchParams.toString());
-      if (template) {
-        params.set('templateId', template.id);
-        params.set('mode', template.status === 'ARCHIVED' || !canEdit ? 'view' : 'edit');
-      } else {
-        params.delete('templateId');
-        params.set('mode', 'create');
-      }
-      return `${pathname}?${params.toString()}`;
-    },
-    [canEdit, pathname, searchParams]
+    (template?: SalaryTemplate) =>
+      template
+        ? hrPaths.payroll.settings.salaryTemplateEditor(template.id)
+        : hrPaths.payroll.settings.newSalaryTemplate,
+    []
   );
 
   const openTemplate = useCallback(
     (template: SalaryTemplate) => router.push(editorHref(template)),
     [editorHref, router]
-  );
-
-  const closeEditorNow = useCallback(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete('templateId');
-    params.delete('mode');
-    const query = params.toString();
-    setEditorDirty(false);
-    router.push(query ? `${pathname}?${query}` : pathname);
-  }, [pathname, router, searchParams]);
-  const { requestNavigation, confirmation } = useUnsavedNavigation(editorDirty, {
-    description: 'Your salary template edits have not been saved. Keep editing, or discard them and close.',
-    push: router.push,
-  });
-  const closeEditor = useCallback(
-    () => requestNavigation(closeEditorNow),
-    [closeEditorNow, requestNavigation]
   );
 
   const setDefaultTemplate = useCallback(
@@ -240,7 +211,13 @@ export default function SalaryTemplateSettings() {
           value === 'School default' ? <Label color="primary">School default</Label> : 'No',
       },
       { id: 'activeVersionLabel', label: 'Active version', filterType: 'string', minWidth: 140 },
-      { id: 'componentCount', label: 'Components', filterType: 'number', align: 'right', minWidth: 120 },
+      {
+        id: 'componentCount',
+        label: 'Components',
+        filterType: 'number',
+        align: 'right',
+        minWidth: 120,
+      },
       { id: 'updatedLabel', label: 'Last updated', filterType: 'string', minWidth: 150 },
       {
         id: 'status',
@@ -272,7 +249,10 @@ export default function SalaryTemplateSettings() {
           const canChooseDefault =
             canSetDefault && template.status === 'ACTIVE' && !template.isDefault;
           return (
-            <Box onClick={(event) => event.stopPropagation()} onKeyDown={(event) => event.stopPropagation()}>
+            <Box
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
               <ThreeDotsActions
                 showViewIcon={!editable}
                 showEditIcon={editable}
@@ -292,7 +272,9 @@ export default function SalaryTemplateSettings() {
                           setDefaultTemplate(template);
                         }}
                       >
-                        <ListItemIcon><Iconify icon="mdi:star" width={18} /></ListItemIcon>
+                        <ListItemIcon>
+                          <Iconify icon="mdi:star" width={18} />
+                        </ListItemIcon>
                         <ListItemText>Set as school default</ListItemText>
                       </MenuItem>
                     ) : null}
@@ -304,7 +286,9 @@ export default function SalaryTemplateSettings() {
                           setArchiveTarget(template);
                         }}
                       >
-                        <ListItemIcon sx={{ color: 'inherit' }}><Iconify icon="mdi:archive" width={18} /></ListItemIcon>
+                        <ListItemIcon sx={{ color: 'inherit' }}>
+                          <Iconify icon="mdi:archive" width={18} />
+                        </ListItemIcon>
                         <ListItemText>Archive</ListItemText>
                       </MenuItem>
                     ) : null}
@@ -325,15 +309,23 @@ export default function SalaryTemplateSettings() {
 
   return (
     <Box display="flex" flexDirection="column" flex={1} minHeight={0} gap={2}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" gap={2} flexWrap="wrap">
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        gap={2}
+        flexWrap="wrap"
+      >
         <Typography variant="body2" color="text.secondary">
-          Templates are reusable defaults. Saving a change creates a new version for future salary setups only.
+          Templates are reusable defaults. Saving a change creates a new version for future salary
+          setups only.
         </Typography>
         {canAdd ? (
           <Button
             variant="contained"
             startIcon={<Iconify icon="mdi:plus" width={18} />}
-            onClick={() => router.push(editorHref())}
+            component={RouterLink}
+            href={editorHref()}
             sx={{ minHeight: 44 }}
           >
             Create template
@@ -359,38 +351,20 @@ export default function SalaryTemplateSettings() {
         />
       )}
 
-      <Drawer
-        anchor="right"
-        open={editorOpen}
-        onClose={closeEditor}
-        ModalProps={{ keepMounted: false }}
-        slotProps={{
-          paper: {
-            sx: { width: { xs: '100%', md: 'min(1000px, 92vw)' }, maxWidth: '100%' },
-          },
-        }}
-      >
-        {editorOpen ? (
-          <SalaryTemplateEditor
-            templateId={selectedTemplateId}
-            mode={editorMode}
-            onClose={closeEditor}
-            onSaved={closeEditorNow}
-            onDirtyChange={setEditorDirty}
-          />
-        ) : null}
-      </Drawer>
-
       <CustomDialog
         open={Boolean(archiveTarget)}
-        handleClose={() => { setArchiveTarget(null); setReplacementId(''); }}
+        handleClose={() => {
+          setArchiveTarget(null);
+          setReplacementId('');
+        }}
         title="Archive salary template?"
         maxWidth="sm"
         hasForm={false}
       >
         <DialogScrollContent>
           <Typography mb={2}>
-            Existing employee salary revisions will remain unchanged. This template will no longer be available for new salary setups.
+            Existing employee salary revisions will remain unchanged. This template will no longer
+            be available for new salary setups.
           </Typography>
           {archiveTarget?.isDefault ? (
             replacementOptions.length ? (
@@ -403,7 +377,9 @@ export default function SalaryTemplateSettings() {
                   onChange={(event) => setReplacementId(event.target.value)}
                 >
                   {replacementOptions.map((template) => (
-                    <MenuItem key={template.id} value={template.id}>{template.name}</MenuItem>
+                    <MenuItem key={template.id} value={template.id}>
+                      {template.name}
+                    </MenuItem>
                   ))}
                 </Select>
               </FormControl>
@@ -415,7 +391,14 @@ export default function SalaryTemplateSettings() {
           ) : null}
         </DialogScrollContent>
         <DialogActions>
-          <Button onClick={() => { setArchiveTarget(null); setReplacementId(''); }}>Cancel</Button>
+          <Button
+            onClick={() => {
+              setArchiveTarget(null);
+              setReplacementId('');
+            }}
+          >
+            Cancel
+          </Button>
           <Button
             color="error"
             variant="contained"
@@ -426,7 +409,6 @@ export default function SalaryTemplateSettings() {
           </Button>
         </DialogActions>
       </CustomDialog>
-      {confirmation}
     </Box>
   );
 }

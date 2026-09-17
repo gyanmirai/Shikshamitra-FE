@@ -53,8 +53,9 @@ export const hrPaths = {
       professionalTax: '/hr/payroll/setting/professional-tax',
       statutorySchemes: '/hr/payroll/setting/statutory-schemes',
       salaryTemplates: '/hr/payroll/setting/salary-templates',
-      salaryTemplateEditor: (templateId: string, versionId: string) =>
-        `/hr/payroll/setting/salary-templates/${templateId}/${versionId}`,
+      newSalaryTemplate: '/hr/payroll/setting/salary-templates/new',
+      salaryTemplateEditor: (templateId: string) =>
+        `/hr/payroll/setting/salary-templates/${templateId}`,
     },
   },
   attendance: {
