@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Landing
 status: canonical
-updated_on: 2026-09-16
+updated_on: 2026-09-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -14,7 +14,7 @@ audience: humans-and-agents
 
 TL;DR: this release preserves the old Role and User UI, including separate permission and visibility dialogs.
 Backend authorization and frontend action guards remain hardened.
-The user-approved behavior fixes operate inside the existing three-panel layout and separate dialogs, not a replacement editor.
+The September 17 staging reference includes the three-panel layout, expandable groups, compact grouped action switches, and separate dialogs.
 
 ## Read order
 
@@ -37,8 +37,10 @@ The user-approved behavior fixes operate inside the existing three-panel layout 
 
 Read the backend standard before changing actions, route gates, identity, scope, or security seeders.
 Do not reintroduce the withdrawn catalogue-editor redesign without explicit approval.
-Do not restore fixed CRUD assumptions, implicit action bundles, or target-visibility restrictions on permission administration.
-Server catalogue entries, not navigation metadata or a hardcoded action list, define all available grants.
+Preserve staging's grouped controls and existing action mappings, including Student bundles and Accounts Settings exceptions.
+The approved Statutory Schemes exception uses View/Edit/Delete controls and complete direct-feature revocation as described in [Workflows](workflows.md).
+Server catalogue entries remain authoritative for valid API names and provider eligibility.
+Do not add granular action tiles or let expanding a group edit grants.
 Keep inherited grants and unsaved drafts separate from direct-grant edits.
 
 ## Validation

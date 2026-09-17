@@ -6,13 +6,21 @@ on:
       - main
   workflow_dispatch:
 
+concurrency:
+  group: staging-frontend-release
+  cancel-in-progress: false
+
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
   WEBAPP_NAME: 'dev-gyanmirai-fe'
   HUSKY: 0 # ✅ disable husky in CI
 
 jobs:
+  security:
+    uses: ./.github/workflows/security-regression.yml
+
   build:
+    needs: security
     runs-on: ubuntu-latest
     timeout-minutes: 30
 

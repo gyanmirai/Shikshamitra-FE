@@ -1,5 +1,3 @@
-import type { CataloguePermission } from 'src/screens/security/role/permission-catalogue';
-
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ThemeProvider } from '@mui/material/styles';
@@ -8,11 +6,14 @@ import financeModule from 'src/constants/finance-menu';
 import { Box, Alert, Typography, CssBaseline } from '@mui/material';
 import PermissionNode from 'src/screens/security/role/permission-node';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { branchPermissions } from 'src/screens/security/role/permission-catalogue';
 import {
   setPermissionGrants,
   getChangedPermissionGrants,
 } from 'src/screens/security/role/permission-grants';
+import {
+  getNodeActionPermissionNames,
+  getAffectedNodePermissionNames,
+} from 'src/screens/security/role/account-settings-permissions';
 
 const findNodes = (nodes: any[]): any[] =>
   nodes.flatMap((node) => [node, ...findNodes(node.children ?? [])]);
@@ -36,25 +37,6 @@ const roots = [
 const initial = roots.flatMap((root) =>
   ['View', 'Add', 'Delete'].map((action) => ({ name: `${root}.${action}`, isGranted: true }))
 );
-const permissionEntry = (
-  name: string,
-  displayName: string,
-  parentName?: string
-): CataloguePermission => ({
-  name,
-  displayName,
-  parentName,
-  isGranted: false,
-  grantedProviders: [],
-  allowedProviders: [],
-});
-const branches = nodes.map((node, index) => ({
-  permission: permissionEntry(roots[index], node.title),
-  children: ['View', 'Add', 'Delete'].map((action) => ({
-    permission: permissionEntry(`${roots[index]}.${action}`, action, roots[index]),
-    children: [],
-  })),
-}));
 function Fixture() {
   const [grants, setGrants] = useState(initial);
   return (
@@ -67,21 +49,26 @@ function Fixture() {
         <Typography variant="h5" sx={{ mb: 2 }}>
           Fee configuration permissions
         </Typography>
-        {branches.map((node) => (
+        {nodes.map((node) => (
           <PermissionNode
-            key={node.permission.name}
+            key={node.title}
             node={node}
-            provider={{ providerName: 'R', providerKey: 'synthetic' }}
-            grants={Object.fromEntries(grants.map((grant) => [grant.name, grant.isGranted]))}
-            subtreeEntries={new Map([[node.permission.name, branchPermissions([node])]])}
-            onToggle={(name, value) => setGrants((old) => setPermissionGrants(old, [name], value))}
-            onBulk={(_, value) =>
+            moduleTitle="Finance"
+            submoduleTitle="Configuration"
+            permissions={grants}
+            setPermission={setGrants}
+            onToggle={(selected, action, current) =>
               setGrants((old) =>
                 setPermissionGrants(
                   old,
-                  branchPermissions([node]).map((entry) => entry.name),
-                  value
+                  [...getAffectedNodePermissionNames(selected, action, !current, old)],
+                  !current
                 )
+              )
+            }
+            onSelectAll={(selected, value) =>
+              setGrants((old) =>
+                setPermissionGrants(old, getNodeActionPermissionNames(selected, old), value)
               )
             }
           />

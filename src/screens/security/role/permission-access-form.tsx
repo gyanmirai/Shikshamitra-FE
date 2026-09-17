@@ -159,26 +159,6 @@ export default function PermissionAccessForm({
         )}
       </DialogScrollContent>
       <DialogActions sx={{ flexWrap: 'wrap', '& button': { minHeight: 44, minWidth: 44 } }}>
-        <Box sx={{ flex: 1, minWidth: 160 }}>
-          <Typography variant="body2" aria-live="polite">
-            {draft.changes.length} pending permission changes
-          </Typography>
-          {draft.dirty && (
-            <Box component="details">
-              <Box component="summary" sx={{ cursor: 'pointer', py: 1 }}>
-                Review changes
-              </Box>
-              <Stack sx={{ maxHeight: 160, overflow: 'auto' }}>
-                {draft.changes.map((entry) => (
-                  <Typography variant="caption" key={entry.name}>
-                    {entry.displayName}:{' '}
-                    {draft.grants[entry.name] ? 'Grant directly' : 'Remove direct grant'}
-                  </Typography>
-                ))}
-              </Stack>
-            </Box>
-          )}
-        </Box>
         <Button
           variant="outlined"
           size="small"
