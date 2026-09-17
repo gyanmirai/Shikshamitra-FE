@@ -32,9 +32,9 @@ import type {
   UsageReportData,
   MaintenanceBlock,
   RoomAvailabilityItem,
+  GetReservationsParams,
   ReservationRequirements,
   RoomAvailabilityFilters,
-  GetReservationsParams,
 } from './types';
 
 const fakeDelay = (ms = 600) => new Promise((res) => setTimeout(res, ms));
@@ -310,9 +310,9 @@ export function useRoomSuggestions() {
         const mapped = response.map((r: any) => ({
           roomId: r.roomId,
           roomName: r.roomName,
-          buildingName: 'Main Building',
-          floorName: 'First Floor',
-          type: 'Classroom',
+          buildingName: r.buildingName || '',
+          floorName: r.floorName || '',
+          type: r.type || '',
           capacity: r.capacity,
           facilities: r.features || [],
           availability: r.conflictStatus === 'critical' ? 'none' : 'full',

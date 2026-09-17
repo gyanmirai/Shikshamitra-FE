@@ -1,4 +1,7 @@
-import { fDate, fTime } from 'src/utils/format-time';
+import {
+  formatDateTimeOffsetAsWallClockDate,
+  formatDateTimeOffsetAsWallClockTime,
+} from 'src/utils/dateConvertor';
 
 import type { GuidedSeatingValues } from './types';
 
@@ -8,24 +11,14 @@ interface SessionSchedule {
   endTime?: string | null;
 }
 
-function dateTimeValue(examDate: string, time: string) {
-  if (time.includes('T')) return time;
-  return `${examDate.split('T')[0]}T${time}`;
-}
-
 export function formatSession(session: SessionSchedule): string {
   if (!session.examDate || !session.startTime || !session.endTime) return 'Schedule incomplete';
 
-  const date = fDate(session.examDate, 'ddd, D MMM YYYY');
-  const startTime = fTime(dateTimeValue(session.examDate, session.startTime), 'h:mm A');
-  const endTime = fTime(dateTimeValue(session.examDate, session.endTime), 'h:mm A');
+  const date = formatDateTimeOffsetAsWallClockDate(session.examDate, 'ddd, D MMM YYYY');
+  const startTime = formatDateTimeOffsetAsWallClockTime(session.startTime, 'h:mm A');
+  const endTime = formatDateTimeOffsetAsWallClockTime(session.endTime, 'h:mm A');
 
-  if (
-    !date ||
-    !startTime ||
-    !endTime ||
-    [date, startTime, endTime].includes('Invalid time value')
-  ) {
+  if (!date || !startTime || !endTime) {
     return 'Schedule incomplete';
   }
 

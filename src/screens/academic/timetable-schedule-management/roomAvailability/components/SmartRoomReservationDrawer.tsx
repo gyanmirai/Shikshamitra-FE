@@ -8,9 +8,9 @@ import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { useState, useEffect, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
@@ -26,6 +26,7 @@ import {
   TextField,
   Typography,
   IconButton,
+  InputAdornment,
   CircularProgress,
   FormControlLabel,
 } from '@mui/material';
@@ -43,7 +44,15 @@ import {
   SUGGESTION_BADGE_LABELS,
   RESERVATION_TYPE_OPTIONS,
 } from '../roomAvailability.constants';
+import {
+  filterRoomSuggestions,
+  ALL_ROOM_FILTER_VALUE,
+  getRoomSuggestionFilterOptions,
+  hasActiveRoomSuggestionFilters,
+  DEFAULT_ROOM_SUGGESTION_FILTERS,
+} from '../services/roomSuggestionFilters';
 
+import type { RoomSuggestionFilters } from '../services/roomSuggestionFilters';
 import type { SuggestedRoom, RoomReservation, ReservationRequirements } from '../types';
 
 const StepBadge = ({ number }: { number: number }) => (
@@ -129,6 +138,22 @@ const defaultRequirements: ReservationRequirements = {
   aiCommand: '',
 };
 
+const CAPACITY_FILTER_OPTIONS = [
+  { value: 0, label: 'Any capacity' },
+  { value: 20, label: '20+ seats' },
+  { value: 40, label: '40+ seats' },
+  { value: 60, label: '60+ seats' },
+  { value: 100, label: '100+ seats' },
+];
+
+const MATCH_SCORE_FILTER_OPTIONS = [
+  { value: 0, label: 'Any match score' },
+  { value: 60, label: '60%+ match' },
+  { value: 80, label: '80%+ match' },
+  { value: 90, label: '90%+ match' },
+  { value: 100, label: '100% match' },
+];
+
 interface SmartRoomReservationDrawerProps {
   open: boolean;
   prefilledRoom?: { roomId: string; roomName: string } | null;
@@ -157,10 +182,34 @@ export const SmartRoomReservationDrawer = ({
   const [searched, setSearched] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [bookingRoomId, setBookingRoomId] = useState<string | null>(null);
+  const [resultFilters, setResultFilters] = useState<RoomSuggestionFilters>({
+    ...DEFAULT_ROOM_SUGGESTION_FILTERS,
+  });
 
   const suggestions = useRoomSuggestions();
   const { suggest } = suggestions;
   const createReservation = useCreateRoomReservation();
+
+  const buildingOptions = useMemo(
+    () => getRoomSuggestionFilterOptions(suggestions.data, 'buildingName'),
+    [suggestions.data]
+  );
+  const roomsInSelectedBuilding = useMemo(
+    () =>
+      resultFilters.building === ALL_ROOM_FILTER_VALUE
+        ? suggestions.data
+        : suggestions.data.filter((room) => room.buildingName === resultFilters.building),
+    [resultFilters.building, suggestions.data]
+  );
+  const floorOptions = useMemo(
+    () => getRoomSuggestionFilterOptions(roomsInSelectedBuilding, 'floorName'),
+    [roomsInSelectedBuilding]
+  );
+  const filteredSuggestions = useMemo(
+    () => filterRoomSuggestions(suggestions.data, resultFilters),
+    [resultFilters, suggestions.data]
+  );
+  const hasResultFilters = hasActiveRoomSuggestionFilters(resultFilters);
 
   const patchRequirements = useCallback((patch: Partial<ReservationRequirements>) => {
     setRequirements((prev) => ({ ...prev, ...patch }));
@@ -171,6 +220,14 @@ export const SmartRoomReservationDrawer = ({
       });
       return updated;
     });
+  }, []);
+
+  const patchResultFilters = useCallback((patch: Partial<RoomSuggestionFilters>) => {
+    setResultFilters((previous) => ({ ...previous, ...patch }));
+  }, []);
+
+  const clearResultFilters = useCallback(() => {
+    setResultFilters({ ...DEFAULT_ROOM_SUGGESTION_FILTERS });
   }, []);
 
   // Auto-search if a prefilled room is provided
@@ -193,8 +250,9 @@ export const SmartRoomReservationDrawer = ({
         setSearched(false);
       }
       setFieldErrors({});
+      clearResultFilters();
     }
-  }, [open, prefilledRoom, prefillDate, suggest]);
+  }, [open, prefilledRoom, prefillDate, suggest, clearResultFilters]);
 
   const handleSearch = async () => {
     const errors = validateRoomSearchRequirements(requirements);
@@ -202,6 +260,7 @@ export const SmartRoomReservationDrawer = ({
     if (Object.keys(errors).length > 0) return;
 
     setFieldErrors({});
+    clearResultFilters();
     setSearched(true);
     await suggestions.suggest(requirements);
   };
@@ -271,6 +330,7 @@ export const SmartRoomReservationDrawer = ({
     setSearched(false);
     setFieldErrors({});
     setBookingRoomId(null);
+    clearResultFilters();
     suggestions.reset();
     onClose();
   };
@@ -771,13 +831,122 @@ export const SmartRoomReservationDrawer = ({
                 {searched && !suggestions.isLoading && suggestions.data.length > 0 && (
                   <Chip
                     size="small"
-                    label={`${suggestions.data.length} found`}
+                    label={
+                      hasResultFilters
+                        ? `${filteredSuggestions.length} of ${suggestions.data.length}`
+                        : `${suggestions.data.length} found`
+                    }
                     color="primary"
                     variant="outlined"
                     sx={{ fontWeight: 600 }}
                   />
                 )}
               </Stack>
+
+              {searched && !suggestions.isLoading && suggestions.data.length > 0 && (
+                <Box
+                  sx={{
+                    p: 1.5,
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    bgcolor: 'background.paper',
+                  }}
+                >
+                  <Stack spacing={1.25}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Search available rooms"
+                        placeholder="Room name, building, floor, type, or facility"
+                        value={resultFilters.search}
+                        onChange={(event) => patchResultFilters({ search: event.target.value })}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <Iconify icon="eva:search-fill" width={18} />
+                            </InputAdornment>
+                          ),
+                          endAdornment: resultFilters.search ? (
+                            <InputAdornment position="end">
+                              <IconButton
+                                size="small"
+                                aria-label="Clear room search"
+                                onClick={() => patchResultFilters({ search: '' })}
+                              >
+                                <Iconify icon="eva:close-fill" width={17} />
+                              </IconButton>
+                            </InputAdornment>
+                          ) : undefined,
+                        }}
+                      />
+                      {hasResultFilters && (
+                        <Button
+                          size="small"
+                          color="inherit"
+                          onClick={clearResultFilters}
+                          sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}
+                        >
+                          Clear filters
+                        </Button>
+                      )}
+                    </Stack>
+
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: 'repeat(2, minmax(0, 1fr))',
+                          lg: 'repeat(4, minmax(0, 1fr))',
+                        },
+                        gap: 1,
+                      }}
+                    >
+                      <CustomSelect
+                        label="Building"
+                        value={resultFilters.building}
+                        options={[
+                          { value: ALL_ROOM_FILTER_VALUE, label: 'All buildings' },
+                          ...buildingOptions.map((building) => ({
+                            value: building,
+                            label: building,
+                          })),
+                        ]}
+                        onChange={(value) =>
+                          patchResultFilters({
+                            building: String(value),
+                            floor: ALL_ROOM_FILTER_VALUE,
+                          })
+                        }
+                      />
+                      <CustomSelect
+                        label="Floor"
+                        value={resultFilters.floor}
+                        options={[
+                          { value: ALL_ROOM_FILTER_VALUE, label: 'All floors' },
+                          ...floorOptions.map((floor) => ({ value: floor, label: floor })),
+                        ]}
+                        onChange={(value) => patchResultFilters({ floor: String(value) })}
+                      />
+                      <CustomSelect
+                        label="Minimum capacity"
+                        value={resultFilters.minimumCapacity}
+                        options={CAPACITY_FILTER_OPTIONS}
+                        onChange={(value) => patchResultFilters({ minimumCapacity: Number(value) })}
+                      />
+                      <CustomSelect
+                        label="Match score"
+                        value={resultFilters.minimumMatchScore}
+                        options={MATCH_SCORE_FILTER_OPTIONS}
+                        onChange={(value) =>
+                          patchResultFilters({ minimumMatchScore: Number(value) })
+                        }
+                      />
+                    </Box>
+                  </Stack>
+                </Box>
+              )}
 
               {!searched && (
                 <Box
@@ -814,8 +983,8 @@ export const SmartRoomReservationDrawer = ({
                     No Search Conducted Yet
                   </Typography>
                   <Typography variant="caption" color="text.disabled" sx={{ maxWidth: 320 }}>
-                    Select your booking requirements on the left, then click &ldquo;Find Rooms&rdquo; to
-                    view matching rooms here.
+                    Select your booking requirements on the left, then click &ldquo;Find
+                    Rooms&rdquo; to view matching rooms here.
                   </Typography>
                 </Box>
               )}
@@ -892,7 +1061,40 @@ export const SmartRoomReservationDrawer = ({
                       </Alert>
                     )}
 
-                  {!suggestions.isLoading && suggestions.data.length > 0 && (
+                  {!suggestions.isLoading &&
+                    suggestions.data.length > 0 &&
+                    filteredSuggestions.length === 0 && (
+                      <Box
+                        sx={{
+                          py: 6,
+                          px: 3,
+                          border: '1px dashed',
+                          borderColor: 'divider',
+                          borderRadius: 2,
+                          textAlign: 'center',
+                          bgcolor: 'background.paper',
+                        }}
+                      >
+                        <Iconify
+                          icon="mdi:filter-off-outline"
+                          width={34}
+                          sx={{ color: 'text.disabled', mb: 1 }}
+                        />
+                        <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                          No rooms match these filters
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Clear or adjust the result filters to view more available rooms.
+                        </Typography>
+                        <Box sx={{ mt: 1.5 }}>
+                          <Button size="small" variant="outlined" onClick={clearResultFilters}>
+                            Clear filters
+                          </Button>
+                        </Box>
+                      </Box>
+                    )}
+
+                  {!suggestions.isLoading && filteredSuggestions.length > 0 && (
                     <Box
                       sx={{
                         display: 'grid',
@@ -901,7 +1103,7 @@ export const SmartRoomReservationDrawer = ({
                         alignItems: 'start',
                       }}
                     >
-                      {suggestions.data.map((room) => {
+                      {filteredSuggestions.map((room) => {
                         const isCritical = room.conflictStatus === 'critical';
                         const isWarning = room.conflictStatus === 'warning' || room.needsApproval;
                         const accentColor = isCritical

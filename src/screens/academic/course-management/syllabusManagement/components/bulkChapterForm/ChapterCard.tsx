@@ -6,12 +6,12 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Editor } from 'src/components/editor';
 import { useTheme } from '@mui/material/styles';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import CloseIcon from '@mui/icons-material/Close';
+import FileUploader from 'src/components/custom-upload';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ShakingTextField from 'src/components/shaking-text-field';
-import FileUploader from 'src/components/custom-upload';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
   Grid,
@@ -30,7 +30,10 @@ import {
 
 import type { IChapterCardProps } from './type';
 
-const getFileNameFromUrl = (file: string | File, localFileNames?: Record<string, string>): string => {
+const getFileNameFromUrl = (
+  file: string | File,
+  localFileNames?: Record<string, string>
+): string => {
   if (!file) return '';
   if (typeof file !== 'string') return file.name;
   if (localFileNames && localFileNames[file]) return localFileNames[file];
@@ -244,7 +247,7 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
               return (
                 <ShakingTextField error={!!startDateError}>
                   <DatePicker
-                    label="Expected Start Date for all Division"
+                    label="Expected Start Date for all Division *"
                     format="DD/MM/YYYY"
                     value={entry.startDate}
                     standardId={classId}
@@ -299,7 +302,7 @@ const ChapterCard: React.FC<IChapterCardProps> = ({
               return (
                 <ShakingTextField error={!!endDateError}>
                   <DatePicker
-                    label="Expected End Date for all Division"
+                    label="Expected End Date for all Division *"
                     format="DD/MM/YYYY"
                     value={entry.endDate}
                     standardId={classId}

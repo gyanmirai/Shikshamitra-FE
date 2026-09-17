@@ -39,7 +39,10 @@ function useQueryAndMutation<T>({
   };
   const resp = currentQueryAndMutation(params, {
     refetchOnMountOrArgChange: true, // Refetch on every component mount
-    refetchOnFocus: true, // Refetch when the window/tab regains focus
+    // Focus can change during ordinary workflows such as using DevTools, opening a file
+    // picker, or switching applications. Refreshing every mounted query here caused a
+    // page-wide request burst. Screens that need live focus refresh can still opt in.
+    refetchOnFocus: false,
     refetchOnReconnect: true, // Refetch when internet connection is restored
     ...options,
   });

@@ -108,6 +108,35 @@ const formatKnownTimetableIssue = (
 ): TimetableValidationIssue | null => {
   const { day, timeRange, details } = formatDayAndTime(data);
   const slotText = [day, timeRange].filter(Boolean).join(' ');
+  const contextualMessage = getValue(data, 'message', 'Message');
+
+  if (
+    errorCode === 'Academic:Timetable:RoomConflict' ||
+    errorCode === 'Academic:Timetable:030004'
+  ) {
+    return {
+      title: 'Room conflict found',
+      description:
+        contextualMessage ||
+        `The selected room is already assigned to another class${slotText ? ` during ${slotText}` : ' during this time slot'}. Choose another room or change the timetable slot.`,
+      severity: 'error',
+      details,
+    };
+  }
+
+  if (
+    errorCode === 'Academic:Timetable:TeacherConflict' ||
+    errorCode === 'Academic:Timetable:030003'
+  ) {
+    return {
+      title: 'Teacher conflict found',
+      description:
+        contextualMessage ||
+        `The selected teacher is already assigned to another class${slotText ? ` during ${slotText}` : ' during this time slot'}. Choose another teacher or change the timetable slot.`,
+      severity: 'error',
+      details,
+    };
+  }
 
   if (errorCode === 'Academic:Timetable:TeacherRequiredBeforePublish') {
     return {
@@ -135,14 +164,16 @@ export const extractTimetableApiIssues = (
   fallbackTitle = 'Server validation failed'
 ): TimetableValidationIssue[] => {
   const apiError = error as any;
-  const innerError = apiError?.data?.error ?? apiError?.error ?? apiError;
-  const customData = innerError?.data ?? apiError?.data?.data ?? {};
-  const errorCode = apiError?.data?.errorCode ?? innerError?.code ?? innerError?.errorCode;
-
-  if (typeof errorCode === 'string') {
-    const knownIssue = formatKnownTimetableIssue(errorCode, customData);
-    if (knownIssue) return [knownIssue];
-  }
+  const problem = apiError?.data && typeof apiError.data === 'object' ? apiError.data : apiError;
+  const innerError = problem?.error && typeof problem.error === 'object' ? problem.error : problem;
+  const nestedCustomData =
+    innerError?.data && typeof innerError.data === 'object'
+      ? innerError.data
+      : problem?.data && typeof problem.data === 'object'
+        ? problem.data
+        : null;
+  const customData = nestedCustomData ?? innerError ?? problem ?? {};
+  const errorCode = problem?.errorCode ?? innerError?.code ?? innerError?.errorCode;
 
   const conflictDetails = tryParseConflictDetails(
     customData.ConflictDetails ??
@@ -155,6 +186,11 @@ export const extractTimetableApiIssues = (
 
   if (conflictDetails.length > 0) {
     return conflictDetails.map(formatConflictIssue);
+  }
+
+  if (typeof errorCode === 'string') {
+    const knownIssue = formatKnownTimetableIssue(errorCode, customData);
+    if (knownIssue) return [knownIssue];
   }
 
   const message =
@@ -176,4 +212,3 @@ export const extractTimetableApiIssues = (
     },
   ];
 };
-
