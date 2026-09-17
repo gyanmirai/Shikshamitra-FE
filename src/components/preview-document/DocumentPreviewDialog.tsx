@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import { getCachedAuthSession } from 'src/redux/session-cache';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Button, Typography, CircularProgress } from '@mui/material';
 import { useGetCurriculumFileByNameMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
@@ -12,6 +13,8 @@ interface DocumentPreviewDialogProps {
   /** The stored file path returned by the upload API, e.g. "/files/abc123.pdf" */
   url: string;
   documentName?: string;
+  /** Fetch the complete API URL instead of resolving it through the curriculum file client. */
+  directUrl?: boolean;
 }
 
 const getFileNameFromUrl = (url: string): string => {
@@ -26,11 +29,13 @@ const DocumentPreviewDialog: React.FC<DocumentPreviewDialogProps> = ({
   onClose,
   url,
   documentName = 'Document Preview',
+  directUrl = false,
 }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [mimeType, setMimeType] = useState<string>('');
+  const [isDirectLoading, setIsDirectLoading] = useState(false);
 
-  const [getFile, { isLoading }] = useQueryAndMutation({
+  const [getFile, { isLoading: isLegacyLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useGetCurriculumFileByNameMutation,
     popupConfig: { error: true, errorMessage: 'Unable to load document preview.', success: false },
@@ -41,22 +46,52 @@ const DocumentPreviewDialog: React.FC<DocumentPreviewDialogProps> = ({
     if (!open || !url) return;
 
     let active = true;
+    const abortController = new AbortController();
 
     const load = async () => {
-      const fileName = getFileNameFromUrl(url);
-      if (!fileName) {
-        shikshaMitraToast.error({ message: 'Unable to resolve file name for preview.' });
-        return;
-      }
-
       try {
-        const blob = await getFile(fileName).unwrap();
+        let blob: Blob;
+        if (directUrl) {
+          setIsDirectLoading(true);
+          const apiRoot = process.env.NEXT_PUBLIC_API_URL || '';
+          const requestUrl = /^(https?:)?\/\//i.test(url)
+            ? url
+            : `${apiRoot}${url.startsWith('/') ? '' : '/'}${url}`;
+          const requestOrigin = new URL(requestUrl, window.location.origin).origin;
+          const allowedOrigin = new URL(apiRoot || window.location.origin, window.location.origin)
+            .origin;
+          if (requestOrigin !== allowedOrigin) throw new Error('Document URL is outside the API.');
+          const session = await getCachedAuthSession();
+          const headers = new Headers();
+          if (session?.accessToken) headers.set('Authorization', `Bearer ${session.accessToken}`);
+          const response = await fetch(requestUrl, {
+            credentials: 'include',
+            headers,
+            signal: abortController.signal,
+          });
+          if (!response.ok) throw new Error(`Document request failed with ${response.status}`);
+          blob = await response.blob();
+        } else {
+          const fileName = getFileNameFromUrl(url);
+          if (!fileName) {
+            shikshaMitraToast.error({ message: 'Unable to resolve file name for preview.' });
+            return;
+          }
+          blob = await getFile(fileName).unwrap();
+        }
         if (!active) return;
         const objectUrl = URL.createObjectURL(blob);
         setMimeType(blob.type || '');
         setPreviewUrl(objectUrl);
-      } catch {
-        if (active) setPreviewUrl(null);
+      } catch (error) {
+        if (active && !(error instanceof DOMException && error.name === 'AbortError')) {
+          setPreviewUrl(null);
+          if (directUrl) {
+            shikshaMitraToast.error({ message: 'Unable to load document preview.' });
+          }
+        }
+      } finally {
+        if (active) setIsDirectLoading(false);
       }
     };
 
@@ -71,9 +106,10 @@ const DocumentPreviewDialog: React.FC<DocumentPreviewDialogProps> = ({
     // eslint-disable-next-line consistent-return
     return () => {
       active = false;
+      abortController.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, url]);
+  }, [directUrl, open, url]);
 
   // Cleanup object URL on unmount
   useEffect(
@@ -94,6 +130,7 @@ const DocumentPreviewDialog: React.FC<DocumentPreviewDialogProps> = ({
 
   const isPdf = mimeType.includes('pdf');
   const isImage = mimeType.startsWith('image/');
+  const isLoading = directUrl ? isDirectLoading : isLegacyLoading;
 
   return (
     <CustomDialog

@@ -53,7 +53,9 @@ Metadata list pagination/search uses the server. Empty, loading and error states
 
 Canonical save responses replace the local draft; subsequent saves use its ID and stamp. Conflicts keep unsaved input available and ask the user to refresh/review. Optional policy removal sends null IDs and null versions; a previous/default attachment must never be silently restored.
 
-Display validation messages from both ABP `error.data.Errors` and the host's Problem Details `errors`/`detail` responses. Recognize the concurrency code in either envelope and preserve the draft on failure.
+Display validation messages from both ABP `error.data.Errors` and the host's Problem Details `data.Errors`/`errors`/`detail` responses. Prefer specific business-rule errors over the generic detail. Recognize the concurrency code in either envelope and preserve the draft on failure.
+
+Policy selectors are editable only in an authorized draft edit session. Selecting a policy updates the local candidate; **Save draft** persists its policy ID and version ID. Publish sends only the saved structure ID and concurrency stamp. Keep Publish disabled until changes are saved and a fresh review is ready, show the required next step, and recheck those conditions when confirming publication.
 
 The active path uses `FeeStructureWorkspaceCard.tsx` and `StructureScheduleDialog.tsx`. Older `IndependentFeeStructureCard`, `FeePoliciesTab`, schedule drawer and ViewDetails prototypes remain inactive source; they are not the current management flow. The old status/unlock path is no longer exposed by the active screen.
 

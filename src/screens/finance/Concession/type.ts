@@ -54,8 +54,11 @@ export interface IStudentInfo {
   avatarUrl?: string;
   boardMedium?: string;
   concessionType?: string;
+  concessionTypeId?: string;
   reason?: string;
   status?: number;
+  concurrencyStamp?: string;
+  sourceRequestId?: string;
   totalConcession: number;
   concession?: IConcession;
   concessions: {

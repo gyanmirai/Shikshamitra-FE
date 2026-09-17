@@ -1,14 +1,14 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 
-import React, { useState } from 'react';
-import type { RootState } from 'src/redux/store';
-import { useSelector } from 'react-redux';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
+import React, { useRef, useState } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -16,7 +16,9 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Cancel, Visibility, CheckCircle } from '@mui/icons-material';
@@ -76,6 +78,7 @@ interface IRejectDialogProps {
 const RejectReasonDialog: React.FC<IRejectDialogProps> = ({ open, onClose, selectedItem }) => {
   const [reason, setReason] = useState('');
   const [reasonError, setReasonError] = useState('');
+  const commandKey = useRef('');
 
   const [rejectConcession, { isLoading: isRejecting }] = useQueryAndMutation({
     type: 'mutation',
@@ -92,16 +95,22 @@ const RejectReasonDialog: React.FC<IRejectDialogProps> = ({ open, onClose, selec
     if (!requestId) return;
     await rejectConcession({
       studentConcessionTypeRequestId: requestId,
-      body: { message: reason },
+      body: {
+        message: reason.trim(),
+        requestConcurrencyStamp: selectedItem?.concurrencyStamp ?? '',
+        idempotencyKey: (commandKey.current ||= window.crypto.randomUUID()),
+      },
     }).unwrap();
     shikshaMitraToast.success({ message: 'Concession rejected successfully' });
     setReason('');
+    commandKey.current = '';
     onClose();
   };
 
   const handleClose = () => {
     setReason('');
     setReasonError('');
+    commandKey.current = '';
     onClose();
   };
 
@@ -202,6 +211,7 @@ interface IAdminDocumentDialogProps {
   /** Used as {id} in PUT /concession-request/{id}/documents */
   studentConcessionTypeRequestId: string;
   onRefresh?: () => void;
+  canUpload: boolean;
 }
 
 const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
@@ -210,6 +220,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
   item,
   studentConcessionTypeRequestId,
   onRefresh,
+  canUpload,
 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
@@ -217,6 +228,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
 
   // Local docs state - initialised from requiredDocuments
   const [localDocs, setLocalDocs] = useState<IRequiredDocument[]>([]);
+  const commandKey = useRef('');
 
   React.useEffect(() => {
     if (open) {
@@ -296,6 +308,8 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
       await saveDocuments({
         concessionRequestId: studentConcessionTypeRequestId,
         documents: payloadDocs,
+        concurrencyStamp: item.concurrencyStamp,
+        idempotencyKey: (commandKey.current ||= window.crypto.randomUUID()),
       }).unwrap();
 
       shikshaMitraToast.success({ message: 'Documents saved successfully' });
@@ -383,22 +397,24 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
                         <Iconify icon="carbon:view-filled" />
                       </IconButton>
                     )}
-                    <LoadingButton
-                      size="small"
-                      variant="outlined"
-                      color={doc.isUploaded ? 'inherit' : 'primary'}
-                      // show spinner on THIS doc's button while uploading it;
-                      // show generic disabled state while saving or uploading another doc
-                      loading={
-                        (isUploading && uploadingDocId === doc.documentId) ||
-                        (isSaving && uploadingDocId === doc.documentId)
-                      }
-                      disabled={isBusy && uploadingDocId !== doc.documentId}
-                      onClick={() => handleUploadClick(doc.documentId)}
-                      startIcon={<Iconify icon="eva:cloud-upload-outline" />}
-                    >
-                      {doc.isUploaded ? 'Replace' : 'Upload'}
-                    </LoadingButton>
+                    {canUpload && (
+                      <LoadingButton
+                        size="small"
+                        variant="outlined"
+                        color={doc.isUploaded ? 'inherit' : 'primary'}
+                        // show spinner on THIS doc's button while uploading it;
+                        // show generic disabled state while saving or uploading another doc
+                        loading={
+                          (isUploading && uploadingDocId === doc.documentId) ||
+                          (isSaving && uploadingDocId === doc.documentId)
+                        }
+                        disabled={isBusy && uploadingDocId !== doc.documentId}
+                        onClick={() => handleUploadClick(doc.documentId)}
+                        startIcon={<Iconify icon="eva:cloud-upload-outline" />}
+                      >
+                        {doc.isUploaded ? 'Replace' : 'Upload'}
+                      </LoadingButton>
+                    )}
                   </Box>
                 </Box>
               </Box>
@@ -441,17 +457,19 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
           >
             Close
           </Button>
-          <LoadingButton
-            variant="contained"
-            size="small"
-            color="primary"
-            loading={isSaving}
-            disabled={isUploading || !hasChanges}
-            onClick={handleSubmit}
-            startIcon={<Iconify icon={GlobalIcons.submit} />}
-          >
-            Submit
-          </LoadingButton>
+          {canUpload && (
+            <LoadingButton
+              variant="contained"
+              size="small"
+              color="primary"
+              loading={isSaving}
+              disabled={isUploading || !hasChanges}
+              onClick={handleSubmit}
+              startIcon={<Iconify icon={GlobalIcons.submit} />}
+            >
+              Submit
+            </LoadingButton>
+          )}
         </DialogActions>
       </CustomDialog>
 
@@ -460,6 +478,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
         onClose={() => setPreviewDoc(null)}
         url={previewDoc?.url || ''}
         documentName={previewDoc?.name}
+        directUrl
       />
     </>
   );
@@ -485,6 +504,16 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   onDelete,
 }) => {
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const actions = financePermissions.fees.concessionActions;
+  const canApprove = hasGrantedPermission(permissions, actions.approve);
+  const canReject = hasGrantedPermission(permissions, actions.reject);
+  const canReverse = hasGrantedPermission(permissions, actions.reverse);
+  const canDelete = hasGrantedPermission(permissions, actions.delete);
+  const canViewDocuments = hasGrantedPermission(permissions, actions.viewDocument);
+  const canUploadDocuments = hasGrantedPermission(permissions, actions.uploadDocument);
+  const serverAllows = (action: string) =>
+    !item.availableActions?.length || item.availableActions.includes(action);
   const isApproved = item.status === ConcessionStatusType.Approved;
   const isPartiallyReversed = item.status === ConcessionStatusType.PartiallyReversed;
   const isRejected = item.status === ConcessionStatusType.Rejected;
@@ -562,9 +591,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
               </Typography>
               <Typography variant="subtitle1" fontWeight={800} color="success.main">
                 {formatNumber(
-                  item.totalReversedAmount > 0
-                    ? item.netApprovedAmount
-                    : item.totalApprovedAmount,
+                  item.totalReversedAmount > 0 ? item.netApprovedAmount : item.totalApprovedAmount,
                   'INR'
                 )}
               </Typography>
@@ -592,15 +619,16 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
                 />
               )}
             </Box>
-            {hasRequiredDocs && (
-              <Button
-                size="small"
-                onClick={() => onOpenDocs(item)}
-                sx={{ fontSize: '11px', textTransform: 'none', height: 24 }}
-              >
-                See All
-              </Button>
-            )}
+            {hasRequiredDocs &&
+              (canViewDocuments || (canUploadDocuments && serverAllows('upload-document'))) && (
+                <Button
+                  size="small"
+                  onClick={() => onOpenDocs(item)}
+                  sx={{ fontSize: '11px', textTransform: 'none', height: 24 }}
+                >
+                  See All
+                </Button>
+              )}
           </Box>
 
           {/* Show only uploaded docs (max 1) in the card */}
@@ -694,6 +722,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           onClose={() => setPreviewDoc(null)}
           url={previewDoc?.url || ''}
           documentName={previewDoc?.name}
+          directUrl
         />
 
         {/* Message */}
@@ -740,6 +769,31 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
             </Typography>
           </Box>
         )}
+        {!!item.timeline?.length && (
+          <Box sx={{ mt: 1.5 }}>
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+              Activity
+            </Typography>
+            <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+              {item.timeline.slice(-3).map((event, index) => (
+                <Box
+                  key={`${event.action}-${event.occurredAt}-${index}`}
+                  display="flex"
+                  justifyContent="space-between"
+                  gap={1}
+                >
+                  <Typography variant="caption" sx={{ textTransform: 'capitalize' }}>
+                    {event.action}
+                    {event.amount ? ` · ${formatNumber(event.amount, 'INR')}` : ''}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {new Date(event.occurredAt).toLocaleString('en-IN')}
+                  </Typography>
+                </Box>
+              ))}
+            </Stack>
+          </Box>
+        )}
       </CardContent>
 
       {/* Action Buttons */}
@@ -753,60 +807,68 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
         }}
       >
         {/* Approve button with tooltip when docs are missing */}
-        <Tooltip
-          title={
-            !allMandatoryDocsUploaded && !isApproved && !isRejected && !isCancelled
-              ? `Upload all mandatory documents first — click "See All" to upload pending documents`
-              : ''
-          }
-          placement="top"
-          arrow
-        >
-          {/* span needed so tooltip works on disabled button */}
-          <span style={{ flex: 1 }}>
-            <LoadingButton
-              fullWidth
-              size="small"
-              variant={isApproved ? 'soft' : 'contained'}
-              color="success"
-              disabled={approveDisabled}
-              startIcon={<CheckCircle fontSize="small" />}
-              onClick={() => onApprove(item)}
-            >
-              Approve
-            </LoadingButton>
-          </span>
-        </Tooltip>
-        <LoadingButton
-          fullWidth
-          size="small"
-          variant="soft"
-          color="error"
-          disabled={item.status !== ConcessionStatusType.Pending}
-          startIcon={<Cancel fontSize="small" />}
-          onClick={() => onReject(item)}
-        >
-          Reject
-        </LoadingButton>
-        <LoadingButton
-          fullWidth
-          size="small"
-          variant="soft"
-          color="warning"
-          disabled={!isApproved && !isPartiallyReversed}
-          startIcon={<Iconify icon="mdi:cancel" width={16} />}
-          onClick={() => onCancel(item)}
-        >
-          Reverse
-        </LoadingButton>
-        <IconButton
-          onClick={() => onDelete(item)}
-          color="error"
-          disabled={item.status !== ConcessionStatusType.Pending}
-          sx={{ mt: -0.5 }}
-        >
-          <Iconify icon={GlobalIcons.delete} />
-        </IconButton>
+        {canApprove && serverAllows('approve') && (
+          <Tooltip
+            title={
+              !allMandatoryDocsUploaded && !isApproved && !isRejected && !isCancelled
+                ? `Upload all mandatory documents first — click "See All" to upload pending documents`
+                : ''
+            }
+            placement="top"
+            arrow
+          >
+            {/* span needed so tooltip works on disabled button */}
+            <span style={{ flex: 1 }}>
+              <LoadingButton
+                fullWidth
+                size="small"
+                variant={isApproved ? 'soft' : 'contained'}
+                color="success"
+                disabled={approveDisabled}
+                startIcon={<CheckCircle fontSize="small" />}
+                onClick={() => onApprove(item)}
+              >
+                Approve
+              </LoadingButton>
+            </span>
+          </Tooltip>
+        )}
+        {canReject && serverAllows('reject') && (
+          <LoadingButton
+            fullWidth
+            size="small"
+            variant="soft"
+            color="error"
+            disabled={item.status !== ConcessionStatusType.Pending}
+            startIcon={<Cancel fontSize="small" />}
+            onClick={() => onReject(item)}
+          >
+            Reject
+          </LoadingButton>
+        )}
+        {canReverse && serverAllows('reverse') && (
+          <LoadingButton
+            fullWidth
+            size="small"
+            variant="soft"
+            color="warning"
+            disabled={!isApproved && !isPartiallyReversed}
+            startIcon={<Iconify icon="mdi:cancel" width={16} />}
+            onClick={() => onCancel(item)}
+          >
+            Reverse
+          </LoadingButton>
+        )}
+        {canDelete && serverAllows('delete') && (
+          <IconButton
+            onClick={() => onDelete(item)}
+            color="error"
+            disabled={item.status !== ConcessionStatusType.Draft}
+            sx={{ mt: -0.5 }}
+          >
+            <Iconify icon={GlobalIcons.delete} />
+          </IconButton>
+        )}
       </Box>
     </Card>
   );
@@ -816,12 +878,18 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
 
 const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student, onClose }) => {
   const theme = useTheme();
-	const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canUploadDocuments = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.concessionActions.uploadDocument
+  );
   const [activeTab, setActiveTab] = useState('all');
   const docDialog = useBoolean();
   const deleteDialog = useBoolean();
   const rejectDialog = useBoolean();
   const [selectedItem, setSelectedItem] = useState<IConcessionRequestItem | null>(null);
+  const deleteCommandKey = useRef('');
   // approvalView drives the in-place fee-head-wise approval screen
   const [approvalView, setApprovalView] = useState<{
     item: IConcessionRequestItem;
@@ -839,8 +907,8 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentConcessionDetailsQuery,
-		params: { studentId: student?.studentId, academicYearId: currentYear?.id },
-		options: { skip: !student?.studentId || !currentYear?.id },
+    params: { studentId: student?.studentId, academicYearId: currentYear?.id },
+    options: { skip: !student?.studentId || !currentYear?.id },
   }) as { data: any; isLoading: boolean; isFetching: boolean };
 
   const allItems: IConcessionRequestItem[] = (data?.items || []).map((item: any) => ({
@@ -873,6 +941,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
 
   const handleDelete = (item: IConcessionRequestItem) => {
     setSelectedItem(item);
+    deleteCommandKey.current = window.crypto.randomUUID();
     deleteDialog.onTrue();
   };
 
@@ -952,6 +1021,12 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
                   color: 'default' as LabelColor,
                 },
                 {
+                  label: 'Draft',
+                  value: ConcessionStatusType.Draft,
+                  count: allItems.filter((i) => i.status === ConcessionStatusType.Draft).length,
+                  color: 'default' as LabelColor,
+                },
+                {
                   label: 'Pending',
                   value: ConcessionStatusType.Pending,
                   count: allItems.filter((i) => i.status === ConcessionStatusType.Pending).length,
@@ -978,9 +1053,8 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
                 {
                   label: 'Partially reversed',
                   value: ConcessionStatusType.PartiallyReversed,
-                  count: allItems.filter(
-                    (i) => i.status === ConcessionStatusType.PartiallyReversed
-                  ).length,
+                  count: allItems.filter((i) => i.status === ConcessionStatusType.PartiallyReversed)
+                    .length,
                   color: 'warning' as LabelColor,
                 },
                 {
@@ -1130,7 +1204,14 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
             color="error"
             size="small"
             onClick={async () => {
-              await deleteConcessionApplication(selectedItem?.studentConcessionTypeRequestId || '');
+              if (!selectedItem) return;
+              await deleteConcessionApplication({
+                concessionRequestId: selectedItem.studentConcessionTypeRequestId,
+                requestConcurrencyStamp: selectedItem.concurrencyStamp,
+                idempotencyKey:
+                  deleteCommandKey.current ||
+                  (deleteCommandKey.current = window.crypto.randomUUID()),
+              });
               deleteDialog.onFalse();
               setSelectedItem(null);
             }}
@@ -1178,6 +1259,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
           open={docDialog.value}
           item={selectedItem}
           studentConcessionTypeRequestId={selectedItem.studentConcessionTypeRequestId}
+          canUpload={canUploadDocuments && selectedItem.status === ConcessionStatusType.Draft}
           onClose={() => {
             docDialog.onFalse();
             setSelectedItem(null);

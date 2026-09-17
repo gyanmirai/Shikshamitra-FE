@@ -45,6 +45,7 @@ export const structureError = (error: unknown): string => {
       message?: string;
       errorCode?: string;
       detail?: string;
+      data?: { Errors?: string[] };
       errors?: Record<string, string[]>;
     };
   };
@@ -55,6 +56,7 @@ export const structureError = (error: unknown): string => {
     return 'A Fee Structure with this name already exists in this class. Choose a different name.';
   return (
     problem?.data?.Errors?.join('\n') ||
+    response?.data?.data?.Errors?.join('\n') ||
     Object.values(response?.data?.errors ?? {})
       .flat()
       .join('\n') ||

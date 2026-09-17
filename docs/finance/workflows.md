@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-09-01
+updated_on: 2026-09-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -56,9 +56,18 @@ Concession and adjustment workflows should preserve approval and audit behavior.
 2. The form collects a Concession Type Name and document definitions with mandatory/optional, maximum file size, and accepted formats. New document rows start with backend defaults.
 3. The server is authoritative for normalized-name uniqueness. Active types cannot be deleted. After deactivation, Delete is available only while the type is unused; used types remain undeletable and lock document-definition changes.
 4. A new concession request lists active types only. Editing an existing request may resolve its inactive historical type.
-5. Before upload, the UI filters extensions and checks size; the concession upload API repeats extension, MIME, signature, and size validation.
+5. Before upload, the shared upload control filters extensions and checks size; the concession upload API repeats extension, MIME, signature, and size validation. The backend expires unattached staged files after 24 hours. Saved evidence opens in the shared preview dialog through an authenticated request-scoped URL only when `ViewDocument` is granted.
 6. Missing mandatory evidence blocks approval. Optional evidence is shown and uploadable but is not required.
 7. Version History is available from each row's action menu and shows the audited create, edit, and status changes with actor, timestamp, and changed fields.
+
+### Concession request and approval
+
+1. The request form selects academic context and student, then loads the assignment-derived context. When the server reports more than one current assignment, the form uses the shared select component to require one explicit assignment before showing its policy and types. The policy name, code, version, calculation method, limits, installment scope, eligible heads, and due rows are read-only server values; there is no policy selector.
+2. Policy-fixed modes render server preview values without editable money fields. Request-entered percentage and fixed-total inputs are validated for usability, while the rendered concession and net payable always come from the matching latest preview.
+3. Save Draft remains available after student, year, type, and assignment context resolve even when fee selections or mandatory evidence are incomplete. Submit requires the current authoritative preview and all mandatory evidence. Removing all evidence sends an empty replacement list.
+4. Draft, Pending, Approved, Rejected, Cancelled, Partially Reversed, and Reversed are distinct tabs and labels. Edit/delete appear only for Draft; an owner with Cancel can withdraw Draft or Pending with a reason.
+5. Approval is two-step: Review Impact calls the approval-preview endpoint, then Confirm and Apply sends the returned fingerprint and current request stamp. The panel shows submitted and current maximum amounts, warns when balances changed, and requires a reason for a reduction. Reversal follows the same preview/confirm pattern and sends allocation due-row stamps.
+6. Buttons require both the matching `Finance.Fees.Concession` permission and the server-provided available action. Detail views render the stored lifecycle timeline. Opening a View-only detail does not call an approval mutation. API authorization and maker-checker checks remain authoritative.
 
 ## Trace settings changes
 

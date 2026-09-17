@@ -86,11 +86,13 @@ export enum ConcessionTypeEnum {
 }
 
 export enum ConcessionRequestStatusEnum {
-  DRAFT = 0,
-  IN_PROGRESS = 1,
-  SUBMITTED = 2,
-  APPROVED = 3,
-  REJECTED = 4,
+  PENDING = 0,
+  APPROVED = 1,
+  REJECTED = 2,
+  CANCELLED = 3,
+  PARTIALLY_REVERSED = 4,
+  REVERSED = 5,
+  DRAFT = 6,
 }
 
 export enum DiscountBasedOnEnum {
@@ -198,7 +200,10 @@ export interface RejectionResponse {
 }
 
 export interface ConcessionApplication {
+  id: string;
+  studentId: string;
   concessionRequestId: string;
+  concessionTypeId: string;
   studentName: string;
   rollNo: string;
   grNumber: string;
@@ -207,9 +212,22 @@ export interface ConcessionApplication {
   email: string;
   contactNo: string;
   totalConcessionApplication: number;
+  concessionTypeName: string;
+  concessionPolicyCode: string;
+  concessionPolicyVersion: number;
+  documentSubmissionState: string;
+  concessionAmount: number;
+  requestedConcessionAmount: number;
+  approvedConcessionAmount: number;
+  status: ConcessionRequestStatusEnum;
+  statusName: string;
+  createdAt: string;
+  concurrencyStamp: string;
+  availableActions: string[];
 }
 
 export interface ConcessionApplicationsResponse {
+  draftCount: number;
   pendingCount: number;
   approvedCount: number;
   rejectedCount: number;
@@ -247,4 +265,284 @@ export interface ValueEntryResponse {
     grandTotalDiscountAmount: number;
     grandTotalNetAmount: number;
   };
+}
+
+export type ApiDataResponse<T> = { success: boolean; data: T };
+
+export interface ConcessionDocumentRequirement {
+  documentId: string;
+  documentName: string;
+  isRequired: boolean;
+  maxFileSizeBytes: number;
+  acceptedFormats: number[];
+  url?: string | null;
+  isUploaded: boolean;
+}
+
+export interface ConcessionEligibleDueFee {
+  dueFeeId: string;
+  feeHeadId: string;
+  feeHeadName: string;
+  month: number;
+  year: number;
+  installmentLabel: string;
+  originalAmount: number;
+  paidAmount: number;
+  concessionAmount: number;
+  adjustmentCreditAmount: number;
+  outstandingAmount: number;
+  status: string;
+  concurrencyStamp: string;
+}
+
+export interface ConcessionEligibleFeeHead {
+  feeHeadId: string;
+  feeHeadName: string;
+  eligibleOutstanding: number;
+}
+
+export interface ConcessionTypeOption {
+  concessionTypeId: string;
+  name: string;
+  description?: string | null;
+  documents: ConcessionDocumentRequirement[];
+}
+
+export interface ConcessionRequestContext {
+  academicYearId: string;
+  studentId: string;
+  studentName: string;
+  studentFeeStructureId: string;
+  feeStructureName: string;
+  concessionPolicyId: string;
+  concessionPolicyVersionId: string;
+  concessionPolicyName: string;
+  concessionPolicyCode: string;
+  concessionPolicyVersion: number;
+  valueSource: 'PolicyFixed' | 'RequestEnteredWithinLimits';
+  calculationMethod: 'Percentage' | 'FixedAmount' | 'FullWaiver';
+  percentageValue?: number | null;
+  fixedAmount?: number | null;
+  maximumPercentage?: number | null;
+  maximumFixedAmount?: number | null;
+  applyOn: 'CurrentInstallment' | 'FutureInstallments' | 'AllOutstanding';
+  roundingMethod: string;
+  currency: string;
+  assignmentSelectionRequired: boolean;
+  assignments: {
+    studentFeeStructureId: string;
+    feeStructureId: string;
+    feeStructureName: string;
+    chargeStartDate: string;
+    chargeEndDate: string;
+  }[];
+  blockers: string[];
+  feeHeads: ConcessionEligibleFeeHead[];
+  eligibleDueFees: ConcessionEligibleDueFee[];
+  concessionTypes: ConcessionTypeOption[];
+}
+
+export interface FeeHeadConcessionInput {
+  feeHeadId: string;
+  basedOn: 0 | 1;
+  amount: number;
+}
+
+export interface ConcessionDocumentInput {
+  documentId: string;
+  url: string;
+  status: 1;
+}
+
+export interface ConcessionDraftCommand {
+  academicYearId: string;
+  studentId: string;
+  studentFeeStructureId?: string;
+  concessionTypeId: string;
+  sourceRequestId?: string;
+  idempotencyKey?: string;
+  previewFingerprint?: string;
+  remarks?: string;
+  feeHeadConcessions: FeeHeadConcessionInput[];
+  documents: ConcessionDocumentInput[];
+}
+
+export interface ConcessionRequestDetail {
+  concessionRequestId: string;
+  academicYearId: string;
+  studentId: string;
+  studentName: string;
+  concessionTypeId: string;
+  studentFeeStructureId: string;
+  concessionPolicyId: string;
+  concessionPolicyVersionId: string;
+  concessionPolicyName: string;
+  concessionPolicyCode: string;
+  concessionPolicyVersion: number;
+  concessionTypeName: string;
+  status: ConcessionRequestStatusEnum;
+  statusName: string;
+  concurrencyStamp: string;
+  requesterId?: string | null;
+  submittedById?: string | null;
+  decidedById?: string | null;
+  sourceRequestId?: string | null;
+  submittedAt?: string | null;
+  cancellationReason?: string | null;
+  totalRequestedConcessionAmount: number;
+  totalApprovedConcessionAmount: number;
+  totalReversedConcessionAmount: number;
+  netApprovedConcessionAmount: number;
+  remarks?: string | null;
+  boardId: string;
+  educationMediumId: string;
+  standardId: string;
+  divisionId: string;
+  feeHeadConcessions: FeeHeadValueResult[];
+  requiredDocuments: ConcessionDocumentRequirement[];
+  submittedDocuments: Array<{
+    documentId: string;
+    documentName: string;
+    url: string;
+    status: number;
+  }>;
+  documentSubmissionState: string;
+  missingDocumentIds: string[];
+  createdAt: string;
+  availableActions: string[];
+  timeline: ConcessionTimelineEvent[];
+}
+
+export interface ConcessionTimelineEvent {
+  action: string;
+  status: ConcessionRequestStatusEnum;
+  actorId?: string | null;
+  occurredAt: string;
+  reason?: string | null;
+  amount?: number | null;
+}
+
+export interface ConcessionRequestPreview {
+  studentFeeStructureId: string;
+  concessionPolicyId: string;
+  concessionPolicyVersionId: string;
+  concessionPolicyName: string;
+  concessionPolicyCode: string;
+  concessionPolicyVersion: number;
+  applyOn: string;
+  valueSource: string;
+  calculationMethod: string;
+  maximumPercentage?: number | null;
+  maximumFixedAmount?: number | null;
+  totalEligibleBase: number;
+  totalConcessionAmount: number;
+  netPayable: number;
+  feeHeadConcessions: FeeHeadValueResult[];
+  eligibleDueFees: ConcessionEligibleDueFee[];
+  previewFingerprint: string;
+  generatedAt: string;
+}
+
+export interface DueFeeApprovalLine extends ConcessionEligibleDueFee {
+  concessionDueFeeAllocationId?: string | null;
+  monthLabel: string;
+  isSelectable: boolean;
+  maxConcessionAmount: number;
+  suggestedConcessionAmount: number;
+  appliedConcessionAmount: number;
+  reversedConcessionAmount: number;
+  reversibleConcessionAmount: number;
+}
+
+export interface FeeHeadApprovalGroup {
+  feeHeadId: string;
+  feeHeadName: string;
+  requestedConcessionAmount: number;
+  liveMaximumConcessionAmount: number;
+  suggestedConcessionAmount: number;
+  hasChangedSinceSubmission: boolean;
+  dueFeeLines: DueFeeApprovalLine[];
+}
+
+export interface ConcessionApprovalContext {
+  concessionRequestId: string;
+  studentId: string;
+  concessionPolicyName: string;
+  concessionPolicyCode: string;
+  concessionPolicyVersion: number;
+  requestConcurrencyStamp: string;
+  totalRequestedConcessionAmount: number;
+  totalLiveMaximumConcessionAmount: number;
+  hasChangedSinceSubmission: boolean;
+  previewFingerprint: string;
+  feeHeadGroups: FeeHeadApprovalGroup[];
+}
+
+export interface ApproveConcessionCommand {
+  message?: string;
+  requestConcurrencyStamp: string;
+  previewFingerprint: string;
+  idempotencyKey: string;
+  feeHeadApprovals: Array<{
+    feeHeadId: string;
+    approvedConcessionAmount: number;
+    dueFeeAllocations: Array<{
+      dueFeeId: string;
+      concessionAmount: number;
+      concurrencyStamp: string;
+    }>;
+  }>;
+}
+
+export type PreviewConcessionApprovalCommand = Pick<
+  ApproveConcessionCommand,
+  'requestConcurrencyStamp' | 'previewFingerprint' | 'feeHeadApprovals'
+>;
+
+export interface ConcessionApprovalPreview {
+  concessionRequestId: string;
+  requestConcurrencyStamp: string;
+  previewFingerprint: string;
+  totalApprovedAmount: number;
+  dueFeeAllocations: Array<{
+    dueFeeId: string;
+    feeHeadId: string;
+    month: number;
+    year: number;
+    concessionAmount: number;
+  }>;
+}
+
+export interface RejectConcessionCommand {
+  message: string;
+  requestConcurrencyStamp: string;
+  idempotencyKey: string;
+}
+
+export interface ReverseConcessionCommand {
+  reason: string;
+  requestConcurrencyStamp: string;
+  idempotencyKey: string;
+  lines: Array<{
+    concessionDueFeeAllocationId: string;
+    amount: number;
+    concurrencyStamp: string;
+  }>;
+}
+
+export interface ConcessionReversalPreview {
+  concessionRequestId: string;
+  requestConcurrencyStamp: string;
+  totalApprovedAmount: number;
+  totalPreviouslyReversedAmount: number;
+  totalReversalAmount: number;
+  netApprovedAfterReversal: number;
+  lines: Array<{
+    concessionDueFeeAllocationId: string;
+    dueFeeId: string;
+    feeHeadId: string;
+    reversalAmount: number;
+    outstandingBefore: number;
+    outstandingAfter: number;
+  }>;
 }

@@ -1,6 +1,6 @@
-import React from 'react';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
+import React, { useRef } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -10,29 +10,27 @@ import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import {
-  useRejectConcessionRequestMutation,
-  useApproveConcessionRequestMutation,
-} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
+import { useRejectConcessionRequestMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import type { IReasonApprovalFormProps } from '../type';
 
-const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprovalFormProps) => {
+const ReasonApprovalForm = ({ onClose, selectedConcession }: IReasonApprovalFormProps) => {
+  const commandKey = useRef('');
   const [rejectConcessionRequest, { isLoading: isRejectLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useRejectConcessionRequestMutation,
   });
 
-  const [approveConcessionRequest, { isLoading: isApproveLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useApproveConcessionRequestMutation,
-  });
   const formik = useFormik({
     initialValues: {
       reason: '',
     },
     validationSchema: Yup.object().shape({
-      reason: mode === 'Reject' ? Yup.string().required('Reason is required') : Yup.string(), // optional in approve
+      reason: Yup.string()
+        .trim()
+        .min(10, 'Reason must be at least 10 characters')
+        .max(2000, 'Reason cannot exceed 2000 characters')
+        .required('Reason is required'),
     }),
     onSubmit: async (values) => {
       const requestId =
@@ -41,19 +39,16 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
         selectedConcession?.id;
       if (!requestId) return;
       try {
-        if (mode === 'Reject') {
-          await rejectConcessionRequest({
-            studentConcessionTypeRequestId: requestId,
-            body: { message: values.reason },
-          }).unwrap();
-          shikshaMitraToast.success({ message: 'Concession request rejected successfully' });
-        } else {
-          await approveConcessionRequest({
-            studentConcessionTypeRequestId: requestId,
-            body: { message: values.reason },
-          }).unwrap();
-          shikshaMitraToast.success({ message: 'Concession request approved successfully' });
-        }
+        await rejectConcessionRequest({
+          studentConcessionTypeRequestId: requestId,
+          body: {
+            message: values.reason.trim(),
+            requestConcurrencyStamp: selectedConcession?.concurrencyStamp ?? '',
+            idempotencyKey: (commandKey.current ||= window.crypto.randomUUID()),
+          },
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Concession request rejected successfully' });
+        commandKey.current = '';
         onClose(null, true);
       } catch (error) {
         console.error(error);
@@ -69,7 +64,7 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
             <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
               <TextField
                 fullWidth
-                label={`Reason${mode === 'Reject' ? ' *' : ''}`}
+                label="Reason *"
                 name="reason"
                 size="small"
                 multiline
@@ -102,13 +97,13 @@ const ReasonApprovalForm = ({ onClose, mode, selectedConcession }: IReasonApprov
         <LoadingButton
           type="button"
           variant="soft"
-          color={mode === 'Reject' ? 'error' : 'success'}
+          color="error"
           size="small"
-          loading={isRejectLoading || isApproveLoading}
-          startIcon={<Iconify icon={mode === 'Reject' ? GlobalIcons.cancel : GlobalIcons.tick} />}
+          loading={isRejectLoading}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
           onClick={() => formik.handleSubmit()}
         >
-          {mode}
+          Reject
         </LoadingButton>
       </DialogActions>
     </BackPopUpChecked>

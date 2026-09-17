@@ -1,12 +1,12 @@
-import type { RootState } from 'src/redux/store';
+import type {
+  ConcessionRequestContext,
+  ConcessionRequestPreview,
+} from 'src/redux/finance/ConcessionManagement/types';
 
-import { useSelector } from 'react-redux';
 import React, { useMemo, useCallback } from 'react';
 import PercentIcon from '@mui/icons-material/Percent';
 import CurrencyRupeeIcon from '@mui/icons-material/CurrencyRupee';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
-import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 import {
   Box,
   Card,
@@ -24,9 +24,11 @@ import {
 interface Props {
   formik: any;
   concessionTypes: any[];
+  requestContext?: ConcessionRequestContext;
+  preview?: ConcessionRequestPreview;
 }
 
-const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
+const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes, requestContext, preview }) => {
   const { values, setFieldValue } = formik;
   const selectedTypes = useMemo(
     () => (concessionTypes as any[]).filter((ct: any) => values.concessionTypeIds.includes(ct.id)),
@@ -93,7 +95,14 @@ const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
   return (
     <Box>
       {selectedTypes.map((ct: any) => (
-        <ValueEntryStepItem key={ct.id} concessionType={ct} values={values} setEntry={setEntry} />
+        <ValueEntryStepItem
+          key={ct.id}
+          concessionType={ct}
+          values={values}
+          setEntry={setEntry}
+          requestContext={requestContext}
+          preview={preview}
+        />
       ))}
       {selectedTypes.every((ct: any) => (values.selectedFeeHeads[ct.id] || []).length === 0) && (
         <Typography color="text.disabled" textAlign="center" py={4}>
@@ -104,14 +113,23 @@ const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes }) => {
   );
 };
 
-const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: assignedStructureData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetStudentFeeStructureQuery,
-    params: { studentId: values.studentId, academicYearId: currentYear?.id },
-    options: { skip: !values.studentId || !currentYear?.id },
-  });
+const ValueEntryStepItem = ({ concessionType, values, setEntry, requestContext, preview }: any) => {
+  const assignedStructureData = requestContext
+    ? {
+        concessionValueSource: requestContext.valueSource,
+        concessionCalculationMethod: requestContext.calculationMethod,
+        maximumConcessionPercentage: requestContext.maximumPercentage,
+        maximumConcessionFixedAmount: requestContext.maximumFixedAmount,
+        concessionPercentageValue: requestContext.percentageValue,
+        concessionFixedAmount: requestContext.fixedAmount,
+        concessionPolicyName: requestContext.concessionPolicyName,
+        concessionPolicyVersion: requestContext.concessionPolicyVersion,
+        feeHeads: requestContext.feeHeads.map((feeHead: any) => ({
+          ...feeHead,
+          amount: feeHead.eligibleOutstanding,
+        })),
+      }
+    : undefined;
 
   const selectedFeeHeadIds: string[] = values.selectedFeeHeads[concessionType.id] || [];
   const isPolicyFixed = assignedStructureData?.concessionValueSource === 'PolicyFixed';
@@ -149,17 +167,8 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
         if (isPolicyFixed) {
           const method = assignedStructureData?.concessionCalculationMethod;
           const basedOn = method === 'FixedAmount' ? 0 : 1;
-          const amount =
-            method === 'Percentage'
-              ? assignedStructureData?.concessionPercentageValue || 0
-              : method === 'FullWaiver'
-                ? 100
-                : selectedBaseTotal > 0
-                  ? ((assignedStructureData?.concessionFixedAmount || 0) * baseAmount) /
-                    selectedBaseTotal
-                  : 0;
-          const discount = basedOn === 1 ? (baseAmount * amount) / 100 : amount;
-          updates[fhId] = { basedOn, amount, netAmount: Math.max(0, baseAmount - discount) };
+          const amount = 0;
+          updates[fhId] = { basedOn, amount, netAmount: baseAmount };
           hasUpdates ||=
             !existingEntry || existingEntry.basedOn !== basedOn || existingEntry.amount !== amount;
         } else if (
@@ -202,8 +211,6 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
     isPolicyFixed,
     permittedBasedOn,
     assignedStructureData?.concessionCalculationMethod,
-    assignedStructureData?.concessionPercentageValue,
-    assignedStructureData?.concessionFixedAmount,
   ]);
   // Better to check if update is needed inside to avoid loop. The check `!existingEntry || existingEntry.netAmount === undefined` protects against loop if we set it correctly.
 
@@ -248,7 +255,7 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
   };
 
   return (
-    <Card sx={{ borderRadius: 2, boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }} variant="outlined">
+    <Card sx={{ borderRadius: 2, boxShadow: 'var(--shadows-4)' }} variant="outlined">
       <Box
         sx={{
           p: 1,
@@ -308,18 +315,12 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
           };
           const isPercentage = permittedBasedOn === 1;
 
-          // Calculations
           const baseAmount = fh.amount || 0;
-          let discountAmount = 0;
-
-          if (isPercentage) {
-            const percent = parseFloat(entry.amount) || 0;
-            discountAmount = (baseAmount * percent) / 100;
-          } else {
-            discountAmount = parseFloat(entry.amount) || 0;
-          }
-          // Cap discount at base amount? Usually yes, but depends on logic. Let's not enforce strictly here for display, but user sees net.
-          const netAmount = baseAmount - discountAmount;
+          const serverLine = preview?.feeHeadConcessions?.find(
+            (line: any) => line.feeHeadId === fhId
+          );
+          const discountAmount = serverLine?.discountAmount ?? 0;
+          const netAmount = serverLine?.netAmount ?? baseAmount;
 
           return (
             <React.Fragment key={fhId}>
@@ -332,7 +333,7 @@ const ValueEntryStepItem = ({ concessionType, values, setEntry }: any) => {
                       {fh.feeHeadName}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      Annual Base:{' '}
+                      Eligible outstanding:{' '}
                       <Box component="span" fontWeight={500} color="text.primary">
                         {formatCurrency(baseAmount)}
                       </Box>
