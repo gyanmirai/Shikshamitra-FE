@@ -13,6 +13,7 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import {
   Box,
   Grid,
+  Alert,
   Button,
   Divider,
   MenuItem,
@@ -30,10 +31,11 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
   onClose,
   editData,
 }) => {
-  const { formik, subjectData, isSubjectLoading, isSaveLoading } = useElectiveSubjectForm({
-    onClose,
-    editData,
-  });
+  const { formik, subjectData, isSubjectLoading, isSaveLoading, areSubjectsLocked } =
+    useElectiveSubjectForm({
+      onClose,
+      editData,
+    });
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
@@ -90,7 +92,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
             </TextField>
           </Grid>
 
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12 }} sx={{ mb: 1 }}>
             <ShakingTextField error={!!(formik.touched.color && formik.errors.color) || false}>
               <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 0.5 }}>
                 <Typography
@@ -146,11 +148,22 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
             <Typography variant="subtitle2">Subject Selection</Typography>
           </Grid>
 
+          {areSubjectsLocked && (
+            <Grid size={{ xs: 12 }}>
+              <Alert severity="info" variant="outlined" icon={<Iconify icon="lucide:lock" />}>
+                Subject selection is locked because this elective group is already used in academic
+                records. You can still update all other group details. Create a new elective group
+                to use a different subject combination.
+              </Alert>
+            </Grid>
+          )}
+
           <Grid size={{ xs: 12 }}>
             <ResponsiveMultiSelect
               label="Select Subjects *"
               options={subjectData || []}
               isLoading={isSubjectLoading}
+              disabled={areSubjectsLocked}
               value={formik.values.subjectIds}
               getOptionLabel={(opt: any) => opt?.name}
               getOptionValue={(opt: any) => opt?.id}

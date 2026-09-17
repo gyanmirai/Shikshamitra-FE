@@ -1,4 +1,4 @@
-import type { ReservationRequirements, RoomFacility } from '../types';
+import type { RoomFacility, ReservationRequirements } from '../types';
 
 export type ReservationValidationErrors = Partial<
   Record<keyof ReservationRequirements | 'untilDate', string>
@@ -14,6 +14,8 @@ export interface RoomSuggestionRequest {
   page?: number;
   limit: number;
 }
+
+export const DEFAULT_ROOM_SUGGESTION_LIMIT = 500;
 
 export const validateRoomSearchRequirements = (
   requirements: ReservationRequirements
@@ -66,5 +68,5 @@ export const buildRoomSuggestionRequest = (
       ? undefined
       : requirements.preferredBuilding,
   page: requirements.page,
-  limit: requirements.limit || 50,
+  limit: requirements.limit || DEFAULT_ROOM_SUGGESTION_LIMIT,
 });

@@ -77,6 +77,7 @@ export function useTeacherSelection({
         search: query,
         page,
         isTeaching: true,
+        status: 'Active',
       }).unwrap();
       const hasMore = res.currentPage < res.totalPages;
       const data = (res?.items ?? [])
@@ -106,6 +107,7 @@ export function useTeacherSelection({
         search: query,
         page,
         isTeaching: true,
+        status: 'Active',
       }).unwrap();
       const hasMore = res.currentPage < res.totalPages;
       const data = (res?.items ?? [])

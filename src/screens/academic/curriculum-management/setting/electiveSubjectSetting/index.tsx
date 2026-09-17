@@ -16,13 +16,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useGetElectiveGroupUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
-import {
-  Box,
-  Alert,
-  Button,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Alert, Button, TextField, Typography } from '@mui/material';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
 import SettingElectiveSubjectForm from './components/electiveSubjectForm';
@@ -179,7 +173,7 @@ const ElectiveSubjectSetting = () => {
               placement="right"
               title={
                 selected
-                  ? 'You can update the elective group details by entering group name, subjects and color.'
+                  ? 'You can update the group details. Subject selection is locked after the group is used in academic records.'
                   : 'You can create a new elective group details by entering the group name, subjects and color.'
               }
             >

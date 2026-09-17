@@ -21,6 +21,7 @@ export type IElectiveSubject = {
   timetablePeriodsCount?: number;
   examSchedulesCount?: number;
   isUsed?: boolean;
+  canModifySubjects?: boolean;
   canDelete?: boolean;
   lastUpdatedAt?: string;
   createdBy: string;

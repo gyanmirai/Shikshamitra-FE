@@ -14,6 +14,17 @@ const currentYear = {
 };
 
 describe('getChapterValidationSchema', () => {
+  it('requires the chapter start and end dates expected by the API contract', async () => {
+    const schema = getChapterValidationSchema(currentYear);
+
+    await expect(schema.validateAt('startDate', { startDate: null })).rejects.toThrow(
+      'Start Date is required'
+    );
+    await expect(
+      schema.validateAt('endDate', { startDate: dayjs(), endDate: null })
+    ).rejects.toThrow('End Date is required');
+  });
+
   it('validates chapter numbers as bounded whole numbers', async () => {
     const schema = getChapterValidationSchema(currentYear);
 
