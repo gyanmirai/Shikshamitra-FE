@@ -5,6 +5,7 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -15,14 +16,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import {
-  Box,
-  Chip,
-  Alert,
-  Button,
-  Tooltip,
-  Checkbox,
-} from '@mui/material';
+import { Box, Alert, Button, Tooltip, Checkbox } from '@mui/material';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useGetStudentElectiveAssignmentsQuery,
@@ -41,6 +36,7 @@ import useElectiveAssignmentState from './hooks/useElectiveAssignmentState';
 import AssignmentProgressSummary from './components/AssignmentProgressSummary';
 
 const AssignElectiveSubject = () => {
+  const router = useRouter();
   const [allClass, setAllClass] = useState<Standards[]>([]);
   const [classes, setClasses] = useState<string>('');
 
@@ -176,6 +172,13 @@ const AssignElectiveSubject = () => {
     isLocked,
   });
 
+  const { confirmation: navigationConfirmation } = useUnsavedNavigation(hasUnsavedChanges, {
+    push: router.push,
+    title: 'Unsaved Changes',
+    description:
+      'You have unsaved elective assignment changes. Leave this page to discard them, or keep editing to preserve your work.',
+  });
+
   // --------------------------------------------
   // CONTEXT CHANGE GUARD (unsaved changes)
   // --------------------------------------------
@@ -189,6 +192,7 @@ const AssignElectiveSubject = () => {
   };
 
   const handleDiscardAndContinue = () => {
+    resetSelections();
     pendingContextChange.current?.();
     pendingContextChange.current = null;
     unsavedDialog.onFalse();
@@ -333,7 +337,11 @@ const AssignElectiveSubject = () => {
                       variant="contained"
                       size="small"
                       color={isLocked ? 'inherit' : 'error'}
-                      startIcon={<Iconify icon={isLocked ? GlobalIcons.approvedIcon : GlobalIcons.lockIcon} />}
+                      startIcon={
+                        <Iconify
+                          icon={isLocked ? GlobalIcons.approvedIcon : GlobalIcons.lockIcon}
+                        />
+                      }
                       disabled={!canLock}
                       onClick={reviewDrawer.onTrue}
                     >
@@ -372,7 +380,9 @@ const AssignElectiveSubject = () => {
             issues={summary.issues}
             preferenceMatchPct={summary.preferenceMatchPct}
             activeFilter={statusFilter}
-            onFilterAssigned={() => setStatusFilter(statusFilter === 'assigned' ? 'all' : 'assigned')}
+            onFilterAssigned={() =>
+              setStatusFilter(statusFilter === 'assigned' ? 'all' : 'assigned')
+            }
             onFilterUnassigned={() =>
               setStatusFilter(statusFilter === 'unassigned' ? 'all' : 'unassigned')
             }
@@ -552,7 +562,11 @@ const AssignElectiveSubject = () => {
                     locked: { label: 'Locked', color: 'default' },
                   };
                   const s = map[status];
-                  return <Label color={s.color} variant="soft">{s.label}</Label>;
+                  return (
+                    <Label color={s.color} variant="soft">
+                      {s.label}
+                    </Label>
+                  );
                 },
               },
             ]}
@@ -641,6 +655,8 @@ const AssignElectiveSubject = () => {
         }}
         onDiscard={handleDiscardAndContinue}
       />
+
+      {navigationConfirmation}
     </Box>
   );
 };

@@ -28,8 +28,8 @@ export function useFormListActions() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const editingQuery = useGetAdmissionFormQuery(editingId ?? '', { skip: !editingId });
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canManage = hasGrantedPermission(permissions, 'Students.Admissions.Forms.Manage');
-  const canPublish = hasGrantedPermission(permissions, 'Students.Admissions.Forms.Publish');
+  const canManage = hasGrantedPermission(permissions, 'Students.Admissions.Forms.Add');
+  const canPublish = hasGrantedPermission(permissions, 'Students.Admissions.Forms.Add');
   const [create, createState] = useCreateAdmissionFormMutation();
   const [update, updateState] = useUpdateAdmissionFormMutation();
   const [clone] = useCloneAdmissionFormMutation();

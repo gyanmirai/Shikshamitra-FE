@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-15
+updated_on: 2026-09-16
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -55,11 +55,11 @@ Collection Policy Version History and its policy-specific Audit Trail both lazil
 Account Head lookups use `src/hooks/useAccountHeadOptions.ts` and `src/redux/finance/accountHeadApi.ts`.
 The hook waits for permission initialization and a selected academic year, and exposes permission/API failures separately from empty results. Master and bank selectors require Account Head View. Income and Expense Category forms pass `categoryType` and use their own `/income-categories/account-head-options` or `/expense-categories/account-head-options` endpoint with the corresponding category Add or Edit permission. Options display account names and filter by type and active status.
 It uses current query data so switching academic years cannot reuse another year's account options.
-`src/screens/security/role/account-settings-permissions.ts` maps Accounts menu `.View` gates back to their action base for the role editor.
-The editor exposes View, Add, Edit, Change Status and Delete only when defined by the server, and warns when an older catalog omits Accounts settings actions.
+`src/screens/security/role/permission-catalogue.ts` organizes every server-defined Accounts action in the retained role editor without a Finance-specific action list.
+The [Security workflow](../security/workflows.md) explains complete subtree operations and why removing direct user grants does not remove inherited role access.
 Account Head forms and contracts omit code, currency, direct-posting/control toggles, and effective dates. Both category forms omit code and effective dates; the server owns legacy category metadata. A category's default-head selector is enabled for permitted creation and unused-category editing. Used categories retain the server mapping lock and show an explanation. These changes require the matching backend release and migration described in the [backend API guide](../../../Shikshamitra-BE/docs/modules/finance/api.md).
 
-Focused coverage: `src/hooks/useAccountHeadOptions.test.ts`, `src/screens/finance/settings/account-settings-forms.test.ts`, `src/screens/security/role/account-settings-permissions.test.ts`, and `src/screens/security/role/permission-node.test.tsx`.
+Focused coverage: `src/hooks/useAccountHeadOptions.test.ts`, `src/screens/finance/settings/account-settings-forms.test.ts`, `src/screens/security/role/permission-catalogue.test.ts`, and `src/screens/security/role/permission-node.test.tsx`.
 
 Backend Finance behavior is canonical in [Finance backend APIs](../../../Shikshamitra-BE/docs/modules/finance/api.md).
 Confirm request and response behavior there before changing a client shape.

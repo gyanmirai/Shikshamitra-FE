@@ -14,27 +14,35 @@ interface UseElectiveAssignmentStateArgs {
   isLocked: boolean;
 }
 
+const buildSelectionMap = (records: StudentElectiveRow[] | undefined) => {
+  const selections: Record<string, string> = {};
+  records?.forEach((student) => {
+    if (student.selectedSubjectId) selections[student.studentId] = student.selectedSubjectId;
+  });
+  return selections;
+};
+
 export default function useElectiveAssignmentState({
   students,
   serverRecords,
   isLocked,
 }: UseElectiveAssignmentStateArgs) {
   const [studentSelections, setStudentSelections] = useState<Record<string, string>>({});
+  const [serverSelections, setServerSelections] = useState<Record<string, string>>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<AssignmentFilterValue>('all');
   const [selectedRowIds, setSelectedRowIds] = useState<Set<string>>(new Set());
 
   // Reset selections whenever server data changes (new context loaded / refetch after save)
   useEffect(() => {
-    if (!serverRecords) return;
-    const initial: Record<string, string> = {};
-    serverRecords.forEach((st) => {
-      if (st.selectedSubjectId) initial[st.studentId] = st.selectedSubjectId;
-    });
-    requestAnimationFrame(() => {
+    if (!serverRecords) return undefined;
+    const initial = buildSelectionMap(serverRecords);
+    const frame = requestAnimationFrame(() => {
       setStudentSelections(initial);
+      setServerSelections(initial);
       setSelectedRowIds(new Set());
     });
+    return () => cancelAnimationFrame(frame);
   }, [serverRecords]);
 
   const assignSubject = useCallback(
@@ -72,16 +80,8 @@ export default function useElectiveAssignmentState({
   }, []);
 
   const resetSelections = useCallback(() => {
-    if (!serverRecords) {
-      setStudentSelections({});
-      return;
-    }
-    const initial: Record<string, string> = {};
-    serverRecords.forEach((st) => {
-      if (st.selectedSubjectId) initial[st.studentId] = st.selectedSubjectId;
-    });
-    setStudentSelections(initial);
-  }, [serverRecords]);
+    setStudentSelections(serverSelections);
+  }, [serverSelections]);
 
   const toggleRowSelected = useCallback((studentId: string) => {
     setSelectedRowIds((prev) => {
@@ -117,11 +117,11 @@ export default function useElectiveAssignmentState({
     (row: StudentElectiveRow) => {
       const selectedId = studentSelections[row.studentId];
       if (!selectedId) return 'unassigned' as const;
-      const original = serverRecords?.find((r) => r.studentId === row.studentId)?.selectedSubjectId;
+      const original = serverSelections[row.studentId];
       if (original !== selectedId) return 'changed' as const;
       return 'assigned' as const;
     },
-    [studentSelections, serverRecords]
+    [studentSelections, serverSelections]
   );
 
   const filteredStudents = useMemo(() => {
@@ -197,20 +197,15 @@ export default function useElectiveAssignmentState({
     [students, studentSelections]
   );
 
-  const unsavedChangesCount = useMemo(() => {
-    if (!serverRecords) return 0;
-    return students.filter(
-      (st) =>
-        (studentSelections[st.studentId] ?? '') !==
-        (serverRecords.find((r) => r.studentId === st.studentId)?.selectedSubjectId ?? '')
-    ).length;
-  }, [studentSelections, serverRecords, students]);
+  const unsavedChangesCount = useMemo(
+    () =>
+      students.filter(
+        (st) => (studentSelections[st.studentId] ?? '') !== (serverSelections[st.studentId] ?? '')
+      ).length,
+    [studentSelections, serverSelections, students]
+  );
 
-  const hasUnsavedChanges = useMemo(() => {
-    if (!serverRecords) return false;
-    if (students.length !== serverRecords.length) return true;
-    return unsavedChangesCount > 0;
-  }, [serverRecords, students, unsavedChangesCount]);
+  const hasUnsavedChanges = unsavedChangesCount > 0;
 
   const allStudentsAssigned = useMemo(
     () => students.length > 0 && students.every((st) => !!studentSelections[st.studentId]),

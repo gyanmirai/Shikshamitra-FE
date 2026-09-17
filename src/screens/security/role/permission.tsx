@@ -4,63 +4,61 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import { motion } from 'framer-motion';
 import Stack from '@mui/material/Stack';
+import { Tooltip } from '@mui/material';
 import Switch from '@mui/material/Switch';
 import Button from '@mui/material/Button';
+import { useMemo, useState } from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
-import { useMemo, useState, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Tooltip, CircularProgress } from '@mui/material';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { fullSecurityNavData } from 'src/layouts/config-nav-dashboard';
-import { useGetPermissionsQuery } from 'src/redux/permission/permissionApi';
 
-import { extractGrantedPermissions } from '.';
 import PermissionNode from './permission-node';
 import { getVisibilityPermissionName } from './permission-grants';
 import { getAllChildrenData, type PermissionType, getPermissionChildren } from './utils';
+import { canManageGrant, catalogueEntries, inheritedSources } from './permission-catalogue';
 import {
   ACCOUNT_SETTING_ACTIONS,
   getActionPermissionBase,
+  getNodePermissionActions,
   isAccountSettingPermission,
+  isStatutorySchemePermission,
   getNodeActionPermissionNames,
   getAffectedNodePermissionNames,
+  getNodeRevocationPermissionNames,
   getNodeActionPermissionNamesForAction,
 } from './account-settings-permissions';
+
+import type { GrantProvider, PermissionCatalogue } from './permission-catalogue';
 
 // ----------------------------------------------------------------------
 
 export default function Permission({
-  editData,
-  setPermissionData,
-  permissionData,
-  providerName,
-  initialData,
+  catalogue, provider, grants, setGrants, disabled = false,
 }: {
-  editData: any;
-  setPermissionData: (data: { name: string; isGranted: boolean }[]) => void;
-  permissionData: { name: string; isGranted: boolean }[];
-  providerName: string;
-  initialData: any;
+  catalogue: PermissionCatalogue;
+  provider: GrantProvider;
+  grants: Record<string, boolean>;
+  setGrants: (names: string[], value: boolean) => void;
+  disabled?: boolean;
 }) {
-  const { data: _permissionData, isLoading: isPermissionLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetPermissionsQuery,
-    params: { providerName, providerKey: providerName === 'R' ? editData?.name : editData?.id },
-    options: {
-      skip: !editData,
-      refetchOnMountOrArgChange: true,
-    },
-  });
-
-  useEffect(() => {
-    if (_permissionData?.groups?.length > 0) {
-      const init = extractGrantedPermissions(_permissionData?.groups);
-      setPermissionData(init);
-      initialData.current = init;
-    }
-  }, [_permissionData, initialData, setPermissionData]);
+  const entries = catalogueEntries(catalogue);
+  const inherited = new Map(entries.map((entry) => [entry.name,
+    inheritedSources(entry, provider).map((source) =>
+      `${source.providerName === 'R' ? 'role' : source.providerName} ${source.providerKey}`
+    ),
+  ]));
+  const permissionData = entries.filter((entry) => canManageGrant(entry, provider))
+    .map((entry) => ({ name: entry.name, isGranted: !!grants[entry.name] }));
+  const setPermissionData = (values: { name: string; isGranted: boolean }[]) => {
+    if (disabled) return;
+    const changes = values.filter((entry) => entry.isGranted !== !!grants[entry.name]);
+    [true, false].forEach((value) => {
+      const names = changes.filter((entry) => entry.isGranted === value).map((entry) => entry.name);
+      if (names.length) setGrants(names, value);
+    });
+  };
 
   const navigationData = useMemo(() => fullSecurityNavData(), []);
   const modules = useMemo(() => navigationData.flatMap((group) => group.items), [navigationData]);
@@ -96,7 +94,9 @@ export default function Permission({
   const handleNodeSelectAll = (node: any, value: boolean) => {
     if (!expandedSubModule) return;
 
-    const key = getNodeActionPermissionNames(node, permissionData);
+    const key = value
+      ? getNodeActionPermissionNames(node, permissionData)
+      : getNodeRevocationPermissionNames(node, permissionData);
 
     const newPermissions = permissionData.map((item) =>
       key.includes(item.name) ? { ...item, isGranted: value } : item
@@ -105,7 +105,7 @@ export default function Permission({
   };
 
   const findVisibility = (name: string | undefined) =>
-    permissionData?.find((item) => item.name === name)?.isGranted;
+    entries.find((item) => item.name === name)?.isGranted;
 
   const renderModuleList = (
     <Card
@@ -130,7 +130,7 @@ export default function Permission({
             const hasVisibility = findVisibility(getVisibilityPermissionName(module));
             return (
               <Tooltip
-                title={hasVisibility ? '' : 'Not Module visibility Accessible'}
+                title={hasVisibility ? '' : 'Navigation is hidden. Use Set Module Visibility to change it.'}
                 key={module.title}
               >
                 <span key={module.title}>
@@ -139,8 +139,8 @@ export default function Permission({
                     fullWidth
                     size="large"
                     startIcon={module.icon}
-                    onClick={() => hasVisibility && handleModuleClick(module)}
-                    disabled={!hasVisibility}
+                    onClick={() => handleModuleClick(module)}
+                    disabled={disabled}
                     sx={{
                       justifyContent: 'flex-start',
                       px: 2.5,
@@ -190,7 +190,7 @@ export default function Permission({
               const hasVisibility = findVisibility(getVisibilityPermissionName(subItem));
               return (
                 <Tooltip
-                  title={hasVisibility ? '' : 'Not Module visibility Accessible'}
+                  title={hasVisibility ? '' : 'Navigation is hidden. Use Set Module Visibility to change it.'}
                   key={subItem.title}
                 >
                   <span key={subItem.title}>
@@ -198,8 +198,8 @@ export default function Permission({
                       fullWidth
                       size="large"
                       // startIcon={module.icon}
-                      disabled={!hasVisibility}
-                      onClick={() => hasVisibility && handleSubModuleChange(subItem.title)}
+                      disabled={disabled}
+                      onClick={() => handleSubModuleChange(subItem.title)}
                       sx={{
                         justifyContent: 'flex-start',
                         px: 2.5,
@@ -250,7 +250,9 @@ export default function Permission({
     isAccountSettingPermission(getActionPermissionBase(item.permissionName))
   )
     ? ACCOUNT_SETTING_ACTIONS
-    : ['View', 'Add', 'Delete'];
+    : getAllChildrenData(selectedPermissionModule).some((item: any) =>
+      isStatutorySchemePermission(getActionPermissionBase(item.permissionName))
+    ) ? ['View', 'Add', 'Edit', 'Delete'] : ['View', 'Add', 'Delete'];
 
   const renderPermissionMatrix = (
     <Card
@@ -268,6 +270,8 @@ export default function Permission({
           sx={{
             p: 2.5,
             display: 'flex',
+            flexWrap: 'wrap',
+            gap: 2,
             alignItems: 'center',
             justifyContent: 'space-between',
             borderBottom: '1px dashed',
@@ -283,9 +287,9 @@ export default function Permission({
           </Box>
 
           {/* Gamification HUD & Global Actions */}
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0, maxWidth: '100%' }}>
             {expandedSubModule && (
-              <Stack direction="row" spacing={2} alignItems="center">
+              <Stack direction="row" spacing={2} alignItems="center" useFlexGap sx={{ minWidth: 0, flexWrap: 'wrap' }}>
                 {matrixActions.map((type) => {
                   const activeSubModule = selectedModule.submodule?.find(
                     (s: any) => s.title === expandedSubModule
@@ -297,6 +301,7 @@ export default function Permission({
 
                   // Check if all items have this permission enabled
                   const availableItems = itemsToShow.filter((item: any) =>
+                    getNodePermissionActions(item.permissionName, permissionData).includes(type) &&
                     getNodeActionPermissionNamesForAction(
                       item.permissionName,
                       type,
@@ -318,13 +323,14 @@ export default function Permission({
                     });
 
                   return (
-                    <Stack key={type} direction="row" spacing={1} alignItems="center">
+                    <Stack key={type} direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
                       <Typography variant="subtitle2" sx={{ fontSize: '0.75rem' }}>
                         {type === 'ChangeStatus' ? 'Change Status' : type}
                       </Typography>
                       <Switch
                         size="small"
-                        disabled={availableItems.length === 0}
+                        disabled={disabled || availableItems.length === 0}
+                        slotProps={{ input: { 'aria-label': `All ${type}` } }}
                         checked={isGlobalChecked}
                         onChange={(e) => {
                           const isChecked = e.target.checked;
@@ -387,6 +393,8 @@ export default function Permission({
                     >
                       <PermissionNode
                         node={item}
+                        disabled={disabled}
+                        inherited={inherited}
                         moduleTitle={selectedModule.title}
                         submoduleTitle={expandedSubModule}
                         permissions={permissionData}
@@ -456,33 +464,17 @@ export default function Permission({
     <Stack
       direction={{ xs: 'column', md: 'row' }}
       spacing={2}
-      sx={{ height: 'calc(100vh - 100px)', p: 1 }}
+      sx={{ height: '100%', minHeight: 0, p: 1 }}
     >
-      {isPermissionLoading ? (
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flex: 1,
-            height: '100%',
-            width: '100%',
-            minHeight: 200,
-          }}
-        >
-          <CircularProgress />
-        </Box>
-      ) : (
         <>
-          <Box sx={{ width: { xs: '100%', md: 280 }, flexShrink: 0, height: '100%' }}>
+          <Box sx={{ width: { xs: '100%', md: 280 }, flexShrink: 0, height: '100%', minHeight: { xs: 240, md: 0 } }}>
             {renderModuleList}
           </Box>
-          <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, height: '100%' }}>
+          <Box sx={{ width: { xs: '100%', md: 320 }, flexShrink: 0, height: '100%', minHeight: { xs: 240, md: 0 } }}>
             {renderSubModules}
           </Box>
-          <Box sx={{ flexGrow: 1, minWidth: 0, height: '100%' }}>{renderPermissionMatrix}</Box>
+          <Box sx={{ flexGrow: 1, minWidth: 0, height: '100%', minHeight: { xs: 400, md: 0 } }}>{renderPermissionMatrix}</Box>
         </>
-      )}
     </Stack>
   );
 }

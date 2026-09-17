@@ -6,8 +6,43 @@ import {
   getNodePermissionActions,
   getNodeActionPermissionNames,
   getAffectedNodePermissionNames,
+  getNodeRevocationPermissionNames,
   getNodeActionPermissionNamesForAction,
 } from './account-settings-permissions';
+
+describe('Statutory Schemes permission groups', () => {
+  const root = 'HR.PayrollManagement.Settings.StatutorySchemes';
+  const node = { permissionName: `${root}.View` };
+  const edits = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map((action) => `${root}.${action}`);
+  const catalog = [`${root}.View`, ...edits].map((name) => ({ name, isGranted: true }));
+
+  it('uses three existing controls and maps Edit to all four defined write permissions', () => {
+    expect(getNodePermissionActions(node.permissionName, catalog)).toEqual(['View', 'Edit', 'Delete']);
+    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Edit', catalog)).toEqual(edits);
+    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'View', catalog)).toEqual([`${root}.View`]);
+    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Delete', catalog)).toEqual([]);
+    expect(getNodeActionPermissionNames(node, catalog)).toEqual(catalog.map(({ name }) => name));
+  });
+
+  it('keeps View and Edit independent and never invents missing actions', () => {
+    expect(getAffectedNodePermissionNames(node, 'View', false, catalog)).toEqual(new Set([`${root}.View`]));
+    expect(getAffectedNodePermissionNames(node, 'Edit', true, catalog)).toEqual(new Set(edits));
+    expect(getAffectedNodePermissionNames(node, 'Edit', false, catalog)).toEqual(new Set(edits));
+    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Edit', catalog.slice(0, 1))).toEqual([]);
+    const withDelete = [...catalog, { name: `${root}.Delete`, isGranted: false }];
+    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Delete', withDelete)).toEqual([`${root}.Delete`]);
+  });
+
+  it('revokes every feature grant including unrepresented actions, without granting unknown rights', () => {
+    const extra = [root, `${root}.FutureAction`, `${root}.Nested.Action`, `${root}.Add`];
+    const outside = [`${root}Other.Edit`, 'HR.PayrollManagement.Settings.PFRule.View', 'ShikshaMitra.Module.HR.PayrollManagement'];
+    const complete = [...catalog, ...extra.concat(outside).map((name) => ({ name, isGranted: true }))];
+    expect(getNodeRevocationPermissionNames(node, complete)).toEqual([...catalog.map(({ name }) => name), ...extra]);
+    expect(getNodeActionPermissionNames(node, complete)).toEqual(catalog.map(({ name }) => name));
+    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Add', complete)).toEqual([]);
+    expect(getNodeRevocationPermissionNames({ children: [node, node] }, complete)).toEqual([...catalog.map(({ name }) => name), ...extra]);
+  });
+});
 
 describe.each(['AccountHead', 'IncomeCategory', 'ExpenseCategory', 'BankAccount'])(
   '%s permission editor',

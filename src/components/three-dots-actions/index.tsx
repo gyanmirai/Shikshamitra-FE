@@ -111,13 +111,15 @@ const ThreeDotsActions = ({
         <Tooltip title={moreLabel}>
           <IconButton
             aria-label={moreLabel}
+            aria-haspopup="menu"
+            aria-expanded={popover.open}
             data-testid="table-action-more"
             onClick={(e) => {
               e.stopPropagation();
               popover.onOpen(e);
               onClickThreeDots?.(e);
             }}
-            sx={COMPACT_ACTION_BUTTON_SX}
+            sx={{ ...COMPACT_ACTION_BUTTON_SX, '& *': { pointerEvents: 'none' } }}
           >
             <Iconify
               icon="eva:more-vertical-fill"

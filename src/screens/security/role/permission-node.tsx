@@ -14,7 +14,9 @@ import {
   getActionPermissionBase,
   getNodePermissionActions,
   isAccountSettingPermission,
+  isStatutorySchemePermission,
   isFinanceConfigurationPermission,
+  getNodeRevocationPermissionNames,
   getNodeActionPermissionNamesForAction,
 } from './account-settings-permissions';
 
@@ -28,6 +30,8 @@ interface PermissionNodeProps {
   onToggle: (node: any, action: PermissionType, currentValue: boolean) => void;
   onSelectAll: (node: any, value: boolean, hasChildren: boolean) => void;
   depth?: number;
+  disabled?: boolean;
+  inherited?: Map<string, string[]>;
   setPermission: (data: any) => void;
 }
 
@@ -40,50 +44,43 @@ export default function PermissionNode({
   onSelectAll,
   depth = 0,
   setPermission,
+  disabled = false,
+  inherited = new Map<string, string[]>(),
 }: PermissionNodeProps) {
   const permissionBase = getActionPermissionBase(node.permissionName);
+  const isStatutoryScheme = isStatutorySchemePermission(permissionBase);
   const [expanded, setExpanded] = useState(
     !!permissions.find((p) => p.name === node.permissionName)?.isGranted
   );
   const actions = getNodePermissionActions(node.permissionName, permissions);
+  const availablePermissionNames = actions.flatMap((action) =>
+    getNodeActionPermissionNamesForAction(node.permissionName, action, permissions)
+  );
   const incompletePermissions =
-    actions.length === 0 ||
+    availablePermissionNames.length === 0 ||
     (isAccountSettingPermission(permissionBase) &&
       actions.length < ACCOUNT_SETTING_ACTIONS.length) ||
     (isFinanceConfigurationPermission(permissionBase) && actions.length < 3);
   const children = node.permissionChildren ?? node.children ?? [];
   const hasChildren = children.length > 0;
 
-  // Check if all permissions for this node are active
+  // Disabled action placeholders are not grants and must not block Revoke All.
   const isNodeFullySelected =
-    actions.length > 0 &&
-    actions.every((action) => {
-      const permissionNames = getNodeActionPermissionNamesForAction(
-        node.permissionName,
-        action,
-        permissions
-      );
-      return (
-        permissionNames.length > 0 &&
-        permissionNames.every(
-          (permissionName) =>
-            !!permissions.find((permission) => permission.name === permissionName)?.isGranted
-        )
-      );
-    });
-
-  const handleToggleExpand = (n: any) => {
-    setPermission(
-      permissions.map((per) =>
-        per.name === n.permissionName ? { ...per, isGranted: !expanded } : per
-      )
+    availablePermissionNames.length > 0 &&
+    availablePermissionNames.every(
+      (name) => !!permissions.find((permission) => permission.name === name)?.isGranted
     );
-    setExpanded(!expanded);
-  };
+  const revocationNames = isStatutoryScheme ? getNodeRevocationPermissionNames(node, permissions) : [];
+  const canRevokeAll = isNodeFullySelected || (isStatutoryScheme &&
+    revocationNames.some((name) => permissions.some((permission) => permission.name === name && permission.isGranted)));
+
+  // Expanding a group is presentation state, never a permission write.
+  const handleToggleExpand = () => setExpanded(!expanded);
 
   return (
     <Box sx={{ pl: depth * 3, mb: 1 }}>
       <Card
+        data-testid={`permission-${node.title}`}
         variant="outlined"
         sx={{
           p: 2,
@@ -121,21 +118,21 @@ export default function PermissionNode({
               {hasChildren && (
                 <Box
                   sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer' }}
-                  onClick={() => handleToggleExpand(node)}
+                  onClick={handleToggleExpand}
                 >
-                  <IconButton size="small">
+                  <IconButton size="small" aria-label={`${expanded ? 'Collapse' : 'Expand'} ${node.title}`} aria-expanded={expanded}>
                     <Iconify
                       icon={expanded ? 'eva:arrow-ios-downward-fill' : 'eva:arrow-ios-forward-fill'}
                       width={16}
                     />
                   </IconButton>
-                  <Checkbox checked={expanded} />
+                  <Checkbox checked={expanded} slotProps={{ input: { 'aria-label': `Expand ${node.title}` } }} />
                 </Box>
               )}
               <Typography variant="subtitle2" sx={{ fontWeight: isNodeFullySelected ? 700 : 600 }}>
                 {node.title}
               </Typography>
-              {incompletePermissions && (
+              {!hasChildren && incompletePermissions && (
                 <Typography variant="caption" color="error">
                   Some permissions are missing from the server. Update the backend permission
                   definitions.
@@ -166,8 +163,11 @@ export default function PermissionNode({
                   return (
                     <motion.div key={perm} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                       <Box
+                        title={isStatutoryScheme && perm === 'Delete' && permissionNames.length === 0
+                          ? 'Deletion is not supported for Statutory Schemes.'
+                          : undefined}
                         onClick={() =>
-                          permissionNames.length > 0 && onToggle(node, perm, isChecked)
+                          !disabled && permissionNames.length > 0 && onToggle(node, perm, isChecked)
                         }
                         sx={{
                           p: 1,
@@ -196,8 +196,14 @@ export default function PermissionNode({
                         </Typography>
                         <Switch
                           size="small"
+                          title={[
+                            isStatutoryScheme && perm === 'Edit'
+                              ? 'Edit settings, activate the scheme, manage enrollment and approve overrides.' : '',
+                            permissionNames.some((name) => inherited.get(name)?.length)
+                              ? `Direct grant. Inherited access from ${[...new Set(permissionNames.flatMap((name) => inherited.get(name) ?? []))].join(', ')} remains effective.` : '',
+                          ].filter(Boolean).join(' ') || undefined}
                           checked={isChecked}
-                          disabled={permissionNames.length === 0}
+                          disabled={disabled || permissionNames.length === 0}
                           slotProps={{ input: { 'aria-label': perm } }}
                         />
                       </Box>
@@ -209,11 +215,11 @@ export default function PermissionNode({
           {!hasChildren && (
             <Button
               size="small"
-              disabled={actions.length === 0}
-              color={isNodeFullySelected ? 'error' : 'primary'}
-              onClick={() => onSelectAll(node, !isNodeFullySelected, hasChildren)}
+              disabled={disabled || (!canRevokeAll && availablePermissionNames.length === 0)}
+              color={canRevokeAll ? 'error' : 'primary'}
+              onClick={() => onSelectAll(node, !canRevokeAll, hasChildren)}
             >
-              {isNodeFullySelected ? 'Revoke All' : 'Grant All'}
+              {canRevokeAll ? 'Revoke All' : 'Grant All'}
             </Button>
           )}
         </Box>
@@ -244,6 +250,8 @@ export default function PermissionNode({
                 <PermissionNode
                   key={child.title}
                   node={child}
+                  disabled={disabled}
+                  inherited={inherited}
                   moduleTitle={moduleTitle}
                   submoduleTitle={submoduleTitle}
                   permissions={permissions}

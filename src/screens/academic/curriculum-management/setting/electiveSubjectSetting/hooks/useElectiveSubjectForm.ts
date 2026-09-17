@@ -91,17 +91,23 @@ export const useElectiveSubjectForm = ({
   );
 
   const initialValues = useMemo(() => getElectiveSubjectInitialValues(editData), [editData]);
+  const areSubjectsLocked = Boolean(
+    editData && (editData.canModifySubjects === false || editData.isUsed)
+  );
 
   const formik = useFormik({
     initialValues,
     validationSchema: electiveSubjectValidationSchema(existingNames, editData),
     onSubmit: async (values) => {
       try {
+        const subjectIds = areSubjectsLocked
+          ? editData?.subjects.map((subject) => subject.id) || []
+          : values.subjectIds;
         const duplicateResult = await checkElectiveGroupDuplicate({
           academicMediumId: (currentMedium as Medium).id,
           body: {
             name: values.name.trim(),
-            subjectIds: values.subjectIds,
+            subjectIds,
             excludeElectiveGroupId: editData?.id,
           },
         }).unwrap();
@@ -123,7 +129,7 @@ export const useElectiveSubjectForm = ({
             body: {
               name: values.name.trim(),
               color: values.color,
-              subjectIds: values.subjectIds,
+              subjectIds,
               groupType: values.groupType,
               description: values.description,
               status: statusToNumber(values.status),
@@ -164,6 +170,7 @@ export const useElectiveSubjectForm = ({
     subjectData: activeSubjectData,
     isSubjectLoading,
     isSaveLoading: isUpdateLoading || isAddLoading || isDuplicateCheckLoading,
+    areSubjectsLocked,
   };
 };
 

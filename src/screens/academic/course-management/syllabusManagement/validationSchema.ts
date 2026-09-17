@@ -65,6 +65,7 @@ export const getChapterValidationSchema = (
       .min(0, 'Marks weightage cannot be negative'),
     startDate: Yup.mixed()
       .nullable()
+      .required('Start Date is required')
       .test(
         'is-valid-dayjs',
         'Expected Start Date for all Division must be a valid date',
@@ -88,6 +89,7 @@ export const getChapterValidationSchema = (
 
     endDate: Yup.mixed()
       .nullable()
+      .required('End Date is required')
       .test(
         'is-valid-dayjs',
         'Expected End Date for all Division must be a valid date',

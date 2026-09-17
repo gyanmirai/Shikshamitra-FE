@@ -453,7 +453,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     return (
                       <ShakingTextField error={!!startDateError}>
                         <DatePicker
-                          label="Expected Start Date for all Division"
+                          label="Expected Start Date for all Division *"
                           format="DD/MM/YYYY"
                           value={formik.values.startDate}
                           standardId={classId}
@@ -508,7 +508,7 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                     return (
                       <ShakingTextField error={!!endDateError}>
                         <DatePicker
-                          label="Expected End Date for all Division"
+                          label="Expected End Date for all Division *"
                           format="DD/MM/YYYY"
                           disablePast={!initialValues}
                           standardId={classId}
@@ -565,9 +565,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                 transition: 'all 0.25s ease',
                 borderColor: additionalFieldsCount > 0 ? 'success.main' : 'divider',
                 borderWidth: additionalFieldsCount > 0 ? 1.5 : 1,
-                boxShadow: additionalFieldsCount > 0
-                  ? (t) => `0 0 0 3px ${varAlpha(t.vars.palette.success.mainChannel, 0.12)}`
-                  : 'none',
+                boxShadow:
+                  additionalFieldsCount > 0
+                    ? (t) => `0 0 0 3px ${varAlpha(t.vars.palette.success.mainChannel, 0.12)}`
+                    : 'none',
                 '&:hover': {
                   borderColor: additionalFieldsCount > 0 ? 'success.dark' : 'text.primary',
                 },
@@ -609,16 +610,20 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                               About Additional Content Fields
                             </Typography>
                             <Typography variant="caption" display="block" sx={{ mb: 0.75 }}>
-                              • <strong>Planning &amp; Scheduling:</strong> Define unit, term, topic name, teaching days, and period allocations.
+                              • <strong>Planning &amp; Scheduling:</strong> Define unit, term, topic
+                              name, teaching days, and period allocations.
                             </Typography>
                             <Typography variant="caption" display="block" sx={{ mb: 0.75 }}>
-                              • <strong>Pedagogy &amp; Objectives:</strong> Set difficulty, Bloom&apos;s taxonomy level, learning outcomes, and prerequisites.
+                              • <strong>Pedagogy &amp; Objectives:</strong> Set difficulty,
+                              Bloom&apos;s taxonomy level, learning outcomes, and prerequisites.
                             </Typography>
                             <Typography variant="caption" display="block" sx={{ mb: 0.75 }}>
-                              • <strong>Materials &amp; Assessment:</strong> Attach study links, worksheets, audio/video media, and exam weightage metrics.
+                              • <strong>Materials &amp; Assessment:</strong> Attach study links,
+                              worksheets, audio/video media, and exam weightage metrics.
                             </Typography>
                             <Typography variant="caption" display="block">
-                              • <strong>Summaries &amp; Workflow:</strong> Provide teacher/student/parent notes and track review statuses.
+                              • <strong>Summaries &amp; Workflow:</strong> Provide
+                              teacher/student/parent notes and track review statuses.
                             </Typography>
                           </Box>
                         }
@@ -664,7 +669,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   width: { xs: '100%', sm: 680, md: 760 },
                   display: 'flex',
                   flexDirection: 'column',
-                  boxShadow: (t) => `-8px 0 32px -4px ${varAlpha(t.vars.palette.common.blackChannel, 0.16)}`,
+                  boxShadow: (t) =>
+                    `-8px 0 32px -4px ${varAlpha(t.vars.palette.common.blackChannel, 0.16)}`,
                   bgcolor: 'background.default',
                 },
               }}
@@ -696,16 +702,20 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                             Content Metadata Guidance
                           </Typography>
                           <Typography variant="caption" display="block" sx={{ mb: 0.75 }}>
-                            • <strong>Syllabus Planning:</strong> Unit name, term, topic name, teaching days, and periods.
+                            • <strong>Syllabus Planning:</strong> Unit name, term, topic name,
+                            teaching days, and periods.
                           </Typography>
                           <Typography variant="caption" display="block" sx={{ mb: 0.75 }}>
-                            • <strong>Pedagogy &amp; Taxonomies:</strong> Bloom levels, difficulty, outcomes, skills, and activities.
+                            • <strong>Pedagogy &amp; Taxonomies:</strong> Bloom levels, difficulty,
+                            outcomes, skills, and activities.
                           </Typography>
                           <Typography variant="caption" display="block" sx={{ mb: 0.75 }}>
-                            • <strong>Materials &amp; Assessment:</strong> Worksheets, board documents, media links, and weightage.
+                            • <strong>Materials &amp; Assessment:</strong> Worksheets, board
+                            documents, media links, and weightage.
                           </Typography>
                           <Typography variant="caption" display="block">
-                            • <strong>Stakeholder Summaries:</strong> Notes for teachers, students, and parents.
+                            • <strong>Stakeholder Summaries:</strong> Notes for teachers, students,
+                            and parents.
                           </Typography>
                         </Box>
                       }
@@ -746,7 +756,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
               <Scrollbar sx={{ p: { xs: 1.5, sm: 2 }, flex: 1 }}>
                 <Stack spacing={2}>
                   {/* Section 1: Planning & Scheduling */}
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  >
                     <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
                       <Box
                         sx={{
@@ -866,7 +879,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   </Paper>
 
                   {/* Section 2: Pedagogy & Learning Objectives */}
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  >
                     <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
                       <Box
                         sx={{
@@ -1010,7 +1026,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   </Paper>
 
                   {/* Section 3: Chapter Overview & Detailed Description */}
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  >
                     <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
                       <Box
                         sx={{
@@ -1057,7 +1076,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   </Paper>
 
                   {/* Section 4: Summaries & Stakeholder Notes */}
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  >
                     <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
                       <Box
                         sx={{
@@ -1128,7 +1150,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   </Paper>
 
                   {/* Section 5: Resources & Study Materials */}
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  >
                     <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
                       <Box
                         sx={{
@@ -1212,7 +1237,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   </Paper>
 
                   {/* Section 6: Assessment & Metrics */}
-                  <Paper variant="outlined" sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}>
+                  <Paper
+                    variant="outlined"
+                    sx={{ p: 2, borderRadius: 1.75, bgcolor: 'background.paper' }}
+                  >
                     <Stack direction="row" alignItems="center" gap={1.25} mb={0.75}>
                       <Box
                         sx={{
@@ -1319,7 +1347,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                       </Grid>
                     </Grid>
                   </Paper>
-
                 </Stack>
               </Scrollbar>
 
@@ -1333,7 +1360,8 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  boxShadow: (t) => `-4px 0 16px ${varAlpha(t.vars.palette.grey['500Channel'], 0.06)}`,
+                  boxShadow: (t) =>
+                    `-4px 0 16px ${varAlpha(t.vars.palette.grey['500Channel'], 0.06)}`,
                 }}
               >
                 <Typography variant="caption" color="text.secondary" fontWeight={500}>

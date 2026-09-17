@@ -1,11 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
-import type { ReservationRequirements } from '../types';
 import {
   buildRoomSuggestionRequest,
+  DEFAULT_ROOM_SUGGESTION_LIMIT,
   validateRoomSearchRequirements,
   validateRoomBookingRequirements,
 } from './roomSuggestionSearch';
+
+import type { ReservationRequirements } from '../types';
 
 const createRequirements = (
   overrides: Partial<ReservationRequirements> = {}
@@ -49,7 +51,7 @@ describe('room suggestion search contract', () => {
       requiredFacilities: ['projector'],
       preferredBuildingId: undefined,
       page: undefined,
-      limit: 50,
+      limit: DEFAULT_ROOM_SUGGESTION_LIMIT,
     });
   });
 });

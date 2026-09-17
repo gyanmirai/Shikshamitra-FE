@@ -18,6 +18,11 @@ export const ACCOUNT_SETTING_ACTIONS: PermissionType[] = [
 
 export const isAccountSettingPermission = (name: string = '') => ACCOUNT_SETTING_ROOT.test(name);
 
+const STATUTORY_SCHEME_ROOT = 'HR.PayrollManagement.Settings.StatutorySchemes';
+const STATUTORY_SCHEME_EDIT_ACTIONS = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'];
+export const isStatutorySchemePermission = (name: string = '') =>
+  name === STATUTORY_SCHEME_ROOT || name === `${STATUTORY_SCHEME_ROOT}.View`;
+
 type NodePermissionName = string | string[];
 
 const STUDENT_PERMISSION_PREFIXES = ['Students.', 'ShikshaMitra.Module.Students.'];
@@ -90,6 +95,15 @@ export const getNodeActionPermissionNamesForAction = (
   permissions: PermissionGrant[]
 ): string[] => {
   const configuredNames = getConfiguredPermissionNames(name, permissions);
+  const permissionBase = getActionPermissionBase(name);
+
+  if (isStatutorySchemePermission(permissionBase)) {
+    if (!['View', 'Edit', 'Delete'].includes(action)) return [];
+    const actions = action === 'Edit' ? STATUTORY_SCHEME_EDIT_ACTIONS : [action];
+    return configuredNames.filter((permissionName) =>
+      actions.some((item) => permissionName === `${STATUTORY_SCHEME_ROOT}.${item}`)
+    );
+  }
 
   if (isStudentPermission(name)) {
     return configuredNames.filter((permissionName) => {
@@ -105,7 +119,6 @@ export const getNodeActionPermissionNamesForAction = (
     });
   }
 
-  const permissionBase = getActionPermissionBase(name);
   const permissionName = `${permissionBase}.${action}`;
   return configuredNames.includes(permissionName) ? [permissionName] : [];
 };
@@ -120,7 +133,8 @@ export const getAffectedNodePermissionNames = (
     getNodeActionPermissionNamesForAction(node.permissionName, action, permissions)
   );
   const permissionBase = getActionPermissionBase(node.permissionName);
-  if (isAccountSettingPermission(permissionBase)) return affectedNames;
+  if (isAccountSettingPermission(permissionBase) || isStatutorySchemePermission(permissionBase))
+    return affectedNames;
 
   if (isGranted && (action === 'Add' || action === 'Delete')) {
     getNodeActionPermissionNamesForAction(node.permissionName, 'View', permissions).forEach((name) =>
@@ -147,6 +161,7 @@ export const getNodePermissionActions = (
   name: NodePermissionName,
   permissions: PermissionGrant[]
 ): PermissionType[] => {
+  if (isStatutorySchemePermission(getActionPermissionBase(name))) return ['View', 'Edit', 'Delete'];
   if (isStudentPermission(name)) return PERMISSIONS;
 
   const actions = isAccountSettingPermission(getActionPermissionBase(name))
@@ -172,4 +187,24 @@ export const getNodeActionPermissionNames = (
       )
     )
   );
+};
+
+// Revocation covers the complete feature, including actions absent from the grouped controls.
+// Granting still uses only the explicitly mapped actions above.
+export const getNodeRevocationPermissionNames = (
+  node: any,
+  permissions: PermissionGrant[]
+): string[] => {
+  const children = node?.permissionChildren ?? node?.children ?? [];
+  if (children.length) {
+    return Array.from(new Set(children.flatMap((child: any) =>
+      getNodeRevocationPermissionNames(child, permissions)
+    )));
+  }
+  if (isStatutorySchemePermission(getActionPermissionBase(node.permissionName))) {
+    return permissions.filter(({ name }) =>
+      name === STATUTORY_SCHEME_ROOT || name.startsWith(`${STATUTORY_SCHEME_ROOT}.`)
+    ).map(({ name }) => name);
+  }
+  return getNodeActionPermissionNames(node, permissions);
 };

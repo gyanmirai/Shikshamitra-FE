@@ -27,6 +27,57 @@ function renderNode(actions: string[]) {
   return onToggle;
 }
 
+describe('Student rows with unavailable actions', () => {
+  it.each([{ actions: ['View'] }, { actions: ['View', 'Create'] }])(
+    'can revoke all available grants when the catalogue only contains $actions',
+    ({ actions }) => {
+      const root = 'Students.Admissions.Applications';
+      const node = { title: 'All Applications', permissionName: `${root}.View` };
+      const onSelectAll = vi.fn();
+      render(<ThemeProvider theme={createTheme(defaultSettings)}>
+        <PermissionNode node={node} moduleTitle="Student" submoduleTitle="Admissions"
+          permissions={actions.map((action) => ({ name: `${root}.${action}`, isGranted: true }))}
+          onToggle={vi.fn()} onSelectAll={onSelectAll} setPermission={vi.fn()} />
+      </ThemeProvider>);
+
+      expect(screen.getByRole('switch', { name: 'Delete' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Revoke All' }));
+      expect(onSelectAll).toHaveBeenCalledExactlyOnceWith(node, false, false);
+    }
+  );
+
+  it('disables Grant All when no matching server permissions exist', () => {
+    render(<ThemeProvider theme={createTheme(defaultSettings)}>
+      <PermissionNode node={{ title: 'Student Setup', permissionName: 'Students.Setup.View' }}
+        moduleTitle="Student" submoduleTitle="Student Onboarding" permissions={[]}
+        onToggle={vi.fn()} onSelectAll={vi.fn()} setPermission={vi.fn()} />
+    </ThemeProvider>);
+
+    expect(screen.getByRole('button', { name: 'Grant All' })).toBeDisabled();
+    expect(screen.getByText(/permissions are missing from the server/)).toBeInTheDocument();
+  });
+});
+
+describe('Statutory Schemes controls', () => {
+  it.each(['Activate', 'FutureAction'])('can revoke a lone %s grant while both visible groups are off', (action) => {
+    const root = 'HR.PayrollManagement.Settings.StatutorySchemes';
+    const node = { title: 'Statutory Schemes', permissionName: `${root}.View` };
+    const onSelectAll = vi.fn();
+    render(<ThemeProvider theme={createTheme(defaultSettings)}>
+      <PermissionNode node={node} moduleTitle="HR/Staff" submoduleTitle="Payroll Management"
+        permissions={['View', 'Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride', 'FutureAction']
+          .map((name) => ({ name: `${root}.${name}`, isGranted: name === action }))}
+        onToggle={vi.fn()} onSelectAll={onSelectAll} setPermission={vi.fn()} />
+    </ThemeProvider>);
+    expect(screen.getAllByRole('switch')).toHaveLength(3);
+    expect(screen.getByRole('switch', { name: 'View' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Edit' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Delete' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Revoke All' }));
+    expect(onSelectAll).toHaveBeenCalledExactlyOnceWith(node, false, false);
+  });
+});
+
 describe('Accounts permission controls', () => {
   it('renders separate Edit and Change Status switches using the exact permission base', () => {
     const onToggle = renderNode(['View', 'Add', 'Edit', 'ChangeStatus', 'Delete']);

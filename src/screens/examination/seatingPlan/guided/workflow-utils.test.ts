@@ -38,7 +38,7 @@ describe('formatSession', () => {
     expect(formatSession(session())).toBe('Thu, 10 Sep 2026 · 9:00 AM–12:00 PM');
   });
 
-  it('formats full ISO timestamps without combining the date twice', () => {
+  it('formats full ISO timestamps as wall-clock values without applying a timezone offset', () => {
     expect(
       formatSession(
         session({
@@ -47,7 +47,19 @@ describe('formatSession', () => {
           endTime: '2026-09-10T12:00:00Z',
         })
       )
-    ).toContain('10 Sep 2026');
+    ).toBe('Thu, 10 Sep 2026 · 9:00 AM–12:00 PM');
+  });
+
+  it('does not add the IST offset to the reported 5:15 PM exam schedule', () => {
+    expect(
+      formatSession(
+        session({
+          examDate: '2026-09-16T00:00:00Z',
+          startTime: '2026-09-16T17:15:00Z',
+          endTime: '2026-09-16T18:00:00Z',
+        })
+      )
+    ).toBe('Wed, 16 Sep 2026 · 5:15 PM–6:00 PM');
   });
 
   it('returns a safe fallback for incomplete or malformed schedules', () => {

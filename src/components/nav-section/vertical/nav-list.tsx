@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { usePathname } from 'src/routes/hooks';
 import { useEffect, useCallback } from 'react';
 import { isExternalLink } from 'src/routes/utils';
-import { hasGrantedPermission } from 'src/utils/permissions';
+import { hasNavigationPermission } from 'src/utils/permissions';
 
 import { NavItem } from './nav-item';
 import { navSectionClasses } from '../classes';
@@ -27,7 +27,7 @@ export function NavList({
   const pathname = usePathname();
   const removeTrailingSlash = pathname.replace(/\/$/, '');
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const isGranted = hasGrantedPermission(permissions, data.permissionName);
+  const isGranted = hasNavigationPermission(permissions, data.permissionName);
 
   const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
   // const active = useActiveLink(data.path, !!data.children);
