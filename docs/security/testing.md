@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-09-16
+updated_on: 2026-09-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,16 +24,18 @@ git diff --check
 
 Run ESLint on touched TypeScript files.
 The Security Regression PR and reusable deployment job runs the complete role test directory, shared exact-action/history/menu tests, lint, TypeScript, documentation validation, and production build.
-Removing unknown future actions, restoring fixed CRUD lists, or bundling Student actions must fail these tests.
+The September 17 staging reference uses compact grouped controls, not individual backend action tiles.
+Tests preserve the staging Student bundles and Accounts Settings exceptions while verifying the unchanged server permission IDs.
 
 ## Required behavior coverage
 
 | Surface | Evidence required |
 | --- | --- |
-| Catalogue | Every action reachable exactly once, nested and flat catalogues, future/unmapped actions, provider eligibility |
-| Existing panels | Hidden navigation does not block configuration; search does not reduce the bulk subtree |
+| Catalogue | Preserve the full response and provider eligibility; submit only changes from mapped controls |
+| Existing panels | Staging navigation groups and View/Add/Delete controls; expansion never grants; bulk operations include collapsed descendants |
 | Visibility | Separate dialog, independent flags, nested settings, unmapped flags, no action mutations |
-| Direct and inherited grants | Role/user grant and revoke round trips; removing direct grants leaves inherited access labelled |
+| Direct and inherited grants | Role/user grant and revoke round trips; removing direct grants leaves inherited access effective |
+| Statutory Schemes | View/Edit/Delete controls, four-action Edit group, unavailable Delete disabled, partial and undisplayed direct grants fully revoked, provider restrictions and unrelated grants preserved |
 | Save | Changed entries only, unchanged grants preserved, pre-save drift check, post-save verification |
 | Drafts | Refetch errors, provider changes, explicit reload, duplicate submission, close during save |
 | Browser | Keyboard operation, focus return, dirty Cancel/Escape/history, failed reads/writes, bounded scrolling and 44px actions |
@@ -55,28 +57,21 @@ Never point the runner at DDVS staging or a production database.
 Each browser project covers Chromium, Firefox, WebKit, mobile Chrome emulation, or mobile Safari emulation.
 Round trips and retained-dialog smoke cover 390x844, 768x1024, and 1440x900.
 Failure/loading/history coverage is an additional case per browser project.
-The tests create isolated synthetic roles and use the fresh FullDemo HR Manager account with verified inherited grants.
+The tests create isolated synthetic roles and use a synthetic HR Manager account with verified inherited grants.
+They restore the exact initial direct user grant in a finally block, so an existing local fixture is supported.
+The complete Statutory Schemes user-revocation test restores all five original direct grants in a finally block and verifies the full catalogue afterward.
 They verify the account's full catalogue before and after the direct-grant round trip.
 The existing identity-create role-membership path is not a reliable fixture and is not claimed as validated by this suite.
 Browser setup does not fabricate compensation approvals, alter payroll, or activate ESI.
 
-## Current evidence
+## Evidence for the staging restoration
 
-The focused retained-layout behavior suite passes 46 tests in eight files.
-Local evidence is `.artifacts/security-local/rc-0916-editor-unit-final.log`.
-The pre-publication Security/HR/shared regression run passes 636 tests in 109 files; its existing happy-dom network/teardown warnings remain documented.
-After integrating main through `1f59f2a1`, the refreshed Security/HR/shared run passes 633 tests in 110 files, and standalone TypeScript passes.
-The changed test count comes from the upstream salary-template workflow suite, not skipped tests or weakened assertions in this patch.
-The final production build, standalone TypeScript check, and touched-file ESLint pass.
-Evidence is recorded in the `rc-0916-permissions-final-*` logs under ignored local artifacts.
-The five-browser acceptance run passes all 35 cases with zero failures, skips, retries, or flaky results.
-Its final log is `.artifacts/security-local/rc-0916-permissions-final-browser.log`.
-The runner generates a local-only `results.json` in its ignored Security browser artifacts directory.
-That report is not a checked-in source file and is not expected in a clean CI checkout.
-Authenticated Codex in-app confirmation verifies the retained Role/User layout, separate visibility, all five ESI actions, inheritance labels, focus return, and footer bounds at all three requested viewport sizes.
-That confirmation is recorded in `.artifacts/security-local/rc-0916-permissions-final-codex.md`.
-Do not substitute the previous unchanged-UI or withdrawn-editor browser results for those gates.
+Staging at `https://app.gyanmirai.in/security/role` is the visual and grouped-control reference.
+Inspect it without saving live permission changes.
+Local browser tests cover grouped role Grant All/Revoke All with save/reopen verification, direct user grants with role inheritance, separate dialogs, and failed-save/draft behavior.
+The individual-action tile assertions from the prior release are superseded by the user's September 17 correction.
+Do not reuse the earlier 35-case report as evidence for this restoration.
+Record current results and any baseline failures in the ignored `.artifacts` directory.
 
-Use the authenticated Codex in-app browser for final visible confirmation.
-The [backend validation matrix](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency-validation.md) records the final Passed, Failed, and Not run results.
-Follow the [release runbook](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency-release.md) for publication, backup, environment verification, and reset sequencing.
+Use the authenticated Codex in-app browser for final visible confirmation after automated checks.
+The backend's safe seeding, exact API authorization, atomic batch validation, and tenant boundaries remain mandatory.

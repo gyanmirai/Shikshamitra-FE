@@ -41,15 +41,179 @@ async function openPayrollPermissions(page: Page, kind: 'role' | 'user', name: s
   await page.getByRole('menuitem', { name: 'Module Permission', exact: true }).click();
   await page.getByRole('button', { name: 'HR/Staff', exact: true }).click();
   await page.getByRole('button', { name: 'Payroll Management', exact: true }).click();
-  await expect(
-    page.getByRole('switch', { name: 'Statutory Schemes: Activate', exact: true })
-  ).toBeVisible();
+  const row = page.getByTestId('permission-Statutory Schemes');
+  if (!(await row.isVisible())) await page.getByRole('button', { name: 'Expand Settings', exact: true }).click();
+  await expect(row.getByRole('switch', { name: 'View', exact: true })).toBeVisible();
 }
-
+async function openApplications(page: Page, name: string) {
+  await openActions(page, 'role', name);
+  await page.getByRole('menuitem', { name: 'Module Permission', exact: true }).click();
+  await page.getByRole('button', { name: 'Student', exact: true }).click();
+  await page.getByRole('button', { name: 'Admissions', exact: true }).click();
+  await page.getByRole('button', { name: 'Expand Applications', exact: true }).click();
+  await expect(page.getByTestId('permission-All Applications')).toBeVisible();
+}
 const esiPrefix = 'HR.PayrollManagement.Settings.StatutorySchemes.';
-const esiNames = ['View', 'Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map(
-  (action) => esiPrefix + action
-);
+
+test('statutory scheme grouped editing and complete direct revocation', async ({ page }) => {
+  const headers = await login(page);
+  const roleName = `security-statutory-${randomUUID().slice(0, 8)}`;
+  const created = await page.request.post(`${apiURL}/api/identity/roles`, {
+    headers,
+    data: {
+      name: roleName, isDefault: false, isPublic: false,
+      employeeOnboardingAssignable: false, employeeGroupAudience: 'Both',
+      extraProperties: { color: '#456789', roleAudience: 'Employee', employeeGroupAudience: 'Both', employeeOnboardingAssignable: false },
+    },
+  });
+  expect(created.ok()).toBeTruthy();
+  const featureNames = (await readGrants(page, headers, 'R', roleName))
+    .filter((grant) => grant.name.startsWith(esiPrefix)).map((grant) => grant.name);
+  expect(featureNames).toHaveLength(5);
+  const unrelated = 'Finance.Settings.FeeStructure.View';
+  const seeded = await page.request.put(`${apiURL}/api/permission-management/permissions?${new URLSearchParams({ providerName: 'R', providerKey: roleName })}`, {
+    headers, data: { permissions: [unrelated, `${esiPrefix}Activate`].map((name) => ({ name, isGranted: true })) },
+  });
+  expect(seeded.ok()).toBeTruthy();
+  await openPayrollPermissions(page, 'role', roleName);
+  await verifyBounds(page);
+  await Promise.all(['View', 'Add', 'Edit', 'Delete'].map(async (action) => {
+    const bounds = await page.getByRole('switch', { name: `All ${action}`, exact: true }).boundingBox();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(page.viewportSize()!.width);
+  }));
+  const row = page.getByTestId('permission-Statutory Schemes');
+  await expect(row.getByRole('switch')).toHaveCount(3);
+  await expect(row.getByRole('switch', { name: 'Edit', exact: true })).not.toBeChecked();
+  await expect(row.getByRole('switch', { name: 'Delete', exact: true })).toBeDisabled();
+  await expect(row.getByRole('switch', { name: 'View', exact: true })).not.toBeChecked();
+  // A partially granted group must be revocable without first granting additional rights.
+  await row.getByRole('button', { name: 'Revoke All', exact: true }).click();
+  await savePermissions(page);
+  let saved = await readGrants(page, headers, 'R', roleName);
+  expect(saved.filter((grant) => featureNames.includes(grant.name) && grant.isGranted)).toEqual([]);
+  expect(saved.find((grant) => grant.name === unrelated)?.isGranted).toBe(true);
+
+  await openPayrollPermissions(page, 'role', roleName);
+  await row.getByRole('switch', { name: 'Edit', exact: true }).check();
+  await savePermissions(page);
+  saved = await readGrants(page, headers, 'R', roleName);
+  expect(saved.filter((grant) => featureNames.includes(grant.name) && grant.isGranted).map((grant) => grant.name).sort())
+    .toEqual(['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map((action) => `${esiPrefix}${action}`).sort());
+  await openPayrollPermissions(page, 'role', roleName);
+  await expect(row.getByRole('switch', { name: 'Edit', exact: true })).toBeChecked();
+  await row.getByRole('button', { name: 'Revoke All', exact: true }).click();
+  await savePermissions(page);
+  await openPayrollPermissions(page, 'role', roleName);
+  await row.getByRole('button', { name: 'Grant All', exact: true }).click();
+  await savePermissions(page);
+  saved = await readGrants(page, headers, 'R', roleName);
+  expect(saved.filter((grant) => featureNames.includes(grant.name) && grant.isGranted)).toHaveLength(5);
+  await openPayrollPermissions(page, 'role', roleName);
+  await page.getByRole('button', { name: 'Collapse Settings', exact: true }).click();
+  await page.getByRole('switch', { name: 'All Edit', exact: true }).uncheck();
+  await savePermissions(page);
+  saved = await readGrants(page, headers, 'R', roleName);
+  expect(saved.filter((grant) => featureNames.includes(grant.name) && grant.isGranted).map((grant) => grant.name)).toEqual([`${esiPrefix}View`]);
+  expect(saved.find((grant) => grant.name === unrelated)?.isGranted).toBe(true);
+  await openPayrollPermissions(page, 'role', roleName);
+  await row.getByRole('button', { name: 'Revoke All', exact: true }).click();
+  await savePermissions(page);
+  await openPayrollPermissions(page, 'role', roleName);
+  await expect(row.getByRole('switch', { name: 'View', exact: true })).not.toBeChecked();
+  await expect(row.getByRole('switch', { name: 'Edit', exact: true })).not.toBeChecked();
+});
+
+test('statutory user Revoke All clears direct grants and preserves role inheritance', async ({ page }) => {
+  const headers = await login(page);
+  const users = await page.request.get(`${apiURL}/api/identity/users?filter=hr-manager`, { headers });
+  expect(users.ok()).toBeTruthy();
+  const user = (await users.json()).items.find((item: { userName: string }) => item.userName === 'hr-manager');
+  expect(user).toBeTruthy();
+  const before = await readGrants(page, headers, 'U', user.id);
+  const feature = before.filter((grant) => grant.name.startsWith(esiPrefix));
+  expect(feature).toHaveLength(5);
+  const isDirect = (grant: Grant) => grant.grantedProviders.some((source) => source.providerName === 'U' && source.providerKey === user.id);
+  const endpoint = `${apiURL}/api/permission-management/permissions?${new URLSearchParams({ providerName: 'U', providerKey: user.id })}`;
+  try {
+    const seeded = await page.request.put(endpoint, {
+      headers, data: { permissions: feature.map(({ name }) => ({ name, isGranted: true })) },
+    });
+    expect(seeded.ok()).toBeTruthy();
+    await openPayrollPermissions(page, 'user', `${user.name} ${user.surname || ''}`.trim());
+    const row = page.getByTestId('permission-Statutory Schemes');
+    await expect(row.getByRole('switch', { name: 'Edit', exact: true })).toBeChecked();
+    await row.getByRole('button', { name: 'Revoke All', exact: true }).click();
+    await savePermissions(page);
+    const saved = await readGrants(page, headers, 'U', user.id);
+    expect(saved.filter((grant) => grant.name.startsWith(esiPrefix)).some(isDirect)).toBe(false);
+    expect(saved.filter((grant) => !grant.name.startsWith(esiPrefix))).toEqual(before.filter((grant) => !grant.name.startsWith(esiPrefix)));
+    const inherited = saved.find((grant) => grant.name === `${esiPrefix}View`)!;
+    expect(inherited.isGranted).toBe(true);
+    expect(inherited.grantedProviders).toContainEqual({ providerName: 'R', providerKey: 'HR Manager' });
+    await openPayrollPermissions(page, 'user', `${user.name} ${user.surname || ''}`.trim());
+    await expect(row.getByRole('switch', { name: 'View', exact: true })).not.toBeChecked();
+    await expect(row.getByRole('switch', { name: 'Edit', exact: true })).not.toBeChecked();
+    await expect(row.getByRole('button', { name: 'Grant All', exact: true })).toBeVisible();
+  } finally {
+    const restored = await page.request.put(endpoint, {
+      headers, data: { permissions: feature.map((grant) => ({ name: grant.name, isGranted: isDirect(grant) })) },
+    });
+    expect(restored.ok()).toBeTruthy();
+    expect(await readGrants(page, headers, 'U', user.id)).toEqual(before);
+  }
+});
+
+[[], ['View']].forEach((availableActions) => {
+  test(`limited catalogue supports ${availableActions.length ? 'View-only revocation' : 'no-action disabling'}`, async ({ page }) => {
+    const headers = await login(page);
+    const roleName = `security-limited-${randomUUID().slice(0, 8)}`;
+    const created = await page.request.post(`${apiURL}/api/identity/roles`, {
+      headers,
+      data: {
+        name: roleName, isDefault: false, isPublic: false,
+        employeeOnboardingAssignable: false, employeeGroupAudience: 'Both',
+        extraProperties: { color: '#456789', roleAudience: 'Employee', employeeGroupAudience: 'Both', employeeOnboardingAssignable: false },
+      },
+    });
+    expect(created.ok()).toBeTruthy();
+    const prefix = 'Students.Admissions.Applications.';
+    // Model unavailable server actions while retaining real API persistence.
+    await page.route('**/api/permission-management/permissions?**', async (route) => {
+      const request = route.request();
+      if (request.method() !== 'GET' || new URL(request.url()).searchParams.get('providerKey') !== roleName) {
+        await route.continue();
+        return;
+      }
+      const response = await route.fetch();
+      const catalogue = await response.json();
+      catalogue.groups.forEach((group: { permissions: Grant[] }) => {
+        group.permissions = group.permissions.filter((grant) =>
+          !grant.name.startsWith(prefix) || availableActions.includes(grant.name.slice(prefix.length))
+        );
+      });
+      await route.fulfill({ response, json: catalogue });
+    });
+    await openApplications(page, roleName);
+    const row = page.getByTestId('permission-All Applications');
+    await expect(row.getByRole('switch', { name: 'Delete', exact: true })).toBeDisabled();
+    if (!availableActions.length) {
+      await expect(row.getByRole('button', { name: 'Grant All', exact: true })).toBeDisabled();
+      await expect(page.getByRole('button', { name: 'Submit', exact: true })).toBeDisabled();
+      return;
+    }
+    await row.getByRole('button', { name: 'Grant All', exact: true }).click();
+    await expect(row.getByRole('button', { name: 'Revoke All', exact: true })).toBeVisible();
+    await savePermissions(page);
+    expect((await readGrants(page, headers, 'R', roleName)).find((grant) => grant.name === `${prefix}View`)?.isGranted).toBe(true);
+    await openApplications(page, roleName);
+    await row.getByRole('button', { name: 'Revoke All', exact: true }).click();
+    await savePermissions(page);
+    expect((await readGrants(page, headers, 'R', roleName)).filter((grant) => grant.name.startsWith(prefix) && grant.isGranted)).toEqual([]);
+    await openApplications(page, roleName);
+    await expect(row.getByRole('switch', { name: 'View', exact: true })).not.toBeChecked();
+  });
+});
 type Grant = {
   name: string;
   isGranted: boolean;
@@ -117,167 +281,71 @@ async function verifyOriginalDialogs(page: Page, kind: 'role' | 'user', name: st
   { width: 768, height: 1024 },
   { width: 1440, height: 900 },
 ].forEach((viewport) => {
-  test(`retained-layout grant/revoke and inherited-user round trips at ${viewport.width}px`, async ({
-    page,
-  }) => {
-    test.setTimeout(240_000);
+  test(`staging grouped role and inherited-user round trips at ${viewport.width}px`, async ({ page }) => {
+    test.setTimeout(300_000);
     await page.setViewportSize(viewport);
     const headers = await login(page);
-    const suffix = randomUUID().slice(0, 8);
-    const roleName = `security-ui-${suffix}`;
-    const createdRole = await page.request.post(`${apiURL}/api/identity/roles`, {
-      headers,
-      data: {
-        name: roleName,
-        isDefault: false,
-        isPublic: false,
-        employeeOnboardingAssignable: false,
-        employeeGroupAudience: 'Both',
-        extraProperties: {
-          color: '#456789',
-          roleAudience: 'Employee',
-          employeeGroupAudience: 'Both',
-          employeeOnboardingAssignable: false,
-        },
-      },
+    const roleName = `security-staging-ui-${  randomUUID().slice(0, 8)}`;
+    const role = await page.request.post(`${apiURL  }/api/identity/roles`, {
+      headers, data: { name: roleName, isDefault: false, isPublic: false,
+        employeeOnboardingAssignable: false, employeeGroupAudience: 'Both',
+        extraProperties: { color: '#456789', roleAudience: 'Employee', employeeGroupAudience: 'Both', employeeOnboardingAssignable: false } },
     });
-    expect(createdRole.ok()).toBeTruthy();
-    const initial = await page.request.put(
-      `${apiURL}/api/permission-management/permissions?${new URLSearchParams({ providerName: 'R', providerKey: roleName })}`,
-      {
-        headers,
-        data: {
-          permissions: [
-            { name: `${esiPrefix}Edit`, isGranted: true },
-            { name: 'Finance.Settings.FeeStructure.View', isGranted: true },
-          ],
-        },
-      }
-    );
-    expect(initial.ok()).toBeTruthy();
-    // Use the fresh FullDemo synthetic account with verified role membership.
-    // The existing identity-create roleNames path is not a reliable membership fixture.
-    const fixtureUsers = await page.request.get(`${apiURL}/api/identity/users?filter=hr-manager`, {
-      headers,
-    });
-    expect(fixtureUsers.ok()).toBeTruthy();
-    const fixtureUser = (await fixtureUsers.json()).items.find(
-      (item: { userName: string }) => item.userName === 'hr-manager'
-    );
-    expect(fixtureUser).toBeTruthy();
-    const userId = fixtureUser.id;
-    const userDisplayName = `${fixtureUser.name} ${fixtureUser.surname || ''}`.trim();
-    const inheritedRole = 'HR Manager';
-    const beforeUserGrants = await readGrants(page, headers, 'U', userId);
-    expect(
-      beforeUserGrants.filter(
-        (grant) =>
-          grant.name.startsWith('HR.PayrollManagement.') &&
-          grant.grantedProviders.some(
-            (provider) => provider.providerName === 'U' && provider.providerKey === userId
-          )
-      )
-    ).toEqual([]);
-    esiNames.forEach((name) => {
-      expect(
-        beforeUserGrants.find((grant) => grant.name === name)!.grantedProviders
-      ).toContainEqual({ providerName: 'R', providerKey: inheritedRole });
-    });
-    const writes: { name: string; isGranted: boolean }[][] = [];
-    page.on('request', (request) => {
-      if (
-        request.method() === 'PUT' &&
-        new URL(request.url()).pathname === '/api/permission-management/permissions'
-      ) {
-        writes.push(request.postDataJSON().permissions);
-      }
-    });
-    await openPayrollPermissions(page, 'role', roleName);
-    await expect(page.getByText(/Navigation is hidden/)).toBeVisible();
+    expect(role.ok()).toBeTruthy();
+    const grants = await readGrants(page, headers, 'R', roleName);
+    const applicationNames = grants.filter((grant) => /^Students\.Admissions\.Applications\.[^.]+$/.test(grant.name)).map((grant) => grant.name);
+    expect(applicationNames.length).toBeGreaterThanOrEqual(3);
+    await openApplications(page, roleName);
     await verifyBounds(page);
-    const activateSwitch = page.getByRole('switch', {
-      name: 'Statutory Schemes: Activate',
-      exact: true,
-    });
-    await activateSwitch.focus();
-    await page.keyboard.press('Space');
-    await expect(activateSwitch).toBeChecked();
-    await expect(
-      page.getByRole('switch', { name: 'Statutory Schemes: View', exact: true })
-    ).not.toBeChecked();
-    await expect(page.getByText('1 pending permission changes', { exact: true })).toBeVisible();
+    const row = page.getByTestId('permission-All Applications');
+    await expect(row.getByRole('switch')).toHaveCount(3);
+    await expect(page.getByRole('textbox', { name: 'Search permissions' })).toHaveCount(0);
+    // Expansion must not dirty the permission form.
+    await expect(page.getByRole('button', { name: 'Submit', exact: true })).toBeDisabled();
+    await row.getByRole('button', { name: 'Grant All', exact: true }).click();
     page.once('dialog', (dialog) => dialog.dismiss());
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-    await expect(activateSwitch).toBeChecked();
+    await expect(row.getByRole('switch', { name: 'Add', exact: true })).toBeChecked();
     await savePermissions(page);
-    expect(writes).toEqual([[{ name: `${esiPrefix}Activate`, isGranted: true }]]);
-    let grants = await readGrants(page, headers, 'R', roleName);
-    expect(grants.find((grant) => grant.name === `${esiPrefix}Activate`)?.isGranted).toBe(true);
-    expect(grants.find((grant) => grant.name === `${esiPrefix}View`)?.isGranted).toBe(false);
-    await openPayrollPermissions(page, 'role', roleName);
-    await expect(activateSwitch).toBeChecked();
-    await page.getByRole('textbox', { name: 'Search permissions' }).fill('Activate');
-    await expect(
-      page.getByRole('switch', { name: 'Statutory Schemes: Edit', exact: true })
-    ).toHaveCount(0);
-    await page.getByRole('button', { name: /^Revoke All \(/ }).click();
+    let persisted = await readGrants(page, headers, 'R', roleName);
+    expect(persisted.filter((grant) => applicationNames.includes(grant.name) && grant.isGranted)).toHaveLength(applicationNames.length);
+    await openApplications(page, roleName);
+    await expect(row.getByRole('switch', { name: 'Add', exact: true })).toBeChecked();
+    await row.getByRole('button', { name: 'Revoke All', exact: true }).click();
     await savePermissions(page);
-    grants = await readGrants(page, headers, 'R', roleName);
-    expect(
-      grants.filter((grant) => grant.name.startsWith('HR.PayrollManagement.') && grant.isGranted)
-    ).toEqual([]);
-    expect(
-      grants.find((grant) => grant.name === 'Finance.Settings.FeeStructure.View')?.isGranted
-    ).toBe(true);
-    await openPayrollPermissions(page, 'role', roleName);
-    // Five server-defined ESI actions, with no synthetic parent grant.
-    await page
-      .getByRole('heading', { name: 'Statutory Schemes', exact: true })
-      .locator('..')
-      .getByRole('button', { name: 'Grant All (5)', exact: true })
-      .click();
-    await savePermissions(page);
-    grants = await readGrants(page, headers, 'R', roleName);
-    expect(grants.filter((grant) => esiNames.includes(grant.name) && grant.isGranted)).toHaveLength(
-      5
-    );
-    await openPayrollPermissions(page, 'user', userDisplayName);
-    await verifyBounds(page);
-    await expect(
-      page.getByText(`Inherited from role ${inheritedRole}. Remains effective.`).first()
-    ).toBeVisible();
-    const enrollment = page.getByRole('switch', {
-      name: 'Statutory Schemes: Manage Enrollment',
-      exact: true,
-    });
-    await expect(enrollment).not.toBeChecked();
-    await enrollment.check();
-    await savePermissions(page);
-    grants = await readGrants(page, headers, 'U', userId);
-    expect(
-      grants.find((grant) => grant.name === `${esiPrefix}ManageEnrollment`)!.grantedProviders
-    ).toContainEqual({ providerName: 'U', providerKey: userId });
-    await openPayrollPermissions(page, 'user', userDisplayName);
-    await expect(enrollment).toBeChecked();
-    await page.getByRole('textbox', { name: 'Search permissions' }).fill('Activate');
-    await page.getByRole('button', { name: /^Remove direct grants \(/ }).click();
-    await savePermissions(page);
-    grants = await readGrants(page, headers, 'U', userId);
-    const esi = grants.filter((grant) => esiNames.includes(grant.name));
-    expect(esi).toHaveLength(5);
-    esi.forEach((grant) => {
-      expect(grant.isGranted).toBe(true);
-      expect(grant.grantedProviders).toContainEqual({
-        providerName: 'R',
-        providerKey: inheritedRole,
+    persisted = await readGrants(page, headers, 'R', roleName);
+    expect(persisted.filter((grant) => applicationNames.includes(grant.name) && grant.isGranted)).toEqual([]);
+    await openApplications(page, roleName);
+    await expect(row.getByRole('switch', { name: 'View', exact: true })).not.toBeChecked();
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    const users = await page.request.get(`${apiURL  }/api/identity/users?filter=hr-manager`, { headers });
+    const user = (await users.json()).items.find((item: { userName: string }) => item.userName === 'hr-manager');
+    expect(user).toBeTruthy();
+    const userName = (`${user.name  } ${  user.surname || ''}`).trim();
+    const before = await readGrants(page, headers, 'U', user.id);
+    const target = before.find((grant) => grant.name === `${esiPrefix  }View`)!;
+    expect(target.grantedProviders).toContainEqual({ providerName: 'R', providerKey: 'HR Manager' });
+    const hadDirect = target.grantedProviders.some((provider) => provider.providerName === 'U' && provider.providerKey === user.id);
+    try {
+      await openPayrollPermissions(page, 'user', userName);
+      const view = page.getByTestId('permission-Statutory Schemes').getByRole('switch', { name: 'View', exact: true });
+      await view.setChecked(!hadDirect);
+      await savePermissions(page);
+      const changed = (await readGrants(page, headers, 'U', user.id)).find((grant) => grant.name === target.name)!;
+      expect(changed.grantedProviders.some((provider) => provider.providerName === 'U' && provider.providerKey === user.id)).toBe(!hadDirect);
+      expect(changed.isGranted).toBe(true);
+      await openPayrollPermissions(page, 'user', userName);
+      if (hadDirect) await expect(view).not.toBeChecked();
+      else await expect(view).toBeChecked();
+      await view.setChecked(hadDirect);
+      await savePermissions(page);
+      expect(await readGrants(page, headers, 'U', user.id)).toEqual(before);
+    } finally {
+      const restored = await page.request.put(`${apiURL  }/api/permission-management/permissions?${  new URLSearchParams({ providerName: 'U', providerKey: user.id })}`, {
+        headers, data: { permissions: [{ name: target.name, isGranted: hadDirect }] },
       });
-      expect(
-        grant.grantedProviders.some(
-          (provider) => provider.providerName === 'U' && provider.providerKey === userId
-        )
-      ).toBe(false);
-    });
-    expect(grants).toEqual(beforeUserGrants);
+      expect(restored.ok()).toBeTruthy();
+    }
   });
 
   test(`original role and user dialogs remain separate at ${viewport.width}px without writes`, async ({
@@ -309,6 +377,45 @@ async function verifyOriginalDialogs(page: Page, kind: 'role' | 'user', name: st
     await verifyOriginalDialogs(page, 'user', `${user.name} ${user.surname || ''}`.trim());
     expect(writes).toEqual([]);
   });
+});
+
+test('collapsed bulk removal preserves unrelated module grants', async ({ page }) => {
+  const headers = await login(page);
+  const roleName = `security-collapsed-${randomUUID().slice(0, 8)}`;
+  const created = await page.request.post(`${apiURL}/api/identity/roles`, {
+    headers,
+    data: {
+      name: roleName, isDefault: false, isPublic: false,
+      employeeOnboardingAssignable: false, employeeGroupAudience: 'Both',
+      extraProperties: { color: '#456789', roleAudience: 'Employee', employeeGroupAudience: 'Both', employeeOnboardingAssignable: false },
+    },
+  });
+  expect(created.ok()).toBeTruthy();
+  const applicationNames = (await readGrants(page, headers, 'R', roleName))
+    .filter((grant) => /^Students\.Admissions\.Applications\.[^.]+$/.test(grant.name))
+    .map((grant) => grant.name);
+  expect(applicationNames.length).toBeGreaterThanOrEqual(3);
+  const unrelatedName = 'Finance.Settings.FeeStructure.View';
+  const initial = await page.request.put(
+    `${apiURL}/api/permission-management/permissions?${new URLSearchParams({ providerName: 'R', providerKey: roleName })}`,
+    { headers, data: { permissions: [...applicationNames, unrelatedName].map((name) => ({ name, isGranted: true })) } }
+  );
+  expect(initial.ok()).toBeTruthy();
+  await openApplications(page, roleName);
+  await page.getByRole('button', { name: 'Collapse Applications', exact: true }).click();
+  await expect(page.getByTestId('permission-All Applications')).not.toBeVisible();
+  // Other admissions groups have no grants, so first grant the selected action column.
+  await page.getByRole('switch', { name: 'All View', exact: true }).check();
+  await page.getByRole('switch', { name: 'All View', exact: true }).uncheck();
+  await savePermissions(page);
+  const persisted = await readGrants(page, headers, 'R', roleName);
+  expect(persisted.filter((grant) => applicationNames.includes(grant.name) && grant.isGranted)).toEqual([]);
+  expect(persisted.find((grant) => grant.name === unrelatedName)?.isGranted).toBe(true);
+  await openApplications(page, roleName);
+  await Promise.all(['View', 'Add', 'Delete'].map((action) =>
+    expect(page.getByTestId('permission-All Applications').getByRole('switch', { name: action, exact: true })).not.toBeChecked()
+  ));
+  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
 });
 
 test('loading, failed saves, dirty navigation, and visibility remain usable without server mutations', async ({ page }) => {
@@ -344,7 +451,8 @@ test('loading, failed saves, dirty navigation, and visibility remain usable with
   await page.getByRole('button', { name: 'Reload', exact: true }).click();
   await page.getByRole('button', { name: 'HR/Staff', exact: true }).click();
   await page.getByRole('button', { name: 'Payroll Management', exact: true }).click();
-  const activateSwitch = page.getByRole('switch', { name: 'Statutory Schemes: Activate', exact: true });
+  if (!(await page.getByTestId('permission-Statutory Schemes').isVisible())) await page.getByRole('button', { name: 'Expand Settings', exact: true }).click();
+  const activateSwitch = page.getByTestId('permission-Statutory Schemes').getByRole('switch', { name: 'View', exact: true });
   await activateSwitch.uncheck();
   page.once('dialog', (dialog) => dialog.dismiss());
   await page.keyboard.press('Escape');
