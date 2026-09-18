@@ -1,12 +1,17 @@
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 
-import type { FieldSettingsProps } from '../types/field-settings';
+import {
+  parseEditableAdmissionVisibilityRule,
+  type EditableAdmissionVisibilityRule,
+  serializeEditableAdmissionVisibilityRule,
+} from '../field-visibility-rules';
 
-type Rule = { field: string; operator: string; value?: string };
+import type { FieldSettingsProps } from '../types/field-settings';
 
 const CONDITIONS = [
   ['Equals', 'is equal to'],
@@ -25,24 +30,15 @@ const CONDITIONS = [
   ['IsNotEmpty', 'is not empty'],
 ].map(([value, label]) => ({ value, label }));
 
-function parseRule(value?: string | null): Rule | null {
-  if (!value) return null;
-  try {
-    const parsed = JSON.parse(value) as Rule;
-    return parsed?.field && parsed.operator ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
 export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
   const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
   const otherFields = formik.values.sections
     .flatMap((section) => section.fields)
     .filter((item) => item.code !== field.code);
-  const rule = parseRule(field.visibilityRuleJson);
-  const updateRule = (patch: Partial<Rule>) => {
+  const parsedRule = parseEditableAdmissionVisibilityRule(field.visibilityRuleJson);
+  const { rule } = parsedRule;
+  const updateRule = (patch: Partial<EditableAdmissionVisibilityRule>) => {
     const next = {
       field: rule?.field ?? '',
       operator: rule?.operator ?? 'Equals',
@@ -51,9 +47,58 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
     };
     formik.setFieldValue(
       `${path}.visibilityRuleJson`,
-      next.field ? JSON.stringify(next) : undefined
+      serializeEditableAdmissionVisibilityRule(next)
     );
   };
+  if (parsedRule.error) {
+    return (
+      <Stack spacing={1.5}>
+        <Alert severity="warning">{parsedRule.error} It has not been changed.</Alert>
+        <TextField
+          fullWidth
+          size="small"
+          multiline
+          minRows={2}
+          label="Compatibility rule"
+          value={field.visibilityRuleJson ?? ''}
+          helperText="This technical value is shown only because the saved rule cannot be edited safely here."
+          onChange={(event) =>
+            formik.setFieldValue(`${path}.visibilityRuleJson`, event.target.value || undefined)
+          }
+        />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={!otherFields.length}
+            onClick={() =>
+              formik.setFieldValue(
+                `${path}.visibilityRuleJson`,
+                serializeEditableAdmissionVisibilityRule({
+                  field: otherFields[0].code,
+                  operator: 'Equals',
+                  value: '',
+                })
+              )
+            }
+          >
+            Replace with simple condition
+          </Button>
+          <Button
+            size="small"
+            color="inherit"
+            onClick={() => formik.setFieldValue(`${path}.visibilityRuleJson`, undefined)}
+          >
+            Clear rule
+          </Button>
+        </Stack>
+      </Stack>
+    );
+  }
+
+  const currentFieldIsMissing = Boolean(
+    rule?.field && !otherFields.some((item) => item.code === rule.field)
+  );
   return (
     <Stack spacing={1.5}>
       <CustomSelect
@@ -62,6 +107,9 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
         value={rule?.field ?? ''}
         options={[
           { value: '', label: 'Always visible' },
+          ...(currentFieldIsMissing
+            ? [{ value: rule?.field ?? '', label: `${rule?.field} (field not found)` }]
+            : []),
           ...otherFields.map((item) => ({ value: item.code, label: item.label })),
         ]}
         onChange={(value) => updateRule({ field: String(value) })}
@@ -80,7 +128,7 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
               fullWidth
               size="small"
               label="Answer to match"
-              value={rule.value ?? ''}
+              value={String(rule.value ?? '')}
               onChange={(event) => updateRule({ value: event.target.value })}
             />
           )}

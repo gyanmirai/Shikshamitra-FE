@@ -10,6 +10,8 @@ function makeForm(): CreateUpdateAdmissionForm {
     code: 'ADMISSION',
     layoutType: 0,
     fieldsPerRow: 1,
+    defaultLanguage: 'en',
+    supportedLanguages: ['en'],
     sections: [
       ['first', 'a', 'b', 'c'],
       ['second', 'd'],

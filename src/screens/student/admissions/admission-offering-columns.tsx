@@ -20,13 +20,16 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
   { id: 'boardName', label: 'Board', minWidth: 120 },
   { id: 'campusName', label: 'Campus', minWidth: 130 },
   { id: 'mediumName', label: 'Medium', minWidth: 120 },
-  { id: 'stageName', label: 'Stage', minWidth: 120 },
+  { id: 'stageName', label: 'School level', minWidth: 130 },
   { id: 'standardName', label: 'Standard', minWidth: 130 },
   {
     id: 'workflowName',
     label: 'Workflow',
     minWidth: 170,
-    render: (value, row) => (value ? `${value} v${row.workflowVersion}` : 'Not configured'),
+    render: (_, row) =>
+      row.workflowName && row.workflowVersion != null
+        ? `${row.workflowName} v${row.workflowVersion}`
+        : 'Not configured',
   },
   {
     id: 'effectiveOpenDate',
@@ -41,9 +44,15 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
     render: (value) => formatDateOnly(value, 'DD MMM YYYY'),
   },
   {
+    id: 'applicationCount',
+    label: 'Applications',
+    minWidth: 120,
+  },
+  {
     id: 'availabilityStatus',
     label: 'Availability',
     sticky: true,
+    stickyPosition: 'right',
     minWidth: 150,
     render: (value) => (
       <Label color={availabilityColors[value as number]}>
@@ -55,6 +64,7 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
     id: 'configurationStatus',
     label: 'Configuration',
     sticky: true,
+    stickyPosition: 'right',
     minWidth: 130,
     render: (value) => (
       <Label color={value === 1 ? 'success' : 'warning'}>
@@ -66,7 +76,12 @@ export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionPr
     id: 'actions',
     label: 'Actions',
     sticky: true,
+    stickyPosition: 'right',
+    width: 160,
+    minWidth: 150,
+    align: 'right',
     isSort: false,
+    isFilter: false,
     excludeFromExport: true,
     render: (_, data) => (
       <AdmissionOfferingRowActions

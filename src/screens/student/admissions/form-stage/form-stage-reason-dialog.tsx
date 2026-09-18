@@ -31,7 +31,7 @@ export function FormStageReasonDialog({
       title={title}
       handleClose={onClose}
       disableClose={busy}
-      hasUnsavedChanges={formik.dirty}
+      guardUnsavedChanges={formik.dirty}
     >
       <DialogScrollContent onSubmit={formik.handleSubmit}>
         <Stack spacing={2}>

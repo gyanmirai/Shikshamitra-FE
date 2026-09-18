@@ -44,7 +44,7 @@ export function ReviewDialog({
         title={title}
         maxWidth={maxWidth}
         handleClose={requestClose}
-        hasUnsavedChanges={false}
+        guardUnsavedChanges={false}
         disableClose={busy}
       >
         {children}

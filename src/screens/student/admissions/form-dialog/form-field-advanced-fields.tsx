@@ -24,7 +24,7 @@ export function FormFieldAdvancedFields(props: FieldSettingsProps) {
       </FieldSettingsGroup>
       <FieldSettingsGroup
         title="Advanced rules"
-        description="Validation and conditional rules in JSON."
+        description="Validation and conditional required rules in JSON."
       >
         <FieldJsonSettings {...props} />
       </FieldSettingsGroup>

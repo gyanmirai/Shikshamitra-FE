@@ -16,15 +16,15 @@ Open the editable [Enrollment Admissions flow design](./enrollment-admissions-fl
 
 ## Project scope implemented
 
-| Capability                     | Implemented surface                                                                                                                                                            |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Admission cycles and offerings | Cycle setup plus scoped offering CRUD, inherited or override dates, readiness, availability, concurrency, clone, state commands, and bulk preview or commit                    |
-| Workflow configuration         | Graph-based immutable versions with explicit entry and terminal stages, controlled conditional or default transitions, validation, preview, usage, clone, archive, and publish |
-| Dynamic form runtime            | Published form versions are pinned to applications; controlled Applicant, Guardian, and Address bindings prefill canonical data, while custom values remain in form-instance storage |
-| Form configuration             | Versioned sections and fields with system bindings, defaults, validation, visibility rules, preview, and publish                                                               |
-| Inquiry CRM                    | Inquiry creation, duplicate check, family and applicant linking, search, filters, contacted state, and source tracking                                                         |
-| Applicant 360                  | Applicant context, application progress, activity timeline, and notes                                                                                                          |
-| Application runtime            | Start, prefill, draft save, concurrency handling, authoritative submit validation, condition-based advancement, stage handlers, idempotency, and transition history            |
+| Capability                     | Implemented surface                                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Admission cycles and offerings | Cycle setup plus scoped offering CRUD, inherited or override dates, readiness, availability, concurrency, clone, state commands, and bulk preview or commit                          |
+| Workflow configuration         | Graph-based immutable versions with explicit entry and terminal stages, controlled conditional or default transitions, validation, preview, usage, clone, archive, and publish       |
+| Dynamic form runtime           | Published form versions are pinned to applications; controlled Applicant, Guardian, and Address bindings prefill canonical data, while custom values remain in form-instance storage |
+| Form configuration             | Versioned sections and fields with system bindings, defaults, validation, visibility rules, preview, and publish                                                                     |
+| Inquiry CRM                    | Inquiry creation, duplicate check, family and applicant linking, search, filters, contacted state, and source tracking                                                               |
+| Applicant 360                  | Applicant and family context, identity completeness, explainable next action, frozen application-stage progress, unified activity timeline, and staff notes                          |
+| Application runtime            | Start, prefill, draft save, concurrency handling, authoritative submit validation, condition-based advancement, stage handlers, idempotency, and transition history                  |
 
 ## Demo path
 
@@ -34,7 +34,7 @@ Open the editable [Enrollment Admissions flow design](./enrollment-admissions-fl
 4. Open `/student/admissions/settings/offerings`, select scoped academic hierarchy, choose inherited or override dates, associate the published definitions, and save or activate the offering.
 5. Use Bulk create when several Standards share one workflow, forms, and admission window; commit only after every preview row is ready.
 6. Create an inquiry under `/student/admissions/inquiries` and use duplicate detection when matching contact data exists.
-7. Open the linked Applicant 360 page, review the timeline, and add a note.
+7. Open the linked Applicant 360 page, confirm the family and identity context, resolve any explained Inquiry blocker, review the current journey stage, and add a staff note when useful.
 8. Start an application, edit the prefilled form, save a draft, submit it, and follow the application through its configured journey and immutable transition history.
 
 ## Frontend source map

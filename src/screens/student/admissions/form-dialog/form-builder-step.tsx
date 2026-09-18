@@ -58,6 +58,9 @@ export function FormBuilderStep({
         stepName: step.name,
         stepDisplayOrder: step.displayOrder,
         stepVisibilityRuleJson: step.visibilityRuleJson,
+        isRepeatable: false,
+        minEntries: 1,
+        maxEntries: 1,
         fields: [],
       },
     ]);

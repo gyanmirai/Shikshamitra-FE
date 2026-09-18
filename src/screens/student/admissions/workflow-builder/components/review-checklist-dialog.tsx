@@ -45,7 +45,7 @@ export function ReviewChecklistDialog({
     <CustomDialog
       open
       hasForm={false}
-      hasUnsavedChanges={formik.dirty}
+      guardUnsavedChanges={formik.dirty}
       title={`Configure ${context} checklist item`}
       handleClose={onClose}
       maxWidth="sm"

@@ -72,5 +72,20 @@ export function useAdmissionOfferingFilters() {
   const update = (changes: Partial<AdmissionOfferingFilters>) =>
     commit({ ...filters, ...changes, page: changes.page ?? 0 });
 
-  return { filters, update };
+  const clearFilters = () =>
+    commit({
+      ...filters,
+      campusId: '',
+      boardId: '',
+      mediumId: '',
+      stageId: '',
+      standardId: '',
+      isActive: '',
+      availabilityStatus: '',
+      configurationStatus: '',
+      search: '',
+      page: 0,
+    });
+
+  return { filters, update, clearFilters };
 }

@@ -4,6 +4,12 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Admissions.WorkflowConcurrencyConflict':
+    'This workflow changed after the list was loaded. Refresh the latest version, review it, and try again.',
+  'Admissions.FormMakerCheckerRequired':
+    'A different authorized user must review this form. The user who requested approval cannot approve or reject the same form.',
+  'Admissions.FormAdminOverrideReasonRequired':
+    'Enter a reason to use the administrator self-review override.',
   'Admissions.Application.EnrollmentDivisionFull':
     'The selected division has no seats available. Choose another division or assign one later.',
   'Admissions.Application.EnrollmentDivisionInvalid':
@@ -16,8 +22,7 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     'Required applicant or guardian information is missing. Complete the application data before enrolling.',
   'Admissions.Application.OfferExpiryInvalid':
     'The admission offer has expired or the expiry time is invalid.',
-  'Admissions.Application.DecisionReasonRequired':
-    'A reason is required for this decision.',
+  'Admissions.Application.DecisionReasonRequired': 'A reason is required for this decision.',
   'Admissions.Application.DecisionInvalidState':
     'This application has changed and no longer allows that action. Refresh the application and try again.',
   'Finance:ConcessionPolicy:010001': 'The concession policy could not be found.',
@@ -30,7 +35,8 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   'Finance:ConcessionPolicy:010009': 'The academic year cannot be changed after creation.',
   'Finance:ConcessionPolicy:010010': 'Only an Active concession policy can be attached or used.',
   'Finance:ConcessionPolicy:010011': 'No concession policy is attached to this fee structure.',
-  'Finance:ConcessionPolicy:010012': 'The selected concession policy version is no longer available.',
+  'Finance:ConcessionPolicy:010012':
+    'The selected concession policy version is no longer available.',
   'Finance:ConcessionPolicy:010013': 'Select at least one eligible fee head.',
   'Finance:ConcessionPolicy:010014': 'The concession calculation configuration is invalid.',
   'Finance:ConcessionPolicy:010015': 'The requested concession exceeds the policy limit.',
@@ -64,10 +70,8 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     'Cannot evaluate feedback as the student has not submitted their work yet.',
   'ShikshaMitra.Exam:ScheduleIncomplete':
     'Cannot publish: one or more subjects have incomplete schedule details (date, time, or marks). Open the exam schedule and fill in all required fields.',
-  'ShikshaMitra.Exam:DivisionRequired':
-    'Cannot publish: no divisions are assigned to this exam.',
-  'ShikshaMitra.Exam:SubjectRequired':
-    'Cannot publish: no subjects are added to this exam.',
+  'ShikshaMitra.Exam:DivisionRequired': 'Cannot publish: no divisions are assigned to this exam.',
+  'ShikshaMitra.Exam:SubjectRequired': 'Cannot publish: no subjects are added to this exam.',
 };
 
 const GENERIC_MESSAGES = new Set([

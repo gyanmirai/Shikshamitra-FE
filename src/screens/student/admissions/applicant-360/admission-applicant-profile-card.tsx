@@ -2,12 +2,21 @@
 
 import type { AdmissionApplicant360 } from 'src/redux/student/admissions/admission-applicants-api';
 
-import { shikshaMitraToast } from 'src/components/toast';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Card, Alert, Stack, Button, Typography, CardContent } from '@mui/material';
+import { formatDateOnly } from 'src/utils/date-only';
+import { shikshaMitraToast } from 'src/components/toast';
+import { Box, Card, Alert, Stack, Avatar, Button, Typography, CardContent } from '@mui/material';
 import { useUpdateAdmissionApplicantProfileMutation } from 'src/redux/student/admissions/admission-applicants-api';
 
 import { AdmissionApplicantProfileDialog } from './admission-applicant-profile-dialog';
+import {
+  getApplicantName,
+  getApplicantInitials,
+  getApplicantJourneyState,
+  getApplicantMissingDetails,
+} from './admission-applicant-360-model';
 
 type Props = { data: AdmissionApplicant360 };
 
@@ -17,39 +26,110 @@ export function AdmissionApplicantProfileCard({ data }: Props) {
   const locked = data.applications.some(
     (application) => application.status === 10 || application.status === 11
   );
-  const name = [data.applicant.firstName, data.applicant.middleName, data.applicant.lastName]
+  const name = getApplicantName(data);
+  const journey = getApplicantJourneyState(data.applications);
+  const missingDetails = getApplicantMissingDetails(data);
+  const guardianName = [data.primaryGuardian?.firstName, data.primaryGuardian?.lastName]
     .filter(Boolean)
     .join(' ');
+
   return (
     <Card>
       <CardContent>
-        <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={1}>
-          <Stack spacing={0.5}>
-            <Typography variant="h6">{name}</Typography>
-            <Typography color="text.secondary">
-              Date of birth:{' '}
-              {data.applicant.dateOfBirth
-                ? new Date(data.applicant.dateOfBirth).toLocaleDateString()
-                : 'Missing'}{' '}
-              · Gender: {data.applicant.gender ?? 'Missing'}
-            </Typography>
-            <Typography color="text.secondary">
-              {data.primaryGuardian?.firstName} {data.primaryGuardian?.lastName} ·{' '}
-              {data.primaryGuardian?.mobile}
-            </Typography>
-            <Typography color="text.secondary">
-              Family {data.family?.familyNumber ?? '—'}
-            </Typography>
+        <Stack spacing={2.5}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ sm: 'flex-start' }}
+            gap={2}
+          >
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
+              <Avatar
+                sx={{
+                  width: 56,
+                  height: 56,
+                  color: 'primary.main',
+                  bgcolor: 'action.selected',
+                  fontWeight: 700,
+                }}
+              >
+                {getApplicantInitials(data)}
+              </Avatar>
+              <Box sx={{ minWidth: 0 }}>
+                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+                  <Typography variant="h5">{name}</Typography>
+                  <Label color={journey.color}>{journey.label}</Label>
+                  {missingDetails.length > 0 && <Label color="warning">Profile incomplete</Label>}
+                </Stack>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  {journey.description} · Family {data.family?.familyNumber ?? 'not assigned'}
+                </Typography>
+              </Box>
+            </Stack>
+            <Button
+              variant="outlined"
+              disabled={locked}
+              onClick={dialog.onTrue}
+              startIcon={<Iconify icon="mdi:account-edit-outline" />}
+            >
+              Edit identity
+            </Button>
           </Stack>
-          <Button variant="outlined" disabled={locked} onClick={dialog.onTrue}>
-            Edit identity
-          </Button>
+
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: {
+                xs: 'minmax(0, 1fr)',
+                sm: 'repeat(2, minmax(0, 1fr))',
+                lg: 'repeat(4, minmax(0, 1fr))',
+              },
+              gap: 2,
+            }}
+          >
+            <ProfileDetail
+              icon="mdi:cake-variant-outline"
+              label="Date of birth"
+              value={
+                data.applicant.dateOfBirth
+                  ? formatDateOnly(data.applicant.dateOfBirth, 'DD MMM YYYY')
+                  : 'Not provided'
+              }
+              missing={!data.applicant.dateOfBirth}
+            />
+            <ProfileDetail
+              icon="mdi:account-outline"
+              label="Gender"
+              value={data.applicant.gender ?? 'Not provided'}
+              missing={!data.applicant.gender}
+            />
+            <ProfileDetail
+              icon="mdi:account-heart-outline"
+              label="Primary guardian"
+              value={guardianName || 'Not provided'}
+              secondary={data.primaryGuardian?.email ?? undefined}
+            />
+            <ProfileDetail
+              icon="mdi:phone-outline"
+              label="Contact number"
+              value={data.primaryGuardian?.mobile ?? 'Not provided'}
+              missing={!data.primaryGuardian?.mobile}
+            />
+          </Box>
+
+          {missingDetails.length > 0 && !locked && (
+            <Alert severity="warning">
+              Add the applicant’s {missingDetails.join(' and ')} before the admission reaches
+              eligibility, documents, or finalization.
+            </Alert>
+          )}
+
+          {locked && (
+            <Alert severity="info">
+              This admission is finalized. Update identity details from the Student record.
+            </Alert>
+          )}
         </Stack>
-        {locked && (
-          <Alert severity="info" sx={{ mt: 2 }}>
-            This admission is finalized. Update identity details from the Student record.
-          </Alert>
-        )}
       </CardContent>
       <AdmissionApplicantProfileDialog
         open={dialog.value}
@@ -68,5 +148,38 @@ export function AdmissionApplicantProfileCard({ data }: Props) {
         }}
       />
     </Card>
+  );
+}
+
+function ProfileDetail({
+  icon,
+  label,
+  value,
+  secondary,
+  missing = false,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  secondary?: string;
+  missing?: boolean;
+}) {
+  return (
+    <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
+      <Iconify icon={icon} sx={{ mt: 0.25, color: missing ? 'warning.main' : 'text.secondary' }} />
+      <Box sx={{ minWidth: 0 }}>
+        <Typography variant="caption" color="text.secondary">
+          {label}
+        </Typography>
+        <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+          {value}
+        </Typography>
+        {secondary && (
+          <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+            {secondary}
+          </Typography>
+        )}
+      </Box>
+    </Stack>
   );
 }

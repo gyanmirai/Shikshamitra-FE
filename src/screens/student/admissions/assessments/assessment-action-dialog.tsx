@@ -68,7 +68,7 @@ export function AssessmentActionDialog({
       title={title}
       maxWidth="sm"
       handleClose={onClose}
-      hasUnsavedChanges={formik.dirty}
+      guardUnsavedChanges={formik.dirty}
       disableClose={formik.isSubmitting}
     >
       <DialogScrollContent>

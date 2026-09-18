@@ -30,9 +30,24 @@ const outcomes = [
   { value: 4, label: 'Duplicate' },
 ];
 
+const closureReasons = [
+  { value: 'TIMING', label: 'Timing is not suitable' },
+  { value: 'BUDGET', label: 'Budget concern' },
+  { value: 'NO_RESPONSE', label: 'No response from family' },
+  { value: 'CHANGED_PLAN', label: 'Family changed plans' },
+  { value: 'JOINED_OTHER_SCHOOL', label: 'Joined another school' },
+  { value: 'SEAT_UNAVAILABLE', label: 'Seat unavailable' },
+  { value: 'FEES', label: 'Fee concern' },
+  { value: 'LOCATION', label: 'Location or transport concern' },
+  { value: 'ACADEMIC_FIT', label: 'Academic fit concern' },
+  { value: 'DUPLICATE', label: 'Duplicate inquiry' },
+  { value: 'OTHER', label: 'Other' },
+];
+
 export function InquiryQualificationForm({ value }: { value: AdmissionInquiryManagement }) {
   const [outcome, setOutcome] = useState<InquiryOutcome>(value.outcome ?? 0);
   const [reason, setReason] = useState('');
+  const [reasonCode, setReasonCode] = useState('');
   const [duplicateOfId, setDuplicateOfId] = useState('');
   const [answers, setAnswers] = useState<InquiryQualificationAnswer[]>(() =>
     (value.policy?.qualificationChecklist ?? []).map((item) => ({
@@ -128,6 +143,16 @@ export function InquiryQualificationForm({ value }: { value: AdmissionInquiryMan
           helperText="Use the original inquiry from the duplicate search."
         />
       )}
+      {[2, 3, 4].includes(outcome) && (
+        <CustomSelect
+          fullWidth
+          size="small"
+          label="Closure reason *"
+          value={reasonCode}
+          options={closureReasons}
+          onChange={(next) => setReasonCode(String(next))}
+        />
+      )}
       <TextField
         fullWidth
         multiline
@@ -153,6 +178,7 @@ export function InquiryQualificationForm({ value }: { value: AdmissionInquiryMan
         variant="contained"
         disabled={
           !reason.trim() ||
+          ([2, 3, 4].includes(outcome) && !reasonCode) ||
           (outcome === 0 && !requiredPassed) ||
           (outcome === 1 && !value.followUps.some((item) => item.status === 0)) ||
           (outcome === 4 && !duplicateOfId)
@@ -162,6 +188,7 @@ export function InquiryQualificationForm({ value }: { value: AdmissionInquiryMan
             inquiryId: value.inquiryId,
             concurrencyStamp: value.concurrencyStamp,
             outcome,
+            reasonCode: [2, 3, 4].includes(outcome) ? reasonCode : null,
             reason: reason.trim(),
             duplicateOfId: outcome === 4 ? duplicateOfId : null,
             answers,

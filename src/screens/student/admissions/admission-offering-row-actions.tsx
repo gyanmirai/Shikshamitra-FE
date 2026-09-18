@@ -21,30 +21,27 @@ export type AdmissionOfferingActionProps = {
 type Props = AdmissionOfferingActionProps & { row: AdmissionOfferingListItem };
 
 export function AdmissionOfferingRowActions({ row, ...actions }: Props) {
+  const activationAllowed = row.canActivate || row.configurationStatus === 1;
+  const hasOverflowActions =
+    actions.canClone || (row.isActive ? actions.canDeactivate : actions.canActivate);
+
   return (
     <ThreeDotsActions
+      showViewIcon
+      viewIcon="mdi:eye-outline"
+      viewLabel={`View ${row.code}`}
+      handleViewClick={() => actions.onView(row)}
+      showEditIcon={actions.canEdit}
+      editLabel={`Edit ${row.code}`}
+      handleEditClick={() => actions.onEdit(row)}
+      showDeleteIcon={actions.canDelete}
+      deleteLabel={`Delete ${row.code}`}
+      disableDeleteIcon={!row.canDelete}
+      handleDeleteClick={() => actions.onDelete(row)}
+      showThreeDots={hasOverflowActions}
+      moreLabel={`Actions for ${row.code}`}
       actions={({ popover }) => (
         <MenuList dense>
-          <MenuItem
-            onClick={() => {
-              popover.onClose();
-              actions.onView(row);
-            }}
-          >
-            <Iconify icon={GlobalIcons.eye} sx={{ mr: 1 }} />
-            View
-          </MenuItem>
-          {actions.canEdit && (
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                actions.onEdit(row);
-              }}
-            >
-              <Iconify icon={GlobalIcons.edit} sx={{ mr: 1 }} />
-              {row.canEditIdentity ? 'Edit' : 'Edit operational configuration'}
-            </MenuItem>
-          )}
           {actions.canClone && (
             <MenuItem
               onClick={() => {
@@ -56,30 +53,43 @@ export function AdmissionOfferingRowActions({ row, ...actions }: Props) {
               Clone
             </MenuItem>
           )}
-          {((row.isActive && actions.canDeactivate) || (!row.isActive && actions.canActivate)) && (
+          {row.isActive && actions.canDeactivate && (
             <MenuItem
               onClick={() => {
                 popover.onClose();
                 actions.onToggleActive(row);
               }}
             >
-              <Iconify
-                icon={row.isActive ? GlobalIcons.lockIcon : GlobalIcons.publish}
-                sx={{ mr: 1 }}
-              />
-              {row.isActive ? 'Deactivate' : 'Activate'}
+              <Iconify icon={GlobalIcons.lockIcon} sx={{ mr: 1 }} />
+              Deactivate
             </MenuItem>
           )}
-          {actions.canDelete && row.canDelete && (
+          {!row.isActive && actions.canActivate && activationAllowed && (
             <MenuItem
-              sx={{ color: 'error.main' }}
               onClick={() => {
                 popover.onClose();
-                actions.onDelete(row);
+                actions.onToggleActive(row);
               }}
             >
-              <Iconify icon={GlobalIcons.delete} sx={{ mr: 1 }} />
-              Delete
+              <Iconify icon={GlobalIcons.publish} sx={{ mr: 1 }} />
+              Activate
+            </MenuItem>
+          )}
+          {!row.isActive && actions.canActivate && !activationAllowed && actions.canEdit && (
+            <MenuItem
+              onClick={() => {
+                popover.onClose();
+                actions.onEdit(row);
+              }}
+            >
+              <Iconify icon="mdi:clipboard-edit-outline" sx={{ mr: 1 }} />
+              Complete setup to activate
+            </MenuItem>
+          )}
+          {!row.isActive && actions.canActivate && !activationAllowed && !actions.canEdit && (
+            <MenuItem disabled>
+              <Iconify icon="mdi:alert-circle-outline" sx={{ mr: 1 }} />
+              Activation blocked by incomplete setup
             </MenuItem>
           )}
         </MenuList>

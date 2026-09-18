@@ -1,28 +1,32 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type {
-  AdmissionWorkflow,
-  CreateUpdateAdmissionWorkflow,
-} from 'src/redux/student/admissions/admission-workflows-api';
+import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
-import { hasGrantedPermission } from 'src/utils/permissions';
+import { studentPaths } from 'src/constants/student-menu';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useCloneAdmissionWorkflowMutation,
   useCreateAdmissionWorkflowMutation,
   useDeleteAdmissionWorkflowMutation,
   useArchiveAdmissionWorkflowMutation,
+  useLazyGetAdmissionWorkflowQuery,
   useCreateAdmissionWorkflowVersionMutation,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-export type WorkflowDetails = Pick<CreateUpdateAdmissionWorkflow, 'name' | 'code' | 'description'>;
-export type PendingWorkflowConfirmation = { workflow: AdmissionWorkflow; action: 'archive' | 'delete' } | null;
+import { getAdmissionWorkflowAccess } from '../workflow-access';
+
+import type { WorkflowDetails } from '../admission-workflow-dialog';
+
+export type PendingWorkflowConfirmation = {
+  workflow: AdmissionWorkflow;
+  action: 'archive' | 'delete';
+} | null;
 
 export function useWorkflowListActions() {
   const router = useRouter();
@@ -30,52 +34,153 @@ export function useWorkflowListActions() {
   const cloneDialog = useBoolean();
   const [cloneSource, setCloneSource] = useState<AdmissionWorkflow | null>(null);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingWorkflowConfirmation>(null);
+  const [confirmationNotice, setConfirmationNotice] = useState<string | null>(null);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const workflowAccess = getAdmissionWorkflowAccess(permissions);
   const allowed = {
-    canCreate: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add'),
-    canEdit: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add'),
-    canDelete: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Delete'),
-    canClone: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add'),
-    canCreateVersion: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Add'),
-    canArchive: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.Delete'),
-    canViewUsage: hasGrantedPermission(permissions, 'Students.Admissions.Workflows.View'),
+    canCreate: workflowAccess.canManage,
+    canEdit: workflowAccess.canManage,
+    canDelete: workflowAccess.canDelete,
+    canClone: workflowAccess.canManage,
+    canCreateVersion: workflowAccess.canManage,
+    canArchive: workflowAccess.canDelete,
+    canViewUsage: workflowAccess.canView,
   };
   const [createWorkflow, createState] = useCreateAdmissionWorkflowMutation();
   const [cloneWorkflow, cloneState] = useCloneAdmissionWorkflowMutation();
   const [createVersion] = useCreateAdmissionWorkflowVersionMutation();
   const [archiveWorkflow, archiveState] = useArchiveAdmissionWorkflowMutation();
   const [deleteWorkflow, deleteState] = useDeleteAdmissionWorkflowMutation();
-  const navigate = (workflow: AdmissionWorkflow, usage = false) =>
-    router.push(`/student/admissions/settings/workflows/${workflow.id}${usage ? '?panel=usage' : ''}`);
-  const runAction = async (action: () => Promise<AdmissionWorkflow | void>, message: string, goToResult = false) => {
+  const [getLatestWorkflow, latestWorkflowState] = useLazyGetAdmissionWorkflowQuery();
+  const navigate = (workflow: AdmissionWorkflow, panel?: 'preview' | 'usage') =>
+    router.push(
+      `${studentPaths.enrollment.settings.workflows}/${workflow.id}${panel ? `?panel=${panel}` : ''}`
+    );
+  const runAction = async (
+    action: () => Promise<AdmissionWorkflow | void>,
+    message: string,
+    goToResult = false
+  ) => {
     try {
       const result = await action();
       shikshaMitraToast.success({ message });
       if (goToResult && result && 'id' in result) navigate(result);
     } catch (error) {
-      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail || 'Unable to complete the workflow action.' });
+      shikshaMitraToast.error({
+        message: parseApiProblemDetail(error).detail || 'Unable to complete the workflow action.',
+      });
       throw error;
     }
   };
-  const create = (values: WorkflowDetails) => runAction(() => createWorkflow({ ...values, stages: [], transitions: [] }).unwrap(), 'Workflow draft created', true);
-  const clone = async (values: WorkflowDetails) => {
-    if (cloneSource) await runAction(() => cloneWorkflow({ id: cloneSource.id, body: values }).unwrap(), 'Workflow cloned', true);
+  const create = async ({ starterJourney, ...values }: WorkflowDetails) => {
+    try {
+      const result = await createWorkflow({ ...values, stages: [], transitions: [] }).unwrap();
+      shikshaMitraToast.success({ message: 'Workflow draft created' });
+      const setupQuery =
+        starterJourney && starterJourney !== 'empty'
+          ? `?setup=${encodeURIComponent(starterJourney)}`
+          : '';
+      router.push(`${studentPaths.enrollment.settings.workflows}/${result.id}${setupQuery}`);
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: parseApiProblemDetail(error).detail || 'Unable to create the workflow draft.',
+      });
+      throw error;
+    }
   };
-  const openClone = (workflow: AdmissionWorkflow) => { setCloneSource(workflow); cloneDialog.onTrue(); };
+  const clone = async (values: WorkflowDetails) => {
+    if (cloneSource)
+      await runAction(
+        () => cloneWorkflow({ id: cloneSource.id, body: values }).unwrap(),
+        'Workflow cloned',
+        true
+      );
+  };
+  const openClone = (workflow: AdmissionWorkflow) => {
+    setCloneSource(workflow);
+    cloneDialog.onTrue();
+  };
+  const requestConfirmation = (
+    workflow: AdmissionWorkflow,
+    action: NonNullable<PendingWorkflowConfirmation>['action']
+  ) => {
+    setConfirmationNotice(null);
+    setPendingConfirmation({ workflow, action });
+  };
+  const closeConfirmation = () => {
+    setConfirmationNotice(null);
+    setPendingConfirmation(null);
+  };
+  const showLatestWorkflow = (workflow: AdmissionWorkflow, action: 'archive' | 'delete') => {
+    setPendingConfirmation({ workflow, action });
+    setConfirmationNotice(
+      'This workflow changed after the list was loaded. The latest version is now loaded. Review and confirm the action again.'
+    );
+  };
   const confirm = async () => {
     if (!pendingConfirmation) return;
     const { workflow, action } = pendingConfirmation;
-    await runAction(
-      () => action === 'delete' ? deleteWorkflow({ id: workflow.id, concurrencyStamp: workflow.concurrencyStamp }).unwrap() : archiveWorkflow({ id: workflow.id, concurrencyStamp: workflow.concurrencyStamp }).unwrap(),
-      action === 'delete' ? 'Workflow draft deleted' : 'Workflow archived'
-    );
-    setPendingConfirmation(null);
+    try {
+      const latest = await getLatestWorkflow(workflow.id, false).unwrap();
+      if (latest.concurrencyStamp !== workflow.concurrencyStamp) {
+        showLatestWorkflow(latest, action);
+        return;
+      }
+
+      if (action === 'delete') {
+        await deleteWorkflow({
+          id: latest.id,
+          concurrencyStamp: latest.concurrencyStamp,
+        }).unwrap();
+      } else {
+        await archiveWorkflow({
+          id: latest.id,
+          concurrencyStamp: latest.concurrencyStamp,
+        }).unwrap();
+      }
+      shikshaMitraToast.success({
+        message: action === 'delete' ? 'Workflow draft deleted' : 'Workflow archived',
+      });
+      closeConfirmation();
+    } catch (error) {
+      const problem = parseApiProblemDetail(error);
+      if (problem.errorCode === 'Admissions.WorkflowConcurrencyConflict') {
+        try {
+          const latest = await getLatestWorkflow(workflow.id, false).unwrap();
+          showLatestWorkflow(latest, action);
+          return;
+        } catch (refreshError) {
+          shikshaMitraToast.error({ message: parseApiProblemDetail(refreshError).detail });
+          return;
+        }
+      }
+      shikshaMitraToast.error({
+        message: problem.detail || 'Unable to complete the workflow action.',
+      });
+    }
   };
 
   return {
-    allowed, createDialog, cloneDialog, cloneSource, setCloneSource, pendingConfirmation,
-    setPendingConfirmation, createState, cloneState, archiveState, deleteState, navigate,
-    create, clone, openClone, confirm,
-    createVersion: (workflow: AdmissionWorkflow) => runAction(() => createVersion(workflow.id).unwrap(), 'New workflow version created', true),
+    allowed,
+    createDialog,
+    cloneDialog,
+    cloneSource,
+    setCloneSource,
+    pendingConfirmation,
+    confirmationNotice,
+    confirmationRefreshing: latestWorkflowState.isFetching,
+    requestConfirmation,
+    closeConfirmation,
+    createState,
+    cloneState,
+    archiveState,
+    deleteState,
+    navigate,
+    create,
+    clone,
+    openClone,
+    confirm,
+    createVersion: (workflow: AdmissionWorkflow) =>
+      runAction(() => createVersion(workflow.id).unwrap(), 'New workflow version created', true),
   };
 }

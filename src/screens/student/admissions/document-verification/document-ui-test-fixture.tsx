@@ -11,8 +11,10 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { render, cleanup } from '@testing-library/react';
 import { setPermissions } from 'src/redux/auth/authSlice';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { createDocumentTestStore } from 'src/redux/student/admissions/document-test-fixture';
 
 vi.mock('@mui/icons-material', async () => {
@@ -64,7 +66,9 @@ export function renderDocumentUi(
   );
   render(
     <Provider store={store}>
-      <ThemeProvider theme={createTheme(defaultSettings)}>{children}</ThemeProvider>
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>{children}</LocalizationProvider>
+      </ThemeProvider>
     </Provider>
   );
   return store;

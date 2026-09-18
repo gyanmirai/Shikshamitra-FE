@@ -6,8 +6,9 @@ import CustomSelect from 'src/components/custom-select';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import ShakingTextField from 'src/components/shaking-text-field';
 
-import { FIELD_TYPES } from './form-dialog-model';
+import { getConfigurableFieldTypes } from './form-dialog-model';
 import { FieldChoiceSettings } from './components/field-choice-settings';
+import { FieldTranslationSettings } from './components/field-translation-settings';
 
 import type { FieldSettingsProps } from './types/field-settings';
 
@@ -38,7 +39,16 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
         size="small"
         label="Field type"
         value={field.fieldType}
-        options={FIELD_TYPES.map(([label, value]) => ({ label, value }))}
+        options={getConfigurableFieldTypes(field.fieldType).map(([label, value]) => ({
+          label,
+          value,
+        }))}
+        disabled={field.fieldType === 10}
+        helperText={
+          field.fieldType === 10
+            ? 'File upload is not available yet. Replace this field before publishing.'
+            : undefined
+        }
         onChange={(value) => formik.setFieldValue(`${path}.fieldType`, Number(value))}
       />
       {!isStatic && (
@@ -86,6 +96,11 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
       {isChoice && (
         <FieldChoiceSettings formik={formik} sectionIndex={sectionIndex} fieldIndex={fieldIndex} />
       )}
+      <FieldTranslationSettings
+        formik={formik}
+        sectionIndex={sectionIndex}
+        fieldIndex={fieldIndex}
+      />
     </Stack>
   );
 }

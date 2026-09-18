@@ -65,7 +65,7 @@ export function DocumentRequirementDialog({
       title="Configure document requirement"
       handleClose={onClose}
       maxWidth="sm"
-      hasUnsavedChanges={formik.dirty}
+      guardUnsavedChanges={formik.dirty}
     >
       <Box
         component="form"

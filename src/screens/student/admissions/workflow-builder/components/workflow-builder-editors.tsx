@@ -31,25 +31,62 @@ type Props = {
   onDeleteStage: (stageId: string) => void;
 };
 
-export function WorkflowBuilderEditors({ stageOpen, transitionOpen, editingStage, editingTransition, stageToDelete, stages, transitions, stageTypes, forms, readOnly, onCloseStage, onCloseTransition, onCloseDelete, onSaveStage, onSaveTransition, onDeleteStage }: Props) {
+export function WorkflowBuilderEditors({
+  stageOpen,
+  transitionOpen,
+  editingStage,
+  editingTransition,
+  stageToDelete,
+  stages,
+  transitions,
+  stageTypes,
+  forms,
+  readOnly,
+  onCloseStage,
+  onCloseTransition,
+  onCloseDelete,
+  onSaveStage,
+  onSaveTransition,
+  onDeleteStage,
+}: Props) {
   const connectedTransitions = stageToDelete
     ? transitions.filter(
         (transition) =>
-          transition.fromStageId === stageToDelete?.id ||
-          transition.toStageId === stageToDelete?.id
+          transition.fromStageId === stageToDelete?.id || transition.toStageId === stageToDelete?.id
       ).length
     : 0;
 
   return (
     <>
-      <AdmissionWorkflowStageDrawer open={stageOpen} stage={editingStage} stageTypes={stageTypes} forms={forms} stages={stages} readOnly={readOnly} onClose={onCloseStage} onSave={onSaveStage} />
-      <AdmissionWorkflowTransitionDrawer open={transitionOpen} transition={editingTransition} stages={stages} readOnly={readOnly} onClose={onCloseTransition} onSave={onSaveTransition} />
+      <AdmissionWorkflowStageDrawer
+        open={stageOpen}
+        stage={editingStage}
+        stageTypes={stageTypes}
+        forms={forms}
+        stages={stages}
+        readOnly={readOnly}
+        onClose={onCloseStage}
+        onSave={onSaveStage}
+      />
+      <AdmissionWorkflowTransitionDrawer
+        open={transitionOpen}
+        transition={editingTransition}
+        stages={stages}
+        transitions={transitions}
+        readOnly={readOnly}
+        onClose={onCloseTransition}
+        onSave={onSaveTransition}
+      />
       <ConfirmDialog
         open={Boolean(stageToDelete)}
         onClose={onCloseDelete}
         icon="warning"
         title="Remove workflow stage?"
-        content={stageToDelete ? `Removing ${stageToDelete.name} will also remove ${connectedTransitions} connected transition(s). This change is saved only when you save the draft.` : ''}
+        content={
+          stageToDelete
+            ? `Removing ${stageToDelete.name} will also remove ${connectedTransitions} connected transition(s). This change is saved only when you save the draft.`
+            : ''
+        }
         action={
           <Button
             size="small"

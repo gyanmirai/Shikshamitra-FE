@@ -100,12 +100,23 @@ export type AdmissionFormField = {
   bindingType: number;
   required: boolean;
   readOnly: boolean;
+  displayOrder: number;
   placeholder?: string | null;
   helpText?: string | null;
   optionsJson?: string | null;
   validationJson?: string | null;
   visibilityRuleJson?: string | null;
   requiredRuleJson?: string | null;
+  translations?: Record<
+    string,
+    {
+      label?: string | null;
+      placeholder?: string | null;
+      helpText?: string | null;
+      validationMessage?: string | null;
+      choices?: Record<string, string>;
+    }
+  >;
 };
 export type AdmissionFormSection = {
   id: string;
@@ -118,6 +129,11 @@ export type AdmissionFormSection = {
   stepDisplayOrder?: number | null;
   stepVisibilityRuleJson?: string | null;
   visibilityRuleJson?: string | null;
+  isRepeatable?: boolean;
+  minEntries?: number;
+  maxEntries?: number;
+  entryLabel?: string | null;
+  translations?: Record<string, { label?: string | null; helpText?: string | null }>;
   fields: AdmissionFormField[];
 };
 export type AdmissionApplicationForm = {
@@ -131,6 +147,8 @@ export type AdmissionApplicationForm = {
     name: string;
     layoutType: number;
     fieldsPerRow: 1 | 2 | 3 | 4;
+    defaultLanguage?: string;
+    supportedLanguages?: string[];
     sections: AdmissionFormSection[];
   };
   values: { fieldCode: string; valueJson?: string | null }[];

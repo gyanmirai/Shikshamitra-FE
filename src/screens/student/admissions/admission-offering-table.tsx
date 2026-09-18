@@ -2,6 +2,7 @@
 
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 
+import Box from '@mui/material/Box';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { buildAdmissionOfferingColumns } from './admission-offering-columns';
@@ -21,10 +22,8 @@ type Props = AdmissionOfferingActionProps & {
 };
 
 export function AdmissionOfferingTable(props: Props) {
-  const {
-    rows, loading, totalCount, page, rowsPerPage, search,
-    onSearch, onSort, onPagination,
-  } = props;
+  const { rows, loading, totalCount, page, rowsPerPage, search, onSearch, onSort, onPagination } =
+    props;
   return (
     <CustomizableTable
       tableId="admission-offerings"
@@ -49,7 +48,12 @@ export function AdmissionOfferingTable(props: Props) {
       onServerPagination={onPagination}
       wrapperProps={{ sx: { height: 1 } }}
       tableContainerProps={{ sx: { height: 1 } }}
-      noDataText="No Admission Offerings configured. Create an offering to define which standards accept applications."
+      noDataText={
+        <Box component="span" sx={{ color: 'text.secondary' }}>
+          No Admission Offerings configured. Create an offering to define which standards accept
+          applications.
+        </Box>
+      }
     />
   );
 }

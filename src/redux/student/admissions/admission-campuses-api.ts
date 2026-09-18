@@ -13,6 +13,13 @@ type AdmissionCampusListResult = {
   items: AdmissionCampus[];
 };
 
+export type AdmissionCampusListInput = {
+  search?: string;
+  isActive?: boolean;
+  skipCount?: number;
+  maxResultCount?: number;
+};
+
 type ResultEnvelope<T> = { data?: T };
 
 const unwrapResult = <T>(response: ResultEnvelope<T> | T): T => {
@@ -25,18 +32,30 @@ const unwrapResult = <T>(response: ResultEnvelope<T> | T): T => {
 
 export const admissionCampusesApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getAdmissionCampuses: builder.query<AdmissionCampusListResult, void>({
-      query: () => ({
-        url: '/app/admission-campus',
-        params: { isActive: true, skipCount: 0, maxResultCount: 100 },
-      }),
-      transformResponse: (
-        response: ResultEnvelope<AdmissionCampusListResult> | AdmissionCampusListResult
-      ) => unwrapResult(response),
+    getAdmissionCampus: builder.query<AdmissionCampus, string>({
+      query: (id) => ({ url: `/app/admission-campus/${id}` }),
+      transformResponse: (response: ResultEnvelope<AdmissionCampus> | AdmissionCampus) =>
+        unwrapResult(response),
       providesTags: [studentAdmissionsCrmType.admissionOffering],
     }),
+    getAdmissionCampuses: builder.query<AdmissionCampusListResult, AdmissionCampusListInput | void>(
+      {
+        query: (input) => ({
+          url: '/app/admission-campus',
+          params: { isActive: true, skipCount: 0, maxResultCount: 25, ...input },
+        }),
+        transformResponse: (
+          response: ResultEnvelope<AdmissionCampusListResult> | AdmissionCampusListResult
+        ) => unwrapResult(response),
+        providesTags: [studentAdmissionsCrmType.admissionOffering],
+      }
+    ),
   }),
   overrideExisting: true,
 });
 
-export const { useGetAdmissionCampusesQuery } = admissionCampusesApi;
+export const {
+  useGetAdmissionCampusQuery,
+  useGetAdmissionCampusesQuery,
+  useLazyGetAdmissionCampusesQuery,
+} = admissionCampusesApi;

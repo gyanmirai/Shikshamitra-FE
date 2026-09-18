@@ -60,7 +60,7 @@ export function EligibilityCriterionDialog({
         title={readOnly ? 'Eligibility criterion' : 'Configure eligibility criterion'}
         handleClose={close}
         maxWidth="sm"
-        hasUnsavedChanges={false}
+        guardUnsavedChanges={false}
       >
         <Box
           component="form"

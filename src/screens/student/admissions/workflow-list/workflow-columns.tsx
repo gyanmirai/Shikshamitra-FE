@@ -1,5 +1,8 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
-import type { AdmissionWorkflow, AdmissionWorkflowStatus } from 'src/redux/student/admissions/admission-workflows-api';
+import type {
+  AdmissionWorkflow,
+  AdmissionWorkflowStatus,
+} from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
@@ -9,11 +12,33 @@ import { formatWorkflowDateTime } from './workflow-list-format';
 
 import type { WorkflowActionPermissions } from './workflow-row-actions';
 
-const STATUS_LABELS: Record<AdmissionWorkflowStatus, string> = { 0: 'Draft', 1: 'Published', 2: 'Archived' };
-const STATUS_COLORS: Record<AdmissionWorkflowStatus, 'default' | 'success' | 'error'> = { 0: 'default', 1: 'success', 2: 'error' };
+const STATUS_LABELS: Record<AdmissionWorkflowStatus, string> = {
+  0: 'Draft',
+  1: 'Published',
+  2: 'Archived',
+  3: 'Validated',
+  4: 'Submitted',
+  5: 'Approved',
+  6: 'Scheduled',
+  7: 'Superseded',
+};
+const STATUS_COLORS: Record<
+  AdmissionWorkflowStatus,
+  'default' | 'success' | 'error' | 'info' | 'warning' | 'primary' | 'secondary'
+> = {
+  0: 'default',
+  1: 'success',
+  2: 'error',
+  3: 'info',
+  4: 'warning',
+  5: 'primary',
+  6: 'secondary',
+  7: 'default',
+};
 
 type Handlers = {
   onView: (workflow: AdmissionWorkflow) => void;
+  onEdit: (workflow: AdmissionWorkflow) => void;
   onClone: (workflow: AdmissionWorkflow) => void;
   onCreateVersion: (workflow: AdmissionWorkflow) => void;
   onUsage: (workflow: AdmissionWorkflow) => void;
@@ -21,20 +46,88 @@ type Handlers = {
   onDelete: (workflow: AdmissionWorkflow) => void;
 };
 
-export function createWorkflowColumns(permissions: WorkflowActionPermissions, handlers: Handlers): IColumn[] {
+export function createWorkflowColumns(
+  permissions: WorkflowActionPermissions,
+  handlers: Handlers
+): IColumn[] {
   return [
-    { id: 'name', label: 'Workflow', minWidth: 240, isFilter: false, render: (value, row) => <Box><Typography fontWeight={600}>{value}</Typography><Typography variant="caption" color="text.secondary">{(row as AdmissionWorkflow).description || 'No description'}</Typography></Box> },
+    {
+      id: 'name',
+      label: 'Workflow',
+      minWidth: 240,
+      sticky:true,
+      isFilter: false,
+      render: (value, row) => (
+        <Box>
+          <Typography fontWeight={600}>{value}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {(row as AdmissionWorkflow).description || 'No description'}
+          </Typography>
+        </Box>
+      ),
+    },
     { id: 'code', label: 'Code', minWidth: 140, isFilter: false },
     { id: 'version', label: 'Version', minWidth: 90, align: 'center', isFilter: false },
-    { id: 'status', label: 'Status', minWidth: 120, isFilter: false, render: (value) => { const status = Number(value) as AdmissionWorkflowStatus; return <Label color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Label>; } },
-    { id: 'offeringCount', label: 'Used by offerings', minWidth: 150, align: 'center', isFilter: false },
-    { id: 'lastModificationTime', label: 'Last modified', minWidth: 170, isFilter: false, render: (value, row) => formatWorkflowDateTime((value as string | null) || (row as AdmissionWorkflow).creationTime) },
-    { id: 'publishedAt', label: 'Published at', minWidth: 170, isFilter: false, render: (value) => formatWorkflowDateTime(value as string | null) },
     {
-      id: 'actions', label: 'Actions', width: 80, align: 'right', sticky: true, stickyPosition: 'right', isSort: false, isFilter: false, excludeFromExport: true,
+      id: 'offeringCount',
+      label: 'Used by offerings',
+      minWidth: 150,
+      align: 'center',
+      isFilter: false,
+    },
+    {
+      id: 'lastModificationTime',
+      label: 'Last modified',
+      minWidth: 170,
+      isFilter: false,
+      render: (value, row) =>
+        formatWorkflowDateTime((value as string | null) || (row as AdmissionWorkflow).creationTime),
+    },
+    {
+      id: 'publishedAt',
+      label: 'Published at',
+      minWidth: 170,
+      isFilter: false,
+      render: (value) => formatWorkflowDateTime(value as string | null),
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      minWidth: 120,
+      sticky: true,
+      stickyPosition: 'right',
+      isFilter: false,
+      render: (value) => {
+        const status = Number(value) as AdmissionWorkflowStatus;
+        return <Label color={STATUS_COLORS[status]}>{STATUS_LABELS[status]}</Label>;
+      },
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      width: 160,
+      minWidth: 150,
+      align: 'right',
+      sticky: true,
+      stickyPosition: 'right',
+      isSort: false,
+      isFilter: false,
+      excludeFromExport: true,
       render: (_, row) => {
         const workflow = row as AdmissionWorkflow;
-        return <WorkflowRowActions {...permissions} workflow={workflow} onView={() => handlers.onView(workflow)} onClone={() => handlers.onClone(workflow)} onCreateVersion={() => handlers.onCreateVersion(workflow)} onUsage={() => handlers.onUsage(workflow)} onArchive={() => handlers.onArchive(workflow)} onDelete={() => handlers.onDelete(workflow)} />;
+        return (
+          <WorkflowRowActions
+            {...permissions}
+            workflow={workflow}
+            onView={() => handlers.onView(workflow)}
+            onEdit={() => handlers.onEdit(workflow)}
+            onClone={() => handlers.onClone(workflow)}
+            onCreateVersion={() => handlers.onCreateVersion(workflow)}
+            onUsage={() => handlers.onUsage(workflow)}
+            onArchive={() => handlers.onArchive(workflow)}
+            onDelete={() => handlers.onDelete(workflow)}
+          />
+        );
       },
     },
   ];

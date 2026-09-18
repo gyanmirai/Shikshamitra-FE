@@ -47,6 +47,9 @@ it('uses the nested inquiry management routes and keeps identifiers out of comma
       endpoints.recordAdmissionInquiryContact.initiate({
         inquiryId: 'inquiry-1',
         concurrencyStamp: 'stamp',
+        channel: 'PHONE',
+        direction: 'OUTBOUND',
+        outcome: 'CONNECTED',
         note: 'Called guardian',
       })
     )
@@ -84,7 +87,16 @@ it('uses the nested inquiry management routes and keeps identifiers out of comma
     )
     .unwrap();
   expect(requests).toEqual([
-    { path: 'contact', body: { concurrencyStamp: 'stamp', note: 'Called guardian' } },
+    {
+      path: 'contact',
+      body: {
+        concurrencyStamp: 'stamp',
+        channel: 'PHONE',
+        direction: 'OUTBOUND',
+        outcome: 'CONNECTED',
+        note: 'Called guardian',
+      },
+    },
     {
       path: 'follow-ups',
       body: {
