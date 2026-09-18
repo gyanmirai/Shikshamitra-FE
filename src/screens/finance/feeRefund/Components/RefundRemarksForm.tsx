@@ -8,7 +8,6 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 import { useGetFeeRefundByIdQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 import {
   Box,
@@ -127,16 +126,36 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
 
   const infoItems = [
     {
-      label: 'Total Paid Amount',
-      value: dto?.totalPaidAmount != null ? formatCurrency(dto.totalPaidAmount) : 'N/A',
+      label: 'Voucher',
+      value: dto?.voucherNumber || 'N/A',
     },
     {
-      label: 'Total Refunded Amount',
-      value: dto?.totalRefundedAmount != null ? formatCurrency(dto.totalRefundedAmount) : 'N/A',
+      label: 'Original Receipt',
+      value: dto?.originalReceiptNumber || 'N/A',
     },
     {
-      label: 'Current Refund Request',
+      label: 'Policy',
+      value: dto?.refundPolicyName || 'N/A',
+    },
+    {
+      label: 'Requested',
       value: currentRequestAmount > 0 ? formatCurrency(currentRequestAmount) : 'N/A',
+    },
+    {
+      label: 'Policy-calculated',
+      value: dto?.calculatedAmount ? formatCurrency(dto.calculatedAmount) : 'N/A',
+    },
+    {
+      label: 'Approved',
+      value: dto?.approvedAmount ? formatCurrency(dto.approvedAmount) : 'N/A',
+    },
+    {
+      label: 'Processed',
+      value: dto?.processedAmount ? formatCurrency(dto.processedAmount) : 'N/A',
+    },
+    {
+      label: 'Reversed',
+      value: dto?.reversedAmount ? formatCurrency(dto.reversedAmount) : 'N/A',
     },
     {
       label: 'Refund Method',
@@ -237,6 +256,45 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
                 <Typography variant="body2">{dto.approverNotes}</Typography>
               </Card>
             )}
+
+            {dto?.settlements && dto.settlements.length > 0 && (
+              <Card variant="outlined" sx={{ borderRadius: 2, p: 2, mb: 2 }}>
+                <Typography variant="subtitle2" fontWeight={700} mb={1}>
+                  Settlement History
+                </Typography>
+                <Stack spacing={1}>
+                  {dto.settlements.map((settlement) => (
+                    <Paper key={settlement.id} variant="outlined" sx={{ p: 1.5 }}>
+                      <Stack
+                        direction={{ xs: 'column', sm: 'row' }}
+                        spacing={1}
+                        justifyContent="space-between"
+                      >
+                        <Box>
+                          <Typography variant="body2" fontWeight={600}>
+                            Attempt {settlement.attemptNumber} · {settlement.method}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {new Date(settlement.settlementDate).toLocaleString('en-IN')}
+                            {settlement.externalReference
+                              ? ` · Ref: ${settlement.externalReference}`
+                              : ''}
+                          </Typography>
+                        </Box>
+                        <Typography variant="body2" fontWeight={700}>
+                          {formatCurrency(settlement.amount)}
+                        </Typography>
+                      </Stack>
+                      {settlement.failureReason && (
+                        <Typography variant="caption" color="error.main">
+                          {settlement.failureReason}
+                        </Typography>
+                      )}
+                    </Paper>
+                  ))}
+                </Stack>
+              </Card>
+            )}
           </>
         )}
       </Scrollbar>
@@ -244,32 +302,34 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
       {/* Actions */}
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         {(() => {
-          const currentStatus = dto?.status ?? (student as any)?.status;
-          const isPending =
-            currentStatus === FeeRefundStatusType.Pending || currentStatus === undefined;
-          if (isPending) {
+          const availableActions = dto?.availableActions ?? (student as any)?._availableActions ?? [];
+          if (availableActions.includes('approve') || availableActions.includes('reject')) {
             return (
               <>
-                <Button
-                  variant="soft"
-                  color="error"
-                  onClick={onReject}
-                  size="small"
-                  disabled={loading}
-                  startIcon={<Iconify icon={GlobalIcons.cancel} />}
-                >
-                  Reject
-                </Button>
-                <Button
-                  variant="soft"
-                  color="success"
-                  onClick={onApprove}
-                  size="small"
-                  disabled={loading}
-                  startIcon={<Iconify icon={GlobalIcons.tick} />}
-                >
-                  Approve
-                </Button>
+                {availableActions.includes('reject') && (
+                  <Button
+                    variant="soft"
+                    color="error"
+                    onClick={onReject}
+                    size="small"
+                    disabled={loading}
+                    startIcon={<Iconify icon={GlobalIcons.cancel} />}
+                  >
+                    Reject
+                  </Button>
+                )}
+                {availableActions.includes('approve') && (
+                  <Button
+                    variant="soft"
+                    color="success"
+                    onClick={onApprove}
+                    size="small"
+                    disabled={loading}
+                    startIcon={<Iconify icon={GlobalIcons.tick} />}
+                  >
+                    Approve
+                  </Button>
+                )}
               </>
             );
           }

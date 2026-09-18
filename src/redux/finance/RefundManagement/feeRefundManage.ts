@@ -10,6 +10,16 @@ export interface FeeRefundLineDto {
   id: string;
   dueFeeId: string;
   amount: number;
+  calculatedAmount: number;
+  sourceAllocationId?: string;
+  sourceReceiptId?: string;
+  feeHeadId: string;
+  feeHeadName: string;
+  installmentLabel: string;
+  settledPaidAmount: number;
+  approvedAmount: number;
+  processedAmount: number;
+  reversedAmount: number;
 }
 
 export interface FeeRefundRequestDto {
@@ -20,10 +30,20 @@ export interface FeeRefundRequestDto {
   educationMediumId: string;
   standardId: string;
   divisionId: string;
-  /** 0=Pending, 1=UnderReview, 2=Approved, 3=Rejected, 4=Cancelled */
   status: number;
   voucherNumber: string;
   totalAmount: number;
+  calculatedAmount: number;
+  approvedAmount: number;
+  processedAmount: number;
+  reversedAmount: number;
+  studentFeeStructureId?: string;
+  refundPolicyId?: string;
+  refundPolicyVersionId?: string;
+  refundPolicyName?: string;
+  originalReceiptId?: string;
+  originalReceiptNumber?: string;
+  currency: string;
   refundMethod: string | null;
   reason: string | null;
   approverNotes: string | null;
@@ -31,6 +51,13 @@ export interface FeeRefundRequestDto {
   processedByUserId: string | null;
   processedAt: string | null;
   creationTime: string;
+  submittedAt?: string;
+  reviewStartedAt?: string;
+  reversedAt?: string;
+  failureReason?: string;
+  reversalReason?: string;
+  availableActions: string[];
+  settlements: FeeRefundSettlementDto[];
   lines: FeeRefundLineDto[];
   paymentDetails?: Record<string, any>;
 
@@ -77,6 +104,9 @@ export interface PagedRefundResult {
 
 export interface RefundEligibilityMonthDto {
   dueFeeId: string;
+  sourceAllocationId: string;
+  sourceReceiptId: string;
+  receiptNumber: string;
   month: number;
   year: number;
   total: number;
@@ -100,7 +130,34 @@ export interface RefundEligibilityDto {
   totalPaid: number;
   totalRefunded: number;
   totalRefundable: number;
+  studentFeeStructureId?: string;
+  refundPolicyId?: string;
+  refundPolicyVersionId?: string;
+  refundPolicyName?: string;
+  allowedPayoutMethods: string[];
+  processingTargetDays?: number;
+  allowPartialRefund: boolean;
+  receipts: RefundEligibleReceiptDto[];
   feeHeads: RefundEligibilityFeeHeadDto[];
+}
+
+export interface RefundEligibleReceiptDto {
+  receiptId: string;
+  receiptNumber: string;
+  receiptDate: string;
+  paidAmount: number;
+  refundableAmount: number;
+}
+
+export interface FeeRefundSettlementDto {
+  id: string;
+  attemptNumber: number;
+  status: number;
+  method: string;
+  amount: number;
+  settlementDate: string;
+  externalReference?: string;
+  failureReason?: string;
 }
 
 export interface GetFeeRefundsInput {
@@ -167,6 +224,67 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.feeRefund],
     }),
 
+    previewFeeRefund: builder.mutation<any, IFeeRefundApiPayload>({
+      query: (body) => ({ url: '/fee-refunds/preview', method: 'POST', body }),
+    }),
+
+    submitFeeRefund: builder.mutation<FeeRefundRequestDto, string>({
+      query: (id) => ({ url: `/fee-refunds/${id}/submit`, method: 'POST' }),
+      invalidatesTags: [financeModuleType.feeRefund],
+    }),
+
+    startReviewFeeRefund: builder.mutation<FeeRefundRequestDto, string>({
+      query: (id) => ({ url: `/fee-refunds/${id}/start-review`, method: 'POST' }),
+      invalidatesTags: [financeModuleType.feeRefund],
+    }),
+
+    approveFeeRefund: builder.mutation<FeeRefundRequestDto, { id: string; notes?: string }>({
+      query: ({ id, notes }) => ({
+        url: `/fee-refunds/${id}/approve`,
+        method: 'POST',
+        body: { notes },
+      }),
+      invalidatesTags: [financeModuleType.feeRefund],
+    }),
+
+    rejectFeeRefund: builder.mutation<FeeRefundRequestDto, { id: string; notes: string }>({
+      query: ({ id, notes }) => ({
+        url: `/fee-refunds/${id}/reject`,
+        method: 'POST',
+        body: { notes },
+      }),
+      invalidatesTags: [financeModuleType.feeRefund],
+    }),
+
+    cancelFeeRefund: builder.mutation<FeeRefundRequestDto, { id: string; notes?: string }>({
+      query: ({ id, notes }) => ({
+        url: `/fee-refunds/${id}/cancel`,
+        method: 'POST',
+        body: { notes },
+      }),
+      invalidatesTags: [financeModuleType.feeRefund],
+    }),
+
+    processFeeRefund: builder.mutation<
+      FeeRefundRequestDto,
+      { id: string; body: Record<string, unknown> }
+    >({
+      query: ({ id, body }) => ({ url: `/fee-refunds/${id}/process`, method: 'POST', body }),
+      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.accountPosting],
+    }),
+
+    reverseFeeRefund: builder.mutation<
+      FeeRefundRequestDto,
+      { id: string; settlementId: string; reason: string }
+    >({
+      query: ({ id, settlementId, reason }) => ({
+        url: `/fee-refunds/${id}/reverse`,
+        method: 'POST',
+        body: { settlementId, reason },
+      }),
+      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.accountPosting],
+    }),
+
     updateFeeRefund: builder.mutation<FeeRefundRequestDto, UpdateFeeRefundInput>({
       query: ({ id, body }) => ({
         url: `/fee-refunds/${id}`,
@@ -211,6 +329,14 @@ export const {
   useGetRefundEligibilityQuery,
   useLazyGetRefundEligibilityQuery,
   useCreateFeeRefundMutation,
+  usePreviewFeeRefundMutation,
+  useSubmitFeeRefundMutation,
+  useStartReviewFeeRefundMutation,
+  useApproveFeeRefundMutation,
+  useRejectFeeRefundMutation,
+  useCancelFeeRefundMutation,
+  useProcessFeeRefundMutation,
+  useReverseFeeRefundMutation,
   useUpdateFeeRefundMutation,
   useDeleteFeeRefundMutation,
   useUpdateFeeRefundStatusMutation,

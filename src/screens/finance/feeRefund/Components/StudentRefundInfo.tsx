@@ -9,9 +9,16 @@ import { FeeRefundStatusType, FeeRefundStatusTypeColors } from 'src/enums/feeRef
 import type { IStudentFeeData } from '../type';
 
 const statusLabel: Record<FeeRefundStatusType, string> = {
-  [FeeRefundStatusType.Pending]: 'Pending',
-  [FeeRefundStatusType.Rejected]: 'Rejected',
+  [FeeRefundStatusType.Submitted]: 'Submitted',
+  [FeeRefundStatusType.UnderReview]: 'Under review',
   [FeeRefundStatusType.Approved]: 'Approved',
+  [FeeRefundStatusType.Rejected]: 'Rejected',
+  [FeeRefundStatusType.Cancelled]: 'Cancelled',
+  [FeeRefundStatusType.Draft]: 'Draft',
+  [FeeRefundStatusType.Processing]: 'Processing',
+  [FeeRefundStatusType.Processed]: 'Processed',
+  [FeeRefundStatusType.Failed]: 'Failed',
+  [FeeRefundStatusType.Reversed]: 'Reversed',
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────

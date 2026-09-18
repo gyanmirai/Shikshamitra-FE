@@ -12,16 +12,22 @@ import { financeModuleType } from 'src/redux/tagTypes';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Card, Button, Typography } from '@mui/material';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { Box, Card, Stack, Button, TextField, Typography } from '@mui/material';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import {
   feeRefundApi,
   useDeleteFeeRefundMutation,
-  useUpdateFeeRefundStatusMutation,
+  useCancelFeeRefundMutation,
+  useSubmitFeeRefundMutation,
+  useRejectFeeRefundMutation,
+  useApproveFeeRefundMutation,
+  useProcessFeeRefundMutation,
+  useReverseFeeRefundMutation,
+  useStartReviewFeeRefundMutation,
 } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import RefundRemarksForm from './Components/RefundRemarksForm';
@@ -36,6 +42,8 @@ const FeeRefund = () => {
   const viewRefundRequest = useBoolean();
   const onConfirmDialg = useBoolean();
   const deleteDialog = useBoolean();
+  const processDialog = useBoolean();
+  const reverseDialog = useBoolean();
   const { confirmWithUndo } = useConfirmWithUndo();
   const [selectedMode, setSelectedMode] = useState('');
   const [isEditMode, setIsEditMode] = useState(false);
@@ -43,11 +51,34 @@ const FeeRefund = () => {
   const dispatch = useDispatch();
   const academicFilters = useFinanceAcademicFilters();
 
-  const [updateStatus, { isLoading: isUpdateStatus, isFetching: isFetchingStatus }] =
-    useQueryAndMutation({
-      type: 'mutation',
-      currentQueryAndMutation: useUpdateFeeRefundStatusMutation,
-    });
+  const [approveRefund, { isLoading: isApproving }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useApproveFeeRefundMutation,
+  });
+  const [rejectRefund, { isLoading: isRejecting }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useRejectFeeRefundMutation,
+  });
+  const [startReview] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useStartReviewFeeRefundMutation,
+  });
+  const [submitRefund] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSubmitFeeRefundMutation,
+  });
+  const [cancelRefund, { isLoading: isCancelling }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useCancelFeeRefundMutation,
+  });
+  const [processRefund, { isLoading: isProcessing }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useProcessFeeRefundMutation,
+  });
+  const [reverseRefund, { isLoading: isReversing }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useReverseFeeRefundMutation,
+  });
   const [deleteRefund] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDeleteFeeRefundMutation,
@@ -56,6 +87,9 @@ const FeeRefund = () => {
   // State to store the selected student fee refund data
   // null when no student is selected
   const [selectedFeeRefund, setSelectedFeeRefund] = useState<IStudentFeeData | null>(null);
+  const [externalReference, setExternalReference] = useState('');
+  const [settlementKey, setSettlementKey] = useState('');
+  const [reversalReason, setReversalReason] = useState('');
 
   /**
    * Handles closing of the refund request form dialog
@@ -192,6 +226,43 @@ const FeeRefund = () => {
             setSelectedFeeRefund(data);
             deleteDialog.onTrue();
           }}
+          onSubmit={async (data) => {
+            if (!data._refundRequestId) return;
+            try {
+              await submitRefund(data._refundRequestId).unwrap();
+              shikshaMitraToast.success({ message: 'Refund request submitted for review.' });
+            } catch (err: any) {
+              shikshaMitraToast.error({
+                message: err?.data?.error?.message ?? 'Could not submit the refund request.',
+              });
+            }
+          }}
+          onCancel={(data) => {
+            setSelectedFeeRefund(data);
+            setSelectedMode('Cancel');
+            onConfirmDialg.onTrue();
+          }}
+          onStartReview={async (data) => {
+            try {
+              await startReview(data._refundRequestId).unwrap();
+              shikshaMitraToast.success({ message: 'Refund request moved to review.' });
+            } catch (err: any) {
+              shikshaMitraToast.error({
+                message: err?.data?.error?.message ?? 'Could not start review.',
+              });
+            }
+          }}
+          onProcess={(data) => {
+            setSelectedFeeRefund(data);
+            setExternalReference('');
+            setSettlementKey(crypto.randomUUID());
+            processDialog.onTrue();
+          }}
+          onReverse={(data) => {
+            setSelectedFeeRefund(data);
+            setReversalReason('');
+            reverseDialog.onTrue();
+          }}
           academicFilters={academicFilters}
         />
       )}
@@ -256,7 +327,11 @@ const FeeRefund = () => {
             <Box sx={{ minWidth: 0, flex: 1 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Typography variant="h5" sx={{ lineHeight: 1.25 }}>
-                  {selectedMode === 'Approve' ? 'Approve Request' : 'Reject Request'}
+                  {selectedMode === 'Approve'
+                    ? 'Approve Request'
+                    : selectedMode === 'Cancel'
+                      ? 'Cancel Request'
+                      : 'Reject Request'}
                 </Typography>
                 <CustomTooltip
                   arrow
@@ -265,7 +340,9 @@ const FeeRefund = () => {
                   title={
                     selectedMode === 'Approve'
                       ? 'This modal allows the admin to approve a student’s fee refund request by adding remarks and confirming the approval.'
-                      : 'This modal allows the admin to reject a student’s fee refund request by adding remarks and confirming the rejection.'
+                      : selectedMode === 'Cancel'
+                        ? 'Cancel this request and release any amount reserved during approval.'
+                        : 'This modal allows the admin to reject a student’s fee refund request by adding remarks and confirming the rejection.'
                   }
                 >
                   <Iconify
@@ -304,15 +381,20 @@ const FeeRefund = () => {
             if (isSubmit && selectedFeeRefund) {
               try {
                 const refundId = (selectedFeeRefund as any)._refundRequestId;
-                await updateStatus({
-                  id: refundId,
-                  body: {
-                    status: selectedMode === 'Approve' ? 2 : 3,
-                    notes: notes ?? undefined,
-                  },
-                }).unwrap();
+                if (selectedMode === 'Approve') {
+                  await approveRefund({ id: refundId, notes: notes ?? undefined }).unwrap();
+                } else if (selectedMode === 'Reject') {
+                  await rejectRefund({ id: refundId, notes: notes ?? '' }).unwrap();
+                } else {
+                  await cancelRefund({ id: refundId, notes: notes ?? '' }).unwrap();
+                }
                 shikshaMitraToast.success({
-                  message: `Refund request ${selectedMode === 'Approve' ? 'approved' : 'rejected'} successfully.`,
+                  message:
+                    selectedMode === 'Approve'
+                      ? 'Refund request approved successfully.'
+                      : selectedMode === 'Cancel'
+                        ? 'Refund request cancelled successfully.'
+                        : 'Refund request rejected successfully.',
                 });
                 handleRequstClose(e, true);
                 viewRefundRequest.onFalse();
@@ -328,8 +410,126 @@ const FeeRefund = () => {
             }
           }}
           mode={selectedMode}
-          loading={isUpdateStatus || isFetchingStatus}
+          loading={isApproving || isRejecting || isCancelling}
         />
+      </CustomDialog>
+
+      <CustomDialog
+        open={processDialog.value}
+        title="Process Refund Settlement"
+        handleClose={processDialog.onFalse}
+        maxWidth="xs"
+      >
+        <Stack spacing={2} sx={{ pt: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            Record the payout for <strong>{selectedFeeRefund?.name}</strong>. The fee ledger changes
+            only after this succeeds.
+          </Typography>
+          <TextField
+            label="Approved amount"
+            value={selectedFeeRefund?._approvedAmount ?? 0}
+            size="small"
+            disabled
+          />
+          <TextField
+            label="Payout method"
+            value={selectedFeeRefund?._refundMethod ?? ''}
+            size="small"
+            disabled
+          />
+          <TextField
+            label="Bank / transaction reference"
+            value={externalReference}
+            onChange={(e) => setExternalReference(e.target.value)}
+            size="small"
+            inputProps={{ maxLength: 200 }}
+          />
+          <Stack direction="row" justifyContent="flex-end" spacing={1}>
+            <Button onClick={processDialog.onFalse} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              disabled={isProcessing || !selectedFeeRefund?._refundRequestId}
+              onClick={async () => {
+                if (!selectedFeeRefund?._refundRequestId) return;
+                try {
+                  await processRefund({
+                    id: selectedFeeRefund._refundRequestId,
+                    body: {
+                      idempotencyKey: settlementKey,
+                      method: selectedFeeRefund._refundMethod,
+                      amount: selectedFeeRefund._approvedAmount,
+                      settlementDate: new Date().toISOString(),
+                      externalReference: externalReference || undefined,
+                    },
+                  }).unwrap();
+                  shikshaMitraToast.success({ message: 'Refund processed successfully.' });
+                  processDialog.onFalse();
+                  setSelectedFeeRefund(null);
+                } catch (err: any) {
+                  shikshaMitraToast.error({
+                    message: err?.data?.error?.message ?? 'Refund processing failed.',
+                  });
+                }
+              }}
+            >
+              Process Refund
+            </Button>
+          </Stack>
+        </Stack>
+      </CustomDialog>
+
+      <CustomDialog
+        open={reverseDialog.value}
+        title="Reverse Processed Refund"
+        handleClose={reverseDialog.onFalse}
+        maxWidth="xs"
+      >
+        <Stack spacing={2} sx={{ pt: 1 }}>
+          <Typography variant="body2" color="text.secondary">
+            This creates an auditable reversal and restores the refundable fee balance.
+          </Typography>
+          <TextField
+            required
+            multiline
+            minRows={3}
+            label="Reversal reason"
+            value={reversalReason}
+            onChange={(e) => setReversalReason(e.target.value)}
+            inputProps={{ maxLength: 1000 }}
+          />
+          <Stack direction="row" justifyContent="flex-end" spacing={1}>
+            <Button onClick={reverseDialog.onFalse} color="inherit">
+              Cancel
+            </Button>
+            <Button
+              color="warning"
+              variant="contained"
+              disabled={isReversing || !reversalReason.trim() || !selectedFeeRefund?._settlementId}
+              onClick={async () => {
+                if (!selectedFeeRefund?._refundRequestId || !selectedFeeRefund._settlementId)
+                  return;
+                try {
+                  await reverseRefund({
+                    id: selectedFeeRefund._refundRequestId,
+                    settlementId: selectedFeeRefund._settlementId,
+                    reason: reversalReason.trim(),
+                  }).unwrap();
+                  shikshaMitraToast.success({ message: 'Refund reversed successfully.' });
+                  reverseDialog.onFalse();
+                  setSelectedFeeRefund(null);
+                } catch (err: any) {
+                  shikshaMitraToast.error({
+                    message: err?.data?.error?.message ?? 'Refund reversal failed.',
+                  });
+                }
+              }}
+            >
+              Reverse Refund
+            </Button>
+          </Stack>
+        </Stack>
       </CustomDialog>
 
       <ConfirmDialog

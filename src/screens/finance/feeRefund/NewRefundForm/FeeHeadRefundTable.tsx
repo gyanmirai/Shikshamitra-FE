@@ -88,6 +88,13 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     return result;
   }, [formik.values.feeHeadRefunds]);
 
+  const selectedReceiptId = useMemo(
+    () =>
+      formik.values.feeHeadRefunds.flatMap((x) => x.months).find((x) => x.sourceReceiptId)
+        ?.sourceReceiptId,
+    [formik.values.feeHeadRefunds]
+  );
+
   // Map eligibility API response to IFeeHeadPayment shape used by child components
   const feeHeads: IFeeHeadPayment[] = useMemo(() => {
     if (!eligibility?.feeHeads) return [];
@@ -97,12 +104,15 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       items: fh.months.map((m): IMonthItem => {
         const monthIndex = typeof m.month === 'number' ? m.month : 0;
         const monthName = FeeMonth[monthIndex] ?? `Month ${m.month}`;
-        const monthLabel = `${monthName} ${m.year}`;
+        const monthLabel = `${monthName} ${m.year}${(m as any).receiptNumber ? ` · ${(m as any).receiptNumber}` : ''}`;
         const refunded = isAdj ? ((m as any).adjusted ?? 0) : ((m as any).refunded ?? 0);
         const refundable = isAdj ? ((m as any).adjustable ?? 0) : ((m as any).refundable ?? 0);
         const concession = (m as any).concession ?? 0;
         return {
           dueFeeId: m.dueFeeId,
+          sourceAllocationId: (m as any).sourceAllocationId,
+          sourceReceiptId: (m as any).sourceReceiptId,
+          receiptNumber: (m as any).receiptNumber,
           month: monthLabel,
           year: m.year,
           total: m.total,
@@ -145,15 +155,20 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
     if (formik.values.refundType === 'full' && formik.values.feeHeadRefunds.length > 0) {
       const refunds = formik.values.feeHeadRefunds;
       let needsUpdate = false;
+      let remainingPolicyAmount = isAdj
+        ? Number.POSITIVE_INFINITY
+        : Number((eligibility as any)?.totalRefundable ?? 0);
       const updated = refunds.map((fh) => {
         const fhInfo = feeHeads.find((f) => f.feeHeadId === fh.feeHeadId);
         if (!fhInfo) return fh;
         const newMonths = fh.months.map((m) => {
           const item = fhInfo.items.find((i) => i.month === m.month);
           const refundable = item ? Math.max(0, item.refundable) : 0;
-          if (m.amount !== refundable) {
+          const allowedAmount = Math.min(refundable, Math.max(0, remainingPolicyAmount));
+          remainingPolicyAmount -= allowedAmount;
+          if (m.amount !== allowedAmount) {
             needsUpdate = true;
-            return { ...m, amount: refundable };
+            return { ...m, amount: allowedAmount };
           }
           return m;
         });
@@ -163,7 +178,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
         formik.setFieldValue('feeHeadRefunds', updated, false);
       }
     }
-  }, [formik.values.refundType, formik.values.feeHeadRefunds, feeHeads, formik]);
+  }, [formik.values.refundType, formik.values.feeHeadRefunds, feeHeads, formik, eligibility, isAdj]);
 
   /**
    * Memoization Justification:
@@ -183,12 +198,35 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       const initialAmount = formik.values.refundType === 'full' ? refundable : '';
 
       if (!existing) {
-        updated = [...refunds, { feeHeadId, months: [{ month, dueFeeId, amount: initialAmount }] }];
+        updated = [
+          ...refunds,
+          {
+            feeHeadId,
+            months: [
+              {
+                month,
+                dueFeeId,
+                sourceAllocationId: itemInfo?.sourceAllocationId,
+                sourceReceiptId: itemInfo?.sourceReceiptId,
+                amount: initialAmount,
+              },
+            ],
+          },
+        ];
       } else {
         const hasMonth = existing.months.some((m) => m.month === month);
         const updatedMonths = hasMonth
           ? existing.months.filter((m) => m.month !== month)
-          : [...existing.months, { month, dueFeeId, amount: initialAmount }];
+          : [
+              ...existing.months,
+              {
+                month,
+                dueFeeId,
+                sourceAllocationId: itemInfo?.sourceAllocationId,
+                sourceReceiptId: itemInfo?.sourceReceiptId,
+                amount: initialAmount,
+              },
+            ];
 
         if (updatedMonths.length === 0) {
           updated = refunds.filter((fh) => fh.feeHeadId !== feeHeadId);
@@ -231,6 +269,8 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
             months: refundableItems.map((i) => ({
               month: i.month,
               dueFeeId: i.dueFeeId,
+              sourceAllocationId: i.sourceAllocationId,
+              sourceReceiptId: i.sourceReceiptId,
               amount: formik.values.refundType === 'full' ? Math.max(0, i.refundable) : '',
             })),
           },
@@ -241,6 +281,8 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
           .map((i) => ({
             month: i.month,
             dueFeeId: i.dueFeeId,
+            sourceAllocationId: i.sourceAllocationId,
+            sourceReceiptId: i.sourceReceiptId,
             amount: formik.values.refundType === 'full' ? Math.max(0, i.refundable) : '',
           }));
         updated = refunds.map((fh) =>
@@ -353,9 +395,17 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   if (!studentId) return null;
   if (isLoading || isFetching) return <RefundTableSkeleton />;
 
-  const feeHeadsWithPayments = feeHeads.filter((fh) =>
-    fh.items.some((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
-  );
+  const feeHeadsWithPayments = feeHeads
+    .map((fh) => ({
+      ...fh,
+      items:
+        selectedReceiptId && !isAdj
+          ? fh.items.filter((item) => item.sourceReceiptId === selectedReceiptId)
+          : fh.items,
+    }))
+    .filter((fh) =>
+      fh.items.some((m) => (isAdj ? m.refundable > 0 || m.refunded > 0 : m.paid > 0))
+    );
 
   // Notify parent whether any payment records exist
   onHasRecords?.(feeHeadsWithPayments.length > 0);
@@ -372,6 +422,12 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   return (
     <Box>
+      {!isAdj && selectedReceiptId && (
+        <Alert severity="info" sx={{ mb: 1 }}>
+          This request is locked to one original receipt. Clear the selected lines to choose another
+          receipt.
+        </Alert>
+      )}
       {/* ── Overall Summary KPI Cards ── */}
       <OverallSummaryCard feeHeads={feeHeadsWithPayments} formik={formik} mode={mode} />
 
