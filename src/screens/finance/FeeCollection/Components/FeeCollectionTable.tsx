@@ -22,8 +22,6 @@ import {
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
 
-import { DUMMY_FEE_COLLECTION_LIST } from './dummyData';
-
 import type { IFeeData, IFeeTableProps } from './type';
 
 const FeeCollectionTable: React.FC<IFeeTableProps> = ({
@@ -146,7 +144,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           noDataText={<>Fee Collection Data Not Found </>}
           isLoading={feeCollectionLoading || feeCollectionFetching}
           serverSidePagination
-          totalCount={feeCollectionData?.totalCount || DUMMY_FEE_COLLECTION_LIST.totalCount}
+          totalCount={feeCollectionData?.totalCount ?? 0}
           onServerPagination={handleServerPagination}
           serverSideSearch
           onServerSearch={handleServerSearch}

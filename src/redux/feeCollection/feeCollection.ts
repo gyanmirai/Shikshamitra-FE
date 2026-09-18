@@ -239,6 +239,7 @@ export interface FeePayment {
 }
 
 export interface CollectFeeInput {
+  idempotencyKey: string;
   studentId: string;
   academicYearId: string;
   notes?: string;

@@ -25,9 +25,16 @@ import {
 import type { IStudentFeeData, IStudentFeeTableProps } from '../type';
 
 const REFUND_TABS = [
-  { label: 'Pending', value: FeeRefundStatusType.Pending, color: 'warning' },
+  { label: 'Draft', value: FeeRefundStatusType.Draft, color: 'default' },
+  { label: 'Submitted', value: FeeRefundStatusType.Submitted, color: 'warning' },
+  { label: 'Review', value: FeeRefundStatusType.UnderReview, color: 'info' },
   { label: 'Approved', value: FeeRefundStatusType.Approved, color: 'success' },
+  { label: 'Processing', value: FeeRefundStatusType.Processing, color: 'info' },
+  { label: 'Processed', value: FeeRefundStatusType.Processed, color: 'success' },
+  { label: 'Failed', value: FeeRefundStatusType.Failed, color: 'error' },
   { label: 'Rejected', value: FeeRefundStatusType.Rejected, color: 'error' },
+  { label: 'Cancelled', value: FeeRefundStatusType.Cancelled, color: 'default' },
+  { label: 'Reversed', value: FeeRefundStatusType.Reversed, color: 'warning' },
 ] as const;
 
 function mapRefundItem(item: FeeRefundRequestDto, idx: number): IStudentFeeData {
@@ -43,7 +50,7 @@ function mapRefundItem(item: FeeRefundRequestDto, idx: number): IStudentFeeData 
     contactNo: item.studentContactNo ?? '',
     totalPaidFees: item.totalAmount,
     totalPendingFees: 0,
-    refundAmount: item.totalAmount,
+    refundAmount: item.approvedAmount > 0 ? item.approvedAmount : item.calculatedAmount,
     requestDate: item.creationTime
       ? new Date(item.creationTime).toLocaleDateString('en-IN', {
           day: '2-digit',
@@ -56,6 +63,10 @@ function mapRefundItem(item: FeeRefundRequestDto, idx: number): IStudentFeeData 
     refundMethod: item.refundMethod ?? '',
     _refundRequestId: item.id,
     _studentId: item.studentId,
+    _availableActions: item.availableActions,
+    _approvedAmount: item.approvedAmount,
+    _settlementId: item.settlements?.find((x) => x.status === 1)?.id,
+    _refundMethod: item.refundMethod ?? undefined,
   } as IStudentFeeData;
 }
 
@@ -69,6 +80,11 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
   onApprove,
   onReject,
   onDelete,
+  onSubmit,
+  onCancel,
+  onStartReview,
+  onProcess,
+  onReverse,
   academicFilters,
 }) => {
   const localFilters = useFinanceAcademicFilters();
@@ -92,7 +108,7 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
     classesLoading,
   } = filters;
 
-  const tabs = useTabs(FeeRefundStatusType.Pending);
+  const tabs = useTabs(FeeRefundStatusType.Submitted);
 
   const {
     data: refundListData,
@@ -105,6 +121,7 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
       academicMediumId: filterPayload?.educationMediumId,
       standardId: filterPayload?.standardId,
       divisionId: filterPayload?.divisionId,
+      status: Number(tabs.value),
       maxResultCount: 100,
     },
     options: {
@@ -120,22 +137,10 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
     [refundListData?.items]
   );
 
-  const tabCounts = useMemo(
-    () =>
-      REFUND_TABS.reduce(
-        (acc: any, tab: any) => {
-          acc[tab.value] = (data || []).filter((item: any) => item?.status === tab.value).length;
-          return acc;
-        },
-        {} as Record<number, number>
-      ),
-    [data]
-  );
-
-  const filteredData = useMemo(
-    () => (data || []).filter((item: any) => item?.status === tabs.value),
-    [data, tabs.value]
-  );
+  const tabCounts = { [Number(tabs.value)]: refundListData?.totalCount ?? 0 } as Record<
+    number,
+    number
+  >;
 
   return (
     <>
@@ -269,14 +274,15 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
             minWidth: 80,
             sticky: true,
             render(value, row) {
-              const isPending = row?.status === FeeRefundStatusType.Pending;
+              const actions = row?._availableActions ?? [];
+              const isDraft = actions.includes('edit');
               return (
                 <Box display="flex" gap={1} alignItems="center">
                   <ThreeDotsActions
                     showThreeDots={false}
                     showViewIcon
-                    showEditIcon={isPending}
-                    showDeleteIcon={isPending}
+                    showEditIcon={isDraft}
+                    showDeleteIcon={actions.includes('delete')}
                     handleViewClick={() => {
                       onView?.(row as IStudentFeeData);
                     }}
@@ -288,7 +294,7 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
                     }}
                     placement="right-top"
                   />
-                  {isPending && (
+                  {(actions.includes('approve') || actions.includes('reject')) && (
                     <Box sx={{ display: 'flex' }}>
                       <IconButton
                         size="small"
@@ -314,12 +320,62 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
                       </IconButton>
                     </Box>
                   )}
+                  {actions.includes('startReview') && (
+                    <IconButton
+                      size="small"
+                      color="info"
+                      title="Start review"
+                      onClick={() => onStartReview?.(row as IStudentFeeData)}
+                    >
+                      <Iconify icon="mdi:clipboard-search-outline" width={20} />
+                    </IconButton>
+                  )}
+                  {actions.includes('submit') && (
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      title="Submit for review"
+                      onClick={() => onSubmit?.(row as IStudentFeeData)}
+                    >
+                      <Iconify icon="mdi:send-outline" width={20} />
+                    </IconButton>
+                  )}
+                  {(actions.includes('process') || actions.includes('retryProcessing')) && (
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      title="Process refund"
+                      onClick={() => onProcess?.(row as IStudentFeeData)}
+                    >
+                      <Iconify icon="mdi:bank-transfer-out" width={20} />
+                    </IconButton>
+                  )}
+                  {actions.includes('reverse') && (
+                    <IconButton
+                      size="small"
+                      color="warning"
+                      title="Reverse refund"
+                      onClick={() => onReverse?.(row as IStudentFeeData)}
+                    >
+                      <Iconify icon="mdi:undo-variant" width={20} />
+                    </IconButton>
+                  )}
+                  {actions.includes('cancel') && (
+                    <IconButton
+                      size="small"
+                      color="error"
+                      title="Cancel request"
+                      onClick={() => onCancel?.(row as IStudentFeeData)}
+                    >
+                      <Iconify icon="mdi:cancel" width={20} />
+                    </IconButton>
+                  )}
                 </Box>
               );
             },
           },
         ]}
-        data={filteredData}
+        data={data}
       />
     </>
   );

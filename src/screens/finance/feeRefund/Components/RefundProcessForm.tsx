@@ -73,7 +73,7 @@ const mapDtoToStudentFeeData = (dto: FeeRefundRequestDto): IStudentFeeData => ({
   contactNo: dto.studentContactNo ?? '',
   totalPaidFees: dto.totalAmount ?? 0,
   totalPendingFees: 0,
-  refundAmount: dto.totalAmount ?? 0,
+  refundAmount: dto.approvedAmount > 0 ? dto.approvedAmount : (dto.calculatedAmount ?? 0),
   requestDate: dto.creationTime
     ? new Date(dto.creationTime).toLocaleDateString('en-IN', {
         day: '2-digit',

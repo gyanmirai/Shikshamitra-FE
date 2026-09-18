@@ -11,9 +11,11 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
+import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
 import {
   Box,
   Grid,
+  Alert,
   Radio,
   Paper,
   MenuItem,
@@ -40,6 +42,10 @@ export default function FeeRefundDetailsForm({
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [hasPaymentRecords, setHasPaymentRecords] = useState(false);
+  const { data: eligibility } = useGetRefundEligibilityQuery(
+    { studentId: formik.values.studentId, academicYearId: currentYear?.id ?? '' },
+    { skip: !formik.values.studentId || !currentYear?.id }
+  );
   const {
     data: bankAccountsData,
     isLoading: bankAccountsLoading,
@@ -99,9 +105,20 @@ export default function FeeRefundDetailsForm({
               value="partial"
               control={<Radio size="small" />}
               label="Partial Refund"
+              disabled={eligibility != null && !eligibility.allowPartialRefund}
             />
           </RadioGroup>
         </Paper>
+      )}
+
+      {eligibility?.refundPolicyName && (
+        <Alert severity="info" sx={{ mb: 1 }}>
+          Policy: <strong>{eligibility.refundPolicyName}</strong> · Maximum currently refundable: ₹
+          {eligibility.totalRefundable.toLocaleString('en-IN')}
+          {eligibility.processingTargetDays != null
+            ? ` · Target processing time: ${eligibility.processingTargetDays} day(s)`
+            : ''}
+        </Alert>
       )}
 
       {/* ── Fee Head-wise Refund Accordion Table ── */}
@@ -148,10 +165,16 @@ export default function FeeRefundDetailsForm({
                 error={!!(formik.touched.refundMethod && formik.errors.refundMethod)}
               >
                 <CustomSelect
-                  options={Object.keys(refundPaymentMethodsConfig).map((method) => ({
-                    value: method,
-                    label: method.charAt(0).toUpperCase() + method.slice(1),
-                  }))}
+                  options={Object.keys(refundPaymentMethodsConfig)
+                    .filter(
+                      (method) =>
+                        !eligibility?.allowedPayoutMethods?.length ||
+                        eligibility.allowedPayoutMethods.includes(method)
+                    )
+                    .map((method) => ({
+                      value: method,
+                      label: method.charAt(0).toUpperCase() + method.slice(1),
+                    }))}
                   label="Refund Method *"
                   value={formik.values.refundMethod}
                   onChange={(value) => {

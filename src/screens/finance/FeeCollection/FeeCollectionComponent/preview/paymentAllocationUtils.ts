@@ -15,6 +15,8 @@ export interface AllocatedFeeRow {
   installmentLabel?: string;
   originalAmount: number;
   paidAmount: number;
+  principalPaidAmount: number;
+  lateFeePaidAmount: number;
   remainingAmount: number;
   status: FeeCollectionStatusType;
 }
@@ -66,7 +68,11 @@ const allocateFeeItem = (
   item: SelectedItem,
   feeHeadMap: Record<string, string>
 ): AllocationWallet => {
-  const paidAmount = wallet.remaining > 0 ? Math.min(wallet.remaining, item.dueAmount) : 0;
+  const lateFeeAmount = item.lateFeeAmount ?? 0;
+  const originalAmount = item.dueAmount + lateFeeAmount;
+  const paidAmount = wallet.remaining > 0 ? Math.min(wallet.remaining, originalAmount) : 0;
+  const principalPaidAmount = Math.min(paidAmount, item.dueAmount);
+  const lateFeePaidAmount = Math.max(0, paidAmount - principalPaidAmount);
 
   return {
     remaining: wallet.remaining - paidAmount,
@@ -80,10 +86,12 @@ const allocateFeeItem = (
         feeHeadName: feeHeadMap[item.feeHeadId] ?? item.feeHeadId,
         period: dayjs(`${item.period}-01`).format('MMM YYYY'),
         installmentLabel: item.installmentLabel,
-        originalAmount: item.dueAmount,
+        originalAmount,
         paidAmount,
-        remainingAmount: item.dueAmount - paidAmount,
-        status: resolveAllocationStatus(paidAmount, item.dueAmount),
+        principalPaidAmount,
+        lateFeePaidAmount,
+        remainingAmount: originalAmount - paidAmount,
+        status: resolveAllocationStatus(paidAmount, originalAmount),
       } satisfies AllocatedFeeRow,
     ],
   };
