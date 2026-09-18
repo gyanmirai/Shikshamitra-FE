@@ -64,28 +64,40 @@ const ReviewStatusHeaderTooltip = (
         alignItems: 'center',
       }}
     >
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
+      >
         Pending :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Awaiting reviewer action
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'success.main', fontSize: '0.75rem' }}
+      >
         Approved :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Reviewed & approved
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'warning.main', fontSize: '0.75rem' }}
+      >
         Changes Requested :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
         Requires teacher revisions
       </Typography>
 
-      <Typography variant="caption" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}>
+      <Typography
+        variant="caption"
+        sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}
+      >
         Rejected :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
@@ -102,10 +114,52 @@ type ReviewState = {
   updateProgress: boolean;
 };
 
+const mapLessonPlansToReviewRows = (lessonPlans: LessonPlanRow[]): ReviewItem[] =>
+  lessonPlans
+    .filter((plan) =>
+      ['Submitted', 'Approved', 'NeedsChanges', 'Rejected'].includes(plan.planStatus)
+    )
+    .map((plan) => ({
+      id: plan.id,
+      targetType: 'plan',
+      teacherId: plan.teacherId,
+      teacherName: plan.teacherName,
+      submittedDate: plan.plannedDate,
+      pendingSince: plan.plannedDate,
+      classDivision: `${plan.className}-${plan.divisionName}`,
+      subjectName: plan.subjectName,
+      chapterName: plan.chapterName,
+      topic: plan.topic,
+      learningObjective: plan.learningObjective,
+      lessonType: 'Lesson Plan',
+      plannedPct: plan.plannedCompletionPercentage ?? 0,
+      actualPct: plan.actualCompletionPercentage ?? '-',
+      progressGap:
+        typeof plan.actualCompletionPercentage === 'number'
+          ? plan.actualCompletionPercentage - (plan.plannedCompletionPercentage ?? 0)
+          : '-',
+      evidenceCount: 0,
+      submittedAt: plan.plannedDate,
+      status:
+        plan.planStatus === 'Approved'
+          ? 'approved'
+          : plan.planStatus === 'NeedsChanges'
+            ? 'changes'
+            : plan.planStatus === 'Rejected'
+              ? 'rejected'
+              : 'pending',
+      reviewRemarks: plan.reviewRemarks,
+      reviewedByName: plan.reviewedByName,
+      reviewedAt: plan.reviewedAt,
+    }));
+
 type Props = {
   lessonPlans: LessonPlanRow[];
+  allLessonPlans?: LessonPlanRow[];
   canReviewSubmissions: boolean;
   currentTeacherId?: string;
+  statusFilter: ReviewStatusFilter;
+  onStatusFilterChange: (status: ReviewStatusFilter) => void;
   onApprove: (target: ReviewTarget, comment: string, updateProgress: boolean) => Promise<boolean>;
   onReject: (target: ReviewTarget, comment: string) => Promise<boolean>;
   onRequestChanges: (target: ReviewTarget, comment: string) => Promise<boolean>;
@@ -114,13 +168,17 @@ type Props = {
   isRejecting?: boolean;
   isRequesting?: boolean;
   isLoading?: boolean;
+  isRefreshing?: boolean;
   onRefresh?: () => void;
 };
 
 export const ReviewQueueTab = ({
   lessonPlans,
+  allLessonPlans = lessonPlans,
   canReviewSubmissions,
   currentTeacherId,
+  statusFilter,
+  onStatusFilterChange,
   onApprove,
   onReject,
   onRequestChanges,
@@ -129,13 +187,13 @@ export const ReviewQueueTab = ({
   isRejecting = false,
   isRequesting = false,
   isLoading = false,
+  isRefreshing = false,
   onRefresh,
 }: Props) => {
   const theme = useTheme();
 
   // Layout & Navigation State
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
-  const [statusFilter, setStatusFilter] = useState<ReviewStatusFilter>('pending');
 
   // Filter States
   const [teacherSearch, setTeacherSearch] = useState('');
@@ -217,46 +275,19 @@ export const ReviewQueueTab = ({
     }
   };
 
-  // Convert raw lesson plans to structured ReviewItem rows
-  const reviewRows: ReviewItem[] = useMemo(
-    () =>
-      lessonPlans
-        .filter((p) => ['Submitted', 'Approved', 'NeedsChanges', 'Rejected'].includes(p.planStatus))
-        .map((p): ReviewItem => ({
-          id: p.id,
-          targetType: 'plan',
-          teacherId: p.teacherId,
-          teacherName: p.teacherName,
-          submittedDate: p.plannedDate,
-          pendingSince: p.plannedDate,
-          classDivision: `${p.className}-${p.divisionName}`,
-          subjectName: p.subjectName,
-          chapterName: p.chapterName,
-          topic: p.topic,
-          learningObjective: p.learningObjective,
-          lessonType: 'Lesson Plan',
-          plannedPct: p.plannedCompletionPercentage ?? 0,
-          actualPct: p.actualCompletionPercentage ?? '-',
-          progressGap:
-            typeof p.actualCompletionPercentage === 'number'
-              ? p.actualCompletionPercentage - (p.plannedCompletionPercentage ?? 0)
-              : '-',
-          evidenceCount: 0,
-          submittedAt: p.plannedDate,
-          status:
-            p.planStatus === 'Approved'
-              ? 'approved'
-              : p.planStatus === 'NeedsChanges'
-                ? 'changes'
-                : p.planStatus === 'Rejected'
-                  ? 'rejected'
-                  : 'pending',
-          reviewRemarks: p.reviewRemarks,
-          reviewedByName: p.reviewedByName,
-          reviewedAt: p.reviewedAt,
-        })),
-    [lessonPlans]
-  );
+  /**
+   * Memoization Justification:
+   * - Maps the active server-filtered queue only when its API result changes.
+   * - Prevents repeated row-shape conversion while local toolbar state changes.
+   */
+  const reviewRows = useMemo(() => mapLessonPlansToReviewRows(lessonPlans), [lessonPlans]);
+
+  /**
+   * Memoization Justification:
+   * - Keeps status counts and filter options based on the complete review set.
+   * - Avoids remapping up to 1,000 queue records on every local interaction.
+   */
+  const allReviewRows = useMemo(() => mapLessonPlansToReviewRows(allLessonPlans), [allLessonPlans]);
 
   const activeTargetPlan = useMemo(() => {
     if (!review.target) return null;
@@ -281,33 +312,33 @@ export const ReviewQueueTab = ({
 
   // Dynamic Options for Filters
   const classOptions = useMemo(() => {
-    const unique = Array.from(new Set(reviewRows.map((r) => r.classDivision)));
+    const unique = Array.from(new Set(allReviewRows.map((r) => r.classDivision)));
     return unique.map((c) => ({ label: c, value: c }));
-  }, [reviewRows]);
+  }, [allReviewRows]);
 
   const subjectOptions = useMemo(() => {
-    const unique = Array.from(new Set(reviewRows.map((r) => r.subjectName)));
+    const unique = Array.from(new Set(allReviewRows.map((r) => r.subjectName)));
     return unique.map((s) => ({ label: s, value: s }));
-  }, [reviewRows]);
+  }, [allReviewRows]);
 
   const reviewerOptions = useMemo(() => {
     const unique = Array.from(
-      new Set(reviewRows.map((r) => r.reviewedByName).filter(Boolean) as string[])
+      new Set(allReviewRows.map((r) => r.reviewedByName).filter(Boolean) as string[])
     );
     return unique.map((rev) => ({ label: rev, value: rev }));
-  }, [reviewRows]);
+  }, [allReviewRows]);
 
   // Counts for status tabs
   const statusCounts = useMemo(
     () =>
-      reviewRows.reduce<Record<ReviewStatusFilter, number>>(
+      allReviewRows.reduce<Record<ReviewStatusFilter, number>>(
         (counts, row) => ({
           ...counts,
           [row.status as ReviewStatusFilter]: (counts[row.status as ReviewStatusFilter] || 0) + 1,
         }),
-        { pending: 0, approved: 0, changes: 0, rejected: 0, all: reviewRows.length }
+        { pending: 0, approved: 0, changes: 0, rejected: 0, all: allReviewRows.length }
       ),
-    [reviewRows]
+    [allReviewRows]
   );
 
   // Filtering Logic
@@ -369,7 +400,7 @@ export const ReviewQueueTab = ({
     setSelectedClass('');
     setSelectedSubject('');
     setSelectedReviewer('');
-    setStatusFilter('pending');
+    onStatusFilterChange('pending');
   };
 
   const canReviewRow = (row: ReviewItem) =>
@@ -391,7 +422,7 @@ export const ReviewQueueTab = ({
           <ReviewStatusTabs
             value={statusFilter}
             counts={statusCounts}
-            onChange={setStatusFilter}
+            onChange={onStatusFilterChange}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
           />
@@ -427,26 +458,30 @@ export const ReviewQueueTab = ({
             onRangeEndChange={setRangeEnd}
             onResetFilters={resetFilters}
             isFiltered={isFiltered}
+            onRefresh={onRefresh}
+            isRefreshing={isRefreshing}
           />
         </Card>
       </Box>
 
       {/* Permission Notice */}
-      {!canReviewSubmissions && reviewRows.length > 0 && (
+      {!canReviewSubmissions && allReviewRows.length > 0 && (
         <Alert severity="info">
-          Review actions (Approve, Reject, Request Changes) are restricted to Principal, Admin, or Coordinator roles.
+          Review actions (Approve, Reject, Request Changes) are restricted to Principal, Admin, or
+          Coordinator roles.
         </Alert>
       )}
 
       {/* Loading Skeletons */}
-      {isLoading && (viewMode === 'card' ? <SkeletonCardGrid count={6} /> : <SkeletonTable rows={6} />)}
+      {isLoading &&
+        (viewMode === 'card' ? <SkeletonCardGrid count={6} /> : <SkeletonTable rows={6} />)}
 
       {/* Empty States */}
       {!isLoading && reviewRows.length === 0 && (
         <Card sx={{ p: 4 }}>
           <EmptyContent
-            title="No Pending Reviews"
-            description="All lesson plans and diaries have been reviewed and processed."
+            title={statusFilter === 'pending' ? 'No Pending Reviews' : 'No Reviews Found'}
+            description="No reviews match the selected status and filters."
             action={
               onRefresh ? (
                 <Button
@@ -491,7 +526,13 @@ export const ReviewQueueTab = ({
             display: 'grid',
             gap: 2,
             flex: '1 0 auto',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(2, 1fr)', lg: 'repeat(2, 1fr)', xl: 'repeat(3, 1fr)' },
+            gridTemplateColumns: {
+              xs: '1fr',
+              sm: 'repeat(2, 1fr)',
+              md: 'repeat(2, 1fr)',
+              lg: 'repeat(2, 1fr)',
+              xl: 'repeat(3, 1fr)',
+            },
           }}
         >
           {filteredReviewRows.map((row) => {
@@ -514,7 +555,9 @@ export const ReviewQueueTab = ({
                 onApprove={() => openReview({ type: 'plan', id: row.id }, 'approve')}
                 onRequestChanges={() => openReview({ type: 'plan', id: row.id }, 'changes')}
                 onReject={() => openReview({ type: 'plan', id: row.id }, 'reject')}
-                onViewDetails={sourcePlan && onViewDetails ? () => onViewDetails(sourcePlan) : undefined}
+                onViewDetails={
+                  sourcePlan && onViewDetails ? () => onViewDetails(sourcePlan) : undefined
+                }
               />
             );
           })}
@@ -559,10 +602,34 @@ export const ReviewQueueTab = ({
               minWidth: 120,
               render: (v: any) => (v ? dayjs(v).format('DD-MM-YYYY') : '—'),
             },
-            { id: 'classDivision', label: 'Class', align: 'left' as const, minWidth: 120, filterType: 'enum' as const },
-            { id: 'subjectName', label: 'Subject', align: 'left' as const, minWidth: 140, filterType: 'enum' as const },
-            { id: 'chapterName', label: 'Chapter', align: 'left' as const, minWidth: 160, filterType: 'string' as const },
-            { id: 'topic', label: 'Topic', align: 'left' as const, minWidth: 220, filterType: 'string' as const },
+            {
+              id: 'classDivision',
+              label: 'Class',
+              align: 'left' as const,
+              minWidth: 120,
+              filterType: 'enum' as const,
+            },
+            {
+              id: 'subjectName',
+              label: 'Subject',
+              align: 'left' as const,
+              minWidth: 140,
+              filterType: 'enum' as const,
+            },
+            {
+              id: 'chapterName',
+              label: 'Chapter',
+              align: 'left' as const,
+              minWidth: 160,
+              filterType: 'string' as const,
+            },
+            {
+              id: 'topic',
+              label: 'Topic',
+              align: 'left' as const,
+              minWidth: 220,
+              filterType: 'string' as const,
+            },
             {
               id: 'plannedPct',
               label: 'Planned %',
@@ -857,7 +924,9 @@ export const ReviewQueueTab = ({
           <Stack spacing={2} sx={{ py: 1 }}>
             <Typography variant="subtitle2">Understanding the Review Queue</Typography>
             <Typography variant="body2" color="text.secondary">
-              The Review Queue is designed for Principal, Admin, and Academic Head roles to efficiently evaluate, approve, or request revisions for lesson plans and teacher diaries submitted by staff.
+              The Review Queue is designed for Principal, Admin, and Academic Head roles to
+              efficiently evaluate, approve, or request revisions for lesson plans and teacher
+              diaries submitted by staff.
             </Typography>
 
             <Divider />

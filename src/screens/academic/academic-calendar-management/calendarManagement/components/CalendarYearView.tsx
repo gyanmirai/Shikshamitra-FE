@@ -1,15 +1,21 @@
 'use client';
 
 import dayjs from 'dayjs';
+import { useMemo } from 'react';
 import { varAlpha } from 'src/theme/styles';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
+import { Box, Paper, Stack, Avatar, Tooltip, Typography } from '@mui/material';
 import { DayType, DAY_TYPE_COLORS, DAY_TYPE_LABELS } from 'src/enums/academic-calendar';
-import { Box, Paper, Stack, Avatar, Tooltip, Typography, CircularProgress } from '@mui/material';
+
+import type { CalendarDayViewRecord } from '../calendarViewModel';
+
+// DualMonthCard removed — year view uses individual MonthCard per responsive grid (Bug #5408 fix)
+
+import { CalendarYearSkeleton } from './CalendarSkeleton';
 
 interface Props {
-  calendarDays: any[];
+  dayMap: Record<string, CalendarDayViewRecord[]>;
   calendarStartDate: string;
   calendarEndDate: string;
   isLoading: boolean;
@@ -30,30 +36,6 @@ const LEGEND_ITEMS = [
   { type: DayType.EmergencyClosure, label: 'Emergency' },
 ];
 
-/**
- * Class-specific records for one calendar event can have different IDs, but
- * they should still render as one event when their visible event details match.
- */
-const getCalendarEventIdentity = (event: any) =>
-  [
-    dayjs(event.date).format('YYYY-MM-DD'),
-    event.dayType,
-    event.title?.trim().toLowerCase() ?? '',
-    event.holidayCategory ?? '',
-    event.description?.trim().toLowerCase() ?? '',
-  ].join('|');
-
-const uniqueCalendarEvents = (events: any[]) => {
-  const seen = new Set<string>();
-
-  return events.filter((event) => {
-    const identity = getCalendarEventIdentity(event);
-    if (seen.has(identity)) return false;
-    seen.add(identity);
-    return true;
-  });
-};
-
 // ─── Single Month Mini-Calendar ───────────────────────────────────────────────
 
 const MonthInner = ({
@@ -66,7 +48,7 @@ const MonthInner = ({
   activeDayType,
 }: {
   monthStart: dayjs.Dayjs;
-  dayMap: Record<string, any[]>;
+  dayMap: Record<string, CalendarDayViewRecord[]>;
   startDate: string;
   endDate: string;
   today: string;
@@ -82,13 +64,6 @@ const MonthInner = ({
     ...Array.from({ length: daysInMonth }, (_, i) => monthStart.add(i, 'day')),
   ];
   while (cells.length < 42) cells.push(null);
-
-  // Count marked days in this month (dates that have at least one matching event)
-  const markedCount = Object.entries(dayMap).filter(
-    ([key, events]) =>
-      key.startsWith(monthStart.format('YYYY-MM')) &&
-      (!activeDayType || events.some((e: any) => e.dayType === activeDayType))
-  ).length;
 
   return (
     <Box sx={{ minWidth: 0, height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -157,14 +132,13 @@ const MonthInner = ({
           const dayEvents = dayMap[key];
           const calEvents = dayEvents
             ? activeDayType
-              ? dayEvents.filter((e: any) => e.dayType === activeDayType)
+              ? dayEvents.filter((event) => event.dayType === activeDayType)
               : dayEvents
             : [];
           const isWeekend = day.day() === 0;
           const isSaturday = day.day() === 6;
           const isToday = key === today;
-          const isOutside =
-            day.isBefore(dayjs(startDate), 'day') || day.isAfter(dayjs(endDate), 'day');
+          const isOutside = key < startDate || key > endDate;
           // Use the first event's color for cell background, or null if no events
           const markerColor = calEvents.length > 0
             ? DAY_TYPE_COLORS[calEvents[0].dayType as DayType]
@@ -179,7 +153,7 @@ const MonthInner = ({
                   : calEvents.length > 0
                     ? (
                       <Box sx={{ py: 0.5 }}>
-                        {calEvents.map((e: any, i: number) => (
+                        {calEvents.map((e, i) => (
                           <Typography key={i} variant="caption" sx={{ display: 'block', lineHeight: 1.6 }}>
                             {`${i + 1}. ${e.title || DAY_TYPE_LABELS[e.dayType as DayType]}`}
                           </Typography>
@@ -258,7 +232,7 @@ const MonthInner = ({
                   {/* Multi-event dot indicators */}
                   {calEvents.length > 0 && !isToday && (
                     <Box sx={{ display: 'flex', gap: '2px', mt: '2px' }}>
-                      {calEvents.slice(0, 3).map((e: any, i: number) => (
+                      {calEvents.slice(0, 3).map((e, i) => (
                         <Box
                           key={i}
                           sx={{
@@ -283,7 +257,7 @@ const MonthInner = ({
 
 const MonthCard = (props: {
   monthStart: dayjs.Dayjs;
-  dayMap: Record<string, any[]>;
+  dayMap: Record<string, CalendarDayViewRecord[]>;
   startDate: string;
   endDate: string;
   today: string;
@@ -302,6 +276,8 @@ const MonthCard = (props: {
         overflow: 'hidden',
         border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
         backgroundColor: theme.vars.palette.background.paper,
+        contentVisibility: 'auto',
+        containIntrinsicSize: '290px',
         transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
         '&:hover': {
           boxShadow: `0 12px 28px ${alpha(theme.palette.primary.main, 0.08)}`,
@@ -315,14 +291,10 @@ const MonthCard = (props: {
   );
 };
 
-// DualMonthCard removed — year view uses individual MonthCard per responsive grid (Bug #5408 fix)
-
-import { CalendarYearSkeleton } from './CalendarSkeleton';
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const CalendarYearView = ({
-  calendarDays,
+  dayMap,
   calendarStartDate,
   calendarEndDate,
   isLoading,
@@ -332,23 +304,30 @@ const CalendarYearView = ({
 }: Props) => {
   const theme = useTheme();
 
+  /**
+   * Memoization Justification:
+   * - The legend previously rescanned the full expanded event collection seven times per render.
+   * - Counts only change when the parent supplies a new indexed calendar dataset.
+   */
+  const dayTypeCounts = useMemo(() => {
+    const counts = new Map<DayType, number>();
+    Object.values(dayMap).forEach((events) => {
+      events.forEach((event) => {
+        counts.set(event.dayType, (counts.get(event.dayType) ?? 0) + 1);
+      });
+    });
+    return counts;
+  }, [dayMap]);
+
   if (isLoading) {
     return <CalendarYearSkeleton />;
   }
 
-  const days = calendarDays;
   const startDate = calendarStartDate;
   const endDate = calendarEndDate;
+  const startDateKey = dayjs(startDate).format('YYYY-MM-DD');
+  const endDateKey = dayjs(endDate).format('YYYY-MM-DD');
   const today = dayjs().format('YYYY-MM-DD');
-
-  // Build date map after collapsing class-specific duplicates per date.
-  const uniqueDays = uniqueCalendarEvents(days);
-  const dayMap: Record<string, any[]> = {};
-  uniqueDays.forEach((d) => {
-    const key = dayjs(d.date).format('YYYY-MM-DD');
-    if (!dayMap[key]) dayMap[key] = [];
-    dayMap[key].push(d);
-  });
 
   // Build months list
   const months: dayjs.Dayjs[] = [];
@@ -407,7 +386,7 @@ const CalendarYearView = ({
           <Stack direction="row" flexWrap="wrap" gap={0.75} alignItems="center" flex={1}>
             {LEGEND_ITEMS.map(({ type, label }) => {
               const isActive = activeDayType === type;
-              const count = uniqueDays.filter((d) => d.dayType === type).length;
+              const count = dayTypeCounts.get(type) ?? 0;
 
               return (
                 <Stack
@@ -538,8 +517,8 @@ const CalendarYearView = ({
             <MonthCard
               monthStart={month}
               dayMap={dayMap}
-              startDate={startDate}
-              endDate={endDate}
+              startDate={startDateKey}
+              endDate={endDateKey}
               today={today}
               onDayClick={onDayClick}
               activeDayType={activeDayType}

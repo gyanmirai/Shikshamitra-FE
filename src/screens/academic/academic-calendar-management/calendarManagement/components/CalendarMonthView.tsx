@@ -1,6 +1,7 @@
 'use client';
 
 import dayjs from 'dayjs';
+import { useMemo } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { varAlpha, getSemanticTextStyles } from 'src/theme/styles';
@@ -11,8 +12,10 @@ import { CalendarMonthSkeleton } from './CalendarSkeleton';
 import { CalendarMonthEventsPanel } from './CalendarMonthEventsPanel';
 import { getDayTypeSemanticColor } from './calendarDayTypePresentation';
 
+import type { CalendarDayViewRecord } from '../calendarViewModel';
+
 interface Props {
-  calendarDays: any[];
+  dayMap: Record<string, CalendarDayViewRecord[]>;
   currentMonth: dayjs.Dayjs;
   onMonthChange: (month: dayjs.Dayjs) => void;
   onDayClick: (date: string) => void;
@@ -20,30 +23,6 @@ interface Props {
 }
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-/**
- * Class-specific records for one calendar event can have different IDs, but
- * they should still render as one event when their visible event details match.
- */
-const getCalendarEventIdentity = (event: any) =>
-  [
-    dayjs(event.date).format('YYYY-MM-DD'),
-    event.dayType,
-    event.title?.trim().toLowerCase() ?? '',
-    event.holidayCategory ?? '',
-    event.description?.trim().toLowerCase() ?? '',
-  ].join('|');
-
-const uniqueCalendarEvents = (events: any[]) => {
-  const seen = new Set<string>();
-
-  return events.filter((event) => {
-    const identity = getCalendarEventIdentity(event);
-    if (seen.has(identity)) return false;
-    seen.add(identity);
-    return true;
-  });
-};
 
 // ─── Day Cell ─────────────────────────────────────────────────────────────────
 
@@ -55,7 +34,7 @@ const DayCell = ({
   onClick,
 }: {
   day: dayjs.Dayjs | null;
-  events: any[];
+  events: CalendarDayViewRecord[];
   isToday: boolean;
   isWeekend: boolean;
   onClick?: () => void;
@@ -229,27 +208,42 @@ const DayCell = ({
 // ─── Main Month View Component ───────────────────────────────────────────────
 
 const CalendarMonthView = ({
-  calendarDays,
+  dayMap,
   currentMonth,
   onMonthChange,
   onDayClick,
   isLoading,
 }: Props) => {
   const theme = useTheme();
+  const monthKey = currentMonth.format('YYYY-MM');
+
+  /**
+   * Memoization Justification:
+   * - Month navigation previously deduplicated and rescanned every event in the academic year.
+   * - The indexed lookup now visits only the selected month's dates and is reused by the grid,
+   *   summary chips, and event panel.
+   */
+  const { monthEvents, monthEventCounts } = useMemo(() => {
+    const events = Object.entries(dayMap)
+      .filter(([dateKey]) => dateKey.startsWith(monthKey))
+      .flatMap(([dateKey, dateEvents]) =>
+        dateEvents.map((event) => ({
+          ...event,
+          date: event.date ?? `${dateKey}T00:00:00`,
+          title: event.title ?? DAY_TYPE_LABELS[event.dayType],
+        }))
+      )
+      .sort((left, right) => dayjs(left.date).valueOf() - dayjs(right.date).valueOf());
+    const counts = new Map<DayType, number>();
+    events.forEach((event) => {
+      counts.set(event.dayType, (counts.get(event.dayType) ?? 0) + 1);
+    });
+    return { monthEvents: events, monthEventCounts: counts };
+  }, [dayMap, monthKey]);
 
   if (isLoading) {
     return <CalendarMonthSkeleton />;
   }
-
-  const days = calendarDays;
-
-  const uniqueDays = uniqueCalendarEvents(days);
-  const dayMap: Record<string, any[]> = {};
-  uniqueDays.forEach((d) => {
-    const key = dayjs(d.date).format('YYYY-MM-DD');
-    if (!dayMap[key]) dayMap[key] = [];
-    dayMap[key].push(d);
-  });
 
   const monthStart = currentMonth.startOf('month');
   const daysInMonth = monthStart.daysInMonth();
@@ -261,10 +255,6 @@ const CalendarMonthView = ({
     ...Array.from({ length: daysInMonth }, (_, i) => monthStart.add(i, 'day')),
   ];
   while (cells.length % 7 !== 0) cells.push(null);
-
-  const monthEvents = uniqueDays
-    .filter((d) => dayjs(d.date).format('YYYY-MM') === currentMonth.format('YYYY-MM'))
-    .sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
 
   const isCurrentMonth = currentMonth.isSame(dayjs(), 'month');
 
@@ -346,7 +336,7 @@ const CalendarMonthView = ({
             {monthEvents.length > 0 && (
               <Stack direction="row" gap={1} flexWrap="wrap">
                 {[DayType.Holiday, DayType.Exam, DayType.Event, DayType.Vacation].map((dt) => {
-                  const count = monthEvents.filter((e) => e.dayType === dt).length;
+                  const count = monthEventCounts.get(dt) ?? 0;
                   if (!count) return null;
                   const statusColor = getDayTypeSemanticColor(dt);
                   const statusPalette = theme.vars.palette[statusColor];
