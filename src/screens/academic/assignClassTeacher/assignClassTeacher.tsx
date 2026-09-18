@@ -1,9 +1,9 @@
 'use client';
 
-import type { ReactElement } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { Organization } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
+import type { ITimetableSummaryCard } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import type {
   ClassTeacherSummary,
   ClassTeacherEligibleTeacher,
@@ -14,23 +14,25 @@ import type {
 import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { alpha } from '@mui/material/styles';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
   Save,
-  School,
   History,
-  EditNote,
   FactCheck,
-  AccessTime,
   RestartAlt,
-  ErrorOutline,
-  HourglassEmpty,
   Close as CloseIcon,
-  CheckCircleOutline,
   AssignmentTurnedIn,
 } from '@mui/icons-material';
-import { Iconify } from 'src/components/iconify';
 import {
   Tab,
   Box,
@@ -42,38 +44,27 @@ import {
   Button,
   Drawer,
   Avatar,
-  Divider,
-  MenuItem,
   TextField,
   IconButton,
   Typography,
-  Accordion,
   Autocomplete,
-  InputAdornment,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
-import { useMemo, useState, useEffect } from 'react';
-
-import CustomSelect from 'src/components/custom-select';
-import { Label } from 'src/components/label';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import {
-  TimetableSettingsSummaryCards,
-  type ITimetableSummaryCard,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   useGetClassTeacherAssignmentsQuery,
+  useGetClassTeacherEligibleTeachersQuery,
   useGetClassTeacherAssignmentHistoryQuery,
   useGetClassTeacherAssignmentSummaryQuery,
-  useGetClassTeacherEligibleTeachersQuery,
-  useValidateClassTeacherAssignmentsMutation,
   useUpdateClassTeacherAssignmentsMutation,
+  useValidateClassTeacherAssignmentsMutation,
 } from 'src/redux/classManagementApi/classTeacherAssignmentApi/classTeacherAssignmentApi';
+
+import { shouldCloseReviewDrawer } from './classTeacherReviewDrawer';
+import { getPendingAssignmentRows } from './classTeacherPendingRows';
+import { ClassTeacherAssignmentParameterSelect } from './ClassTeacherAssignmentParameterSelect';
+import {
+  getDraftTeacherWorkload,
+  applyDraftTeacherWorkloads,
+} from './classTeacherDraftWorkload';
 
 type AssignmentTableRow = ClassTeacherAssignmentRowDto & {
   classTeacher: string | null;
@@ -129,7 +120,7 @@ const getSummary = (
   const reasons = [
     ...(unassigned ? [`${unassigned} class divisions are unassigned.`] : []),
     ...(conflicts ? [`${conflicts} assignments need review.`] : []),
-    ...(pendingChanges ? [`${pendingChanges} unsaved changes are waiting.`] : []),
+    ...(pendingChanges ? [`${pendingChanges} changes are awaiting confirmation.`] : []),
   ];
 
   return {
@@ -243,7 +234,11 @@ const ReviewDrawer = ({
   <Drawer
     anchor="right"
     open={open}
-    onClose={onClose}
+    onClose={(_event, reason) => {
+      if (shouldCloseReviewDrawer(reason)) {
+        onClose();
+      }
+    }}
     PaperProps={{
       sx: {
         width: { xs: '100%', sm: 480 },
@@ -528,7 +523,19 @@ const ClassTeacherAssignment = () => {
 
   const changedRows = getChangedRows(tableData, originalTableData);
   const hasChanges = changedRows.length > 0;
-  const summary = getSummary(tableData, apiSummary, changedRows.length);
+  const pendingRows = getPendingAssignmentRows(tableData, changedRows);
+  const hasPendingChanges = pendingRows.length > 0;
+  const summary = getSummary(tableData, apiSummary, pendingRows.length);
+
+  /**
+   * Memoization Justification:
+   * - Reconciles the server teacher list with every editable table row.
+   * - Keeps one stable option collection for all assignment dropdowns until draft state changes.
+   */
+  const draftEligibleTeachers = useMemo(
+    () => applyDraftTeacherWorkloads(eligibleTeachers, tableData, originalTableData),
+    [eligibleTeachers, originalTableData, tableData]
+  );
 
   const filteredData = tableData.filter((row) => {
     const text = `${row.className} ${row.divisionName} ${row.classTeacherName}`.toLowerCase();
@@ -539,7 +546,7 @@ const ClassTeacherAssignment = () => {
       (statusFilter === 'unassigned' && !row.classTeacher) ||
       (statusFilter === 'conflict' && row.conflictCount > 0) ||
       (statusFilter === 'changed' &&
-        changedRows.some((changedRow) => getRowKey(changedRow) === getRowKey(row))) ||
+        pendingRows.some((pendingRow) => getRowKey(pendingRow) === getRowKey(row))) ||
       (statusFilter === 'temporary' && row.assignmentTypeDraft === 'Temporary');
     return matchesSearch && matchesFilter;
   });
@@ -692,7 +699,7 @@ const ClassTeacherAssignment = () => {
   };
 
   const handleReview = async () => {
-    if (!hasChanges) return;
+    if (!hasPendingChanges) return;
     try {
       const result = await validateAssignments(buildPayload(false)).unwrap();
       setValidationResult(result);
@@ -762,7 +769,7 @@ const ClassTeacherAssignment = () => {
             size="small"
             variant="contained"
             startIcon={<FactCheck />}
-            disabled={!hasChanges}
+            disabled={!hasPendingChanges}
             loading={isValidating}
             onClick={handleReview}
           >
@@ -847,7 +854,7 @@ const ClassTeacherAssignment = () => {
                 return (
                   <TeacherAssignmentCell
                     row={typedRow}
-                    teachers={eligibleTeachers}
+                    teachers={draftEligibleTeachers}
                     onChange={(teacher) => handleTeacherChange(typedRow, teacher)}
                   />
                 );
@@ -861,14 +868,19 @@ const ClassTeacherAssignment = () => {
               minWidth: 140,
               render: (_: unknown, row) => {
                 const typedRow = row as unknown as AssignmentTableRow;
-                const countText = typedRow.assignedTeacher
-                  ? `${typedRow.assignedTeacher.currentClassTeacherCount}/${typedRow.assignedTeacher.maximumClassTeacherCount} classes`
+                const workload = getDraftTeacherWorkload(
+                  draftEligibleTeachers,
+                  typedRow.classTeacher,
+                  typedRow.assignedTeacher
+                );
+                const countText = workload
+                  ? `${workload.currentClassTeacherCount}/${workload.maximumClassTeacherCount} classes`
                   : 'Unassigned';
-                const color: LabelColor = !typedRow.assignedTeacher
+                const color: LabelColor = !workload
                   ? 'default'
-                  : typedRow.assignedTeacher.workloadStatus === 'Exceeded'
+                  : workload.workloadStatus === 'Exceeded'
                     ? 'error'
-                    : typedRow.assignedTeacher.workloadStatus === 'High'
+                    : workload.workloadStatus === 'High'
                       ? 'warning'
                       : 'info';
                 return <Label color={color}>{countText}</Label>;
@@ -918,21 +930,14 @@ const ClassTeacherAssignment = () => {
               render: (_: unknown, row) => {
                 const typedRow = row as unknown as AssignmentTableRow;
                 return (
-                  <TextField
-                    select
-                    size="small"
+                  <ClassTeacherAssignmentParameterSelect
+                    ariaLabel={`${typedRow.className} ${typedRow.divisionName} Assignment Type`}
+                    options={assignmentTypes}
                     value={typedRow.assignmentTypeDraft}
-                    onChange={(event) =>
-                      updateRow(getRowKey(typedRow), { assignmentTypeDraft: event.target.value })
+                    onChange={(value) =>
+                      updateRow(getRowKey(typedRow), { assignmentTypeDraft: value })
                     }
-                    fullWidth
-                  >
-                    {assignmentTypes.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        {type}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                  />
                 );
               },
             },
@@ -945,21 +950,14 @@ const ClassTeacherAssignment = () => {
               render: (_: unknown, row) => {
                 const typedRow = row as unknown as AssignmentTableRow;
                 return (
-                  <TextField
-                    select
-                    size="small"
+                  <ClassTeacherAssignmentParameterSelect
+                    ariaLabel={`${typedRow.className} ${typedRow.divisionName} Change Reason`}
+                    options={changeReasons}
                     value={typedRow.changeReasonDraft}
-                    onChange={(event) =>
-                      updateRow(getRowKey(typedRow), { changeReasonDraft: event.target.value })
+                    onChange={(value) =>
+                      updateRow(getRowKey(typedRow), { changeReasonDraft: value })
                     }
-                    fullWidth
-                  >
-                    {changeReasons.map((reason) => (
-                      <MenuItem key={reason} value={reason}>
-                        {reason}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                  />
                 );
               },
             },
@@ -993,7 +991,7 @@ const ClassTeacherAssignment = () => {
       <ReviewDrawer
         open={reviewOpen}
         validation={validationResult}
-        changedRows={changedRows}
+        changedRows={pendingRows}
         isSaving={isSaving}
         onClose={() => setReviewOpen(false)}
         onConfirm={handleConfirm}

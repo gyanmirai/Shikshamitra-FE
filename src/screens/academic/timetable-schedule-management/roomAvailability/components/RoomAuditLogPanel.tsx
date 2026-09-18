@@ -167,7 +167,7 @@ const AuditLogItem = ({
 
       {/* Card content */}
       <Box
-        sx={{
+        sx={(theme) => ({
           flex: 1,
           mb: isLast ? 0 : 1.5,
           p: 1.5,
@@ -177,7 +177,10 @@ const AuditLogItem = ({
           bgcolor: 'background.paper',
           '&:hover': { borderColor: config.color, bgcolor: config.bg },
           transition: 'border-color 0.15s, background-color 0.15s',
-        }}
+          ...theme.applyStyles('dark', {
+            '&:hover': { borderColor: config.color, bgcolor: 'action.hover' },
+          }),
+        })}
       >
         {/* Header row */}
         <Stack

@@ -53,7 +53,11 @@ export const lessonPlanApi = academicApi.injectEndpoints({
 
     createLessonPlan: builder.mutation({
       query: (body) => ({ url: '/academic/curriculum/lesson-plans', method: 'POST', body }),
-      invalidatesTags: [academicType.lessonPlan, academicType.coverageTracker, academicType.chapter],
+      invalidatesTags: [
+        academicType.lessonPlan,
+        academicType.coverageTracker,
+        academicType.chapter,
+      ],
     }),
 
     updateLessonPlan: builder.mutation({
@@ -67,7 +71,11 @@ export const lessonPlanApi = academicApi.injectEndpoints({
 
     deleteLessonPlan: builder.mutation({
       query: ({ id }) => ({ url: `/academic/curriculum/lesson-plans/${id}`, method: 'DELETE' }),
-      invalidatesTags: [academicType.lessonPlan, academicType.coverageTracker, academicType.chapter],
+      invalidatesTags: [
+        academicType.lessonPlan,
+        academicType.coverageTracker,
+        academicType.chapter,
+      ],
     }),
 
     submitLessonPlan: builder.mutation({
@@ -177,7 +185,11 @@ export const lessonPlanApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.teacherDiary, academicType.coverageTracker, academicType.chapter],
+      invalidatesTags: [
+        academicType.teacherDiary,
+        academicType.coverageTracker,
+        academicType.chapter,
+      ],
     }),
 
     // ─── Evidence ────────────────────────────────────────────────────────────
@@ -323,16 +335,6 @@ export const lessonPlanApi = academicApi.injectEndpoints({
       }),
     }),
 
-    // ─── Review Queue ────────────────────────────────────────────────────────
-    getReviewQueue: builder.query({
-      query: (params) => ({
-        url: '/academic/curriculum/lesson-plans/review-queue',
-        method: 'GET',
-        params,
-      }),
-      providesTags: [academicType.lessonPlanReview],
-    }),
-
     // ─── Audit Log ───────────────────────────────────────────────────────────
     getLessonPlanAuditLog: builder.query({
       query: ({ entityType, entityId }) => ({
@@ -467,7 +469,6 @@ export const {
   useGetSyllabusDelayReportQuery,
   useGetPlannedVsActualReportQuery,
   useExportLessonPlanReportMutation,
-  useGetReviewQueueQuery,
   useGetLessonPlanAuditLogQuery,
   useAiGenerateLessonPlanMutation,
   useAiGenerateDiarySummaryMutation,

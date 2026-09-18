@@ -67,6 +67,8 @@ import TeachingKpiCards from './components/TeachingKpiCards';
 import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import { reconcileTimelineSlots } from './reconcileTimelineSlots';
+import { canRoleReviewLessonPlans } from './lessonPlanReviewAccess';
+import { useReviewQueueQuery } from './hooks/use-review-queue-query';
 import { ReviewQueueTabLabel } from './components/ReviewQueueTabLabel';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
 import { usePendingReviewCount } from './hooks/use-pending-review-count';
@@ -224,9 +226,6 @@ const readRoleNames = (employee: any, user: any): string[] => {
     .filter((value): value is string => typeof value === 'string' && Boolean(value.trim()))
     .map((value) => value.trim().toLowerCase());
 };
-
-const canRoleReviewLessonPlans = (role: string) =>
-  role === 'admin' || role === 'administrator' || role.includes('coordinator');
 
 const toPlanStatus = (value: unknown): PlanStatus =>
   typeof value === 'number'
@@ -460,6 +459,10 @@ const LessonPlanScreen = () => {
   });
   const [activeTab, setActiveTab] = useState<TabValue>('dailyTimeline');
   const activeTabQueries = getLessonPlanTabQueryState(activeTab);
+  const reviewQueueQuery = useReviewQueueQuery({
+    academicYearId: currentYear?.id,
+    enabled: activeTab === 'reviewQueue' && canReviewSubmissions,
+  });
   const [healthScore] = useState<TeachingHealthScore>(initialHealthScore);
 
   /**
@@ -516,15 +519,13 @@ const LessonPlanScreen = () => {
     isLoading: isPlansLoading,
     isFetching: isPlansFetching,
     isUninitialized: isLessonPlansUninitialized,
-  } = useGetLessonPlansQuery(
-    lessonPlanListQuery,
-    {
-      skip: shouldSkipLessonPlanListQuery(activeTab, {
-        academicYearId: currentYear?.id,
-        academicMediumId: currentMedium?.id,
-      }),
-    }
-  );
+  } = useGetLessonPlansQuery(lessonPlanListQuery, {
+    skip: shouldSkipLessonPlanListQuery(activeTab, {
+      academicYearId: currentYear?.id,
+      academicMediumId: currentMedium?.id,
+    }),
+    refetchOnMountOrArgChange: activeTab === 'reviewQueue',
+  });
 
   const {
     data: teacherDiaryList,
@@ -605,6 +606,11 @@ const LessonPlanScreen = () => {
   });
   const isSavingDiary = isCreatingDiary || isUpdatingDiary || isSubmittingDiary;
 
+  /**
+   * Memoization Justification:
+   * - Maps the API response into the screen model only when the server result changes.
+   * - Prevents repeated conversion of up to 1,000 lesson plans during local UI interactions.
+   */
   const lessonPlans = useMemo<LessonPlanRow[]>(() => {
     if (!lessonPlanList) return [];
     return (
@@ -662,6 +668,27 @@ const LessonPlanScreen = () => {
       })) || []
     );
   }, [lessonPlanList]);
+
+  /**
+   * Memoization Justification:
+   * - Builds a stable membership set for the currently selected review-status response.
+   * - Prevents repeated O(active rows) membership reconstruction during screen renders.
+   */
+  const reviewQueuePlanIds = useMemo(
+    () =>
+      new Set((reviewQueueQuery.currentData?.items ?? []).map((plan: { id: string }) => plan.id)),
+    [reviewQueueQuery.currentData]
+  );
+
+  /**
+   * Memoization Justification:
+   * - Intersects the complete reviewer dataset with the active server-filtered queue.
+   * - Prevents repeated O(all plans) filtering while unrelated screen state changes.
+   */
+  const reviewQueuePlans = useMemo(
+    () => lessonPlans.filter((plan) => reviewQueuePlanIds.has(plan.id)),
+    [lessonPlans, reviewQueuePlanIds]
+  );
 
   /**
    * Memoization Justification:
@@ -2067,9 +2094,12 @@ const LessonPlanScreen = () => {
 
           {activeTab === 'reviewQueue' && (
             <ReviewQueueTab
-              lessonPlans={lessonPlans}
+              lessonPlans={reviewQueuePlans}
+              allLessonPlans={lessonPlans}
               canReviewSubmissions={canReviewSubmissions}
               currentTeacherId={currentTeacherOption?.value}
+              statusFilter={reviewQueueQuery.statusFilter}
+              onStatusFilterChange={reviewQueueQuery.setStatusFilter}
               onApprove={handleApprove}
               onReject={handleReject}
               onRequestChanges={handleRequestChanges}
@@ -2077,8 +2107,12 @@ const LessonPlanScreen = () => {
               isApproving={isApproving}
               isRejecting={isRejecting}
               isRequesting={isRequestingPlanChanges}
-              isLoading={isPlansLoading || isPlansFetching}
-              onRefresh={refetchLessonPlans}
+              isLoading={reviewQueueQuery.isLoading || isPlansLoading}
+              isRefreshing={reviewQueueQuery.isFetching || isPlansFetching}
+              onRefresh={() => {
+                reviewQueueQuery.refetch();
+                refetchLessonPlans();
+              }}
             />
           )}
         </Scrollbar>

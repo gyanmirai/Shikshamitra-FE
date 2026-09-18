@@ -17,23 +17,23 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
-import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
-import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useGetAssignmentTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/AssignmentTypesApi';
+import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { serializeAssignmentFormData } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-serialization';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
-  evaluationUsesMarks,
   AssignmentStatus,
+  evaluationUsesMarks,
   AssignmentEvaluationMethod,
   ASSIGNMENT_EVALUATION_METHOD_OPTIONS,
 } from 'src/enums/assignment';
@@ -41,7 +41,6 @@ import {
   Box,
   Grid,
   Chip,
-  Radio,
   Stack,
   Button,
   Checkbox,
@@ -56,18 +55,19 @@ import {
   useUploadCurriculumFileMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
-  useAddAssignmentMutation,
-  useGetAssignmentByIdQuery,
-  useUpdateAssignmentMutation,
-  useUpdateAssignmentStatusMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
-import {
   RubricStatus,
   RubricWorkType,
   useGetRubricsQuery,
   useCreateRubricFromTemplateMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+import {
+  useAddAssignmentMutation,
+  useGetAssignmentByIdQuery,
+  useUpdateAssignmentMutation,
+  useUpdateAssignmentStatusMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 
+import { SubmissionTypeCard } from '../../components/SubmissionTypeCard';
 import {
   getAssignmentInitialValues,
   hasAssignmentTypeOverrides,
@@ -84,107 +84,6 @@ const cardStyle = {
   boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
   border: '1px solid rgba(145, 158, 171, 0.08)',
 };
-
-const SubmissionTypeCard = ({
-  value,
-  label,
-  description,
-  icon,
-  selected,
-  onClick,
-}: {
-  value: number;
-  label: string;
-  description: string;
-  icon: string;
-  selected: boolean;
-  onClick: () => void;
-}) => (
-  <Box
-    onClick={onClick}
-    sx={{
-      cursor: 'pointer',
-      p: 2.5,
-      width: '100%',
-      height: '100%',
-      borderRadius: 2,
-      border: (theme) =>
-        `2px solid ${selected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.12)}`,
-      bgcolor: (theme) => (selected ? alpha(theme.palette.primary.main, 0.04) : 'background.paper'),
-      boxShadow: (theme) =>
-        selected
-          ? `0 8px 16px -4px ${alpha(theme.palette.primary.main, 0.12)}, 0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`
-          : 'none',
-      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      gap: 2,
-      '&:hover': {
-        borderColor: (theme) => (selected ? theme.palette.primary.main : 'text.disabled'),
-        boxShadow: (theme) =>
-          selected
-            ? `0 8px 16px -4px ${alpha(theme.palette.primary.main, 0.16)}, 0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`
-            : `0 4px 12px -2px ${alpha(theme.palette.grey[500], 0.08)}`,
-        transform: 'translateY(-2px)',
-      },
-    }}
-  >
-    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
-      <Box
-        sx={{
-          p: 1,
-          borderRadius: 1.5,
-          color: selected ? 'primary.main' : 'text.secondary',
-          bgcolor: (theme) =>
-            selected
-              ? alpha(theme.palette.primary.main, 0.12)
-              : alpha(theme.palette.grey[500], 0.08),
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.25s',
-        }}
-      >
-        <Iconify icon={icon} width={24} height={24} />
-      </Box>
-      <Radio
-        checked={selected}
-        value={value}
-        sx={{
-          p: 0,
-          color: 'text.disabled',
-          '&.Mui-checked': {
-            color: 'primary.main',
-          },
-        }}
-      />
-    </Stack>
-
-    <Stack spacing={0.5}>
-      <Typography
-        variant="subtitle2"
-        sx={{
-          fontWeight: 700,
-          color: selected ? 'primary.darker' : 'text.primary',
-          transition: 'all 0.25s',
-        }}
-      >
-        {label}
-      </Typography>
-      <Typography
-        variant="caption"
-        sx={{
-          color: 'text.secondary',
-          lineHeight: 1.3,
-          fontSize: '11px',
-        }}
-      >
-        {description}
-      </Typography>
-    </Stack>
-  </Box>
-);
 
 const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onClose }) => {
   // State to control assignment type dialog visibility

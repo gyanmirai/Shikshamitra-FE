@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Provider } from 'react-redux';
 import { api } from 'src/redux/service';
 import { http, HttpResponse } from 'msw';
@@ -101,6 +102,9 @@ export async function prepareReviewNetwork() {
 }
 
 function ReviewQueueWithApi() {
+  const [statusFilter, setStatusFilter] = useState<
+    'pending' | 'approved' | 'changes' | 'rejected' | 'all'
+  >('pending');
   const { data, isLoading } = useGetLessonPlansQuery({});
   const [approve, approval] = useApproveLessonPlanMutation();
   const [reject, rejection] = useRejectLessonPlanMutation();
@@ -109,6 +113,8 @@ function ReviewQueueWithApi() {
     <ReviewQueueTab
       lessonPlans={data?.items ?? []}
       canReviewSubmissions
+      statusFilter={statusFilter}
+      onStatusFilterChange={setStatusFilter}
       isLoading={isLoading}
       isApproving={approval.isLoading}
       isRejecting={rejection.isLoading}
