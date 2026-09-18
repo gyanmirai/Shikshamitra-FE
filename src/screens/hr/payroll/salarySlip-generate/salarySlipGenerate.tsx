@@ -585,6 +585,11 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
         </Stack>
       </Card>
 
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+        <Typography variant="body2">Full-month gross: {formatCurrency(slip?.fullGrossSalary ?? 0)}</Typography>
+        <Typography variant="body2">Gross Salary: {formatCurrency(slip?.grossSalary ?? 0)}</Typography>
+        <Typography variant="body2">Additional earnings: {formatCurrency(slip?.additionalEarnings ?? 0)}</Typography>
+      </Stack>
       <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 4 }}>
           <DashboardMetricCard
@@ -1106,6 +1111,10 @@ const PayslipDocumentPreview = ({ employee, monthYear, slip }: PayslipDocumentPr
     ['Proration Factor', formatDecimal(slip?.prorationFactor)],
     ['Day Calculation', formatMode(slip?.payrollDayCalculationMode)],
     ['Pay Period', period],
+    ['Full-month gross', formatCurrency(slip?.fullGrossSalary ?? 0)],
+    ['Gross Salary', formatCurrency(slip?.grossSalary ?? 0)],
+    ['Additional earnings', formatCurrency(slip?.additionalEarnings ?? 0)],
+    ['Total earnings', formatCurrency(slip?.totalEarning ?? 0)],
   ];
 
   return (

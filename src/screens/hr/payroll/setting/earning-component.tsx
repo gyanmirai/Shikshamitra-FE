@@ -1,5 +1,6 @@
 'use client';
 
+
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -54,6 +55,7 @@ import {
   usePreviewEarningComponentUpdateImpactMutation,
 } from 'src/redux/hr/employee-payroll-api';
 
+import { grossSalaryOption, getCalculationBase } from './payroll-calculation-base';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 import {
   isEarningComponentDependencyError,
@@ -313,11 +315,11 @@ const EarningComponent = () => {
           },
           {
             id: 'customComponent.componentName',
-            label: 'Component Name',
+            label: 'Calculation base',
             align: 'left',
             minWidth: '10vw',
-            render(value: string) {
-              return value || '-';
+            render(value: string, row: any) {
+              return row?.calculationBase === 'GROSS' ? 'Gross Salary' : value || '-';
             },
           },
           { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
@@ -414,7 +416,7 @@ const validationSchema = Yup.object({
     .nullable()
     .when('calculationType', {
       is: 'Percentage',
-      then: (schema) => schema.required('Select Component is required'),
+      then: (schema) => schema.required('Calculation base is required'),
       otherwise: (schema) => schema.notRequired(),
     }),
   amount: Yup.string()
@@ -497,13 +499,13 @@ const EarningComponentForm = ({
             ? 'Amount'
             : editData?.calculationType || editData?.componentType || '',
       selectedEarningComponent:
-        (editData?.selectedEarningComponentId || editData?.customComponentId) === editData?.id
+        editData?.calculationBase === 'GROSS' ? grossSalaryOption.id : ((editData?.selectedEarningComponentId || editData?.customComponentId) === editData?.id
           ? null
-          : editData?.selectedEarningComponentId || editData?.customComponentId || null,
+          : editData?.selectedEarningComponentId || editData?.customComponentId || null),
       amount:
         editData?.calculationType?.toLowerCase() === 'percentage'
-          ? editData?.percentage || ''
-          : editData?.amount || '',
+          ? editData?.percentage ?? ''
+          : editData?.amount ?? '',
       showOnPayslip: editData?.visibleInPayslip ?? true,
     },
     enableReinitialize: true,
@@ -523,8 +525,8 @@ const EarningComponentForm = ({
             values.earningType === 'Fixed' && values.calculationType === 'Percentage'
               ? Number(values.amount) || 0
               : 0,
-          selectedEarningComponentId:
-            values.calculationType === 'Percentage' ? values.selectedEarningComponent : null,
+          calculationBase: getCalculationBase(values.calculationType, values.selectedEarningComponent).calculationBase,
+          selectedEarningComponentId: getCalculationBase(values.calculationType, values.selectedEarningComponent).componentId,
           visibleInPayslip: values.showOnPayslip,
         };
 
@@ -746,13 +748,13 @@ const EarningComponentForm = ({
                   }
                 >
                   <Autocomplete
-                    options={componentOptions}
+                    options={[grossSalaryOption, ...componentOptions]}
                     groupBy={(option) => option.group || 'Earning Components'}
                     getOptionLabel={(option) => option.componentName || ''}
                     filterOptions={(options) => options}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     value={
-                      componentOptions.find(
+                      [grossSalaryOption, ...componentOptions].find(
                         (opt) => opt.id === formik.values.selectedEarningComponent
                       ) || null
                     }
@@ -782,7 +784,7 @@ const EarningComponentForm = ({
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Select Component *"
+                        label="Calculation base *"
                         size="small"
                         error={
                           formik.touched.selectedEarningComponent &&
@@ -949,14 +951,13 @@ const EarningComponentForm = ({
                       This earning will be calculated as{' '}
                       <strong>{formik.values.amount || 'X'}%</strong> of{' '}
                       <strong>
-                        {componentOptions.find(
+                        {[grossSalaryOption, ...componentOptions].find(
                           (c) => c.id === formik.values.selectedEarningComponent
                         )?.componentName || 'the selected component'}
                       </strong>
                       .
                       <br />
-                      Example: If Basic Pay is ₹30,000 and percentage is 40%, this earning will be
-                      ₹12,000.
+                      Gross Salary is the regular monthly gross adjusted for payable days. Additional earnings do not increase this base.
                     </>
                   ) : (
                     <>
@@ -971,7 +972,9 @@ const EarningComponentForm = ({
 
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
                   {formik.values.earningType === 'Fixed'
-                    ? 'The amount will be the same for all employees.'
+                    ? formik.values.calculationType === 'Percentage'
+                      ? 'The percentage is fixed; the amount follows the calculation base.'
+                      : 'The configured amount is fixed.'
                     : 'The amount can vary for each employee.'}
                 </Typography>
 

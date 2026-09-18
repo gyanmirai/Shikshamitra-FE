@@ -1,5 +1,6 @@
 'use client';
 
+
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
@@ -54,6 +55,7 @@ import {
   usePreviewDeductionComponentUpdateImpactMutation,
 } from 'src/redux/hr/employee-payroll-api';
 
+import { grossSalaryOption, getCalculationBase } from './payroll-calculation-base';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 interface PayElement {
@@ -309,11 +311,11 @@ const DeductionComponent = () => {
           },
           {
             id: 'customComponent.componentName',
-            label: 'Component Name',
+            label: 'Calculation base',
             align: 'left',
             minWidth: '10vw',
-            render(value: string) {
-              return value || '-';
+            render(value: string, row: any) {
+              return row?.calculationBase === 'GROSS' ? 'Gross Salary' : value || '-';
             },
           },
           { id: 'description', label: 'Description', align: 'left', minWidth: '20vw' },
@@ -410,7 +412,7 @@ const validationSchema = Yup.object({
     .nullable()
     .when('calculationType', {
       is: 'Percentage',
-      then: (schema) => schema.required('Select Deduction Component is required'),
+      then: (schema) => schema.required('Calculation base is required'),
       otherwise: (schema) => schema.notRequired(),
     }),
   amount: Yup.string()
@@ -507,11 +509,11 @@ const DeductionComponentForm = ({
           editData.calculationType.slice(1).toLowerCase()
         : '',
       selectedDeductionComponent:
-        editData?.selectedDeductionComponentId || editData?.selectedDeductionComponent || null,
+        editData?.calculationBase === 'GROSS' ? grossSalaryOption.id : (editData?.selectedDeductionComponentId || editData?.selectedDeductionComponent || null),
       amount:
         editData?.calculationType?.toUpperCase() === 'PERCENTAGE'
-          ? editData?.percentage || ''
-          : editData?.amount || '',
+          ? editData?.percentage ?? ''
+          : editData?.amount ?? '',
       showOnPayslip: editData?.visibleInPayslip ?? editData?.showOnPayslip ?? true,
     },
     enableReinitialize: true,
@@ -531,8 +533,8 @@ const DeductionComponentForm = ({
             values.deductionType === 'Fixed' && values.calculationType === 'Percentage'
               ? Number(values.amount) || 0
               : 0,
-          selectedDeductionComponentId:
-            values.calculationType === 'Percentage' ? values.selectedDeductionComponent : null,
+          calculationBase: getCalculationBase(values.calculationType, values.selectedDeductionComponent).calculationBase,
+          selectedDeductionComponentId: getCalculationBase(values.calculationType, values.selectedDeductionComponent).componentId,
           visibleInPayslip: values.showOnPayslip,
         };
 
@@ -760,13 +762,13 @@ const DeductionComponentForm = ({
                   }
                 >
                   <Autocomplete
-                    options={componentOptions}
+                    options={[grossSalaryOption, ...componentOptions]}
                     groupBy={(option) => option.group}
                     getOptionLabel={(option) => option.componentName}
                     filterOptions={(options) => options}
                     isOptionEqualToValue={(option, value) => option.id === value.id}
                     value={
-                      componentOptions.find(
+                      [grossSalaryOption, ...componentOptions].find(
                         (opt) => opt.id === formik.values.selectedDeductionComponent
                       ) || null
                     }
@@ -796,7 +798,7 @@ const DeductionComponentForm = ({
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Select Deduction Component *"
+                        label="Calculation base *"
                         size="small"
                         error={
                           formik.touched.selectedDeductionComponent &&
@@ -964,7 +966,7 @@ const DeductionComponentForm = ({
                       This deduction will be calculated as{' '}
                       <strong>{formik.values.amount || 'X'}%</strong> of{' '}
                       <strong>
-                        {componentOptions.find(
+                        {[grossSalaryOption, ...componentOptions].find(
                           (c) => c.id === formik.values.selectedDeductionComponent
                         )?.componentName || 'the selected component'}
                       </strong>
@@ -986,7 +988,9 @@ const DeductionComponentForm = ({
 
                 <Typography variant="body2" sx={{ mt: 0.5 }}>
                   {formik.values.deductionType === 'Fixed'
-                    ? 'The amount will be the same for all employees.'
+                    ? formik.values.calculationType === 'Percentage'
+                      ? 'The percentage is fixed; the amount follows the calculation base.'
+                      : 'The configured amount is fixed.'
                     : 'The amount can vary for each employee.'}
                 </Typography>
 

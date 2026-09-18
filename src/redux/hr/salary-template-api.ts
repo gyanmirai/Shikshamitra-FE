@@ -24,6 +24,10 @@ export type SalaryRuleOverride = {
 };
 
 export type SalaryTemplateComponentCatalogItem = {
+  calculationType?: string;
+  calculationBase?: string | null;
+  defaultValue?: number | null;
+  basisComponentId?: string | null;
   componentId: string;
   name: string;
   description?: string | null;

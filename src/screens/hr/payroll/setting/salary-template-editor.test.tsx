@@ -60,6 +60,9 @@ vi.mock('src/utils/permissions', () => ({
   hasGrantedPermission: (_permissions: unknown, permission: string) =>
     [...mocks.permissions].some((action) => permission.endsWith(`.${action}`)),
 }));
+// Icon assets are unrelated to salary form behavior and must not start network requests.
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 vi.mock('src/redux/PF/PFApi', () => ({
   useGetPFQuery: () => ({ data: { items: [] }, isError: false }),
 }));

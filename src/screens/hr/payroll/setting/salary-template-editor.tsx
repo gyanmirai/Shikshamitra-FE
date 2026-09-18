@@ -161,6 +161,7 @@ function RuleSection({
             (candidate) =>
               candidate.componentId !== rule.componentId &&
               candidate.lineKind === 'EARNING' &&
+              (rule.lineKind === 'DEDUCTION' || candidate.formulaType !== 'REMAINDER_OF_GROSS') &&
               candidate.displayOrder < rule.displayOrder
           );
           return (

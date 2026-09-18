@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-09-16
+updated_on: 2026-09-17
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -167,3 +167,13 @@ The review step explains that the new version applies to future salary setups wh
 Template formulas override component-master formulas only when the template generates an employee salary structure.
 Template versions define a default quote basis, protection policy, PF applicability, and PF rule.
 Fixed and percentage formulas keep an editable empty numeric value, while remainder and statutory formulas explicitly show that their value is calculated automatically.
+
+## Built-in Gross Salary
+
+Earning and deduction settings offer Gross Salary in the percentage calculation-base selector under System values.
+The selected base and fixed or variable value behavior survive save and reopen.
+New template rows inherit the master calculation base and configured percentage.
+Salary structure generation labels the resolved value Full-month gross and supports Gross, Take-home, and Employer Cost / CTC inputs.
+Run Payroll and payslips distinguish Full-month gross, attendance-adjusted Gross Salary, Additional earnings, Total earnings, deductions, and net pay.
+Gross Salary is a read-only summary, separate from the regular earning lines that allocate it.
+The backend calculation contract and policy behavior are documented in [HR backend workflows](../../../Shikshamitra-BE/docs/modules/hr/workflows.md#built-in-gross-salary).

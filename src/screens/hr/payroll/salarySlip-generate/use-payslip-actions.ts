@@ -15,6 +15,9 @@ interface Employee {
 }
 
 interface SalarySlip {
+  fullGrossSalary?: number | null;
+  grossSalary?: number | null;
+  additionalEarnings?: number | null;
   totalEarning: number | null | undefined;
   totalDeduction: number | null | undefined;
   netSalary: number | null | undefined;
@@ -257,6 +260,11 @@ const generateClientPreviewPdf = async (
     write(pdfCurrency(total || 0), pageWidth - margin - 110, 10, true);
     y += 28;
   };
+
+  write(`Full-month gross: ${pdfCurrency(slip.fullGrossSalary ?? 0)}`, margin, 10);
+  y += 16;
+  write(`Gross Salary: ${pdfCurrency(slip.grossSalary ?? 0)} | Additional earnings: ${pdfCurrency(slip.additionalEarnings ?? 0)}`, margin, 10);
+  y += 24;
 
   drawLines('Earnings', slip.earnings || [], slip.totalEarning);
   drawLines('Deductions', slip.deductions || [], slip.totalDeduction);

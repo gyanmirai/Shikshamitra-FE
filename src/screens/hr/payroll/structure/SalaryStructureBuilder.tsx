@@ -402,7 +402,7 @@ export function SalaryStructureBuilder({
               value={salaryBasis}
               onChange={(event) => { setSalaryBasis(event.target.value as SalaryBasis); setCalculation(null); }}
             >
-              <MenuItem value="EMPLOYER_COST">Employer cost</MenuItem>
+              <MenuItem value="EMPLOYER_COST">Employer cost / CTC</MenuItem>
               <MenuItem value="GROSS">Gross salary</MenuItem>
               <MenuItem value="TAKE_HOME">Take-home salary</MenuItem>
             </Select>
@@ -559,7 +559,7 @@ export function SalaryStructureBuilder({
       {calculation ? (
         <Box display="grid" gap={2} aria-live="polite">
           <Grid container spacing={1.5}>
-            <Grid size={{ xs: 6, md: 3 }}><Summary label="Gross salary" amount={calculation.grossSalary} /></Grid>
+            <Grid size={{ xs: 6, md: 3 }}><Summary label="Full-month gross" amount={calculation.grossSalary} /></Grid>
             <Grid size={{ xs: 6, md: 3 }}><Summary label="Deductions" amount={calculation.totalDeductions} /></Grid>
             <Grid size={{ xs: 6, md: 3 }}><Summary label="Net salary" amount={calculation.netSalary} /></Grid>
             <Grid size={{ xs: 6, md: 3 }}><Summary label="Employer cost" amount={calculation.employerCost} /></Grid>
