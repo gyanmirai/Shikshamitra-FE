@@ -146,3 +146,16 @@ export const getTransitionStepLabel = (
   const to = stages.find((stage) => stage.id === transition.toStageId)?.displayOrder;
   return from === undefined || to === undefined ? 'Unmapped' : `Step ${from + 1} → ${to + 1}`;
 };
+
+export const getTransitionSummary = (transition: AdmissionWorkflowTransition) => {
+  if (transition.isDefault) return 'Usual path';
+  const condition = parseSimpleCondition(transition.conditionRuleJson);
+  if (!condition) return 'Advanced path';
+  const field = condition.field
+    .split('.')
+    .at(-1)
+    ?.replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]/g, ' ');
+  const value = condition.value?.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]/g, ' ');
+  return value ? `${field}: ${value}` : `${field}: ${condition.operator}`;
+};

@@ -47,7 +47,7 @@ it('uses scoped Offer routes and keeps route identifiers out of command bodies',
   expect((await query.unwrap()).status).toBe('issued');
   query.unsubscribe();
   const common = { ...key, concurrencyStamp: 'current', idempotencyKey: 'operation-1' };
-  await store.dispatch(endpoints.issueAdmissionOffer.initiate(common)).unwrap();
+  await store.dispatch(endpoints.issueAdmissionStageOffer.initiate(common)).unwrap();
   await store.dispatch(endpoints.respondAdmissionOffer.initiate({ ...common, accepted: true,
     confirmTermsAccepted: true, confirmConditionsSatisfied: true })).unwrap();
   await store.dispatch(endpoints.extendAdmissionOffer.initiate({ ...common,

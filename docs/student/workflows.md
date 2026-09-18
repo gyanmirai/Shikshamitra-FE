@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-09-11
+updated_on: 2026-09-18
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -19,23 +19,59 @@ Existing backend operations that share one permission identifier remain one capa
 
 TL;DR: the Enrollment Admissions CRM project connects configurable setup screens to an inquiry-to-application runtime flow.
 
+## Manage Admission Cycles
+
+The `/student/admissions/settings/cycles` screen loads server-paged cycles and exposes independent Lifecycle and Application Window filters.
+Each row shows its Academic Year, date window, current or scheduled action, lifecycle, computed window status, Offering count, and Application count.
+
+Create saves a Draft and supports every configured Academic Year, including future years.
+The form normalizes the code, validates dates, accepts an optional description, labels the command **Save as draft**, and confirms before discarding edits.
+Publishing first loads server readiness errors and warnings.
+Close, reopen, and archive require a reason; Close displays dependency counts and requires explicit acknowledgement when active Offerings exist.
+Reopen requires a non-expired or extended close date.
+Delete is visible only for an unused Draft and still uses a destructive confirmation.
+
+View details loads current dependency counts and immutable history on demand.
+Clone creates a Draft without Offerings or Applications.
+Published or Closed windows can be revised with a reason, and Draft or Published lifecycle actions can be scheduled using institution-local input converted to UTC.
+The backend remains authoritative for stale concurrency, lifecycle transitions, dependencies, and all View/Add/Delete permissions.
+
 ## Configuration workflow
 
 1. An administrator creates or selects an admission cycle.
 2. The administrator configures an offering through scoped Board, Medium, Stage, and Standard selectors and associates published workflow, inquiry form, and application form versions.
-3. The administrator builds workflow stages and transitions, then previews, validates, and publishes the workflow.
+3. The administrator builds workflow stages and chooses what happens next from each stage, then previews, validates, and publishes the workflow.
 4. The administrator builds form sections and fields, configures bindings, rules, defaults, required state, and read-only state, then previews, validates, and publishes the form.
 
 The setup screens are `admission-cycles.tsx`, `admission-offerings.tsx`, `admission-workflows.tsx`, `admission-forms.tsx`, and `admission-form-preview.tsx`.
 
-Workflow creation collects only identity and description.
-The dedicated `/student/admissions/settings/workflows/[id]` builder owns stage ordering, explicit entry and terminal flags, controlled transition conditions, validation results, preview, version history, and usage.
+Workflow creation generates a code from the name and lets the administrator start from the recommended standard journey or an empty workflow. The standard journey is Inquiry, Application form, Document verification, Review, and Admission decision; optional assessment, eligibility, payment, offer, and appointment steps are added only when the school needs them.
+The dedicated `/student/admissions/settings/workflows/[id]` builder owns stage ordering, stage-owned next-step paths, advanced entry and ending controls, guided outcome conditions, undo/redo, validation results, route-aware preview, route simulation, version comparison, restore-as-draft, and usage.
+Configure does not expose a separate technical Transitions workspace. Each stage shows its usual and special outcome paths under **What happens next?**; the saved transition graph remains the backend runtime contract. Stage ordering remains presentation order and does not silently rewrite advanced routes. Required stages cannot use ordinary manual skip, while a separately authorized emergency override requires a reason.
+Seat, Enrollment, and Custom remain readable and executable in immutable historical workflow versions but are not selectable for new stages. New capacity and waitlisting setup is planned as a separate Admission Offering contract; Workflow Builder does not show placeholder capacity fields. Final admission creates the Student and hands operational work to Student Onboarding. Appointment remains hidden until its runtime scheduling and completion contract is available.
 Published and archived versions are read-only.
 
-The Offering screen uses server-side search, paging, sorting, URL-backed filters, inherited or overridden cycle dates, readiness feedback, optimistic concurrency, and `ThreeDotsActions` row commands.
+The URL-backed **Configure** and **Journey map** views preserve the administrator's selected workspace across reload and browser navigation. Configure keeps the ordered stages and each stage's next-step paths together; Journey map groups reachable stages by actual graph depth from the entry stage, keeps branches together, identifies disconnected stages and dead ends, and opens the same stage editor for correction.
+
+**Test routes** runs the complete release-safety scenario set and summarizes how many reach a terminal stage. Administrators can open any scenario, adjust its condition values, and inspect the selected journey. The simulation follows the same priority-first conditional selection and default-route fallback as runtime routing and identifies ambiguous or missing routes. Conditional routes leaving one stage require unique non-negative priorities, and a route without a condition is saved as the stage's single default route. It is a configuration preview only; backend validation, managed-stage policy validation, stage evidence, permissions, and runtime completion gates remain authoritative.
+
+Release readiness is deliberately checked at two lifecycle points. Publishing a workflow validates graph integrity, runtime support, managed-stage configuration, and configured SLA or deadline ranges. Staff availability depends on an Offering's academic hierarchy, so activation revalidates it in that concrete scope: configured Inquiry counsellors must be active and accessible, and a default Review assignee must be active, have the configured role, and be able to access the Offering hierarchy. This keeps reusable workflows independent of one campus while preventing an unusable Offering from becoming active.
+
+Version history includes the complete stage and route definition plus per-version Offering and Application usage. Administrators can compare the open version with an earlier version by stable stage codes, review added, removed, and changed stages/routes, and copy a selected immutable version into a new Draft. Creating that Draft never changes published versions or applications already pinned to them, and only one Draft may exist in a workflow history.
+
+The permission-protected Usage panel reports real runtime records for the selected immutable version: journeys started, active and completed, overall completion rate and duration, plus per-stage entered, active, completed, skipped, completion-rate, average-duration, and oldest-active values. It also shows Offering, distinct Campus, and Application impact; an Offering without a Campus remains labelled as school-wide scope. Empty versions show an explicit no-data state; the frontend does not manufacture estimates.
+
+The Offering screen uses server-side search, paging, sorting, URL-backed primary and advanced filters,
+inherited or overridden cycle dates, readiness feedback, optimistic concurrency, and
+`ThreeDotsActions` row commands. Published workflow and form selectors search and page the server
+instead of limiting large schools to an initial client-side option list.
 Archived cycles are excluded from the setup selector.
-Clone copies source operational configuration while requiring a new valid identity.
-Bulk create performs an all-or-nothing server preview before commit.
+Clone can target any non-archived admission cycle. It copies the source code, dates, workflow, and
+form versions, then clears and revalidates the academic hierarchy against the target cycle;
+applications are never copied.
+Single and bulk setup distinguish safe inactive preparation from full activation readiness. Bulk
+create performs an all-or-nothing server preview before either commit mode. Action confirmations
+show the Offering identity, linked Application count, and the effect on new and existing intake.
 
 ## Managed assessments
 
@@ -104,11 +140,11 @@ The queue offers assigned-to-me and overdue filters with server pagination. Opti
 The full-screen editor in `src/screens/student/admissions/admission-form-dialog.tsx` uses the shared `CustomStepperWithFormik` for three ordered stages.
 The shared stepper owns one Formik state across the stages; **Back** preserves entered values and **Next** validates the current stage without saving.
 
-| Stage             | User interaction                                                                                                                                                       |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Form details**  | Enter the name, code, description, and applicant layout; a new form can start from **Use registration template**.                                                      |
-| **Build form**    | Use the complete field library, form structure, and selected-field settings workspace.                                                                                 |
-| **Review & save** | Review identity, layout, field counts, ordered sections, and advisory publishing checks; return through **Edit details** or **Edit fields**, or choose **Save draft**. |
+| Stage             | User interaction                                                                                                                                                                                                                             |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Form details**  | Choose **Blank form**, the recommended **Admission application**, or **Student registration**. **Browse all templates and school forms** opens a searchable, categorized library with purpose, section, field, and completion-time previews. |
+| **Build form**    | Focus one section at a time, add individual fields, add a ready-made section pack, edit field settings, or open the complete structure when steps and sections need arranging.                                                               |
+| **Review & save** | Review identity, layout, field counts, ordered sections, and advisory publishing checks; return through **Edit details** or **Edit fields**, or choose **Save draft**.                                                                       |
 
 Details validation checks name, code, layout, and fields per row; the builder stage checks the section and field schema.
 The final save validates the complete draft schema and is the only wizard action that persists the form.
@@ -116,22 +152,30 @@ Publishing checks in the review are advisory and do not add a separate draft-sav
 
 | Workspace area     | User interaction                                                                                                                                                                                                     |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Add fields**     | Search student fields or choose a custom field; the destination section is displayed above the library and each field has an explicit add action.                                                                    |
-| **Your form**      | Arrange steps, sections, and fields; select a field to customize it.                                                                                                                                                 |
+| **Form outline**   | Move between steps and sections without loading the full form into the editing canvas. Add an individual field or a ready-made section beside the selected section.                                                  |
+| **Your form**      | Edit the selected section and its fields. Open **Manage structure** only when steps or sections need adding, deleting, editing, or reordering.                                                                       |
+| **Section packs**  | Search categorized student, family, address, document, medical, transport, finance, consent, and survey sections. Linked student fields already present in the form are skipped rather than duplicated.              |
+| **Add field**      | Open a focused drawer, confirm the destination section, then search student fields or choose a custom field.                                                                                                         |
 | **Field settings** | See the selected field and its section, then edit its label, type, required state, and help text; expand additional settings for defaults, read-only access, data connection, codes, visibility, and advanced rules. |
 
-Within **Build form**, desktop shows all three workspace areas together; narrower screens use **Add fields**, **Your form**, and **Field settings** tabs.
+Within **Build form**, desktop shows the outline, focused section canvas, and field settings together; narrower screens use **Outline**, **Your form**, and **Field settings** tabs. Choice fields use a visual list editor with add, paste, reorder, rename, and delete actions. A technical compatibility value is exposed only when old saved choice data cannot be interpreted safely.
 The local validation panel identifies structural, option, binding, and rule-reference issues before backend publish validation.
-Closing or cancelling a changed draft requires confirmation, and replacing entered content with **Use registration template** requires confirmation.
+Closing or cancelling a changed draft requires confirmation, and replacing entered content with a different starting point requires confirmation.
+Ready-made full-form templates remain frontend-owned structures that produce the existing `CreateUpdateAdmissionForm` contract. **Your school forms** uses the existing tenant-scoped form list and detail reads to create a fresh editable copy with new client IDs and a new copy code; the source form, lifecycle, and published versions remain unchanged.
 An unsuccessful save leaves the editor open with its values intact for correction or retry.
 Saving persists a draft; publishing remains a separate form-list action.
 
 ## CRM runtime workflow
 
-1. A counselor creates an inquiry from the inquiry dialog.
-2. The inquiry flow checks duplicate phone, email, applicant name, and date-of-birth signals before creating or reusing family context.
-3. The inquiry list supports search and cycle, offering, status, and source filters.
-4. The counselor marks contact, reviews Applicant 360, adds notes, and starts an application only for an offering whose computed availability is `Open`.
+1. A counselor selects an admission cycle and offering, then captures a workflow-allowed source, its optional or required Source details, the family's preferred language, and the configured applicant and guardian fields.
+2. The inquiry flow checks duplicate phone, email, applicant name, and date-of-birth signals within the selected admission cycle. Staff can open the existing inquiry, continue with a sibling, or use the permitted override instead of creating an unexplained duplicate.
+3. The server-paged inquiry list supports search and cycle, offering, status, source, My inquiries, Unassigned, specific-counsellor, Overdue, Awaiting first contact, Awaiting qualification, and Open follow-ups filters. Filters stay in the URL for refresh and sharing, sorting stays on the server, and Export downloads the complete filtered set rather than only the visible page.
+4. Staff with Inquiry Assign permission can assign or reassign one inquiry, or select up to 100 visible inquiries and assign them together. The server changes the whole selection or none of it. Workflow defaults and round-robin policies continue to provide automatic assignment when configured.
+5. The management drawer keeps editable contact/source/language details, concurrency-safe saving, structured contact channel/direction/outcome, follow-ups, structured closure reasons, and a unified activity timeline. Once an application starts, inquiry details become read-only.
+6. Staff with Inquiry Manage and Communication Add permission can use language-aware acknowledgement, follow-up, or application-link templates. Creation can immediately create/send the acknowledgement when selected; Communication Send controls immediate delivery, while provider, consent, approval, retry, and delivery tracking remain in Communication.
+7. The counselor reviews Applicant 360 and starts an application only for an offering whose computed availability is `Open`. Opening Applicant 360 from an inquiry carries that exact inquiry into application start so the handoff is traceable and the inquiry is locked after conversion.
+
+The separate CRM Pipeline groups the same inquiry records into Active inquiries and Handoffs and closed lanes. Every visible lane keeps its own server count and bounded recent-card page, while the shared cycle, offering, source, counsellor, and work-queue filters apply across the board. Cards expose the same Manage, Assign, and permission-controlled Compose actions as the inquiry table. Pipeline is not an Applications alias and does not make application-stage decisions.
 
 The runtime screens are `admission-inquiries.tsx`, `admission-applicant-360.tsx`, and `admission-applicant-notes.tsx`.
 
@@ -139,8 +183,8 @@ The runtime screens are `admission-inquiries.tsx`, `admission-applicant-360.tsx`
 
 An Inquiry stage keeps the Basic process unless an administrator enables the version 1 Inquiry policy in a draft workflow.
 Managed setup can require contact or qualification before an application starts, constrain sources, require source detail and identity fields, configure duplicate handling, assign scoped counsellors manually or round robin, set response deadlines, and define a qualification checklist.
-The list uses backend paging with cycle, offering, status, source, applicant, and phone filters.
-The **Manage** drawer explains readiness and overdue work, records contact notes, schedules and completes follow-ups, records a qualification outcome, and can reopen a non-terminal qualification.
+The list uses backend paging with cycle, offering, status, source, owner, assignment state, operational work queue, applicant, and phone filters. Work queues are evaluated before paging so small, medium, and large schools see correct counts and pages.
+The **Manage** drawer explains readiness and overdue work, edits pre-application inquiry details, records structured contacts, schedules and completes follow-ups, records a qualification outcome with a standard closure reason, shows the activity timeline, and can reopen a non-terminal qualification.
 Server capability flags and blockers control available commands; application-start and workflow guards remain authoritative on the backend.
 
 ## Managed Form stages
@@ -161,11 +205,13 @@ An Offer stage retains the existing admission decision behavior until an adminis
 
 At runtime, the application card shows version, status, conditions, expiry, blockers, capabilities, and permanent history. Staff issue, accept, decline, extend, withdraw, or reissue through focused dialogs that preserve entered values on failure. Acceptance collects configured evidence; decline and exception actions collect reasons. The frontend continues only when the server reports completion, and non-acceptance outcomes depend on explicit backend-validated routes.
 
-## Managed Seat stages
+## Legacy managed Seat stages
 
-A Seat stage keeps basic manual completion until an administrator enables managed capacity. The editor configures offering capacity, manual or entry-time reservation, default and optional staff-adjusted hold duration, renewal limits, FIFO waitlisting, authorized capacity exceptions, release reasons, permitted completion outcomes, and continuation after confirmation.
+Seat is hidden from new workflow drafts. Published versions and applications already pinned to a managed Seat stage retain their configured capacity, reservation timing, renewal limits, FIFO waitlisting, exceptions, release reasons, completion outcomes, and continuation rules.
 
-The application card shows available, reserved, confirmed, and total seats with occupancy progress, reservation expiry, waitlist position, blockers, server-authorized actions, and permanent history. Staff can reserve, confirm, renew, waitlist, release, promote, or change capacity through focused dialogs. Confirmed allocations remain visible after workflow advancement so staff can release them before finalization. Mutations refresh the shared offering capacity and advance only when the server reports an allowed outcome.
+For those historical journeys, the application card continues to show available, reserved, confirmed, and total seats with occupancy progress, reservation expiry, waitlist position, blockers, server-authorized actions, and permanent history. Staff actions remain governed by server capabilities and concurrency controls.
+
+New offering-level capacity and waitlist setup requires a separate persisted Admission Offering API and finalization gate. The Workflow Builder must not simulate that ownership with UI-only fields.
 
 ## Application workflow
 
@@ -199,7 +245,7 @@ An ineligible result can continue only when the backend permits a configured rev
 
 The application detail screen mounts `document-verification/application-documents.tsx` only for stages marked `documentVerificationEnabled`, including lazy, read-only history for completed stages. The current checklist displays required progress, server blockers, and Missing, Pending review, Accepted, Needs resubmission, Waived, or Not applicable status. Per-requirement actions collect a permitted file, record a physical-original check, accept evidence, request a replacement with a reason, or record an authorized waiver.
 
-Document action dialogs preserve the selected evidence and application stamp while editing, keep entered values on failure, and use the local `CustomDialog.hasUnsavedChanges` guard without clearing a dirty application form. Replacement and original-attestation behavior is explained before saving. The existing workflow advance action is available only when the backend reports `canComplete` and the user has advancement permission.
+Document action dialogs preserve the selected evidence and application stamp while editing, keep entered values on failure, and use the local `CustomDialog.guardUnsavedChanges` behavior without clearing a dirty application form. Replacement and original-attestation behavior is explained before saving. The existing workflow advance action is available only when the backend reports `canComplete` and the user has advancement permission.
 
 Once admission finalization links evidence to a Student record, the existing student profile **Documents** tab can show **Admission evidence**. `studentProfile/student-admission-evidence-panel.tsx` groups retained versions by their source application, stage, and requirement. It requires both student-record and admission-document view access; authorized downloads retain the student scope. This panel is read-only and leaves normal student document collection in place.
 

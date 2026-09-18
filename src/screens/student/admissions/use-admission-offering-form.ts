@@ -12,13 +12,12 @@ import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
-import { useGetAdmissionFormsQuery } from 'src/redux/student/admissions/admission-forms-api';
-import { useGetAdmissionWorkflowsQuery } from 'src/redux/student/admissions/admission-workflows-api';
 import { useValidateAdmissionOfferingMutation } from 'src/redux/student/admissions/admission-offerings-api';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
 import { admissionOfferingSchema } from './admission-offering-schema';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
+import { useAdmissionDefinitionOptions } from './use-admission-definition-options';
 import {
   toOfferingWriteInput,
   getAdmissionApiError,
@@ -30,24 +29,18 @@ type Input = {
   cycle: AdmissionCycle;
   mode: 'create' | 'edit' | 'clone';
   offering?: AdmissionOffering | null;
-  onSave: (values: AdmissionOfferingWriteInput) => Promise<void>;
+  onSave: (values: AdmissionOfferingWriteInput, admissionCycleId: string) => Promise<void>;
 };
 
 export function useAdmissionOfferingForm({ open, cycle, mode, offering, onSave }: Input) {
   const [readiness, setReadiness] = useState<AdmissionOfferingValidation | null>(null);
+  const [submitIntent, setSubmitIntent] = useState<'inactive' | 'activate' | null>(null);
   const [validateOffering, { isLoading: validating }] = useValidateAdmissionOfferingMutation();
   const hierarchyQuery = useGetAcademicOrganizationOptionsQuery(
     { academicYearId: cycle.academicYearId },
     { skip: !open, refetchOnMountOrArgChange: true }
   );
-  const workflowsQuery = useGetAdmissionWorkflowsQuery(
-    { status: 1, maxResultCount: 100, skipCount: 0 },
-    { skip: !open, refetchOnMountOrArgChange: true }
-  );
-  const formsQuery = useGetAdmissionFormsQuery(
-    { status: 1, maxResultCount: 100, skipCount: 0 },
-    { skip: !open, refetchOnMountOrArgChange: true }
-  );
+  const definitionOptions = useAdmissionDefinitionOptions(open);
 
   /**
    * Memoization Justification:
@@ -71,7 +64,7 @@ export function useAdmissionOfferingForm({ open, cycle, mode, offering, onSave }
         validated = true;
         setReadiness(validation);
         if (values.isActive && !validation.isValid) return;
-        await onSave(input);
+        await onSave(input, cycle.id);
         helpers.resetForm();
       } catch (error) {
         if (!validated)
@@ -79,6 +72,7 @@ export function useAdmissionOfferingForm({ open, cycle, mode, offering, onSave }
             message: getAdmissionApiError(error, 'Unable to validate the offering configuration.'),
           });
       } finally {
+        setSubmitIntent(null);
         helpers.setSubmitting(false);
       }
     },
@@ -88,25 +82,29 @@ export function useAdmissionOfferingForm({ open, cycle, mode, offering, onSave }
   });
   useAdmissionUnsavedChanges(open, formik.dirty);
   const hierarchy = hierarchyQuery.data?.items ?? [];
+  const submitWithActiveState = async (isActive: boolean) => {
+    setSubmitIntent(isActive ? 'activate' : 'inactive');
+    try {
+      await formik.setFieldValue('isActive', isActive, false);
+      await formik.submitForm();
+    } finally {
+      setSubmitIntent(null);
+    }
+  };
 
   return {
     formik,
+    submitIntent,
+    submitWithActiveState,
     readiness,
     clearReadiness: () => setReadiness(null),
     hierarchy,
-    hierarchyEmpty:
-      !hierarchyQuery.isFetching && !hierarchyQuery.isError && hierarchy.length === 0,
+    hierarchyEmpty: !hierarchyQuery.isFetching && !hierarchyQuery.isError && hierarchy.length === 0,
     standards: (standardsQuery.data ?? []) as Standards[],
-    workflows: workflowsQuery.data?.items ?? [],
-    forms: formsQuery.data?.items ?? [],
+    ...definitionOptions,
     hierarchyLoading: hierarchyQuery.isFetching,
     standardsLoading: standardsQuery.isFetching,
-    configurationLoading: workflowsQuery.isFetching || formsQuery.isFetching,
-    queryFailed:
-      hierarchyQuery.isError ||
-      standardsQuery.isError ||
-      workflowsQuery.isError ||
-      formsQuery.isError,
+    queryFailed: hierarchyQuery.isError || standardsQuery.isError,
     validating,
   };
 }

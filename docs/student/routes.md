@@ -3,7 +3,7 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-09-11
+updated_on: 2026-09-15
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,14 +16,14 @@ TL;DR: use this page to map the implemented Admissions CRM routes to their scree
 
 | Area                                         | Route                                             | Screen                                                            | Frontend permission                                                    |
 | -------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Admissions → Settings → Admission Cycles     | `/student/admissions/settings/cycles`             | `src/screens/student/admissions/admission-cycles.tsx`             | `Students.Admissions`                                                  |
-| Admissions → Settings → Admission Offerings  | `/student/admissions/settings/offerings`          | `src/screens/student/admissions/admission-offerings.tsx`          | `Students.Admissions.Offerings.View` with granular command permissions |
+| Admissions → Settings → Admission Cycles     | `/student/admissions/settings/cycles`             | `src/screens/student/admissions/admission-cycles.tsx`             | `Students.Admissions.View`; commands use only `Add` or `Delete`        |
+| Admissions → Settings → Admission Offerings  | `/student/admissions/settings/offerings`          | `src/screens/student/admissions/admission-offerings.tsx`          | `View`; additive commands use `Add`, destructive commands use `Delete` |
 | Admissions → Settings → Workflow Builder     | `/student/admissions/settings/workflows`          | `src/screens/student/admissions/admission-workflows.tsx`          | `Students.Admissions.Workflows`                                        |
 | Workflow definition builder                  | `/student/admissions/settings/workflows/[id]`     | `src/screens/student/admissions/admission-workflow-builder.tsx`   | granular Workflow View, Edit, Validate, and Publish permissions        |
 | Admissions → Settings → Form Builder         | `/student/admissions/settings/forms`              | `src/screens/student/admissions/admission-forms.tsx`              | `Students.Admissions.Forms`                                            |
 | Form preview                                 | `/student/admissions/settings/forms/[id]/preview` | `src/screens/student/admissions/admission-form-preview.tsx`       | inherited from Forms                                                   |
 | Admissions → CRM → Inquiries                 | `/student/admissions/inquiries`                   | `src/screens/student/admissions/admission-inquiries.tsx`          | `Students.Admissions.Inquiries`                                        |
-| Admissions → CRM → Pipeline                  | `/student/admissions/pipeline`                    | `src/screens/student/admissions/admission-applications.tsx`       | `Students.Admissions.Applications`                                     |
+| Admissions → CRM → Pipeline                  | `/student/admissions/pipeline`                    | `src/screens/student/admissions/admission-inquiry-pipeline.tsx`   | `Students.Admissions.Inquiries`                                        |
 | Admissions → Applicant 360                   | `/student/admissions/applicants/[id]`             | `src/screens/student/admissions/admission-applicant-360.tsx`      | inherited from Admissions                                              |
 | Admissions → Applications → All Applications | `/student/admissions/applications`                | `src/screens/student/admissions/admission-applications.tsx`       | `Students.Admissions.Applications`                                     |
 | Admissions → Application detail              | `/student/admissions/applications/[id]`           | `src/screens/student/admissions/admission-application-detail.tsx` | inherited from Applications                                            |
@@ -39,6 +39,12 @@ The Review queue is available at `/student/admissions/reviews`, owned by `src/sc
 
 The Admissions menu and route constants are defined in `src/constants/student-menu.ts`.
 The menu exposes Dashboard, CRM (Inquiries and Pipeline), Applications (All Applications, Assessments, and Review queue), and Settings (Admission Cycles, Admission Offerings, Workflow Builder, and Form Builder).
+CRM Pipeline is an Inquiry workspace and therefore uses Inquiry View access. It does not reuse or expose the Applications list; application work remains under Applications.
+The Inquiry list stores its search, filters, and selected `inquiryId` in query parameters. Applicant 360 also accepts `inquiryId` when opened from the management drawer so application start uses the exact inquiry selected by the counselor.
+Applicant 360 is the applicant-level admissions workspace: it explains the family context, surfaces missing identity data, shows the current application stage, exposes the next action, and keeps applications, CRM activity, and internal notes together.
+
+The Admission Cycle screen uses exactly three assignable permissions.
+`View` enables the list, details, impact, and history; `Add` enables create, draft edit, publish, reopen, clone, window revision, and scheduling; `Delete` enables close, archive, and unused-Draft deletion.
 
 The Offering screen checks `Create`, `Edit`, `Clone`, `Activate`, `Deactivate`, `Delete`, and `BulkCreate` permissions for visible controls.
 The Workflow screens check granular `View`, `Create`, `Edit`, `Delete`, `Clone`, `Validate`, `Publish`, `Archive`, and `ViewUsage` permissions.

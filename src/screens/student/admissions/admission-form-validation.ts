@@ -13,7 +13,12 @@ type AdmissionFormValidationField = {
   requiredRuleJson?: string | null;
 };
 export type AdmissionFormValidationDefinition = {
-  sections: { fields: AdmissionFormValidationField[] }[];
+  sections: {
+    fields: AdmissionFormValidationField[];
+    isRepeatable?: boolean;
+    minEntries?: number;
+    maxEntries?: number;
+  }[];
 };
 type ValidationConfiguration = {
   minLength?: number;
@@ -154,6 +159,29 @@ function createFieldSchema(field: AdmissionFormValidationField) {
   });
 }
 
+function createRepeatableFieldSchema(
+  field: AdmissionFormValidationField,
+  minimumEntries: number,
+  maximumEntries: number
+) {
+  return Yup.mixed().test('admission-repeatable-field-validation', function validate(value) {
+    let entries: unknown[] = [];
+    try {
+      const parsed = typeof value === 'string' ? (JSON.parse(value) as unknown) : value;
+      if (Array.isArray(parsed)) entries = parsed;
+    } catch {
+      return this.createError({ message: `${field.label} has invalid repeated answers.` });
+    }
+    if (entries.length < minimumEntries)
+      return this.createError({ message: `Add at least ${minimumEntries} entries.` });
+    if (entries.length > maximumEntries)
+      return this.createError({ message: `Add no more than ${maximumEntries} entries.` });
+    if (field.required && entries.some(isEmpty))
+      return this.createError({ message: `${field.label} is required in every entry.` });
+    return true;
+  });
+}
+
 function isLocationValue(value: string) {
   try {
     const parsed = JSON.parse(value) as { name?: unknown };
@@ -167,9 +195,19 @@ function isLocationValue(value: string) {
 
 export function buildDynamicAdmissionYupSchema(form: AdmissionFormValidationDefinition) {
   const shape = form.sections
-    .flatMap((section) => section.fields)
+    .flatMap((section) =>
+      section.fields.map((field) => ({
+        field,
+        section,
+      }))
+    )
     .reduce<Record<string, Yup.AnySchema>>(
-      (result, field) => ({ ...result, [field.code]: createFieldSchema(field) }),
+      (result, { field, section }) => ({
+        ...result,
+        [field.code]: section.isRepeatable
+          ? createRepeatableFieldSchema(field, section.minEntries ?? 0, section.maxEntries ?? 1)
+          : createFieldSchema(field),
+      }),
       {}
     );
   return Yup.object(shape);

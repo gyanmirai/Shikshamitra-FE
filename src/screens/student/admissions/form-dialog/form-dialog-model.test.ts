@@ -2,7 +2,12 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import { it, expect, describe } from 'vitest';
 
-import { nextFieldOrder, hasSystemBinding } from './form-dialog-model';
+import {
+  nextFieldOrder,
+  hasSystemBinding,
+  CREATABLE_FIELD_TYPES,
+  getConfigurableFieldTypes,
+} from './form-dialog-model';
 
 describe('admission form field codes', () => {
   it('generates a unique field sequence across every step', () => {
@@ -22,5 +27,14 @@ describe('admission form field codes', () => {
 
     expect(hasSystemBinding(sections, 'Applicant.DateOfBirth')).toBe(true);
     expect(hasSystemBinding(sections, 'Applicant.Gender')).toBe(false);
+  });
+
+  it('does not offer the runtime-unavailable file type for new fields', () => {
+    expect(CREATABLE_FIELD_TYPES.some(([, value]) => value === 10)).toBe(false);
+    expect(getConfigurableFieldTypes(0).some(([, value]) => value === 10)).toBe(false);
+  });
+
+  it('keeps an existing file placeholder visible without allowing it to be changed', () => {
+    expect(getConfigurableFieldTypes(10)).toContainEqual(['File placeholder (unavailable)', 10]);
   });
 });

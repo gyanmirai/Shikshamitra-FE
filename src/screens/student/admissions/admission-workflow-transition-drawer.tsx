@@ -5,8 +5,11 @@ import type {
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { useEffect } from 'react';
 import { useFormik } from 'formik';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 
 import { serializeSimpleCondition } from './workflow-builder-utils';
@@ -21,6 +24,7 @@ type Props = {
   open: boolean;
   transition: AdmissionWorkflowTransition | null;
   stages: AdmissionWorkflowStage[];
+  transitions?: AdmissionWorkflowTransition[];
   readOnly: boolean;
   onClose: () => void;
   onSave: (transition: AdmissionWorkflowTransition) => void;
@@ -30,24 +34,75 @@ export function AdmissionWorkflowTransitionDrawer({
   open,
   transition,
   stages,
+  transitions = [],
   readOnly,
   onClose,
   onSave,
 }: Props) {
+  const discard = useBoolean();
   const conditionState = getTransitionConditionEditorState(transition?.conditionRuleJson);
+  const creatingConditionalPath = transition?.id === '' && transition.isDefault === false;
+  const defaultFromStageId = transition?.fromStageId ?? stages[0]?.id ?? '';
+  const nextPriority =
+    Math.max(
+      -1,
+      ...transitions
+        .filter((item) => item.fromStageId === defaultFromStageId)
+        .map((item) => item.priority)
+    ) + 1;
   const formik = useFormik<WorkflowTransitionFormValues>({
     enableReinitialize: true,
     initialValues: {
       id: transition?.id ?? '',
-      fromStageId: transition?.fromStageId ?? stages[0]?.id ?? '',
+      fromStageId: defaultFromStageId,
       toStageId: transition?.toStageId ?? stages[1]?.id ?? '',
-      priority: transition?.priority ?? 0,
-      isDefault: conditionState.hasCondition ? false : (transition?.isDefault ?? true),
+      priority: transition?.priority ?? nextPriority,
+      isDefault: creatingConditionalPath
+        ? false
+        : conditionState.hasCondition
+          ? false
+          : (transition?.isDefault ?? true),
       conditionRuleJson: transition?.conditionRuleJson,
       ...conditionState,
+      ...(creatingConditionalPath ? { hasCondition: true } : {}),
     },
     validationSchema: workflowTransitionSchema,
-    onSubmit: (values) => {
+    validate: (values) => {
+      const errors: Partial<Record<keyof WorkflowTransitionFormValues, string>> = {};
+      if (
+        transitions.some(
+          (item) =>
+            item.id !== values.id &&
+            item.fromStageId === values.fromStageId &&
+            item.toStageId === values.toStageId
+        )
+      ) {
+        errors.toStageId = 'A route between these stages already exists';
+      }
+      if (
+        !values.hasCondition &&
+        transitions.some(
+          (item) =>
+            item.id !== values.id && item.fromStageId === values.fromStageId && item.isDefault
+        )
+      ) {
+        errors.toStageId = 'This stage already has a default route';
+      }
+      if (
+        values.hasCondition &&
+        transitions.some(
+          (item) =>
+            item.id !== values.id &&
+            item.fromStageId === values.fromStageId &&
+            !item.isDefault &&
+            item.priority === Number(values.priority)
+        )
+      ) {
+        errors.priority = 'Use a unique priority for each conditional route from this stage';
+      }
+      return errors;
+    },
+    onSubmit: (values, helpers) => {
       const condition = values.hasCondition
         ? {
             field: values.conditionField,
@@ -60,45 +115,81 @@ export function AdmissionWorkflowTransitionDrawer({
         fromStageId: values.fromStageId,
         toStageId: values.toStageId,
         priority: Number(values.priority),
-        isDefault: values.hasCondition ? false : values.isDefault,
+        isDefault: !values.hasCondition,
         conditionRuleJson: values.preserveCondition
           ? values.conditionRuleJson
           : serializeSimpleCondition(condition),
       });
+      helpers.resetForm({ values });
       onClose();
     },
   });
 
+  useEffect(() => {
+    if (!open || !formik.dirty) return undefined;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener('beforeunload', warn);
+    return () => window.removeEventListener('beforeunload', warn);
+  }, [open, formik.dirty]);
+
+  const close = () => {
+    discard.onFalse();
+    formik.resetForm();
+    onClose();
+  };
+  const requestClose = () => {
+    if (!readOnly && formik.dirty) discard.onTrue();
+    else close();
+  };
+
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      PaperProps={{ sx: { width: { xs: 1, sm: 480 }, maxWidth: 1 } }}
-    >
-      <Box
-        component="form"
-        onSubmit={formik.handleSubmit}
-        sx={{ height: 1, display: 'flex', flexDirection: 'column' }}
+    <>
+      <Drawer
+        anchor="right"
+        open={open}
+        onClose={requestClose}
+        PaperProps={{ sx: { width: { xs: 1, sm: 480 }, maxWidth: 1 } }}
       >
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2 }}>
-          <Box>
-            <Typography variant="h6">
-              {readOnly ? 'Transition details' : 'Configure transition'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Connect stages with a default route or controlled condition.
-            </Typography>
-          </Box>
-          <IconButton aria-label="Close transition editor" onClick={onClose}>
-            <Iconify icon="mdi:close" />
-          </IconButton>
-        </Stack>
-        <Divider />
-        <WorkflowTransitionFields formik={formik} stages={stages} readOnly={readOnly} />
-        {!readOnly && <DrawerActions onCancel={onClose} />}
-      </Box>
-    </Drawer>
+        <Box
+          component="form"
+          onSubmit={formik.handleSubmit}
+          sx={{ height: 1, display: 'flex', flexDirection: 'column' }}
+        >
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2 }}>
+            <Box>
+              <Typography variant="h6">
+                {readOnly ? 'Next-step details' : 'What happens next?'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Choose the usual next step or add a path for a specific outcome.
+              </Typography>
+            </Box>
+            <IconButton aria-label="Close next-step editor" onClick={requestClose}>
+              <Iconify icon="mdi:close" />
+            </IconButton>
+          </Stack>
+          <Divider />
+          <WorkflowTransitionFields
+            formik={formik}
+            stages={stages}
+            readOnly={readOnly}
+            lockFromStage
+          />
+          {!readOnly && <DrawerActions onCancel={requestClose} />}
+        </Box>
+      </Drawer>
+      <ConfirmDialog
+        open={discard.value}
+        onClose={discard.onFalse}
+        title="Discard next-step changes?"
+        content="Your unsaved next-step changes will be lost."
+        action={
+          <Button color="error" variant="contained" onClick={close}>
+            Discard changes
+          </Button>
+        }
+      />
+    </>
   );
 }
 
@@ -121,7 +212,7 @@ function DrawerActions({ onCancel }: { onCancel: () => void }) {
           size="small"
           startIcon={<Iconify icon="mdi:content-save-outline" />}
         >
-          Save transition
+          Save path
         </Button>
       </Stack>
     </>

@@ -17,6 +17,7 @@ type Props = {
   selected: boolean;
   canDelete: boolean;
   settingsOpen: boolean;
+  reorderEnabled: boolean;
   sortable: ReturnType<typeof useSortable>;
   onSelect: () => void;
   onToggleSettings: () => void;
@@ -29,6 +30,7 @@ export function FormBuilderSectionHeader({
   selected,
   canDelete,
   settingsOpen,
+  reorderEnabled,
   sortable,
   onSelect,
   onToggleSettings,
@@ -47,17 +49,19 @@ export function FormBuilderSectionHeader({
         borderRadius: 'inherit',
       }}
     >
-      <Tooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
-        <IconButton
-          ref={sortable.setActivatorNodeRef}
-          {...sortable.attributes}
-          {...sortable.listeners}
-          aria-label={`Reorder ${name}`}
-          sx={{ width: 44, height: 44, flexShrink: 0, cursor: 'grab', touchAction: 'none' }}
-        >
-          <Iconify icon="mdi:drag-vertical" width={20} />
-        </IconButton>
-      </Tooltip>
+      {reorderEnabled && (
+        <Tooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
+          <IconButton
+            ref={sortable.setActivatorNodeRef}
+            {...sortable.attributes}
+            {...sortable.listeners}
+            aria-label={`Reorder ${name}`}
+            sx={{ width: 44, height: 44, flexShrink: 0, cursor: 'grab', touchAction: 'none' }}
+          >
+            <Iconify icon="mdi:drag-vertical" width={20} />
+          </IconButton>
+        </Tooltip>
+      )}
       <ButtonBase
         onClick={onSelect}
         aria-label={`Add fields to ${name}`}

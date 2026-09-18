@@ -28,6 +28,7 @@ export type AdmissionInquiryManagement = {
   contactCount: number;
   outcome: InquiryOutcome | null;
   outcomeReason: string | null;
+  outcomeReasonCode: string | null;
   outcomeAt: string | null;
   outcomeBy: string | null;
   isOverdue: boolean;
@@ -59,7 +60,14 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
     }),
     recordAdmissionInquiryContact: builder.mutation<
       AdmissionInquiryManagement,
-      Stamp & { inquiryId: string; note: string; contactedAt?: string }
+      Stamp & {
+        inquiryId: string;
+        channel: string;
+        direction: string;
+        outcome: string;
+        note: string;
+        contactedAt?: string;
+      }
     >({
       query: ({ inquiryId, ...body }) => ({
         url: `${url(inquiryId)}/contact`,
@@ -109,6 +117,7 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
       Stamp & {
         inquiryId: string;
         outcome: InquiryOutcome;
+        reasonCode?: string | null;
         reason: string;
         duplicateOfId?: string | null;
         answers: InquiryQualificationAnswer[];

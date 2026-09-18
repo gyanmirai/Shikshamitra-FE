@@ -1,5 +1,11 @@
-import AdmissionApplicationsScreen from 'src/screens/student/admissions/admission-applications';
+import AdmissionInquiryPipelineScreen from 'src/screens/student/admissions/admission-inquiry-pipeline';
+import { studentPermissions } from 'src/constants/student-menu';
+import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 export default function Page() {
-  return <AdmissionApplicationsScreen view="pipeline" />;
+  return (
+    <StudentPermissionGuard permissionKey={studentPermissions.enrollment.inquiries}>
+      <AdmissionInquiryPipelineScreen />
+    </StudentPermissionGuard>
+  );
 }

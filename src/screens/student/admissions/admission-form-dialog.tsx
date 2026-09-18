@@ -7,6 +7,7 @@ import { Box, Chip, Stack } from '@mui/material';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
+import { AdmissionDialogTitle } from './admission-dialog-title';
 import { ADMISSION_FORM_STEPS } from './form-dialog/form-wizard-model';
 import { getFormWizardLayout } from './form-dialog/form-wizard-layout';
 import { useAdmissionFormWizard } from './form-dialog/hooks/use-admission-form-wizard';
@@ -37,7 +38,11 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
       hasForm={false}
       title={
         <Stack component="span" direction="row" spacing={1.5} alignItems="center">
-          <Box component="span">{editing ? 'Edit admission form' : 'Create admission form'}</Box>
+          <AdmissionDialogTitle
+            title={editing ? 'Edit admission form' : 'Create admission form'}
+            helpText="Build the reusable fields, validation, and review structure used by admission applicants and staff."
+            helpLabel="Admission form information"
+          />
           <Chip component="span" size="small" label="Draft" variant="outlined" />
         </Stack>
       }
@@ -75,7 +80,7 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
             validationSchema={wizard.validationSchema}
             validateOnChange
             scrollbarHeight="auto"
-            showSaveButton={false}
+            showSaveButton={wizard.activeStep < ADMISSION_FORM_STEPS.length - 1}
             nextButtonLabel="Next"
             finalButtonLabel="Save draft"
             saveAndNextButtonProps={{
@@ -87,8 +92,13 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
                 }
               },
             }}
+            saveButtonProps={{
+              loading: busy,
+              title: 'Save this draft and close the form builder',
+            }}
             handleBack={wizard.back}
             handleNext={wizard.next}
+            onSave={wizard.saveDraft}
             onStepClick={wizard.goTo}
             isStepClickable={(index) => index <= wizard.activeStep + 1}
             validateForwardStepClick
@@ -96,7 +106,7 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
               <FormBuilderWizardContent
                 formik={formik}
                 activeStep={wizard.activeStep}
-                editing={Boolean(editing)}
+                editing={editing}
                 busy={busy}
                 onClose={onClose}
                 onEditDetails={() => wizard.goTo(0)}

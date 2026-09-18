@@ -26,6 +26,7 @@ export type AdmissionOfferingListItem = {
   isActive: boolean;
   availabilityStatus: AdmissionOfferingAvailabilityStatus;
   configurationStatus: AdmissionOfferingConfigurationStatus;
+  canActivate: boolean;
   applicationCount: number;
   canEditIdentity: boolean;
   canDelete: boolean;
@@ -121,6 +122,8 @@ export type BulkAdmissionOfferingResult = {
     code: string;
     offeringId?: string | null;
     isValid: boolean;
+    canSaveInactive: boolean;
+    canActivate: boolean;
     errors: AdmissionOfferingValidationError[];
   }>;
 };

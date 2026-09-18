@@ -1,9 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
+import { EmptyContent } from 'src/components/empty-content';
 import { LoadingButton } from 'src/components/loading-button';
-import { Box, Card, Alert, Stack, Button, TextField, Typography, CardContent } from '@mui/material';
+import { Box, Card, Paper, Stack, Button, TextField, Typography, CardContent } from '@mui/material';
 import {
   useCreateAdmissionApplicantNoteMutation,
   useUpdateAdmissionApplicantNoteMutation,
@@ -36,17 +39,24 @@ export default function AdmissionApplicantNotes({ applicantId, notes }: Props) {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          Notes
-        </Typography>
-        <Stack spacing={1.5}>
+        <Stack spacing={2}>
+          <Box>
+            <Typography variant="h6">Team notes</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Keep internal context for the next counselor or admissions staff member.
+            </Typography>
+          </Box>
           <TextField
             multiline
-            minRows={3}
+            minRows={2}
+            maxRows={6}
             label={editingId ? 'Edit note' : 'Add note'}
+            placeholder="Add useful family context, preferences, or an agreed follow-up…"
             value={text}
             onChange={(event) => setText(event.target.value)}
             fullWidth
+            inputProps={{ maxLength: 2000 }}
+            helperText={`${text.length}/2000 characters`}
           />
           <Stack direction="row" spacing={1}>
             <LoadingButton
@@ -54,6 +64,9 @@ export default function AdmissionApplicantNotes({ applicantId, notes }: Props) {
               variant="contained"
               onClick={save}
               disabled={!text.trim()}
+              startIcon={
+                <Iconify icon={editingId ? 'mdi:content-save-outline' : 'mdi:note-plus-outline'} />
+              }
             >
               {editingId ? 'Update note' : 'Add note'}
             </LoadingButton>
@@ -69,30 +82,45 @@ export default function AdmissionApplicantNotes({ applicantId, notes }: Props) {
             )}
           </Stack>
           {notes.length ? (
-            notes.map((note) => (
-              <Box key={note.id} sx={{ borderBottom: 1, borderColor: 'divider', pb: 1 }}>
-                <Typography sx={{ whiteSpace: 'pre-wrap' }}>{note.text}</Typography>
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <Typography variant="caption" color="text.secondary">
-                    {new Date(note.creationTime).toLocaleString()}
-                    {note.lastEditedAt
-                      ? ` · edited ${new Date(note.lastEditedAt).toLocaleString()}`
-                      : ''}
+            <Stack spacing={1.5}>
+              {notes.map((note) => (
+                <Paper key={note.id} variant="outlined" sx={{ p: 1.5 }}>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
+                    {note.text}
                   </Typography>
-                  <Button
-                    size="small"
-                    onClick={() => {
-                      setEditingId(note.id);
-                      setText(note.text);
-                    }}
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    alignItems="center"
+                    justifyContent="space-between"
+                    sx={{ mt: 1 }}
                   >
-                    Edit
-                  </Button>
-                </Stack>
-              </Box>
-            ))
+                    <Typography variant="caption" color="text.secondary">
+                      {fDateTime(note.creationTime) || 'Time not recorded'}
+                      {note.lastEditedAt ? ` · edited ${fDateTime(note.lastEditedAt)}` : ''}
+                    </Typography>
+                    <Button
+                      size="small"
+                      startIcon={<Iconify icon="mdi:pencil-outline" />}
+                      onClick={() => {
+                        setEditingId(note.id);
+                        setText(note.text);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  </Stack>
+                </Paper>
+              ))}
+            </Stack>
           ) : (
-            <Alert severity="info">No notes yet.</Alert>
+            <EmptyContent
+              filled
+              title="No team notes yet"
+              description="Add only context that helps staff support this family’s admission journey."
+              sx={{ minHeight: 190 }}
+              slotProps={{ img: { maxWidth: 80 } }}
+            />
           )}
         </Stack>
       </CardContent>

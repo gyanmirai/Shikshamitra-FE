@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 
 import { PaletteFieldButton } from './palette-field-button';
 import { CUSTOM_FIELD_PRESETS } from '../form-field-presets';
-import { FIELD_TYPES, fieldTypeIcon } from '../form-dialog-model';
+import { fieldTypeIcon, CREATABLE_FIELD_TYPES } from '../form-dialog-model';
 
 import type { AdmissionFieldPreset } from '../form-field-presets';
 
@@ -38,7 +38,7 @@ export function CustomFieldPalette({ onAddField }: Props) {
       <Typography variant="overline" color="text.secondary" sx={{ pt: 1 }}>
         Basic field types
       </Typography>
-      {FIELD_TYPES.map(([label, value]) => (
+      {CREATABLE_FIELD_TYPES.map(([label, value]) => (
         <PaletteFieldButton
           key={value}
           label={label}

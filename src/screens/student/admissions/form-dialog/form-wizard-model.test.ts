@@ -10,6 +10,8 @@ function validForm(): CreateUpdateAdmissionForm {
     code: 'ADMISSION_2026',
     layoutType: 1,
     fieldsPerRow: 1,
+    defaultLanguage: 'en',
+    supportedLanguages: ['en'],
     sections: [
       {
         id: 'student',

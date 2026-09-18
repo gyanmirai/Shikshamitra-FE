@@ -34,7 +34,7 @@ export const bulkOfferingInitialValues: BulkOfferingValues = {
   workflowDefinitionId: '',
   inquiryFormDefinitionId: '',
   applicationFormDefinitionId: '',
-  isActive: true,
+  isActive: false,
 };
 
 export const bulkOfferingSchema = Yup.object({
@@ -66,9 +66,18 @@ export const bulkOfferingSchema = Yup.object({
             }
           ),
     }),
-  workflowDefinitionId: Yup.string().required('Workflow is required'),
-  inquiryFormDefinitionId: Yup.string().required('Inquiry form is required'),
-  applicationFormDefinitionId: Yup.string().required('Application form is required'),
+  workflowDefinitionId: Yup.string().when('isActive', {
+    is: true,
+    then: (schema) => schema.required('Workflow is required for activation'),
+  }),
+  inquiryFormDefinitionId: Yup.string().when('isActive', {
+    is: true,
+    then: (schema) => schema.required('Inquiry form is required for activation'),
+  }),
+  applicationFormDefinitionId: Yup.string().when('isActive', {
+    is: true,
+    then: (schema) => schema.required('Application form is required for activation'),
+  }),
   isActive: Yup.boolean().required(),
 });
 

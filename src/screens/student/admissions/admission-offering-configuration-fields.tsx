@@ -1,10 +1,13 @@
 import type { FormikProps } from 'formik';
-import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
-import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
-import CustomSelect from 'src/components/custom-select';
-import { Grid, Alert, Switch, TextField, Typography, FormControlLabel } from '@mui/material';
+import { Grid, Alert, TextField, Typography } from '@mui/material';
 
+import { AdmissionDefinitionSelect } from './admission-definition-select';
+
+import type {
+  AdmissionDefinitionOption,
+  AdmissionDefinitionFetcher,
+} from './use-admission-definition-options';
 import {
   type AdmissionOfferingFormValues,
   isAdmissionOfferingConfigurationIncomplete,
@@ -12,18 +15,20 @@ import {
 
 type Props = {
   formik: FormikProps<AdmissionOfferingFormValues>;
-  workflows: AdmissionWorkflow[];
-  forms: AdmissionForm[];
-  loading: boolean;
-  statusLocked?: boolean;
+  fetchWorkflows: AdmissionDefinitionFetcher;
+  fetchForms: AdmissionDefinitionFetcher;
+  initialWorkflow?: AdmissionDefinitionOption | null;
+  initialInquiryForm?: AdmissionDefinitionOption | null;
+  initialApplicationForm?: AdmissionDefinitionOption | null;
 };
 
 export function AdmissionOfferingConfigurationFields({
   formik,
-  workflows,
-  forms,
-  loading,
-  statusLocked,
+  fetchWorkflows,
+  fetchForms,
+  initialWorkflow,
+  initialInquiryForm,
+  initialApplicationForm,
 }: Props) {
   const missingPublishedConfiguration = isAdmissionOfferingConfigurationIncomplete(formik.values);
 
@@ -32,7 +37,7 @@ export function AdmissionOfferingConfigurationFields({
       <Grid size={12}>
         <Typography variant="subtitle2">Admission configuration</Typography>
       </Grid>
-      {missingPublishedConfiguration && !loading && (
+      {missingPublishedConfiguration && (
         <Grid size={12}>
           <Alert severity="warning">
             Select a published workflow, inquiry form, and application form before activating this
@@ -48,59 +53,46 @@ export function AdmissionOfferingConfigurationFields({
           {...formik.getFieldProps('code')}
           error={formik.touched.code && Boolean(formik.errors.code)}
           helperText={
-            formik.touched.code ? formik.errors.code : 'A stable, unique operational code.'
+            formik.touched.code
+              ? formik.errors.code
+              : 'A stable operational code used to identify this intake.'
           }
         />
       </Grid>
       <Grid size={12}>
-        <CustomSelect
-          options={workflows}
+        <AdmissionDefinitionSelect
           label="Published workflow"
-          value={formik.values.workflowDefinitionId ?? ''}
-          onChange={(value) => formik.setFieldValue('workflowDefinitionId', value || null)}
-          labelKey="name"
-          valueKey="id"
-          isLoading={loading}
-          noOptionsMessage="No published workflows available"
+          valueId={formik.values.workflowDefinitionId ?? null}
+          initialOption={initialWorkflow}
+          fetchOptions={fetchWorkflows}
+          onChange={(value) => formik.setFieldValue('workflowDefinitionId', value)}
+          noOptionsText="No published workflows found"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <CustomSelect
-          options={forms}
+        <AdmissionDefinitionSelect
           label="Published inquiry form"
-          value={formik.values.inquiryFormDefinitionId ?? ''}
-          onChange={(value) => formik.setFieldValue('inquiryFormDefinitionId', value || null)}
-          labelKey="name"
-          valueKey="id"
-          isLoading={loading}
-          noOptionsMessage="No published forms available"
+          valueId={formik.values.inquiryFormDefinitionId ?? null}
+          initialOption={initialInquiryForm}
+          fetchOptions={fetchForms}
+          onChange={(value) => formik.setFieldValue('inquiryFormDefinitionId', value)}
+          noOptionsText="No published forms found"
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <CustomSelect
-          options={forms}
+        <AdmissionDefinitionSelect
           label="Published application form"
-          value={formik.values.applicationFormDefinitionId ?? ''}
-          onChange={(value) => formik.setFieldValue('applicationFormDefinitionId', value || null)}
-          labelKey="name"
-          valueKey="id"
-          isLoading={loading}
-          noOptionsMessage="No published forms available"
+          valueId={formik.values.applicationFormDefinitionId ?? null}
+          initialOption={initialApplicationForm}
+          fetchOptions={fetchForms}
+          onChange={(value) => formik.setFieldValue('applicationFormDefinitionId', value)}
+          noOptionsText="No published forms found"
         />
       </Grid>
       <Grid size={12}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={formik.values.isActive}
-              disabled={statusLocked}
-              onChange={(_, checked) => formik.setFieldValue('isActive', checked)}
-            />
-          }
-          label="Active"
-        />
-        <Typography variant="caption" color="text.secondary" display="block">
-          Active offerings require a published cycle, complete forms, workflow, and valid dates.
+        <Typography variant="caption" color="text.secondary">
+          Save incomplete preparation as inactive. Activation requires a published cycle, complete
+          forms and workflow, and valid dates.
         </Typography>
       </Grid>
     </Grid>

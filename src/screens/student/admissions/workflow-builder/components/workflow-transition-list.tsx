@@ -4,7 +4,8 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Chip, Alert, Stack, Button, IconButton, Typography } from '@mui/material';
+import { EmptyContent } from 'src/components/empty-content';
+import { Box, Card, Chip, Stack, Button, IconButton, Typography } from '@mui/material';
 
 import {
   getTransitionLabel,
@@ -31,17 +32,22 @@ export function WorkflowTransitionList({
 }: Props) {
   const orderedTransitions = orderTransitionsByJourney(transitions, stages);
   return (
-    <Stack sx={{ p: 2, minHeight: 0, overflowY: 'auto' }} spacing={1.25}>
+    <Stack
+      component="section"
+      aria-labelledby="workflow-transitions-heading"
+      sx={{ p: 2, minHeight: 0, overflowY: 'auto' }}
+      spacing={1.25}
+    >
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Box>
-          <Typography variant="subtitle1" fontWeight={700}>
+          <Typography id="workflow-transitions-heading" variant="subtitle1" fontWeight={700}>
             Transitions
           </Typography>
           <Typography variant="caption" color="text.secondary">
             Add a default route or controlled condition from each non-terminal stage.
           </Typography>
         </Box>
-        {!readOnly && (
+        {!readOnly && transitions.length > 0 && (
           <Button
             size="small"
             startIcon={<Iconify icon="mdi:source-branch-plus" />}
@@ -53,14 +59,40 @@ export function WorkflowTransitionList({
         )}
       </Stack>
       {transitions.length === 0 && (
-        <Alert severity="info">
-          No transitions yet. Connect stages without relying on their visual order.
-        </Alert>
+        <EmptyContent
+          filled
+          title={stages.length < 2 ? 'Add stages before routes' : 'Connect the journey'}
+          description={
+            stages.length < 2
+              ? 'Create at least two stages. You can then define how an applicant moves from one stage to the next.'
+              : 'Add a route between stages. Use a default route for the usual path or conditions for special cases.'
+          }
+          action={
+            !readOnly && stages.length >= 2 ? (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<Iconify icon="mdi:source-branch-plus" />}
+                onClick={onAdd}
+                sx={{ mt: 2, minHeight: 44 }}
+              >
+                Add first transition
+              </Button>
+            ) : undefined
+          }
+          sx={{ minHeight: 280, py: 4 }}
+          slotProps={{ img: { maxWidth: 104 } }}
+        />
       )}
       {orderedTransitions.map((transition) => {
         const transitionLabel = getTransitionLabel(transition, stages);
         return (
-          <Card key={transition.id} variant="outlined" sx={{ p: 1.5 }}>
+          <Card
+            id={`workflow-transition-${transition.id}`}
+            key={transition.id}
+            variant="outlined"
+            sx={{ p: 1.5 }}
+          >
             <Stack direction="row" alignItems="flex-start" spacing={1}>
               <Iconify icon="mdi:source-branch" color="primary.main" />
               <Box sx={{ flex: 1 }}>

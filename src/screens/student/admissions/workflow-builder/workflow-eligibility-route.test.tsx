@@ -22,7 +22,7 @@ describe('eligibility route presets', { timeout: 15000 }, () => {
     const { user, onSave } = setup();
     await chooseEligibilityRouteOption(user, 'Continue after eligibility check', label);
     expect(screen.queryByRole('textbox', { name: 'Application field *' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toEqual({
       id: 'transition-1',
@@ -48,7 +48,7 @@ describe('eligibility route presets', { timeout: 15000 }, () => {
       'Continue after eligibility check',
       'Eligible or approved exception (default route)'
     );
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       isDefault: true,
@@ -65,7 +65,7 @@ describe('eligibility route presets', { timeout: 15000 }, () => {
     expect(screen.getByRole('textbox', { name: 'Application field *' })).toHaveValue(
       'application.CATEGORY'
     );
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].conditionRuleJson)).toEqual(condition);
   });
@@ -75,6 +75,6 @@ describe('eligibility route presets', { timeout: 15000 }, () => {
     expect(
       screen.getByRole('combobox', { name: 'Continue after eligibility check' })
     ).toHaveAttribute('aria-disabled', 'true');
-    expect(screen.queryByRole('button', { name: 'Save transition' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save path' })).not.toBeInTheDocument();
   });
 });

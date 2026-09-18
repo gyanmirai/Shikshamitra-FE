@@ -2,7 +2,7 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import { useState } from 'react';
 
-type BuilderPanel = 'fields' | 'form' | 'settings';
+type BuilderPanel = 'outline' | 'form' | 'settings';
 
 export function useFormBuilderSelection(sections: CreateUpdateAdmissionForm['sections']) {
   const [selection, setSelection] = useState<{ sectionId: string | null; fieldId: string | null }>(

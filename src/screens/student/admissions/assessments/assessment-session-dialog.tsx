@@ -47,7 +47,7 @@ export function AssessmentSessionDialog({ scope, session, onClose, onSave }: Pro
     <CustomDialog
       open
       handleClose={onClose}
-      hasUnsavedChanges={formik.dirty}
+      guardUnsavedChanges={formik.dirty}
       disableClose={formik.isSubmitting}
       maxWidth="sm"
       title={session ? 'Edit assessment session' : 'Create assessment session'}

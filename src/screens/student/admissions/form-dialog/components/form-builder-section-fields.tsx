@@ -14,6 +14,7 @@ type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   sectionIndex: number;
   selectedFieldId: string | null;
+  showInlineAddField?: boolean;
   onSelectField: (fieldId: string) => void;
 };
 
@@ -21,6 +22,7 @@ export function FormBuilderSectionFields({
   formik,
   sectionIndex,
   selectedFieldId,
+  showInlineAddField = true,
   onSelectField,
 }: Props) {
   const section = formik.values.sections[sectionIndex];
@@ -73,15 +75,17 @@ export function FormBuilderSectionFields({
           </Typography>
         </Stack>
       )}
-      <Button
-        size="small"
-        color="inherit"
-        startIcon={<Iconify icon="mdi:plus" />}
-        onClick={addField}
-        sx={{ minHeight: 44, alignSelf: 'flex-start' }}
-      >
-        Add custom field
-      </Button>
+      {showInlineAddField && (
+        <Button
+          size="small"
+          color="inherit"
+          startIcon={<Iconify icon="mdi:plus" />}
+          onClick={addField}
+          sx={{ minHeight: 44, alignSelf: 'flex-start' }}
+        >
+          Add custom field
+        </Button>
+      )}
     </Stack>
   );
 }

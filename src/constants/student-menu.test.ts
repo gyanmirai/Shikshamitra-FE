@@ -1,6 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import studentModule, { studentVisibilityPermissions } from './student-menu';
+import studentModule, { studentPermissions, studentVisibilityPermissions } from './student-menu';
 
 type NestedMenuItem = {
   title: string;
@@ -89,6 +89,9 @@ describe('student navigation', () => {
     expect(crm?.children?.map((item) => item.title)).toEqual(['Inquiries', 'Pipeline']);
     expect(crm?.children?.find((item) => item.title === 'Pipeline')?.path).toBe(
       '/student/admissions/pipeline'
+    );
+    expect(crm?.children?.find((item) => item.title === 'Pipeline')?.permissionName).toBe(
+      studentPermissions.enrollment.inquiries
     );
     expect(crm?.children?.every((item) => item.path.startsWith('/student/admissions/'))).toBe(true);
 

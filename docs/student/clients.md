@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-11
+updated_on: 2026-09-18
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -12,17 +12,24 @@ audience: humans-and-agents
 
 TL;DR: the individual Enrollment Admissions CRM project uses focused RTK Query clients under `src/redux/student/admissions` and invalidates the shared Student Admissions cache tags after mutations.
 
+## Admission Cycle client
+
+`src/redux/student/admissions/admission-cycles-api.ts` owns the Admission Cycle RTK Query contract.
+It provides server-paged list/detail reads, impact/history reads, Draft create/edit, readiness validation, publish, close, reopen, archive, unused-Draft delete, clone, window revision, and schedule commands.
+Every mutation invalidates `studentAdmissionsCrmType.admissionCycle`; impact/history reads are loaded only when their dialogs open.
+The backend owns lifecycle, dependency, permission, institution-timezone, and concurrency enforcement.
+
 ## Client map
 
-| Client                          | Responsibilities                                                                                                 | Main screens                                |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| `admission-cycles-api.ts`       | Admission cycle list and lifecycle commands                                                                      | Cycles and cycle selectors                  |
-| `admission-offerings-api.ts`    | Offering list, detail, CRUD, explicit state commands, clone, readiness, availability, and bulk preview or commit | Offerings, inquiry selection, Applicant 360 |
-| `admission-workflows-api.ts`    | Workflow CRUD, graph save, stage metadata, validation, publish, archive, clone, versions, and usage              | Workflow list and dedicated builder         |
-| `admission-forms-api.ts`        | Form definitions, sections, fields, clone, publish, validation, preview                                          | Form builder and preview                    |
-| `admission-inquiries-api.ts`    | Server-paged inquiry list, create, duplicate check, and basic contacted action                                   | Inquiry CRM and inquiry dialog              |
-| `admission-applicants-api.ts`   | Applicant 360, notes, activities                                                                                 | Applicant 360                               |
-| `admission-applications-api.ts` | Start application, list, frozen workflow, form values, draft save, submit, stage advance, and transition history | Application list and detail                 |
+| Client                          | Responsibilities                                                                                                                                                                                                                             | Main screens                                                |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `admission-cycles-api.ts`       | Admission cycle list and lifecycle commands                                                                                                                                                                                                  | Cycles and cycle selectors                                  |
+| `admission-offerings-api.ts`    | Offering list, detail, CRUD, explicit state commands, clone, readiness, availability, and bulk preview or commit                                                                                                                             | Offerings, inquiry selection, Applicant 360                 |
+| `admission-workflows-api.ts`    | Workflow CRUD, server-searchable published-option paging, graph save, metadata, validation, lifecycle, versions, and usage                                                                                                                   | Workflow list, builder, and Offering setup                  |
+| `admission-forms-api.ts`        | Form definitions, server-searchable published-option paging, detail reads for school-form reuse, sections, fields, lifecycle, validation, and preview                                                                                        | Form builder, template library, preview, and Offering setup |
+| `admission-inquiries-api.ts`    | Server-paged/sorted owner and operational queues, URL-backed filters, detail update with concurrency, timeline, filtered CSV export, duplicate resolution, scoped single/bulk assignment, and inquiry-linked Communication campaign creation | Inquiry CRM, management drawer, and inquiry dialog          |
+| `admission-applicants-api.ts`   | Applicant 360 identity/family context, application and stage progress with stage timestamps, bounded recent activity, and notes                                                                                                              | Applicant 360                                               |
+| `admission-applications-api.ts` | Start application, list, frozen workflow, form values, draft save, submit, stage advance, and transition history                                                                                                                             | Application list and detail                                 |
 
 ## Endpoint ownership
 
@@ -46,8 +53,12 @@ The existing application decision client continues to own approval, rejection, w
 
 Inquiry stage configuration uses `admission-inquiry-policy.ts`; disabled or missing settings preserve the Basic process.
 `admission-inquiry-settings-api.ts` loads offering-scoped active counsellors for workflow setup.
-`admission-inquiry-management-api.ts` reads the safe management summary and records contacts, follow-ups, qualification, and reopen actions.
+`admission-inquiry-management-api.ts` reads the safe management summary and records structured contacts, follow-ups, qualification with closure codes, and reopen actions.
 Successful management commands invalidate the inquiry tag so the list and open drawer reload authoritative state.
+Runtime counsellor search and assignment stay in `admission-inquiries-api.ts`; they use the dedicated Inquiry Assign permission and keep offering-scope validation on the backend.
+The same client sends `workQueue` for Overdue, Awaiting first contact, Awaiting qualification, and Open follow-ups. The backend filters these queues before paging and returns the row's cycle, offering, counsellor, management readiness, deadlines, and next follow-up in the list response.
+Inquiry Pipeline reuses this server-paged list contract once per visible status lane. Each lane requests only its 25 most recent matching inquiries and displays the authoritative `totalCount`; changing a CRM filter updates every visible lane without fetching application records.
+The Inquiry list and Pipeline also reuse `createAdmissionInquiryCommunication`. The compose dialog permits WhatsApp, SMS, and Email, supplies language-aware acknowledgement/follow-up/application templates, requires a subject for Email, hides immediate delivery without `Communication.Campaigns.Send`, and is visible only when the user has both Inquiry Manage and `Communication.Campaigns.Add`. Inquiry creation can invoke the same contract for an automatic acknowledgement; the backend remains authoritative for approval, providers, consent, delivery tracking, retries, and usage.
 
 Managed Form stages use `admission-form-stage-api.ts` for the scoped stage summary, section verification, verification revocation, and correction requests. The client keeps application, stage, and section identifiers in the route and sends only command data plus the application concurrency stamp. Both mutations invalidate the stage-specific and application tags so blockers, attempts, form state, and workflow controls refresh together. `admission-form-stage-policy.ts` owns the versioned editor shape and preserves unrelated stage configuration.
 
@@ -55,7 +66,7 @@ Managed Payment stages use `admission-payment-policy.ts`, `admission-payment-typ
 
 Managed Offer stages use `admission-offer-policy.ts`, `admission-offer-types.ts`, and `admission-offer-api.ts`. Application and stage identifiers stay in scoped routes; every command sends the captured application stamp and a unique idempotency key. Mutations invalidate the application tag so status, blockers, capabilities, history, and workflow state refresh. The application detail mounts the managed card only when `offerStageEnabled` is present and hides the legacy offer actions for that stage; missing metadata preserves release compatibility.
 
-Managed Seat stages use `admission-seat-policy.ts`, `admission-seat-types.ts`, and `admission-seat-api.ts`. Commands send application, pool, and allocation concurrency stamps when applicable, plus one idempotency key per user action. Every mutation invalidates the application tag so shared capacity, expiry, waitlist position, blockers, history, and workflow state reload together. The application detail mounts the Seat card only when `seatStageEnabled` is present; missing metadata preserves the basic workflow step.
+Legacy managed Seat stages use `admission-seat-policy.ts`, `admission-seat-types.ts`, and `admission-seat-api.ts`. They remain supported for immutable published versions and applications already pinned to them, but Seat is not selectable in new workflow drafts. New capacity and waitlist setup requires a separate persisted Admission Offering contract and must not be represented by UI-only fields. Legacy commands continue to send pool and allocation concurrency stamps plus an idempotency key, and they invalidate the application tag so existing journeys remain operational.
 
 The clients use the Student Enrollment Admissions endpoint family under `/student/enrollment/admissions`.
 Request and response contracts are owned by `../../../Shikshamitra-BE/src/ShikshaMitra.Application.Contracts/Students/Enrollments/Admissions/**`.

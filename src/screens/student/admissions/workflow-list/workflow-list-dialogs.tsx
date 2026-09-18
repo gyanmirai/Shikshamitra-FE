@@ -1,5 +1,4 @@
-
-import { Button } from '@mui/material';
+import { Alert, Button, Stack, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 
@@ -14,10 +13,20 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
   const deleting = pending?.action === 'delete';
   return (
     <>
-      <AdmissionWorkflowDialog open={actions.createDialog.value} onClose={actions.createDialog.onFalse} saving={actions.createState.isLoading} onSave={actions.create} />
+      <AdmissionWorkflowDialog
+        open={actions.createDialog.value}
+        onClose={actions.createDialog.onFalse}
+        saving={actions.createState.isLoading}
+        showStarterJourney
+        autoGenerateCode
+        onSave={actions.create}
+      />
       <AdmissionWorkflowDialog
         open={actions.cloneDialog.value}
-        onClose={() => { actions.cloneDialog.onFalse(); actions.setCloneSource(null); }}
+        onClose={() => {
+          actions.cloneDialog.onFalse();
+          actions.setCloneSource(null);
+        }}
         saving={actions.cloneState.isLoading}
         title="Clone Workflow"
         submitLabel="Clone draft"
@@ -30,20 +39,35 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
       />
       <ConfirmDialog
         open={Boolean(pending)}
-        onClose={() => actions.setPendingConfirmation(null)}
+        onClose={actions.closeConfirmation}
         icon={deleting ? 'error' : 'warning'}
         title={deleting ? 'Delete workflow draft?' : 'Archive workflow?'}
-        content={deleting ? 'This permanently removes the unused draft and its stage configuration.' : 'Archived workflows cannot be selected for new admission offerings.'}
+        content={
+          <Stack spacing={1.5}>
+            <Typography variant="body2">
+              {deleting
+                ? 'This permanently removes the unused draft and its stage configuration.'
+                : 'Archived workflows cannot be selected for new admission offerings.'}
+            </Typography>
+            {actions.confirmationNotice && (
+              <Alert severity="warning">{actions.confirmationNotice}</Alert>
+            )}
+          </Stack>
+        }
         action={
           <Button
             size="small"
             variant="contained"
             color={deleting ? 'error' : 'warning'}
-            disabled={actions.archiveState.isLoading || actions.deleteState.isLoading}
+            disabled={
+              actions.archiveState.isLoading ||
+              actions.deleteState.isLoading ||
+              actions.confirmationRefreshing
+            }
             startIcon={<Iconify icon={deleting ? 'mdi:delete-outline' : 'mdi:archive-outline'} />}
             onClick={actions.confirm}
           >
-            {deleting ? 'Delete' : 'Archive'}
+            {actions.confirmationRefreshing ? 'Checking latest…' : deleting ? 'Delete' : 'Archive'}
           </Button>
         }
       />

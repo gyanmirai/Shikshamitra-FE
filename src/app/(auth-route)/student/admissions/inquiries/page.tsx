@@ -1,5 +1,11 @@
 import AdmissionInquiriesScreen from 'src/screens/student/admissions/admission-inquiries';
+import { studentPermissions } from 'src/constants/student-menu';
+import StudentPermissionGuard from 'src/components/student-permission-guard';
 
 export default function Page() {
-  return <AdmissionInquiriesScreen />;
+  return (
+    <StudentPermissionGuard permissionKey={studentPermissions.enrollment.inquiries}>
+      <AdmissionInquiriesScreen />
+    </StudentPermissionGuard>
+  );
 }

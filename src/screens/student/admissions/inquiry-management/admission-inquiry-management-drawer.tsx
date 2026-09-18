@@ -1,11 +1,14 @@
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
+import NextLink from 'next/link';
 import { Iconify } from 'src/components/iconify';
+import { studentPaths } from 'src/constants/student-menu';
 import {
   Box,
   Alert,
   Stack,
   Drawer,
+  Button,
   Divider,
   Skeleton,
   IconButton,
@@ -14,7 +17,9 @@ import {
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
 import { InquiryFollowUps } from './inquiry-follow-ups';
+import { InquiryTimeline } from './inquiry-timeline';
 import { InquiryContactForm } from './inquiry-contact-form';
+import { InquiryOverviewForm } from './inquiry-overview-form';
 import { InquiryManagementSummary } from './inquiry-management-summary';
 import { InquiryQualificationForm } from './inquiry-qualification-form';
 
@@ -40,6 +45,16 @@ export function AdmissionInquiryManagementDrawer({
             {inquiry?.inquiryNumber} · {inquiry?.applicantName}
           </Typography>
         </Box>
+        {inquiry?.applicantId && (
+          <Button
+            component={NextLink}
+            href={`${studentPaths.enrollment.root}/applicants/${inquiry.applicantId}?inquiryId=${encodeURIComponent(inquiry.id)}`}
+            size="small"
+            variant="outlined"
+          >
+            Applicant 360
+          </Button>
+        )}
         <IconButton aria-label="Close inquiry management" onClick={onClose}>
           <Iconify icon="mdi:close" />
         </IconButton>
@@ -64,14 +79,22 @@ export function AdmissionInquiryManagementDrawer({
             Inquiry management could not be loaded.
           </Alert>
         )}
+        {query.data && inquiry && (
+          <InquiryOverviewForm inquiry={inquiry} readOnly={query.data.isLocked} />
+        )}
         {query.data && !query.data.managed && (
-          <Alert severity="info">
-            This inquiry uses the Basic process. Enable Managed Inquiry on its workflow to use
-            contact notes, follow-ups and qualification.
-          </Alert>
+          <>
+            <Alert severity="info">
+              This inquiry uses the Basic process. Enable Managed Inquiry on its workflow to use
+              contact notes, follow-ups and qualification.
+            </Alert>
+            <Divider />
+            <InquiryTimeline inquiryId={query.data.inquiryId} />
+          </>
         )}
         {query.data?.managed && (
           <>
+            <Divider />
             <InquiryManagementSummary value={query.data} />
             {query.data.isLocked && (
               <Alert severity="info">
@@ -84,6 +107,8 @@ export function AdmissionInquiryManagementDrawer({
             <InquiryFollowUps value={query.data} readOnly={query.data.isLocked} />
             {!query.data.isLocked && <Divider />}
             {!query.data.isLocked && <InquiryQualificationForm value={query.data} />}
+            <Divider />
+            <InquiryTimeline inquiryId={query.data.inquiryId} />
           </>
         )}
       </Stack>
