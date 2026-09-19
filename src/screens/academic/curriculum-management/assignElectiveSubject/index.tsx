@@ -34,6 +34,7 @@ import ValidationIssuesDrawer from './components/ValidationIssuesDrawer';
 import SubjectSelectionControl from './components/SubjectSelectionControl';
 import useElectiveAssignmentState from './hooks/useElectiveAssignmentState';
 import AssignmentProgressSummary from './components/AssignmentProgressSummary';
+import { buildElectiveAssignmentUpdates } from './utils/buildElectiveAssignmentUpdates';
 
 const AssignElectiveSubject = () => {
   const router = useRouter();
@@ -143,7 +144,7 @@ const AssignElectiveSubject = () => {
 
   const {
     studentSelections,
-    assignSubject,
+    toggleSubject,
     bulkAssignSubject,
     clearSelections,
     resetSelections,
@@ -210,10 +211,7 @@ const AssignElectiveSubject = () => {
     const payload = {
       academicMediumId: medium?.id,
       electiveGroupId,
-      assignments: Object.entries(studentSelections).map(([studentId, selectedSubjectId]) => ({
-        studentId,
-        selectedSubjectId,
-      })),
+      assignments: buildElectiveAssignmentUpdates(students, studentSelections),
     };
 
     try {
@@ -531,7 +529,7 @@ const AssignElectiveSubject = () => {
                   <SubjectSelectionControl
                     subjects={row.selectableSubjects}
                     selectedSubjectId={studentSelections[row.studentId]}
-                    onSelect={(subjectId) => assignSubject(row.studentId, subjectId)}
+                    onToggle={(subjectId) => toggleSubject(row.studentId, subjectId)}
                     disabled={isLocked}
                     ariaLabelPrefix={row.studentName}
                   />

@@ -2,7 +2,6 @@ import type { Dayjs } from 'dayjs';
 
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 export const SCHEDULE_EXAM_STATUS_REFRESH_INTERVAL_MS = 60_000;
@@ -28,25 +27,17 @@ export const buildScheduleExamListQueryParams = ({
   dateRange,
   page,
   pageSize,
-}: ScheduleExamListQueryInput) => {
-  const isPendingStatus = activeStatus === examScheduledStatus.Pending;
-
-  return {
-    AcademicMediumId: mediumId,
-    Status: activeStatus,
-    StandardId: selectedClass !== 'all' && selectedClass ? selectedClass : undefined,
-    StartDate:
-      !isPendingStatus && dateRange[0]?.isValid()
-        ? dateConvertor(dateRange[0].format(dateFormat))
-        : undefined,
-    EndDate:
-      !isPendingStatus && dateRange[1]?.isValid()
-        ? dateConvertor(dateRange[1].format(dateFormat))
-        : undefined,
-    SkipCount: (page - 1) * pageSize,
-    MaxResultCount: pageSize,
-  };
-};
+}: ScheduleExamListQueryInput) => ({
+  AcademicMediumId: mediumId,
+  Status: activeStatus,
+  StandardId: selectedClass !== 'all' && selectedClass ? selectedClass : undefined,
+  StartDate:
+    dateRange[0]?.isValid() ? dateConvertor(dateRange[0].format(dateFormat)) : undefined,
+  EndDate:
+    dateRange[1]?.isValid() ? dateConvertor(dateRange[1].format(dateFormat)) : undefined,
+  SkipCount: (page - 1) * pageSize,
+  MaxResultCount: pageSize,
+});
 
 export const useScheduleExamListQuery = (input: ScheduleExamListQueryInput) => {
   const params = buildScheduleExamListQueryParams(input);

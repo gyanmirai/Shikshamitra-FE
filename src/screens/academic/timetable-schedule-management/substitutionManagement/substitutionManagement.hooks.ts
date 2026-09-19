@@ -32,6 +32,11 @@ type QueryOptions = {
   skip?: boolean;
 };
 
+export const shouldFetchTeacherAvailability = (
+  activeTab: string,
+  availabilityDialogOpen: boolean
+) => activeTab === 'availability' || availabilityDialogOpen;
+
 const silentQueryPopup = {
   error: true,
   success: false,
@@ -81,12 +86,14 @@ export const useMySubstitutionDutiesDataQuery = (
   }) as ReturnType<typeof useGetMySubstitutionDutiesQuery>;
 
 export const useTeacherAvailabilityDataQuery = (
-  params: QueryParams
+  params: QueryParams,
+  options?: QueryOptions
 ): ReturnType<typeof useGetTeacherAvailabilityQuery> =>
   useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetTeacherAvailabilityQuery,
     params,
+    options,
     popupConfig: silentQueryPopup,
   }) as ReturnType<typeof useGetTeacherAvailabilityQuery>;
 

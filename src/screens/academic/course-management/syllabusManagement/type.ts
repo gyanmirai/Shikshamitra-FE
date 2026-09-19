@@ -2,6 +2,8 @@ import type React from 'react';
 import type { Dayjs } from 'dayjs';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
+import type { ChapterDocument } from './chapterMultipartPayload';
+
 // Interface for document object containing file information
 export interface IDocument {
   id: string;
@@ -85,7 +87,7 @@ export interface IChapterFormValues {
   description: string;
   startDate: Dayjs | null;
   endDate: Dayjs | null;
-  documents?: string[];
+  documents?: ChapterDocument[];
   unitName: string;
   termName: string;
   topic: string;

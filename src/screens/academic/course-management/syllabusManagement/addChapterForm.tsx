@@ -28,11 +28,6 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
-import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
-import {
-  useAddChapterMutation,
-  useUpdateChapterMutation,
-} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   Box,
   Grid,
@@ -49,12 +44,18 @@ import {
   DialogActions,
   InputAdornment,
 } from '@mui/material';
+import {
+  useAddChapterWithAttachmentsMutation,
+  useUpdateChapterWithAttachmentsMutation,
+} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 
 import { getChapterInitialValues } from './initialValues';
 import { getChapterNumberApiError } from './chapterNumber';
 import { getChapterValidationSchema } from './validationSchema';
 import { ChapterNumberField } from './components/ChapterNumberField';
+import { buildChapterMultipartPayload } from './chapterMultipartPayload';
 import { bloomOptions, difficultyOptions } from './syllabusPlanningData';
+import { AdditionalFieldsActionButton } from './components/AdditionalFieldsActionButton';
 
 import type { IChapterFormValues, IAddNewChapterProps } from './type';
 
@@ -78,25 +79,19 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
 
   const [previewFile, setPreviewFile] = useState<File | string | null>(null);
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
-  const [localFileNames, setLocalFileNames] = useState<Record<string, string>>({});
   const [isDoneSaving, setIsDoneSaving] = useState(false);
   const previewDialog = useBoolean();
   const additionalFieldsDrawer = useBoolean(false);
   const [addChapter, { isLoading: isAddLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useAddChapterMutation,
+    currentQueryAndMutation: useAddChapterWithAttachmentsMutation,
     popupConfig: { error: false },
   });
   const [updateChapter, { isLoading: isUpdateLoading }] = useQueryAndMutation({
     type: 'mutation',
-    currentQueryAndMutation: useUpdateChapterMutation,
+    currentQueryAndMutation: useUpdateChapterWithAttachmentsMutation,
     popupConfig: { error: false },
   });
-  const [uploadCurriculumFile] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUploadCurriculumFileMutation,
-  });
-
   const numberOrNull = (value: number | string) => (value === '' ? null : Number(value));
   const numberOrZero = (value: number | string) => (value === '' ? 0 : Number(value));
 
@@ -150,8 +145,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
   const getFileNameFromUrl = (file: string | File): string => {
     if (!file) return '';
     if (typeof file !== 'string') return file.name;
-    if (localFileNames && localFileNames[file]) return localFileNames[file];
-
     const normalized = file.split('?')[0];
     const segments = normalized.split('/').filter(Boolean);
     let rawName = decodeURIComponent(segments[segments.length - 1] || '');
@@ -180,10 +173,6 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
           return;
         }
 
-        const documents = (values.documents ?? []).filter(
-          (doc): doc is string => typeof doc === 'string' && Boolean(doc)
-        );
-
         // Shared formatted dates
         const formattedStartDate = dateConvertor(
           values?.startDate?.format(dateFormat) || '',
@@ -200,13 +189,12 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
             startDate: formattedStartDate,
             endDate: formattedEndDate,
             description: values.description,
-            documents,
             ...planningPayload,
           };
 
           await updateChapter({
             id: initialValues.id,
-            body: updatePayload,
+            body: buildChapterMultipartPayload(updatePayload, values.documents),
           }).unwrap();
 
           shikshaMitraToast.success({
@@ -219,11 +207,14 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
             startDate: formattedStartDate,
             endDate: formattedEndDate,
             description: values.description,
-            documents,
             ...planningPayload,
           };
 
-          await addChapter({ standardId: classId, subjectId, body: [postPayload] }).unwrap();
+          await addChapter({
+            standardId: classId,
+            subjectId,
+            body: buildChapterMultipartPayload(postPayload, values.documents),
+          }).unwrap();
 
           shikshaMitraToast.success({
             message: `Chapter ${values.chapterNo} added successfully`,
@@ -245,47 +236,15 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
     },
   });
 
-  const handleDropzoneChange = async (droppedFiles: any[]) => {
+  const handleDropzoneChange = (droppedFiles: any[]) => {
     const newFiles = droppedFiles.filter((f): f is File => f instanceof File);
     const existingFiles = droppedFiles
       .filter((f) => !(f instanceof File))
       .map((f) => (typeof f === 'string' ? f : f.url || f.filePath || ''))
       .filter(Boolean);
 
-    if (newFiles.length === 0) {
-      formik.setFieldValue('documents', existingFiles);
-      formik.setFieldTouched('documents', true, false);
-      return;
-    }
-
-    try {
-      const uploadPromises = newFiles.map(async (file) => {
-        const formData = new FormData();
-        formData.append('File', file);
-        const response = await uploadCurriculumFile(formData).unwrap();
-        return { data: response.data, name: file.name };
-      });
-
-      const results = await Promise.all(uploadPromises);
-
-      const newDocs = [...existingFiles];
-      const nameUpdates: Record<string, string> = {};
-
-      results.forEach((res) => {
-        if (res.data) {
-          newDocs.push(res.data);
-          nameUpdates[res.data] = res.name;
-        }
-      });
-
-      setLocalFileNames((prev) => ({ ...prev, ...nameUpdates }));
-      formik.setFieldValue('documents', newDocs);
-      formik.setFieldTouched('documents', true, false);
-      shikshaMitraToast.success({ message: 'Document(s) uploaded successfully' });
-    } catch (error) {
-      console.error('Upload failed:', error);
-      shikshaMitraToast.error({ message: 'Upload failed' });
-    }
+    formik.setFieldValue('documents', [...existingFiles, ...newFiles]);
+    formik.setFieldTouched('documents', true, false);
   };
 
   const additionalFieldsCount = (() => {
@@ -648,14 +607,10 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
                   </Box>
                 </Stack>
 
-                <Button
-                  variant="contained"
-                  size="small"
+                <AdditionalFieldsActionButton
+                  configuredCount={additionalFieldsCount}
                   onClick={additionalFieldsDrawer.onTrue}
-                  startIcon={<Iconify icon="solar:info-circle-linear" width={16} />}
-                >
-                  Add Additional Fields
-                </Button>
+                />
               </Stack>
             </Paper>
 

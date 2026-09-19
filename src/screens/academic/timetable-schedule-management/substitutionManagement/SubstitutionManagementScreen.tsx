@@ -123,6 +123,7 @@ import {
   useAffectedLecturesDataQuery,
   useCompleteSubstitutionAction,
   useSuggestedTeachersDataQuery,
+  shouldFetchTeacherAvailability,
   useTeacherAvailabilityDataQuery,
   useAcknowledgeSubstitutionAction,
   useMySubstitutionDutiesDataQuery,
@@ -816,12 +817,15 @@ const SubstitutionManagementScreen = () => {
     maxResultCount: 200,
   });
   const { data: availabilityResult, isLoading: isAvailabilityLoading } =
-    useTeacherAvailabilityDataQuery({
-      ...academicContextParams,
-      fromDate: toDateTimeOffset(availabilityDate.startOf('day')),
-      toDate: toDateTimeOffset(availabilityDate.endOf('day')),
-      maxResultCount: 200,
-    });
+    useTeacherAvailabilityDataQuery(
+      {
+        ...academicContextParams,
+        fromDate: toDateTimeOffset(availabilityDate.startOf('day')),
+        toDate: toDateTimeOffset(availabilityDate.endOf('day')),
+        maxResultCount: 200,
+      },
+      { skip: !shouldFetchTeacherAvailability(activeTab, availabilityDialogOpen) }
+    );
   const {
     data: rawCreateMetadata,
     isLoading: isCreateMetadataLoading,

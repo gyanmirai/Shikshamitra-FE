@@ -2,15 +2,17 @@
 
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
-import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { SubjectType } from 'src/enums/subject-type';
-import { Box, Chip, Grid, Paper, Stack, Avatar, Skeleton, Typography } from '@mui/material';
+import { Box, Grid, Paper, Stack, Avatar, Skeleton, Typography } from '@mui/material';
 
 import TeacherHoverProfile from './TeacherHoverProfile';
-import { TeacherEmptyState } from './TeacherEmptyState';
+import {
+  getUnifiedTeachers,
+  toTeacherOption,
+} from '../subjectAssignmentForm/teacherOptions';
 
 import type { ISubjectDetail } from '../type';
 
@@ -216,6 +218,8 @@ interface SubjectOverviewProps {
 
 const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading }) => {
   const theme = useTheme();
+  const teacherDetails = getUnifiedTeachers(subject ?? {});
+  const teachers = teacherDetails.map(toTeacherOption);
 
   if (isLoading) {
     return <SubjectOverviewSkeleton />;
@@ -353,174 +357,70 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
                 Teaching Staff
               </Typography>
 
-              {/* Primary Teacher Section */}
-              <Box sx={{ mb: 2.5 }}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
-                  <Label
-                    variant="soft"
-                    color="primary"
-                    sx={{ height: 20, fontSize: 11, fontWeight: 700 }}
-                  >
-                    Primary Teacher
-                  </Label>
-                </Stack>
-
-                {subject?.primaryTeacher?.name ? (
-                  <TeacherHoverProfile
-                    teacher={{
-                      name: subject.primaryTeacher.name,
-                      status: 'Active',
-                      designation: 'Subject Teacher',
-                      department: 'Academics',
-                      email: subject.primaryTeacher.email,
-                      experience: subject.primaryTeacher.experience,
-                    }}
-                    avatarComp={
-                      <Box
-                        sx={{
-                          p: 1.5,
-                          borderRadius: 1.5,
-                          bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.06),
-                          border: `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.16)}`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1.25,
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          '&:hover': {
-                            bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.1),
-                            borderColor: theme.palette.primary.main,
-                          },
-                        }}
-                      >
-                        <Avatar
+              {teachers.length > 0 ? (
+                <Stack spacing={1}>
+                  {teachers.map((teacher) => (
+                    <TeacherHoverProfile
+                      key={teacher.id}
+                      teacher={{
+                        name: teacher.name,
+                        status: 'Active',
+                        designation: 'Subject Teacher',
+                        department: 'Academics',
+                        email: teacherDetails.find((item) => item.id === teacher.id)?.email,
+                        experience: teacherDetails.find((item) => item.id === teacher.id)?.experience,
+                      }}
+                      avatarComp={
+                        <Box
                           sx={{
-                            width: 40,
-                            height: 40,
-                            bgcolor: 'primary.main',
-                            fontSize: '0.95rem',
-                            fontWeight: 700,
+                            p: 1.25,
+                            borderRadius: 1.5,
+                            bgcolor: varAlpha(theme.palette.info.mainChannel, 0.05),
+                            border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.12)}`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1.25,
+                            cursor: 'pointer',
+                            transition: 'all 0.2s ease',
+                            '&:hover': {
+                              bgcolor: varAlpha(theme.palette.info.mainChannel, 0.09),
+                              borderColor: theme.palette.info.main,
+                            },
                           }}
                         >
-                          {subject.primaryTeacher.name.charAt(0).toUpperCase()}
-                        </Avatar>
-                        <Box sx={{ minWidth: 0, flex: 1 }}>
-                          <Typography
-                            variant="subtitle2"
-                            noWrap
-                            sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.85rem' }}
-                          >
-                            {subject.primaryTeacher.name}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{ color: 'primary.main', fontWeight: 600, fontSize: '0.7rem' }}
-                          >
-                            Primary Instructor
-                          </Typography>
-                        </Box>
-                        <Iconify
-                          icon="mdi:shield-check"
-                          sx={{ color: 'primary.main', fontSize: 20, flexShrink: 0 }}
-                        />
-                      </Box>
-                    }
-                  />
-                ) : (
-                  <TeacherEmptyState teacherRole="primary" />
-                )}
-              </Box>
-
-              {/* Secondary Teachers Section */}
-              <Box>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
-                  <Label
-                    variant="soft"
-                    color="info"
-                    sx={{ height: 20, fontSize: 11, fontWeight: 700 }}
-                  >
-                    Secondary Teachers
-                  </Label>
-                  {subject?.secondaryTeachers && subject.secondaryTeachers.length > 0 && (
-                    <Chip
-                      size="small"
-                      label={subject.secondaryTeachers.length}
-                      sx={{ height: 18, fontSize: 10 }}
-                    />
-                  )}
-                </Stack>
-
-                {subject?.secondaryTeachers && subject.secondaryTeachers.length > 0 ? (
-                  <Stack spacing={1}>
-                    {subject.secondaryTeachers.map((teacher, index) => (
-                      <TeacherHoverProfile
-                        key={teacher.id || index}
-                        teacher={{
-                          name: teacher.name,
-                          status: 'Active',
-                          designation: 'Assistant Teacher',
-                          department: 'Academics',
-                          email: teacher.email,
-                          experience: teacher.experience,
-                        }}
-                        avatarComp={
-                          <Box
+                          <Avatar
                             sx={{
-                              p: 1.25,
-                              borderRadius: 1.5,
-                              bgcolor: varAlpha(theme.palette.info.mainChannel, 0.05),
-                              border: `1px solid ${varAlpha(theme.palette.info.mainChannel, 0.12)}`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 1.25,
-                              cursor: 'pointer',
-                              transition: 'all 0.2s ease',
-                              '&:hover': {
-                                bgcolor: varAlpha(theme.palette.info.mainChannel, 0.09),
-                                borderColor: theme.palette.info.main,
-                              },
+                              width: 36,
+                              height: 36,
+                              bgcolor: 'info.main',
+                              fontSize: '0.85rem',
+                              fontWeight: 700,
                             }}
                           >
-                            <Avatar
-                              sx={{
-                                width: 32,
-                                height: 32,
-                                bgcolor: 'info.main',
-                                fontSize: '0.8rem',
-                                fontWeight: 700,
-                              }}
+                            {teacher.name.charAt(0).toUpperCase()}
+                          </Avatar>
+                          <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Typography
+                              variant="body2"
+                              noWrap
+                              sx={{ fontWeight: 600, color: 'text.primary' }}
                             >
-                              {teacher.name.charAt(0).toUpperCase()}
-                            </Avatar>
-                            <Box sx={{ minWidth: 0, flex: 1 }}>
-                              <Typography
-                                variant="body2"
-                                noWrap
-                                sx={{
-                                  fontWeight: 600,
-                                  color: 'text.primary',
-                                  fontSize: '0.8125rem',
-                                }}
-                              >
-                                {teacher.name}
-                              </Typography>
-                              <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                sx={{ fontSize: '0.675rem' }}
-                              >
-                                Assistant
-                              </Typography>
-                            </Box>
+                              {teacher.name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {teacher.employeeCode || 'Teacher code unavailable'}
+                            </Typography>
                           </Box>
-                        }
-                      />
-                    ))}
-                  </Stack>
-                ) : (
-                  <TeacherEmptyState teacherRole="secondary" />
-                )}
-              </Box>
+                        </Box>
+                      }
+                    />
+                  ))}
+                </Stack>
+              ) : (
+                <Typography variant="body2" color="text.secondary">
+                  No teachers assigned
+                </Typography>
+              )}
             </Paper>
           </Grid>
         </Grid>

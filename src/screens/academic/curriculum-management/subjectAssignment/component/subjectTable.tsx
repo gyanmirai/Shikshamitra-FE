@@ -1,115 +1,24 @@
-// SubjectTable.tsx
+'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
-import { useMemo, useCallback } from 'react';
-import { GlobalIcons } from 'src/utils/icons';
-import { useTheme } from '@mui/material/styles';
-import { Iconify } from 'src/components/iconify';
-import { formatDateOnly } from 'src/utils/date-only';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { useState, useCallback } from 'react';
+import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Button, Typography } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Archive, Restore, RemoveCircle } from '@mui/icons-material';
-import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor';
-import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
-import {
-  Box,
-  Chip,
-  MenuList,
-  MenuItem,
-  IconButton,
-  Typography,
-  LinearProgress,
-} from '@mui/material';
+import { academicPermissions } from 'src/constants/academic-menu';
 
-import { getPrimaryTeacherNames } from '../utils/primaryTeacherNames';
-import { SubjectType, SubjectAssignmentStatus } from '../enum/subjectType';
+import { getSubjectDisplayLabel } from '../utils/getSubjectDisplayLabel';
+import { useSubjectTableRows } from './subjectTable/useSubjectTableRows';
+import { SubjectScheduleDrawer } from './subjectTable/SubjectScheduleDrawer';
+import { useSubjectTableColumns } from './subjectTable/useSubjectTableColumns';
 
-import type { ISubjectTableProps, ISubjectFormValues } from './type';
-
-// ── Health score helpers ─────────────────────────────────────────────────────
-function healthColor(score: number) {
-  if (score >= 90) return '#22c55e';
-  if (score >= 70) return '#3b82f6';
-  if (score >= 40) return '#f59e0b';
-  return '#ef4444';
-}
-
-function getSetupHealthIssues(row: ISubjectFormValues): string[] {
-  const issues: string[] = [];
-
-  if (!getPrimaryTeacherNames(row).length) {
-    issues.push('Assign a primary teacher');
-  }
-
-  if ((row.chaptersCount ?? 0) === 0) {
-    issues.push('Add at least 3 syllabus chapters');
-  } else if ((row.chaptersCount ?? 0) < 3) {
-    issues.push('Add more syllabus chapters (3 recommended)');
-  }
-
-  if ((row.weeklyPeriods ?? 0) <= 0) {
-    issues.push('Set periods per week');
-  }
-
-  return issues;
-}
-
-function SetupHealthCell({ score, row }: { score?: number; row: ISubjectFormValues }) {
-  const value = Math.max(0, Math.min(100, score ?? 0));
-  const color = healthColor(value);
-  const missingItems = getSetupHealthIssues(row);
-  const tooltipTitle =
-    value >= 100 ? (
-      'Setup complete'
-    ) : (
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-        <Typography variant="caption" fontWeight={700}>
-          Missing setup:
-        </Typography>
-        {missingItems.length > 0 ? (
-          missingItems.map((item) => (
-            <Typography key={item} variant="caption">
-              • {item}
-            </Typography>
-          ))
-        ) : (
-          <Typography variant="caption">Complete the remaining setup fields</Typography>
-        )}
-      </Box>
-    );
-
-  return (
-    <CustomTooltip title={tooltipTitle} arrow placement="top">
-      <Box sx={{ minWidth: 80 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.3 }}>
-          <Typography variant="caption" fontWeight={600} sx={{ color }}>
-            {value}%
-          </Typography>
-        </Box>
-        <LinearProgress
-          variant="determinate"
-          value={value}
-          sx={{
-            height: 5,
-            borderRadius: 3,
-            backgroundColor: `${color}30`,
-            '& .MuiLinearProgress-bar': { backgroundColor: color, borderRadius: 3 },
-          }}
-        />
-      </Box>
-    </CustomTooltip>
-  );
-}
+import type { ISubjectFormValues, ISubjectTableProps } from './type';
 
 const SubjectTable = ({
   isLoading,
-  classId,
   addSubjectDialog,
   subjectTableData,
   onView,
@@ -118,12 +27,13 @@ const SubjectTable = ({
   onArchive,
   onRestore,
   onToggleStatus,
-  query,
   setQuery,
   totalCount,
 }: ISubjectTableProps) => {
-  const theme = useTheme();
   const { permissions } = useSelector((state: RootState) => state.auth);
+  const scheduleDrawer = useBoolean();
+  const { onTrue: openScheduleDrawer } = scheduleDrawer;
+  const [scheduleSubject, setScheduleSubject] = useState<ISubjectFormValues | null>(null);
 
   const canAdd = hasGrantedPermission(
     permissions,
@@ -138,348 +48,66 @@ const SubjectTable = ({
     `${academicPermissions.curriculum.subjectsAssignment}.Delete`
   );
 
-  const subjectData = useMemo(
-    () =>
-      subjectTableData?.map((item) => ({
-        ...item,
-        subjectTypeValue: SubjectType[item.subjectType] || 'Core',
-        subjectsName: item?.subjects?.map((sub: any) => sub.subjectName).join(', '),
-        subjectName: (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
-            {item?.subjects?.map(
-              (
-                sub: { color?: string; subjectName?: string; subjectCode?: string },
-                subIndex: number
-              ) => (
-                <Box
-                  key={`${item.id}-${subIndex}`}
-                  sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
-                >
-                  <SubjectColorIndicator color={sub.color} />
-                  <Typography variant="body2">{sub.subjectName}</Typography>
-                </Box>
-              )
-            )}
-            {/* AI / Copied badges */}
-            {item.isAiSuggested && (
-              <Chip size="small" label="AI" color="secondary" sx={{ height: 18, fontSize: 10 }} />
-            )}
-            {item.isCopiedFromPreviousYear && (
-              <Chip
-                size="small"
-                label="Copied"
-                variant="outlined"
-                sx={{ height: 18, fontSize: 10 }}
-              />
-            )}
-          </Box>
-        ),
-        subjectCodeValue: item?.subjects?.map((sub: any) => sub.subjectCode).join(', ') || '—',
-        statusValue: SubjectAssignmentStatus[item.status] || 'Draft',
-        primaryTeacherDisplay: getPrimaryTeacherNames(item),
-        chaptersDisplay: item.chaptersCount ?? 0,
-        weeklyPeriodsDisplay: item.weeklyPeriods ? `${item.weeklyPeriods}` : '—',
-        lastUpdatedDisplay: item.lastUpdatedAt ? formatDateOnly(item.lastUpdatedAt) : '—',
-      })) || [],
-    [subjectTableData]
-  );
-
-  const actions = useCallback(
-    ({ popover, row }: any) => {
-      const removeDisabled = row.canDelete === false;
-      const isArchived = row.status === SubjectAssignmentStatus.Archived;
-      console.log('row=====', row);
-      const removeDisabledReason =
-        row.deleteDisabledReason ||
-        'This subject is already used in another module. Remove those references before removing it.';
-
-      return (
-        <MenuList disablePadding dense>
-          {isArchived && canAdd && (
-            <MenuItem
-              onClick={() => {
-                onRestore?.(row);
-                popover.onClose();
-              }}
-            >
-              <Restore sx={{ width: 18, height: 18, color: 'success.main', mr: 1 }} />
-              Reactivate
-            </MenuItem>
-          )}
-          {!isArchived && canDelete && SubjectAssignmentStatus.Draft !== row.status && (
-            <MenuItem
-              onClick={() => {
-                onArchive?.(row);
-                popover.onClose();
-              }}
-            >
-              <Archive sx={{ width: 18, height: 18, color: 'warning.main', mr: 1 }} />
-              Archive
-            </MenuItem>
-          )}
-          {canDelete && (
-            <CustomTooltip
-              title={removeDisabled ? removeDisabledReason : 'Remove'}
-              arrow
-              placement="left"
-            >
-              <Box component="span" sx={{ display: 'block' }}>
-                <MenuItem
-                  disabled={removeDisabled}
-                  onClick={() => {
-                    if (removeDisabled) return;
-                    onDelete(row);
-                    popover.onClose();
-                  }}
-                  sx={{ color: removeDisabled ? 'text.disabled' : 'error.main' }}
-                >
-                  <RemoveCircle sx={{ width: 18, height: 18, mr: 1 }} />
-                  Remove
-                </MenuItem>
-              </Box>
-            </CustomTooltip>
-          )}
-        </MenuList>
-      );
+  /**
+   * Memoization Justification:
+   * Passed into memoized table column configuration and used by every Periods/Wk cell.
+   * A stable callback prevents the table from rebuilding its columns on drawer state changes.
+   */
+  const handleViewSchedule = useCallback(
+    (subject: ISubjectFormValues) => {
+      setScheduleSubject(subject);
+      openScheduleDrawer();
     },
-    [onDelete, onArchive, onRestore, canAdd, canDelete]
+    [openScheduleDrawer]
   );
 
-  const columns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'subjectTypeValue',
-        label: 'Type',
-        align: 'left',
-        minWidth: 60,
-        width: 70,
-        sticky: true,
-        render: (value) => (
-          <Chip
-            size="small"
-            label={value}
-            variant="soft"
-            color={value === 'Core' ? 'primary' : value === 'Elective' ? 'secondary' : 'default'}
-            sx={{ height: 20, fontSize: 11 }}
-          />
-        ),
-      },
-      {
-        id: 'subjectsName',
-        label: 'Subject Name',
-        align: 'left',
-        isFilter: false,
-        isSort: false,
-        minWidth: 180,
-        sticky: true,
-        render: (value, row) => (
-          <>
-            {row.electiveGroupName ? `${row.electiveGroupName} - ` : ''}
-            {row.subjectName}
-          </>
-        ),
-      },
-      {
-        id: 'subjectCodeValue',
-        label: 'Code',
-        align: 'left',
-        minWidth: 100,
-        isSort: false,
-        isFilter: false,
-        render: (value) => (
-          <Typography variant="caption" fontFamily="monospace" color="text.secondary">
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'primaryTeacherDisplay',
-        label: 'Primary Teacher',
-        align: 'left',
-        minWidth: 180,
-        isSort: false,
-        isFilter: false,
-        render: (_value, row) => {
-          const teacherNames = getPrimaryTeacherNames(row as ISubjectFormValues);
-
-          return teacherNames.length === 0 ? (
-            <Chip
-              size="small"
-              label="Not Assigned"
-              color="warning"
-              variant="soft"
-              sx={{ height: 20, fontSize: 11 }}
-            />
-          ) : (
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-              {teacherNames.map((teacherName) => (
-                <Chip
-                  key={teacherName}
-                  size="small"
-                  label={teacherName}
-                  variant="soft"
-                  color="info"
-                  sx={{ height: 22, fontSize: 11 }}
-                />
-              ))}
-            </Box>
-          );
-        },
-      },
-      {
-        id: 'chaptersDisplay',
-        label: 'Chapters',
-        align: 'center',
-        minWidth: 70,
-        width: 70,
-        isSort: false,
-        isFilter: false,
-        render: (value) => (
-          <Typography variant="body2" textAlign="center">
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'weeklyPeriodsDisplay',
-        label: 'Periods/Wk',
-        align: 'center',
-        minWidth: 80,
-        width: 80,
-        isSort: false,
-        isFilter: false,
-      },
-      {
-        id: 'setupHealthScore',
-        label: 'Health',
-        align: 'left',
-        minWidth: 90,
-        width: 100,
-        isSort: false,
-        isFilter: false,
-        render: (value, row) => (
-          <SetupHealthCell score={value as number} row={row as ISubjectFormValues} />
-        ),
-      },
-      {
-        id: 'lastUpdatedDisplay',
-        label: 'Updated',
-        align: 'left',
-        minWidth: 100,
-        width: 100,
-        isSort: false,
-        isFilter: false,
-        render: (value) => (
-          <Typography variant="caption" color="text.secondary">
-            {value}
-          </Typography>
-        ),
-      },
-      {
-        id: 'statusValue',
-        label: 'Status',
-        align: 'left',
-        minWidth: 60,
-        width: 70,
-        isSort: false,
-        isFilter: false,
-        sticky: true,
-        enumOptions: PublishUnpublishStatusOptions,
-        render(value, row) {
-          const isPublished = row.status === SubjectAssignmentStatus.Published;
-          const isInteractive = !isPublished;
-          const statusColor = isPublished
-            ? theme.vars.palette.success.main
-            : theme.vars.palette.text.secondary;
-
-          return (
-            <CustomTooltip title={value} arrow placement="left">
-              <Box component="span">
-                <IconButton
-                  disabled={!isInteractive}
-                  onClick={() => onToggleStatus(row as ISubjectFormValues)}
-                  sx={{
-                    p: 0.6,
-                    borderRadius: '50%',
-                    backgroundColor: 'action.hover',
-                    transition: 'all 0.2s',
-                    cursor: isInteractive ? 'pointer' : 'default',
-                    '&:hover': {
-                      transform: isInteractive ? 'scale(1.1)' : 'none',
-                      backgroundColor: 'action.selected',
-                    },
-                    '&.Mui-disabled': { backgroundColor: 'action.hover' },
-                  }}
-                >
-                  <Iconify
-                    icon={GlobalIcons.tick}
-                    sx={{ width: 20, height: 20, color: statusColor }}
-                  />
-                </IconButton>
-              </Box>
-            </CustomTooltip>
-          );
-        },
-      },
-      {
-        id: 'action',
-        label: 'Actions',
-        width: 70,
-        minWidth: 70,
-        align: 'left',
-        sticky: true,
-        isSort: false,
-        isFilter: false,
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              placement="right-top"
-              actions={(prop) => actions({ ...prop, row: row as ISubjectFormValues })}
-              showViewIcon={canView}
-              showEditIcon={canAdd}
-              showThreeDots={canDelete}
-              handleViewClick={() => onView(row as ISubjectFormValues)}
-              handleEditClick={() => onEdit(row as ISubjectFormValues)}
-            />
-          );
-        },
-      },
-    ],
-    [actions, canAdd, canDelete, canView, onEdit, onToggleStatus, onView, theme]
-  );
+  const rows = useSubjectTableRows(subjectTableData);
+  const columns = useSubjectTableColumns({
+    canAdd,
+    canView,
+    canDelete,
+    onView,
+    onEdit,
+    onDelete,
+    onArchive,
+    onRestore,
+    onToggleStatus,
+    onViewSchedule: handleViewSchedule,
+  });
 
   return (
-    <CustomizableTable
-      tableId="subject-table"
-      isLoading={isLoading}
-      totalCount={totalCount}
-      noDataText={
-        <Box width="100%" display="flex" flexDirection="column" alignItems="center">
-          <Typography variant="body2" color="text.secondary" mb={1}>
-            No subjects allocated for this class yet.
-          </Typography>
-          {canAdd && (
-            <Box
-              onClick={() => addSubjectDialog.onTrue()}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                cursor: 'pointer',
-                '&:hover': { color: 'primary.main', textDecoration: 'underline' },
-              }}
-            >
-              + Allocate Subjects
-            </Box>
-          )}
-        </Box>
-      }
-      serverSidePagination
-      onServerPagination={(page, rowPerPage) => {
-        setQuery((prev) => ({ ...prev, page: page - 1, pageSize: rowPerPage }));
-      }}
-      columns={columns}
-      data={subjectData}
-    />
+    <>
+      <CustomizableTable
+        tableId="subject-table"
+        isLoading={isLoading}
+        totalCount={totalCount}
+        noDataText={
+          <Box width="100%" display="flex" flexDirection="column" alignItems="center">
+            <Typography variant="body2" color="text.secondary" mb={1}>
+              No subjects allocated for this class yet.
+            </Typography>
+            {canAdd && (
+              <Button variant="text" onClick={addSubjectDialog.onTrue}>
+                + Allocate Subjects
+              </Button>
+            )}
+          </Box>
+        }
+        serverSidePagination
+        onServerPagination={(page, rowPerPage) => {
+          setQuery((previous) => ({ ...previous, page: page - 1, pageSize: rowPerPage }));
+        }}
+        columns={columns}
+        data={rows}
+      />
+
+      <SubjectScheduleDrawer
+        assignmentId={scheduleSubject?.id ? String(scheduleSubject.id) : undefined}
+        subjectLabel={getSubjectDisplayLabel(scheduleSubject) || scheduleSubject?.subjectName || ''}
+        open={scheduleDrawer.value}
+        onClose={scheduleDrawer.onFalse}
+      />
+    </>
   );
 };
 

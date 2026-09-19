@@ -38,10 +38,31 @@ export const chaptersApi = academicApi.injectEndpoints({
       invalidatesTags: [academicType.chapter],
     }),
 
+    // POST - Create a single chapter with file attachments
+    addChapterWithAttachments: builder.mutation({
+      query: ({ standardId, subjectId, body }) => ({
+        url: `/academic/curriculum/chapters/with-attachments`,
+        method: 'POST',
+        params: { standardId, subjectId },
+        body,
+      }),
+      invalidatesTags: [academicType.chapter],
+    }),
+
     // PUT - Update chapter
     updateChapter: builder.mutation({
       query: ({ id, body }) => ({
         url: `/academic/curriculum/chapters/${id}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: [academicType.chapter],
+    }),
+
+    // PUT - Update a single chapter with file attachments
+    updateChapterWithAttachments: builder.mutation({
+      query: ({ id, body }) => ({
+        url: `/academic/curriculum/chapters/${id}/with-attachments`,
         method: 'PUT',
         body,
       }),
@@ -66,6 +87,8 @@ export const {
   useGetChaptersQuery,
   useGetChaptersByStandardQuery,
   useAddChapterMutation,
+  useAddChapterWithAttachmentsMutation,
   useUpdateChapterMutation,
+  useUpdateChapterWithAttachmentsMutation,
   useDeleteChapterMutation,
 } = chaptersApi;
