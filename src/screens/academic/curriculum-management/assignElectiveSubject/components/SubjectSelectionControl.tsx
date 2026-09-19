@@ -1,14 +1,14 @@
 'use client';
 
-import { Box, Tooltip, Typography } from '@mui/material';
 import { Check as CheckIcon } from '@mui/icons-material';
+import { Box, Tooltip, ButtonBase, Typography } from '@mui/material';
 
 import type { ElectiveSubjectOption } from '../types';
 
 interface SubjectSelectionControlProps {
   subjects: ElectiveSubjectOption[];
   selectedSubjectId?: string;
-  onSelect: (subjectId: string) => void;
+  onToggle: (subjectId: string) => void;
   disabled?: boolean;
   ariaLabelPrefix?: string;
 }
@@ -16,14 +16,14 @@ interface SubjectSelectionControlProps {
 export default function SubjectSelectionControl({
   subjects,
   selectedSubjectId,
-  onSelect,
+  onToggle,
   disabled,
   ariaLabelPrefix = 'Assign',
 }: SubjectSelectionControlProps) {
   return (
     <Box
-      role="radiogroup"
-      aria-label={`${ariaLabelPrefix} elective subject`}
+      role="group"
+      aria-label={`Elective subject assignment for ${ariaLabelPrefix}`}
       display="flex"
       flexDirection="row"
       flexWrap="wrap"
@@ -31,79 +31,89 @@ export default function SubjectSelectionControl({
     >
       {subjects.map((s) => {
         const isSelected = selectedSubjectId === s.subjectId;
-        const color = s.subjectColor || '#3b82f6';
+        const actionLabel = `${isSelected ? 'Unassign' : 'Assign'} ${s.subjectName} ${
+          isSelected ? 'from' : 'to'
+        } ${ariaLabelPrefix}`;
 
         return (
-          <Tooltip key={s.subjectId} title={isSelected ? `${s.subjectName} (selected)` : s.subjectName}>
-            <Box
-              role="radio"
-              aria-checked={isSelected}
-              aria-disabled={disabled}
-              tabIndex={disabled ? -1 : 0}
-              onClick={() => !disabled && onSelect(s.subjectId)}
-              onKeyDown={(e) => {
-                if (!disabled && (e.key === 'Enter' || e.key === ' ')) {
-                  e.preventDefault();
-                  onSelect(s.subjectId);
-                }
-              }}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.75,
-                pl: 1,
-                pr: 1.5,
-                py: 0.625,
-                borderRadius: 1,
-                border: '1px solid',
-                cursor: disabled ? 'default' : 'pointer',
-                userSelect: 'none',
-                transition: 'all 0.18s ease',
-                pointerEvents: disabled ? 'none' : 'auto',
-                outline: 'none',
-                '&:focus-visible': {
-                  boxShadow: (theme) => `0 0 0 2px ${theme.vars.palette.primary.main}`,
-                },
-                ...(isSelected
-                  ? {
-                      borderColor: color,
-                      boxShadow: `0 1px 4px ${color}30`,
-                      '&:hover': { backgroundColor: disabled ? 'transparent' : `${color}22` },
-                    }
-                  : {
-                      opacity: disabled ? 0.4 : 0.65,
-                      borderColor: 'divider',
-                      '&:hover': {
-                        backgroundColor: disabled ? 'transparent' : 'background.paper',
+          <Tooltip key={s.subjectId} title={actionLabel} arrow>
+            <span>
+              <ButtonBase
+                disabled={disabled}
+                aria-label={actionLabel}
+                aria-pressed={isSelected}
+                onClick={() => onToggle(s.subjectId)}
+                sx={(theme) => ({
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  minHeight: 44,
+                  px: 1.25,
+                  py: 0.5,
+                  borderRadius: 1,
+                  border: '1px solid',
+                  userSelect: 'none',
+                  transition: theme.transitions.create([
+                    'background-color',
+                    'border-color',
+                    'box-shadow',
+                    'opacity',
+                  ]),
+                  '&:focus-visible': {
+                    outline: `2px solid ${theme.vars.palette.primary.main}`,
+                    outlineOffset: 2,
+                  },
+                  '&.Mui-disabled': { opacity: 0.4 },
+                  ...(isSelected
+                    ? {
+                        borderColor: s.subjectColor || 'primary.main',
+                        backgroundColor: 'action.selected',
+                        boxShadow: theme.vars.customShadows.z1,
+                        '&:hover': { backgroundColor: 'action.hover' },
+                      }
+                    : {
+                        opacity: 0.72,
                         borderColor: 'divider',
-                      },
-                    }),
-              }}
-            >
-              {isSelected ? (
-                <CheckIcon sx={{ width: 14, height: 14, color, flexShrink: 0 }} />
-              ) : (
-                <Box
-                  sx={{
-                    width: 3,
-                    height: 16,
-                    borderRadius: 1,
-                    flexShrink: 0,
-                    backgroundColor: 'grey.300',
-                  }}
-                />
-              )}
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: isSelected ? 600 : 400,
-                  color: isSelected ? 'text.primary' : 'text.secondary',
-                  whiteSpace: 'nowrap',
-                }}
+                        '&:hover': {
+                          opacity: 1,
+                          backgroundColor: 'action.hover',
+                          borderColor: 'text.secondary',
+                        },
+                      }),
+                })}
               >
-                {s.subjectName}
-              </Typography>
-            </Box>
+                {isSelected ? (
+                  <CheckIcon
+                    sx={(theme) => ({
+                      width: 16,
+                      height: 16,
+                      color: s.subjectColor || theme.vars.palette.primary.main,
+                      flexShrink: 0,
+                    })}
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      width: 3,
+                      height: 16,
+                      borderRadius: 1,
+                      flexShrink: 0,
+                      backgroundColor: 'grey.300',
+                    }}
+                  />
+                )}
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: isSelected ? 600 : 400,
+                    color: isSelected ? 'text.primary' : 'text.secondary',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {s.subjectName}
+                </Typography>
+              </ButtonBase>
+            </span>
           </Tooltip>
         );
       })}

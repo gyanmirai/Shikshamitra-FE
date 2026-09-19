@@ -21,15 +21,11 @@ export const useSubjectCard = ({
   'isPublished' | 'onFileUpload' | 'onAccordionToggle' | 'onRemove' | 'isCore'
 >) => {
   const {
-    primaryTeacherObj,
-    setPrimaryTeacherObj,
-    secondaryTeacherObjs,
-    setSecondaryTeacherObjs,
-    fetchPrimaryTeacherOptions,
-    fetchSecondaryTeacherOptions,
+    teacherObjs,
+    setTeacherObjs,
+    fetchTeacherOptions,
   } = useTeacherSelection({
-    primaryTeacherId: subject.primaryTeacherId,
-    secondaryTeacherIds: subject.secondaryTeacherIds,
+    teacherIds: subject.teacherIds,
   });
 
   const [uploadCurriculumFile, { isLoading: isUploading }] = useQueryAndMutation({
@@ -114,12 +110,9 @@ export const useSubjectCard = ({
   };
 
   return {
-    primaryTeacherObj,
-    setPrimaryTeacherObj,
-    secondaryTeacherObjs,
-    setSecondaryTeacherObjs,
-    fetchPrimaryTeacherOptions,
-    fetchSecondaryTeacherOptions,
+    teacherObjs,
+    setTeacherObjs,
+    fetchTeacherOptions,
     previewDoc,
     setPreviewDoc,
     handleDropzoneChange,

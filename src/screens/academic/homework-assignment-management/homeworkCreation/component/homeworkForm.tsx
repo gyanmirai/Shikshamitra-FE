@@ -65,6 +65,7 @@ import { serializeHomeworkFormData } from './homework-serialization';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
 import { SubmissionTypeCard } from '../../components/SubmissionTypeCard';
 import HomeworkTypeForm from '../../setting/homeworkType/homeworkTypeForm';
+import { useHomeworkRubricTemplateSelection } from '../hooks/useHomeworkRubricTemplateSelection';
 
 import type { IHomeWorkCreationFormProps } from '../type';
 
@@ -88,7 +89,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   });
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [previewFileState, setPreviewFileState] = useState<any>(null);
-  const [selectedRubricTemplateId, setSelectedRubricTemplateId] = useState('');
   const [createRubricFromTemplate, { isLoading: isRubricCopyLoading }] =
     useCreateRubricFromTemplateMutation();
   const submitModeRef = useRef<'draft' | 'publish' | 'schedule'>('draft');
@@ -131,6 +131,22 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to control homework type dialog visibility
   const homeworkTypeDialog = useBoolean();
+
+  const { data: homeworkRubrics, isFetching: isHomeworkRubricFetching } = useGetRubricsQuery(
+    {
+      homeworkId: editData?.id,
+      isTemplate: false,
+      status: RubricStatus.Published,
+    },
+    {
+      skip: !editData?.id,
+    }
+  );
+  const {
+    assignedRubricTemplateId,
+    selectedRubricTemplateId,
+    setSelectedRubricTemplateId,
+  } = useHomeworkRubricTemplateSelection(editData?.id, homeworkRubrics);
 
   // State to store all available divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
@@ -202,6 +218,21 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             }),
           };
           await updateHomework(updatePayload).unwrap();
+          if (
+            selectedRubricTemplateId &&
+            selectedRubricTemplateId !== assignedRubricTemplateId
+          ) {
+            await createRubricFromTemplate({
+              templateId: selectedRubricTemplateId,
+              body: {
+                standardId:
+                  values.classId || values.standardId || values.class || activeClassId || '',
+                subjectId: values.subjectId || values.subject,
+                homeworkId: editData.id,
+                title: `${values.title} Rubric`,
+              },
+            }).unwrap();
+          }
           shikshaMitraToast.success({
             message: `Homework "${values.title}" has been updated successfully.`,
           });
@@ -262,31 +293,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       skip: !medium?.id,
     }
   );
-
-  const { data: homeworkRubrics = [], isFetching: isHomeworkRubricFetching } = useGetRubricsQuery(
-    {
-      homeworkId: editData?.id,
-      isTemplate: false,
-    },
-    {
-      skip: !editData?.id,
-    }
-  );
-
-  useEffect(() => {
-    if (!editData?.id) {
-      setSelectedRubricTemplateId('');
-      return;
-    }
-
-    const assignedRubric = homeworkRubrics.find(
-      (rubric) => rubric.homeworkId === editData.id
-    );
-
-    // The dropdown contains template IDs, while the saved task rubric has its own ID.
-    // Bind the source template that was used to create the task rubric.
-    setSelectedRubricTemplateId(assignedRubric?.sourceTemplateId ?? '');
-  }, [editData?.id, homeworkRubrics]);
 
   // Update divisions when class changes
   useEffect(() => {
@@ -774,7 +780,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     labelKey="title"
                     valueKey="id"
                     value={selectedRubricTemplateId}
-                    disabled={!!editData?.id}
                     isLoading={isRubricTemplateFetching || isHomeworkRubricFetching}
                     onChange={(value) => setSelectedRubricTemplateId(String(value))}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}

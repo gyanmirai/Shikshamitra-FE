@@ -88,8 +88,7 @@ export function useSubjectAssignmentForm({
           learningGoal: subj.learningGoal,
           prerequisites: subj.prerequisites,
           description: subj.description,
-          primaryTeacherId: subj.primaryTeacherId || null,
-          secondaryTeacherIds: subj.secondaryTeacherIds || [],
+          teacherIds: subj.teacherIds,
         }));
 
         const payload = {
@@ -290,10 +289,8 @@ export function useSubjectAssignmentForm({
         allSubjects.push({
           subjectCode: '',
           subjectType: 0,
-          primaryTeacher: { id: '', name: '' },
-          primaryTeacherId: option.primaryTeacherId || '',
-          secondaryTeacher: [],
-          secondaryTeacherIds: option.secondaryTeacherIds || [],
+          teachers: [],
+          teacherIds: option.teacherIds || [],
           description: '',
           isSubjectOpen: false,
           learningGoal: '',
@@ -310,10 +307,8 @@ export function useSubjectAssignmentForm({
           subjectCode: '',
           subjectType: 1,
           electiveGroupId: option.value,
-          primaryTeacher: { id: '', name: '' },
-          primaryTeacherId: '',
-          secondaryTeacher: [],
-          secondaryTeacherIds: [],
+          teachers: [],
+          teacherIds: [],
           isSubjectOpen: false,
           description: '',
           learningGoal: '',

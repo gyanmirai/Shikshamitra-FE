@@ -1,4 +1,4 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, waitFor, renderHook } from '@testing-library/react';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
 
 import { useTeacherSelection } from './useTeacherSelection';
@@ -11,44 +11,61 @@ const employeeApiMocks = vi.hoisted(() => ({
 vi.mock('src/redux/hr/employeeApi', () => employeeApiMocks);
 
 describe('useTeacherSelection', () => {
-  const primarySearch = vi.fn();
-  const secondarySearch = vi.fn();
+  const teacherSearch = vi.fn();
+  const getEmployeeById = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
-    employeeApiMocks.useLazyGetEmployeeQuery
-      .mockReturnValueOnce([primarySearch])
-      .mockReturnValueOnce([secondarySearch]);
-    employeeApiMocks.useLazyGetEmployeeByIdQuery.mockReturnValue([vi.fn()]);
-    primarySearch.mockReturnValue({
-      unwrap: () => Promise.resolve({ currentPage: 1, totalPages: 1, items: [] }),
+    employeeApiMocks.useLazyGetEmployeeQuery.mockReturnValue([teacherSearch]);
+    employeeApiMocks.useLazyGetEmployeeByIdQuery.mockReturnValue([getEmployeeById]);
+    teacherSearch.mockReturnValue({
+      unwrap: () =>
+        Promise.resolve({
+          currentPage: 1,
+          totalPages: 1,
+          items: [
+            { id: 'teacher-1', fullName: 'Jay Dalia', employeeIdentifier: 'TEA150001' },
+          ],
+        }),
     });
-    secondarySearch.mockReturnValue({
-      unwrap: () => Promise.resolve({ currentPage: 1, totalPages: 1, items: [] }),
-    });
+    getEmployeeById.mockImplementation((id: string) => ({
+      unwrap: () =>
+        Promise.resolve({ id, fullName: 'Jay Dalia', employeeIdentifier: 'TEA150001' }),
+    }));
   });
 
-  it('requests only active teaching employees for both teacher selectors', async () => {
-    const { result } = renderHook(() =>
-      useTeacherSelection({ primaryTeacherId: '', secondaryTeacherIds: [] })
-    );
+  it('requests active teaching employees and displays code with name', async () => {
+    const { result } = renderHook(() => useTeacherSelection({ teacherIds: [] }));
 
     await act(async () => {
-      await result.current.fetchPrimaryTeacherOptions('akshay', 2);
-      await result.current.fetchSecondaryTeacherOptions('hiren', 3);
+      const response = await result.current.fetchTeacherOptions('jay', 2);
+      expect(response.data).toEqual([
+        {
+          id: 'teacher-1',
+          name: 'Jay Dalia',
+          employeeCode: 'TEA150001',
+          label: 'TEA150001 - Jay Dalia',
+        },
+      ]);
     });
 
-    expect(primarySearch).toHaveBeenCalledWith({
-      search: 'akshay',
+    expect(teacherSearch).toHaveBeenCalledWith({
+      search: 'jay',
       page: 2,
       isTeaching: true,
       status: 'Active',
     });
-    expect(secondarySearch).toHaveBeenCalledWith({
-      search: 'hiren',
-      page: 3,
-      isTeaching: true,
-      status: 'Active',
-    });
+  });
+
+  it('hydrates every selected teacher with the same code-name label', async () => {
+    const { result } = renderHook(() =>
+      useTeacherSelection({ teacherIds: ['teacher-1', 'teacher-2'] })
+    );
+
+    await waitFor(() => expect(result.current.teacherObjs).toHaveLength(2));
+
+    expect(getEmployeeById).toHaveBeenCalledWith('teacher-1');
+    expect(getEmployeeById).toHaveBeenCalledWith('teacher-2');
+    expect(result.current.teacherObjs[0].label).toBe('TEA150001 - Jay Dalia');
   });
 });

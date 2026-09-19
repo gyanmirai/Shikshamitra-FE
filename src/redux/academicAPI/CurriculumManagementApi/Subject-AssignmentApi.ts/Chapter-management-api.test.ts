@@ -67,4 +67,80 @@ describe('chaptersApi.addChapter', () => {
 
     store.dispatch(api.util.resetApiState());
   });
+
+  it('posts a multipart chapter payload and files to the attachment-aware route', async () => {
+    const requests: Array<{
+      contentType: string | null;
+      payload: unknown;
+      files: FormDataEntryValue[];
+    }> = [];
+    const file = new File(['chapter notes'], 'notes.pdf', { type: 'application/pdf' });
+    const body = new FormData();
+    body.append('Payload', JSON.stringify({ chapterNo: 2, documents: ['existing.pdf'] }));
+    body.append('Files', file, file.name);
+
+    mswServer.use(
+      http.post('*/api/academic/curriculum/chapters/with-attachments', async ({ request }) => {
+        const requestBody = await request.formData();
+        requests.push({
+          contentType: request.headers.get('content-type'),
+          payload: JSON.parse(String(requestBody.get('Payload'))),
+          files: requestBody.getAll('Files'),
+        });
+        return HttpResponse.json({});
+      })
+    );
+
+    const store = createStore();
+    await store
+      .dispatch(
+        chaptersApi.endpoints.addChapterWithAttachments.initiate({
+          standardId: 'class-id',
+          subjectId: 'subject-id',
+          body,
+        })
+      )
+      .unwrap();
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0].contentType).toContain('multipart/form-data; boundary=');
+    expect(requests[0].payload).toEqual({ chapterNo: 2, documents: ['existing.pdf'] });
+    expect(requests[0].files).toHaveLength(1);
+    expect((requests[0].files[0] as File).name).toBe('notes.pdf');
+
+    store.dispatch(api.util.resetApiState());
+  });
+
+  it('puts multipart chapter updates to the attachment-aware route', async () => {
+    const urls: string[] = [];
+    const body = new FormData();
+    body.append('Payload', JSON.stringify({ chapterNo: 3, documents: [] }));
+
+    mswServer.use(
+      http.put(
+        '*/api/academic/curriculum/chapters/chapter-id/with-attachments',
+        async ({ request }) => {
+          urls.push(request.url);
+          expect(request.headers.get('content-type')).toContain('multipart/form-data; boundary=');
+          expect(JSON.parse(String((await request.formData()).get('Payload')))).toMatchObject({
+            chapterNo: 3,
+          });
+          return HttpResponse.json({});
+        }
+      )
+    );
+
+    const store = createStore();
+    await store
+      .dispatch(
+        chaptersApi.endpoints.updateChapterWithAttachments.initiate({
+          id: 'chapter-id',
+          body,
+        })
+      )
+      .unwrap();
+
+    expect(urls).toHaveLength(1);
+    store.dispatch(api.util.resetApiState());
+  });
 });

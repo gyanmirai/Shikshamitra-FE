@@ -296,10 +296,7 @@ const HomeworkAssignmentAnalyticsReports = ({
     }));
   }, [classId, subjectOptionsData, coreSubjectData]);
 
-  const { fetchPrimaryTeacherOptions: fetchTeacherOptions } = useTeacherSelection({
-    primaryTeacherId: '',
-    secondaryTeacherIds: [],
-  });
+  const { fetchTeacherOptions } = useTeacherSelection({ teacherIds: [] });
 
   const [teacherObjs, setTeacherObjs] = useState<EmployeeOption[]>([]);
 

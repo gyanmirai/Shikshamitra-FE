@@ -22,6 +22,14 @@ export interface TeacherProfile {
   subjects?: string[];
 }
 
+export interface SubjectTeacherInfo {
+  id: string;
+  name: string;
+  employeeCode?: string | null;
+  email?: string | null;
+  experience?: string | null;
+}
+
 export interface ISubjectDetail {
   subjectAssignmentId?: string;
   id: string;
@@ -38,16 +46,10 @@ export interface ISubjectDetail {
   };
   subjectName?: string; // Kept optional for backward compatibility or flat structures if any
 
-  primaryTeacher: {
-    id: string;
-    name: string;
-    email?: string | null;
-    experience?: string | null;
-  }; // Changed to object for better data handling
+  teachers?: SubjectTeacherInfo[];
+  primaryTeacher: SubjectTeacherInfo; // Legacy API compatibility
   primaryTeacherId: string;
-  secondaryTeachers:
-    | { id: string; name: string; email?: string | null; experience?: string | null }[]
-    | null; // Renamed from secondaryTeacher
+  secondaryTeachers: SubjectTeacherInfo[] | null; // Legacy API compatibility
   documents?: (File | string)[];
   prerequisites: string;
   learningGoals: string;
@@ -73,6 +75,7 @@ export interface ISubjectFormValues {
   isCopiedFromPreviousYear?: boolean;
   primaryTeacherName?: string;
   primaryTeacherNames?: string[];
+  teacherNames?: string[];
   chaptersCount?: number;
   weeklyPeriods?: number;
   lastUpdatedAt?: string;
@@ -188,6 +191,7 @@ export interface INavigatorSubjectItem {
   electiveGroupId?: string;
   electiveGroupName?: string;
   primaryTeacher?: { id: string; name: string };
+  teachers?: SubjectTeacherInfo[];
   weeklyPeriods?: number;
 }
 

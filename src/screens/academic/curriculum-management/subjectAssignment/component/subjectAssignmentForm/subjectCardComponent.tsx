@@ -32,12 +32,9 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
   onRemove,
 }) => {
   const {
-    primaryTeacherObj,
-    setPrimaryTeacherObj,
-    secondaryTeacherObjs,
-    setSecondaryTeacherObjs,
-    fetchPrimaryTeacherOptions,
-    fetchSecondaryTeacherOptions,
+    teacherObjs,
+    setTeacherObjs,
+    fetchTeacherOptions,
     previewDoc,
     setPreviewDoc,
     handleDropzoneChange,
@@ -55,8 +52,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
     onSubjectChange,
     activeSubjectId,
   });
-
-  console.log('subject====', subject);
 
   const getFileNameFromUrl = (file: string | File): string => {
     if (!file) return '';
@@ -129,15 +124,16 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
                     sx={{ height: 22, fontSize: '0.75rem' }}
                   />
                 )}
-                {(primaryTeacherObj?.label || subject.primaryTeacher?.name) && (
+                {teacherObjs.map((teacher) => (
                   <Chip
-                    label={`Lead: ${primaryTeacherObj?.label || subject.primaryTeacher?.name}`}
+                    key={teacher.id}
+                    label={teacher.label}
                     size="small"
                     variant="soft"
                     color="info"
                     sx={{ height: 22, fontSize: '0.75rem' }}
                   />
-                )}
+                ))}
               </Box>
             )}
           </Box>
@@ -189,32 +185,23 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
               <Box sx={{ flex: 1, height: '1px', bgcolor: 'divider' }} />
             </Box>
             <SubjectSetupSection
-              index={index ?? 0}
               subjectCode={subject.subjectCode}
-              primaryTeacherId={subject.primaryTeacherId}
-              secondaryTeacherIds={subject.secondaryTeacherIds}
-              primaryTeacherObj={primaryTeacherObj}
-              secondaryTeacherObjs={secondaryTeacherObjs}
-              fetchPrimaryTeacherOptions={fetchPrimaryTeacherOptions}
-              fetchSecondaryTeacherOptions={fetchSecondaryTeacherOptions}
-              onPrimaryChange={(newValue) => {
-                setPrimaryTeacherObj(newValue);
-                formik.setFieldValue(`subjects.${index}.primaryTeacherId`, newValue?.id ?? '');
-                formik.setFieldTouched(`subjects.${index}.primaryTeacherId`, true, false);
-                formik.setFieldTouched(`subjects.${index}.secondaryTeacherIds`, true, false);
-              }}
-              onSecondaryChange={(newValues) => {
-                setSecondaryTeacherObjs(newValues);
+              teacherObjs={teacherObjs}
+              fetchTeacherOptions={fetchTeacherOptions}
+              onTeachersChange={(newValues) => {
+                setTeacherObjs(newValues);
                 formik.setFieldValue(
-                  `subjects.${index}.secondaryTeacherIds`,
+                  `subjects.${index}.teacherIds`,
                   newValues.map((item) => item.id)
                 );
-                formik.setFieldTouched(`subjects.${index}.secondaryTeacherIds`, true, false);
-                formik.setFieldTouched(`subjects.${index}.primaryTeacherId`, true, false);
+                formik.setFieldValue(
+                  `subjects.${index}.teachers`,
+                  newValues.map(({ id, name, employeeCode }) => ({ id, name, employeeCode }))
+                );
+                formik.setFieldTouched(`subjects.${index}.teacherIds`, true, false);
               }}
               getError={getError}
               onChange={handleChange}
-              formik={formik}
             />
           </Box>
 

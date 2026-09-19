@@ -20,11 +20,9 @@ import {
   Stack,
   Paper,
   Button,
-  Switch,
   TextField,
   Typography,
   FormHelperText,
-  FormControlLabel,
 } from '@mui/material';
 import {
   RubricStatus,
@@ -35,6 +33,7 @@ import {
   usePublishRubricMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
+import { RubricCriterionActions } from './components/RubricCriterionActions';
 import {
   CRITERION_BANK,
   RUBRIC_WORK_TYPE_OPTIONS,
@@ -766,7 +765,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
                       }
                     />
                   </Grid>
-                  <Grid size={{ xs: 8, md: 2 }}>
+                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
                     <CustomSelect
                       label={
                         formik.values.scoringModel === RubricScoringModel.WeightedPercentage
@@ -791,27 +790,15 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
                       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                     />
                   </Grid>
-                  <Grid size={{ xs: 4, md: 2 }}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          size="small"
-                          checked={criterion.isRequired}
-                          onChange={(event) =>
-                            updateCriterion(formik, index, 'isRequired', event.target.checked)
-                          }
-                        />
+                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+                    <RubricCriterionActions
+                      criterionNumber={index + 1}
+                      isRequired={criterion.isRequired}
+                      canDelete={formik.values.criteria.length > 1}
+                      onRequiredChange={(isRequired) =>
+                        updateCriterion(formik, index, 'isRequired', isRequired)
                       }
-                      label="Required"
-                      sx={{ ml: 1 }}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 1 }}>
-                    <Button
-                      size="small"
-                      color="error"
-                      disabled={formik.values.criteria.length === 1}
-                      onClick={() =>
+                      onDelete={() =>
                         formik.setFieldValue(
                           'criteria',
                           formik.values.criteria.filter(
@@ -820,9 +807,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
                           )
                         )
                       }
-                    >
-                      <Iconify icon={GlobalIcons.delete} />
-                    </Button>
+                    />
                   </Grid>
                   <Grid size={{ xs: 12, md: 6 }}>
                     <TextField

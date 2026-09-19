@@ -111,6 +111,7 @@ describe('exam list and preview date range', () => {
         </Provider>
       );
 
+      expect(screen.getByLabelText('Date Range')).toBeVisible();
       const row = screen.getByRole('row', { name: /11th ENG exam _9/ });
       expect(within(row).getByText(label, { exact: true })).toBeVisible();
       fireEvent.click(within(row).getByRole('button', { name: 'View' }));

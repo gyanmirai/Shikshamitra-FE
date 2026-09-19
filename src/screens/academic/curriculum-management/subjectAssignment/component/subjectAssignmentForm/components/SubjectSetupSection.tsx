@@ -4,36 +4,27 @@ import ShakingTextField from 'src/components/shaking-text-field';
 
 import TeacherSelectionFields from '../TeacherSelectionFields';
 
+import type { TeacherOption } from '../teacherOptions';
+
 interface SubjectSetupSectionProps {
-  index: number;
   subjectCode: string;
-  primaryTeacherId: string;
-  secondaryTeacherIds: string[];
-  primaryTeacherObj: any;
-  secondaryTeacherObjs: any[];
-  fetchPrimaryTeacherOptions: any;
-  fetchSecondaryTeacherOptions: any;
-  onPrimaryChange: (newValue: any) => void;
-  onSecondaryChange: (newValues: any[]) => void;
+  teacherObjs: TeacherOption[];
+  fetchTeacherOptions: (
+    query: string,
+    page?: number
+  ) => Promise<{ data: TeacherOption[]; hasMore: boolean }>;
+  onTeachersChange: (newValues: TeacherOption[]) => void;
   getError: (field: string) => any;
   onChange: (field: string, value: unknown) => void;
-  formik: any;
 }
 
 export const SubjectSetupSection: React.FC<SubjectSetupSectionProps> = ({
-  index,
   subjectCode,
-  primaryTeacherId,
-  secondaryTeacherIds,
-  primaryTeacherObj,
-  secondaryTeacherObjs,
-  fetchPrimaryTeacherOptions,
-  fetchSecondaryTeacherOptions,
-  onPrimaryChange,
-  onSecondaryChange,
+  teacherObjs,
+  fetchTeacherOptions,
+  onTeachersChange,
   getError,
   onChange,
-  formik,
 }) => (
   <Grid container spacing={1}>
     <Grid size={{ xs: 12, md: 4 }}>
@@ -55,15 +46,9 @@ export const SubjectSetupSection: React.FC<SubjectSetupSectionProps> = ({
     </Grid>
 
     <TeacherSelectionFields
-      index={index}
-      primaryTeacherObj={primaryTeacherObj}
-      secondaryTeacherObjs={secondaryTeacherObjs}
-      secondaryTeacherIds={secondaryTeacherIds}
-      primaryTeacherId={primaryTeacherId}
-      fetchPrimaryTeacherOptions={fetchPrimaryTeacherOptions}
-      fetchSecondaryTeacherOptions={fetchSecondaryTeacherOptions}
-      onPrimaryChange={onPrimaryChange}
-      onSecondaryChange={onSecondaryChange}
+      teacherObjs={teacherObjs}
+      fetchTeacherOptions={fetchTeacherOptions}
+      onChange={onTeachersChange}
       getError={getError}
     />
   </Grid>

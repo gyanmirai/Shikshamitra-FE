@@ -2,6 +2,42 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../../academicApi';
 
+export type SubjectScheduleLectureSubject = {
+  subjectId: string;
+  subjectName: string;
+  subjectColor?: string | null;
+  teacherId?: string | null;
+  teacherName?: string | null;
+  roomId?: string | null;
+  roomName?: string | null;
+};
+
+export type SubjectScheduleLecture = {
+  timetableId: string;
+  timetableSlotId: string;
+  timetableStatus: number;
+  divisionId: string;
+  divisionName: string;
+  day: number;
+  periodNumber: number;
+  startTime: string;
+  endTime: string;
+  subjects: SubjectScheduleLectureSubject[];
+};
+
+export type SubjectScheduleBreakdown = {
+  subjectAssignmentId: string;
+  standardId: string;
+  allocatedPeriodsPerWeek: number;
+  scheduledPeriods: number;
+  divisionCount: number;
+  lectures: SubjectScheduleLecture[];
+};
+
+type SubjectScheduleBreakdownResponse = {
+  data: SubjectScheduleBreakdown;
+};
+
 export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subject assignments - academicMediumId passed in query params
@@ -26,6 +62,17 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
         method: 'GET',
       }),
       providesTags: [academicType.subjectAssignment],
+    }),
+
+    getSubjectScheduleBreakdown: builder.query<
+      SubjectScheduleBreakdownResponse,
+      { assignmentId: string }
+    >({
+      query: ({ assignmentId }) => ({
+        url: `/academics/curriculum/subject-assignments/${assignmentId}/schedule-breakdown`,
+        method: 'GET',
+      }),
+      providesTags: [academicType.subjectAssignment, academicType.timetableManagement],
     }),
 
     // Create assignment
@@ -189,6 +236,7 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
 export const {
   useGetSubjectAssignmentsQuery,
   useGetSubjectAssignmentByIdQuery,
+  useGetSubjectScheduleBreakdownQuery,
   useAddSubjectAssignmentMutation,
   useUpdateSubjectAssignmentMutation,
   useDeleteSubjectAssignmentMutation,
