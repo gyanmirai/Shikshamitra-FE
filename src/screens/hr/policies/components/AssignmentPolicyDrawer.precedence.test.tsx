@@ -1,7 +1,7 @@
 import type React from 'react';
 
 import { useState } from 'react';
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { renderWithProviders } from 'src/test/test-utils';
@@ -320,9 +320,12 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
 
     expect(screen.getByTestId('selected-target')).toBeEmptyDOMElement();
 
-    await user.click(await screen.findByRole('option', { name: 'Bina Teacher' }));
+    await screen.findByRole('option', { name: 'Bina Teacher' });
+    await user.keyboard('{ArrowDown}{Enter}');
 
-    expect(screen.getByTestId('selected-target')).toHaveTextContent('employee-2');
-    expect(employeePicker).toHaveValue('Bina Teacher');
+    await waitFor(() => {
+      expect(screen.getByTestId('selected-target')).toHaveTextContent('employee-2');
+      expect(employeePicker).toHaveValue('Bina Teacher');
+    });
   });
 });
