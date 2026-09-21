@@ -99,8 +99,39 @@ const humanizeActivityType = (value: string) =>
   value.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
 
 export const getActivityPresentation = (activity: Activity) =>
-  activityPresentation[activity.activityType] ?? {
-    title: humanizeActivityType(activity.activityType),
-    icon: 'mdi:history',
-    color: 'default' as LabelColor,
-  };
+  activityPresentation[activity.activityType] ??
+  (activity.activityType.includes('Communication')
+    ? {
+        title: humanizeActivityType(activity.activityType),
+        icon: 'mdi:message-text-outline',
+        color: 'info' as LabelColor,
+      }
+    : activity.activityType.includes('FollowUp')
+      ? {
+          title: humanizeActivityType(activity.activityType),
+          icon: 'mdi:calendar-clock-outline',
+          color: 'warning' as LabelColor,
+        }
+      : activity.activityType.includes('Contact')
+        ? {
+            title: humanizeActivityType(activity.activityType),
+            icon: 'mdi:phone-outline',
+            color: 'success' as LabelColor,
+          }
+        : activity.activityType.includes('Assigned')
+          ? {
+              title: humanizeActivityType(activity.activityType),
+              icon: 'mdi:account-arrow-right-outline',
+              color: 'default' as LabelColor,
+            }
+          : activity.activityType.includes('Qualification')
+            ? {
+                title: humanizeActivityType(activity.activityType),
+                icon: 'mdi:check-decagram-outline',
+                color: 'primary' as LabelColor,
+              }
+            : {
+                title: humanizeActivityType(activity.activityType),
+                icon: 'mdi:history',
+                color: 'default' as LabelColor,
+              });

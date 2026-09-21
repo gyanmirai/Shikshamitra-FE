@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-09-18
+updated_on: 2026-09-19
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,9 +17,9 @@ Existing backend operations that share one permission identifier remain one capa
 
 # Trace Student Enrollment Admissions workflows
 
-TL;DR: the Enrollment Admissions CRM project connects configurable setup screens to an inquiry-to-application runtime flow.
+TL;DR: Student Admissions connects school setup screens to an inquiry-to-application runtime flow.
 
-## Manage Admission Cycles
+## Manage Admission Periods
 
 The `/student/admissions/settings/cycles` screen loads server-paged cycles and exposes independent Lifecycle and Application Window filters.
 Each row shows its Academic Year, date window, current or scheduled action, lifecycle, computed window status, Offering count, and Application count.
@@ -38,14 +38,14 @@ The backend remains authoritative for stale concurrency, lifecycle transitions, 
 
 ## Configuration workflow
 
-1. An administrator creates or selects an admission cycle.
-2. The administrator configures an offering through scoped Board, Medium, Stage, and Standard selectors and associates published workflow, inquiry form, and application form versions.
-3. The administrator builds workflow stages and chooses what happens next from each stage, then previews, validates, and publishes the workflow.
-4. The administrator builds form sections and fields, configures bindings, rules, defaults, required state, and read-only state, then previews, validates, and publishes the form.
+1. In **Admission Periods**, an administrator creates or selects the admission cycle that controls the intake window.
+2. In **Admission Forms**, the administrator builds, previews, validates, and publishes reusable inquiry and application forms.
+3. In **Admission Process**, the administrator builds the workflow stages, chooses what happens next, previews the journey, validates it, and publishes it.
+4. In **Class Admission Setup**, the administrator selects Board, Medium, Stage, and Standard, connects the published process and form versions to the period, validates readiness, and activates the intake.
 
 The setup screens are `admission-cycles.tsx`, `admission-offerings.tsx`, `admission-workflows.tsx`, `admission-forms.tsx`, and `admission-form-preview.tsx`.
 
-Workflow creation generates a code from the name and lets the administrator start from the recommended standard journey or an empty workflow. The standard journey is Inquiry, Application form, Document verification, Review, and Admission decision; optional assessment, eligibility, payment, offer, and appointment steps are added only when the school needs them.
+Workflow creation generates a code from the name and lets the administrator start from the recommended standard journey or an empty workflow. Inquiry capture and qualification happen before an application starts, so new Admission Process templates begin with Application form, followed by Document verification, Review, and Admission decision; optional assessment, eligibility, payment, and offer steps are added only when the school needs them. Historical Inquiry workflow stages remain readable and executable for applications already pinned to them but are not selectable for new processes.
 The dedicated `/student/admissions/settings/workflows/[id]` builder owns stage ordering, stage-owned next-step paths, advanced entry and ending controls, guided outcome conditions, undo/redo, validation results, route-aware preview, route simulation, version comparison, restore-as-draft, and usage.
 Configure does not expose a separate technical Transitions workspace. Each stage shows its usual and special outcome paths under **What happens next?**; the saved transition graph remains the backend runtime contract. Stage ordering remains presentation order and does not silently rewrite advanced routes. Required stages cannot use ordinary manual skip, while a separately authorized emergency override requires a reason.
 Seat, Enrollment, and Custom remain readable and executable in immutable historical workflow versions but are not selectable for new stages. New capacity and waitlisting setup is planned as a separate Admission Offering contract; Workflow Builder does not show placeholder capacity fields. Final admission creates the Student and hands operational work to Student Onboarding. Appointment remains hidden until its runtime scheduling and completion contract is available.
@@ -82,7 +82,7 @@ The stage editor exposes optional attendance, aggregate scoring and pass marks, 
 1. Configure the Assessment stage in a draft workflow and choose its completion requirements.
 2. Add outgoing routes using **Continue after**. The default route accepts passed or waived results; failed, absent, and retake outcomes require their own matching route. A retake can also remain in the assessment stage while staff create another allowed attempt.
 3. Publish the workflow and assign it to an admission offering.
-4. For scheduled assessments, open **Admissions > Applications > Assessments**, choose the offering and stage, and create a session. The selected scope is stored in the URL. Result-only assessments do not require sessions.
+4. For scheduled assessments, open **Admissions > Assessments**, choose the offering and stage, and create a session. The selected scope is stored in the URL. Result-only assessments do not require sessions.
 5. In application detail, create an attempt or book an available session, record attendance if required, and enter an aggregate mark or a manual pass/fail result when scoring is disabled.
 6. If review is required, a different authorized staff member approves or returns the result. The assessment panel explains outstanding requirements before staff advance the application.
 
@@ -129,7 +129,7 @@ Review uses **Basic completion (existing process)** unless an administrator enab
 1. Optionally choose a reviewer role and default assigned reviewer. Choose earlier managed Assessment, Document verification or Eligibility stages whose evidence must be considered.
 2. Add school-specific checklist items, marking individual confirmations required or optional. Configure an approver role, independent approver and review due days only when needed.
 3. Save and validate the draft. This first delivery allows one managed Review stage per workflow. Route negative decisions explicitly with **Continue after review decision**; the default route follows approval.
-4. Staff open the Review queue or the application's Review panel to inspect evidence, blockers, assignment and deadline. Save an incomplete draft or submit a reasoned recommendation with the required confirmations.
+4. Staff open Application Reviews or the application's Review panel to inspect evidence, blockers, assignment and deadline. Save an incomplete draft or submit a reasoned recommendation with the required confirmations.
 5. An authorized approver uses the existing **Admission decision** actions. A recommendation alone never approves, rejects or advances an application. A correction request reopens the application form; resubmission returns to the same Review stage for another recommendation.
 6. If authoritative evidence changes after Review, inspect it and submit a fresh recommendation. When the backend permits it, the existing approval action reaffirms the review while preserving the current offer lifecycle. History remains available through an explicit expansion.
 
@@ -165,7 +165,7 @@ Ready-made full-form templates remain frontend-owned structures that produce the
 An unsuccessful save leaves the editor open with its values intact for correction or retry.
 Saving persists a draft; publishing remains a separate form-list action.
 
-## CRM runtime workflow
+## Inquiry runtime workflow
 
 1. A counselor selects an admission cycle and offering, then captures a workflow-allowed source, its optional or required Source details, the family's preferred language, and the configured applicant and guardian fields.
 2. The inquiry flow checks duplicate phone, email, applicant name, and date-of-birth signals within the selected admission cycle. Staff can open the existing inquiry, continue with a sibling, or use the permitted override instead of creating an unexplained duplicate.
@@ -175,14 +175,14 @@ Saving persists a draft; publishing remains a separate form-list action.
 6. Staff with Inquiry Manage and Communication Add permission can use language-aware acknowledgement, follow-up, or application-link templates. Creation can immediately create/send the acknowledgement when selected; Communication Send controls immediate delivery, while provider, consent, approval, retry, and delivery tracking remain in Communication.
 7. The counselor reviews Applicant 360 and starts an application only for an offering whose computed availability is `Open`. Opening Applicant 360 from an inquiry carries that exact inquiry into application start so the handoff is traceable and the inquiry is locked after conversion.
 
-The separate CRM Pipeline groups the same inquiry records into Active inquiries and Handoffs and closed lanes. Every visible lane keeps its own server count and bounded recent-card page, while the shared cycle, offering, source, counsellor, and work-queue filters apply across the board. Cards expose the same Manage, Assign, and permission-controlled Compose actions as the inquiry table. Pipeline is not an Applications alias and does not make application-stage decisions.
+Inquiry Pipeline groups the same inquiry records into Active inquiries and Handoffs and closed lanes. Every visible lane keeps its own server count and bounded recent-card page, while the shared cycle, offering, source, counsellor, and work-queue filters apply across the board. Cards expose the same Manage, Assign, and permission-controlled Compose actions as the inquiry table. Inquiry Pipeline is not an Applications alias and does not make application-stage decisions.
 
 The runtime screens are `admission-inquiries.tsx`, `admission-applicant-360.tsx`, and `admission-applicant-notes.tsx`.
 
 ## Managed inquiries
 
-An Inquiry stage keeps the Basic process unless an administrator enables the version 1 Inquiry policy in a draft workflow.
-Managed setup can require contact or qualification before an application starts, constrain sources, require source detail and identity fields, configure duplicate handling, assign scoped counsellors manually or round robin, set response deadlines, and define a qualification checklist.
+Inquiry capture and qualification are owned by the Inquiries workspace before the application workflow starts. Historical published workflows may still contain a managed Inquiry stage, but Admission Process no longer offers Inquiry as a new stage and the school-ready templates begin with Application Form.
+The managed inquiry contract can require contact or qualification before an application starts, constrain sources, require source detail and identity fields, configure duplicate handling, assign scoped counsellors manually or round robin, set response deadlines, and define a qualification checklist.
 The list uses backend paging with cycle, offering, status, source, owner, assignment state, operational work queue, applicant, and phone filters. Work queues are evaluated before paging so small, medium, and large schools see correct counts and pages.
 The **Manage** drawer explains readiness and overdue work, edits pre-application inquiry details, records structured contacts, schedules and completes follow-ups, records a qualification outcome with a standard closure reason, shows the activity timeline, and can reopen a non-terminal qualification.
 Server capability flags and blockers control available commands; application-start and workflow guards remain authoritative on the backend.

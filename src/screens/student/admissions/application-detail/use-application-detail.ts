@@ -27,10 +27,11 @@ import {
   buildDynamicAdmissionYupSchema,
   getDynamicAdmissionValidationErrors,
 } from '../admission-form-validation';
+import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 
 export type RuntimeAction = 'skip' | 'override' | null;
 export type AdvanceOptions = {
-	concurrencyStamp?: string;
+  concurrencyStamp?: string;
   reason?: string;
   transitionDefinitionId?: string;
   skipCurrentStage?: boolean;
@@ -168,7 +169,12 @@ export function useApplicationDetail(id: string) {
       setErrors(result.validationErrors ?? []);
       setFieldErrors(result.fieldErrors ?? {});
       if (!result.validationErrors?.length) {
-        shikshaMitraToast.success({ message: 'Application submitted' });
+        shikshaMitraToast.success({
+          message:
+            applicationQuery.data?.status === 1
+              ? 'Application moved to the next admission step'
+              : 'Application submitted',
+        });
       }
     } catch (error) {
       shikshaMitraToast.error({
@@ -235,12 +241,9 @@ export function useApplicationDetail(id: string) {
           : {}
       );
     },
-    canAdvance: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Advance'),
-    canSkip: hasGrantedPermission(permissions, 'Students.Admissions.Applications.SkipStage'),
-    canOverride: hasGrantedPermission(
-      permissions,
-      'Students.Admissions.Applications.OverrideWorkflow'
-    ),
-    canReopen: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Reopen'),
+    canAdvance: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
+    canSkip: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
+    canOverride: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
+    canReopen: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
   };
 }

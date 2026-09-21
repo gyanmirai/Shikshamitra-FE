@@ -110,7 +110,7 @@ export function WorkflowStandardTemplateDialog({
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
             Start from a school-ready journey, then edit its stages, rules, and routes in the
-            Workflow Builder.
+            Admission Process workspace.
           </Typography>
           <Alert severity="warning">
             Applying the journey replaces every stage and next-step path currently on this draft.
@@ -202,7 +202,7 @@ export function WorkflowStandardTemplateDialog({
                         onOpenFormBuilder();
                       }}
                     >
-                      Open Form Builder
+                      Open Admission Forms
                     </Button>
                   }
                 >

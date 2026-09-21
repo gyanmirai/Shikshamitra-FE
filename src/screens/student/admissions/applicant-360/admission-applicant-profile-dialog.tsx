@@ -12,6 +12,8 @@ import { LoadingButton } from 'src/components/loading-button';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Stack, Button, TextField, DialogActions } from '@mui/material';
 
+import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
+
 type Props = {
   open: boolean;
   busy: boolean;
@@ -91,6 +93,7 @@ export function AdmissionApplicantProfileDialog({
           />
           <DatePicker
             label="Date of birth"
+            format={ADMISSION_DATE_FORMAT}
             value={formik.values.dateOfBirth ? dayjs(formik.values.dateOfBirth) : null}
             maxDate={dayjs()}
             onChange={(value) =>

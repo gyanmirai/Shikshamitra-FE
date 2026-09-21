@@ -45,7 +45,21 @@ export function AdmissionOfferingConfigurationFields({
           </Alert>
         </Grid>
       )}
-      <Grid size={12}>
+      <Grid size={{ xs: 12, sm: 7 }}>
+        <TextField
+          fullWidth
+          size="small"
+          label="Offering name *"
+          {...formik.getFieldProps('name')}
+          error={formik.touched.name && Boolean(formik.errors.name)}
+          helperText={
+            formik.touched.name
+              ? formik.errors.name
+              : 'A clear name shown to staff and families, such as Grade 1 General Admission.'
+          }
+        />
+      </Grid>
+      <Grid size={{ xs: 12, sm: 5 }}>
         <TextField
           fullWidth
           size="small"

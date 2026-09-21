@@ -21,7 +21,6 @@ import {
   Alert,
   Stack,
   Button,
-  Divider,
   MenuItem,
   TextField,
   Typography,
@@ -36,6 +35,11 @@ import {
 
 type Application = AdmissionApplicant360['applications'][number];
 
+const TERMINAL_APPLICATION_STATUSES = new Set([2, 3, 9, 10, 11]);
+
+export const isActiveAdmissionApplication = (application: Application) =>
+  !TERMINAL_APPLICATION_STATUSES.has(application.status);
+
 export function AdmissionApplicantStartCard({
   applicantId,
   applications,
@@ -48,26 +52,31 @@ export function AdmissionApplicantStartCard({
   const inquiryId = searchParams.get('inquiryId') || undefined;
   const [offeringId, setOfferingId] = useState('');
   const [submitError, setSubmitError] = useState('');
-  const currentApplication = applications[0];
+  const activeApplication = applications.find(isActiveAdmissionApplication);
+  const currentApplication = activeApplication ?? applications[0];
   const currentStage = getCurrentStage(currentApplication);
-  const { data: offerings, isFetching } = useGetAdmissionOfferingsQuery({
-    availabilityStatus: 2,
-    maxResultCount: 100,
-    skipCount: 0,
-  });
+  const { data: offerings, isFetching } = useGetAdmissionOfferingsQuery(
+    {
+      availabilityStatus: 2,
+      maxResultCount: 100,
+      skipCount: 0,
+    },
+    { skip: Boolean(activeApplication) }
+  );
   const inquiryState = useGetAdmissionInquiryManagementQuery(inquiryId ?? '', {
     skip: !inquiryId,
   });
   const [startApplication, startState] = useStartAdmissionApplicationMutation();
   const blockers = inquiryState.data?.blockers ?? [];
   const applicationStartBlocked = Boolean(
-    inquiryId && inquiryState.data?.managed && !inquiryState.data.canStartApplication
+    activeApplication ||
+    (inquiryId && inquiryState.data?.managed && !inquiryState.data.canStartApplication)
   );
   const readinessMessage = blockers.length
     ? blockers.join(' ')
     : inquiryState.data?.isLocked
       ? 'This inquiry is already linked to an application. Continue that application below.'
-      : 'Complete the required CRM steps before starting an application.';
+      : 'Complete the required inquiry steps before starting an application.';
 
   const start = async () => {
     if (!offeringId || applicationStartBlocked) return;
@@ -84,7 +93,7 @@ export function AdmissionApplicantStartCard({
   };
 
   return (
-    <Card id="next-action">
+    <Card id="next-action" variant="outlined">
       <CardContent>
         <Stack spacing={2}>
           <Stack direction="row" spacing={1.5} alignItems="flex-start">
@@ -102,8 +111,8 @@ export function AdmissionApplicantStartCard({
             <Box sx={{ minWidth: 0 }}>
               <Typography variant="h6">Next action</Typography>
               <Typography variant="body2" color="text.secondary">
-                {currentApplication
-                  ? 'Continue the active admission journey or start another application when needed.'
+                {activeApplication
+                  ? 'Continue the current admission journey before starting another application.'
                   : 'Choose the school offering this family wants to apply for.'}
               </Typography>
             </Box>
@@ -116,7 +125,7 @@ export function AdmissionApplicantStartCard({
                 border: 1,
                 borderRadius: 2,
                 borderColor: 'divider',
-                bgcolor: 'background.neutral',
+                bgcolor: 'action.hover',
               }}
             >
               <Stack
@@ -128,18 +137,22 @@ export function AdmissionApplicantStartCard({
                 <Stack spacing={0.5} sx={{ minWidth: 0 }}>
                   <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
                     <Typography variant="subtitle1">
-                      {currentStage ? `Continue: ${currentStage.name}` : 'Review application'}
+                      {activeApplication ? 'Continue application' : 'Review previous application'}
                     </Typography>
                     <Label color={getAdmissionApplicationStatusColor(currentApplication.status)}>
                       {getAdmissionApplicationStatusLabel(currentApplication.status)}
                     </Label>
                   </Stack>
                   <Typography variant="body2" color="text.secondary">
-                    {currentApplication.applicationNumber}
-                    {currentStage?.enteredAt
-                      ? ` · Stage entered ${fDateTime(currentStage.enteredAt)}`
-                      : ''}
+                    {currentStage
+                      ? `Current stage: ${currentStage.name}`
+                      : 'Review application details'}
                   </Typography>
+                  {currentStage?.enteredAt && (
+                    <Typography variant="caption" color="text.secondary">
+                      Stage entered {fDateTime(currentStage.enteredAt)}
+                    </Typography>
+                  )}
                 </Stack>
                 <Button
                   component={NextLink}
@@ -153,18 +166,16 @@ export function AdmissionApplicantStartCard({
             </Box>
           )}
 
-          {currentApplication && <Divider />}
-
           <Box>
-            <Typography variant="subtitle2">
-              {currentApplication ? 'Start another application' : 'Start application'}
-            </Typography>
+            <Typography variant="subtitle2">Start application</Typography>
             <Typography variant="caption" color="text.secondary">
-              Only offerings that are active, configured, and currently open are available.
+              {activeApplication
+                ? 'Unavailable while this applicant has an active application.'
+                : 'Only offerings that are active, configured, and currently open are available.'}
             </Typography>
           </Box>
 
-          {applicationStartBlocked && (
+          {applicationStartBlocked && !activeApplication && (
             <Alert
               severity="warning"
               action={
@@ -202,16 +213,21 @@ export function AdmissionApplicantStartCard({
                 setSubmitError('');
               }}
               helperText={
-                isFetching
-                  ? 'Loading open offerings…'
-                  : !(offerings?.items.length ?? 0)
-                    ? 'No open offerings are currently available.'
-                    : 'Cycle, class, board, and medium'
+                activeApplication
+                  ? 'Finish the current application before starting another.'
+                  : isFetching
+                    ? 'Loading open offerings…'
+                    : !(offerings?.items.length ?? 0)
+                      ? 'No open offerings are currently available.'
+                      : 'Cycle, class, board, and medium'
               }
             >
               {(offerings?.items ?? []).map((offering) => (
                 <MenuItem key={offering.id} value={offering.id}>
-                  {offering.standardName} · {offering.boardName} / {offering.mediumName} ·{' '}
+                  {offering.name || offering.code}
+                  {offering.name && offering.name !== offering.code
+                    ? ` (${offering.code})`
+                    : ''} · {offering.standardName} · {offering.boardName} / {offering.mediumName} ·{' '}
                   {offering.admissionCycleName}
                 </MenuItem>
               ))}

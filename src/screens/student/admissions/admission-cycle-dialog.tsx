@@ -24,6 +24,7 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { normalizeCycleCode } from './admission-cycle-model';
 import { AdmissionDialogTitle } from './admission-dialog-title';
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 
 type Props = {
   open: boolean;
@@ -243,7 +244,7 @@ export function AdmissionCycleDialog({
             <ShakingTextField error={Boolean(formik.touched.startDate && formik.errors.startDate)}>
               <DatePicker
                 label="Applications open"
-                format="DD-MM-YYYY"
+                format={ADMISSION_DATE_FORMAT}
                 value={formik.values.startDate ? dayjs(formik.values.startDate) : null}
                 onChange={async (value) => {
                   await formik.setFieldTouched('startDate', true, false);
@@ -270,7 +271,7 @@ export function AdmissionCycleDialog({
             <ShakingTextField error={Boolean(formik.touched.endDate && formik.errors.endDate)}>
               <DatePicker
                 label="Applications close"
-                format="DD-MM-YYYY"
+                format={ADMISSION_DATE_FORMAT}
                 value={formik.values.endDate ? dayjs(formik.values.endDate) : null}
                 onChange={async (value) => {
                   await formik.setFieldTouched('endDate', true, false);

@@ -1,3 +1,4 @@
+import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 import type {
   AdmissionForm,
   AdmissionFormField,
@@ -9,8 +10,10 @@ import { DEFAULT_INQUIRY_POLICY } from 'src/redux/student/admissions/admission-i
 import {
   validateAdmissionInquiry,
   getAdmissionInquiryFields,
+  getAdmissionInquirySections,
   buildAdmissionInquiryPayload,
   type AdmissionInquiryFormValues,
+  getAdmissionInquiryAcademicOptions,
 } from './admission-inquiry-model';
 
 const field = (
@@ -40,11 +43,11 @@ const fields = [
 ];
 
 const values: AdmissionInquiryFormValues = {
-  cycleId: 'cycle-1',
+  boardId: 'board-1',
+  mediumId: 'medium-1',
+  standardId: 'standard-1',
   offeringId: 'offering-1',
   source: 0,
-  sourceDetail: '',
-  preferredLanguageCode: 'en',
   sendAcknowledgement: true,
   fields: {
     FIRST_NAME: 'Aanya',
@@ -56,14 +59,37 @@ const values: AdmissionInquiryFormValues = {
   },
 };
 
+const offering = {
+  id: 'offering-1',
+  admissionCycleId: 'cycle-1',
+  admissionCycleName: '2026-27',
+  boardId: 'board-1',
+  boardName: 'CBSE',
+  mediumId: 'medium-1',
+  mediumName: 'English',
+  stageId: 'stage-1',
+  stageName: 'Primary',
+  standardId: 'standard-1',
+  standardName: 'Class 1',
+  code: 'CBSE-ENG-1',
+} as AdmissionOfferingListItem;
+
 describe('admission inquiry model', () => {
   it('carries canonical and custom form values into the inquiry request', () => {
-    const payload = buildAdmissionInquiryPayload(values, fields);
+    const payload = buildAdmissionInquiryPayload(values, fields, offering);
 
     expect(payload.applicantFirstName).toBe('Aanya');
     expect(payload.applicantDateOfBirth).toBe('2016-04-12T00:00:00+05:30');
     expect(payload.guardianPhone).toBe('9876543210');
     expect(payload.preferredLanguageCode).toBe('en');
+    expect(payload).toMatchObject({
+      boardId: 'board-1',
+      mediumId: 'medium-1',
+      standardId: 'standard-1',
+      admissionCycleId: 'cycle-1',
+      admissionOfferingId: 'offering-1',
+      sourceDetail: null,
+    });
     expect(payload.formValues).toEqual(
       expect.arrayContaining([
         { fieldCode: 'GENDER', valueJson: '"Female"' },
@@ -89,6 +115,7 @@ describe('admission inquiry model', () => {
     const payload = buildAdmissionInquiryPayload(
       values,
       fields,
+      offering,
       null,
       true,
       '  Different guardian  '
@@ -133,7 +160,7 @@ describe('admission inquiry model', () => {
     };
 
     const runtimeFields = getAdmissionInquiryFields(legacyForm);
-    const payload = buildAdmissionInquiryPayload(legacyValues, runtimeFields);
+    const payload = buildAdmissionInquiryPayload(legacyValues, runtimeFields, offering);
 
     expect(runtimeFields).toHaveLength(legacyFields.length);
     expect(payload).toMatchObject({
@@ -145,25 +172,62 @@ describe('admission inquiry model', () => {
     });
   });
 
-  it('requires source details only when the selected workflow policy requires them', () => {
+  it('keeps source policy validation without collecting source details', () => {
     const policy = {
       ...DEFAULT_INQUIRY_POLICY,
       allowedSources: [0, 3],
       requireSourceDetailFor: [3],
     };
 
-    expect(validateAdmissionInquiry({ ...values, source: 3 }, fields, policy)).toMatchObject({
-      sourceDetail: 'Source details are required for this source',
-    });
     expect(
-      validateAdmissionInquiry(
-        { ...values, source: 3, sourceDetail: 'Parent referral' },
-        fields,
-        policy
-      )
+      validateAdmissionInquiry({ ...values, source: 3 }, fields, policy, offering)
     ).not.toHaveProperty('sourceDetail');
     expect(validateAdmissionInquiry({ ...values, source: 4 }, fields, policy)).toMatchObject({
       source: 'Choose a source allowed by this admission workflow',
     });
+  });
+
+  it('filters offerings to the selected board, medium, and class', () => {
+    const otherOffering = {
+      ...offering,
+      id: 'offering-2',
+      standardId: 'standard-2',
+      standardName: 'Class 2',
+      code: 'CBSE-ENG-2',
+    };
+    const options = getAdmissionInquiryAcademicOptions([offering, otherOffering], values);
+
+    expect(options.boards).toEqual([{ id: 'board-1', name: 'CBSE' }]);
+    expect(options.standards).toEqual([
+      { id: 'standard-1', name: 'Class 1' },
+      { id: 'standard-2', name: 'Class 2' },
+    ]);
+    expect(options.offerings.map((item) => item.id)).toEqual(['offering-1']);
+  });
+
+  it('preserves configured form sections for category-wise rendering', () => {
+    const form = {
+      sections: [
+        {
+          id: 'guardian',
+          code: 'GUARDIAN',
+          name: 'Guardian details',
+          displayOrder: 2,
+          fields: [fields[3], fields[4]],
+        },
+        {
+          id: 'applicant',
+          code: 'APPLICANT',
+          name: 'Applicant details',
+          displayOrder: 1,
+          fields: fields.slice(0, 3),
+        },
+      ],
+    } as AdmissionForm;
+
+    expect(getAdmissionInquirySections(form).map((section) => section.name)).toEqual([
+      'Applicant details',
+      'Guardian details',
+    ]);
   });
 });

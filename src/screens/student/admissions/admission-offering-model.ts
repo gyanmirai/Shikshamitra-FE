@@ -34,6 +34,7 @@ export const availabilityColors = ['warning', 'info', 'success', 'default', 'def
 
 export const getOfferingInitialValues = (
   offering?: {
+    name?: string | null;
     campusId?: string | null;
     boardId: string;
     mediumId: string;
@@ -49,6 +50,7 @@ export const getOfferingInitialValues = (
     isActive: boolean;
   } | null
 ): AdmissionOfferingFormValues => ({
+  name: offering?.name?.trim() || offering?.code || '',
   campusId: offering?.campusId ?? null,
   boardId: offering?.boardId ?? '',
   mediumId: offering?.mediumId ?? '',

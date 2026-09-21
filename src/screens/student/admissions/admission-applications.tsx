@@ -13,6 +13,7 @@ import {
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { AdmissionQueryError } from './admission-query-error';
+import { formatAdmissionReference } from './admission-reference';
 import { getAdmissionApplicationStatusLabel } from './application-status';
 
 type AdmissionApplicationsView = 'applications' | 'pipeline';
@@ -39,7 +40,7 @@ export default function AdmissionApplicationsScreen({
       minWidth: 180,
       render: (value, row) => (
         <NextLink href={`/student/admissions/applications/${(row as AdmissionApplication).id}`}>
-          {String(value)}
+          {formatAdmissionReference(String(value))}
         </NextLink>
       ),
     },

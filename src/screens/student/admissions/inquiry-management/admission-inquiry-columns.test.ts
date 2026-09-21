@@ -1,8 +1,27 @@
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
-import { it, expect, describe } from 'vitest';
+import { vi, it, expect, describe } from 'vitest';
 
 import { inquiryWorkState } from './admission-inquiry-work-state';
+import {
+  buildAdmissionInquiryColumns,
+  getAdmissionInquiryActionPlan,
+} from './admission-inquiry-columns';
+
+const columnOptions = {
+  canManage: true,
+  canAssign: true,
+  canCommunicate: true,
+  isMarkingContacted: false,
+  counsellorNames: {},
+  counsellorOptions: [],
+  offeringOptions: [],
+  onOpenApplicant360: vi.fn(),
+  onManage: vi.fn(),
+  onAssign: vi.fn(),
+  onCommunicate: vi.fn(),
+  onMarkContacted: vi.fn(),
+};
 
 function inquiry(overrides: Partial<AdmissionInquiry> = {}): AdmissionInquiry {
   return {
@@ -58,5 +77,38 @@ describe('inquiryWorkState', () => {
         })
       ).label
     ).toBe('Managed inquiry');
+  });
+});
+
+describe('admission inquiry columns', () => {
+  it('keeps identity left, operations right, and moves next action into Actions', () => {
+    const columns = buildAdmissionInquiryColumns(columnOptions);
+
+    expect(columns.map((column) => column.id)).not.toContain('work');
+    expect(columns.map((column) => column.id)).not.toContain('lastActivityAt');
+    expect(columns.find((column) => column.id === 'inquiryNumber')).toMatchObject({
+      sticky: true,
+      stickyPosition: 'left',
+    });
+    expect(columns.find((column) => column.id === 'applicantName')).toMatchObject({
+      sticky: true,
+      stickyPosition: 'left',
+    });
+    expect(columns.slice(-2).map((column) => column.id)).toEqual(['status', 'actions']);
+    expect(columns.slice(-2).every((column) => column.stickyPosition === 'right')).toBe(true);
+    expect(columns.find((column) => column.id === 'actions')).toMatchObject({
+      width: 152,
+      maxWidth: 152,
+    });
+  });
+
+  it('keeps three actions visible and places remaining actions in more', () => {
+    const plan = getAdmissionInquiryActionPlan(
+      inquiry({ applicantId: 'applicant-1', admissionOfferingId: 'offering-1', status: 0 }),
+      columnOptions
+    );
+
+    expect(plan.direct).toEqual(['applicant360', 'manage', 'assign']);
+    expect(plan.overflow).toEqual(['communicate', 'markContacted']);
   });
 });

@@ -23,6 +23,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { studentPaths } from 'src/constants/student-menu';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -356,9 +357,9 @@ export default function AdmissionCyclesScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Admission Cycles"
-        description="Create, publish, monitor, close and retain controlled admission seasons."
-        links={[{ name: 'Students', href: '/student/dashboard' }, { name: 'Admissions', href: '/student/admissions' }, { name: 'Admission Cycles' }]}
+        heading="Admission Periods"
+        description="Create, publish, monitor, close and retain controlled admission periods."
+        links={[{ name: 'Students', href: '/student/dashboard' }, { name: 'Admissions', href: '/student/admissions' }, { name: 'Admission Setup', href: studentPaths.enrollment.settings.root }, { name: 'Admission Periods' }]}
         action={
           <Button size="small" variant="contained" disabled={!canAdd} startIcon={<Iconify icon="mdi:plus" />} onClick={() => { setEditingCycle(null); editDialog.onTrue(); }}>
             Create cycle
@@ -381,7 +382,7 @@ export default function AdmissionCyclesScreen() {
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="admission-cycles"
-          tableTitle="Admission cycles"
+          tableTitle="Admission periods"
           wrapperProps={{ sx: { height: 1 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           isLoading={isLoading || isFetching}

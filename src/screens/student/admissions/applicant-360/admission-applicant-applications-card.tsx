@@ -21,6 +21,7 @@ import {
 } from '@mui/material';
 
 import { getCurrentStage } from './admission-applicant-360-model';
+import { formatAdmissionReference } from '../admission-reference';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
@@ -36,7 +37,7 @@ export function AdmissionApplicantApplicationsCard({
   const horizontalJourney = useResponsive('up', 'md');
 
   return (
-    <Card>
+    <Card variant="outlined">
       <CardContent>
         <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
           <Box>
@@ -74,7 +75,7 @@ export function AdmissionApplicantApplicationsCard({
                           alignItems="center"
                         >
                           <Typography variant="subtitle1">
-                            {application.applicationNumber}
+                            {formatAdmissionReference(application.applicationNumber)}
                           </Typography>
                           <Label color={getAdmissionApplicationStatusColor(application.status)}>
                             {getAdmissionApplicationStatusLabel(application.status)}

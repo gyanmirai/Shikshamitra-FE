@@ -1,24 +1,31 @@
 import type { AdmissionInquiryPolicy } from 'src/redux/student/admissions/admission-inquiry-policy';
-import type {
-  AdmissionForm,
-  AdmissionFormField,
-} from 'src/redux/student/admissions/admission-forms-api';
+import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 import type {
   AdmissionInquirySource,
   CreateAdmissionInquiry,
 } from 'src/redux/student/admissions/admission-inquiries-api';
+import type {
+  AdmissionForm,
+  AdmissionFormField,
+  AdmissionFormSection,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import * as Yup from 'yup';
 
 export type AdmissionInquiryFormValues = {
-  cycleId: string;
+  boardId: string;
+  mediumId: string;
+  standardId: string;
   offeringId: string;
   source: AdmissionInquirySource;
-  sourceDetail: string;
-  preferredLanguageCode: string;
   sendAcknowledgement: boolean;
   fields: Record<string, string>;
 };
+
+export type AdmissionInquiryFormSection = Pick<
+  AdmissionFormSection,
+  'id' | 'code' | 'name' | 'displayOrder' | 'fields'
+>;
 
 export const admissionInquirySourceOptions = [
   'Website',
@@ -33,6 +40,7 @@ export const admissionInquirySourceOptions = [
   'Other',
 ];
 
+// Retained for the existing inquiry-management editor. New inquiry capture uses the default.
 export const admissionInquiryLanguageOptions = [
   { value: 'en', label: 'English' },
   { value: 'hi', label: 'Hindi' },
@@ -48,21 +56,21 @@ export const admissionInquiryLanguageOptions = [
 ];
 
 export const initialAdmissionInquiryValues: AdmissionInquiryFormValues = {
-  cycleId: '',
+  boardId: '',
+  mediumId: '',
+  standardId: '',
   offeringId: '',
   source: 0,
-  sourceDetail: '',
-  preferredLanguageCode: 'en',
   sendAcknowledgement: true,
   fields: {},
 };
 
 export const admissionInquirySchema = Yup.object({
-  cycleId: Yup.string().required('Admission cycle is required'),
+  boardId: Yup.string().required('Board is required'),
+  mediumId: Yup.string().required('Medium is required'),
+  standardId: Yup.string().required('Class is required'),
   offeringId: Yup.string().required('Offering is required'),
   source: Yup.number().integer().min(0).max(9).required('Source is required'),
-  sourceDetail: Yup.string().trim().max(128, 'Use 128 characters or fewer'),
-  preferredLanguageCode: Yup.string().trim().required('Preferred language is required'),
   sendAcknowledgement: Yup.boolean().required(),
   fields: Yup.object().required(),
 });
@@ -86,6 +94,18 @@ const guardianFirstNameFallback: AdmissionFormField = {
   fieldType: 0,
   bindingType: 0,
   bindingKey: 'Guardian.FirstName',
+  required: true,
+  readOnly: false,
+  displayOrder: Number.MAX_SAFE_INTEGER,
+};
+
+const guardianPhoneFallback: AdmissionFormField = {
+  id: 'inquiry-guardian-phone',
+  code: 'guardianPhone',
+  label: 'Guardian mobile number',
+  fieldType: 4,
+  bindingType: 0,
+  bindingKey: 'Guardian.Mobile',
   required: true,
   readOnly: false,
   displayOrder: Number.MAX_SAFE_INTEGER,
@@ -126,15 +146,93 @@ const hasIdentityField = (fields: AdmissionFormField[], bindingKey: string) => {
   );
 };
 
-export const getAdmissionInquiryFields = (form?: AdmissionForm): AdmissionFormField[] => {
-  if (!form) return [];
-  const fields = form.sections.flatMap((section) => section.fields);
-  return [
-    ...fields,
-    ...(!hasIdentityField(fields, 'Applicant.FirstName') ? [applicantFirstNameFallback] : []),
+export const getAdmissionInquirySections = (
+  form?: AdmissionForm
+): AdmissionInquiryFormSection[] => {
+  const sections = [...(form?.sections ?? [])]
+    .sort((left, right) => left.displayOrder - right.displayOrder)
+    .map((section) => ({
+      id: section.id,
+      code: section.code,
+      name: section.name,
+      displayOrder: section.displayOrder,
+      fields: [...section.fields].sort((left, right) => left.displayOrder - right.displayOrder),
+    }));
+  const fields = sections.flatMap((section) => section.fields);
+  const applicantFallbackFields = !hasIdentityField(fields, 'Applicant.FirstName')
+    ? [applicantFirstNameFallback]
+    : [];
+  const guardianFallbackFields = [
     ...(!hasIdentityField(fields, 'Guardian.FirstName') ? [guardianFirstNameFallback] : []),
+    ...(!hasIdentityField(fields, 'Guardian.Mobile') ? [guardianPhoneFallback] : []),
+  ];
+
+  return [
+    ...sections,
+    ...(applicantFallbackFields.length
+      ? [
+          {
+            id: 'inquiry-applicant-details',
+            code: 'INQUIRY_APPLICANT_DETAILS',
+            name: 'Applicant details',
+            displayOrder: Number.MAX_SAFE_INTEGER - 1,
+            fields: applicantFallbackFields,
+          },
+        ]
+      : []),
+    ...(guardianFallbackFields.length
+      ? [
+          {
+            id: 'inquiry-guardian-details',
+            code: 'INQUIRY_GUARDIAN_DETAILS',
+            name: 'Guardian details',
+            displayOrder: Number.MAX_SAFE_INTEGER,
+            fields: guardianFallbackFields,
+          },
+        ]
+      : []),
   ];
 };
+
+export const getAdmissionInquiryFields = (form?: AdmissionForm): AdmissionFormField[] =>
+  getAdmissionInquirySections(form).flatMap((section) => section.fields);
+
+const uniqueOptions = (
+  values: Array<{ id: string; name: string }>
+): Array<{ id: string; name: string }> =>
+  Array.from(new Map(values.map((value) => [value.id, value])).values()).sort((left, right) =>
+    left.name.localeCompare(right.name)
+  );
+
+export function getAdmissionInquiryAcademicOptions(
+  offerings: AdmissionOfferingListItem[],
+  values: Pick<AdmissionInquiryFormValues, 'boardId' | 'mediumId' | 'standardId'>
+) {
+  const boardOfferings = values.boardId
+    ? offerings.filter((offering) => offering.boardId === values.boardId)
+    : offerings;
+  const mediumOfferings = values.mediumId
+    ? boardOfferings.filter((offering) => offering.mediumId === values.mediumId)
+    : boardOfferings;
+
+  return {
+    boards: uniqueOptions(
+      offerings.map((offering) => ({ id: offering.boardId, name: offering.boardName }))
+    ),
+    mediums: uniqueOptions(
+      boardOfferings.map((offering) => ({ id: offering.mediumId, name: offering.mediumName }))
+    ),
+    standards: uniqueOptions(
+      mediumOfferings.map((offering) => ({ id: offering.standardId, name: offering.standardName }))
+    ),
+    offerings: offerings.filter(
+      (offering) =>
+        offering.boardId === values.boardId &&
+        offering.mediumId === values.mediumId &&
+        offering.standardId === values.standardId
+    ),
+  };
+}
 
 const fieldValue = (values: AdmissionInquiryFormValues, code?: string) => {
   if (!code) return '';
@@ -176,6 +274,7 @@ const serializeFieldValue = (field: AdmissionFormField, value: string) => {
 export function buildAdmissionInquiryPayload(
   values: AdmissionInquiryFormValues,
   fields: AdmissionFormField[],
+  offering: AdmissionOfferingListItem,
   existingFamilyId?: string | null,
   createSeparateFamily = false,
   duplicateOverrideReason?: string
@@ -194,17 +293,20 @@ export function buildAdmissionInquiryPayload(
     boundValue(values, fields, 'Applicant.Name', 'applicantName') ||
     [applicantFirstName, applicantLastName].filter(Boolean).join(' ');
   return {
-    admissionCycleId: values.cycleId,
-    admissionOfferingId: values.offeringId || null,
+    admissionCycleId: offering.admissionCycleId,
+    admissionOfferingId: offering.id,
+    boardId: values.boardId,
+    mediumId: values.mediumId,
+    standardId: values.standardId,
     existingFamilyId,
     createSeparateFamily,
     duplicateOverrideReason: duplicateOverrideReason?.trim() || null,
     applicantName,
     phone: guardianPhone,
     email: guardianEmail || null,
-    preferredLanguageCode: values.preferredLanguageCode,
+    preferredLanguageCode: 'en',
     source: values.source,
-    sourceDetail: values.sourceDetail || null,
+    sourceDetail: null,
     guardianFirstName,
     guardianLastName: boundValue(values, fields, 'Guardian.LastName', 'guardianLastName') || null,
     guardianPhone,
@@ -225,7 +327,8 @@ export function buildAdmissionInquiryPayload(
 export function validateAdmissionInquiry(
   values: AdmissionInquiryFormValues,
   fields: AdmissionFormField[],
-  policy?: AdmissionInquiryPolicy | null
+  policy?: AdmissionInquiryPolicy | null,
+  offering?: AdmissionOfferingListItem
 ) {
   const fieldErrors = Object.fromEntries(
     fields
@@ -233,13 +336,19 @@ export function validateAdmissionInquiry(
       .map((field) => [field.code, `${field.label} is required`])
   );
   return {
-    ...(!values.cycleId ? { cycleId: 'Admission cycle is required' } : {}),
+    ...(!values.boardId ? { boardId: 'Board is required' } : {}),
+    ...(!values.mediumId ? { mediumId: 'Medium is required' } : {}),
+    ...(!values.standardId ? { standardId: 'Class is required' } : {}),
     ...(!values.offeringId ? { offeringId: 'Offering is required' } : {}),
+    ...(values.offeringId && !offering ? { offeringId: 'Choose an available offering' } : {}),
+    ...(offering &&
+    (offering.boardId !== values.boardId ||
+      offering.mediumId !== values.mediumId ||
+      offering.standardId !== values.standardId)
+      ? { offeringId: 'Choose an offering for the selected board, medium, and class' }
+      : {}),
     ...(policy?.allowedSources.length && !policy.allowedSources.includes(values.source)
       ? { source: 'Choose a source allowed by this admission workflow' }
-      : {}),
-    ...(policy?.requireSourceDetailFor.includes(values.source) && !values.sourceDetail.trim()
-      ? { sourceDetail: 'Source details are required for this source' }
       : {}),
     ...(Object.keys(fieldErrors).length ? { fields: fieldErrors } : {}),
   };
@@ -247,9 +356,10 @@ export function validateAdmissionInquiry(
 
 export function buildAdmissionInquiryDuplicateInput(
   values: AdmissionInquiryFormValues,
-  fields: AdmissionFormField[]
+  fields: AdmissionFormField[],
+  offering: AdmissionOfferingListItem
 ) {
-  const payload = buildAdmissionInquiryPayload(values, fields);
+  const payload = buildAdmissionInquiryPayload(values, fields, offering);
   return {
     admissionCycleId: payload.admissionCycleId,
     guardianPhone: payload.guardianPhone,

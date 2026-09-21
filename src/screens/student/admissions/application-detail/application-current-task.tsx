@@ -17,11 +17,14 @@ type Props = {
   active: boolean;
   awaitingDecision: boolean;
   canComplete: boolean;
+  canRetryFormHandoff: boolean;
   canSkip: boolean;
   canOverride: boolean;
   hasAlternativeRoutes: boolean;
   advancing: boolean;
+  retryingFormHandoff: boolean;
   onAdvance: () => void;
+  onRetryFormHandoff: () => void;
   onSkip: () => void;
   onOverride: () => void;
 };
@@ -33,14 +36,20 @@ export function ApplicationCurrentTask({
   active,
   awaitingDecision,
   canComplete,
+  canRetryFormHandoff,
   canSkip,
   canOverride,
   hasAlternativeRoutes,
   advancing,
+  retryingFormHandoff,
   onAdvance,
+  onRetryFormHandoff,
   onSkip,
   onOverride,
 }: Props) {
+  const showActions =
+    canComplete || canRetryFormHandoff || canSkip || canOverride || awaitingDecision;
+
   return (
     <Alert
       severity={awaitingDecision ? 'warning' : 'info'}
@@ -59,7 +68,7 @@ export function ApplicationCurrentTask({
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
         Entered {fDateTime(stage.enteredAt) || 'time not recorded'}
       </Typography>
-      {active && (canComplete || canSkip || canOverride || awaitingDecision) && (
+      {active && showActions && (
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 1.5 }}>
           {canComplete && (
             <LoadingButton
@@ -71,6 +80,18 @@ export function ApplicationCurrentTask({
               onClick={onAdvance}
             >
               {getStageActionLabel(stage)}
+            </LoadingButton>
+          )}
+          {canRetryFormHandoff && (
+            <LoadingButton
+              size="small"
+              variant="contained"
+              loading={retryingFormHandoff}
+              startIcon={<Iconify icon="mdi:arrow-right-circle-outline" />}
+              sx={{ minHeight: 44 }}
+              onClick={onRetryFormHandoff}
+            >
+              Continue admission
             </LoadingButton>
           )}
           {awaitingDecision && (
@@ -110,7 +131,7 @@ export function ApplicationCurrentTask({
           )}
         </Stack>
       )}
-      {isFormStage(stage) && (
+      {isFormStage(stage) && !canRetryFormHandoff && (
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
           The form automatically advances this journey after a successful submission.
         </Typography>

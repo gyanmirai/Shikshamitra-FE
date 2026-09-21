@@ -73,6 +73,7 @@ export function useAdmissionOfferingActions(cycle: AdmissionCycle | null) {
           id: selected.id,
           body: {
             admissionCycleId: targetCycleId,
+            name: values.name,
             campusId: values.campusId,
             boardId: values.boardId,
             mediumId: values.mediumId,

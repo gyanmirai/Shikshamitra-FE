@@ -75,13 +75,13 @@ export default function AdmissionWorkflowsScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Workflow Builder"
+        heading="Admission Process"
         description="Design, validate, version, and publish the admission journey used by offerings."
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'Settings' },
-          { name: 'Workflow Builder' },
+          { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
+          { name: 'Admission Process' },
         ]}
         action={
           <Stack
@@ -137,7 +137,7 @@ export default function AdmissionWorkflowsScreen() {
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="admission-workflows"
-          tableTitle="Admission workflows"
+          tableTitle="Admission processes"
           wrapperProps={{ sx: { height: 1 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}

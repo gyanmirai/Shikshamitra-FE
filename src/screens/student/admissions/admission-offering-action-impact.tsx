@@ -38,7 +38,7 @@ export function AdmissionOfferingActionImpact({ action, offering }: Props) {
     <Stack spacing={1.5}>
       <Stack spacing={0.25}>
         <Typography variant="subtitle2">
-          {offering.code} · {offering.standardName}
+          {offering.name || offering.code} · {offering.standardName}
         </Typography>
         <Typography variant="body2" color="text.secondary">
           {offering.campusName || 'All campuses'} · {offering.boardName} · {offering.mediumName} ·{' '}

@@ -264,6 +264,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: [
         studentAdmissionsCrmType.admissionApplication,
         studentAdmissionsCrmType.admissionApplicant,
+        studentAdmissionsCrmType.admissionInquiry,
       ],
     }),
     getAdmissionApplicationWorkflow: builder.query<AdmissionApplicationWorkflow, string>({

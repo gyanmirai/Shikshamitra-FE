@@ -37,7 +37,7 @@ export default function AdmissionApplicantNotes({ applicantId, notes }: Props) {
     }
   };
   return (
-    <Card>
+    <Card variant="outlined">
       <CardContent>
         <Stack spacing={2}>
           <Box>

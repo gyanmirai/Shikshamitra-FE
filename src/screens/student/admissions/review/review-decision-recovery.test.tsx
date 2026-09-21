@@ -53,7 +53,7 @@ it.each([true, false])(
     );
     const user = userEvent.setup();
     renderReviewUi(<ApplicationDecisionCard application={application} />, [
-      'Students.Admissions.Applications.Decide',
+      'Students.Admissions.Applications.Add',
     ]);
     await user.click(screen.getByRole('button', { name: 'Reject' }));
     const dialog = within(screen.getByRole('dialog'));

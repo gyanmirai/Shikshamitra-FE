@@ -79,35 +79,57 @@ describe('student navigation', () => {
     expect(admissions).toBeDefined();
     expect(admissions?.path).toBe('/student/admissions');
     expect(admissions?.children?.map((item) => item.title)).toEqual([
-      'Dashboard',
-      'CRM',
+      'Inquiries',
+      'Pipeline',
+      'Assessments',
       'Applications',
       'Settings',
     ]);
 
-    const crm = admissions?.children?.find((item) => item.title === 'CRM');
-    expect(crm?.children?.map((item) => item.title)).toEqual(['Inquiries', 'Pipeline']);
-    expect(crm?.children?.find((item) => item.title === 'Pipeline')?.path).toBe(
-      '/student/admissions/pipeline'
-    );
-    expect(crm?.children?.find((item) => item.title === 'Pipeline')?.permissionName).toBe(
-      studentPermissions.enrollment.inquiries
-    );
-    expect(crm?.children?.every((item) => item.path.startsWith('/student/admissions/'))).toBe(true);
+    const inquiries = admissions?.children?.find((item) => item.title === 'Inquiries');
+    const pipeline = admissions?.children?.find((item) => item.title === 'Pipeline');
+    expect(inquiries?.path).toBe('/student/admissions/inquiries');
+    expect(inquiries?.permissionName).toBe(studentPermissions.enrollment.inquiries);
+    expect(pipeline?.path).toBe('/student/admissions/pipeline');
+    expect(pipeline?.permissionName).toBe(studentPermissions.enrollment.inquiries);
 
     const applications = admissions?.children?.find((item) => item.title === 'Applications');
-    expect(applications?.children?.map((item) => item.title)).toEqual([
-      'All Applications',
-      'Assessments',
-      'Review queue',
+    expect(applications?.path).toBe('/student/admissions/applications');
+    expect(applications?.permissionName).toBe(studentPermissions.enrollment.applications);
+    expect(applications?.permissionChildren).toEqual([
+      {
+        title: 'Application Reviews',
+        permissionName: studentPermissions.enrollment.reviews,
+      },
     ]);
 
     const settings = admissions?.children?.find((item) => item.title === 'Settings');
     expect(settings?.children?.map((item) => item.title)).toEqual([
-      'Admission Cycles',
-      'Admission Offerings',
-      'Workflow Builder',
-      'Form Builder',
+      'Admission Periods',
+      'Admission Forms',
+      'Admission Process',
+      'Admission Setup',
     ]);
+    expect(settings?.children?.map((item) => item.path)).toEqual([
+      '/student/admissions/settings/cycles',
+      '/student/admissions/settings/forms',
+      '/student/admissions/settings/workflows',
+      '/student/admissions/settings/offerings',
+    ]);
+
+    const visibleTitles = admissions?.children?.flatMap((item) => [
+      item.title,
+      ...(item.children?.map((child) => child.title) ?? []),
+    ]);
+    expect(visibleTitles).not.toEqual(
+      expect.arrayContaining([
+        'Dashboard',
+        'CRM',
+        'All Applications',
+        'Review queue',
+        'Inquiry Pipeline',
+        'Class Admission Setup',
+      ])
+    );
   });
 });

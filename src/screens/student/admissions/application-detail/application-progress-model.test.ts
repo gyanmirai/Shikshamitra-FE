@@ -6,6 +6,9 @@ import {
   getStageGuidance,
   getWorkflowProgress,
   getStageActionLabel,
+  isAdmissionDecisionStage,
+  hasManagedStageWorkspace,
+  canRetrySubmittedFormHandoff,
   canCompleteStageFromProgress,
 } from './application-progress-model';
 
@@ -46,5 +49,28 @@ describe('application progress model', () => {
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 1, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 6, true)).toBe(true);
     expect(getStageGuidance(stage({ stageType: 7 }), 1)).toContain('approve or reject');
+  });
+
+  it('offers a recovery handoff for a submitted legacy Form stage only', () => {
+    const legacyForm = stage({ stageType: 1, formStageEnabled: false });
+
+    expect(canRetrySubmittedFormHandoff(legacyForm, 1)).toBe(true);
+    expect(canRetrySubmittedFormHandoff(legacyForm, 0)).toBe(false);
+    expect(canRetrySubmittedFormHandoff(stage({ stageType: 1, formStageEnabled: true }), 1)).toBe(
+      false
+    );
+    expect(getStageGuidance(legacyForm, 1)).toContain('submitted');
+  });
+
+  it('separates managed stage workspaces and decision stages from manual steps', () => {
+    expect(hasManagedStageWorkspace(stage({ stageType: 5 }))).toBe(false);
+    expect(
+      hasManagedStageWorkspace(stage({ stageType: 5, documentVerificationEnabled: true }))
+    ).toBe(true);
+    expect(isAdmissionDecisionStage(stage({ stageType: 5 }))).toBe(false);
+    expect(isAdmissionDecisionStage(stage({ stageType: 6 }))).toBe(false);
+    expect(isAdmissionDecisionStage(stage({ stageType: 6, reviewEnabled: true }))).toBe(true);
+    expect(isAdmissionDecisionStage(stage({ stageType: 7 }))).toBe(true);
+    expect(isAdmissionDecisionStage(stage({ stageType: 10 }))).toBe(true);
   });
 });

@@ -54,7 +54,7 @@ export function AssessmentPanelActions({
           size="small"
           variant="contained"
           disabled={disabled || !assessment.canComplete}
-          onClick={onComplete}
+          onClick={() => onComplete()}
         >
           Complete assessment step
         </Button>

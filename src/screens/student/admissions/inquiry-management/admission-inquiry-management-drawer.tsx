@@ -3,6 +3,7 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 import NextLink from 'next/link';
 import { Iconify } from 'src/components/iconify';
 import { studentPaths } from 'src/constants/student-menu';
+import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 import {
   Box,
   Alert,
@@ -14,10 +15,10 @@ import {
   IconButton,
   Typography,
 } from '@mui/material';
-import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
-import { InquiryFollowUps } from './inquiry-follow-ups';
 import { InquiryTimeline } from './inquiry-timeline';
+import { formatAdmissionReference } from '../admission-reference';
+import { InquiryFollowUps } from './inquiry-follow-ups';
 import { InquiryContactForm } from './inquiry-contact-form';
 import { InquiryOverviewForm } from './inquiry-overview-form';
 import { InquiryManagementSummary } from './inquiry-management-summary';
@@ -36,13 +37,21 @@ export function AdmissionInquiryManagementDrawer({
       anchor="right"
       open={Boolean(inquiry)}
       onClose={onClose}
-      PaperProps={{ sx: { width: { xs: 1, sm: 560 }, maxWidth: 1 } }}
+      PaperProps={{
+        sx: {
+          width: { xs: 1, sm: 640 },
+          maxWidth: 1,
+          height: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
+        },
+      }}
     >
       <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="h6">Manage inquiry</Typography>
           <Typography variant="body2" color="text.secondary" noWrap>
-            {inquiry?.inquiryNumber} · {inquiry?.applicantName}
+            {formatAdmissionReference(inquiry?.inquiryNumber)} · {inquiry?.applicantName}
           </Typography>
         </Box>
         {inquiry?.applicantId && (
@@ -51,6 +60,7 @@ export function AdmissionInquiryManagementDrawer({
             href={`${studentPaths.enrollment.root}/applicants/${inquiry.applicantId}?inquiryId=${encodeURIComponent(inquiry.id)}`}
             size="small"
             variant="outlined"
+            startIcon={<Iconify icon="mdi:account-circle-outline" />}
           >
             Applicant 360
           </Button>
@@ -60,7 +70,10 @@ export function AdmissionInquiryManagementDrawer({
         </IconButton>
       </Stack>
       <Divider />
-      <Stack spacing={2.5} sx={{ p: 2, overflowY: 'auto' }}>
+      <Stack
+        spacing={2}
+        sx={{ p: 2, flex: 1, minHeight: 0, overflowY: 'auto', bgcolor: 'background.default' }}
+      >
         {query.isLoading && (
           <>
             <Skeleton height={100} />

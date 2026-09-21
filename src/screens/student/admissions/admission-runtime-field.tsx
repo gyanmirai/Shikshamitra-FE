@@ -10,6 +10,7 @@ import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 
 import { parseFieldConfiguration } from './form-dialog/form-field-presets';
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtime-field';
 
 type Field = {
@@ -148,6 +149,7 @@ function renderDate({ field, value, disabled, error, onChange, onBlur }: Rendere
   return (
     <DatePicker
       label={field.label}
+      format={ADMISSION_DATE_FORMAT}
       value={parsedDate?.isValid() ? parsedDate : null}
       disabled={disabled}
       onChange={(nextValue) => onChange(datePickerToDateTimeOffset(nextValue) ?? '')}
@@ -194,28 +196,28 @@ function renderInput({ field, value, disabled, error, onChange, options, onBlur 
   return (
     <ShakingTextField error={Boolean(error)}>
       <TextField
-      fullWidth
-      size="small"
-      multiline={field.fieldType === 1}
-      minRows={field.fieldType === 1 ? 3 : undefined}
-      type={
-        field.fieldType === 2
-          ? 'number'
-          : field.fieldType === 3
-            ? 'email'
-            : field.fieldType === 4
-              ? 'tel'
-              : 'text'
-      }
-      label={field.label}
-      required={field.required}
-      disabled={disabled}
-      error={Boolean(error)}
-      helperText={error || field.helpText || undefined}
-      placeholder={field.placeholder ?? undefined}
-      value={value}
-      onBlur={onBlur}
-      onChange={(event) => onChange(String(event.target.value))}
+        fullWidth
+        size="small"
+        multiline={field.fieldType === 1}
+        minRows={field.fieldType === 1 ? 3 : undefined}
+        type={
+          field.fieldType === 2
+            ? 'number'
+            : field.fieldType === 3
+              ? 'email'
+              : field.fieldType === 4
+                ? 'tel'
+                : 'text'
+        }
+        label={field.label}
+        required={field.required}
+        disabled={disabled}
+        error={Boolean(error)}
+        helperText={error || field.helpText || undefined}
+        placeholder={field.placeholder ?? undefined}
+        value={value}
+        onBlur={onBlur}
+        onChange={(event) => onChange(String(event.target.value))}
       />
     </ShakingTextField>
   );

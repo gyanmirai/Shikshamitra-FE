@@ -27,6 +27,7 @@ import {
   isApprovalStage,
   getWorkflowProgress,
   APPLICATION_APPROVED_STATUS,
+  canRetrySubmittedFormHandoff,
   canCompleteStageFromProgress,
 } from './application-progress-model';
 
@@ -38,7 +39,9 @@ type Props = {
   canSkip: boolean;
   canOverride: boolean;
   advancing: boolean;
+  retryingFormHandoff: boolean;
   onAdvance: () => void;
+  onRetryFormHandoff: () => void;
   onSkip: () => void;
   onOverride: () => void;
 };
@@ -51,7 +54,9 @@ export function ApplicationProgressCard({
   canSkip,
   canOverride,
   advancing,
+  retryingFormHandoff,
   onAdvance,
+  onRetryFormHandoff,
   onSkip,
   onOverride,
 }: Props) {
@@ -59,6 +64,7 @@ export function ApplicationProgressCard({
   const progress = getWorkflowProgress(stages);
   const active = workflow?.status === 0 && Boolean(workflow.currentStageInstanceId);
   const canComplete = canCompleteStageFromProgress(currentStage, application.status, canAdvance);
+  const canRetryFormHandoff = canRetrySubmittedFormHandoff(currentStage, application.status);
   const awaitingDecision =
     isApprovalStage(currentStage) && application.status !== APPLICATION_APPROVED_STATUS;
 
@@ -97,11 +103,14 @@ export function ApplicationProgressCard({
             active={active}
             awaitingDecision={awaitingDecision}
             canComplete={canComplete}
+            canRetryFormHandoff={canRetryFormHandoff}
             canSkip={canSkip}
             canOverride={canOverride}
             hasAlternativeRoutes={Boolean(workflow.availableTransitions.length)}
             advancing={advancing}
+            retryingFormHandoff={retryingFormHandoff}
             onAdvance={onAdvance}
+            onRetryFormHandoff={onRetryFormHandoff}
             onSkip={onSkip}
             onOverride={onOverride}
           />

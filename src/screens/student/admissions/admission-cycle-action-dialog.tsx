@@ -7,7 +7,15 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Alert, Stack, Checkbox, TextField, Typography, FormControlLabel } from '@mui/material';
+import {
+  Box,
+  Alert,
+  Stack,
+  Checkbox,
+  TextField,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
 import {
   type AdmissionCycle,
   type AdmissionCycleAction,
@@ -15,6 +23,8 @@ import {
   type AdmissionCycleValidation,
   useLazyGetAdmissionCycleImpactQuery,
 } from 'src/redux/student/admissions/admission-cycles-api';
+
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 
 export type CycleGuardedAction = 'publish' | 'close' | 'reopen' | 'archive' | 'delete';
 
@@ -112,10 +122,14 @@ export function AdmissionCycleActionDialog({
                 {dayjs(cycle.endDate).format('DD MMM YYYY')}.
               </Typography>
               {validation?.errors.map((issue) => (
-                <Alert severity="error" key={issue.code}>{issue.message}</Alert>
+                <Alert severity="error" key={issue.code}>
+                  {issue.message}
+                </Alert>
               ))}
               {validation?.warnings.map((issue) => (
-                <Alert severity="warning" key={issue.code}>{issue.message}</Alert>
+                <Alert severity="warning" key={issue.code}>
+                  {issue.message}
+                </Alert>
               ))}
               {!validation && <Alert severity="info">Checking publication readiness…</Alert>}
               {validation?.isValid && !validation.warnings.length && (
@@ -126,9 +140,24 @@ export function AdmissionCycleActionDialog({
 
           {action !== 'publish' && (
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
-              <Box><Typography variant="caption" color="text.secondary">Offerings</Typography><Typography fontWeight={600}>{impact?.linkedOfferingCount ?? '—'}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Active</Typography><Typography fontWeight={600}>{impact?.activeOfferingCount ?? '—'}</Typography></Box>
-              <Box><Typography variant="caption" color="text.secondary">Applications</Typography><Typography fontWeight={600}>{impact?.applicationCount ?? '—'}</Typography></Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Offerings
+                </Typography>
+                <Typography fontWeight={600}>{impact?.linkedOfferingCount ?? '—'}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Active
+                </Typography>
+                <Typography fontWeight={600}>{impact?.activeOfferingCount ?? '—'}</Typography>
+              </Box>
+              <Box>
+                <Typography variant="caption" color="text.secondary">
+                  Applications
+                </Typography>
+                <Typography fontWeight={600}>{impact?.applicationCount ?? '—'}</Typography>
+              </Box>
             </Box>
           )}
 
@@ -139,21 +168,40 @@ export function AdmissionCycleActionDialog({
           )}
           {needsOfferingConfirmation && (
             <FormControlLabel
-              control={<Checkbox checked={confirmOfferings} onChange={(event) => setConfirmOfferings(event.target.checked)} />}
+              control={
+                <Checkbox
+                  checked={confirmOfferings}
+                  onChange={(event) => setConfirmOfferings(event.target.checked)}
+                />
+              }
               label={`I understand ${impact?.activeOfferingCount} active offering(s) will stop accepting applications.`}
             />
           )}
-          {cannotArchive && <Alert severity="error">Close or deactivate active offerings before archiving this cycle.</Alert>}
-          {cannotDelete && <Alert severity="error">Only an unused draft with no offerings or applications can be deleted.</Alert>}
-          {action === 'delete' && !cannotDelete && <Alert severity="error">This cannot be undone. Use Archive for historical cycles.</Alert>}
+          {cannotArchive && (
+            <Alert severity="error">
+              Close or deactivate active offerings before archiving this cycle.
+            </Alert>
+          )}
+          {cannotDelete && (
+            <Alert severity="error">
+              Only an unused draft with no offerings or applications can be deleted.
+            </Alert>
+          )}
+          {action === 'delete' && !cannotDelete && (
+            <Alert severity="error">
+              This cannot be undone. Use Archive for historical cycles.
+            </Alert>
+          )}
 
           {action === 'reopen' && (
             <DatePicker
               label="New applications close date"
-              format="DD-MM-YYYY"
+              format={ADMISSION_DATE_FORMAT}
               minDate={dayjs()}
               value={newEndDate ? dayjs(newEndDate) : null}
-              onChange={(value) => setNewEndDate(value?.isValid() ? value.format('YYYY-MM-DD') : '')}
+              onChange={(value) =>
+                setNewEndDate(value?.isValid() ? value.format('YYYY-MM-DD') : '')
+              }
               slotProps={{ textField: { fullWidth: true, size: 'small', required: true } }}
             />
           )}
@@ -177,10 +225,14 @@ export function AdmissionCycleActionDialog({
         <LoadingButton
           variant="contained"
           size="small"
-          color={action === 'delete' || action === 'archive' || action === 'close' ? 'error' : 'primary'}
+          color={
+            action === 'delete' || action === 'archive' || action === 'close' ? 'error' : 'primary'
+          }
           loading={busy}
           disabled={disabled}
-          startIcon={<Iconify icon={action === 'delete' ? GlobalIcons.delete : GlobalIcons.submit} />}
+          startIcon={
+            <Iconify icon={action === 'delete' ? GlobalIcons.delete : GlobalIcons.submit} />
+          }
           onClick={confirm}
         >
           {actionLabels[action]}

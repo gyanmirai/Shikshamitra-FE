@@ -1,43 +1,59 @@
-import { fDateTime } from 'src/utils/format-time';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Alert, Stack, Skeleton, Typography } from '@mui/material';
+import { Alert, Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionInquiryTimelineQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 
-const iconForActivity = (activityType: string) => {
-  if (activityType.includes('Communication')) return 'mdi:message-text-outline';
-  if (activityType.includes('FollowUp')) return 'mdi:calendar-clock-outline';
-  if (activityType.includes('Contact')) return 'mdi:phone-outline';
-  if (activityType.includes('Assigned')) return 'mdi:account-arrow-right-outline';
-  if (activityType.includes('Qualification')) return 'mdi:check-decagram-outline';
-  return 'mdi:history';
-};
+import { AdmissionActivityTimeline } from '../admission-activity-timeline';
 
 export function InquiryTimeline({ inquiryId }: { inquiryId: string }) {
   const query = useGetAdmissionInquiryTimelineQuery(inquiryId);
+  const activities = query.data ?? [];
+
   return (
-    <Stack spacing={1.5}>
-      <Typography variant="subtitle1">Timeline and communications</Typography>
-      {query.isLoading && <Skeleton height={96} />}
-      {query.isError && <Alert severity="error">Timeline could not be loaded.</Alert>}
-      {query.data?.length === 0 && (
-        <Typography variant="body2" color="text.secondary">
-          No activity has been recorded yet.
-        </Typography>
-      )}
-      {query.data?.map((item) => (
-        <Stack key={item.id} direction="row" spacing={1.25} alignItems="flex-start">
-          <Iconify
-            icon={iconForActivity(item.activityType)}
-            sx={{ mt: 0.25, color: 'text.secondary' }}
-          />
+    <Paper variant="outlined" sx={{ p: 2 }}>
+      <Stack spacing={1.5}>
+        <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
           <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-            <Typography variant="body2">{item.description}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {fDateTime(item.occurredAt)}
+            <Typography variant="subtitle1">Timeline and communications</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Contact, follow-up, assignment, and communication history in one place.
             </Typography>
           </Stack>
+          {!query.isLoading && <Label color="default">{activities.length}</Label>}
         </Stack>
-      ))}
-    </Stack>
+
+        {query.isLoading && (
+          <Stack spacing={1} aria-label="Loading inquiry timeline">
+            <Skeleton variant="rounded" height={64} />
+            <Skeleton variant="rounded" height={64} />
+            <Skeleton variant="rounded" height={64} />
+          </Stack>
+        )}
+        {query.isError && (
+          <Alert
+            severity="error"
+            action={
+              <Button
+                color="inherit"
+                size="small"
+                startIcon={<Iconify icon="mdi:refresh" />}
+                onClick={query.refetch}
+              >
+                Retry
+              </Button>
+            }
+          >
+            Timeline and communications could not be loaded.
+          </Alert>
+        )}
+        {!query.isLoading && !query.isError && (
+          <AdmissionActivityTimeline
+            activities={activities}
+            initiallyVisible={5}
+            emptyDescription="Contact notes, follow-ups, and communications will appear here."
+          />
+        )}
+      </Stack>
+    </Paper>
   );
 }

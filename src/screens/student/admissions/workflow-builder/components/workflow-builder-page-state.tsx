@@ -14,12 +14,12 @@ export function WorkflowBuilderPageState({ state, onRetry = () => undefined }: P
   return (
     <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
       <CustomBreadcrumbs
-        heading="Workflow Builder"
+        heading="Admission Process"
         description="Configure the stages and transitions for this admission journey."
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'Workflow Builder', href: studentPaths.enrollment.settings.workflows },
+          { name: 'Admission Process', href: studentPaths.enrollment.settings.workflows },
         ]}
       />
       {state === 'loading' ? (

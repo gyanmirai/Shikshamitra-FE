@@ -51,7 +51,7 @@ Review summary, draft, recommendation submission, assignment, correction, histor
 
 The existing application decision client continues to own approval, rejection, waitlist, offers and finalization. Optional `reviewDecision` capabilities on the main application response control these existing actions; absent managed-review metadata preserves legacy behavior. Detailed policy, source freshness, role rules and transition gates belong to the [backend student API](../../../Shikshamitra-BE/docs/modules/student/api.md).
 
-Inquiry stage configuration uses `admission-inquiry-policy.ts`; disabled or missing settings preserve the Basic process.
+Historical Inquiry stage configuration uses `admission-inquiry-policy.ts`; Inquiry is no longer selectable in new Admission Process stages, while disabled or missing settings preserve the Basic inquiry process.
 `admission-inquiry-settings-api.ts` loads offering-scoped active counsellors for workflow setup.
 `admission-inquiry-management-api.ts` reads the safe management summary and records structured contacts, follow-ups, qualification with closure codes, and reopen actions.
 Successful management commands invalidate the inquiry tag so the list and open drawer reload authoritative state.
