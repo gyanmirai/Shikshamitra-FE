@@ -3,7 +3,8 @@
 import React from 'react';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Card, Chip, Stack, Button, CardHeader, Typography } from '@mui/material';
+import { EmptyContent } from 'src/components/empty-content';
+import { Box, Card, Chip, Stack, CardHeader, Typography } from '@mui/material';
 
 // ----------------------------------------------------------------------
 
@@ -16,65 +17,6 @@ interface ActivityItem {
   time: string;
   type: ActivityType;
 }
-
-const ACTIVITIES: ActivityItem[] = [
-  {
-    id: 'ac1',
-    action: "Subject 'Physics Advanced' created",
-    actor: 'Admin',
-    time: '2 hours ago',
-    type: 'create',
-  },
-  {
-    id: 'ac2',
-    action: 'Timetable updated for Class 10B — added Saturday sessions',
-    actor: 'Admin',
-    time: '4 hours ago',
-    type: 'update',
-  },
-  {
-    id: 'ac3',
-    action: 'Final Exam scheduled for Class 10A, 10B, 10C',
-    actor: 'Admin',
-    time: '1 day ago',
-    type: 'schedule',
-  },
-  {
-    id: 'ac4',
-    action: 'Grade scaling changed for Grade 9 — updated pass percentage',
-    actor: 'Admin',
-    time: '1 day ago',
-    type: 'configure',
-  },
-  {
-    id: 'ac5',
-    action: "Elective group 'Science Stream' created with 3 subjects",
-    actor: 'Admin',
-    time: '2 days ago',
-    type: 'create',
-  },
-  {
-    id: 'ac6',
-    action: 'Results published for Unit Test 2 — Class 8 & 9',
-    actor: 'Admin',
-    time: '3 days ago',
-    type: 'publish',
-  },
-  {
-    id: 'ac7',
-    action: 'Homework type Assignment added to Homework Settings',
-    actor: 'Admin',
-    time: '3 days ago',
-    type: 'configure',
-  },
-  {
-    id: 'ac8',
-    action: 'Seating plan generated for Mid Term Exam',
-    actor: 'Admin',
-    time: '5 days ago',
-    type: 'create',
-  },
-];
 
 const activityTypeLabel: Record<ActivityType, string> = {
   create: 'Created',
@@ -106,7 +48,7 @@ const ACTIVITY_ICON: Record<ActivityType, string> = {
 // ----------------------------------------------------------------------
 
 export default function RecentActivities({ activities }: { activities?: ActivityItem[] }) {
-  const displayActivities = activities && activities.length > 0 ? activities : ACTIVITIES;
+  const displayActivities = activities ?? [];
 
   return (
     <Card
@@ -118,68 +60,74 @@ export default function RecentActivities({ activities }: { activities?: Activity
       }}
     >
       <CardHeader
-        title="Recent Admin Activities"
-        action={
-          <Button size="small" endIcon={<Iconify icon="eva:arrow-ios-forward-fill" width={18} />}>
-            View All
-          </Button>
-        }
+        title="Recent School-wide Activity"
+        subheader="Latest academic changes across all classes and modules"
         sx={{ p: 0, mb: 1.5 }}
       />
 
-      <Scrollbar sx={{ maxHeight: 380 }}>
-        <Stack spacing={1}>
-          {displayActivities.map((activity) => (
-            <Stack
-              key={activity.id}
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              sx={{
-                p: 1.5,
-                borderRadius: 1.5,
-                border: '1px solid',
-                borderColor: 'divider',
-              }}
-            >
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 1,
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: `${CHIP_COLOR[activity.type] || 'primary'}.main`,
-                    bgcolor: `${CHIP_COLOR[activity.type] || 'primary'}.lighter`,
-                    flexShrink: 0,
-                  }}
-                >
-                  <Iconify
-                    icon={ACTIVITY_ICON[activity.type] || 'solar:info-circle-bold'}
-                    width={16}
-                  />
-                </Box>
-                <Box>
-                  <Typography variant="body2" fontWeight={500} sx={{ lineHeight: 1.4 }}>
-                    {activity.action}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {activity.actor} • {activity.time}
-                  </Typography>
-                </Box>
+      {displayActivities.length === 0 ? (
+        <EmptyContent
+          filled
+          title="No recent academic activity"
+          description="New exams and academic configuration changes will appear here."
+          sx={{ minHeight: 220 }}
+          slotProps={{ img: { maxWidth: 88 } }}
+        />
+      ) : (
+        <Scrollbar sx={{ maxHeight: 380 }}>
+          <Stack spacing={1}>
+            {displayActivities.map((activity) => (
+              <Stack
+                key={activity.id}
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{
+                  p: 1.5,
+                  borderRadius: 1.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <Stack direction="row" alignItems="center" spacing={1}>
+                  <Box
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 1,
+                      display: 'grid',
+                      placeItems: 'center',
+                      color: `${CHIP_COLOR[activity.type] || 'primary'}.main`,
+                      bgcolor: `${CHIP_COLOR[activity.type] || 'primary'}.lighter`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Iconify
+                      icon={ACTIVITY_ICON[activity.type] || 'solar:info-circle-bold'}
+                      width={16}
+                    />
+                  </Box>
+                  <Box>
+                    <Typography variant="body2" fontWeight={500} sx={{ lineHeight: 1.4 }}>
+                      {activity.action}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {activity.actor} • {activity.time}
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Chip
+                  label={activityTypeLabel[activity.type] || 'Info'}
+                  color={CHIP_COLOR[activity.type] || 'primary'}
+                  variant="soft"
+                  size="small"
+                  sx={{ flexShrink: 0, ml: 1 }}
+                />
               </Stack>
-              <Chip
-                label={activityTypeLabel[activity.type] || 'Info'}
-                color={CHIP_COLOR[activity.type] || 'primary'}
-                variant="soft"
-                size="small"
-                sx={{ flexShrink: 0, ml: 1 }}
-              />
-            </Stack>
-          ))}
-        </Stack>
-      </Scrollbar>
+            ))}
+          </Stack>
+        </Scrollbar>
+      )}
     </Card>
   );
 }

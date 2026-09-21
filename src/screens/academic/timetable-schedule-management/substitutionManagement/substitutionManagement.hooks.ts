@@ -30,12 +30,33 @@ import {
 type QueryParams = Record<string, string | number | boolean | undefined>;
 type QueryOptions = {
   skip?: boolean;
+  refetchOnMountOrArgChange?: boolean;
 };
 
+export type SubstitutionManagementTab = 'board' | 'availability' | 'myDuties';
+
 export const shouldFetchTeacherAvailability = (
-  activeTab: string,
+  activeTab: SubstitutionManagementTab,
   availabilityDialogOpen: boolean
 ) => activeTab === 'availability' || availabilityDialogOpen;
+
+export const getSubstitutionTabQueryOptions = (
+  activeTab: SubstitutionManagementTab,
+  availabilityDialogOpen: boolean
+) => ({
+  board: {
+    skip: activeTab !== 'board',
+    refetchOnMountOrArgChange: true,
+  },
+  availability: {
+    skip: !shouldFetchTeacherAvailability(activeTab, availabilityDialogOpen),
+    refetchOnMountOrArgChange: true,
+  },
+  myDuties: {
+    skip: activeTab !== 'myDuties',
+    refetchOnMountOrArgChange: true,
+  },
+});
 
 const silentQueryPopup = {
   error: true,
@@ -56,12 +77,14 @@ const silentMutationPopup = {
 };
 
 export const useSubstitutionsDataQuery = (
-  params: QueryParams
+  params: QueryParams,
+  options?: QueryOptions
 ): ReturnType<typeof useGetSubstitutionsQuery> =>
   useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetSubstitutionsQuery,
     params,
+    options,
     popupConfig: silentQueryPopup,
   }) as ReturnType<typeof useGetSubstitutionsQuery>;
 
@@ -76,12 +99,14 @@ export const useSubstitutionDashboardDataQuery = (
   }) as ReturnType<typeof useGetSubstitutionDashboardQuery>;
 
 export const useMySubstitutionDutiesDataQuery = (
-  params: QueryParams
+  params: QueryParams,
+  options?: QueryOptions
 ): ReturnType<typeof useGetMySubstitutionDutiesQuery> =>
   useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetMySubstitutionDutiesQuery,
     params,
+    options,
     popupConfig: silentQueryPopup,
   }) as ReturnType<typeof useGetMySubstitutionDutiesQuery>;
 

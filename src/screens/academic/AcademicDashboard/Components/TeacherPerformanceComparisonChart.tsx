@@ -6,6 +6,7 @@ import { Box, Card } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 import { Chart, useChart } from 'src/components/chart';
 import CustomSelect from 'src/components/custom-select';
+import { EmptyContent } from 'src/components/empty-content';
 
 interface TeacherPerformanceItem {
   teacherName: string;
@@ -170,7 +171,17 @@ const TeacherPerformanceComparisonChart = ({
       </Box>
 
       <Box sx={{ p: 3, pb: 1 }} dir="ltr">
-        <Chart type="bar" series={dynamicSeries} options={chartOptions} />
+        {chartData?.length === 0 ? (
+          <EmptyContent
+            filled
+            title="No teacher comparison available"
+            description="Teacher-level comparison will appear when an authoritative scoring source is available."
+            sx={{ minHeight: 280 }}
+            slotProps={{ img: { maxWidth: 96 } }}
+          />
+        ) : (
+          <Chart type="bar" series={dynamicSeries} options={chartOptions} />
+        )}
       </Box>
     </Card>
   );

@@ -1,6 +1,35 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createSubstitutionSegments } from './create-substitution-action';
+import {
+  createSubstitutionSegments,
+  resolveAvailabilityTeacherSelection,
+} from './create-substitution-action';
+
+describe('resolveAvailabilityTeacherSelection', () => {
+  it('keeps the employee from the availability action selected in the substitution form', () => {
+    expect(
+      resolveAvailabilityTeacherSelection(
+        { teacherId: 'availability-teacher', teacherName: 'Akshay Patel' },
+        { teacherId: 'lecture-teacher', teacherName: 'Stale Lecture Teacher' }
+      )
+    ).toEqual({
+      originalTeacherId: 'availability-teacher',
+      originalTeacherName: 'Akshay Patel',
+    });
+  });
+
+  it('falls back to the affected lecture teacher when availability identity is incomplete', () => {
+    expect(
+      resolveAvailabilityTeacherSelection(
+        { teacherId: null, teacherName: '  ' },
+        { teacherId: 'lecture-teacher', teacherName: 'Akshay Patel' }
+      )
+    ).toEqual({
+      originalTeacherId: 'lecture-teacher',
+      originalTeacherName: 'Akshay Patel',
+    });
+  });
+});
 
 describe('createSubstitutionSegments', () => {
   it('resets mutation state after every segment succeeds', async () => {
