@@ -60,6 +60,7 @@ import {
 
 import { shouldCloseReviewDrawer } from './classTeacherReviewDrawer';
 import { getPendingAssignmentRows } from './classTeacherPendingRows';
+import { getClassTeacherAssignmentStatusColor } from './classTeacherAssignmentStatus';
 import { ClassTeacherAssignmentParameterSelect } from './ClassTeacherAssignmentParameterSelect';
 import {
   getDraftTeacherWorkload,
@@ -975,11 +976,7 @@ const ClassTeacherAssignment = () => {
               ],
               render: (_: unknown, row) => {
                 const typedRow = row as unknown as AssignmentTableRow;
-                const statusColor: LabelColor = typedRow.conflictCount
-                  ? 'error'
-                  : typedRow.classTeacher
-                    ? 'success'
-                    : 'warning';
+                const statusColor = getClassTeacherAssignmentStatusColor(typedRow.assignmentStatus);
                 return <Label color={statusColor}>{typedRow.assignmentStatus}</Label>;
               },
             },

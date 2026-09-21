@@ -1,300 +1,100 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { AdminAcademicDashboardAnalyticsData } from 'src/redux/academicAPI/academicDashboardApi';
 
-import { useSelector } from 'react-redux';
-import React, { useState, useEffect } from 'react';
-import { alpha, useTheme } from '@mui/material/styles';
+import { useTheme } from '@mui/material/styles';
+import { Box, Card, CardHeader } from '@mui/material';
 import { Chart, useChart } from 'src/components/chart';
-import CustomSelect from 'src/components/custom-select';
-import { fNumber, fPercent } from 'src/utils/format-number';
-import { Box, Card, CardHeader, Typography } from '@mui/material';
-import { useGetSubjectPassFailChartFilteredQuery } from 'src/redux/academicAPI/academicDashboardApi';
+import { EmptyContent } from 'src/components/empty-content';
 
-// -----------------------------------------------------------------------
+import { ChartContextSummary } from './ChartContextSummary';
+import { buildExamResultRows } from './academic-dashboard-chart-data';
 
-const EXAM_DATA = [
-  { label: 'Unit Test 1', passed: 45, failed: 35 },
-  { label: 'Unit Test 2', passed: 52, failed: 41 },
-  { label: 'Mid Term', passed: 38, failed: 62 },
-  { label: 'Final Exam', passed: 33, failed: 13 },
-];
+type ResultChartData = AdminAcademicDashboardAnalyticsData['subjectPassFailChart'];
 
-const toRate = (passed: number, failed: number) => {
-  const total = passed + failed;
-  return total ? (passed / total) * 100 : 0;
-};
-
-// -----------------------------------------------------------------------
-
-interface PassFailChartData {
-  subjectNames: string[];
-  passCounts: number[];
-  failCounts: number[];
-}
-
-const SubjectPassFailChart = ({ chartData }: { chartData?: PassFailChartData }) => {
+export default function SubjectPassFailChart({ chartData }: { chartData: ResultChartData }) {
   const theme = useTheme();
-  const metricCardSx = {
-    p: 2,
-    borderRadius: 2,
-    bgcolor:
-      theme.palette.mode === 'dark'
-        ? alpha(theme.palette.common.white, 0.08)
-        : alpha(theme.palette.grey[500], 0.14),
-    border: `1px solid ${
-      theme.palette.mode === 'dark'
-        ? alpha(theme.palette.common.white, 0.1)
-        : alpha(theme.palette.grey[500], 0.2)
-    }`,
-  };
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClasses] = useState<string>('');
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  const [division, setDivision] = useState<string>('');
-  const [selectedExam, setSelectedExam] = useState<string>(
-    EXAM_DATA[EXAM_DATA.length - 1]?.label || ''
-  );
-
-  const examOptions = EXAM_DATA.map((exam) => ({ label: exam.label, value: exam.label }));
-  const selectedExamData =
-    EXAM_DATA.find((exam) => exam.label === selectedExam) || EXAM_DATA[EXAM_DATA.length - 1];
-
-  const { data: filteredData } = useGetSubjectPassFailChartFilteredQuery(
-    { standardId: classes, divisionId: division, examName: selectedExam },
-    { skip: !!chartData || !classes || !division || !selectedExam }
-  );
-
-  const selectedPassed = filteredData ? filteredData.passed : selectedExamData?.passed || 0;
-  const selectedFailed = filteredData ? filteredData.failed : selectedExamData?.failed || 0;
-  const totalStudents = selectedPassed + selectedFailed;
-  const passRate = toRate(selectedPassed, selectedFailed);
-  const failRate = toRate(selectedFailed, selectedPassed);
-
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-
-  useEffect(() => {
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium]);
-
-  useEffect(() => {
-    setAllDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: Standards) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes]);
-
+  const resultRows = buildExamResultRows(chartData);
+  const hasResults = resultRows.length > 0;
   const chartOptions = useChart({
-    labels: ['Passed', 'Failed'],
-    stroke: {
-      colors: [theme.vars.palette.background.paper],
-    },
-    legend: {
-      show: true,
-      position: 'bottom',
-      horizontalAlign: 'center',
-      labels: {
-        colors: theme.vars.palette.text.primary,
-      },
-      formatter(val: any, opts: any) {
-        return `${val} - ${opts?.w?.globals?.series?.[opts.seriesIndex] || 0}`;
-      },
+    chart: { stacked: true, toolbar: { show: false } },
+    colors: [theme.palette.success.main, theme.palette.error.main],
+    plotOptions: {
+      bar: { horizontal: true, borderRadius: 4, barHeight: '58%' },
     },
     dataLabels: {
       enabled: true,
-      formatter(val: any) {
-        return fPercent(Number(val));
-      },
-      dropShadow: {
-        enabled: false,
-      },
+      formatter: (value: number) => (value > 0 ? Math.round(value).toLocaleString('en-IN') : ''),
+    },
+    xaxis: {
+      categories: resultRows.map((row) => row.assessment),
+    },
+    yaxis: {
+      min: 0,
+      tickAmount: 4,
+      title: { text: 'Number of students' },
+      labels: { formatter: (value: number) => Math.round(value).toLocaleString('en-IN') },
     },
     tooltip: {
-      fillSeriesColor: false,
-      y: {
-        formatter: (value: number) => fNumber(value),
-        title: {
-          formatter: (seriesName: string) => `${seriesName}`,
-        },
-      },
+      y: { formatter: (value: number) => `${value.toLocaleString('en-IN')} students` },
     },
-    plotOptions: {
-      pie: {
-        donut: {
-          labels: {
-            show: true,
-            name: {
-              color: theme.vars.palette.text.secondary,
-            },
-            value: {
-              color: theme.vars.palette.text.primary,
-            },
-            total: {
-              show: true,
-              label: 'Total',
-              color: theme.vars.palette.text.primary,
-              formatter: (w: any) => {
-                const total = w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0);
-                return fNumber(total);
-              },
-            },
+    legend: { show: true, position: 'top', horizontalAlign: 'left' },
+    highcharts: {
+      xAxis: {
+        labels: {
+          style: {
+            color: theme.palette.text.secondary,
+            fontSize: '12px',
+            width: '180px',
+            textOverflow: 'ellipsis',
           },
         },
       },
+      yAxis: { allowDecimals: false },
+      plotOptions: { series: { pointWidth: 22, minPointLength: 2 } },
     },
   });
-
-  const barChartOptions = useChart({
-    chart: {
-      stacked: true,
-      toolbar: { show: false },
-    },
-    plotOptions: {
-      bar: {
-        horizontal: false,
-        columnWidth: '40%',
-        borderRadius: 4,
-      },
-    },
-    xaxis: {
-      categories: chartData?.subjectNames || [],
-    },
-    colors: [theme.palette.success.main, theme.palette.error.main],
-    tooltip: {
-      y: {
-        formatter: (val: number) => `${val} Students`,
-      },
-    },
-    legend: {
-      position: 'top',
-    },
-  });
-
-  const barSeries = [
-    { name: 'Passed', data: chartData?.passCounts || [] },
-    { name: 'Failed', data: chartData?.failCounts || [] },
-  ];
 
   return (
     <Card
-      sx={{
-        height: '100%',
-        p: 2,
-        '&:hover': {
-          transform: 'translateY(-4px)',
-          boxShadow: theme.shadows[8],
-          transition: 'all 0.3s ease-in-out',
-        },
-      }}
+      sx={{ height: '100%', p: 2, border: (muiTheme) => `1px solid ${muiTheme.palette.divider}` }}
     >
       <CardHeader
-        sx={{ p: 0, mb: 2, flexShrink: 0 }}
-        title="Exam Pass / Fail Rate"
-        subheader={
-          <Typography variant="body2" color="text.secondary">
-            {chartData
-              ? 'Pass vs Fail count by subject'
-              : `Selected exam: ${selectedExamData?.label || 'N/A'}`}
-          </Typography>
-        }
-        action={
-          !chartData && (
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <CustomSelect
-                options={allClass}
-                label="Class"
-                value={classes}
-                onChange={(val) => setClasses(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { minWidth: '120px' } }}
-              />
-              <CustomSelect
-                options={allDivision}
-                label="Division"
-                value={division}
-                onChange={(val) => setDivision(val as string)}
-                labelKey="name"
-                valueKey="id"
-                formControlProps={{ sx: { minWidth: '120px' } }}
-                disabled={!classes}
-              />
-              <CustomSelect
-                options={examOptions}
-                label="Exam"
-                value={selectedExam}
-                onChange={(val) => setSelectedExam(val as string)}
-                labelKey="label"
-                valueKey="value"
-                formControlProps={{ sx: { minWidth: '120px' } }}
-              />
-            </Box>
-          )
-        }
+        sx={{ p: 0, mb: 1 }}
+        title="Exam Results by Assessment"
+        subheader="Compare published pass and fail totals for the latest assessments"
       />
 
-      {chartData ? (
-        <Box sx={{ pt: 1 }} dir="ltr">
-          <Chart dir="ltr" type="bar" series={barSeries} options={barChartOptions} height={320} />
-        </Box>
-      ) : (
+      {hasResults ? (
         <>
-          <Box>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-                gap: 1,
-              }}
-            >
-              <Box sx={metricCardSx}>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                  Total Students
-                </Typography>
-                <Typography variant="h4" sx={{ lineHeight: 1 }}>
-                  {fNumber(totalStudents)}
-                </Typography>
-              </Box>
-
-              <Box sx={metricCardSx}>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                  Pass Rate
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="h4" sx={{ lineHeight: 1 }}>
-                    {Math.round(passRate)}%
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box sx={metricCardSx}>
-                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                  Fail Rate
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="h4" sx={{ lineHeight: 1 }}>
-                    {Math.round(failRate)}%
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          </Box>
-
-          <Box sx={{ p: 3, pb: 1, display: 'flex', justifyContent: 'center' }} dir="ltr">
+          <ChartContextSummary
+            items={[
+              { label: 'Shows', value: 'Passed vs failed' },
+              { label: 'Scope', value: 'All classes & divisions' },
+              { label: 'Unit', value: 'Students' },
+            ]}
+          />
+          <Box role="img" aria-label="Passed and failed student counts by exam" sx={{ mt: 1 }}>
             <Chart
-              dir="ltr"
-              type="donut"
-              series={[selectedPassed, selectedFailed]}
+              type="bar"
+              series={[
+                { name: 'Passed', data: resultRows.map((row) => row.passed) },
+                { name: 'Failed', data: resultRows.map((row) => row.failed) },
+              ]}
               options={chartOptions}
-              width="80%"
+              height={Math.max(300, resultRows.length * 52)}
             />
           </Box>
         </>
+      ) : (
+        <EmptyContent
+          filled
+          title="No exam results available"
+          description="This chart shows student pass and fail totals by assessment. It will appear after marks are published."
+          sx={{ minHeight: 300 }}
+          slotProps={{ img: { maxWidth: 104 } }}
+        />
       )}
     </Card>
   );
-};
-
-export default SubjectPassFailChart;
+}

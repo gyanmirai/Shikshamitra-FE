@@ -6,6 +6,7 @@ import { useSelector } from 'react-redux';
 import { orderBy } from 'src/utils/helper';
 import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { EmptyContent } from 'src/components/empty-content';
 import { Box, Card, Avatar, CardHeader } from '@mui/material';
 
 type PerformerItem = {
@@ -93,6 +94,15 @@ export const PerformersList = ({ title, subheader, list, type, ...other }: Props
           flexDirection: 'column',
         }}
       >
+        {list.length === 0 ? (
+          <EmptyContent
+            filled
+            title="No performance records yet"
+            description="Published result data will appear here."
+            sx={{ minHeight: 220 }}
+            slotProps={{ img: { maxWidth: 96 } }}
+          />
+        ) : null}
         {orderBy(list, ['totalMarks'], [type === 'top' ? 'desc' : 'asc']).map((item, index) => (
           <Item
             key={item.id}

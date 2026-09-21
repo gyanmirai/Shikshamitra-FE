@@ -38,16 +38,26 @@ type SubjectScheduleBreakdownResponse = {
   data: SubjectScheduleBreakdown;
 };
 
+export type GetSubjectAssignmentsArgs = {
+  standardId: string;
+  divisionId?: string;
+  page?: number;
+  pageSize?: number;
+  status?: number | 'all';
+  teacherSearch?: string;
+};
+
 export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subject assignments - academicMediumId passed in query params
-    getSubjectAssignments: builder.query({
-      query: ({ standardId, page, pageSize, status = 1, teacherSearch }) => ({
+    getSubjectAssignments: builder.query<any, GetSubjectAssignmentsArgs>({
+      query: ({ standardId, divisionId, page, pageSize, status = 1, teacherSearch }) => ({
         url: `/academics/curriculum/${standardId}/subject-assignments`,
         method: 'GET',
         params: {
           page,
           pageSize,
+          ...(divisionId ? { divisionId } : {}),
           ...(teacherSearch ? { teacherSearch } : {}),
           ...(status === 'all' ? { includeArchived: true } : { status }),
         },

@@ -7,6 +7,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Card, Typography } from '@mui/material';
+import { EmptyContent } from 'src/components/empty-content';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetExamsQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
@@ -15,44 +16,6 @@ import {
   ScheduleExamStatusColor,
   ScheduleExamStatusOptions,
 } from 'src/enums/schedule-exam-status';
-
-const staticExams = [
-  {
-    examName: 'Periodic Test - I',
-    subject: 'Mathematics',
-    class: 'Class 8 A',
-    date: '2026-06-03',
-    status: ScheduleExamStatus.Pending,
-  },
-  {
-    examName: 'Unit Test - II',
-    subject: 'Science',
-    class: 'Class 9 B',
-    date: '2026-06-05',
-    status: ScheduleExamStatus.Published,
-  },
-  {
-    examName: 'Weekly Assessment',
-    subject: 'English',
-    class: 'Class 7 A',
-    date: '2026-06-06',
-    status: ScheduleExamStatus.Completed,
-  },
-  {
-    examName: 'Half-Yearly Practice',
-    subject: 'Social Science',
-    class: 'Class 10 A',
-    date: '2026-06-09',
-    status: ScheduleExamStatus.Pending,
-  },
-  {
-    examName: 'Chapter Test',
-    subject: 'Hindi',
-    class: 'Class 6 B',
-    date: '2026-06-11',
-    status: ScheduleExamStatus.Draft,
-  },
-];
 
 interface AcademicDashboardExamsProps {
   list?: Array<{
@@ -97,8 +60,6 @@ const AcademicDashboardExams = ({ list }: AcademicDashboardExamsProps) => {
         status: e.status ?? ScheduleExamStatus.Pending,
       }));
 
-  const tableData = exams.length ? exams : staticExams;
-
   return (
     <Card sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Typography variant="h6">Next 5 Exams</Typography>
@@ -124,7 +85,14 @@ const AcademicDashboardExams = ({ list }: AcademicDashboardExamsProps) => {
             },
           },
         ]}
-        data={tableData}
+        data={exams}
+        noDataText={
+          <EmptyContent
+            title="No upcoming exams"
+            description="Scheduled exams will appear here."
+            slotProps={{ img: { maxWidth: 96 } }}
+          />
+        }
       />
     </Card>
   );

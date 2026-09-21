@@ -2,6 +2,46 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../../academicApi';
 
+export type LessonPlanTimelinePlan = {
+  id: string;
+  topic: string;
+  status: number | string;
+  actualCompletionPercentage: number;
+  diaryStatus: number | string;
+};
+
+export type LessonPlanTimelineSlot = {
+  timetableSlotId: string;
+  periodName: string;
+  startTime: string;
+  endTime: string;
+  standardId: string;
+  standardName: string;
+  divisionId: string;
+  divisionName: string;
+  subjectId: string;
+  subjectName: string;
+  lessonPlan?: LessonPlanTimelinePlan | null;
+  isTimetableSlotOnly: boolean;
+  insightType?: string | null;
+  insightSeverity?: string | null;
+  insightMessage?: string | null;
+  isPlanCreationBlocked: boolean;
+};
+
+export type LessonPlanTimelineData = {
+  date: string;
+  teacherId: string;
+  slots: LessonPlanTimelineSlot[];
+  isNonWorkingDay?: boolean;
+};
+
+export type LessonPlanTimelineParams = {
+  date?: string;
+  teacherId?: string;
+  academicMediumId?: string;
+};
+
 export const lessonPlanApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // ─── Lesson Plans ───────────────────────────────────────────────────────
@@ -10,7 +50,7 @@ export const lessonPlanApi = academicApi.injectEndpoints({
       providesTags: [academicType.lessonPlan],
     }),
 
-    getLessonPlanTimeline: builder.query({
+    getLessonPlanTimeline: builder.query<LessonPlanTimelineData, LessonPlanTimelineParams>({
       query: (params) => ({
         url: '/academic/curriculum/lesson-plans/timeline',
         method: 'GET',

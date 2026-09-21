@@ -4,11 +4,12 @@ import type { Theme, SxProps } from '@mui/material/styles';
 import React from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import { CONFIG } from 'src/config-global';
 import { varAlpha } from 'src/theme/styles';
 import Typography from '@mui/material/Typography';
 
 // ----------------------------------------------------------------------
+
+const emptyContentImage = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/assets/icons/empty/ic-content.svg`;
 
 export type EmptyContentProps = Omit<StackProps, 'title'> & {
   title?: React.ReactNode;
@@ -56,7 +57,7 @@ export function EmptyContent({
       <Box
         component="img"
         alt="empty content"
-        src={imgUrl ?? `${CONFIG.site.basePath}/assets/icons/empty/ic-content.svg`}
+        src={imgUrl ?? emptyContentImage}
         sx={{ width: 1, maxWidth: 160, ...slotProps?.img }}
       />
 

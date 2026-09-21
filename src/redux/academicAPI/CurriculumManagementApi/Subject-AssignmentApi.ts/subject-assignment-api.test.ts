@@ -64,3 +64,39 @@ describe('subjectAssignmentsApi.getSubjectScheduleBreakdown', () => {
     store.dispatch(api.util.resetApiState());
   });
 });
+
+describe('subjectAssignmentsApi.getSubjectAssignments', () => {
+  beforeEach(() => {
+    clearCachedAuthSession();
+    mswServer.use(http.get('*/api/auth/session', () => HttpResponse.json(null)));
+  });
+
+  afterEach(() => clearCachedAuthSession());
+
+  it('sends the selected division so teacher allocations are scoped correctly', async () => {
+    let requestedUrl = '';
+
+    mswServer.use(
+      http.get('*/api/academics/curriculum/:standardId/subject-assignments', ({ request }) => {
+        requestedUrl = request.url;
+        return HttpResponse.json({ data: { items: [], totalCount: 0, totalPages: 0 } });
+      })
+    );
+
+    const store = createStore();
+    await store
+      .dispatch(
+        subjectAssignmentsApi.endpoints.getSubjectAssignments.initiate({
+          standardId: 'standard-id',
+          divisionId: 'division-id',
+        })
+      )
+      .unwrap();
+
+    const url = new URL(requestedUrl);
+    expect(url.pathname).toContain('/api/academics/curriculum/standard-id/subject-assignments');
+    expect(url.searchParams.get('divisionId')).toBe('division-id');
+    expect(url.searchParams.get('status')).toBe('1');
+    store.dispatch(api.util.resetApiState());
+  });
+});

@@ -181,9 +181,10 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
     currentQueryAndMutation: useGetSubjectAssignmentsQuery,
     params: {
       standardId: classes,
+      divisionId: division,
     },
     options: {
-      skip: !classes,
+      skip: !classes || !division,
     },
   });
 
@@ -250,7 +251,11 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           options={allDivision}
           label="Division"
           value={division}
-          onChange={(val) => setDivision(val as string)}
+          onChange={(val) => {
+            setDivision(val as string);
+            setSubject('');
+            setSubjectSelectValue('');
+          }}
           labelKey="name"
           valueKey="id"
           formControlProps={{ sx: { maxWidth: '248px', width: '100%' } }}
