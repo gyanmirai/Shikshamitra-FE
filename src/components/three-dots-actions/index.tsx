@@ -11,6 +11,7 @@ const COMPACT_ACTION_BUTTON_SX = { p: 0, width: 30, height: 30 } as const;
 
 const ThreeDotsActions = ({
   actions = (_context: ThreeDotsActionContext) => null,
+  directActions = [],
   onClickThreeDots,
   onClosePopover,
   placement = 'left-top',
@@ -107,6 +108,27 @@ const ThreeDotsActions = ({
           </span>
         </CustomTooltip>
       )}
+      {directActions.map((action) => (
+        <Tooltip key={action.id} title={action.label}>
+          <span>
+            <IconButton
+              aria-label={action.label}
+              data-testid={`table-action-${action.id}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                action.onClick(event);
+              }}
+              disabled={action.disabled}
+              sx={COMPACT_ACTION_BUTTON_SX}
+            >
+              <Iconify
+                icon={action.icon}
+                sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+              />
+            </IconButton>
+          </span>
+        </Tooltip>
+      ))}
       {showThreeDots && (
         <Tooltip title={moreLabel}>
           <IconButton

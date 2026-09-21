@@ -27,7 +27,7 @@ export function AdmissionOfferingTable(props: Props) {
   return (
     <CustomizableTable
       tableId="admission-offerings"
-      tableTitle="Admission offerings"
+      tableTitle="Class admission setup"
       columns={buildAdmissionOfferingColumns(props)}
       data={rows}
       isLoading={loading}
@@ -50,7 +50,7 @@ export function AdmissionOfferingTable(props: Props) {
       tableContainerProps={{ sx: { height: 1 } }}
       noDataText={
         <Box component="span" sx={{ color: 'text.secondary' }}>
-          No Admission Offerings configured. Create an offering to define which standards accept
+          No class admission setup has been configured. Create one to define which classes accept
           applications.
         </Box>
       }

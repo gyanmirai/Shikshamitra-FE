@@ -32,6 +32,34 @@ export function isFormStage(stage?: AdmissionApplicationStage) {
   return stage?.stageType === 1;
 }
 
+export function hasManagedStageWorkspace(stage?: AdmissionApplicationStage) {
+  return Boolean(
+    stage?.assessmentEnabled ||
+    stage?.formStageEnabled ||
+    stage?.paymentStageEnabled ||
+    stage?.offerStageEnabled ||
+    stage?.seatStageEnabled ||
+    stage?.documentVerificationEnabled ||
+    stage?.eligibilityEnabled ||
+    stage?.reviewEnabled
+  );
+}
+
+export function isAdmissionDecisionStage(stage?: AdmissionApplicationStage) {
+  return Boolean(
+    stage &&
+    ((stage.stageType === 6 && stage.reviewEnabled) ||
+      (stage.stageType >= 7 && stage.stageType <= 10))
+  );
+}
+
+export function canRetrySubmittedFormHandoff(
+  stage: AdmissionApplicationStage | undefined,
+  applicationStatus: AdmissionApplicationStatus
+) {
+  return isFormStage(stage) && applicationStatus === 1 && !stage?.formStageEnabled;
+}
+
 export function canCompleteStageFromProgress(
   stage: AdmissionApplicationStage | undefined,
   applicationStatus: AdmissionApplicationStatus,
@@ -80,7 +108,10 @@ export function getStageGuidance(
   if (stage.assessmentEnabled)
     return 'Manage the assessment below. The configured requirements determine when this step can continue.';
   if (isFormStage(stage)) {
-    return 'Complete the five registration sections below, save each step, then submit the application.';
+    if (applicationStatus === 1) {
+      return 'The application form is submitted. Continue to the next admission step.';
+    }
+    return 'Complete each registration section below, save every step, then submit the application.';
   }
   if (isApprovalStage(stage) && applicationStatus !== APPLICATION_APPROVED_STATUS) {
     return 'Review the submitted details, then approve or reject the application in Admission decision.';

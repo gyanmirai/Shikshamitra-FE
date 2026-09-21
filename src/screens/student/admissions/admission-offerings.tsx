@@ -40,14 +40,14 @@ export default function AdmissionOfferingsScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Admission Offerings"
-        description="Configure the standards, admission windows, workflows, and forms available in each cycle."
+        heading="Class Admission Setup"
+        description="Connect classes, admission periods, processes, and forms before accepting applications."
         layout="stacked"
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'Settings', href: studentPaths.enrollment.settings.root },
-          { name: 'Admission Offerings' },
+          { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
+          { name: 'Class Admission Setup' },
         ]}
         slotProps={{
           action: {

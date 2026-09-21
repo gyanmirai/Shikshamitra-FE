@@ -6,6 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import { Stack, Paper, Button, MenuItem, TextField } from '@mui/material';
 
 import type { WorkflowFilters } from './use-workflow-filters';
+import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 
 type Props = {
   filters: WorkflowFilters;
@@ -67,6 +68,7 @@ export function WorkflowListFilters({ filters, createdFrom, createdTo, onUpdate,
         </TextField>
         <DatePicker
           label="Created from"
+          format={ADMISSION_DATE_FORMAT}
           value={createdFrom}
           onChange={(value) => onUpdate({ createdFrom: value?.format('YYYY-MM-DD') ?? '' })}
           maxDate={createdTo ?? undefined}
@@ -74,6 +76,7 @@ export function WorkflowListFilters({ filters, createdFrom, createdTo, onUpdate,
         />
         <DatePicker
           label="Created to"
+          format={ADMISSION_DATE_FORMAT}
           value={createdTo}
           onChange={(value) => onUpdate({ createdTo: value?.format('YYYY-MM-DD') ?? '' })}
           minDate={createdFrom ?? undefined}

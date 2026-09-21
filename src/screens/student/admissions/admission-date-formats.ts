@@ -1,0 +1,2 @@
+export const ADMISSION_DATE_FORMAT = 'DD-MM-YYYY';
+export const ADMISSION_DATE_TIME_FORMAT = 'DD-MM-YYYY hh:mm A';

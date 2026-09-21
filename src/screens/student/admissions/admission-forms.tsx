@@ -5,6 +5,7 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 
 import { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Button, TextField, Typography } from '@mui/material';
@@ -66,13 +67,13 @@ export default function AdmissionFormsScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Form Builder"
+        heading="Admission Forms"
         description="Define reusable inquiry and application fields before publishing."
         links={[
           { name: 'Students', href: '/student/dashboard' },
           { name: 'Admissions', href: '/student/admissions' },
-          { name: 'Settings' },
-          { name: 'Form Builder' },
+          { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
+          { name: 'Admission Forms' },
         ]}
         sx={{ mb: 1 }}
         action={

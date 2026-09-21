@@ -16,6 +16,8 @@ import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Button, MenuItem, TextField, Typography, DialogActions } from '@mui/material';
 import { useAssignAdmissionInquiryCounsellorMutation } from 'src/redux/student/admissions/admission-inquiries-api';
 
+import { formatAdmissionReference } from '../admission-reference';
+
 type Props = {
   inquiry: AdmissionInquiry | null;
   counsellors: AdmissionInquiryCounsellor[];
@@ -48,7 +50,7 @@ export function AdmissionInquiryAssignmentDialog({
           body: { mode: 0, counsellorId: values.counsellorId, candidateCounsellorIds: [] },
         }).unwrap();
         shikshaMitraToast.success({
-          message: `${inquiry.inquiryNumber} was assigned successfully.`,
+          message: `${formatAdmissionReference(inquiry.inquiryNumber)} was assigned successfully.`,
         });
         onClose();
       } catch (error) {

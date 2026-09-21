@@ -14,6 +14,8 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Alert, Stack, TextField, Typography, DialogActions } from '@mui/material';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../../admission-date-formats';
+
 export type WorkflowGovernanceActionMode = 'submit' | 'approve' | 'reject' | 'publish' | 'rollback';
 
 type Payload = { reason: string; approverUserId?: string; effectiveAt?: string };
@@ -148,6 +150,7 @@ export function WorkflowGovernanceActionDialog({
             >
               <DateTimePicker
                 label="Effective time (optional)"
+                format={ADMISSION_DATE_TIME_FORMAT}
                 value={formik.values.effectiveAt}
                 minDateTime={dayjs()}
                 onChange={(value) => formik.setFieldValue('effectiveAt', value)}

@@ -7,6 +7,7 @@ import CustomSelect from 'src/components/custom-select';
 import { Grid, Typography } from '@mui/material';
 
 import { AdmissionDefinitionSelect } from './admission-definition-select';
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
 import type { AdmissionDefinitionFetcher } from './use-admission-definition-options';
@@ -91,6 +92,7 @@ export function BulkAdmissionConfigurationFields({
           <Grid size={{ xs: 12, sm: 6 }}>
             <DatePicker
               label="Applications open *"
+              format={ADMISSION_DATE_FORMAT}
               value={values.openDate}
               minDate={dayjs(cycle.startDate)}
               maxDate={dayjs(cycle.endDate)}
@@ -108,6 +110,7 @@ export function BulkAdmissionConfigurationFields({
           <Grid size={{ xs: 12, sm: 6 }}>
             <DatePicker
               label="Applications close *"
+              format={ADMISSION_DATE_FORMAT}
               value={values.closeDate}
               minDate={values.openDate ?? dayjs(cycle.startDate)}
               maxDate={dayjs(cycle.endDate)}

@@ -11,6 +11,7 @@ import { Box, Card, Alert, Stack, Avatar, Button, Typography, CardContent } from
 import { useUpdateAdmissionApplicantProfileMutation } from 'src/redux/student/admissions/admission-applicants-api';
 
 import { AdmissionApplicantProfileDialog } from './admission-applicant-profile-dialog';
+import { formatAdmissionReference } from '../admission-reference';
 import {
   getApplicantName,
   getApplicantInitials,
@@ -34,8 +35,8 @@ export function AdmissionApplicantProfileCard({ data }: Props) {
     .join(' ');
 
   return (
-    <Card>
-      <CardContent>
+    <Card variant="outlined" sx={{ overflow: 'visible' }}>
+      <CardContent sx={{ p: { xs: 2, md: 2.5 }, '&:last-child': { pb: { xs: 2, md: 2.5 } } }}>
         <Stack spacing={2.5}>
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
@@ -46,27 +47,39 @@ export function AdmissionApplicantProfileCard({ data }: Props) {
             <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
               <Avatar
                 sx={{
-                  width: 56,
-                  height: 56,
+                  width: { xs: 56, sm: 64 },
+                  height: { xs: 56, sm: 64 },
                   color: 'primary.main',
                   bgcolor: 'action.selected',
+                  border: 1,
+                  borderColor: 'divider',
                   fontWeight: 700,
+                  fontSize: { xs: '1.125rem', sm: '1.25rem' },
                 }}
               >
                 {getApplicantInitials(data)}
               </Avatar>
               <Box sx={{ minWidth: 0 }}>
+                <Typography variant="overline" color="text.secondary">
+                  Applicant profile
+                </Typography>
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-                  <Typography variant="h5">{name}</Typography>
+                  <Typography variant="h5" sx={{ overflowWrap: 'anywhere' }}>
+                    {name}
+                  </Typography>
                   <Label color={journey.color}>{journey.label}</Label>
                   {missingDetails.length > 0 && <Label color="warning">Profile incomplete</Label>}
                 </Stack>
                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  {journey.description} · Family {data.family?.familyNumber ?? 'not assigned'}
+                  {journey.description}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Family reference: {formatAdmissionReference(data.family?.familyNumber)}
                 </Typography>
               </Box>
             </Stack>
             <Button
+              size="small"
               variant="outlined"
               disabled={locked}
               onClick={dialog.onTrue}
@@ -165,8 +178,33 @@ function ProfileDetail({
   missing?: boolean;
 }) {
   return (
-    <Stack direction="row" spacing={1.25} alignItems="flex-start" sx={{ minWidth: 0 }}>
-      <Iconify icon={icon} sx={{ mt: 0.25, color: missing ? 'warning.main' : 'text.secondary' }} />
+    <Stack
+      direction="row"
+      spacing={1.25}
+      alignItems="flex-start"
+      sx={{
+        minWidth: 0,
+        p: 1.5,
+        border: 1,
+        borderColor: 'divider',
+        borderRadius: 1.5,
+        bgcolor: 'action.hover',
+      }}
+    >
+      <Box
+        sx={{
+          width: 32,
+          height: 32,
+          flexShrink: 0,
+          display: 'grid',
+          placeItems: 'center',
+          borderRadius: 1,
+          color: missing ? 'warning.main' : 'text.secondary',
+          bgcolor: 'background.paper',
+        }}
+      >
+        <Iconify icon={icon} width={18} />
+      </Box>
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="caption" color="text.secondary">
           {label}

@@ -43,7 +43,7 @@ it('blocks managed approval while permitting a server-authorized rejection throu
         reviewDecision: { ...reviewSummary.decision, canReject: true },
       }}
     />,
-    ['Students.Admissions.Applications.Decide']
+    ['Students.Admissions.Applications.Add']
   );
   expect(screen.getByRole('button', { name: 'Approve' })).toBeDisabled();
   expect(screen.getByText('Submit a fresh recommendation.')).toBeInTheDocument();
@@ -82,7 +82,7 @@ it('exposes authorized reaffirmation after an accepted offer and keeps finalizat
         reviewDecision: { ...reviewSummary.decision, canApprove: true },
       }}
     />,
-    ['Students.Admissions.Applications.Decide', 'Students.Admissions.Applications.Finalize']
+    ['Students.Admissions.Applications.Add']
   );
   expect(screen.getByRole('button', { name: 'Finalize admission' })).toBeDisabled();
   await user.click(screen.getByRole('button', { name: 'Reaffirm approval' }));
@@ -97,7 +97,7 @@ it('preserves basic approval for legacy applications without a managed Review fl
   mswServer.use(http.get(`${path}/decision-history`, () => HttpResponse.json([])));
   renderReviewUi(
     <ApplicationDecisionCard application={{ ...application, reviewDecision: undefined }} />,
-    ['Students.Admissions.Applications.Decide']
+    ['Students.Admissions.Applications.Add']
   );
   expect(screen.getByRole('button', { name: 'Approve' })).toBeEnabled();
   expect(screen.queryByText('Submit a fresh recommendation.')).not.toBeInTheDocument();

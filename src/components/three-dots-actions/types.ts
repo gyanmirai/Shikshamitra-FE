@@ -7,8 +7,17 @@ export interface ThreeDotsActionContext {
   popover: UsePopoverReturn;
 }
 
+export interface ThreeDotsDirectAction {
+  id: string;
+  label: string;
+  icon: string;
+  disabled?: boolean;
+  onClick: MouseEventHandler<HTMLButtonElement>;
+}
+
 export interface ThreeDotsActionsOptions {
   actions?: (context: ThreeDotsActionContext) => ReactNode;
+  directActions?: readonly ThreeDotsDirectAction[];
   onClickThreeDots?: MouseEventHandler<HTMLButtonElement>;
   onClosePopover?: () => void;
   handleViewClick?: MouseEventHandler<HTMLButtonElement>;

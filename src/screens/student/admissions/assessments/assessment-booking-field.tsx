@@ -3,6 +3,8 @@ import { Alert, Stack, Button } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import { useGetAssessmentSessionsQuery } from 'src/redux/student/admissions/admission-assessment-sessions-api';
 
+import { normalizeAssessmentDateTime } from './assessment-date-time';
+
 type Props = {
   admissionOfferingId: string;
   workflowStageDefinitionId: string;
@@ -28,7 +30,7 @@ export function AssessmentBookingField({
     (session) =>
       !session.isCancelled &&
       session.bookedCount < session.capacity &&
-      dayjs(session.startsAt).isAfter(dayjs())
+      dayjs(normalizeAssessmentDateTime(session.startsAt)).isAfter(dayjs())
   );
   return (
     <Stack spacing={1}>
@@ -54,7 +56,7 @@ export function AssessmentBookingField({
         helperText={error}
         options={available.map((session) => ({
           value: session.id,
-          label: `${session.name} · ${dayjs(session.startsAt).format('DD MMM, h:mm A')} · ${session.location} · ${session.capacity - session.bookedCount} places`,
+          label: `${session.name} · ${dayjs(normalizeAssessmentDateTime(session.startsAt)).format('DD MMM, h:mm A')} · ${session.location} · ${session.capacity - session.bookedCount} places`,
         }))}
         noOptionsMessage="No available sessions. Create a session under Applications → Assessments."
       />

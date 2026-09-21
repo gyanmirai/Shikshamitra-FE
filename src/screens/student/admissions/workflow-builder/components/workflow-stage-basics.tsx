@@ -17,7 +17,8 @@ type Props = {
 export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly }: Props) {
   const availableStageTypes = stageTypes.filter(
     (item) =>
-      (item.isRuntimeReady && item.isSelectable !== false) || item.type === formik.values.stageType
+      (item.type !== 0 && item.isRuntimeReady && item.isSelectable !== false) ||
+      item.type === formik.values.stageType
   );
   const changeType = (value: string) => {
     const next = stageTypes.find((item) => String(item.type) === value);

@@ -56,7 +56,7 @@ describe('AdmissionApplicantApplicationsCard', () => {
   it('shows the current stage, readable status, and application destination', () => {
     renderCard([application]);
 
-    expect(screen.getByText('APP/2026/001')).toBeInTheDocument();
+    expect(screen.getByText('APP-2026-000001')).toBeInTheDocument();
     expect(screen.getByText('In review')).toBeInTheDocument();
     expect(screen.getAllByText('Review and verify').length).toBeGreaterThan(0);
     expect(screen.getByRole('link', { name: 'Open application' })).toHaveAttribute(

@@ -5,12 +5,12 @@ import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-in
 import NextLink from 'next/link';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { fDateTime } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { Stack, MenuItem, MenuList, Typography } from '@mui/material';
 
-import { inquiryWorkState } from './admission-inquiry-work-state';
+import { UNASSIGNED_INQUIRIES_FILTER } from './admission-inquiry-filters';
+import { formatAdmissionReference } from '../admission-reference';
 import {
   inquirySourceLabel,
   inquiryStatusLabel,
@@ -24,6 +24,9 @@ type Options = {
   canCommunicate: boolean;
   isMarkingContacted: boolean;
   counsellorNames: Record<string, string>;
+  counsellorOptions: { label: string; value: string }[];
+  offeringOptions: { label: string; value: string }[];
+  onOpenApplicant360: (inquiry: AdmissionInquiry) => void;
   onManage: (inquiry: AdmissionInquiry) => void;
   onAssign: (inquiry: AdmissionInquiry) => void;
   onCommunicate: (inquiry: AdmissionInquiry) => void;
@@ -42,17 +45,47 @@ const statusColors: Record<number, LabelColor> = {
   8: 'warning',
 };
 
+type InquiryActionId = 'applicant360' | 'manage' | 'assign' | 'communicate' | 'markContacted';
+
+export function getAdmissionInquiryActionPlan(inquiry: AdmissionInquiry, options: Options) {
+  const available: InquiryActionId[] = [
+    ...(inquiry.applicantId ? (['applicant360'] as const) : []),
+    ...(options.canManage ? (['manage'] as const) : []),
+    ...(options.canAssign && inquiry.admissionOfferingId ? (['assign'] as const) : []),
+    ...(options.canCommunicate ? (['communicate'] as const) : []),
+    ...(options.canManage && inquiry.status === 0 ? (['markContacted'] as const) : []),
+  ];
+
+  return {
+    direct: available.slice(0, 3),
+    overflow: available.slice(3),
+  };
+}
+
 export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
   return [
-    { id: 'inquiryNumber', label: 'Inquiry', minWidth: 140, filterType: 'string' },
+    {
+      id: 'inquiryNumber',
+      label: 'Inquiry',
+      minWidth: 140,
+      filterType: 'string',
+      sticky: true,
+      stickyPosition: 'left',
+      render: (value) => formatAdmissionReference(String(value)),
+    },
     {
       id: 'applicantName',
       label: 'Applicant',
       minWidth: 220,
+      sticky: true,
+      stickyPosition: 'left',
       render: (value, row) => {
         const inquiry = row as AdmissionInquiry;
         return inquiry.applicantId ? (
-          <NextLink href={`${studentPaths.enrollment.root}/applicants/${inquiry.applicantId}`}>
+          <NextLink
+            href={`${studentPaths.enrollment.root}/applicants/${inquiry.applicantId}`}
+            onClick={(event) => event.stopPropagation()}
+          >
             {String(value)}
           </NextLink>
         ) : (
@@ -61,15 +94,18 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       },
     },
     {
-      id: 'admissionOfferingCode',
+      id: 'admissionOfferingId',
       label: 'Admission interest',
       minWidth: 190,
-      isFilter: false,
-      render: (value, row) => {
+      filterType: 'enum',
+      enumOptions: options.offeringOptions,
+      render: (_value, row) => {
         const inquiry = row as AdmissionInquiry;
         return (
           <Stack spacing={0.25}>
-            <Typography variant="body2">{value ? String(value) : 'Cycle inquiry'}</Typography>
+            <Typography variant="body2">
+              {inquiry.admissionOfferingCode || 'Cycle inquiry'}
+            </Typography>
             <Typography variant="caption" color="text.secondary">
               {inquiry.admissionCycleName || 'Admission cycle'}
             </Typography>
@@ -83,52 +119,17 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       id: 'assignedCounsellorId',
       label: 'Counsellor',
       minWidth: 180,
-      filterType: 'string',
+      filterType: 'enum',
+      enumOptions: [
+        { label: 'Unassigned', value: UNASSIGNED_INQUIRIES_FILTER },
+        ...options.counsellorOptions,
+      ],
       render: (value, row) => {
         const inquiry = row as AdmissionInquiry;
         return value
           ? inquiry.assignedCounsellorName || options.counsellorNames[String(value)] || 'Assigned'
           : 'Unassigned';
       },
-    },
-    {
-      id: 'work',
-      label: 'Next action',
-      minWidth: 210,
-      isSort: false,
-      isFilter: false,
-      render: (_, row) => {
-        const work = inquiryWorkState(row as AdmissionInquiry);
-        return (
-          <Stack spacing={0.5} alignItems="flex-start">
-            <Label color={work.color}>{work.label}</Label>
-            {work.detail && (
-              <Typography variant="caption" color="text.secondary">
-                {work.detail}
-              </Typography>
-            )}
-          </Stack>
-        );
-      },
-    },
-    {
-      id: 'lastActivityAt',
-      label: 'Last activity',
-      minWidth: 170,
-      filterType: 'dateTime',
-      render: (value) => (value ? fDateTime(String(value)) : '—'),
-    },
-    {
-      id: 'status',
-      label: 'Status',
-      minWidth: 140,
-      filterType: 'enum',
-      enumOptions: INQUIRY_STATUS_OPTIONS,
-      sticky: true,
-      stickyPosition: 'right',
-      render: (value) => (
-        <Label color={statusColors[Number(value)]}>{inquiryStatusLabel(value)}</Label>
-      ),
     },
     {
       id: 'source',
@@ -151,9 +152,23 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       },
     },
     {
+      id: 'status',
+      label: 'Status',
+      minWidth: 140,
+      filterType: 'enum',
+      enumOptions: INQUIRY_STATUS_OPTIONS,
+      sticky: true,
+      stickyPosition: 'right',
+      render: (value) => (
+        <Label color={statusColors[Number(value)]}>{inquiryStatusLabel(value)}</Label>
+      ),
+    },
+    {
       id: 'actions',
       label: 'Actions',
-      minWidth: 190,
+      width: 152,
+      minWidth: 152,
+      maxWidth: 152,
       sticky: true,
       stickyPosition: 'right',
       isSort: false,
@@ -161,25 +176,58 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       excludeFromExport: true,
       render: (_, row) => {
         const inquiry = row as AdmissionInquiry;
-        if (!options.canManage && !options.canAssign && !options.canCommunicate) return null;
+        const plan = getAdmissionInquiryActionPlan(inquiry, options);
+        if (plan.direct.length === 0 && plan.overflow.length === 0) return null;
+        const reference = formatAdmissionReference(inquiry.inquiryNumber);
+        const directActions = plan.direct.flatMap((action) => {
+          if (action === 'applicant360' || action === 'manage') return [];
+          if (action === 'assign') {
+            return [
+              {
+                id: 'assign',
+                label: `${inquiry.assignedCounsellorId ? 'Reassign' : 'Assign'} counsellor for ${inquiry.applicantName}`,
+                icon: 'mdi:account-arrow-right-outline',
+                onClick: () => options.onAssign(inquiry),
+              },
+            ];
+          }
+          if (action === 'communicate') {
+            return [
+              {
+                id: 'communicate',
+                label: `Compose communication for ${inquiry.applicantName}`,
+                icon: 'mdi:message-text-outline',
+                onClick: () => options.onCommunicate(inquiry),
+              },
+            ];
+          }
+          return [
+            {
+              id: 'mark-contacted',
+              label: `Mark ${inquiry.applicantName} contacted`,
+              icon: 'mdi:phone-check-outline',
+              disabled: options.isMarkingContacted,
+              onClick: () => options.onMarkContacted(inquiry),
+            },
+          ];
+        });
+
         return (
           <ThreeDotsActions
             placement="right-top"
-            moreLabel={`Actions for ${inquiry.inquiryNumber}`}
+            showViewIcon={plan.direct.includes('applicant360')}
+            showEditIcon={plan.direct.includes('manage')}
+            showThreeDots={plan.overflow.length > 0}
+            viewIcon="mdi:account-circle-outline"
+            viewLabel={`Open Applicant 360 for ${inquiry.applicantName}`}
+            editLabel={`Manage inquiry ${reference}`}
+            moreLabel={`More actions for ${reference}`}
+            handleViewClick={() => options.onOpenApplicant360(inquiry)}
+            handleEditClick={() => options.onManage(inquiry)}
+            directActions={directActions}
             actions={({ popover }) => (
               <MenuList dense>
-                {options.canManage && (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      options.onManage(inquiry);
-                    }}
-                  >
-                    <Iconify icon="mdi:clipboard-account-outline" sx={{ mr: 1 }} />
-                    Manage inquiry
-                  </MenuItem>
-                )}
-                {options.canAssign && inquiry.admissionOfferingId && (
+                {plan.overflow.includes('assign') && (
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
@@ -190,7 +238,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
                     {inquiry.assignedCounsellorId ? 'Reassign counsellor' : 'Assign counsellor'}
                   </MenuItem>
                 )}
-                {options.canCommunicate && (
+                {plan.overflow.includes('communicate') && (
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
@@ -201,7 +249,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
                     Compose communication
                   </MenuItem>
                 )}
-                {options.canManage && inquiry.status === 0 && (
+                {plan.overflow.includes('markContacted') && (
                   <MenuItem
                     disabled={options.isMarkingContacted}
                     onClick={() => {

@@ -30,6 +30,7 @@ describe('admissions workflow templates', () => {
       expect(template.stages.at(-1)?.isTerminalStage).toBe(true);
       expect(template.stages.filter((stage) => stage.isEntryStage)).toHaveLength(1);
       expect(template.stages.filter((stage) => stage.isTerminalStage)).toHaveLength(1);
+      expect(template.stages.every((stage) => stage.stageType !== 0)).toBe(true);
       expect(template.stages.every((stage) => ![9, 10, 11, 12].includes(stage.stageType))).toBe(
         true
       );
@@ -61,7 +62,6 @@ describe('admissions workflow templates', () => {
     const template = getRegistrationWorkflowTemplate('form-1');
 
     expect(template.stages.map((stage) => stage.code)).toEqual([
-      'BASIC_INQUIRY',
       'APPLICATION_FORM',
       'DOCUMENT_VERIFICATION',
       'APPLICATION_REVIEW',

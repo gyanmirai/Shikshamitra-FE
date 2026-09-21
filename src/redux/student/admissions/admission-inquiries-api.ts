@@ -42,10 +42,20 @@ export type AdmissionInquiry = {
 export type AdmissionInquiryListInput = {
   admissionCycleId?: string;
   admissionOfferingId?: string;
+  inquiryNumber?: string;
+  inquiryNumberFilterType?: string;
+  applicantName?: string;
+  applicantNameFilterType?: string;
+  phone?: string;
+  phoneFilterType?: string;
+  email?: string;
+  emailFilterType?: string;
   status?: AdmissionInquiryStatus;
+  pipelineGroup?: 'active' | 'handoff';
   source?: AdmissionInquirySource;
   assignedCounsellorId?: string;
   isAssigned?: boolean;
+  excludePostApplication?: boolean;
   workQueue?: AdmissionInquiryWorkQueue;
   search?: string;
   sorting?: string;
@@ -81,7 +91,10 @@ export type AdmissionInquiryCommunicationResult = {
 };
 export type CreateAdmissionInquiry = {
   admissionCycleId: string;
-  admissionOfferingId?: string | null;
+  admissionOfferingId: string;
+  boardId: string;
+  mediumId: string;
+  standardId: string;
   existingFamilyId?: string | null;
   createSeparateFamily?: boolean;
   duplicateOverrideReason?: string | null;

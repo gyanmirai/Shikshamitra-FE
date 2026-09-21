@@ -8,6 +8,7 @@ import { Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui
 import { ReviewDialog } from './review-dialog';
 import { ReviewRecoveryAlert } from './review-recovery-alert';
 import { useReviewAssignment } from './use-review-assignment';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import { ReviewAssigneeSelect } from '../workflow-builder/components/review-assignee-select';
 
 export function ReviewAssignmentDialog({
@@ -71,6 +72,7 @@ export function ReviewAssignmentDialog({
           />
           <DateTimePicker
             label="Review deadline (optional)"
+            format={ADMISSION_DATE_TIME_FORMAT}
             value={formik.values.dueAt ? dayjs(formik.values.dueAt) : null}
             disabled={busy}
             onChange={(value) =>

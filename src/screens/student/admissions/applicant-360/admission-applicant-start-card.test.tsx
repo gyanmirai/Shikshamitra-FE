@@ -1,5 +1,5 @@
 import { it, vi, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { AdmissionApplicantStartCard } from './admission-applicant-start-card';
 
@@ -47,6 +47,8 @@ vi.mock('src/redux/student/admissions/admission-applications-api', () => ({
 }));
 
 beforeEach(() => {
+  mocks.push.mockReset();
+  mocks.startApplication.mockReset();
   mocks.management.managed = true;
   mocks.management.canStartApplication = false;
   mocks.management.blockers = ['Record the first contact.', 'Record a qualified outcome.'];
@@ -72,4 +74,58 @@ it('keeps the application action available for schools using the Basic Inquiry w
 
   expect(screen.queryByText('Complete the Inquiry handoff first')).not.toBeInTheDocument();
   expect(screen.getByRole('combobox', { name: 'Admission offering' })).toBeEnabled();
+});
+
+it('disables another offering while an application is active', () => {
+  render(
+    <AdmissionApplicantStartCard
+      applicantId="applicant-1"
+      applications={[
+        {
+          id: 'application-1',
+          applicationNumber: 'APP/2026/3a23c67c84f',
+          status: 1,
+          creationTime: '2026-09-18T06:09:00Z',
+          currentStageInstanceId: 'stage-1',
+          stages: [
+            {
+              code: 'APPLICATION_FORM',
+              name: 'Application form submitted',
+              stageType: 1,
+              status: 1,
+              displayOrder: 0,
+              enteredAt: '2026-09-18T06:09:00Z',
+            },
+          ],
+        },
+      ]}
+    />
+  );
+
+  expect(screen.getByRole('combobox', { name: 'Admission offering' })).toHaveAttribute(
+    'aria-disabled',
+    'true'
+  );
+  expect(screen.getByRole('button', { name: 'Start application' })).toBeDisabled();
+  expect(screen.getByText('Continue application')).toBeInTheDocument();
+  expect(screen.queryByText('APP/2026/3a23c67c84f')).not.toBeInTheDocument();
+});
+
+it('opens the created application in the full application page', async () => {
+  mocks.management.managed = false;
+  mocks.management.canStartApplication = true;
+  mocks.management.blockers = [];
+  mocks.startApplication.mockReturnValue({
+    unwrap: () => Promise.resolve({ id: 'application-1' }),
+  });
+
+  render(<AdmissionApplicantStartCard applicantId="applicant-1" applications={[]} />);
+
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Admission offering' }));
+  fireEvent.click(await screen.findByRole('option', { name: /Class 4/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Start application' }));
+
+  await waitFor(() =>
+    expect(mocks.push).toHaveBeenCalledWith('/student/admissions/applications/application-1')
+  );
 });

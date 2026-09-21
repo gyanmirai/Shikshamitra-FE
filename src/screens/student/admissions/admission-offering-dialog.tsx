@@ -11,8 +11,17 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { LoadingButton } from 'src/components/loading-button';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Link, Alert, Button, Divider, DialogActions } from '@mui/material';
+import {
+  Box,
+  Link,
+  Alert,
+  Stack,
+  Drawer,
+  Button,
+  Divider,
+  IconButton,
+  Typography,
+} from '@mui/material';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { useAdmissionOfferingForm } from './use-admission-offering-form';
@@ -62,25 +71,50 @@ export function AdmissionOfferingDialog({
   };
 
   return (
-    <CustomDialog
+    <Drawer
+      anchor="right"
       open={open}
-      handleClose={closeDialog}
-      maxWidth="md"
-      title={
-        <AdmissionDialogTitle
-          title={
-            mode === 'clone'
-              ? 'Clone Admission Offering'
-              : offering
-                ? 'Edit Admission Offering'
-                : 'Add Admission Offering'
-          }
-          helpText="An offering connects one cycle and academic standard to the workflow and forms used for new admissions."
-          helpLabel="Admission offering information"
-        />
-      }
+      onClose={saving || form.validating ? undefined : cancelDialog}
+      PaperProps={{
+        sx: {
+          width: { xs: 1, sm: 760 },
+          maxWidth: 1,
+          height: '100dvh',
+          display: 'flex',
+          overflow: 'hidden',
+        },
+      }}
     >
-      <DialogScrollContent dividers sx={{ display: 'grid', gap: 2 }}>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography id="admission-offering-drawer-title" variant="h6" component="div">
+            <AdmissionDialogTitle
+              title={
+                mode === 'clone'
+                  ? 'Clone Admission Offering'
+                  : offering
+                    ? 'Edit Admission Offering'
+                    : 'Add Admission Offering'
+              }
+              helpText="An offering connects one cycle and academic standard to the workflow and forms used for new admissions."
+              helpLabel="Admission offering information"
+            />
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Configure the intake identity, dates, workflow, and published forms.
+          </Typography>
+        </Box>
+        <IconButton
+          aria-label="Close admission offering"
+          disabled={saving || form.validating}
+          onClick={cancelDialog}
+        >
+          <Iconify icon="mdi:close" />
+        </IconButton>
+      </Stack>
+      <Divider />
+
+      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
         {mode === 'clone' && (
           <CustomSelect
             options={cycles}
@@ -206,8 +240,13 @@ export function AdmissionOfferingDialog({
           </>
         )}
         <AdmissionOfferingReadiness result={form.readiness} />
-      </DialogScrollContent>
-      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+      </Stack>
+      <Stack
+        direction="row"
+        justifyContent="flex-end"
+        spacing={1}
+        sx={{ p: 2, borderTop: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
+      >
         <Button
           variant="outlined"
           color="inherit"
@@ -259,7 +298,7 @@ export function AdmissionOfferingDialog({
             </LoadingButton>
           </>
         )}
-      </DialogActions>
-    </CustomDialog>
+      </Stack>
+    </Drawer>
   );
 }

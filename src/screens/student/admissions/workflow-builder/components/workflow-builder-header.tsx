@@ -91,7 +91,7 @@ export function WorkflowBuilderHeader({
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'Workflow Builder', href: studentPaths.enrollment.settings.workflows },
+          { name: 'Admission Process', href: studentPaths.enrollment.settings.workflows },
           { name: `Version ${workflow.version}` },
         ]}
       />

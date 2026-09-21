@@ -975,6 +975,7 @@ Use `ThreeDotsActions` from `src/components/three-dots-actions/` for row actions
 | `filterType`     | Set the default filter type according to the field: `string`, `number`, `date`, `dateTime`, `enum`, or `formattedNumber`.                                         |
 | Status column    | Always set `sticky: true`, normally use `stickyPosition: 'right'`, set `filterType: 'enum'` when filterable, and render the value with `Label`.                   |
 | Action column    | Always set `sticky: true`, `stickyPosition: 'right'`, `isSort: false`, and `isFilter: false`; always use the shared `ThreeDotsActions` component for its row actions. |
+| Direct actions   | Show at most three frequent row actions directly. Use built-in view/edit/delete props first and `directActions` for a feature-specific `mdi:` action; place every remaining action in the three-dot menu. |
 | Server-side data | When the API supports server-side pagination, search, sorting, or filtering, enable the corresponding `serverSide*` props and provide the matching callbacks.     |
 | Loading          | Pass the API loading state through `isLoading`; retain the table geometry while the request is in progress.                                                       |
 | Pagination       | Use server-side pagination for API-backed collections that can grow; pass `totalCount` and handle `onServerPagination`.                                           |
@@ -1076,6 +1077,7 @@ When the API provides paging, search, sorting, or filtering, connect those capab
 - Always render status values with `Label`; do not use plain text, an unstyled `Chip`, or color alone for status presentation.
 - Use one consistent label and color mapping for the same domain status across related screens.
 - Always use the shared `ThreeDotsActions` component in the action column; do not create ad-hoc icon buttons or menus for standard view, edit, and delete actions.
+- Keep at most three direct icons before the three-dot control. Configure feature-specific direct icons through `directActions` with a stable id, specific label, `mdi:` icon, disabled state, and handler; keep less-frequent actions in `actions`.
 - Give row actions specific accessible labels that identify the affected record, such as `Edit Spring admission cycle`, rather than repeating generic labels when the row context is available.
 - Stop row-action events from triggering row navigation; `ThreeDotsActions` handles event propagation for its built-in actions.
 - Hide or disable actions according to the screen’s permission and record-state rules, but do not treat hidden controls as authorization; backend permission checks remain authoritative.

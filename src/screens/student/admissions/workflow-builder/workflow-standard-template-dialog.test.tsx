@@ -81,7 +81,7 @@ describe('WorkflowStandardTemplateDialog', () => {
     expect(option).toHaveAttribute('aria-disabled', 'true');
 
     await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('button', { name: 'Open Form Builder' }));
+    await user.click(screen.getByRole('button', { name: 'Open Admission Forms' }));
     expect(props.onOpenFormBuilder).toHaveBeenCalledOnce();
   });
 

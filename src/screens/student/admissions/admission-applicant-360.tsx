@@ -1,17 +1,14 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import { useResponsive } from 'src/hooks/use-responsive';
 import { studentPaths } from 'src/constants/student-menu';
 import { Box, Alert, Stack, Button, Skeleton } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 
 import AdmissionApplicantNotes from './admission-applicant-notes';
-import { getApplicantName } from './applicant-360/admission-applicant-360-model';
 import { AdmissionApplicantStartCard } from './applicant-360/admission-applicant-start-card';
 import { AdmissionApplicantProfileCard } from './applicant-360/admission-applicant-profile-card';
-import { AdmissionApplicantActivityCard } from './applicant-360/admission-applicant-activity-card';
 import { AdmissionApplicantApplicationsCard } from './applicant-360/admission-applicant-applications-card';
 
 function Applicant360Loading() {
@@ -29,7 +26,7 @@ function Applicant360Loading() {
           <Skeleton variant="rounded" height={180} />
           <Skeleton variant="rounded" height={280} />
         </Stack>
-        <Skeleton variant="rounded" height={360} />
+        <Skeleton variant="rounded" height={280} />
       </Box>
     </Stack>
   );
@@ -37,28 +34,52 @@ function Applicant360Loading() {
 
 export default function AdmissionApplicant360Screen() {
   const { id } = useParams<{ id: string }>();
-  const compactHeader = useResponsive('down', 'md');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const inquiryId = searchParams.get('inquiryId');
   const { data, isLoading, isError, refetch } = useGetAdmissionApplicant360Query(id);
-  const name = data ? getApplicantName(data) : 'Applicant 360';
+
+  const handleBack = () => {
+    router.push(
+      inquiryId
+        ? `${studentPaths.enrollment.inquiries}?inquiryId=${encodeURIComponent(inquiryId)}`
+        : studentPaths.enrollment.inquiries
+    );
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <CustomBreadcrumbs
-        layout={compactHeader ? 'stacked' : 'inline'}
-        heading={name}
-        description={
-          data
-            ? 'Review this family’s identity, admission journey, recent activity, and next action in one place.'
-            : 'Review applicant identity, admission progress, family activity, and staff notes in one place.'
-        }
-        descriptionDisplay="visible"
-        links={[
-          { name: 'Students', href: studentPaths.dashboard },
-          { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'CRM', href: studentPaths.enrollment.inquiries },
-          { name: 'Applicant 360' },
-        ]}
-      />
+      <Box
+        sx={(theme) => ({
+          position: 'sticky',
+          top: 0,
+          zIndex: theme.zIndex.appBar - 1,
+          bgcolor: 'background.default',
+          borderBottom: 1,
+          borderColor: 'divider',
+        })}
+      >
+        <CustomBreadcrumbs
+          heading="Applicant 360"
+          description="Review applicant identity, admission progress, and the next staff action in one place."
+          isBack
+          onBack={handleBack}
+          links={[
+            { name: 'Students', href: studentPaths.dashboard },
+            { name: 'Admissions', href: studentPaths.enrollment.root },
+            { name: 'Inquiries', href: studentPaths.enrollment.inquiries },
+            { name: 'Applicant 360' },
+          ]}
+          slotProps={{
+            action: {},
+            heading: {},
+            moreLink: {},
+            breadcrumbs: {
+              '& .MuiBreadcrumbs-li': { flexShrink: 0 },
+            },
+          }}
+        />
+      </Box>
 
       {isLoading && <Applicant360Loading />}
 
@@ -92,7 +113,6 @@ export default function AdmissionApplicant360Screen() {
             <Stack spacing={2} sx={{ minWidth: 0 }}>
               <AdmissionApplicantStartCard applicantId={id} applications={data.applications} />
               <AdmissionApplicantApplicationsCard applications={data.applications} />
-              <AdmissionApplicantActivityCard activities={data.activities} />
             </Stack>
             <AdmissionApplicantNotes applicantId={id} notes={data.notes} />
           </Box>

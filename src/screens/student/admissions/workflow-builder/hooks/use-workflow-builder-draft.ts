@@ -111,7 +111,9 @@ export function useWorkflowBuilderDraft(
     markDirty();
   };
   const addStage = (stageTypes: AdmissionWorkflowStageTypeMetadata[]) => {
-    const metadata = stageTypes.find((item) => item.isRuntimeReady && item.isSelectable !== false);
+    const metadata = stageTypes.find(
+      (item) => item.type !== 0 && item.isRuntimeReady && item.isSelectable !== false
+    );
     if (!metadata) return;
     setEditingStage(
       createStage(metadata, stages.length, !stages.some((stage) => stage.isEntryStage))

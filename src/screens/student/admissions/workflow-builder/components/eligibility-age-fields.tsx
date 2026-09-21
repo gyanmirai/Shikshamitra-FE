@@ -4,6 +4,8 @@ import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Grid, Stack, Button, TextField, Typography } from '@mui/material';
 
+import { ADMISSION_DATE_FORMAT } from '../../admission-date-formats';
+
 type Props = {
   value: AdmissionEligibilityCriterion;
   readOnly: boolean;
@@ -91,7 +93,7 @@ export function EligibilityAgeFields({ value, onChange, readOnly }: Props) {
       />
       <DatePicker
         label="Age cutoff date *"
-        format="DD-MM-YYYY"
+        format={ADMISSION_DATE_FORMAT}
         enableAccessibleFieldDOMStructure={false}
         value={value.cutoffDate ? dayjs(value.cutoffDate) : null}
         disabled={readOnly}

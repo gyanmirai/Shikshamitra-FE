@@ -50,7 +50,7 @@ const emptyStage: AdmissionWorkflowStage = {
   id: '',
   code: '',
   name: '',
-  stageType: 0,
+  stageType: 1,
   displayOrder: 0,
   isRequired: true,
   allowManualSkip: false,

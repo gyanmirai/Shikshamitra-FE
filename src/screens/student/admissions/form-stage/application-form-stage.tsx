@@ -29,8 +29,17 @@ export function ApplicationFormStage({
   advancing: boolean;
   onComplete: () => void;
 }) {
-  const { action, setAction, summary, busy, query, verifySection, submitReason, canEdit, canReopen } =
-    useApplicationFormStage({ applicationId, stageId: stage.id, advancing });
+  const {
+    action,
+    setAction,
+    summary,
+    busy,
+    query,
+    verifySection,
+    submitReason,
+    canEdit,
+    canReopen,
+  } = useApplicationFormStage({ applicationId, stageId: stage.id, advancing });
   return (
     <Card sx={{ p: 2 }}>
       <Stack spacing={2}>
@@ -100,7 +109,7 @@ export function ApplicationFormStage({
                   size="small"
                   variant="contained"
                   disabled={busy || !summary.canComplete}
-                  onClick={onComplete}
+                  onClick={() => onComplete()}
                 >
                   Continue admission
                 </Button>

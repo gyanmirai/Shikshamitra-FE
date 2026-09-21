@@ -3,6 +3,8 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
 
+import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
+
 export function useReviewPermissions() {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const granted = (action: string) =>
@@ -13,6 +15,6 @@ export function useReviewPermissions() {
     submit: granted('Submit'),
     assign: granted('Assign'),
     decide: granted('Decide'),
-    reopen: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Reopen'),
+    reopen: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
   };
 }

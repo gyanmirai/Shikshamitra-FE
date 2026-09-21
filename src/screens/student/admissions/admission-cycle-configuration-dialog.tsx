@@ -20,6 +20,7 @@ import { Grid, Alert, TextField, Typography, DialogActions } from '@mui/material
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { suggestCloneCode, suggestCloneName, normalizeCycleCode } from './admission-cycle-model';
+import { ADMISSION_DATE_FORMAT, ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
 
 export type CycleConfigurationMode = 'clone' | 'window' | 'schedule';
 
@@ -40,12 +41,20 @@ const titles: Record<CycleConfigurationMode, string> = {
 };
 
 const descriptions: Record<CycleConfigurationMode, string> = {
-  clone: 'Create a new draft cycle from this configuration without copying offerings or applications.',
+  clone:
+    'Create a new draft cycle from this configuration without copying offerings or applications.',
   window: 'Change the application window while keeping linked offering dates within the cycle.',
   schedule: 'Choose future publish and close times using the institution timezone.',
 };
 
-export function AdmissionCycleConfigurationDialog({ mode, cycle, academicYears, busy, onClose, onConfirm }: Props) {
+export function AdmissionCycleConfigurationDialog({
+  mode,
+  cycle,
+  academicYears,
+  busy,
+  onClose,
+  onConfirm,
+}: Props) {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [description, setDescription] = useState('');
@@ -128,13 +137,29 @@ export function AdmissionCycleConfigurationDialog({ mode, cycle, academicYears, 
           {mode === 'clone' && (
             <>
               <Grid size={{ xs: 12 }}>
-                <Alert severity="info">The copy is created as a draft. Offerings and applications are not copied.</Alert>
+                <Alert severity="info">
+                  The copy is created as a draft. Offerings and applications are not copied.
+                </Alert>
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <TextField fullWidth required size="small" label="Cycle name" value={name} onChange={(event) => setName(event.target.value.slice(0, 128))} />
+                <TextField
+                  fullWidth
+                  required
+                  size="small"
+                  label="Cycle name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value.slice(0, 128))}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField fullWidth required size="small" label="Cycle code" value={code} onChange={(event) => setCode(normalizeCycleCode(event.target.value).slice(0, 64))} />
+                <TextField
+                  fullWidth
+                  required
+                  size="small"
+                  label="Cycle code"
+                  value={code}
+                  onChange={(event) => setCode(normalizeCycleCode(event.target.value).slice(0, 64))}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
                 <CustomSelect
@@ -147,7 +172,15 @@ export function AdmissionCycleConfigurationDialog({ mode, cycle, academicYears, 
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
-                <TextField fullWidth multiline minRows={2} size="small" label="Description (optional)" value={description} onChange={(event) => setDescription(event.target.value.slice(0, 1000))} />
+                <TextField
+                  fullWidth
+                  multiline
+                  minRows={2}
+                  size="small"
+                  label="Description (optional)"
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value.slice(0, 1000))}
+                />
               </Grid>
             </>
           )}
@@ -155,29 +188,71 @@ export function AdmissionCycleConfigurationDialog({ mode, cycle, academicYears, 
           {(mode === 'clone' || mode === 'window') && (
             <>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <DatePicker label="Applications open" format="DD-MM-YYYY" value={startDate ? dayjs(startDate) : null} onChange={(value) => setStartDate(value?.isValid() ? value.format('YYYY-MM-DD') : '')} slotProps={{ textField: { fullWidth: true, required: true, size: 'small' } }} />
+                <DatePicker
+                  label="Applications open"
+                  format={ADMISSION_DATE_FORMAT}
+                  value={startDate ? dayjs(startDate) : null}
+                  onChange={(value) =>
+                    setStartDate(value?.isValid() ? value.format('YYYY-MM-DD') : '')
+                  }
+                  slotProps={{ textField: { fullWidth: true, required: true, size: 'small' } }}
+                />
               </Grid>
               <Grid size={{ xs: 12, sm: 6 }}>
-                <DatePicker label="Applications close" format="DD-MM-YYYY" value={endDate ? dayjs(endDate) : null} onChange={(value) => setEndDate(value?.isValid() ? value.format('YYYY-MM-DD') : '')} slotProps={{ textField: { fullWidth: true, required: true, size: 'small', error: datesInvalid, helperText: datesInvalid ? 'Close date must be after open date' : undefined } }} />
+                <DatePicker
+                  label="Applications close"
+                  format={ADMISSION_DATE_FORMAT}
+                  value={endDate ? dayjs(endDate) : null}
+                  onChange={(value) =>
+                    setEndDate(value?.isValid() ? value.format('YYYY-MM-DD') : '')
+                  }
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      required: true,
+                      size: 'small',
+                      error: datesInvalid,
+                      helperText: datesInvalid ? 'Close date must be after open date' : undefined,
+                    },
+                  }}
+                />
               </Grid>
             </>
           )}
 
           {mode === 'window' && (
             <Grid size={{ xs: 12 }}>
-              <Alert severity="warning">Linked offering dates must remain inside the revised cycle window.</Alert>
-              <TextField sx={{ mt: 1.5 }} fullWidth required multiline minRows={2} size="small" label="Reason for revising the window" value={reason} onChange={(event) => setReason(event.target.value.slice(0, 500))} helperText={`${reason.length}/500 characters`} />
+              <Alert severity="warning">
+                Linked offering dates must remain inside the revised cycle window.
+              </Alert>
+              <TextField
+                sx={{ mt: 1.5 }}
+                fullWidth
+                required
+                multiline
+                minRows={2}
+                size="small"
+                label="Reason for revising the window"
+                value={reason}
+                onChange={(event) => setReason(event.target.value.slice(0, 500))}
+                helperText={`${reason.length}/500 characters`}
+              />
             </Grid>
           )}
 
           {mode === 'schedule' && (
             <>
-              <Grid size={{ xs: 12 }}><Typography variant="body2" color="text.secondary">Times use your institution’s configured timezone. Leave an action blank if it should remain manual.</Typography></Grid>
+              <Grid size={{ xs: 12 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Times use your institution’s configured timezone. Leave an action blank if it
+                  should remain manual.
+                </Typography>
+              </Grid>
               {cycle.status === 0 && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <DateTimePicker
                     label="Publish at"
-                    format="DD-MM-YYYY hh:mm A"
+                    format={ADMISSION_DATE_TIME_FORMAT}
                     value={publishAt ? dayjs(publishAt) : null}
                     onChange={(value) =>
                       setPublishAt(value?.isValid() ? value.format('YYYY-MM-DDTHH:mm') : '')
@@ -189,7 +264,7 @@ export function AdmissionCycleConfigurationDialog({ mode, cycle, academicYears, 
               <Grid size={{ xs: 12, sm: 6 }}>
                 <DateTimePicker
                   label="Close at"
-                  format="DD-MM-YYYY hh:mm A"
+                  format={ADMISSION_DATE_TIME_FORMAT}
                   value={closeAt ? dayjs(closeAt) : null}
                   onChange={(value) =>
                     setCloseAt(value?.isValid() ? value.format('YYYY-MM-DDTHH:mm') : '')
@@ -197,15 +272,40 @@ export function AdmissionCycleConfigurationDialog({ mode, cycle, academicYears, 
                   slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                 />
               </Grid>
-              {scheduleInvalid && <Grid size={{ xs: 12 }}><Alert severity="warning">Choose a future time. Close time must be later than publish time.</Alert></Grid>}
+              {scheduleInvalid && (
+                <Grid size={{ xs: 12 }}>
+                  <Alert severity="warning">
+                    Choose a future time. Close time must be later than publish time.
+                  </Alert>
+                </Grid>
+              )}
             </>
           )}
         </Grid>
       </DialogScrollContent>
       <DialogActions sx={{ p: 2 }}>
-        <LoadingButton size="small" variant="outlined" onClick={onClose} disabled={busy} startIcon={<Iconify icon={GlobalIcons.cancel} />}>Cancel</LoadingButton>
-        <LoadingButton size="small" variant="contained" onClick={submit} loading={busy} disabled={disabled} startIcon={<Iconify icon={GlobalIcons.submit} />}>
-          {mode === 'clone' ? 'Create draft copy' : mode === 'window' ? 'Update window' : 'Save schedule'}
+        <LoadingButton
+          size="small"
+          variant="outlined"
+          onClick={onClose}
+          disabled={busy}
+          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+        >
+          Cancel
+        </LoadingButton>
+        <LoadingButton
+          size="small"
+          variant="contained"
+          onClick={submit}
+          loading={busy}
+          disabled={disabled}
+          startIcon={<Iconify icon={GlobalIcons.submit} />}
+        >
+          {mode === 'clone'
+            ? 'Create draft copy'
+            : mode === 'window'
+              ? 'Update window'
+              : 'Save schedule'}
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

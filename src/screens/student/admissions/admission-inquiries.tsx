@@ -1,79 +1,59 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Box, Stack, Button, Checkbox, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
-import { useMemo, useState, useEffect, useDeferredValue } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
+import { Box, Stack, Button, Checkbox, Typography } from '@mui/material';
 import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import {
   type AdmissionInquiry,
-  type AdmissionInquirySource,
-  type AdmissionInquiryStatus,
+  useGetAdmissionInquiryQuery,
   useGetAdmissionInquiriesQuery,
   useLazyExportAdmissionInquiriesQuery,
-  useGetAdmissionInquiryQuery,
-  type AdmissionInquiryWorkQueue,
   useMarkAdmissionInquiryContactedMutation,
   useGetAdmissionInquiryAssignableCounsellorsQuery,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { getAdmissionInquiryAccess } from './inquiry-access';
 import { AdmissionQueryError } from './admission-query-error';
+import { formatAdmissionReference } from './admission-reference';
 import AdmissionInquiryDialog from './admission-inquiry-dialog';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
 import { AdmissionInquiryManagementDrawer } from './inquiry-management/admission-inquiry-management-drawer';
 import { AdmissionInquiryAssignmentDialog } from './inquiry-management/admission-inquiry-assignment-dialog';
-import { AdmissionInquiryBulkAssignmentDialog } from './inquiry-management/admission-inquiry-bulk-assignment-dialog';
 import { AdmissionInquiryCommunicationDialog } from './inquiry-management/admission-inquiry-communication-dialog';
+import { AdmissionInquiryBulkAssignmentDialog } from './inquiry-management/admission-inquiry-bulk-assignment-dialog';
 import {
-  MY_INQUIRIES_FILTER,
-  AdmissionInquiryFilters,
-  UNASSIGNED_INQUIRIES_FILTER,
-} from './inquiry-management/admission-inquiry-filters';
+  isAdmissionInquiryEnumFilter,
+  buildAdmissionInquiryListFilters,
+  normalizeAdmissionInquiryTableFilters,
+  ADMISSION_INQUIRY_FILTER_QUERY_PARAMS,
+  createInitialAdmissionInquiryTableFilters,
+} from './inquiry-management/admission-inquiry-table-filters';
 
 export default function AdmissionInquiriesScreen() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const linkedInquiryId = searchParams.get('inquiryId') ?? '';
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
-  const [status, setStatus] = useState<'' | AdmissionInquiryStatus>(() => {
-    const rawValue = searchParams.get('status');
-    if (rawValue === null) return '';
-    const value = Number(rawValue);
-    return Number.isInteger(value) && value >= 0 && value <= 8
-      ? (value as AdmissionInquiryStatus)
-      : '';
-  });
-  const [source, setSource] = useState<'' | AdmissionInquirySource>(() => {
-    const rawValue = searchParams.get('source');
-    if (rawValue === null) return '';
-    const value = Number(rawValue);
-    return Number.isInteger(value) && value >= 0 && value <= 9
-      ? (value as AdmissionInquirySource)
-      : '';
-  });
-  const [workQueue, setWorkQueue] = useState<'' | AdmissionInquiryWorkQueue>(() => {
-    const value = Number(searchParams.get('queue'));
-    return [1, 2, 3, 4].includes(value) ? (value as AdmissionInquiryWorkQueue) : '';
-  });
-  const [ownerId, setOwnerId] = useState(() => searchParams.get('owner') ?? '');
-  const [cycleId, setCycleId] = useState(() => searchParams.get('cycle') ?? '');
-  const [offeringId, setOfferingId] = useState(() => searchParams.get('offering') ?? '');
+  const [tableFilters, setTableFilters] = useState<IParams['filters']>(() =>
+    createInitialAdmissionInquiryTableFilters(searchParams)
+  );
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [selectedInquiry, setSelectedInquiry] = useState<AdmissionInquiry | null>(null);
+  const [dismissedInquiryId, setDismissedInquiryId] = useState('');
   const [assignmentInquiry, setAssignmentInquiry] = useState<AdmissionInquiry | null>(null);
   const [communicationInquiry, setCommunicationInquiry] = useState<AdmissionInquiry | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -81,28 +61,28 @@ export default function AdmissionInquiriesScreen() {
   const [sorts, setSorts] = useState<
     Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
   >([]);
-  const deferredSearch = useDeferredValue(search.trim());
   const createDialog = useBoolean();
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams.toString());
-    const setOrDelete = (key: string, value: string | number) => {
-      if (value === '') next.delete(key);
-      else next.set(key, String(value));
+    const setOrDelete = (key: string, value?: string) => {
+      if (!value) next.delete(key);
+      else next.set(key, value);
     };
     setOrDelete('search', search);
-    setOrDelete('status', status);
-    setOrDelete('source', source);
-    setOrDelete('queue', workQueue);
-    setOrDelete('owner', ownerId);
-    setOrDelete('cycle', cycleId);
-    setOrDelete('offering', offeringId);
+    Object.entries(ADMISSION_INQUIRY_FILTER_QUERY_PARAMS).forEach(([column, parameter]) => {
+      const filter = tableFilters.find((item) => item.column === column);
+      setOrDelete(parameter, filter ? String(filter.value) : undefined);
+      if (!isAdmissionInquiryEnumFilter(column)) setOrDelete(`${parameter}Op`, filter?.type);
+    });
+    next.delete('cycle');
+    next.delete('queue');
     const query = next.toString();
     if (query !== searchParams.toString())
       router.replace(
         query ? `${studentPaths.enrollment.inquiries}?${query}` : studentPaths.enrollment.inquiries
       );
-  }, [cycleId, offeringId, ownerId, router, search, searchParams, source, status, workQueue]);
+  }, [router, search, searchParams, tableFilters]);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const currentUserId = useSelector(
     (state: RootState) => state.auth.user?.sub as string | undefined
@@ -111,36 +91,16 @@ export default function AdmissionInquiriesScreen() {
   const canCommunicate =
     canManage && hasGrantedPermission(permissions, 'Communication.Campaigns.Add');
   const canSendCommunication = hasGrantedPermission(permissions, 'Communication.Campaigns.Send');
-  const assignedCounsellorId =
-    ownerId === MY_INQUIRIES_FILTER
-      ? currentUserId
-      : ownerId && ownerId !== UNASSIGNED_INQUIRIES_FILTER
-        ? ownerId
-        : undefined;
+  const listFilters = buildAdmissionInquiryListFilters(tableFilters, search, currentUserId);
   const { data, isLoading, isError, refetch } = useGetAdmissionInquiriesQuery({
+    ...listFilters,
     maxResultCount: rowsPerPage,
     skipCount: page * rowsPerPage,
-    search: deferredSearch || undefined,
-    status: status === '' ? undefined : status,
-    source: source === '' ? undefined : source,
-    admissionCycleId: cycleId || undefined,
-    admissionOfferingId: offeringId || undefined,
-    assignedCounsellorId,
-    isAssigned: ownerId === UNASSIGNED_INQUIRIES_FILTER ? false : undefined,
-    workQueue: workQueue === '' ? undefined : workQueue,
     sorting: sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : undefined,
   });
   const { data: linkedInquiry } = useGetAdmissionInquiryQuery(linkedInquiryId, {
     skip: !linkedInquiryId,
   });
-  const {
-    data: cycles,
-    isLoading: cyclesLoading,
-    isError: cyclesError,
-  } = useGetAdmissionCyclesQuery(
-    { maxResultCount: 100, skipCount: 0 },
-    { refetchOnMountOrArgChange: true }
-  );
   const { data: offerings } = useGetAdmissionOfferingsQuery({ maxResultCount: 100, skipCount: 0 });
   const { data: counsellors = [] } = useGetAdmissionInquiryAssignableCounsellorsQuery(undefined, {
     skip: !canAssign,
@@ -156,21 +116,35 @@ export default function AdmissionInquiriesScreen() {
   const [markContacted, { isLoading: markingContacted }] =
     useMarkAdmissionInquiryContactedMutation();
   const [exportInquiries, exportState] = useLazyExportAdmissionInquiriesQuery();
-  const listFilters = {
-    search: deferredSearch || undefined,
-    status: status === '' ? undefined : status,
-    source: source === '' ? undefined : source,
-    admissionCycleId: cycleId || undefined,
-    admissionOfferingId: offeringId || undefined,
-    assignedCounsellorId,
-    isAssigned: ownerId === UNASSIGNED_INQUIRIES_FILTER ? false : undefined,
-    workQueue: workQueue === '' ? undefined : workQueue,
+  const exportFilters = {
+    ...listFilters,
     sorting: sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : undefined,
   };
 
+  const openInquiry = useCallback(
+    (inquiry: AdmissionInquiry) => {
+      setDismissedInquiryId('');
+      setSelectedInquiry(inquiry);
+      const next = new URLSearchParams(searchParams.toString());
+      next.set('inquiryId', inquiry.id);
+      router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`);
+    },
+    [router, searchParams]
+  );
+
+  const openApplicant360 = useCallback(
+    (inquiry: AdmissionInquiry) => {
+      if (!inquiry.applicantId) return;
+      router.push(
+        `${studentPaths.enrollment.root}/applicants/${inquiry.applicantId}?inquiryId=${encodeURIComponent(inquiry.id)}`
+      );
+    },
+    [router]
+  );
+
   const downloadExport = async () => {
     try {
-      const blob = await exportInquiries(listFilters).unwrap();
+      const blob = await exportInquiries(exportFilters).unwrap();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -207,6 +181,8 @@ export default function AdmissionInquiriesScreen() {
         />
       ),
       width: 52,
+      sticky: true,
+      stickyPosition: 'left',
       isSort: false,
       isFilter: false,
       excludeFromExport: true,
@@ -215,7 +191,9 @@ export default function AdmissionInquiriesScreen() {
         return (
           <Checkbox
             size="small"
-            inputProps={{ 'aria-label': `Select ${inquiry.inquiryNumber}` }}
+            inputProps={{
+              'aria-label': `Select ${formatAdmissionReference(inquiry.inquiryNumber)}`,
+            }}
             checked={selectedIds.includes(inquiry.id)}
             disabled={!selectedIds.includes(inquiry.id) && selectedIds.length >= 100}
             onClick={(event) => event.stopPropagation()}
@@ -228,13 +206,7 @@ export default function AdmissionInquiriesScreen() {
         );
       },
     };
-    const sortable = new Set([
-      'inquiryNumber',
-      'applicantName',
-      'status',
-      'source',
-      'lastActivityAt',
-    ]);
+    const sortable = new Set(['inquiryNumber', 'applicantName', 'status', 'source']);
     const inquiryColumns = buildAdmissionInquiryColumns({
       canManage,
       canAssign,
@@ -243,12 +215,16 @@ export default function AdmissionInquiriesScreen() {
       counsellorNames: Object.fromEntries(
         counsellors.map((counsellor) => [counsellor.id, counsellor.name || counsellor.userName])
       ),
-      onManage: (inquiry) => {
-        setSelectedInquiry(inquiry);
-        const next = new URLSearchParams(searchParams.toString());
-        next.set('inquiryId', inquiry.id);
-        router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`);
-      },
+      counsellorOptions: counsellors.map((counsellor) => ({
+        label: counsellor.name || counsellor.userName,
+        value: counsellor.id,
+      })),
+      offeringOptions: (offerings?.items ?? []).map((offering) => ({
+        label: `${offering.code} · ${offering.admissionCycleName}`,
+        value: offering.id,
+      })),
+      onOpenApplicant360: openApplicant360,
+      onManage: openInquiry,
       onAssign: setAssignmentInquiry,
       onCommunicate: setCommunicationInquiry,
       onMarkContacted: (inquiry) => {
@@ -256,7 +232,7 @@ export default function AdmissionInquiriesScreen() {
           .unwrap()
           .then(() =>
             shikshaMitraToast.success({
-              message: `${inquiry.inquiryNumber} was marked contacted.`,
+              message: `${formatAdmissionReference(inquiry.inquiryNumber)} was marked contacted.`,
             })
           )
           .catch((error) =>
@@ -280,43 +256,22 @@ export default function AdmissionInquiriesScreen() {
     data?.items,
     markContacted,
     markingContacted,
-    router,
-    searchParams,
+    offerings?.items,
+    openApplicant360,
+    openInquiry,
     selectedIds,
   ]);
-
-  const changeFilter = (field: string, value: string) => {
-    setPage(0);
-    if (field === 'search') setSearch(value);
-    if (field === 'cycleId') {
-      setCycleId(value);
-      setOfferingId('');
-    }
-    if (field === 'offeringId') setOfferingId(value);
-    if (field === 'status')
-      setStatus(value === '' ? '' : (Number(value) as AdmissionInquiryStatus));
-    if (field === 'source')
-      setSource(value === '' ? '' : (Number(value) as AdmissionInquirySource));
-    if (field === 'workQueue')
-      setWorkQueue(value === '' ? '' : (Number(value) as AdmissionInquiryWorkQueue));
-    if (field === 'ownerId') setOwnerId(value);
-  };
-
-  const resetFilters = () => {
-    setSearch('');
-    setCycleId('');
-    setOfferingId('');
-    setStatus('');
-    setSource('');
-    setWorkQueue('');
-    setOwnerId('');
-    setPage(0);
-  };
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
         heading="Admission inquiries"
         description="Capture, qualify, and trace prospective applicants through the enrollment funnel."
+        slotProps={{
+          action: {},
+          heading: {},
+          moreLink: {},
+          breadcrumbs: { display: { xs: 'none', md: 'flex' } },
+        }}
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
@@ -325,37 +280,52 @@ export default function AdmissionInquiriesScreen() {
         action={
           <Stack direction="row" spacing={1}>
             <Button
+              aria-label="Export all inquiries"
               size="small"
               variant="outlined"
               disabled={exportState.isFetching}
               startIcon={<Iconify icon="mdi:file-export-outline" />}
               onClick={downloadExport}
+              sx={{
+                minWidth: { xs: 40, sm: 64 },
+                px: { xs: 1, sm: 1.5 },
+                '& .MuiButton-startIcon': { mr: { xs: 0, sm: 1 } },
+              }}
             >
-              {exportState.isFetching ? 'Exporting…' : 'Export all'}
+              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                {exportState.isFetching ? 'Exporting…' : 'Export all'}
+              </Box>
             </Button>
             {canManage && (
               <Button
+                aria-label="New inquiry"
                 size="small"
                 variant="contained"
                 startIcon={<Iconify icon="mdi:plus" />}
                 onClick={createDialog.onTrue}
+                sx={{
+                  minWidth: { xs: 40, sm: 64 },
+                  px: { xs: 1, sm: 1.5 },
+                  '& .MuiButton-startIcon': { mr: { xs: 0, sm: 1 } },
+                }}
               >
-                New inquiry
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  New inquiry
+                </Box>
               </Button>
             )}
           </Stack>
         }
       />
-      <AdmissionInquiryDialog
-        open={createDialog.value}
-        onClose={createDialog.onFalse}
-        cycles={cycles?.items}
-        cyclesLoading={cyclesLoading}
-        cyclesError={cyclesError}
-      />
+      <AdmissionInquiryDialog open={createDialog.value} onClose={createDialog.onFalse} />
       <AdmissionInquiryManagementDrawer
-        inquiry={selectedInquiry ?? linkedInquiry ?? null}
+        inquiry={
+          selectedInquiry ??
+          (linkedInquiryId && linkedInquiryId !== dismissedInquiryId ? linkedInquiry : null) ??
+          null
+        }
         onClose={() => {
+          setDismissedInquiryId(selectedInquiry?.id ?? linkedInquiryId);
           setSelectedInquiry(null);
           const next = new URLSearchParams(searchParams.toString());
           next.delete('inquiryId');
@@ -393,21 +363,6 @@ export default function AdmissionInquiriesScreen() {
         />
       ) : (
         <>
-          <AdmissionInquiryFilters
-            search={search}
-            cycleId={cycleId}
-            offeringId={offeringId}
-            status={status}
-            source={source}
-            workQueue={workQueue}
-            ownerId={ownerId}
-            currentUserId={currentUserId}
-            cycles={cycles?.items ?? []}
-            offerings={offerings?.items ?? []}
-            counsellors={counsellors}
-            onChange={changeFilter}
-            onReset={resetFilters}
-          />
           {selectedIds.length > 0 && (
             <Stack
               direction={{ xs: 'column', sm: 'row' }}
@@ -442,9 +397,21 @@ export default function AdmissionInquiriesScreen() {
               data={data?.items ?? []}
               isLoading={isLoading}
               serverSidePagination
+              serverSideSearch
               serverSideSort
+              serverSideFilter
               serverSideSortMode="single"
+              searchTerm={search}
+              filters={tableFilters}
               sorts={sorts}
+              onServerSearch={(nextSearch) => {
+                setPage(0);
+                setSearch(nextSearch);
+              }}
+              onServerFilter={(nextFilters) => {
+                setPage(0);
+                setTableFilters(normalizeAdmissionInquiryTableFilters(nextFilters));
+              }}
               onServerSort={(_, nextSorts) => {
                 setPage(0);
                 setSorts(nextSorts);
@@ -459,8 +426,23 @@ export default function AdmissionInquiriesScreen() {
                 setRowsPerPage(nextRowsPerPage);
               }}
               isPagination
-              isSearch={false}
-              isFilter={false}
+              handleRowClick={(row) => openInquiry(row as AdmissionInquiry)}
+              rowProps={(row) => {
+                const inquiry = row as AdmissionInquiry;
+                return {
+                  tabIndex: 0,
+                  role: 'link',
+                  'aria-label': `Open ${formatAdmissionReference(inquiry.inquiryNumber)}`,
+                  onKeyDown: (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      openInquiry(inquiry);
+                    }
+                  },
+                  sx: { cursor: 'pointer' },
+                };
+              }}
+              searchFieldProps={{ placeholder: 'Search inquiries' }}
             />
           </Box>
         </>

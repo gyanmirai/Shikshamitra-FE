@@ -6,7 +6,7 @@ import type {
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Paper, Button, MenuItem, TextField } from '@mui/material';
+import { Box, Card, Button, MenuItem, TextField } from '@mui/material';
 
 import { INQUIRY_SOURCE_OPTIONS, INQUIRY_STATUS_OPTIONS } from './admission-inquiry-list-options';
 
@@ -33,6 +33,7 @@ type Props = {
   cycles: Option[];
   offerings: Option[];
   counsellors: AdmissionInquiryCounsellor[];
+  showSearch?: boolean;
   showStatus?: boolean;
   onChange: (
     field: 'search' | 'cycleId' | 'offeringId' | 'status' | 'source' | 'workQueue' | 'ownerId',
@@ -54,12 +55,19 @@ export function AdmissionInquiryFilters(props: Props) {
     cycles,
     offerings,
     counsellors,
+    showSearch = true,
     showStatus = true,
     onChange,
     onReset,
   } = props;
   const hasActiveFilters = Boolean(
-    search || cycleId || offeringId || status !== '' || source !== '' || workQueue !== '' || ownerId
+    (showSearch && search) ||
+    cycleId ||
+    offeringId ||
+    status !== '' ||
+    source !== '' ||
+    workQueue !== '' ||
+    ownerId
   );
   const select = (
     field: 'cycleId' | 'offeringId' | 'status' | 'source' | 'workQueue' | 'ownerId',
@@ -82,7 +90,7 @@ export function AdmissionInquiryFilters(props: Props) {
   );
 
   return (
-    <Paper variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
+    <Card sx={{ p: 1, borderRadius: 2, boxShadow: 'var(--shadows-4)', flexShrink: 0 }}>
       <Box
         sx={{
           display: 'grid',
@@ -91,19 +99,24 @@ export function AdmissionInquiryFilters(props: Props) {
           gridTemplateColumns: {
             xs: 'minmax(0, 1fr)',
             sm: 'repeat(2, minmax(0, 1fr))',
-            lg: 'repeat(4, minmax(0, 1fr))',
-            xl: `minmax(220px, 1.5fr) repeat(${showStatus ? 6 : 5}, minmax(140px, 1fr)) auto`,
+            lg:
+              !showSearch && !showStatus
+                ? 'repeat(5, minmax(0, 1fr)) auto'
+                : 'repeat(4, minmax(0, 1fr))',
+            xl: `${showSearch ? 'minmax(220px, 1.5fr) ' : ''}repeat(${showStatus ? 6 : 5}, minmax(140px, 1fr)) auto`,
           },
         }}
       >
-        <TextField
-          fullWidth
-          label="Search applicant or phone"
-          value={search}
-          onChange={(event) => onChange('search', event.target.value)}
-          size="small"
-          sx={{ minWidth: 240 }}
-        />
+        {showSearch && (
+          <TextField
+            fullWidth
+            label="Search applicant or phone"
+            value={search}
+            onChange={(event) => onChange('search', event.target.value)}
+            size="small"
+            sx={{ minWidth: 240 }}
+          />
+        )}
         {select(
           'cycleId',
           'Cycle',
@@ -222,6 +235,6 @@ export function AdmissionInquiryFilters(props: Props) {
           Clear
         </Button>
       </Box>
-    </Paper>
+    </Card>
   );
 }

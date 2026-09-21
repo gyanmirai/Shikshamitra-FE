@@ -37,17 +37,12 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
   {
     id: 'standard',
     name: 'Standard admission',
-    description: 'A balanced inquiry-to-decision journey with form, documents, and staff review.',
+    description:
+      'A balanced application-to-decision journey with form, documents, and staff review.',
     bestFor: 'Most K–12 schools and regular fresh admissions',
     icon: 'mdi:school-outline',
     recommended: true,
     stages: [
-      {
-        code: 'BASIC_INQUIRY',
-        name: 'Basic inquiry received',
-        stageType: 0,
-        description: 'Capture the learner and guardian contact details and confirm their interest.',
-      },
       {
         code: 'APPLICATION_FORM',
         name: 'Application form submitted',
@@ -109,12 +104,6 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
     icon: 'mdi:clipboard-text-outline',
     stages: [
       {
-        code: 'BASIC_INQUIRY',
-        name: 'Basic inquiry received',
-        stageType: 0,
-        description: 'Capture the learner and guardian contact details and confirm their interest.',
-      },
-      {
         code: 'APPLICATION_FORM',
         name: 'Application form submitted',
         stageType: 1,
@@ -159,12 +148,6 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
     bestFor: 'Large, private, residential, or highly selective schools',
     icon: 'mdi:email-seal-outline',
     stages: [
-      {
-        code: 'BASIC_INQUIRY',
-        name: 'Basic inquiry received',
-        stageType: 0,
-        description: 'Capture the learner and guardian contact details and confirm their interest.',
-      },
       {
         code: 'APPLICATION_FORM',
         name: 'Application form submitted',

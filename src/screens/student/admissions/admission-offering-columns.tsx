@@ -12,10 +12,17 @@ import type { AdmissionOfferingActionProps } from './admission-offering-row-acti
 
 export const buildAdmissionOfferingColumns = (actions: AdmissionOfferingActionProps): IColumn[] => [
   {
-    id: 'code',
+    id: 'name',
     label: 'Offering',
-    minWidth: 150,
-    render: (value) => <Typography fontWeight={600}>{value}</Typography>,
+    minWidth: 210,
+    render: (value, row) => (
+      <>
+        <Typography fontWeight={600}>{value || row.code}</Typography>
+        <Typography variant="caption" color="text.secondary">
+          {row.code}
+        </Typography>
+      </>
+    ),
   },
   { id: 'boardName', label: 'Board', minWidth: 120 },
   { id: 'campusName', label: 'Campus', minWidth: 130 },

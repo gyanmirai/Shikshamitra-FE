@@ -2,6 +2,8 @@ import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inqu
 
 import { Alert, Stack, Button, TextField } from '@mui/material';
 
+import { formatAdmissionReference } from './admission-reference';
+
 type Props = {
   matches: DuplicateMatch[];
   busy: boolean;
@@ -46,7 +48,9 @@ export function AdmissionInquiryDuplicateMatches({
           }
         >
           Possible existing family: {match.applicantName} · {match.guardianPhone ?? '—'}
-          {match.existingInquiryNumber ? ` · ${match.existingInquiryNumber}` : ''}
+          {match.existingInquiryNumber
+            ? ` · ${formatAdmissionReference(match.existingInquiryNumber)}`
+            : ''}
         </Alert>
       ))}
       <TextField
