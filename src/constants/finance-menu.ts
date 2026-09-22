@@ -84,6 +84,17 @@ export const financePermissions = {
     root: `${defaultModulePermissionName}${defaultFinancePermissionName}Fees`,
     collections: `${defaultFinancePermissionName}Fees.FeeCollections`,
     charges: `${defaultFinancePermissionName}Fees.Charges`,
+	chargeActions: {
+		view: `${defaultFinancePermissionName}Fees.Charges.View`,
+		add: `${defaultFinancePermissionName}Fees.Charges.Add`,
+		edit: `${defaultFinancePermissionName}Fees.Charges.Update`,
+		delete: `${defaultFinancePermissionName}Fees.Charges.Delete`,
+		approve: `${defaultFinancePermissionName}Fees.Charges.Approve`,
+		reject: `${defaultFinancePermissionName}Fees.Charges.Reject`,
+		void: `${defaultFinancePermissionName}Fees.Charges.Void`,
+		export: `${defaultFinancePermissionName}Fees.Charges.Export`,
+		viewAudit: `${defaultFinancePermissionName}Fees.Charges.ViewAudit`,
+	},
     refund: `${defaultFinancePermissionName}Fees.Refund`,
     refundActions: {
       view: `${defaultFinancePermissionName}Fees.Refund.View`,
@@ -120,6 +131,11 @@ export const financePermissions = {
     settings: {
       root: `${defaultModulePermissionName}${defaultFinancePermissionName}Fees.Settings`,
       feeCategory: `${defaultFinancePermissionName}Settings.FeeCategory`,
+      feeCategoryActions: {
+        view: `${defaultFinancePermissionName}Settings.FeeCategory.View`,
+        add: `${defaultFinancePermissionName}Settings.FeeCategory.Add`,
+        delete: `${defaultFinancePermissionName}Settings.FeeCategory.Delete`,
+      },
       feeHead: `${defaultFinancePermissionName}Settings.FeeHead`,
       receiptBook: `${defaultFinancePermissionName}Settings.ReceiptBook`,
       paymentTerms: `${defaultFinancePermissionName}Settings.PaymentTerms`,
@@ -145,6 +161,13 @@ export const financePermissions = {
       },
       concessionType: `${defaultFinancePermissionName}Settings.ConcessionType`,
       chargeCategory: `${defaultFinancePermissionName}Settings.ChargeCategory`,
+      chargeCategoryActions: {
+        view: `${defaultFinancePermissionName}Settings.ChargeCategory.View`,
+        add: `${defaultFinancePermissionName}Settings.ChargeCategory.Add`,
+        edit: `${defaultFinancePermissionName}Settings.ChargeCategory.Edit`,
+        changeStatus: `${defaultFinancePermissionName}Settings.ChargeCategory.ChangeStatus`,
+        delete: `${defaultFinancePermissionName}Settings.ChargeCategory.Delete`,
+      },
     },
   },
   accounts: {

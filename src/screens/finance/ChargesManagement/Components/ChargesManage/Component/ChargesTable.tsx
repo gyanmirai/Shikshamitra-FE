@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -18,6 +18,7 @@ import {
   useFinanceAcademicFilters,
   type UseFinanceAcademicFiltersResult,
 } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
+import { useChargePermissions } from 'src/screens/finance/ChargesManagement/useChargePermissions';
 
 import type { IChargeData } from './type';
 
@@ -31,6 +32,7 @@ const ChargesTable = ({
   onAddCharge,
   onApprove,
   onReject,
+  onVoid,
   onRemove,
   academicFilters,
   selectedTab,
@@ -42,6 +44,7 @@ const ChargesTable = ({
   onAddCharge: () => void;
   onApprove: (data: IChargeData) => void;
   onReject: (data: IChargeData) => void;
+  onVoid: (data: IChargeData) => void;
   onRemove: (data: IChargeData) => void;
   academicFilters?: UseFinanceAcademicFiltersResult;
   selectedTab: string | number;
@@ -70,11 +73,20 @@ const ChargesTable = ({
   } = filters;
 
   const tabs = useTabs(selectedTab);
+	const permissions = useChargePermissions();
+	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(20);
+	const [search, setSearch] = useState('');
 
   useEffect(() => {
     setSelectedTab(tabs.value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabs.value]);
+
+	useEffect(() => {
+		setPage(1);
+	}, [tabs.value, filterPayload?.academicYearId, filterSelectedBoard, filterSelectedMedium,
+		filterPayload?.standardId, filterPayload?.divisionId]);
 
   // Fetch charge data — now passes standardId and divisionId to the backend
   const {
@@ -85,15 +97,19 @@ const ChargesTable = ({
     type: 'query',
     currentQueryAndMutation: useGetChargesQuery,
     params: {
+		academicYearId: filterPayload?.academicYearId,
       boardId: filterSelectedBoard,
       educationMediumId: filterSelectedMedium,
       standardId: filterPayload?.standardId,
       divisionId: filterPayload?.divisionId,
       status: tabs.value,
+		page,
+		pageSize,
+		search: search || undefined,
       _refetchTrigger: refetchTrigger,
     },
     options: {
-      skip: !filterSelectedBoard || !filterSelectedMedium || !isReady,
+		skip: !filterPayload?.academicYearId || !filterSelectedBoard || !filterSelectedMedium || !isReady,
     },
   });
 
@@ -200,14 +216,16 @@ const ChargesTable = ({
             No Charges Found{' '}
             <Box
               component="span"
-              onClick={onAddCharge}
+				onClick={permissions.canAdd ? onAddCharge : undefined}
               color="primary.main"
               fontWeight={600}
-              sx={{
-                '&:hover': { cursor: 'pointer', textDecoration: 'underline' },
-              }}
+              sx={
+                permissions.canAdd
+                  ? { '&:hover': { cursor: 'pointer', textDecoration: 'underline' } }
+                  : undefined
+              }
             >
-              Add Charge
+				{permissions.canAdd ? 'Add Charge' : 'Create permission required'}
             </Box>
           </>
         }
@@ -312,21 +330,27 @@ const ChargesTable = ({
             sticky: true,
             render(_value, row: any) {
               const isPending = row.displayStatus === PENDING;
+			  const actions: string[] = row.availableActions ?? [];
+			  const canEdit = isPending && permissions.canEdit && actions.includes('Edit');
+			  const canDelete = isPending && permissions.canDelete && actions.includes('Delete');
+			  const canApprove = isPending && permissions.canApprove && actions.includes('Approve');
+			  const canReject = isPending && permissions.canReject && actions.includes('Reject');
+              const canVoid = permissions.canVoid && actions.includes('Void');
               return (
                 <Box display="flex" gap={1} alignItems="center">
                   <ThreeDotsActions
                     placement="right-top"
                     showViewIcon
-                    showEditIcon={isPending}
+					showEditIcon={canEdit}
                     showThreeDots={false}
-                    showDeleteIcon={isPending}
+					showDeleteIcon={canDelete}
                     handleDeleteClick={() => onRemove(row as IChargeData)}
                     handleViewClick={() => onView(row as IChargeData)}
                     handleEditClick={() => onEdit(row as IChargeData)}
                   />
-                  {isPending && (
+				  {(canApprove || canReject) && (
                     <Box sx={{ display: 'flex' }}>
-                      <IconButton
+					  {canApprove && <IconButton
                         size="small"
                         onClick={() => onApprove(row as IChargeData)}
                         sx={{
@@ -336,8 +360,8 @@ const ChargesTable = ({
                         title="Approve"
                       >
                         <Iconify icon="mdi:approve" width={20} height={20} />
-                      </IconButton>
-                      <IconButton
+					  </IconButton>}
+					  {canReject && <IconButton
                         size="small"
                         onClick={() => onReject(row as IChargeData)}
                         sx={{
@@ -347,8 +371,18 @@ const ChargesTable = ({
                         title="Reject"
                       >
                         <Iconify icon="entypo:cross" width={20} height={20} />
-                      </IconButton>
+					  </IconButton>}
                     </Box>
+                  )}
+                  {canVoid && (
+                    <IconButton
+                      size="small"
+                      onClick={() => onVoid(row as IChargeData)}
+                      sx={{ color: 'warning.main' }}
+                      title="Void uncollected charge"
+                    >
+                      <Iconify icon="mdi:cancel-circle-outline" width={20} height={20} />
+                    </IconButton>
                   )}
                 </Box>
               );
@@ -356,6 +390,21 @@ const ChargesTable = ({
           },
         ]}
         data={tableData || []}
+		serverSidePagination
+		serverSideSearch
+		totalCount={chargesData?.totalCount ?? 0}
+		page={page - 1}
+		rowsPerPage={pageSize}
+		searchTerm={search}
+		onServerPagination={(nextPage, nextPageSize) => {
+			setPage(nextPage);
+			setPageSize(nextPageSize);
+		}}
+		onServerSearch={(value) => {
+			setSearch(value);
+			setPage(1);
+		}}
+		isFilter={false}
       />
     </>
   );

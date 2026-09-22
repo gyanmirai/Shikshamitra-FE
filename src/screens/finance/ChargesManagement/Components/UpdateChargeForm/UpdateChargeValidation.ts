@@ -78,6 +78,7 @@ export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode:
 
     // Student Selection - At least one of these must be selected
     studentIds: Yup.array().of(Yup.string()),
+	selectionMode: Yup.string().oneOf(['selected', 'all']).required(),
 
     selectedStudents: Yup.array().of(
       Yup.object().shape({
@@ -89,10 +90,11 @@ export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode:
     'selection-required',
     'Please select at least one student, division, or class',
     (values) => {
-      const hasStudents = values.studentIds && values.studentIds.length > 0;
+	  const hasStudents = values.selectionMode === 'selected' && values.studentIds && values.studentIds.length > 0;
+	  const explicitlyAll = values.selectionMode === 'all';
       const hasClass = Array.isArray(values.standardId) && values.standardId.length > 0;
 
-      return !!(hasStudents || hasClass);
+	  return !!((hasStudents || explicitlyAll) && hasClass);
     }
   );
 

@@ -12,6 +12,8 @@ import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 
 import FeeCategoryForm from './Components/FeeCategoryForm';
 import FeeCategoryView from './Components/FeeCategoryView';
@@ -26,6 +28,8 @@ const FeeCategoryCreation = () => {
   const [open, setOpen] = useState(false); // Controls table dialog state
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canAdd = hasGrantedPermission(permissions, financePermissions.fees.settings.feeCategoryActions.add);
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
 
@@ -84,7 +88,7 @@ const FeeCategoryCreation = () => {
           { name: 'Settings' },
           { name: 'Fee Category' },
         ]}
-        action={
+        action={canAdd ? (
           <Button
             onClick={() => addFeeCategoryDialog.onTrue()}
             size="small"
@@ -94,7 +98,7 @@ const FeeCategoryCreation = () => {
           >
             Fee Category
           </Button>
-        }
+        ) : undefined}
       />
 
       <FeeCategoryTable

@@ -207,6 +207,13 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
                 minRows={2}
                 size="small"
                 label="Deactivation reason"
+                required
+                error={!!deactivationReason && !deactivationReason.trim()}
+                helperText={
+                  deactivationReason && !deactivationReason.trim()
+                    ? 'Enter a reason containing text.'
+                    : undefined
+                }
                 value={deactivationReason}
                 onChange={(event) => setDeactivationReason(event.target.value)}
               />
@@ -219,6 +226,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
+            disabled={!nextStatus && !deactivationReason.trim()}
             onClick={async () => {
               if (!statusData) return;
               try {
@@ -226,7 +234,7 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
                   feeHeadId: statusData.id,
                   body: {
                     isActive: nextStatus,
-                    deactivationReason: nextStatus ? null : deactivationReason || null,
+                    deactivationReason: nextStatus ? null : deactivationReason.trim(),
                   },
                 }).unwrap();
                 shikshaMitraToast.success({

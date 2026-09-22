@@ -17,12 +17,15 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
+import CustomSelect from 'src/components/custom-select';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import HeadSelector from 'src/screens/finance/components/HeadSelector';
+import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { financePermissions } from 'src/constants/finance-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
@@ -55,6 +58,15 @@ const FinanceChargeCategory = () => {
   const [selectedEntry, setSelectedEntry] = useState<any>(null);
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const auth = useSelector((state: RootState) => state.auth);
+  const categoryPermissions = financePermissions.fees.settings.chargeCategoryActions;
+  const canAdd = hasGrantedPermission(auth.permissions, categoryPermissions.add);
+  const canEdit = hasGrantedPermission(auth.permissions, categoryPermissions.edit);
+  const canChangeStatus = hasGrantedPermission(
+    auth.permissions,
+    categoryPermissions.changeStatus
+  );
+  const canDelete = hasGrantedPermission(auth.permissions, categoryPermissions.delete);
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
 
@@ -180,6 +192,16 @@ const FinanceChargeCategory = () => {
   const columns: IColumn[] = useMemo(
     () => [
       {
+        id: 'incomeCategoryName',
+        label: 'Income Category',
+        minWidth: '220px',
+        align: 'left',
+        render: (_value: unknown, row: any) =>
+          row.isAccountingReady
+            ? `${row.incomeCategoryName || '-'} → ${row.incomeAccountHeadName || '-'}`
+            : 'Accounting mapping required',
+      },
+      {
         id: 'name',
         label: 'Name',
         minWidth: '200px',
@@ -222,6 +244,7 @@ const FinanceChargeCategory = () => {
               <Switch
                 size="small"
                 checked={row.isActive || false}
+                disabled={!canChangeStatus}
                 onClick={(event) => event.stopPropagation()}
                 onChange={() => handleOpenStatusConfirm(row)}
               />
@@ -240,8 +263,8 @@ const FinanceChargeCategory = () => {
         render(value, row: any) {
           return (
             <ThreeDotsActions
-              showEditIcon
-              showDeleteIcon={row.isUsedInDownstream}
+              showEditIcon={canEdit}
+              showDeleteIcon={canDelete && !row.isUsedInDownstream}
               showThreeDots={false}
               placement="right-top"
               handleDeleteClick={() => {
@@ -256,7 +279,7 @@ const FinanceChargeCategory = () => {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [canChangeStatus, canDelete, canEdit]
   );
 
   return (
@@ -270,7 +293,7 @@ const FinanceChargeCategory = () => {
           { name: 'Settings' },
           { name: 'Charge Category' },
         ]}
-        action={
+        action={canAdd ? (
           <Button
             variant="contained"
             size="small"
@@ -280,7 +303,7 @@ const FinanceChargeCategory = () => {
           >
             Charge Category
           </Button>
-        }
+        ) : undefined}
       />
 
       <CustomizableTable
@@ -389,6 +412,7 @@ const FinanceChargeCategory = () => {
         action={
           <LoadingButton
             loading={isStatusLoading}
+            disabled={!nextStatus && deactivationReason.trim().length < 10}
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
@@ -399,7 +423,7 @@ const FinanceChargeCategory = () => {
                   id: statusData.id,
                   body: {
                     isActive: nextStatus,
-                    deactivationReason: nextStatus ? null : deactivationReason || null,
+                    reason: nextStatus ? null : deactivationReason || null,
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
@@ -433,7 +457,7 @@ interface ChargeCategoryFormValues {
   chargeName: string;
   isRefundable: boolean;
   description: string;
-  chargeHeadId?: string;
+  incomeCategoryId: string;
 }
 
 const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogProps) => {
@@ -441,6 +465,29 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
 
   const [showDownstreamWarning, setShowDownstreamWarning] = useState(false);
   const [pendingFormValues, setPendingFormValues] = useState<ChargeCategoryFormValues | null>(null);
+
+  const { data: incomeCategoryData, isLoading: incomeCategoryLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetIncomeCategoriesQuery,
+    params: {
+      academicYearId: currentYear?.id,
+      page: 1,
+      pageSize: 100,
+      includeInactive: false,
+    },
+    options: { skip: !currentYear?.id || !open },
+  });
+
+  const incomeCategoryOptions = useMemo(
+    () =>
+      (incomeCategoryData?.items ?? []).map((category: any) => ({
+        id: category.id,
+        displayName: `${category.code ? `${category.code} — ` : ''}${category.name} → ${
+          category.defaultAccountHeadName || 'No account head'
+        }`,
+      })),
+    [incomeCategoryData]
+  );
 
   // PUT mutation for updating
   const [putChargeCategory, { isLoading: putLoading }] = useQueryAndMutation({
@@ -489,7 +536,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
           }),
         isRefundable: Yup.boolean().required(),
         description: Yup.string().optional(),
-        chargeHeadId: Yup.string().nullable(),
+        incomeCategoryId: Yup.string().required('Income Category is required'),
       }),
     [editData]
   );
@@ -500,7 +547,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
       chargeName: editData?.name || '',
       isRefundable: editData?.isApprovalRequired || false,
       description: editData?.description || '',
-      chargeHeadId: editData?.chargeHeadId || '',
+      incomeCategoryId: editData?.incomeCategoryId || '',
     },
     validationSchema,
     enableReinitialize: true,
@@ -524,7 +571,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
         name: values.chargeName,
         isApprovalRequired: values.isRefundable,
         description: values.description || '',
-        chargeHeadId: values.chargeHeadId || undefined,
+        incomeCategoryId: values.incomeCategoryId,
       };
 
       if (editData?.id) {
@@ -597,19 +644,29 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
               />
             </ShakingTextField>
 
-            {/* Charge Head Field */}
+            {/* Income category determines the income account used when the charge is collected. */}
             <ShakingTextField
-              error={!!(formik.touched.chargeHeadId && formik.errors.chargeHeadId) || false}
+              error={
+                !!(formik.touched.incomeCategoryId && formik.errors.incomeCategoryId) || false
+              }
             >
-              <HeadSelector
-                name="chargeHeadId"
-                label="Charge Head"
-                headType="Income"
-                value={formik.values.chargeHeadId || ''}
-                onChange={(val) => formik.setFieldValue('chargeHeadId', val)}
-                error={formik.touched.chargeHeadId && Boolean(formik.errors.chargeHeadId)}
+              <CustomSelect
+                name="incomeCategoryId"
+                label="Income Category *"
+                options={incomeCategoryOptions}
+                value={formik.values.incomeCategoryId || ''}
+                labelKey="displayName"
+                valueKey="id"
+                isLoading={incomeCategoryLoading}
+                disabled={Boolean(editData?.isUsedInDownstream)}
+                onChange={(value) => formik.setFieldValue('incomeCategoryId', value)}
+                error={
+                  formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)
+                }
                 helperText={
-                  formik.touched.chargeHeadId ? (formik.errors.chargeHeadId as string) : undefined
+                  formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
+                    ? (formik.errors.incomeCategoryId as string)
+                    : 'Its default income account will be used for collection posting.'
                 }
               />
             </ShakingTextField>

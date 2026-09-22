@@ -32,6 +32,7 @@ import StudentChargeReviewTable from './StudentChargeReviewTable';
 import ChargeApprovalConfirmationDialog from './ChargeApprovalConfirmationDialog';
 
 import type { IApprovalReviewStudent, IChargeApprovalReviewProps } from './types';
+import { useChargePermissions } from '../../useChargePermissions';
 
 /**
  * ChargeApprovalReview Component
@@ -45,6 +46,7 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
 }) => {
   const theme = useTheme();
   const isRejectMode = mode === 'reject';
+	const permissions = useChargePermissions();
 
   // State for student selection and confirmation dialog
   const [students, setStudents] = useState<IApprovalReviewStudent[]>([]);
@@ -108,7 +110,7 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
             : [];
 
       setStudents(chargeStudents);
-      setSelectedStudentIds(chargeStudents.map((s: IApprovalReviewStudent) => s.studentId));
+	  setSelectedStudentIds([]);
     }
   }, [chargeData, open]);
 
@@ -122,6 +124,10 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
   }, []);
 
   const handleApproveClick = useCallback(() => {
+	if (!permissions.canApprove || !chargeData?.availableActions?.includes('Approve')) {
+		shikshaMitraToast.error({ message: 'You are not allowed to approve this charge.' });
+		return;
+	}
     if (selectedStudentIds.length === 0) {
       shikshaMitraToast.error({
         message: 'Please select at least one student for approval',
@@ -129,9 +135,13 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
       return;
     }
     setConfirmationDialogOpen(true);
-  }, [selectedStudentIds.length]);
+	}, [selectedStudentIds.length, permissions.canApprove, chargeData?.availableActions]);
 
   const handleRejectClick = useCallback(() => {
+	if (!permissions.canReject || !chargeData?.availableActions?.includes('Reject')) {
+		shikshaMitraToast.error({ message: 'You are not allowed to reject this charge.' });
+		return;
+	}
     if (selectedStudentIds.length === 0) {
       shikshaMitraToast.error({
         message: 'Please select at least one student for rejection',
@@ -139,7 +149,7 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
       return;
     }
     setConfirmationDialogOpen(true);
-  }, [selectedStudentIds.length]);
+	}, [selectedStudentIds.length, permissions.canReject, chargeData?.availableActions]);
 
   const handleConfirmation = useCallback(
     async (notes: string) => {
@@ -148,22 +158,17 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
           id: chargeId,
           body: {
             studentIds: selectedStudentIds,
+			concurrencyStamp: chargeData?.concurrencyStamp ?? '',
             ...(isRejectMode ? { rejectionReason: notes } : { approvalNotes: notes }),
           },
         };
 
         if (isRejectMode) {
-          const result: any = await rejectCharge(payload);
-          if (result?.error) {
-            shikshaMitraToast.error({
-              message: `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
-            });
-            return;
-          }
-          if (!result?.data?.success) {
+		  const result = await rejectCharge(payload).unwrap();
+		  if (!result?.success) {
             shikshaMitraToast.error({
               message:
-                result?.data?.message || `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
+				result?.message || `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
             });
             return;
           }
@@ -171,17 +176,11 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
             message: `Charge rejected successfully for ${selectedStudentIds.length} student${selectedStudentIds.length !== 1 ? 's' : ''}`,
           });
         } else {
-          const result: any = await approveCharge(payload);
-          if (result?.error) {
-            shikshaMitraToast.error({
-              message: `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
-            });
-            return;
-          }
-          if (!result?.data?.success) {
+		  const result = await approveCharge(payload).unwrap();
+		  if (!result?.success) {
             shikshaMitraToast.error({
               message:
-                result?.data?.message || `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
+				result?.message || `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
             });
             return;
           }
@@ -192,14 +191,16 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
 
         setConfirmationDialogOpen(false);
         onClose();
-      } catch (error) {
+	  } catch (error: any) {
         console.error('Error during confirmation:', error);
         shikshaMitraToast.error({
-          message: `Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
+		  message:
+			error?.data?.error?.message ||
+			`Failed to ${isRejectMode ? 'reject' : 'approve'} charge`,
         });
       }
     },
-    [chargeId, selectedStudentIds, isRejectMode, approveCharge, rejectCharge, onClose]
+	[chargeId, selectedStudentIds, isRejectMode, approveCharge, rejectCharge, onClose, chargeData?.concurrencyStamp]
   );
 
   const formattedDueDate = useMemo(

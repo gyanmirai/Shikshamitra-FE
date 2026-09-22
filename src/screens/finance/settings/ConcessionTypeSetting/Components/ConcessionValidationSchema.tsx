@@ -19,23 +19,35 @@ export const concessionTypeValidationSchema = (
         return !existingNames.has(trimmed);
       }),
 
-    documents: Yup.array().of(
-      Yup.object().shape({
-        documentName: Yup.string()
-          .trim()
-          .max(100, 'Document Name cannot exceed 100 characters')
-          .required('Document Name is required'),
-        maxFileSizeMb: Yup.number()
-          .typeError('Maximum file size is required')
-          .moreThan(0, 'Maximum file size must be greater than 0 MB')
-          .max(20, 'Maximum allowed file size is 20 MB')
-          .required('Maximum file size is required'),
-        acceptedFormats: Yup.array()
-          .of(Yup.number())
-          .min(1, 'At least one file format is required')
-          .required('Accepted formats are required'),
-        isRequired: Yup.boolean().required(),
-      })
-    ),
+    documents: Yup.array()
+      .of(
+        Yup.object().shape({
+          documentName: Yup.string()
+            .trim()
+            .max(100, 'Document Name cannot exceed 100 characters')
+            .required('Document Name is required'),
+          maxFileSizeMb: Yup.number()
+            .typeError('Maximum file size is required')
+            .moreThan(0, 'Maximum file size must be greater than 0 MB')
+            .max(20, 'Maximum allowed file size is 20 MB')
+            .required('Maximum file size is required'),
+          acceptedFormats: Yup.array()
+            .of(Yup.number())
+            .min(1, 'At least one file format is required')
+            .required('Accepted formats are required'),
+          isRequired: Yup.boolean().required(),
+        })
+      )
+      .test(
+        'unique-document-names',
+        'Document names must be unique within the concession type',
+        (documents) => {
+          if (!documents) return true;
+          const names = documents
+            .map((document) => document?.documentName?.trim().replace(/\s+/g, ' ').toLowerCase())
+            .filter(Boolean);
+          return new Set(names).size === names.length;
+        }
+      ),
     description: Yup.string().trim().max(500, 'Description cannot exceed 500 characters'),
   });

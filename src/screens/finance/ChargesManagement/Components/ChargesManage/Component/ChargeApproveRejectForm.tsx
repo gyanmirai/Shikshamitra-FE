@@ -38,14 +38,21 @@ const ChargeReasonApprovalForm = ({ onClose, mode, selectedCharge }: IReasonAppr
     initialValues: {
       reason: '',
     },
-    validationSchema: Yup.object().shape({
-      reason: mode === 'Reject' ? Yup.string().required('Reason is required') : Yup.string(), // optional in approve
+	validationSchema: Yup.object().shape({
+	  reason:
+		mode === 'Reject'
+		  ? Yup.string().required('Reason is required').min(10, 'Reason must be at least 10 characters')
+		  : Yup.string().max(2000),
     }),
     onSubmit: async (values) => {
       if (mode === 'Approve') {
         const result: any = await approveCharge({
           id: selectedCharge?.chargeId,
-          body: { approvalNotes: values.reason },
+		  body: {
+			studentIds: [],
+			approvalNotes: values.reason,
+			concurrencyStamp: selectedCharge?.concurrencyStamp ?? '',
+		  },
         });
         if (result?.error) return;
         shikshaMitraToast.success({
@@ -54,7 +61,11 @@ const ChargeReasonApprovalForm = ({ onClose, mode, selectedCharge }: IReasonAppr
       } else {
         const result: any = await rejectCharge({
           id: selectedCharge?.chargeId,
-          body: { rejectionReason: values.reason },
+		  body: {
+			studentIds: [],
+			rejectionReason: values.reason,
+			concurrencyStamp: selectedCharge?.concurrencyStamp ?? '',
+		  },
         });
         if (result?.error) return;
         shikshaMitraToast.success({

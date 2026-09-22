@@ -3,7 +3,7 @@ module: finance
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-07-06
+updated_on: 2026-09-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -29,6 +29,7 @@ Follow this order when changing Finance frontend behavior:
 | 6 | [Concession Policy frontend review](./references/concession-policy-frontend-review.md) | Compare the current partial UI with the target fee-structure, assignment, request, approval, and ledger flow |
 | 7 | [Refund Policy frontend flow](./references/refund-policy-frontend-flow.md) | Follow the target staff journey, screen behavior, client wiring, permission gates, settlement actions, and browser acceptance flow |
 | 8 | [Proration Policy frontend flow](./references/proration-policy-frontend-flow.md) | Review the current prototype and implement the typed policy, attachment, assignment preview, demand explanation, and cross-module UI flow |
+| 9 | [Charge Management frontend flow](./references/charge-management-frontend-flow.md) | Review the active routes, current collection handoff, missing permissions/contracts, target workspace, and browser acceptance flow |
 
 ## Ownership boundary
 
@@ -65,6 +66,7 @@ Use this table before code search:
 | What is missing from the current Concession Policy UI and how should it integrate? | [Concession Policy frontend review](./references/concession-policy-frontend-review.md) |
 | How should the Refund Policy and Fee Refund UI become an end-to-end staff workflow? | [Refund Policy frontend flow](./references/refund-policy-frontend-flow.md) |
 | How should Proration Policy become an end-to-end frontend workflow? | [Proration Policy frontend flow](./references/proration-policy-frontend-flow.md) |
+| What is implemented and missing in Charge Management across authoring, approval, collection, correction, and reporting? | [Charge Management frontend flow](./references/charge-management-frontend-flow.md) |
 
 ## Validation
 

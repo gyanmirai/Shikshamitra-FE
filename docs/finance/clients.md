@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-16
+updated_on: 2026-09-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -24,7 +24,7 @@ Use this table to find the first integration file.
 | Shared Finance API base | `src/redux/finance/financeModuleApi.ts`                                                      |
 | Charges                 | `src/redux/finance/ChargeManagement/chargeApi.ts`                                            |
 | Charge mappers          | `src/redux/finance/ChargeManagement/chargeMappers.ts`                                        |
-| Student charge grouping | `src/redux/finance/ChargeManagement/studentChargeDataApi.ts`                                 |
+| Student charge grouping | Charge line endpoint in `src/redux/finance/ChargeManagement/chargeApi.ts`; `studentChargeDataApi.ts` is obsolete/comment-only |
 | Concessions             | `src/redux/finance/ConcessionManagement/**`                                                  |
 | Adjustments             | `src/redux/finance/adjustments/adjustmentApi.ts`                                             |
 | Audit Trail             | `src/redux/finance/audit/financeAuditApi.ts`                                                 |
@@ -46,9 +46,11 @@ The Payment Terms workspace queries the paged list separately for current and ar
 
 The Concession Type settings client includes inactive records for administration and history, while the request form receives active types only for new requests. The row action menu loads audit-backed history from `GET /concession-types/{id}/versions`. Delete is shown only for inactive, unused records. Its document contract uses `maxFileSizeBytes`, `acceptedFormats`, and `isRequired`. New document rows use local defaults of 5 MB and PDF/JPG/JPEG/PNG, so opening the form does not make a defaults request. Supporting files use the concession-scoped multipart upload endpoint in `ConcessionManagement/concessionManagementApi.ts`, which returns an opaque uploader-owned staged URL. The UI renders the shared `UploadButton` and `DocumentPreviewDialog`; saved evidence preview uses the authenticated request-scoped download route and is gated by `ViewDocument`.
 
-`ConcessionManagement/concessionManagementApi.ts` is the single concession-request client. It owns typed context, calculation preview, draft, submit, detail, evidence, list, approval context/preview, approve, reject, withdraw, delete-draft, reversal preview, and reversal endpoints. Context responses may require an explicit fee-assignment selection before types and policy data become available. Submit and approve send the latest server fingerprint; existing-request commands send the request stamp, approval and reversal lines send due-row stamps, and mutations retain one idempotency key for retries of the same logical action. Detail and list contracts include server-derived available actions, while detail/student views include timeline entries. The client invalidates concession request, posting, and account views after balance-changing actions. The retired duplicate `concessionRequestApi.ts` client must not be restored.
+`ConcessionManagement/concessionManagementApi.ts` is the single concession-request client. It owns typed context, calculation preview, draft, submit, detail, evidence, list, approval context/preview, approve, reject, withdraw, delete-draft, reversal preview, and reversal endpoints. Context responses may require an explicit fee-assignment selection before active concession policies and types become available. The form selects one active policy and sends its exact version on preview/draft/create/update; the policy is not selected in Fee Structure. Submit and approve send the latest server fingerprint; existing-request commands send the request stamp, approval and reversal lines send due-row stamps, and mutations retain one idempotency key for retries of the same logical action. Detail and list contracts include server-derived available actions, while detail/student views include timeline entries. The client invalidates concession request, posting, and account views after balance-changing actions. The retired duplicate `concessionRequestApi.ts` client must not be restored.
 
 Collection Policy Version History and its policy-specific Audit Trail both lazily query `GET /finance/collection-policies/{id}/versions`. The immutable version stream is the canonical source for create, edit, clone, archive, and unarchive events; the UI renders the same records either as field-level version diffs or as a lifecycle audit timeline. Both row actions require the Collection Policy `ViewVersions` permission.
+
+The Charge Management client currently uses broad `any` contracts and the active batch-list call omits the required academic year. It must not be considered a stable contract until context, preview, paging, detail/timeline, `availableActions`, concurrency, idempotency, collection, and correction DTOs are typed. The route/client consolidation and cache requirements are in [Charge Management frontend flow](./references/charge-management-frontend-flow.md).
 
 ## Backend contract source
 

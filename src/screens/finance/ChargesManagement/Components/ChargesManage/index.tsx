@@ -9,13 +9,16 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Card, Button, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, TextField, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { shikshaMitraToast } from 'src/components/toast';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useDeleteChargeMutation } from 'src/redux/finance/ChargeManagement/chargeApi';
+import {
+  useDeleteChargeMutation,
+  useVoidChargeMutation,
+} from 'src/redux/finance/ChargeManagement/chargeApi';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 
 import ChargesTable from './Component/ChargesTable';
@@ -25,14 +28,15 @@ import { ChargeApprovalReview } from '../ChargeApprovalReview';
 import ChargeReasonApprovalForm from './Component/ChargeApproveRejectForm';
 
 import type { IChargeData } from './Component/type';
+import { useChargePermissions } from '../../useChargePermissions';
 
 const ChargesManagement = () => {
   // State to store the currently selected charge data
   const [selectedChargeData, setSelectedChargeData] = useState<IChargeData | null>(null);
   const addChargeDialog = useBoolean();
   const onConfirmDialg = useBoolean();
-  const { confirmWithUndo } = useConfirmWithUndo();
   const academicFilters = useFinanceAcademicFilters();
+	const permissions = useChargePermissions();
 
   // Lifted state for tab selection to persist across dialog open/close
   const [selectedTab, setSelectedTab] = useState<string | number>(0);
@@ -44,6 +48,11 @@ const ChargesManagement = () => {
     type: 'mutation',
     currentQueryAndMutation: useDeleteChargeMutation,
   });
+  const [voidCharge, { isLoading: isVoiding }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useVoidChargeMutation,
+  });
+  const [voidReason, setVoidReason] = useState('');
 
   const [selectedMode, setSelectedMode] = useState('');
 
@@ -51,6 +60,7 @@ const ChargesManagement = () => {
   const viewChargeDetailsDialog = useBoolean();
   const editChargeDialog = useBoolean();
   const removeChargeDialog = useBoolean();
+  const voidChargeDialog = useBoolean();
   const approvalReviewDialog = useBoolean();
 
   // Redux state and dispatch
@@ -130,7 +140,7 @@ const ChargesManagement = () => {
             { name: 'Fees', href: '/finance/charge-management' },
             {
               name: 'Charges',
-              href: '/finance/charge-management/chargesRequest',
+              href: '/finance/charge-management',
               onClick(e) {
                 viewChargeDetailsDialog.onFalse();
                 setSelectedChargeData(null);
@@ -153,7 +163,7 @@ const ChargesManagement = () => {
             { name: 'Fees', href: '/finance/charge-management' },
             {
               name: 'Charges',
-              href: '/finance/charge-management/chargesRequest',
+              href: '/finance/charge-management',
               onClick(e) {
                 addChargeDialog.onFalse();
                 setSelectedChargeData(null);
@@ -175,7 +185,7 @@ const ChargesManagement = () => {
             { name: 'Fees', href: '/finance/charge-management' },
             {
               name: 'Charges',
-              href: '/finance/charge-management/chargesRequest',
+              href: '/finance/charge-management',
               onClick(e) {
                 editChargeDialog.onFalse();
                 setSelectedChargeData(null);
@@ -203,7 +213,7 @@ const ChargesManagement = () => {
             { name: 'Fees', href: '/finance/charge-management' },
             {
               name: 'Charges',
-              href: '/finance/charge-management/chargesRequest',
+              href: '/finance/charge-management',
               onClick(e) {
                 approvalReviewDialog.onFalse();
                 setSelectedChargeData(null);
@@ -227,9 +237,9 @@ const ChargesManagement = () => {
           links={[
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fees', href: '/finance/charge-management' },
-            { name: 'Charges', href: '/finance/charge-management/chargesRequest' },
+            { name: 'Charges', href: '/finance/charge-management' },
           ]}
-          action={
+		  action={permissions.canAdd ? (
             <Button
               startIcon={<Add />}
               variant="contained"
@@ -239,7 +249,7 @@ const ChargesManagement = () => {
             >
               Charge
             </Button>
-          }
+		  ) : undefined}
         />
       )}
       {!addChargeDialog.value &&
@@ -268,6 +278,11 @@ const ChargesManagement = () => {
               approvalReviewDialog.onTrue();
               setSelectedMode('Reject');
               setSelectedChargeData(data);
+            }}
+            onVoid={(data) => {
+              setSelectedChargeData(data);
+              setVoidReason('');
+              voidChargeDialog.onTrue();
             }}
             onRemove={(data) => {
               removeChargeDialog.onTrue();
@@ -410,23 +425,82 @@ const ChargesManagement = () => {
             variant="contained"
             color="error"
             size="small"
-            onClick={() => {
+			onClick={async () => {
               removeChargeDialog.onFalse();
               if (selectedChargeData) {
-                confirmWithUndo({
-                  item: selectedChargeData,
-                  onOptimisticRemove: (_dispatchFn, _setDeleteIndex) => {
-                    setSelectedChargeData(null);
-                  },
-                  onUndoRestore: (_dispatch, _deleteIndex) => {
-                    setRefetchTrigger((prev) => prev + 1); // Trigger refetch of charges table
-                  },
-                  onCommit: () => deleteCharge(selectedChargeData.chargeId),
-                });
+				try {
+					await deleteCharge({ id: selectedChargeData.chargeId }).unwrap();
+					setSelectedChargeData(null);
+					setRefetchTrigger((prev) => prev + 1);
+					shikshaMitraToast.success({ message: 'Charge deleted successfully.' });
+				} catch (error: any) {
+					shikshaMitraToast.error({
+						message: error?.data?.error?.message || 'Charge could not be deleted.',
+					});
+				}
               }
             }}
           >
             Yes
+          </Button>
+        }
+      />
+      <ConfirmDialog
+        open={voidChargeDialog.value}
+        onClose={() => {
+          voidChargeDialog.onFalse();
+          setSelectedChargeData(null);
+          setVoidReason('');
+        }}
+        title="Void charge"
+        content={
+          <Stack spacing={2}>
+            <Typography variant="body2">
+              This removes only approved, uncollected charge lines. Collected lines must first be
+              reversed through the payment reconciliation/refund flow.
+            </Typography>
+            <TextField
+              autoFocus
+              fullWidth
+              multiline
+              minRows={3}
+              label="Reason *"
+              value={voidReason}
+              onChange={(event) => setVoidReason(event.target.value)}
+              error={voidReason.length > 0 && voidReason.trim().length < 10}
+              helperText="Enter at least 10 characters for the audit trail."
+            />
+          </Stack>
+        }
+        action={
+          <Button
+            variant="contained"
+            color="warning"
+            disabled={isVoiding || voidReason.trim().length < 10}
+            onClick={async () => {
+              if (!selectedChargeData) return;
+              try {
+                await voidCharge({
+                  id: selectedChargeData.chargeId,
+                  body: {
+                    studentIds: [],
+                    concurrencyStamp: selectedChargeData.concurrencyStamp,
+                    reason: voidReason.trim(),
+                  },
+                }).unwrap();
+                shikshaMitraToast.success({ message: 'Charge voided successfully.' });
+                voidChargeDialog.onFalse();
+                setSelectedChargeData(null);
+                setVoidReason('');
+                setRefetchTrigger((prev) => prev + 1);
+              } catch (error: any) {
+                shikshaMitraToast.error({
+                  message: error?.data?.error?.message || 'Charge could not be voided.',
+                });
+              }
+            }}
+          >
+            Void charge
           </Button>
         }
       />

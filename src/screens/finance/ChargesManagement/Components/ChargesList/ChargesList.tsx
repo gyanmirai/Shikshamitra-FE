@@ -4,16 +4,13 @@ import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { ChargesPaymentStatus } from 'src/enums/fee-charges-status';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -99,9 +96,7 @@ const ChargesList = () => {
     return Array.from(map.values());
   }, [pendingData?.items, approvedData?.items, rejectedData?.items]);
 
-  const publish_modal = useBoolean();
   const [selectedCharge, setSelectedCharge] = useState<IStudentChargeData | null>(null);
-  const [deleteCharge, setDeleteCharge] = useState<IChargeData | null>(null);
 
   useEffect(() => {
     setBoards(currentYear?.boards);
@@ -178,47 +173,9 @@ const ChargesList = () => {
         maxWidth="md"
       >
         {selectedCharge && (
-          <ViewStudentAllCharges
-            data={selectedCharge}
-            onDelete={(row) => {
-              setDeleteCharge(row);
-              publish_modal.onTrue();
-            }}
-          />
+		  <ViewStudentAllCharges data={selectedCharge} />
         )}
       </CustomDialog>
-
-      <ConfirmDialog
-        open={publish_modal.value}
-        onClose={() => {
-          publish_modal.onFalse();
-          setDeleteCharge(null);
-        }}
-        title="Remove Charge"
-        content={
-          <>
-            Are you sure you want to remove charge <strong>{deleteCharge?.categoryName}</strong> for{' '}
-            <strong>{selectedCharge?.studentName}</strong>?
-          </>
-        }
-        action={
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<Iconify icon={GlobalIcons.delete} />}
-            onClick={() => {
-              publish_modal.onFalse();
-              setDeleteCharge(null);
-              shikshaMitraToast.success({
-                message: `Charge : ${deleteCharge?.categoryName} removed successfully.`,
-              });
-            }}
-            size="small"
-          >
-            Remove
-          </Button>
-        }
-      />
     </Box>
   );
 };
