@@ -3,7 +3,7 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-09-15
+updated_on: 2026-09-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -30,7 +30,7 @@ Use these commands as the first validation set.
 
 | Risk area                         | Command                                                                                                                                                   |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Charge client and mapper behavior | `npm run test -- src/redux/finance/ChargeManagement`                                                                                                      |
+| Charge client and mapper behavior | No focused Charge Management tests currently exist; add the cases in [Charge Management frontend flow](./references/charge-management-frontend-flow.md), then run their exact test paths |
 | Finance audit client contract     | `npm run test -- src/redux/finance/audit/financeAuditApi.contract.test.ts`                                                                                |
 | Finance audit UI utilities        | `npm run test -- src/screens/finance/AuditTrail`                                                                                                          |
 | Concession document constraints   | `npm run test -- src/screens/finance/Concession/Components/concessionDocumentUpload.test.ts`                                                              |
@@ -48,6 +48,8 @@ Add or update tests when a change affects these areas.
 | Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test |
 | Audit Trail mapping                       | Mapper test                                    |
 | Route-level behavior                      | Playwright test before release sign-off        |
+
+Charge release evidence must cover the selected academic year in every query/cache key, exact action permissions plus server `availableActions`, explicit AllInScope versus selected-student audience, preview/stale/idempotent command behavior, server paging, collection refresh, and absence of placeholder correction actions. The complete matrix is in [Charge Management frontend flow](./references/charge-management-frontend-flow.md).
 
 ## Student fee assignment
 

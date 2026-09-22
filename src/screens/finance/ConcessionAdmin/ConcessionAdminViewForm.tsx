@@ -884,7 +884,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
     permissions,
     financePermissions.fees.concessionActions.uploadDocument
   );
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('pending');
   const docDialog = useBoolean();
   const deleteDialog = useBoolean();
   const rejectDialog = useBoolean();
@@ -918,8 +918,18 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
       item.studentConcessionTypeRequestId || item.concessionRequestId || item.id,
   }));
 
-  const filteredItems =
-    activeTab === 'all' ? allItems : allItems.filter((i) => Number(i.status) === Number(activeTab));
+  const groupedStatuses: Record<string, ConcessionStatusType[]> = {
+    pending: [ConcessionStatusType.Draft, ConcessionStatusType.Pending],
+    approved: [
+      ConcessionStatusType.Approved,
+      ConcessionStatusType.PartiallyReversed,
+      ConcessionStatusType.Reversed,
+    ],
+    rejected: [ConcessionStatusType.Rejected, ConcessionStatusType.Cancelled],
+  };
+  const filteredItems = allItems.filter((item) =>
+    groupedStatuses[activeTab]?.includes(item.status)
+  );
 
   const handleApproveClick = (item: IConcessionRequestItem) => {
     setApprovalView({ item, mode: 'Approve' });
@@ -1015,53 +1025,28 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
             >
               {[
                 {
-                  label: 'All',
-                  value: 'all',
-                  count: allItems.length,
-                  color: 'default' as LabelColor,
-                },
-                {
-                  label: 'Draft',
-                  value: ConcessionStatusType.Draft,
-                  count: allItems.filter((i) => i.status === ConcessionStatusType.Draft).length,
-                  color: 'default' as LabelColor,
-                },
-                {
                   label: 'Pending',
-                  value: ConcessionStatusType.Pending,
-                  count: allItems.filter((i) => i.status === ConcessionStatusType.Pending).length,
+	                  value: 'pending',
+	                  count: allItems.filter((i) =>
+	                    groupedStatuses.pending.includes(i.status)
+	                  ).length,
                   color: 'warning' as LabelColor,
                 },
                 {
                   label: 'Approved',
-                  value: ConcessionStatusType.Approved,
-                  count: allItems.filter((i) => i.status === ConcessionStatusType.Approved).length,
+	                  value: 'approved',
+	                  count: allItems.filter((i) =>
+	                    groupedStatuses.approved.includes(i.status)
+	                  ).length,
                   color: 'success' as LabelColor,
                 },
                 {
                   label: 'Rejected',
-                  value: ConcessionStatusType.Rejected,
-                  count: allItems.filter((i) => i.status === ConcessionStatusType.Rejected).length,
+	                  value: 'rejected',
+	                  count: allItems.filter((i) =>
+	                    groupedStatuses.rejected.includes(i.status)
+	                  ).length,
                   color: 'error' as LabelColor,
-                },
-                {
-                  label: 'Cancelled',
-                  value: ConcessionStatusType.Cancelled,
-                  count: allItems.filter((i) => i.status === ConcessionStatusType.Cancelled).length,
-                  color: 'error' as LabelColor,
-                },
-                {
-                  label: 'Partially reversed',
-                  value: ConcessionStatusType.PartiallyReversed,
-                  count: allItems.filter((i) => i.status === ConcessionStatusType.PartiallyReversed)
-                    .length,
-                  color: 'warning' as LabelColor,
-                },
-                {
-                  label: 'Reversed',
-                  value: ConcessionStatusType.Reversed,
-                  count: allItems.filter((i) => i.status === ConcessionStatusType.Reversed).length,
-                  color: 'default' as LabelColor,
                 },
               ].map((tab) => (
                 <Tab

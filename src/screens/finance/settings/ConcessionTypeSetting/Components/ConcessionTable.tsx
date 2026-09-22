@@ -5,6 +5,7 @@ import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -256,8 +257,13 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
                 statusConfirm.onFalse();
                 setStatusData(null);
                 setDeactivationReason('');
-              } catch {
-                // Keep dialog open on error
+              } catch (error) {
+                // Keep the dialog open so the user can correct the reason or refresh
+                // after a concurrency/status conflict.
+                const parsed = parseApiProblemDetail(error);
+                shikshaMitraToast.error({
+                  message: parsed.detail || 'Unable to change concession type status.',
+                });
               }
             }}
           >

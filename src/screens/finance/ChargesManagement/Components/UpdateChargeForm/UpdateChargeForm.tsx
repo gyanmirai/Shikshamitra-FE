@@ -17,7 +17,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -40,6 +39,9 @@ import {
   Skeleton,
   TextField,
   Typography,
+	Radio,
+	RadioGroup,
+	FormControlLabel,
 } from '@mui/material';
 
 import { useStudentsInScope } from './useStudentsInScope';
@@ -75,7 +77,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   const isEditMode = isEdit || !!chargeId;
 
   // Fetch charge details only if in edit mode
-  const { prefillValues, isLoading: chargeLoading, restrictions } = useChargeDetails(chargeId);
+	const { prefillValues, chargeDetail, isLoading: chargeLoading, restrictions } = useChargeDetails(chargeId);
 
   // State for academic structure
   const [boards, setBoards] = useState<any[]>([]);
@@ -137,7 +139,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       divisionIds: defaultDivisionId ? [defaultDivisionId] : [],
       studentIds: [],
       selectedStudents: [],
-      selectionMode: 'students',
+	  selectionMode: 'selected',
     };
   }, [prefillValues, defaultBoardId, defaultMediumId, defaultStandardId, defaultDivisionId]);
 
@@ -163,17 +165,24 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           )?.name ?? values.chargeName;
 
         const audience = buildAudiencePayload(values, candidateStudentIdsRef.current);
+		if (values.selectionMode === 'all' &&
+			!window.confirm(`Create this charge for all ${candidateStudentIdsRef.current.length} students currently in scope?`)) {
+			return;
+		}
         const payload = {
           chargeName: values.chargeName,
           chargeCategoryId: values.chargeCategoryId,
           purposeDescription: values.purposeDescription,
           amount: parseFloat(String(values.amount)),
-          dueDate: dateConvertor(dayjs(values.dueDate).format(dateFormat) || '') || '',
+		  dueDate: dayjs(values.dueDate).toISOString(),
           audience,
         };
 
         if (isEditMode && chargeId) {
-          await updateCharge({ id: chargeId, body: payload }).unwrap();
+		  await updateCharge({
+			id: chargeId,
+			body: { ...payload, concurrencyStamp: chargeDetail?.concurrencyStamp ?? '' },
+		  }).unwrap();
           shikshaMitraToast.success({
             message: `Charge updated successfully for ${categoryName}`,
           });
@@ -185,9 +194,11 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
         }
         onClose(null, true);
       } catch (error) {
-        console.error('Failed to submit charge:', error);
+		console.error('Failed to submit charge:', error);
         shikshaMitraToast.error({
-          message: `Failed to ${isEditMode ? 'update' : 'create'} charge. Please try again.`,
+		  message:
+			(error as any)?.data?.error?.message ||
+			`Failed to ${isEditMode ? 'update' : 'create'} charge. Please try again.`,
         });
       }
     },
@@ -842,25 +853,46 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                   </Paper>
                 </Grid>
 
-                {/* Student Selection Section */}
+				{/* Student Selection Section */}
                 <Grid size={{ xs: 12 }}>
                   <Typography variant="subtitle2" fontWeight={700} mb={1.5}>
                     Student Selection
                   </Typography>
+				  <RadioGroup
+					row
+					value={values.selectionMode}
+					onChange={(event) => {
+						const mode = event.target.value as 'selected' | 'all';
+						setFieldValue('selectionMode', mode);
+						if (mode === 'all') {
+							setFieldValue('studentIds', []);
+							setFieldValue('selectedStudents', []);
+						}
+					}}
+				  >
+					<FormControlLabel value="selected" control={<Radio size="small" />} label="Selected students" />
+					<FormControlLabel value="all" control={<Radio size="small" />} label="All students in scope" />
+				  </RadioGroup>
+				  {values.selectionMode === 'all' && (
+					<Alert severity="warning" sx={{ mb: 2 }}>
+						This will resolve all currently accessible students in the selected scope on the server.
+					</Alert>
+				  )}
                   <Grid container spacing={2}>
                     {/* Student List */}
                     <Grid size={{ xs: 12, md: 8 }}>
                       <StudentSelectionLayout
-                        students={filteredStudents}
+						students={filteredStudents}
                         selectedStudentIds={values.studentIds}
                         isLoading={studentsLoading}
-                        onSelectionChange={(selectedIds) => {
+						onSelectionChange={(selectedIds) => {
                           setFieldValue('studentIds', selectedIds);
                           const selected = scopeStudents.filter((s) => selectedIds.includes(s.id));
                           setFieldValue('selectedStudents', selected);
                         }}
                         searchQuery={studentSearch}
                         onSearchChange={setStudentSearch}
+						disabled={values.selectionMode === 'all'}
                       />
                     </Grid>
 

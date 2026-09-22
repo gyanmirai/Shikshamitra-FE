@@ -25,15 +25,12 @@ export function buildAudiencePayload(
   values: IUpdateChargeFormValues,
   candidateStudentIds: string[]
 ): IChargeAudience {
-  const mode =
-    values.studentIds.length === 0
-      ? 'AllInScope'
-      : resolveSelectionMode(values.studentIds, candidateStudentIds);
+	const mode: StudentSelectionMode = values.selectionMode === 'all' ? 'AllInScope' : 'Explicit';
 
   const selection: IStudentSelection =
     mode === 'AllInScope'
-      ? { mode: API_SELECTION_MODE.AllInScope }
-      : { mode: API_SELECTION_MODE.Explicit, studentIds: values.studentIds };
+		? { mode: API_SELECTION_MODE.AllInScope }
+		: { mode: API_SELECTION_MODE.Explicit, studentIds: values.studentIds };
 
   return {
     scope: {

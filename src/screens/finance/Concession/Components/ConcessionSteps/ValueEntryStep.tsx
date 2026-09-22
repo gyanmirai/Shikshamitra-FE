@@ -1,4 +1,5 @@
 import type {
+  ConcessionPolicyOption,
   ConcessionRequestContext,
   ConcessionRequestPreview,
 } from 'src/redux/finance/ConcessionManagement/types';
@@ -25,10 +26,17 @@ interface Props {
   formik: any;
   concessionTypes: any[];
   requestContext?: ConcessionRequestContext;
+  policy?: ConcessionPolicyOption;
   preview?: ConcessionRequestPreview;
 }
 
-const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes, requestContext, preview }) => {
+const ValueEntryStep: React.FC<Props> = ({
+  formik,
+  concessionTypes,
+  requestContext,
+  policy,
+  preview,
+}) => {
   const { values, setFieldValue } = formik;
   const selectedTypes = useMemo(
     () => (concessionTypes as any[]).filter((ct: any) => values.concessionTypeIds.includes(ct.id)),
@@ -101,6 +109,7 @@ const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes, requestConte
           values={values}
           setEntry={setEntry}
           requestContext={requestContext}
+          policy={policy}
           preview={preview}
         />
       ))}
@@ -113,17 +122,24 @@ const ValueEntryStep: React.FC<Props> = ({ formik, concessionTypes, requestConte
   );
 };
 
-const ValueEntryStepItem = ({ concessionType, values, setEntry, requestContext, preview }: any) => {
-  const assignedStructureData = requestContext
+const ValueEntryStepItem = ({
+  concessionType,
+  values,
+  setEntry,
+  requestContext,
+  policy,
+  preview,
+}: any) => {
+  const assignedStructureData = requestContext && policy
     ? {
-        concessionValueSource: requestContext.valueSource,
-        concessionCalculationMethod: requestContext.calculationMethod,
-        maximumConcessionPercentage: requestContext.maximumPercentage,
-        maximumConcessionFixedAmount: requestContext.maximumFixedAmount,
-        concessionPercentageValue: requestContext.percentageValue,
-        concessionFixedAmount: requestContext.fixedAmount,
-        concessionPolicyName: requestContext.concessionPolicyName,
-        concessionPolicyVersion: requestContext.concessionPolicyVersion,
+        concessionValueSource: policy.valueSource,
+        concessionCalculationMethod: policy.calculationMethod,
+        maximumConcessionPercentage: policy.maximumPercentage,
+        maximumConcessionFixedAmount: policy.maximumFixedAmount,
+        concessionPercentageValue: policy.percentageValue,
+        concessionFixedAmount: policy.fixedAmount,
+        concessionPolicyName: policy.policyName,
+        concessionPolicyVersion: policy.version,
         feeHeads: requestContext.feeHeads.map((feeHead: any) => ({
           ...feeHead,
           amount: feeHead.eligibleOutstanding,

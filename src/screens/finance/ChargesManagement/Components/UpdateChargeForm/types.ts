@@ -31,7 +31,7 @@ export interface IUpdateChargeFormValues {
   }>;
 
   // Selection state
-  selectionMode: 'students' | 'divisions' | 'classes'; // Determined by what's selected
+	selectionMode: 'selected' | 'all';
 }
 
 /**

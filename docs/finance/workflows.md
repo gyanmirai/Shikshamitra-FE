@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-09-15
+updated_on: 2026-09-21
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -29,6 +29,8 @@ Charge changes start at `/finance/charge-management`.
 3. Inspect `src/redux/finance/ChargeManagement/chargeApi.ts`.
 4. Inspect `src/redux/finance/ChargeManagement/chargeMappers.ts`.
 5. Confirm backend behavior in `../../../Shikshamitra-BE/docs/modules/finance/api.md`.
+
+The current workspace creates and reviews charge batches, while Fee Collection collects approved student lines and displays charge receipts. It does not yet provide a complete correction/refund lifecycle. Academic-year filtering, exact action permissions, explicit audience mode, preview/fingerprint, stamps, idempotency, pagination, and placeholder route cleanup are required. Follow [Charge Management frontend flow](./references/charge-management-frontend-flow.md) for the reviewed current state, target interaction sequence, and acceptance coverage.
 
 ## Trace collection and receipt changes
 
@@ -61,6 +63,8 @@ Concession and adjustment workflows should preserve approval and audit behavior.
 7. Version History is available from each row's action menu and shows the audited create, edit, and status changes with actor, timestamp, and changed fields.
 
 ### Concession request and approval
+
+The request form loads active policies for the selected academic year and fee assignment, defaults the designated policy when present, and requires the user to select one policy before calculation. Preview and save commands include the selected policy and immutable version. Concession management presents three operational buckets: Pending includes Draft and Pending, Approved includes Approved/Partially Reversed/Reversed, and Rejected includes Rejected/Cancelled; cards retain the exact audit status.
 
 1. The request form selects academic context and student, then loads the assignment-derived context. When the server reports more than one current assignment, the form uses the shared select component to require one explicit assignment before showing its policy and types. The policy name, code, version, calculation method, limits, installment scope, eligible heads, and due rows are read-only server values; there is no policy selector.
 2. Policy-fixed modes render server preview values without editable money fields. Request-entered percentage and fixed-total inputs are validated for usability, while the rendered concession and net payable always come from the matching latest preview.
