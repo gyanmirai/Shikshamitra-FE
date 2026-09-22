@@ -8,7 +8,7 @@ describe('exact permission checks', () => {
   it.each(['development', 'production', 'test'])('fails closed in %s', (environment) => {
     vi.stubEnv('NODE_ENV', environment);
     expect(hasGrantedPermission(undefined, 'Students.Admissions.Offerings.Create')).toBe(false);
-    expect(hasGrantedPermission([], 'Students.Enrollment.AdmissionsCrm.ViewActivation')).toBe(false);
+    expect(hasGrantedPermission([], 'Students.Onboarding.View')).toBe(false);
     expect(hasGrantedPermission([], 'HR.Employee.EmployeeList.Edit')).toBe(false);
   });
 

@@ -28,6 +28,7 @@ import {
   getDynamicAdmissionValidationErrors,
 } from '../admission-form-validation';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
+import { canRequestNormalStageAdvance } from './application-progress-model';
 
 export type RuntimeAction = 'skip' | 'override' | null;
 export type AdvanceOptions = {
@@ -120,6 +121,20 @@ export function useApplicationDetail(id: string) {
     if (!application?.concurrencyStamp || !workflow?.currentStageInstanceId) {
       shikshaMitraToast.error({
         message: 'The application changed or is still loading. Refresh it before continuing.',
+      });
+      return false;
+    }
+    const currentStage = workflow.stages.find(
+      (stage) => stage.id === workflow.currentStageInstanceId
+    );
+    if (
+      !options?.skipCurrentStage &&
+      !options?.adminOverride &&
+      !canRequestNormalStageAdvance(currentStage, application.status)
+    ) {
+      shikshaMitraToast.error({
+        message:
+          "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again.",
       });
       return false;
     }

@@ -14,13 +14,14 @@ const settingsItems = [
   {
     title: 'Readiness & Access',
     description:
-      'Control activation requirements, approvals, and student or guardian portal access.',
+      'Manage saved readiness defaults, approvals, handoffs, and student or guardian access.',
     path: studentPaths.onboarding.settingsSections.readinessAccess,
     icon: 'mdi:account-check-outline',
   },
   {
     title: 'Numbering & Placement',
-    description: 'Configure GR and roll numbering together with safe division-change behavior.',
+    description:
+      'Manage saved GR and seat settings, roll numbering, and safe Division-change behavior.',
     path: studentPaths.onboarding.settingsSections.numberingPlacement,
     icon: 'mdi:identifier',
   },
@@ -41,6 +42,7 @@ export default function OnboardingSettingsPage() {
                 items={[
                   'Manage activation readiness and portal-access rules.',
                   'Configure GR, Roll number, and Division placement policies.',
+                  'Save backend readiness, seat reservation, and GR identifier settings in their related sections.',
                 ]}
               />
             ),
@@ -113,10 +115,11 @@ export default function OnboardingSettingsPage() {
         <Stack direction="row" spacing={1} alignItems="flex-start">
           <Iconify icon="mdi:information-outline" width={20} color="info.main" />
           <Box>
-            <Typography variant="subtitle2">Frontend session configuration</Typography>
+            <Typography variant="subtitle2">Persistence boundary</Typography>
             <Typography variant="body2" color="text.secondary">
-              Applied changes affect Student Setup immediately during this frontend session. A full
-              reload restores defaults until the Onboarding Settings APIs are connected.
+              Saved defaults inside Readiness & Access and Numbering & Placement use the backend.
+              Advanced academic rules remain frontend-session previews when no backend contract
+              exists.
             </Typography>
           </Box>
         </Stack>

@@ -93,6 +93,50 @@ describe('Student Setup applied onboarding settings', () => {
     ).toBe('not-required');
   });
 
+  it('resolves the most specific readiness profile by academic path', () => {
+    const baseFreshProfile = defaultOnboardingSettings.onboardingProfiles.find(
+      (profile) => profile.id === 'fresh-admission'
+    )!;
+    const settings = {
+      ...defaultOnboardingSettings,
+      onboardingProfiles: [
+        ...defaultOnboardingSettings.onboardingProfiles,
+        {
+          ...baseFreshProfile,
+          id: 'fresh-gseb-english-secondary',
+          applicability: {
+            ...baseFreshProfile.applicability,
+            boardMode: 'selected' as const,
+            boardIds: ['board-gseb'],
+            mediumMode: 'selected' as const,
+            academicMediumIds: ['medium-english'],
+            stageMode: 'selected' as const,
+            academicMediumStageIds: ['stage-secondary'],
+          },
+          rules: {
+            ...baseFreshProfile.rules,
+            requireDocuments: false,
+          },
+        },
+      ],
+    };
+
+    expect(
+      getEffectiveReadinessRules(settings, 'Fresh admission', {
+        boardId: 'board-gseb',
+        academicMediumId: 'medium-english',
+        academicMediumStageId: 'stage-secondary',
+      }).requireDocuments
+    ).toBe(false);
+    expect(
+      getEffectiveReadinessRules(settings, 'Fresh admission', {
+        boardId: 'board-gseb',
+        academicMediumId: 'medium-gujarati',
+        academicMediumStageId: 'stage-secondary',
+      }).requireDocuments
+    ).toBe(true);
+  });
+
   it('requires approval only when the selected profile policy matches the student', () => {
     const midYearRules = getEffectiveReadinessRules(
       defaultOnboardingSettings,
@@ -136,40 +180,20 @@ describe('Student Setup applied onboarding settings', () => {
     ];
 
     expect(
-      findRollNumberConfiguration(
-        configurations,
-        'Grade 6',
-        undefined,
-        'board-cbse',
-        'grade-6'
-      ).id
+      findRollNumberConfiguration(configurations, { boardId: 'board-cbse', standardId: 'grade-6' })
+        .id
     ).toBe('cbse-grade-6-rule');
     expect(
-      findRollNumberConfiguration(
-        configurations,
-        'Grade 7',
-        undefined,
-        'board-cbse',
-        'grade-7'
-      ).id
+      findRollNumberConfiguration(configurations, { boardId: 'board-cbse', standardId: 'grade-7' })
+        .id
     ).toBe('cbse-rule');
     expect(
-      findRollNumberConfiguration(
-        configurations,
-        'Grade 6',
-        undefined,
-        'board-gseb',
-        'grade-6'
-      ).id
+      findRollNumberConfiguration(configurations, { boardId: 'board-gseb', standardId: 'grade-6' })
+        .id
     ).toBe('grade-6-rule');
     expect(
-      findRollNumberConfiguration(
-        configurations,
-        'Grade 7',
-        undefined,
-        'board-gseb',
-        'grade-7'
-      ).id
+      findRollNumberConfiguration(configurations, { boardId: 'board-gseb', standardId: 'grade-7' })
+        .id
     ).toBe(defaultRollNumberConfiguration.id);
   });
 
@@ -192,28 +216,71 @@ describe('Student Setup applied onboarding settings', () => {
     };
 
     expect(
-      findDivisionChangeConfiguration(
-        divisionConfigurations,
-        'Grade 6',
-        undefined,
-        'board-cbse',
-        'grade-6'
-      ).id
+      findDivisionChangeConfiguration(divisionConfigurations, {
+        boardId: 'board-cbse',
+        standardId: 'grade-6',
+      }).id
     ).toBe('cbse-division-rule');
     expect(
-      findDivisionChangeConfiguration(
-        divisionConfigurations,
-        'Grade 6',
-        undefined,
-        'board-gseb',
-        'grade-6'
-      ).id
+      findDivisionChangeConfiguration(divisionConfigurations, {
+        boardId: 'board-gseb',
+        standardId: 'grade-6',
+      }).id
     ).toBe(defaultDivisionChangeConfiguration.id);
-    expect(isGrConfigurationApplicable(cbseGrSeries, 'fresh-admission', undefined, 'board-cbse')).toBe(
-      true
-    );
-    expect(isGrConfigurationApplicable(cbseGrSeries, 'fresh-admission', undefined, 'board-gseb')).toBe(
-      false
-    );
+    expect(
+      isGrConfigurationApplicable(cbseGrSeries, 'fresh-admission', undefined, {
+        boardId: 'board-cbse',
+      })
+    ).toBe(true);
+    expect(
+      isGrConfigurationApplicable(cbseGrSeries, 'fresh-admission', undefined, {
+        boardId: 'board-gseb',
+      })
+    ).toBe(false);
+    expect(
+      isGrConfigurationApplicable(cbseGrSeries, undefined, undefined, {
+        boardId: 'board-cbse',
+      })
+    ).toBe(false);
+  });
+
+  it('resolves Board, Medium, School Level, Class, and Division specificity independently', () => {
+    const configurations = [
+      defaultRollNumberConfiguration,
+      {
+        ...defaultRollNumberConfiguration,
+        id: 'gseb-english-secondary',
+        boardMode: 'selected' as const,
+        boardIds: ['board-gseb'],
+        mediumMode: 'selected' as const,
+        academicMediumIds: ['medium-english'],
+        stageMode: 'selected' as const,
+        academicMediumStageIds: ['stage-secondary'],
+        classMode: 'selected' as const,
+        standardIds: ['standard-9'],
+        divisionMode: 'selected' as const,
+        divisionIds: ['division-a'],
+        startingNumber: 501,
+      },
+    ];
+
+    expect(
+      findRollNumberConfiguration(configurations, {
+        boardId: 'board-gseb',
+        academicMediumId: 'medium-english',
+        academicMediumStageId: 'stage-secondary',
+        standardId: 'standard-9',
+        divisionId: 'division-a',
+      }).id
+    ).toBe('gseb-english-secondary');
+    expect(
+      findRollNumberConfiguration(configurations, {
+        boardId: 'board-gseb',
+        academicMediumId: 'medium-gujarati',
+        academicMediumStageId: 'stage-secondary',
+        standardId: 'standard-9',
+        divisionId: 'division-a',
+      }).id
+    ).toBe(defaultRollNumberConfiguration.id);
   });
 });

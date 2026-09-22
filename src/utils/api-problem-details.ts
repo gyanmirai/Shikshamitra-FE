@@ -4,6 +4,8 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Admissions:ApplicationStageCannotAdvance':
+    "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again.",
   'Admissions.WorkflowConcurrencyConflict':
     'This workflow changed after the list was loaded. Refresh the latest version, review it, and try again.',
   'Admissions.FormMakerCheckerRequired':

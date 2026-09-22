@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { studentOnboardingType, studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
 import type { ReviewDecisionCapabilities } from './admission-review-types';
 
@@ -25,6 +25,7 @@ export type AdmissionApplication = {
   finalizedAt?: string | null;
   enrolledStudentId?: string | null;
   studentEnrollmentId?: string | null;
+  onboardingCaseId?: string | null;
   currentStageInstanceId?: string | null;
   lastSavedAt?: string | null;
   submittedAt?: string | null;
@@ -223,6 +224,7 @@ export type FinalizeAdmissionInput = {
 export type AdmissionFinalizationResult = {
   application: AdmissionApplication;
   studentId: string;
+  onboardingCaseId: string;
   reusedExistingStudent: boolean;
 };
 type Result<T> = { data?: T };
@@ -456,6 +458,8 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: [
         studentAdmissionsCrmType.admissionApplication,
         studentAdmissionsCrmType.admissionApplicant,
+        { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+        { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
       ],
     }),
     advanceAdmissionApplicationWorkflow: builder.mutation<

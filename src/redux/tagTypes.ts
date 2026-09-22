@@ -540,6 +540,20 @@ export const studentAdmissionsCrmType = {
   communication: 'Student-Admissions-Crm-Communication',
 } as const;
 
+// ===== Student Onboarding API (reducerPath: api) =====
+export const studentOnboardingType = {
+  onboardingCaseList: 'StudentOnboardingCaseList',
+  onboardingCaseDetail: 'StudentOnboardingCase',
+  onboardingAnalytics: 'StudentOnboardingAnalytics',
+  onboardingFilterOptions: 'StudentOnboardingFilterOptions',
+  onboardingPlacementOptions: 'StudentOnboardingPlacementOptions',
+  onboardingIdentifierSeries: 'StudentOnboardingIdentifierSeries',
+  onboardingPolicies: 'StudentOnboardingPolicies',
+  onboardingServiceHandoffs: 'StudentOnboardingServiceHandoffs',
+  onboardingDocuments: 'StudentOnboardingDocuments',
+  onboardingReconciliation: 'StudentOnboardingReconciliation',
+} as const;
+
 // ===== Student Attendance Rule API (reducerPath: StudentAttendanceRuleApi) =====
 export const studentAttendanceRuleType = {
   studentAttendanceRule: 'Student-Attendance-Rule',
@@ -742,6 +756,7 @@ export const allTagTypes = {
   ...studentGrNumberType,
   ...studentGroupType,
   ...studentAdmissionsCrmType,
+  ...studentOnboardingType,
   academicExam: academicType.exam,
   ...studentInvoiceType,
   ...studentLeaveType,

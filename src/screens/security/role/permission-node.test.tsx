@@ -28,6 +28,31 @@ function renderNode(actions: string[]) {
 }
 
 describe('Student rows with unavailable actions', () => {
+  it('maps Student Onboarding to the canonical server action bundle', () => {
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <PermissionNode
+          node={{ title: 'Student Setup', permissionName: 'Students.Onboarding.View' }}
+          moduleTitle="Student"
+          submoduleTitle="Student Onboarding"
+          permissions={['View', 'Add', 'Delete'].map((action) => ({
+            name: `Students.Onboarding.${action}`,
+            isGranted: false,
+          }))}
+          onToggle={vi.fn()}
+          onSelectAll={vi.fn()}
+          setPermission={vi.fn()}
+        />
+      </ThemeProvider>
+    );
+
+    ['View', 'Add', 'Delete'].forEach((action) => {
+      expect(screen.getByRole('switch', { name: action })).toBeEnabled();
+    });
+    expect(screen.getByRole('button', { name: 'Grant All' })).toBeEnabled();
+    expect(screen.queryByText(/permissions are missing from the server/)).not.toBeInTheDocument();
+  });
+
   it.each([{ actions: ['View'] }, { actions: ['View', 'Create'] }])(
     'can revoke all available grants when the catalogue only contains $actions',
     ({ actions }) => {

@@ -28,7 +28,7 @@ type OnboardingSettingsContextValue = {
   setScope: (scope: OnboardingConfigurationScope) => void;
   resetToInherited: () => void;
   applyReadinessAccess: (rules: ReadinessAccessRules) => void;
-  applyOnboardingProfile: (profileId: string, rules: ReadinessAccessRules) => void;
+  applyOnboardingProfile: (profile: OnboardingProfile) => void;
   saveGrNumberConfiguration: (configuration: GrNumberConfiguration) => void;
   setGrAssignmentMode: (mode: AssignmentModePolicy) => void;
   saveRollNumberConfiguration: (configuration: RollNumberConfiguration) => void;
@@ -50,6 +50,14 @@ const cloneInitialSettings = (
   onboardingProfiles: settings.onboardingProfiles.map((profile): OnboardingProfile => ({
     ...profile,
     admissionRoutes: [...profile.admissionRoutes],
+    applicability: {
+      ...profile.applicability,
+      boardIds: [...profile.applicability.boardIds],
+      academicMediumIds: [...profile.applicability.academicMediumIds],
+      academicMediumStageIds: [...profile.applicability.academicMediumStageIds],
+      standardIds: [...profile.applicability.standardIds],
+      divisionIds: [...profile.applicability.divisionIds],
+    },
     rules: {
       ...profile.rules,
       approvalTriggers: [...profile.rules.approvalTriggers],
@@ -61,6 +69,10 @@ const cloneInitialSettings = (
     configurations: settings.grNumber.configurations.map((configuration) => ({
       ...configuration,
       boardIds: [...configuration.boardIds],
+      academicMediumIds: [...configuration.academicMediumIds],
+      academicMediumStageIds: [...configuration.academicMediumStageIds],
+      standardIds: [...configuration.standardIds],
+      divisionIds: [...configuration.divisionIds],
       applicableProfileIds: [...configuration.applicableProfileIds],
     })),
   },
@@ -69,6 +81,10 @@ const cloneInitialSettings = (
     configurations: settings.rollNumber.configurations.map((configuration) => ({
       ...configuration,
       boardIds: [...configuration.boardIds],
+      academicMediumIds: [...configuration.academicMediumIds],
+      academicMediumStageIds: [...configuration.academicMediumStageIds],
+      standardIds: [...configuration.standardIds],
+      divisionIds: [...configuration.divisionIds],
       orderingRules: configuration.orderingRules.map((rule) => ({ ...rule })),
     })),
   },
@@ -76,6 +92,10 @@ const cloneInitialSettings = (
     configurations: settings.divisionChange.configurations.map((configuration) => ({
       ...configuration,
       boardIds: [...configuration.boardIds],
+      academicMediumIds: [...configuration.academicMediumIds],
+      academicMediumStageIds: [...configuration.academicMediumStageIds],
+      standardIds: [...configuration.standardIds],
+      divisionIds: [...configuration.divisionIds],
     })),
   },
 });
@@ -146,21 +166,33 @@ export function OnboardingSettingsProvider({
     [updateSettings]
   );
   const applyOnboardingProfile = useCallback(
-    (profileId: string, rules: ReadinessAccessRules) => {
+    (updatedProfile: OnboardingProfile) => {
       updateSettings((current) => ({
         ...current,
-        onboardingProfiles: current.onboardingProfiles.map((profile) =>
-          profile.id === profileId
-            ? {
-                ...profile,
-                rules: {
-                  ...rules,
-                  approvalTriggers: [...rules.approvalTriggers],
-                  checks: rules.checks.map((check) => ({ ...check })),
-                },
-              }
-            : profile
-        ),
+        onboardingProfiles: (() => {
+          const nextProfile: OnboardingProfile = {
+            ...updatedProfile,
+            admissionRoutes: [...updatedProfile.admissionRoutes],
+            applicability: {
+              ...updatedProfile.applicability,
+              boardIds: [...updatedProfile.applicability.boardIds],
+              academicMediumIds: [...updatedProfile.applicability.academicMediumIds],
+              academicMediumStageIds: [...updatedProfile.applicability.academicMediumStageIds],
+              standardIds: [...updatedProfile.applicability.standardIds],
+              divisionIds: [...updatedProfile.applicability.divisionIds],
+            },
+            rules: {
+              ...updatedProfile.rules,
+              approvalTriggers: [...updatedProfile.rules.approvalTriggers],
+              checks: updatedProfile.rules.checks.map((check) => ({ ...check })),
+            },
+          };
+          return current.onboardingProfiles.some((profile) => profile.id === updatedProfile.id)
+            ? current.onboardingProfiles.map((profile) =>
+                profile.id === updatedProfile.id ? nextProfile : profile
+              )
+            : [...current.onboardingProfiles, nextProfile];
+        })(),
       }));
     },
     [updateSettings]
