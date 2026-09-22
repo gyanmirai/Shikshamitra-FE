@@ -6,6 +6,8 @@ import { Grid, TextField } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
+
 type Props = { formik: FormikProps<AssessmentSessionInput>; disabled: boolean };
 
 export function AssessmentSessionFields({ formik, disabled }: Props) {
@@ -32,6 +34,7 @@ export function AssessmentSessionFields({ formik, disabled }: Props) {
         <Grid key={key} size={{ xs: 12, sm: 6 }}>
           <DateTimePicker
             label={key === 'startsAt' ? 'Starts at' : 'Ends at'}
+            format={ADMISSION_DATE_TIME_FORMAT}
             disabled={disabled}
             value={formik.values[key] ? dayjs(formik.values[key]) : null}
             onChange={(value) => {

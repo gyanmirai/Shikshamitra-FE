@@ -35,7 +35,8 @@ export function AdmissionOfferingDetailsDialog({ open, offering, onClose }: Prop
               defaults, and current readiness.
             </Typography>
             <Detail label="Cycle" value={offering.admissionCycleName} />
-            <Detail label="Offering" value={`${offering.code} · ${offering.standardName}`} />
+            <Detail label="Offering name" value={offering.name || offering.code} />
+            <Detail label="Offering code" value={offering.code} />
             <Detail
               label="Academic hierarchy"
               value={`${offering.boardName} · ${offering.mediumName} · ${offering.stageName}`}

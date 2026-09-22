@@ -5,10 +5,12 @@ import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycl
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Alert, Button, DialogActions } from '@mui/material';
+import { Box, Alert, Button, AlertTitle, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { LoadingButton } from 'src/components/loading-button';
 
 import { useBulkAdmissionOffering } from './use-bulk-admission-offering';
+import { AdmissionOfferingCycleContext } from './admission-offering-cycle-context';
 import { BulkAdmissionHierarchyFields } from './bulk-admission-hierarchy-fields';
 import { BulkAdmissionConfigurationFields } from './bulk-admission-configuration-fields';
 
@@ -49,9 +51,10 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
       }
     >
       <DialogScrollContent dividers sx={{ display: 'grid', gap: 2 }}>
+        <AdmissionOfferingCycleContext cycle={cycle} />
         <Alert severity="info">
-          All-or-nothing: review the server validation preview, then create all valid offerings in
-          one transaction.
+          Preview first. Nothing is created until you choose whether to create the complete batch as
+          inactive preparation or activate every ready Offering.
         </Alert>
         <BulkAdmissionHierarchyFields
           formik={bulk.formik}
@@ -63,17 +66,25 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
         <BulkAdmissionConfigurationFields
           formik={bulk.formik}
           cycle={cycle}
-          workflows={bulk.workflows}
-          forms={bulk.forms}
-          loading={bulk.optionsLoading}
+          fetchWorkflows={bulk.fetchWorkflows}
+          fetchForms={bulk.fetchForms}
           change={change}
         />
-        {bulk.preview?.items.map((item) => (
-          <Alert key={item.standardId} severity={item.isValid ? 'success' : 'error'}>
-            <strong>{item.code}</strong>:{' '}
-            {item.isValid ? 'Ready' : item.errors.map((error) => error.message).join(' ')}
-          </Alert>
-        ))}
+        {bulk.preview?.items.map((item) => {
+          const state = item.canActivate
+            ? { severity: 'success' as const, title: 'Ready to activate' }
+            : item.canSaveInactive
+              ? { severity: 'info' as const, title: 'Can be saved as inactive' }
+              : { severity: 'error' as const, title: 'Cannot be saved' };
+          return (
+            <Alert key={item.standardId} severity={state.severity}>
+              <AlertTitle>
+                {item.code} · {state.title}
+              </AlertTitle>
+              {!item.canActivate && item.errors.map((error) => error.message).join(' ')}
+            </Alert>
+          );
+        })}
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
@@ -86,16 +97,41 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
         >
           Cancel
         </Button>
-        <Button
-          variant="contained"
-          size="small"
-          startIcon={<Iconify icon={bulk.preview ? GlobalIcons.submit : GlobalIcons.eye} />}
-          loading={bulk.loading}
-          disabled={Boolean(bulk.preview && !bulk.preview.canCommit)}
-          onClick={bulk.formik.submitForm}
-        >
-          {bulk.preview ? 'Create all' : 'Preview'}
-        </Button>
+        {!bulk.preview ? (
+          <LoadingButton
+            variant="contained"
+            size="small"
+            startIcon={<Iconify icon={GlobalIcons.eye} />}
+            loading={bulk.loading && bulk.submitIntent === 'preview'}
+            disabled={bulk.loading || bulk.optionsLoading}
+            onClick={bulk.previewOfferings}
+          >
+            Preview Offerings
+          </LoadingButton>
+        ) : (
+          <>
+            <LoadingButton
+              variant="outlined"
+              size="small"
+              startIcon={<Iconify icon="mdi:content-save-outline" />}
+              loading={bulk.loading && bulk.submitIntent === 'inactive'}
+              disabled={bulk.loading || !bulk.canSaveInactive}
+              onClick={bulk.createInactive}
+            >
+              Create as inactive
+            </LoadingButton>
+            <LoadingButton
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon="mdi:check-decagram-outline" />}
+              loading={bulk.loading && bulk.submitIntent === 'activate'}
+              disabled={bulk.loading || !bulk.canActivate}
+              onClick={bulk.createActive}
+            >
+              Create and activate
+            </LoadingButton>
+          </>
+        )}
       </DialogActions>
     </CustomDialog>
   );

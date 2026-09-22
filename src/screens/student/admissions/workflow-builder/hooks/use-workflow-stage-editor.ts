@@ -50,7 +50,7 @@ const emptyStage: AdmissionWorkflowStage = {
   id: '',
   code: '',
   name: '',
-  stageType: 11,
+  stageType: 1,
   displayOrder: 0,
   isRequired: true,
   allowManualSkip: false,
@@ -81,6 +81,7 @@ export function useWorkflowStageEditor({
         name: values.name.trim(),
         code: values.code.trim().toUpperCase(),
         description: values.description?.trim() || undefined,
+        allowManualSkip: values.isRequired ? false : values.allowManualSkip,
       });
       helpers.resetForm({ values });
       onClose();
@@ -123,6 +124,15 @@ function validateConfiguration(
   stages: AdmissionWorkflowStage[],
   forms: AdmissionForm[]
 ) {
+  if (
+    stages.some(
+      (stage) =>
+        stage.id !== values.id &&
+        stage.code.trim().toUpperCase() === values.code.trim().toUpperCase()
+    )
+  ) {
+    return { code: 'Another stage already uses this code' };
+  }
   if (values.stageType === 0) {
     const error =
       getInquiryConfigurationError(values.configurationJson) ||

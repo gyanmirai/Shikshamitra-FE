@@ -70,7 +70,7 @@ it('checks saved information explicitly, shows the evidence, and waits for staff
   expect(screen.getByText('Source: Applicant date of birth')).toBeInTheDocument();
   expect(onComplete).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Continue admission' }));
-  expect(onComplete).toHaveBeenCalledOnce();
+  expect(onComplete).toHaveBeenCalledWith();
 }, 15000);
 
 it('shows missing-information blockers and respects server action availability', async () => {
@@ -136,5 +136,5 @@ it('allows an explicit server-approved review route for an ineligible result wit
   expect(await screen.findByText(/configured review route/)).toBeInTheDocument();
   expect(onComplete).not.toHaveBeenCalled();
   await user.click(screen.getByRole('button', { name: 'Continue admission' }));
-  expect(onComplete).toHaveBeenCalledOnce();
+  expect(onComplete).toHaveBeenCalledWith();
 });

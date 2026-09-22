@@ -6,6 +6,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Stack, Divider } from '@mui/material';
+import { Scrollbar } from 'src/components/scrollbar';
 
 import { WorkflowStageForm } from './workflow-stage-form';
 import { WorkflowStageBasics } from './workflow-stage-basics';
@@ -33,81 +34,83 @@ type Props = {
 export function WorkflowStageFields(props: Props) {
   const { formik, metadata, readOnly, forms, stages, formDefinitionId } = props;
   return (
-    <Stack spacing={2} sx={{ p: 2, flex: 1, minHeight: 0, overflowY: 'auto' }}>
-      <WorkflowStageBasics {...props} />
-      {metadata?.supportsFormAttachment && <WorkflowStageForm {...props} />}
-      {formik.values.stageType === 1 && (
-        <WorkflowFormSettings
-          formik={formik}
-          forms={forms}
-          formDefinitionId={formDefinitionId}
-          readOnly={readOnly}
-          available={metadata?.supportedConfiguration?.includes('form') === true}
-        />
-      )}
-      {formik.values.stageType === 0 && (
-        <WorkflowInquirySettings
-          formik={formik}
-          stages={stages}
-          readOnly={readOnly}
-          available={metadata?.supportedConfiguration?.includes('inquiry') === true}
-        />
-      )}
-      {formik.values.stageType === 2 && (
-        <WorkflowAssessmentSettings
-          formik={formik}
-          readOnly={readOnly}
-          available={metadata?.supportedConfiguration?.includes('assessment') === true}
-        />
-      )}
-      {formik.values.stageType === 5 && (
-        <WorkflowDocumentSettings
-          formik={formik}
-          forms={forms}
-          readOnly={readOnly}
-          available={metadata?.supportedConfiguration?.includes('documentVerification') === true}
-        />
-      )}
-      {formik.values.stageType === 3 && (
-        <WorkflowEligibilitySettings
-          formik={formik}
-          forms={forms}
-          stages={stages}
-          readOnly={readOnly}
-          available={metadata?.supportedConfiguration?.includes('eligibility') === true}
-        />
-      )}
-      {formik.values.stageType === 4 && (
-        <WorkflowPaymentSettings
-          formik={formik}
-          readOnly={readOnly}
-          available={metadata?.supportedConfiguration?.includes('payment') === true}
-        />
-      )}
-      {formik.values.stageType === 8 && (
-        <WorkflowOfferSettings
-          formik={formik}
-          readOnly={readOnly}
-          available={metadata?.supportedConfiguration?.includes('offer') === true}
-        />
-      )}
-      {formik.values.stageType === 9 && (
-        <WorkflowSeatSettings
-          formik={formik}
-          readOnly={readOnly}
-          available={metadata?.supportedConfiguration?.includes('seat') === true}
-        />
-      )}
-      {formik.values.stageType === 6 && (
-        <WorkflowReviewSettings
-          formik={formik}
-          stages={stages}
-          readOnly={readOnly}
-          available={metadata?.supportedConfiguration?.includes('review') === true}
-        />
-      )}
-      <Divider />
-      <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} />
-    </Stack>
+    <Scrollbar role="region" aria-label="Stage configuration" sx={{ flex: 1, minHeight: 0 }}>
+      <Stack spacing={2} sx={{ p: 2 }}>
+        <WorkflowStageBasics {...props} />
+        {metadata?.supportsFormAttachment && <WorkflowStageForm {...props} />}
+        {formik.values.stageType === 1 && (
+          <WorkflowFormSettings
+            formik={formik}
+            forms={forms}
+            formDefinitionId={formDefinitionId}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('form') === true}
+          />
+        )}
+        {formik.values.stageType === 0 && (
+          <WorkflowInquirySettings
+            formik={formik}
+            stages={stages}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('inquiry') === true}
+          />
+        )}
+        {formik.values.stageType === 2 && (
+          <WorkflowAssessmentSettings
+            formik={formik}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('assessment') === true}
+          />
+        )}
+        {formik.values.stageType === 5 && (
+          <WorkflowDocumentSettings
+            formik={formik}
+            forms={forms}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('documentVerification') === true}
+          />
+        )}
+        {formik.values.stageType === 3 && (
+          <WorkflowEligibilitySettings
+            formik={formik}
+            forms={forms}
+            stages={stages}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('eligibility') === true}
+          />
+        )}
+        {formik.values.stageType === 4 && (
+          <WorkflowPaymentSettings
+            formik={formik}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('payment') === true}
+          />
+        )}
+        {formik.values.stageType === 8 && (
+          <WorkflowOfferSettings
+            formik={formik}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('offer') === true}
+          />
+        )}
+        {formik.values.stageType === 9 && (
+          <WorkflowSeatSettings
+            formik={formik}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('seat') === true}
+          />
+        )}
+        {formik.values.stageType === 6 && (
+          <WorkflowReviewSettings
+            formik={formik}
+            stages={stages}
+            readOnly={readOnly}
+            available={metadata?.supportedConfiguration?.includes('review') === true}
+          />
+        )}
+        <Divider />
+        <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} />
+      </Stack>
+    </Scrollbar>
   );
 }

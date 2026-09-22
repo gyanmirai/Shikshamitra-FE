@@ -1,35 +1,98 @@
 'use client';
 
+import type { Theme } from '@mui/material/styles';
+import type { LabelColor } from 'src/components/label';
+
 import dayjs from 'dayjs';
 import { useState, useEffect } from 'react';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { varAlpha, stylesMode, getSemanticTextStyles } from 'src/theme/styles';
 import { Box, Chip, Alert, Stack, Button, Collapse, Skeleton, Typography } from '@mui/material';
 
 import { useRoomAuditLogs } from '../roomAvailability.hooks';
 
 import type { AuditLogEntry } from '../types';
 
-const ACTION_ICONS: Record<string, { icon: string; color: string; bg: string }> = {
-  'Room Reserved': { icon: 'mdi:calendar-plus', color: 'primary.main', bg: 'primary.lighter' },
-  'Reservation Approved': {
-    icon: 'mdi:check-circle',
-    color: 'success.main',
-    bg: 'success.lighter',
-  },
-  'Reservation Rejected': { icon: 'mdi:close-circle', color: 'error.main', bg: 'error.lighter' },
-  'Reservation Cancelled': {
-    icon: 'mdi:calendar-remove',
-    color: 'warning.main',
-    bg: 'warning.lighter',
-  },
-  'Maintenance Created': { icon: 'mdi:wrench', color: 'warning.main', bg: 'warning.lighter' },
-  'Maintenance Completed': { icon: 'mdi:check-all', color: 'success.main', bg: 'success.lighter' },
-  'Room Status Changed': { icon: 'mdi:swap-horizontal', color: 'info.main', bg: 'info.lighter' },
-  'Conflict Override': { icon: 'mdi:alert', color: 'error.main', bg: 'error.lighter' },
-  'AI Suggestion Accepted': { icon: 'mdi:robot', color: 'primary.main', bg: 'primary.lighter' },
+type AuditActionTone = Exclude<LabelColor, 'default'>;
+type AuditActionConfig = { icon: string; tone: LabelColor };
+
+const APPROVED_ACTION: AuditActionConfig = {
+  icon: 'mdi:check-circle',
+  tone: 'success',
 };
 
-const DEFAULT_ICON = { icon: 'mdi:history', color: 'text.secondary', bg: 'action.hover' };
+const REJECTED_ACTION: AuditActionConfig = {
+  icon: 'mdi:close-circle',
+  tone: 'error',
+};
+
+const CANCELLED_ACTION: AuditActionConfig = {
+  icon: 'mdi:calendar-remove',
+  tone: 'warning',
+};
+
+const UPDATED_ACTION: AuditActionConfig = {
+  icon: 'mdi:pencil',
+  tone: 'info',
+};
+
+const ACTION_ICONS: Record<string, AuditActionConfig> = {
+  'room reserved': { icon: 'mdi:calendar-plus', tone: 'primary' },
+  'reservation created': {
+    icon: 'mdi:calendar-plus',
+    tone: 'primary',
+  },
+  approved: APPROVED_ACTION,
+  'reservation approved': APPROVED_ACTION,
+  rejected: REJECTED_ACTION,
+  'reservation rejected': REJECTED_ACTION,
+  cancelled: CANCELLED_ACTION,
+  'reservation cancelled': CANCELLED_ACTION,
+  updated: UPDATED_ACTION,
+  'reservation updated': UPDATED_ACTION,
+  'maintenance created': { icon: 'mdi:wrench', tone: 'warning' },
+  'maintenance completed': {
+    icon: 'mdi:check-all',
+    tone: 'success',
+  },
+  'room status changed': {
+    icon: 'mdi:swap-horizontal',
+    tone: 'info',
+  },
+  'conflict override': { icon: 'mdi:alert', tone: 'error' },
+  'ai suggestion accepted': {
+    icon: 'mdi:robot',
+    tone: 'primary',
+  },
+};
+
+const DEFAULT_ICON: AuditActionConfig = { icon: 'mdi:history', tone: 'default' };
+
+export const getRoomAuditActionConfig = (action: string): AuditActionConfig =>
+  ACTION_ICONS[action.trim().toLowerCase()] || DEFAULT_ICON;
+
+const getAuditActionTextStyles = (theme: Theme, tone: LabelColor) =>
+  tone === 'default' ? { color: theme.vars.palette.text.secondary } : getSemanticTextStyles(theme, tone);
+
+const getAuditActionMarkerStyles = (theme: Theme, tone: LabelColor) => {
+  if (tone === 'default') {
+    return {
+      color: theme.vars.palette.text.secondary,
+      backgroundColor: theme.vars.palette.action.hover,
+      borderColor: theme.vars.palette.text.secondary,
+    };
+  }
+
+  const semanticTone = tone as AuditActionTone;
+  const palette = theme.vars.palette[semanticTone];
+
+  return {
+    ...getAuditActionTextStyles(theme, semanticTone),
+    backgroundColor: varAlpha(palette.mainChannel, 0.16),
+    borderColor: palette.main,
+  };
+};
 
 // Old/new values are sometimes a serialized JSON snapshot of the entity rather than a
 // simple string, so this pulls out human-readable key/value pairs instead of dumping raw JSON.
@@ -117,7 +180,7 @@ const AuditLogItem = ({
   showRoomChip: boolean;
 }) => {
   const [expanded, setExpanded] = useState(false);
-  const config = ACTION_ICONS[log.action] || DEFAULT_ICON;
+  const config = getRoomAuditActionConfig(log.action);
   const oldParsed = parseAuditValue(log.oldValue);
   const newParsed = parseAuditValue(log.newValue);
   const detailEntries = newParsed?.type === 'json' ? newParsed.entries : [];
@@ -136,19 +199,17 @@ const AuditLogItem = ({
         }}
       >
         <Box
-          sx={{
+          sx={(theme) => ({
             width: 36,
             height: 36,
             borderRadius: '50%',
             display: 'grid',
             placeItems: 'center',
-            bgcolor: config.bg,
-            color: config.color,
             border: '2px solid',
-            borderColor: config.color,
             flexShrink: 0,
-            boxShadow: `0 0 0 3px ${config.bg}`,
-          }}
+            boxShadow: `0 0 0 3px ${theme.vars.palette.background.paper}`,
+            ...getAuditActionMarkerStyles(theme, config.tone),
+          })}
         >
           <Iconify icon={config.icon} width={18} />
         </Box>
@@ -175,7 +236,10 @@ const AuditLogItem = ({
           border: '1px solid',
           borderColor: 'divider',
           bgcolor: 'background.paper',
-          '&:hover': { borderColor: config.color, bgcolor: config.bg },
+          '&:hover': {
+            borderColor: config.tone === 'default' ? 'text.secondary' : `${config.tone}.main`,
+            bgcolor: 'action.hover',
+          },
           transition: 'border-color 0.15s, background-color 0.15s',
         }}
       >
@@ -187,19 +251,20 @@ const AuditLogItem = ({
           sx={{ mb: 0.5 }}
         >
           <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
-            <Chip
-              size="small"
-              label={log.action}
+            <Label
+              color={config.tone}
+              variant="soft"
               sx={{
-                bgcolor: config.bg,
-                color: config.color,
-                fontWeight: 700,
                 fontSize: 11,
                 height: 22,
-                border: '1px solid',
-                borderColor: config.color,
+                ...(config.tone !== 'default' && {
+                  color: `${config.tone}.darker`,
+                  [stylesMode.dark]: { color: `${config.tone}.light` },
+                }),
               }}
-            />
+            >
+              {log.action}
+            </Label>
             {showRoomChip && log.roomName && (
               <Chip
                 size="small"

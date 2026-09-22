@@ -14,7 +14,7 @@ describe('review decision routes', { timeout: 15000 }, () => {
     const user = userEvent.setup();
     const { onSave } = renderReviewRoute();
     await chooseReviewOption(user, 'Continue after review decision', label);
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0].isDefault).toBe(false);
     expect(JSON.parse(onSave.mock.calls[0][0].conditionRuleJson)).toEqual({
@@ -32,7 +32,7 @@ describe('review decision routes', { timeout: 15000 }, () => {
       'Continue after review decision',
       'Admission approved (default route)'
     );
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       isDefault: true,
@@ -40,17 +40,20 @@ describe('review decision routes', { timeout: 15000 }, () => {
     });
   });
 
-  it('clears a known decision preset when the source changes to basic review', async () => {
+  it('keeps a decision path attached to its review stage', async () => {
     const user = userEvent.setup();
     const { onSave } = renderReviewRoute(reviewRouteJson('waitlist'));
-    await chooseReviewOption(user, 'From stage *', 'Basic review');
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    expect(screen.getByRole('heading', { name: 'Admissions review' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'From stage *' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
-      fromStageId: 'basic',
-      isDefault: true,
-      conditionRuleJson: undefined,
+      fromStageId: 'review-stage',
+      isDefault: false,
     });
+    expect(JSON.parse(onSave.mock.calls[0][0].conditionRuleJson)).toEqual(
+      JSON.parse(reviewRouteJson('waitlist'))
+    );
   });
 
   it('preserves exact grouped JSON while editing a non-rule detail', async () => {
@@ -68,9 +71,10 @@ describe('review decision routes', { timeout: 15000 }, () => {
     const user = userEvent.setup();
     const { onSave } = renderReviewRoute(json);
     expect(screen.getByRole('alert')).toHaveTextContent('preserved');
-    await user.clear(screen.getByRole('spinbutton', { name: 'Priority *' }));
-    await user.type(screen.getByRole('spinbutton', { name: 'Priority *' }), '2');
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Advanced route order' }));
+    await user.clear(screen.getByRole('spinbutton', { name: 'Route order *' }));
+    await user.type(screen.getByRole('spinbutton', { name: 'Route order *' }), '2');
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       priority: 2,
@@ -84,6 +88,6 @@ describe('review decision routes', { timeout: 15000 }, () => {
     expect(
       screen.getByRole('combobox', { name: 'Continue after review decision' })
     ).toHaveAttribute('aria-disabled', 'true');
-    expect(screen.queryByRole('button', { name: 'Save transition' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save path' })).not.toBeInTheDocument();
   });
 });

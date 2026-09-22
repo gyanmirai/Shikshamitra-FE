@@ -2,10 +2,13 @@ import type { DuplicateMatch } from 'src/redux/student/admissions/admission-inqu
 
 import { Alert, Stack, Button, TextField } from '@mui/material';
 
+import { formatAdmissionReference } from './admission-reference';
+
 type Props = {
   matches: DuplicateMatch[];
   busy: boolean;
   onUseExisting: (familyId: string) => void;
+  onOpenExisting: (inquiryId: string) => void;
   onCreateSeparate: () => void;
   overrideReason: string;
   onOverrideReasonChange: (value: string) => void;
@@ -15,6 +18,7 @@ export function AdmissionInquiryDuplicateMatches({
   matches,
   busy,
   onUseExisting,
+  onOpenExisting,
   onCreateSeparate,
   overrideReason,
   onOverrideReasonChange,
@@ -27,12 +31,26 @@ export function AdmissionInquiryDuplicateMatches({
           key={`${match.familyId}-${match.applicantId}`}
           severity="warning"
           action={
-            <Button size="small" disabled={busy} onClick={() => onUseExisting(match.familyId)}>
-              Use existing family
-            </Button>
+            <Stack direction="row" spacing={0.5}>
+              {match.existingInquiryId && (
+                <Button
+                  size="small"
+                  disabled={busy}
+                  onClick={() => onOpenExisting(match.existingInquiryId!)}
+                >
+                  Open inquiry
+                </Button>
+              )}
+              <Button size="small" disabled={busy} onClick={() => onUseExisting(match.familyId)}>
+                Add sibling
+              </Button>
+            </Stack>
           }
         >
           Possible existing family: {match.applicantName} · {match.guardianPhone ?? '—'}
+          {match.existingInquiryNumber
+            ? ` · ${formatAdmissionReference(match.existingInquiryNumber)}`
+            : ''}
         </Alert>
       ))}
       <TextField
@@ -46,11 +64,7 @@ export function AdmissionInquiryDuplicateMatches({
         slotProps={{ htmlInput: { maxLength: 512 } }}
         helperText="Some managed workflows require this explanation."
       />
-      <Button
-        variant="outlined"
-        disabled={busy}
-        onClick={onCreateSeparate}
-      >
+      <Button variant="outlined" disabled={busy} onClick={onCreateSeparate}>
         Create separate family
       </Button>
     </Stack>

@@ -46,7 +46,10 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
         borderLeft: '1px solid',
         borderColor: 'divider',
         overflow: 'hidden',
-        bgcolor: (theme) => (theme.palette.mode === 'dark' ? 'background.neutral' : 'grey.50'),
+        bgcolor: (theme) =>
+          theme.palette.mode === 'dark'
+            ? theme.palette.background.neutral
+            : theme.palette.grey[50],
       }}
     >
       <Scrollbar sx={{ flex: 1 }}>

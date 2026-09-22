@@ -7,6 +7,11 @@ import DialogActions from '@mui/material/DialogActions';
 import { Box, Chip, Alert, Stack, Typography } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
+import {
+  ReviewStatusIconBadge,
+  type ReviewStatusIconTone,
+} from './ReviewStatusIconBadge';
+
 import type { SubjectCapacityRow } from '../types';
 
 interface ReviewAndLockDialogProps {
@@ -38,34 +43,35 @@ export default function ReviewAndLockDialog({
   isLocking,
   onConfirmLock,
 }: ReviewAndLockDialogProps) {
-  const summaryItems = [
+  const summaryItems: Array<{
+    label: string;
+    value: number | string;
+    icon: string;
+    tone: ReviewStatusIconTone;
+  }> = [
     {
       label: 'Total students',
       value: total,
       icon: 'solar:users-group-rounded-bold-duotone',
-      color: 'info.main',
-      backgroundColor: 'info.lighter',
+      tone: 'info',
     },
     {
       label: 'Assigned',
       value: assigned,
       icon: 'solar:check-circle-bold-duotone',
-      color: 'success.main',
-      backgroundColor: 'success.lighter',
+      tone: 'success',
     },
     {
       label: 'Unassigned',
       value: unassigned,
       icon: 'solar:user-cross-rounded-bold-duotone',
-      color: unassigned > 0 ? 'error.main' : 'text.secondary',
-      backgroundColor: unassigned > 0 ? 'error.lighter' : 'background.neutral',
+      tone: unassigned > 0 ? 'error' : 'default',
     },
     {
       label: 'Preference match',
       value: preferenceMatchPct === null ? 'N/A' : `${preferenceMatchPct}%`,
       icon: 'solar:star-bold-duotone',
-      color: 'warning.dark',
-      backgroundColor: 'warning.lighter',
+      tone: 'warning',
     },
   ];
 
@@ -75,22 +81,12 @@ export default function ReviewAndLockDialog({
       handleClose={onClose}
       title={
         <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            component="span"
-            sx={{
-              width: 40,
-              height: 40,
-              display: 'inline-flex',
-              color: 'error.main',
-              borderRadius: 1.5,
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: 'error.lighter',
-              flexShrink: 0,
-            }}
-          >
-            <Iconify icon={GlobalIcons.lockIcon} width={22} />
-          </Box>
+          <ReviewStatusIconBadge
+            icon={GlobalIcons.lockIcon}
+            tone="error"
+            size={40}
+            iconSize={22}
+          />
           <Box component="span" sx={{ minWidth: 0 }}>
             <Box component="span" sx={{ display: 'block', fontWeight: 700, fontSize: '1.15rem' }}>
               Review and Lock
@@ -186,20 +182,8 @@ export default function ReviewAndLockDialog({
                     bgcolor: 'background.paper',
                   }}
                 >
-                  <Box
-                    sx={{
-                      width: 32,
-                      height: 32,
-                      mb: 1,
-                      display: 'flex',
-                      color: item.color,
-                      borderRadius: 1.25,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: item.backgroundColor,
-                    }}
-                  >
-                    <Iconify icon={item.icon} width={18} />
+                  <Box sx={{ mb: 1 }}>
+                    <ReviewStatusIconBadge icon={item.icon} tone={item.tone} />
                   </Box>
                   <Typography
                     variant="h6"

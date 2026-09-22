@@ -10,7 +10,7 @@ export const admissionOfferApi = api.injectEndpoints({ endpoints: (builder) => (
   getAdmissionOfferStage: builder.query<AdmissionOfferStage, AdmissionOfferStageKey>({
     query: offerStageUrl, transformResponse: unwrapOffer<AdmissionOfferStage>, providesTags: offerTags,
   }),
-  issueAdmissionOffer: builder.mutation<AdmissionOfferStage, AdmissionOfferCommand & {
+  issueAdmissionStageOffer: builder.mutation<AdmissionOfferStage, AdmissionOfferCommand & {
     expiresAt?: string; reason?: string; idempotencyKey: string;
   }>({ query: ({ applicationId, stageId, ...body }) => ({ url: `${offerStageUrl({ applicationId, stageId })}/issue`, method: 'POST', body }),
     transformResponse: unwrapOffer<AdmissionOfferStage>, invalidatesTags: offerTags }),
@@ -32,6 +32,6 @@ export const admissionOfferApi = api.injectEndpoints({ endpoints: (builder) => (
   }>({ query: ({ applicationId, stageId, ...body }) => ({ url: `${offerStageUrl({ applicationId, stageId })}/reissue`, method: 'POST', body }),
     transformResponse: unwrapOffer<AdmissionOfferStage>, invalidatesTags: offerTags }),
 }) });
-export const { useGetAdmissionOfferStageQuery, useIssueAdmissionOfferMutation,
+export const { useGetAdmissionOfferStageQuery, useIssueAdmissionStageOfferMutation,
   useRespondAdmissionOfferMutation, useExtendAdmissionOfferMutation,
   useWithdrawAdmissionOfferMutation, useReissueAdmissionOfferMutation } = admissionOfferApi;

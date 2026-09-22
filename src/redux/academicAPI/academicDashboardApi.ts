@@ -2,6 +2,25 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from './academicApi';
 
+export type AcademicDashboardMode = 'admin' | 'leadership' | 'classTeacher' | 'teacher' | 'common';
+
+export type AcademicDashboardClassAssignment = {
+  id: string;
+  academicYearId?: string | null;
+  standardId: string;
+  standardName: string;
+  divisionId: string;
+  divisionName: string;
+  displayName: string;
+};
+
+export type AcademicDashboardContext = {
+  defaultMode: AcademicDashboardMode;
+  availableModes: AcademicDashboardMode[];
+  displayName: string;
+  classAssignments: AcademicDashboardClassAssignment[];
+};
+
 type AcademicDashboardReadinessItem = {
   key: string;
   title: string;
@@ -91,7 +110,49 @@ export type AdminAcademicDashboardData = {
     plannedPercentages: number[];
     actualPercentages: number[];
   };
+  classSyllabusProgressChart: {
+    classNames: string[];
+    completionPercentages: number[];
+  };
 };
+
+export type AdminAcademicDashboardCurriculumData = Pick<
+  AdminAcademicDashboardData,
+  | 'curriculumCompletion'
+  | 'totalStudents'
+  | 'totalTeachers'
+  | 'assignedSubjects'
+  | 'electiveGroups'
+  | 'pendingElectiveGroups'
+  | 'insights'
+  | 'configurationStatus'
+>;
+
+export type AdminAcademicDashboardTimetableData = Pick<
+  AdminAcademicDashboardData,
+  | 'timetableRate'
+  | 'activeTimetables'
+  | 'pendingTimetables'
+  | 'conflictsCount'
+  | 'insights'
+  | 'configurationStatus'
+  | 'operationalStatus'
+>;
+
+export type AdminAcademicDashboardAssessmentData = Pick<
+  AdminAcademicDashboardData,
+  | 'readinessRate'
+  | 'pendingGradeEntries'
+  | 'pendingEvaluations'
+  | 'upcomingExams'
+  | 'insights'
+  | 'operationalStatus'
+>;
+
+export type AdminAcademicDashboardAnalyticsData = Pick<
+  AdminAcademicDashboardData,
+  'recentActivities' | 'subjectPassFailChart' | 'classSyllabusProgressChart'
+>;
 
 export type PrincipalAcademicDashboardData = {
   schoolPerformanceIndex: number;
@@ -203,7 +264,7 @@ export type TeacherAcademicDashboardData = {
     id: string;
     name: string;
     classDivision: string;
-    attendance: number;
+    attendance: number | null;
     performance: number;
     warning: string;
     avatarUrl: string;
@@ -412,6 +473,10 @@ const mockAdminData: AdminAcademicDashboardData = {
     intervals: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'],
     plannedPercentages: [15, 30, 45, 60, 75, 90],
     actualPercentages: [12, 28, 40, 58, 72, 85],
+  },
+  classSyllabusProgressChart: {
+    classNames: ['Class 8 - A', 'Class 9 - A', 'Class 10 - A'],
+    completionPercentages: [72, 64, 81],
   },
 };
 
@@ -745,8 +810,55 @@ const mockTeacherData: TeacherAcademicDashboardData = {
 const useAcademicDashboardMockFallback =
   process.env.NEXT_PUBLIC_USE_ACADEMIC_DASHBOARD_MOCKS === 'true';
 
+const mockAdminCurriculumData: AdminAcademicDashboardCurriculumData = {
+  curriculumCompletion: mockAdminData.curriculumCompletion,
+  totalStudents: mockAdminData.totalStudents,
+  totalTeachers: mockAdminData.totalTeachers,
+  assignedSubjects: mockAdminData.assignedSubjects,
+  electiveGroups: mockAdminData.electiveGroups,
+  pendingElectiveGroups: mockAdminData.pendingElectiveGroups,
+  insights: mockAdminData.insights.filter((insight) => insight.source === 'curriculum'),
+  configurationStatus: mockAdminData.configurationStatus.slice(0, 3),
+};
+
+const mockAdminTimetableData: AdminAcademicDashboardTimetableData = {
+  timetableRate: mockAdminData.timetableRate,
+  activeTimetables: mockAdminData.activeTimetables,
+  pendingTimetables: mockAdminData.pendingTimetables,
+  conflictsCount: mockAdminData.conflictsCount,
+  insights: mockAdminData.insights.filter((insight) => insight.source === 'timetable'),
+  configurationStatus: mockAdminData.configurationStatus.slice(3),
+  operationalStatus: mockAdminData.operationalStatus.filter(
+    (item) => item.module === 'Timetable Setup'
+  ),
+};
+
+const mockAdminAssessmentData: AdminAcademicDashboardAssessmentData = {
+  readinessRate: mockAdminData.readinessRate,
+  pendingGradeEntries: mockAdminData.pendingGradeEntries,
+  pendingEvaluations: mockAdminData.pendingEvaluations,
+  upcomingExams: mockAdminData.upcomingExams,
+  insights: mockAdminData.insights.filter(
+    (insight) => insight.source !== 'curriculum' && insight.source !== 'timetable'
+  ),
+  operationalStatus: mockAdminData.operationalStatus.filter(
+    (item) => item.module !== 'Timetable Setup'
+  ),
+};
+
+const mockAdminAnalyticsData: AdminAcademicDashboardAnalyticsData = {
+  recentActivities: mockAdminData.recentActivities,
+  subjectPassFailChart: mockAdminData.subjectPassFailChart,
+  classSyllabusProgressChart: mockAdminData.classSyllabusProgressChart,
+};
+
 export const academicDashboardApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
+    getAcademicDashboardContext: builder.query<AcademicDashboardContext, void>({
+      query: () => ({ url: '/academic/dashboard/context', method: 'GET' }),
+      providesTags: [academicType.academicReport],
+    }),
+
     getAdminAcademicDashboard: builder.query<AdminAcademicDashboardData, void>({
       async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
         const result = await baseQuery({
@@ -761,6 +873,70 @@ export const academicDashboardApi = academicApi.injectEndpoints({
         return { data: result.data as AdminAcademicDashboardData };
       },
       providesTags: [academicType.timetableManagement, academicType.academicReport],
+    }),
+
+    getAdminAcademicDashboardCurriculum: builder.query<AdminAcademicDashboardCurriculumData, void>({
+      async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+        const result = await baseQuery({
+          url: '/academic/dashboard/admin/curriculum',
+          method: 'GET',
+        });
+        if (result.error) {
+          return useAcademicDashboardMockFallback
+            ? { data: mockAdminCurriculumData }
+            : { error: result.error };
+        }
+        return { data: result.data as AdminAcademicDashboardCurriculumData };
+      },
+      providesTags: [academicType.academicReport],
+    }),
+
+    getAdminAcademicDashboardTimetable: builder.query<AdminAcademicDashboardTimetableData, void>({
+      async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+        const result = await baseQuery({
+          url: '/academic/dashboard/admin/timetable',
+          method: 'GET',
+        });
+        if (result.error) {
+          return useAcademicDashboardMockFallback
+            ? { data: mockAdminTimetableData }
+            : { error: result.error };
+        }
+        return { data: result.data as AdminAcademicDashboardTimetableData };
+      },
+      providesTags: [academicType.timetableManagement],
+    }),
+
+    getAdminAcademicDashboardAssessment: builder.query<AdminAcademicDashboardAssessmentData, void>({
+      async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+        const result = await baseQuery({
+          url: '/academic/dashboard/admin/assessment',
+          method: 'GET',
+        });
+        if (result.error) {
+          return useAcademicDashboardMockFallback
+            ? { data: mockAdminAssessmentData }
+            : { error: result.error };
+        }
+        return { data: result.data as AdminAcademicDashboardAssessmentData };
+      },
+      providesTags: [academicType.academicReport],
+    }),
+
+    getAdminAcademicDashboardAnalytics: builder.query<AdminAcademicDashboardAnalyticsData, void>({
+      async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+        const result = await baseQuery({
+          url: '/academic/dashboard/admin/analytics',
+          method: 'GET',
+        });
+        if (result.error) {
+          return useAcademicDashboardMockFallback
+            ? { data: mockAdminAnalyticsData }
+            : { error: result.error };
+        }
+        return { data: result.data as AdminAcademicDashboardAnalyticsData };
+      },
+      providesTags: [academicType.academicReport],
     }),
 
     getPrincipalAcademicDashboard: builder.query<PrincipalAcademicDashboardData, void>({
@@ -859,7 +1035,12 @@ export const academicDashboardApi = academicApi.injectEndpoints({
 });
 
 export const {
+  useGetAcademicDashboardContextQuery,
   useGetAdminAcademicDashboardQuery,
+  useGetAdminAcademicDashboardCurriculumQuery,
+  useGetAdminAcademicDashboardTimetableQuery,
+  useGetAdminAcademicDashboardAssessmentQuery,
+  useGetAdminAcademicDashboardAnalyticsQuery,
   useGetPrincipalAcademicDashboardQuery,
   useGetTeacherAcademicDashboardQuery,
   useRefreshAcademicDashboardMutation,

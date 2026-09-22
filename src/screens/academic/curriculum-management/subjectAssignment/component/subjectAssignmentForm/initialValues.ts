@@ -1,6 +1,7 @@
 import * as Yup from 'yup';
 
 import { SubjectType, SubjectAssignmentStatus } from '../../enum/subjectType';
+import { getUnifiedTeachers } from './teacherOptions';
 
 import type { ISubjectAssignmentSubject, ISubjectAssignmentFormValues } from './type';
 
@@ -45,6 +46,11 @@ export const getSubjectAssignmentInitialValues = (
   const subjectNames: string[] = [];
   data.subjects?.forEach((item: any, index: number) => {
     subjectNames.push(item.subjectName);
+    const teachers = getUnifiedTeachers<{
+      id: string;
+      name: string;
+      employeeCode?: string | null;
+    }>(item);
 
     flattenedSubjects.push({
       subjectId: item.subjectId,
@@ -52,10 +58,8 @@ export const getSubjectAssignmentInitialValues = (
       electiveGroupId: item.electiveGroupId || null,
       subjectName: item.subjectName,
       subjectCode: item.subjectCode,
-      primaryTeacher: item.primaryTeacher || '',
-      primaryTeacherId: item.primaryTeacher?.id || '',
-      secondaryTeacher: item.secondaryTeachers,
-      secondaryTeacherIds: item.secondaryTeachers?.map((t: any) => t.id) || [],
+      teachers,
+      teacherIds: teachers.map((teacher) => teacher.id),
       learningGoal: item.learningGoal || item.learningGoals || '',
       prerequisites: item.prerequisites || '',
       description: item.description || '',

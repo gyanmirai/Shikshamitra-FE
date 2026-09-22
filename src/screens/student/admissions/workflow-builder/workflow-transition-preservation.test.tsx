@@ -2,10 +2,7 @@ import { it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { screen, waitFor } from '@testing-library/react';
 
-import {
-  renderEligibilityRoute,
-  chooseEligibilityRouteOption,
-} from './eligibility-route-test-fixture';
+import { renderEligibilityRoute } from './eligibility-route-test-fixture';
 
 const firstRule = { field: 'eligibility.status', operator: 'Equals', value: 'eligible' };
 const secondRule = { field: 'application.CATEGORY', operator: 'Equals', value: 'transfer' };
@@ -27,10 +24,11 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
     expect(
       screen.queryByRole('combobox', { name: 'Continue after eligibility check' })
     ).not.toBeInTheDocument();
-    const priority = screen.getByRole('spinbutton', { name: 'Priority *' });
+    await user.click(screen.getByRole('button', { name: 'Advanced route order' }));
+    const priority = screen.getByRole('spinbutton', { name: 'Route order *' });
     await user.clear(priority);
     await user.type(priority, '4');
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toEqual({
       id: 'transition-1',
@@ -42,17 +40,18 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
     });
   });
 
-  it('keeps grouped eligibility conditions when changing the source without exposing a default toggle', async () => {
+  it('keeps grouped eligibility conditions attached to their source stage', async () => {
     const user = userEvent.setup();
     const { onSave } = renderEligibilityRoute(grouped);
-    await chooseEligibilityRouteOption(user, 'From stage *', 'Staff review');
+    expect(screen.getByRole('heading', { name: 'Eligibility check' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'From stage *' })).not.toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Its rule is preserved');
     expect(screen.queryByLabelText('Default route')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Use a condition')).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
-      fromStageId: 'review-1',
+      fromStageId: 'eligibility-1',
       isDefault: false,
       conditionRuleJson: grouped,
     });
@@ -61,10 +60,8 @@ describe('saved transition condition preservation', { timeout: 15000 }, () => {
   it('displays the preserved condition with no editable rule or save action for a published route', () => {
     renderEligibilityRoute(grouped, true);
     expect(screen.getByRole('alert')).toHaveTextContent('This saved condition');
-    expect(screen.getByRole('combobox', { name: 'From stage *' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
-    expect(screen.queryByRole('button', { name: 'Save transition' })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Eligibility check' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'From stage *' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save path' })).not.toBeInTheDocument();
   });
 });

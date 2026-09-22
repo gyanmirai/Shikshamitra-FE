@@ -1,5 +1,5 @@
 import { api } from 'src/redux/service';
-import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import { studentOnboardingType, studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
 import type { ReviewDecisionCapabilities } from './admission-review-types';
 
@@ -25,6 +25,7 @@ export type AdmissionApplication = {
   finalizedAt?: string | null;
   enrolledStudentId?: string | null;
   studentEnrollmentId?: string | null;
+  onboardingCaseId?: string | null;
   currentStageInstanceId?: string | null;
   lastSavedAt?: string | null;
   submittedAt?: string | null;
@@ -100,12 +101,23 @@ export type AdmissionFormField = {
   bindingType: number;
   required: boolean;
   readOnly: boolean;
+  displayOrder: number;
   placeholder?: string | null;
   helpText?: string | null;
   optionsJson?: string | null;
   validationJson?: string | null;
   visibilityRuleJson?: string | null;
   requiredRuleJson?: string | null;
+  translations?: Record<
+    string,
+    {
+      label?: string | null;
+      placeholder?: string | null;
+      helpText?: string | null;
+      validationMessage?: string | null;
+      choices?: Record<string, string>;
+    }
+  >;
 };
 export type AdmissionFormSection = {
   id: string;
@@ -118,6 +130,11 @@ export type AdmissionFormSection = {
   stepDisplayOrder?: number | null;
   stepVisibilityRuleJson?: string | null;
   visibilityRuleJson?: string | null;
+  isRepeatable?: boolean;
+  minEntries?: number;
+  maxEntries?: number;
+  entryLabel?: string | null;
+  translations?: Record<string, { label?: string | null; helpText?: string | null }>;
   fields: AdmissionFormField[];
 };
 export type AdmissionApplicationForm = {
@@ -131,6 +148,8 @@ export type AdmissionApplicationForm = {
     name: string;
     layoutType: number;
     fieldsPerRow: 1 | 2 | 3 | 4;
+    defaultLanguage?: string;
+    supportedLanguages?: string[];
     sections: AdmissionFormSection[];
   };
   values: { fieldCode: string; valueJson?: string | null }[];
@@ -205,6 +224,7 @@ export type FinalizeAdmissionInput = {
 export type AdmissionFinalizationResult = {
   application: AdmissionApplication;
   studentId: string;
+  onboardingCaseId: string;
   reusedExistingStudent: boolean;
 };
 type Result<T> = { data?: T };
@@ -246,6 +266,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: [
         studentAdmissionsCrmType.admissionApplication,
         studentAdmissionsCrmType.admissionApplicant,
+        studentAdmissionsCrmType.admissionInquiry,
       ],
     }),
     getAdmissionApplicationWorkflow: builder.query<AdmissionApplicationWorkflow, string>({
@@ -437,6 +458,8 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: [
         studentAdmissionsCrmType.admissionApplication,
         studentAdmissionsCrmType.admissionApplicant,
+        { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+        { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
       ],
     }),
     advanceAdmissionApplicationWorkflow: builder.mutation<

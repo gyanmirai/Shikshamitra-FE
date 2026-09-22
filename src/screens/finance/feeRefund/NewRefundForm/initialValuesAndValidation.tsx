@@ -42,6 +42,8 @@ export interface IFeeHeadMonthRefund {
   month: string;
   /** Stable DueFee row ID — sent to the create-refund API. */
   dueFeeId: string;
+  sourceAllocationId?: string;
+  sourceReceiptId?: string;
   amount: number | string;
 }
 
@@ -54,7 +56,8 @@ export interface IFeeHeadRefundItem {
 export interface IFeeRefundApiPayload {
   studentId: string;
   academicYearId: string;
-  lines: { dueFeeId: string; amount: number }[];
+  originalReceiptId: string;
+  lines: { dueFeeId: string; sourceAllocationId: string; amount: number }[];
   refundMethod: string;
   reason: string;
   paymentDetails?: Record<string, unknown>;
@@ -89,23 +92,29 @@ export interface IRefundFormValues {
 export const buildFeeRefundApiPayload = (
   values: IRefundFormValues,
   academicYearId: string
-): IFeeRefundApiPayload => ({
-  studentId: values.studentId,
-  academicYearId,
-  refundMethod: values.refundMethod,
-  reason: values.notes,
-  paymentDetails: Object.fromEntries(
-    Object.entries(values.paymentDetails || {}).map(([k, v]) => [
-      k,
-      dayjs.isDayjs(v) ? dateConvertor(v.format(dateFormat) || '') || '' : v,
-    ])
-  ),
-  lines: (values.feeHeadRefunds || []).flatMap((fh) =>
-    fh.months
-      .filter((m) => Number(m.amount) > 0 && m.dueFeeId)
-      .map((m) => ({ dueFeeId: m.dueFeeId, amount: Number(m.amount) }))
-  ),
-});
+): IFeeRefundApiPayload => {
+  const selected = (values.feeHeadRefunds || []).flatMap((fh) =>
+    fh.months.filter((m) => Number(m.amount) > 0 && m.dueFeeId && m.sourceAllocationId)
+  );
+  return {
+    studentId: values.studentId,
+    academicYearId,
+    originalReceiptId: selected[0]?.sourceReceiptId || '',
+    refundMethod: values.refundMethod,
+    reason: values.notes,
+    paymentDetails: Object.fromEntries(
+      Object.entries(values.paymentDetails || {}).map(([k, v]) => [
+        k,
+        dayjs.isDayjs(v) ? dateConvertor(v.format(dateFormat) || '') || '' : v,
+      ])
+    ),
+    lines: selected.map((m) => ({
+      dueFeeId: m.dueFeeId,
+      sourceAllocationId: m.sourceAllocationId || '',
+      amount: Number(m.amount),
+    })),
+  };
+};
 
 // Legacy helper kept for backward compat
 export const buildFeeRefundPayload = (values: IRefundFormValues): IFeeRefundPayload => ({
@@ -164,15 +173,21 @@ export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
     refundType: Yup.string().required('Refund Type is required'),
     refundMethod: Yup.string().required('Select a refund method'),
     notes: Yup.string(),
-    feeHeadRefunds: Yup.mixed().test(
-      'at-least-one-refund',
-      'Enter a refund amount for at least one month',
-      (value) => {
+    feeHeadRefunds: Yup.mixed()
+      .test('at-least-one-refund', 'Enter a refund amount for at least one month', (value) => {
         if (!Array.isArray(value)) return false;
         const refunds = value as IFeeHeadRefundItem[];
         return refunds.some((fh) => fh.months.some((m) => Number(m.amount) > 0));
-      }
-    ),
+      })
+      .test('single-receipt', 'Select refund lines from one original receipt only', (value) => {
+        if (!Array.isArray(value)) return false;
+        const ids = new Set(
+          (value as IFeeHeadRefundItem[]).flatMap((x) =>
+            x.months.map((m) => m.sourceReceiptId).filter(Boolean)
+          )
+        );
+        return ids.size <= 1;
+      }),
     paymentDetails: Yup.object().when(['refundMethod'], ([refundMethod], schema, context) => {
       if (
         !refundMethod ||

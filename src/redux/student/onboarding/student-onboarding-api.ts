@@ -1,0 +1,415 @@
+import { api } from 'src/redux/service';
+import { studentOnboardingType } from 'src/redux/tagTypes';
+
+import type {
+  StudentOnboardingCase,
+  StudentIdentifierSeries,
+  StudentOnboardingPolicy,
+  StudentOnboardingCasePage,
+  StudentOnboardingAnalytics,
+  StudentOnboardingDocuments,
+  StudentOnboardingListInput,
+  StudentOnboardingStepStatus,
+  UpsertStudentOnboardingPolicy,
+  CreateStudentIdentifierSeries,
+  StudentOnboardingFilterOptions,
+  StudentOnboardingServiceHandoff,
+  StudentOnboardingPlacementOption,
+  HistoricalAdmissionReconciliation,
+} from './student-onboarding-types';
+
+type Result<T> = { data?: T };
+
+const unwrap = <T>(response: Result<T> | T): T =>
+  response && typeof response === 'object' && 'data' in response && response.data !== undefined
+    ? response.data
+    : (response as T);
+
+const caseTags = (id: string) => [
+  { type: studentOnboardingType.onboardingCaseDetail, id },
+  { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+  { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
+];
+
+export const studentOnboardingApi = api.injectEndpoints({
+  endpoints: (builder) => ({
+    getStudentOnboardingCases: builder.query<
+      StudentOnboardingCasePage,
+      StudentOnboardingListInput | void
+    >({
+      query: (params) => ({ url: '/student/onboarding', params: params ?? undefined }),
+      transformResponse: (
+        response: Result<StudentOnboardingCasePage> | StudentOnboardingCasePage
+      ) => unwrap(response),
+      providesTags: (result) => [
+        { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+        ...(result?.items.map(({ id }) => ({
+          type: studentOnboardingType.onboardingCaseDetail,
+          id,
+        })) ?? []),
+      ],
+    }),
+    getStudentOnboardingFilterOptions: builder.query<StudentOnboardingFilterOptions, void>({
+      query: () => '/student/onboarding/filter-options',
+      transformResponse: (
+        response: Result<StudentOnboardingFilterOptions> | StudentOnboardingFilterOptions
+      ) => unwrap(response),
+      providesTags: [{ type: studentOnboardingType.onboardingFilterOptions, id: 'LIST' }],
+    }),
+    getStudentOnboardingAnalytics: builder.query<StudentOnboardingAnalytics, void>({
+      query: () => '/student/onboarding/analytics',
+      transformResponse: (
+        response: Result<StudentOnboardingAnalytics> | StudentOnboardingAnalytics
+      ) => unwrap(response),
+      providesTags: [{ type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' }],
+    }),
+    getStudentOnboardingCase: builder.query<StudentOnboardingCase, string>({
+      query: (id) => `/student/onboarding/${id}`,
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      providesTags: (_result, _error, id) => [
+        { type: studentOnboardingType.onboardingCaseDetail, id },
+      ],
+    }),
+    getStudentOnboardingPlacementOptions: builder.query<StudentOnboardingPlacementOption[], string>(
+      {
+        query: (id) => `/student/onboarding/${id}/placement-options`,
+        transformResponse: (
+          response: Result<StudentOnboardingPlacementOption[]> | StudentOnboardingPlacementOption[]
+        ) => unwrap(response),
+        providesTags: (_result, _error, id) => [
+          { type: studentOnboardingType.onboardingPlacementOptions, id },
+        ],
+      }
+    ),
+    getAvailableStudentIdentifierSeries: builder.query<StudentIdentifierSeries[], string>({
+      query: (id) => `/student/onboarding/${id}/identifier-series`,
+      transformResponse: (
+        response: Result<StudentIdentifierSeries[]> | StudentIdentifierSeries[]
+      ) => unwrap(response),
+      providesTags: (_result, _error, id) => [
+        { type: studentOnboardingType.onboardingIdentifierSeries, id: 'AVAILABLE' },
+        { type: studentOnboardingType.onboardingIdentifierSeries, id },
+      ],
+    }),
+    refreshStudentOnboardingReadiness: builder.mutation<
+      StudentOnboardingCase,
+      { id: string; concurrencyStamp?: string | null }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
+        url: `/student/onboarding/${id}/readiness/refresh`,
+        method: 'POST',
+        params: { concurrencyStamp },
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    assignStudentOnboardingOwner: builder.mutation<
+      StudentOnboardingCase,
+      { id: string; concurrencyStamp?: string | null; userId?: string | null }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/owner`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    updateStudentOnboardingStep: builder.mutation<
+      StudentOnboardingCase,
+      {
+        id: string;
+        stepKey: string;
+        concurrencyStamp?: string | null;
+        status: StudentOnboardingStepStatus;
+        detail?: string | null;
+        waiverReason?: string | null;
+      }
+    >({
+      query: ({ id, stepKey, ...body }) => ({
+        url: `/student/onboarding/${id}/steps/${encodeURIComponent(stepKey)}`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    setStudentOnboardingPlacement: builder.mutation<
+      StudentOnboardingCase,
+      { id: string; concurrencyStamp?: string | null; divisionId: string }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/placement`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => [
+        ...caseTags(id),
+        { type: studentOnboardingType.onboardingPlacementOptions, id },
+      ],
+    }),
+    allocateStudentOnboardingIdentifier: builder.mutation<
+      StudentOnboardingCase,
+      {
+        id: string;
+        concurrencyStamp?: string | null;
+        numberSeriesId: string;
+        rollNumber: number;
+        manualValue?: string | null;
+        manualSequence?: number | null;
+        overrideReason?: string | null;
+      }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/identifiers`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => [
+        ...caseTags(id),
+        { type: studentOnboardingType.onboardingIdentifierSeries, id },
+      ],
+    }),
+    previewStudentOnboardingActivation: builder.query<StudentOnboardingCase, string>({
+      query: (id) => `/student/onboarding/${id}/activation-preview`,
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      providesTags: (_result, _error, id) => [
+        { type: studentOnboardingType.onboardingCaseDetail, id },
+      ],
+    }),
+    activateStudentOnboarding: builder.mutation<
+      StudentOnboardingCase,
+      { id: string; concurrencyStamp?: string | null; idempotencyKey: string }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/activate`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => [
+        ...caseTags(id),
+        { type: studentOnboardingType.onboardingServiceHandoffs, id },
+      ],
+    }),
+    cancelStudentOnboarding: builder.mutation<
+      StudentOnboardingCase,
+      { id: string; concurrencyStamp?: string | null; reason: string }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/student/onboarding/${id}/cancel`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    getStudentOnboardingServiceHandoffs: builder.query<StudentOnboardingServiceHandoff[], string>({
+      query: (id) => `/student/onboarding/${id}/service-handoffs`,
+      transformResponse: (
+        response: Result<StudentOnboardingServiceHandoff[]> | StudentOnboardingServiceHandoff[]
+      ) => unwrap(response),
+      providesTags: (_result, _error, id) => [
+        { type: studentOnboardingType.onboardingServiceHandoffs, id },
+      ],
+    }),
+    retryStudentOnboardingServiceHandoff: builder.mutation<
+      StudentOnboardingServiceHandoff,
+      { id: string; handoffId: string }
+    >({
+      query: ({ id, handoffId }) => ({
+        url: `/student/onboarding/${id}/service-handoffs/${handoffId}/retry`,
+        method: 'POST',
+      }),
+      transformResponse: (
+        response: Result<StudentOnboardingServiceHandoff> | StudentOnboardingServiceHandoff
+      ) => unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => [
+        { type: studentOnboardingType.onboardingServiceHandoffs, id },
+        { type: studentOnboardingType.onboardingCaseDetail, id },
+      ],
+    }),
+    getStudentOnboardingPolicies: builder.query<StudentOnboardingPolicy[], string>({
+      query: (academicYearId) => ({
+        url: '/student/onboarding/settings/policies',
+        params: { academicYearId },
+      }),
+      transformResponse: (
+        response: Result<StudentOnboardingPolicy[]> | StudentOnboardingPolicy[]
+      ) => unwrap(response),
+      providesTags: (_result, _error, academicYearId) => [
+        { type: studentOnboardingType.onboardingPolicies, id: academicYearId },
+      ],
+    }),
+    createStudentOnboardingPolicy: builder.mutation<
+      StudentOnboardingPolicy,
+      UpsertStudentOnboardingPolicy
+    >({
+      query: (body) => ({
+        url: '/student/onboarding/settings/policies',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentOnboardingPolicy> | StudentOnboardingPolicy) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { academicYearId }) => [
+        { type: studentOnboardingType.onboardingPolicies, id: academicYearId },
+      ],
+    }),
+    updateStudentOnboardingPolicy: builder.mutation<
+      StudentOnboardingPolicy,
+      { id: string; policy: UpsertStudentOnboardingPolicy }
+    >({
+      query: ({ id, policy }) => ({
+        url: `/student/onboarding/settings/policies/${id}`,
+        method: 'PUT',
+        body: policy,
+      }),
+      transformResponse: (response: Result<StudentOnboardingPolicy> | StudentOnboardingPolicy) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { policy }) => [
+        { type: studentOnboardingType.onboardingPolicies, id: policy.academicYearId },
+      ],
+    }),
+    getStudentIdentifierSeries: builder.query<StudentIdentifierSeries[], string>({
+      query: (academicYearId) => ({
+        url: '/student/onboarding/settings/identifier-series',
+        params: { academicYearId },
+      }),
+      transformResponse: (
+        response: Result<StudentIdentifierSeries[]> | StudentIdentifierSeries[]
+      ) => unwrap(response),
+      providesTags: (_result, _error, academicYearId) => [
+        { type: studentOnboardingType.onboardingIdentifierSeries, id: academicYearId },
+      ],
+    }),
+    createStudentIdentifierSeries: builder.mutation<
+      StudentIdentifierSeries,
+      CreateStudentIdentifierSeries
+    >({
+      query: (body) => ({
+        url: '/student/onboarding/settings/identifier-series',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<StudentIdentifierSeries> | StudentIdentifierSeries) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { academicYearId }) => [
+        { type: studentOnboardingType.onboardingIdentifierSeries, id: 'AVAILABLE' },
+        { type: studentOnboardingType.onboardingIdentifierSeries, id: academicYearId },
+      ],
+    }),
+    deactivateStudentIdentifierSeries: builder.mutation<
+      StudentIdentifierSeries,
+      { id: string; academicYearId: string; concurrencyStamp?: string | null }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
+        url: `/student/onboarding/settings/identifier-series/${id}/deactivate`,
+        method: 'POST',
+        params: { concurrencyStamp },
+      }),
+      transformResponse: (response: Result<StudentIdentifierSeries> | StudentIdentifierSeries) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { academicYearId }) => [
+        { type: studentOnboardingType.onboardingIdentifierSeries, id: 'AVAILABLE' },
+        { type: studentOnboardingType.onboardingIdentifierSeries, id: academicYearId },
+      ],
+    }),
+    getHistoricalAdmissionReconciliation: builder.query<HistoricalAdmissionReconciliation, void>({
+      query: () => '/student/onboarding/settings/historical-reconciliation',
+      transformResponse: (
+        response: Result<HistoricalAdmissionReconciliation> | HistoricalAdmissionReconciliation
+      ) => unwrap(response),
+      providesTags: [{ type: studentOnboardingType.onboardingReconciliation, id: 'SUMMARY' }],
+    }),
+    backfillHistoricalAdmissions: builder.mutation<HistoricalAdmissionReconciliation, void>({
+      query: () => ({
+        url: '/student/onboarding/settings/historical-reconciliation/backfill',
+        method: 'POST',
+      }),
+      transformResponse: (
+        response: Result<HistoricalAdmissionReconciliation> | HistoricalAdmissionReconciliation
+      ) => unwrap(response),
+      invalidatesTags: [
+        { type: studentOnboardingType.onboardingReconciliation, id: 'SUMMARY' },
+        { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
+        { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
+      ],
+    }),
+    getStudentOnboardingDocuments: builder.query<StudentOnboardingDocuments, string>({
+      query: (caseId) => `/student/onboarding/${caseId}/documents`,
+      transformResponse: (
+        response: Result<StudentOnboardingDocuments> | StudentOnboardingDocuments
+      ) => unwrap(response),
+      providesTags: (_result, _error, caseId) => [
+        { type: studentOnboardingType.onboardingDocuments, id: caseId },
+      ],
+    }),
+    uploadStudentOnboardingDocument: builder.mutation<
+      StudentOnboardingDocuments,
+      { caseId: string; documentTypeId: string; concurrencyStamp: string; file: File }
+    >({
+      query: ({ caseId, documentTypeId, concurrencyStamp, file }) => {
+        const body = new FormData();
+
+        body.append('file', file);
+        body.append('documentTypeId', documentTypeId);
+        body.append('concurrencyStamp', concurrencyStamp);
+
+        return {
+          url: `/student/onboarding/${caseId}/documents`,
+          method: 'POST',
+          body,
+        };
+      },
+      transformResponse: (
+        response: Result<StudentOnboardingDocuments> | StudentOnboardingDocuments
+      ) => unwrap(response),
+      invalidatesTags: (_result, _error, { caseId }) => [
+        { type: studentOnboardingType.onboardingDocuments, id: caseId },
+        ...caseTags(caseId),
+      ],
+    }),
+  }),
+  overrideExisting: false,
+});
+
+export const {
+  useGetStudentOnboardingCasesQuery,
+  useGetStudentOnboardingFilterOptionsQuery,
+  useGetStudentOnboardingAnalyticsQuery,
+  useGetStudentOnboardingCaseQuery,
+  useGetStudentOnboardingPlacementOptionsQuery,
+  useGetAvailableStudentIdentifierSeriesQuery,
+  useRefreshStudentOnboardingReadinessMutation,
+  useAssignStudentOnboardingOwnerMutation,
+  useUpdateStudentOnboardingStepMutation,
+  useSetStudentOnboardingPlacementMutation,
+  useAllocateStudentOnboardingIdentifierMutation,
+  usePreviewStudentOnboardingActivationQuery,
+  useActivateStudentOnboardingMutation,
+  useCancelStudentOnboardingMutation,
+  useGetStudentOnboardingServiceHandoffsQuery,
+  useRetryStudentOnboardingServiceHandoffMutation,
+  useGetStudentOnboardingPoliciesQuery,
+  useCreateStudentOnboardingPolicyMutation,
+  useUpdateStudentOnboardingPolicyMutation,
+  useGetStudentIdentifierSeriesQuery,
+  useCreateStudentIdentifierSeriesMutation,
+  useDeactivateStudentIdentifierSeriesMutation,
+  useGetHistoricalAdmissionReconciliationQuery,
+  useBackfillHistoricalAdmissionsMutation,
+  useGetStudentOnboardingDocumentsQuery,
+  useUploadStudentOnboardingDocumentMutation,
+} = studentOnboardingApi;

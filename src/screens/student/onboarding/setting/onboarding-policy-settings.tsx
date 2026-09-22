@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import type { TooltipProps } from '@mui/material';
+import type { IData, IColumn } from 'src/components/customizabaleTable/types';
 
 import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
@@ -9,21 +10,20 @@ import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { studentPaths } from 'src/constants/student-menu';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import {
   Box,
+  Alert,
   Paper,
   Stack,
-  Table,
   Button,
   Switch,
   Divider,
-  TableRow,
   Checkbox,
   MenuItem,
-  TableBody,
-  TableCell,
-  TableHead,
   TextField,
   Typography,
   FormControlLabel,
@@ -31,16 +31,32 @@ import {
 
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import { SettingsDrawer, SettingsSectionCard } from './onboarding-number-settings';
-import { OnboardingConfigurationScopeBar } from '../onboarding-configuration-scope-bar';
 import { OnboardingSettingsBreadcrumbInfo } from './onboarding-settings-breadcrumb-info';
-import { defaultAccountRules, defaultOnboardingRules } from '../onboarding-settings-model';
+import {
+  usePersistedOnboardingPolicy,
+  PersistedReadinessPolicyFields,
+} from './onboarding-operational-settings';
+import {
+  AcademicApplicabilityFields,
+  getAcademicApplicabilitySummary,
+} from './onboarding-academic-applicability';
+import {
+  defaultAccountRules,
+  defaultOnboardingRules,
+  academicTargetsOverlap,
+  getAcademicApplicabilityScore,
+  createAllAcademicApplicability,
+  getAcademicApplicabilityValidationError,
+} from '../onboarding-settings-model';
 
 import type {
   AccountRules,
   ApprovalMode,
   OnboardingRules,
+  OnboardingProfile,
   ReadinessCheckKey,
   ReadinessAccessRules,
+  AcademicApplicableRule,
   ConditionalApprovalTrigger,
 } from '../onboarding-settings-model';
 
@@ -570,18 +586,110 @@ export function AccountsAccessSettingsScreen() {
   );
 }
 
+const createReadinessOverrideApplicability = (
+  source: AcademicApplicableRule
+): AcademicApplicableRule => {
+  const applicability: AcademicApplicableRule = {
+    ...source,
+    boardIds: [...source.boardIds],
+    academicMediumIds: [...source.academicMediumIds],
+    academicMediumStageIds: [...source.academicMediumStageIds],
+    standardIds: [...source.standardIds],
+    divisionIds: [...source.divisionIds],
+  };
+
+  if (applicability.boardMode === 'all') {
+    return { ...applicability, boardMode: 'selected', boardIds: [] };
+  }
+  if (applicability.mediumMode === 'all') {
+    return { ...applicability, mediumMode: 'selected', academicMediumIds: [] };
+  }
+  if (applicability.stageMode === 'all') {
+    return {
+      ...applicability,
+      stageMode: 'selected',
+      academicMediumStageIds: [],
+    };
+  }
+  if (applicability.classMode === 'all') {
+    return { ...applicability, classMode: 'selected', standardIds: [] };
+  }
+  return { ...applicability, divisionMode: 'selected', divisionIds: [] };
+};
+
+function SchoolReadinessDefaultsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const persistedPolicy = usePersistedOnboardingPolicy(open);
+
+  return (
+    <SettingsDrawer
+      open={open}
+      title="School readiness defaults"
+      description="Save the backend requirements, service handoffs, access preparation, and completion deadline."
+      icon="mdi:database-check-outline"
+      statusLabel={
+        persistedPolicy.schoolDefaultPolicy
+          ? persistedPolicy.schoolDefaultPolicy.isActive
+            ? 'Active'
+            : 'Inactive'
+          : 'New'
+      }
+      footerNote="These defaults persist for the selected academic year."
+      onClose={onClose}
+      onSubmit={persistedPolicy.savePolicy}
+      submitLabel={persistedPolicy.isSaving ? 'Saving...' : 'Save defaults'}
+      submitDisabled={!persistedPolicy.canSave}
+    >
+      <PersistedReadinessPolicyFields editor={persistedPolicy} />
+    </SettingsDrawer>
+  );
+}
+
 export function ReadinessAccessSettingsScreen() {
   const { settings, applyOnboardingProfile } = useOnboardingSettings();
+  const filters = useFinanceAcademicFilters();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [schoolDefaultsOpen, setSchoolDefaultsOpen] = useState(false);
+  const [pendingProfile, setPendingProfile] = useState<OnboardingProfile | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState(
     settings.onboardingProfiles[0]?.id ?? ''
   );
   const selectedProfile =
+    pendingProfile ??
     settings.onboardingProfiles.find((profile) => profile.id === selectedProfileId) ??
     settings.onboardingProfiles[0];
   const saved = selectedProfile?.rules ?? settings.readinessAccess;
+  const savedApplicability = selectedProfile?.applicability ?? createAllAcademicApplicability();
+  const [profileNameDraft, setProfileNameDraft] = useState(selectedProfile?.name ?? '');
+  const [admissionRouteDraft, setAdmissionRouteDraft] = useState(
+    selectedProfile?.admissionRoutes[0] ?? ''
+  );
+  const [creationMode, setCreationMode] = useState<'rule' | 'override' | null>(null);
   const [draft, setDraft] = useState(saved);
-  const isDirty = JSON.stringify(saved) !== JSON.stringify(draft);
+  const [applicabilityDraft, setApplicabilityDraft] = useState(savedApplicability);
+  const isNewProfile = Boolean(pendingProfile);
+  const isDirty =
+    isNewProfile ||
+    profileNameDraft.trim() !== selectedProfile?.name ||
+    admissionRouteDraft !== selectedProfile?.admissionRoutes[0] ||
+    JSON.stringify(saved) !== JSON.stringify(draft) ||
+    JSON.stringify(savedApplicability) !== JSON.stringify(applicabilityDraft);
+  const applicabilityError = getAcademicApplicabilityValidationError(applicabilityDraft);
+  const hasApplicabilityConflict = settings.onboardingProfiles.some(
+    (profile) =>
+      profile.id !== selectedProfile?.id &&
+      profile.admissionRoutes.includes(admissionRouteDraft) &&
+      getAcademicApplicabilityScore(profile.applicability) ===
+        getAcademicApplicabilityScore(applicabilityDraft) &&
+      academicTargetsOverlap(profile.applicability, applicabilityDraft)
+  );
+  const profileValidationError = !profileNameDraft.trim()
+    ? 'Enter a profile name.'
+    : !admissionRouteDraft
+      ? 'Select an admission route.'
+      : applicabilityError ||
+        (hasApplicabilityConflict
+          ? 'Another profile for this admission route already targets the same academic coverage.'
+          : null);
   const setBooleanRule =
     (
       key:
@@ -632,8 +740,11 @@ export function ReadinessAccessSettingsScreen() {
   };
 
   useEffect(() => {
+    setProfileNameDraft(selectedProfile?.name ?? '');
+    setAdmissionRouteDraft(selectedProfile?.admissionRoutes[0] ?? '');
     setDraft(saved);
-  }, [saved]);
+    setApplicabilityDraft(savedApplicability);
+  }, [saved, savedApplicability, selectedProfile?.admissionRoutes, selectedProfile?.name]);
 
   useEffect(() => {
     if (selectedProfile) return;
@@ -643,13 +754,73 @@ export function ReadinessAccessSettingsScreen() {
   const openProfileRules = (profileId: string) => {
     const profile = settings.onboardingProfiles.find((item) => item.id === profileId);
     if (!profile) return;
+    setPendingProfile(null);
+    setCreationMode(null);
     setSelectedProfileId(profileId);
+    setProfileNameDraft(profile.name);
+    setAdmissionRouteDraft(profile.admissionRoutes[0] ?? '');
     setDraft(profile.rules);
+    setApplicabilityDraft(profile.applicability);
+    setDrawerOpen(true);
+  };
+
+  const openProfileOverride = (profileId: string) => {
+    const source = settings.onboardingProfiles.find((item) => item.id === profileId);
+    if (!source) return;
+    const override: OnboardingProfile = {
+      ...source,
+      id: `${source.id}-session-${Date.now()}`,
+      name: `${source.name} academic override`,
+      applicability: createReadinessOverrideApplicability(source.applicability),
+      rules: {
+        ...source.rules,
+        approvalTriggers: [...source.rules.approvalTriggers],
+        checks: source.rules.checks.map((check) => ({ ...check })),
+      },
+    };
+    setPendingProfile(override);
+    setCreationMode('override');
+    setSelectedProfileId(override.id);
+    setProfileNameDraft(override.name);
+    setAdmissionRouteDraft(override.admissionRoutes[0] ?? '');
+    setDraft(override.rules);
+    setApplicabilityDraft(override.applicability);
+    setDrawerOpen(true);
+  };
+
+  const openNewRule = () => {
+    const source = settings.onboardingProfiles[0];
+    if (!source) return;
+
+    const rule: OnboardingProfile = {
+      ...source,
+      id: `custom-readiness-rule-${Date.now()}`,
+      name: 'New readiness rule',
+      description: 'School-defined readiness and access rule.',
+      admissionRoutes: [source.admissionRoutes[0] ?? 'Fresh admission'],
+      applicability: createReadinessOverrideApplicability(source.applicability),
+      rules: {
+        ...source.rules,
+        approvalTriggers: [...source.rules.approvalTriggers],
+        checks: source.rules.checks.map((check) => ({ ...check })),
+      },
+    };
+
+    setPendingProfile(rule);
+    setCreationMode('rule');
+    setSelectedProfileId(rule.id);
+    setProfileNameDraft(rule.name);
+    setAdmissionRouteDraft(rule.admissionRoutes[0]);
+    setDraft(rule.rules);
+    setApplicabilityDraft(rule.applicability);
     setDrawerOpen(true);
   };
 
   const closeDrawer = () => {
+    setPendingProfile(null);
+    setCreationMode(null);
     setDraft(saved);
+    setApplicabilityDraft(savedApplicability);
     setDrawerOpen(false);
   };
 
@@ -666,6 +837,132 @@ export function ReadinessAccessSettingsScreen() {
     return 'Not prepared';
   };
 
+  const admissionRoutes = Array.from(
+    new Set(settings.onboardingProfiles.flatMap((profile) => profile.admissionRoutes))
+  );
+  const ruleRows = settings.onboardingProfiles.map((profile) => {
+    const requiredCount = profile.rules.checks.filter((check) => check.required).length;
+    const blockingCount = profile.rules.checks.filter(
+      (check) => check.required && check.blocking
+    ).length;
+
+    return {
+      id: profile.id,
+      name: profile.name,
+      description: profile.description,
+      admissionRoute: profile.admissionRoutes.join(', '),
+      academicCoverage: getAcademicApplicabilitySummary(profile.applicability, filters.boards),
+      requiredChecks: requiredCount,
+      requiredChecksLabel: `${requiredCount} of ${profile.rules.checks.length}`,
+      blockingCount,
+      approval: approvalLabel(profile.rules.approvalMode),
+      approvalMode: profile.rules.approvalMode,
+      accounts: accountSummary(profile.rules),
+      accessRelease:
+        profile.rules.deliveryTiming === 'after-activation' ? 'After activation' : 'Manual release',
+      statusLabel: 'Applied',
+      profile,
+    };
+  });
+  const ruleColumns: IColumn[] = [
+    {
+      id: 'name',
+      label: 'Rule',
+      minWidth: 220,
+      sticky: true,
+      stickyPosition: 'left',
+      filterType: 'string',
+      render: (value, row) => (
+        <Stack spacing={0.25}>
+          <Typography variant="subtitle2">{value}</Typography>
+          <Typography variant="caption" color="text.secondary" noWrap>
+            {row.description}
+          </Typography>
+        </Stack>
+      ),
+    },
+    {
+      id: 'admissionRoute',
+      label: 'Admission route',
+      minWidth: 160,
+      filterType: 'enum',
+    },
+    {
+      id: 'academicCoverage',
+      label: 'Academic coverage',
+      minWidth: 240,
+      filterType: 'string',
+    },
+    {
+      id: 'requiredChecks',
+      label: 'Required checks',
+      minWidth: 150,
+      filterType: 'number',
+      render: (_value, row) => (
+        <Stack spacing={0.25}>
+          <Typography variant="body2" fontWeight={600}>
+            {row.requiredChecksLabel}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {row.blockingCount} block activation
+          </Typography>
+        </Stack>
+      ),
+    },
+    {
+      id: 'approval',
+      label: 'Approval',
+      minWidth: 135,
+      filterType: 'enum',
+      render: (value, row) => (
+        <Label color={row.approvalMode === 'none' ? 'default' : 'warning'} variant="outlined">
+          {value}
+        </Label>
+      ),
+    },
+    { id: 'accounts', label: 'Accounts', minWidth: 160, filterType: 'enum' },
+    { id: 'accessRelease', label: 'Access release', minWidth: 150, filterType: 'enum' },
+    {
+      id: 'statusLabel',
+      label: 'Status',
+      minWidth: 100,
+      filterType: 'enum',
+      sticky: true,
+      stickyPosition: 'right',
+      render: (value) => <Label color="default">{value}</Label>,
+    },
+    {
+      id: 'actions',
+      label: 'Action',
+      minWidth: 110,
+      align: 'right',
+      isFilter: false,
+      isSort: false,
+      sticky: true,
+      stickyPosition: 'right',
+      excludeFromExport: true,
+      render: (_value, row: IData) => {
+        const profile = row.profile as OnboardingProfile;
+        return (
+          <ThreeDotsActions
+            showEditIcon
+            showThreeDots={false}
+            editLabel={`Edit ${profile.name} rules`}
+            handleEditClick={() => openProfileRules(profile.id)}
+            directActions={[
+              {
+                id: 'add-override',
+                label: `Add ${profile.name} academic override`,
+                icon: 'mdi:source-branch-plus',
+                onClick: () => openProfileOverride(profile.id),
+              },
+            ]}
+          />
+        );
+      },
+    },
+  ];
+
   return (
     <Box
       sx={{
@@ -677,7 +974,7 @@ export function ReadinessAccessSettingsScreen() {
     >
       <CustomBreadcrumbs
         heading="Readiness & Access"
-        description=" "
+        description="Create and manage the readiness, approval, and portal-access rules used during Student Setup."
         tooltipProps={
           {
             title: (
@@ -686,6 +983,7 @@ export function ReadinessAccessSettingsScreen() {
                 description="Configure activation requirements, approval controls, and portal access release."
                 items={[
                   'Compare readiness rules across admission profiles.',
+                  'Add academic overrides without changing the broader route fallback.',
                   'Edit checks, approvals, and student or guardian access release.',
                 ]}
               />
@@ -699,255 +997,116 @@ export function ReadinessAccessSettingsScreen() {
           { name: 'Settings', href: studentPaths.onboarding.settings },
           { name: 'Readiness & Access' },
         ]}
-        action={<Label color="default">{settings.onboardingProfiles.length} profiles</Label>}
-        slotProps={{
-          action: {},
-          heading: { overflowWrap: 'normal', textWrap: 'wrap' },
-          moreLink: {},
-          breadcrumbs: { display: { xs: 'none', md: 'block' } },
-        }}
-        sx={{
-          mb: 2,
-          flexShrink: 0,
-          flexDirection: { xs: 'column !important', md: 'row !important' },
-          alignItems: { xs: 'stretch', md: 'center' },
-          gap: { xs: 0.5, md: 2 },
-          minHeight: { xs: 'auto', md: 56 },
-          py: { xs: 0.75, md: 0 },
-          '& .MuiBreadcrumbs-root': { display: { xs: 'none', md: 'block' } },
-          '& .MuiTypography-h6': { overflowWrap: 'normal !important' },
-        }}
+        action={
+          <Stack direction="row" spacing={1}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:database-check-outline" width={18} />}
+              onClick={() => setSchoolDefaultsOpen(true)}
+            >
+              Saved defaults
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon="mdi:plus" width={18} />}
+              onClick={openNewRule}
+            >
+              Add readiness rule
+            </Button>
+          </Stack>
+        }
       />
 
-      <Box sx={{ mb: 2 }}>
-        <OnboardingConfigurationScopeBar />
-      </Box>
+      <Alert severity="warning" variant="outlined" sx={{ flexShrink: 0 }}>
+        Rules applied here update Student Setup for the current frontend session. A reload restores
+        defaults until every advanced rule has a matching backend contract.
+      </Alert>
 
-      <Scrollbar
+      <Box
         sx={{
           flex: 1,
           minHeight: 0,
-          '& .simplebar-content': {
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-            pr: { sm: 1 },
-            pb: 2,
-          },
+          minWidth: 0,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
-        <Box
-          sx={{
-            px: 2.5,
-            py: 1.5,
-            borderRadius: 1.5,
-            bgcolor: (theme) =>
-              theme.palette.mode === 'light' ? '#FFF9E6' : alpha(theme.palette.warning.main, 0.12),
-            borderLeft: (theme) => `4px solid ${theme.palette.warning.main}`,
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <Typography
-            variant="body2"
-            sx={{
-              color: (theme) =>
-                theme.palette.mode === 'light' ? '#7A4F01' : theme.palette.warning.lighter,
-              fontWeight: 500,
-              fontSize: '0.8125rem',
-              lineHeight: 1.5,
-            }}
-          >
-            Frontend session mode — applying these rules updates Student Setup immediately. A full
-            reload restores defaults until the Onboarding Settings APIs are connected.
-          </Typography>
-        </Box>
+        <CustomizableTable
+          tableId="student-onboarding-readiness-access-rules"
+          tableTitle="Readiness & access rules"
+          columns={ruleColumns}
+          data={ruleRows}
+          isFilter
+          isSearch
+          defaultRowsPerPage={10}
+          noDataText={<>No readiness rules are configured.</>}
+          wrapperProps={{ sx: { flex: 1, minHeight: 0, minWidth: 0 } }}
+          tableContainerProps={{ sx: { height: 1, minHeight: 0 } }}
+        />
+      </Box>
 
-        <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 } }}>
-          <Stack
-            direction={{ xs: 'column', md: 'row' }}
-            spacing={1.5}
-            alignItems={{ md: 'center' }}
-            justifyContent="space-between"
-          >
-            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
-              <Box
-                sx={{
-                  width: 38,
-                  height: 38,
-                  flexShrink: 0,
-                  display: 'grid',
-                  placeItems: 'center',
-                  borderRadius: 1,
-                  bgcolor: 'background.neutral',
-                  color: 'text.secondary',
-                }}
-              >
-                <Iconify icon="mdi:clipboard-check-outline" width={21} />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Readiness profiles
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Review the applied rules, then edit only the admission route that needs a change.
-                </Typography>
-              </Box>
-            </Stack>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Label color="default">{settings.onboardingProfiles.length} profiles</Label>
-              <Label color="default">{settings.readinessAccess.checks.length} checks</Label>
-              <Label color="success" variant="outlined">
-                Connected to Setup
-              </Label>
-            </Stack>
-          </Stack>
-        </Paper>
-
-        <Paper variant="outlined" sx={{ overflow: 'hidden', display: { xs: 'none', md: 'block' } }}>
-          <Box sx={{ overflowX: 'auto' }}>
-            <Table size="small" sx={{ minWidth: 980 }}>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Profile</TableCell>
-                  <TableCell>Required checks</TableCell>
-                  <TableCell>Approval</TableCell>
-                  <TableCell>Accounts</TableCell>
-                  <TableCell>Access release</TableCell>
-                  <TableCell align="right">Action</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {settings.onboardingProfiles.map((profile) => {
-                  const requiredCount = profile.rules.checks.filter(
-                    (check) => check.required
-                  ).length;
-                  const blockingCount = profile.rules.checks.filter(
-                    (check) => check.required && check.blocking
-                  ).length;
-
-                  return (
-                    <TableRow key={profile.id} hover>
-                      <TableCell sx={{ minWidth: 245 }}>
-                        <Typography variant="subtitle2">{profile.name}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {profile.admissionRoutes.join(', ')}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ minWidth: 145 }}>
-                        <Typography variant="body2" fontWeight={600}>
-                          {requiredCount} of {profile.rules.checks.length} required
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {blockingCount} block activation
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ minWidth: 135 }}>
-                        <Label
-                          color={profile.rules.approvalMode === 'none' ? 'default' : 'warning'}
-                          variant="outlined"
-                        >
-                          {approvalLabel(profile.rules.approvalMode)}
-                        </Label>
-                      </TableCell>
-                      <TableCell sx={{ minWidth: 160 }}>
-                        <Typography variant="body2">{accountSummary(profile.rules)}</Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {profile.rules.verifiedGuardianContact
-                            ? 'Verified contact required'
-                            : 'Verification optional'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell sx={{ minWidth: 150 }}>
-                        <Typography variant="body2">
-                          {profile.rules.deliveryTiming === 'after-activation'
-                            ? 'After activation'
-                            : 'Manual release'}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          aria-label={`Edit ${profile.name} rules`}
-                          startIcon={<Iconify icon="mdi:pencil-outline" width={17} />}
-                          onClick={() => openProfileRules(profile.id)}
-                          sx={{ borderRadius: 1.5 }}
-                        >
-                          Edit rules
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </Box>
-        </Paper>
-
-        <Stack spacing={1.25} sx={{ display: { xs: 'flex', md: 'none' } }}>
-          {settings.onboardingProfiles.map((profile) => {
-            const requiredCount = profile.rules.checks.filter((check) => check.required).length;
-            const blockingCount = profile.rules.checks.filter(
-              (check) => check.required && check.blocking
-            ).length;
-
-            return (
-              <Paper key={profile.id} variant="outlined" sx={{ p: 1.5 }}>
-                <Stack spacing={1.25}>
-                  <Box>
-                    <Typography variant="subtitle2">{profile.name}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {profile.description}
-                    </Typography>
-                  </Box>
-                  <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                    <Label color="default">
-                      {requiredCount}/{profile.rules.checks.length} required
-                    </Label>
-                    <Label color="default">{blockingCount} blocking</Label>
-                    <Label
-                      color={profile.rules.approvalMode === 'none' ? 'default' : 'warning'}
-                      variant="outlined"
-                    >
-                      {approvalLabel(profile.rules.approvalMode)}
-                    </Label>
-                  </Stack>
-                  <Button
-                    fullWidth
-                    size="small"
-                    variant="outlined"
-                    aria-label={`Edit ${profile.name} rules`}
-                    startIcon={<Iconify icon="mdi:pencil-outline" width={17} />}
-                    onClick={() => openProfileRules(profile.id)}
-                    sx={{ borderRadius: 1.5 }}
-                  >
-                    Edit rules
-                  </Button>
-                </Stack>
-              </Paper>
-            );
-          })}
-        </Stack>
-      </Scrollbar>
+      {schoolDefaultsOpen ? (
+        <SchoolReadinessDefaultsDrawer
+          open={schoolDefaultsOpen}
+          onClose={() => setSchoolDefaultsOpen(false)}
+        />
+      ) : null}
 
       <SettingsDrawer
         open={drawerOpen && Boolean(selectedProfile)}
-        title={`Edit ${selectedProfile?.name ?? 'Readiness'} Rules`}
-        description="Control activation readiness and safe portal access for this admission route."
+        title={
+          creationMode === 'rule'
+            ? 'Add readiness rule'
+            : isNewProfile
+              ? `Add ${selectedProfile?.admissionRoutes[0] ?? 'Readiness'} Academic Override`
+              : `Edit ${selectedProfile?.name ?? 'Readiness'} Rules`
+        }
+        description={
+          creationMode === 'rule'
+            ? 'Write a school-defined readiness rule, choose its admission route, and narrow where it applies.'
+            : isNewProfile
+              ? 'Start from the selected profile, then narrow its academic coverage and adjust only the rules that differ.'
+              : 'Control activation readiness and safe portal access for this admission route.'
+        }
         icon="mdi:clipboard-check-outline"
-        statusLabel={isDirty ? 'Unsaved changes' : 'Applied rules'}
+        statusLabel={
+          creationMode === 'rule'
+            ? 'New rule'
+            : isNewProfile
+              ? 'New override'
+              : isDirty
+                ? 'Unsaved changes'
+                : 'Applied rules'
+        }
         footerNote="Applies to Student Setup in this frontend session."
         onClose={closeDrawer}
-        onReset={() => setDraft(saved)}
+        onReset={() => {
+          setProfileNameDraft(selectedProfile?.name ?? '');
+          setAdmissionRouteDraft(selectedProfile?.admissionRoutes[0] ?? '');
+          setDraft(saved);
+          setApplicabilityDraft(savedApplicability);
+        }}
         resetDisabled={!isDirty}
         onSubmit={() => {
-          if (!selectedProfile) return;
-          applyOnboardingProfile(selectedProfile.id, draft);
+          if (!selectedProfile || profileValidationError) return;
+          applyOnboardingProfile({
+            ...selectedProfile,
+            name: profileNameDraft.trim(),
+            admissionRoutes: [admissionRouteDraft],
+            applicability: applicabilityDraft,
+            rules: draft,
+          });
+          setPendingProfile(null);
+          setCreationMode(null);
           setDrawerOpen(false);
         }}
-        submitLabel="Apply to Setup"
-        submitDisabled={!isDirty}
+        submitLabel={
+          creationMode === 'rule' ? 'Add rule' : isNewProfile ? 'Add override' : 'Apply to Setup'
+        }
+        submitDisabled={!isDirty || Boolean(profileValidationError)}
       >
         <Stack spacing={2}>
           <Paper variant="outlined" sx={{ p: 1.5, bgcolor: 'background.neutral' }}>
@@ -957,16 +1116,56 @@ export function ReadinessAccessSettingsScreen() {
               justifyContent="space-between"
             >
               <Box sx={{ minWidth: 0 }}>
-                <Typography variant="subtitle2">{selectedProfile?.name}</Typography>
+                <TextField
+                  fullWidth
+                  size="small"
+                  label="Rule name"
+                  value={profileNameDraft}
+                  onChange={(event) => setProfileNameDraft(event.target.value)}
+                  error={!profileNameDraft.trim()}
+                  helperText={!profileNameDraft.trim() ? 'Rule name is required.' : undefined}
+                />
                 <Typography variant="caption" color="text.secondary">
                   {selectedProfile?.description}
                 </Typography>
               </Box>
-              <Label color="default" sx={{ alignSelf: { sm: 'flex-start' } }}>
-                {selectedProfile?.admissionRoutes.join(', ')}
-              </Label>
+              {creationMode === 'rule' ? (
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  label="Admission route"
+                  value={admissionRouteDraft}
+                  onChange={(event) => setAdmissionRouteDraft(event.target.value)}
+                  sx={{ minWidth: { sm: 220 } }}
+                >
+                  {admissionRoutes.map((route) => (
+                    <MenuItem key={route} value={route}>
+                      {route}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              ) : (
+                <Label color="default" sx={{ alignSelf: { sm: 'flex-start' } }}>
+                  {selectedProfile?.admissionRoutes.join(', ')}
+                </Label>
+              )}
             </Stack>
           </Paper>
+
+          {profileValidationError ? <Alert severity="error">{profileValidationError}</Alert> : null}
+
+          <SettingsSectionCard
+            icon="mdi:school-outline"
+            title="Academic applicability"
+            description="Configure Board, Medium, School Level, Class, and Division independently for this admission route."
+          >
+            <AcademicApplicabilityFields
+              value={applicabilityDraft}
+              boards={filters.boards}
+              onChange={setApplicabilityDraft}
+            />
+          </SettingsSectionCard>
 
           <SettingsSectionCard
             icon="mdi:clipboard-list-outline"

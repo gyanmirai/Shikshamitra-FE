@@ -6,6 +6,11 @@ import {
   getStageGuidance,
   getWorkflowProgress,
   getStageActionLabel,
+  isAdmissionDecisionStage,
+  hasManagedStageWorkspace,
+  canRetrySubmittedFormHandoff,
+  canRequestNormalStageAdvance,
+  canStageTypeCompleteForStatus,
   canCompleteStageFromProgress,
 } from './application-progress-model';
 
@@ -41,10 +46,53 @@ describe('application progress model', () => {
     expect(getStageActionLabel(stage({ stageType: 7 }))).toBe('Finish admission workflow');
   });
 
-  it('waits for form submission and the approval decision before manual completion', () => {
+  it('matches the backend status rules before exposing manual completion', () => {
     expect(canCompleteStageFromProgress(stage({ stageType: 1 }), 0, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 1, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 6, true)).toBe(true);
+    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 5, true)).toBe(true);
+    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 3, true)).toBe(true);
+    expect(canCompleteStageFromProgress(stage({ stageType: 5 }), 0, true)).toBe(false);
+    expect(canCompleteStageFromProgress(stage({ stageType: 5 }), 1, true)).toBe(true);
     expect(getStageGuidance(stage({ stageType: 7 }), 1)).toContain('approve or reject');
+  });
+
+  it('keeps assessment and custom-stage exceptions aligned with the backend', () => {
+    expect(canStageTypeCompleteForStatus(stage({ stageType: 2 }), 0)).toBe(true);
+    expect(canStageTypeCompleteForStatus(stage({ stageType: 2 }), 3)).toBe(false);
+    expect(canStageTypeCompleteForStatus(stage({ stageType: 11 }), 0)).toBe(true);
+  });
+
+  it('leaves status ownership with managed payment, review, offer, and seat runtimes', () => {
+    expect(
+      canRequestNormalStageAdvance(stage({ stageType: 4, paymentStageEnabled: true }), 0)
+    ).toBe(true);
+    expect(canRequestNormalStageAdvance(stage({ stageType: 6, reviewEnabled: true }), 3)).toBe(
+      true
+    );
+    expect(canRequestNormalStageAdvance(stage({ stageType: 5 }), 0)).toBe(false);
+  });
+
+  it('offers a recovery handoff for a submitted legacy Form stage only', () => {
+    const legacyForm = stage({ stageType: 1, formStageEnabled: false });
+
+    expect(canRetrySubmittedFormHandoff(legacyForm, 1)).toBe(true);
+    expect(canRetrySubmittedFormHandoff(legacyForm, 0)).toBe(false);
+    expect(canRetrySubmittedFormHandoff(stage({ stageType: 1, formStageEnabled: true }), 1)).toBe(
+      false
+    );
+    expect(getStageGuidance(legacyForm, 1)).toContain('submitted');
+  });
+
+  it('separates managed stage workspaces and decision stages from manual steps', () => {
+    expect(hasManagedStageWorkspace(stage({ stageType: 5 }))).toBe(false);
+    expect(
+      hasManagedStageWorkspace(stage({ stageType: 5, documentVerificationEnabled: true }))
+    ).toBe(true);
+    expect(isAdmissionDecisionStage(stage({ stageType: 5 }))).toBe(false);
+    expect(isAdmissionDecisionStage(stage({ stageType: 6 }))).toBe(false);
+    expect(isAdmissionDecisionStage(stage({ stageType: 6, reviewEnabled: true }))).toBe(true);
+    expect(isAdmissionDecisionStage(stage({ stageType: 7 }))).toBe(true);
+    expect(isAdmissionDecisionStage(stage({ stageType: 10 }))).toBe(true);
   });
 });

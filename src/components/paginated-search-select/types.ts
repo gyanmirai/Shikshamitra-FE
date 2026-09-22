@@ -22,4 +22,5 @@ export type PaginatedSearchSelectProps<
   helperText?: React.ReactNode;
   error?: boolean;
   isLoading?: boolean;
+  loadingLabel?: string;
 };

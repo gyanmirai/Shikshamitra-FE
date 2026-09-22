@@ -69,4 +69,29 @@ describe('ThreeDotsActions', () => {
     expect(onDuplicate).toHaveBeenCalledOnce();
     expect(onRowClick).not.toHaveBeenCalled();
   });
+
+  it('renders feature-specific direct actions with the common icon treatment', () => {
+    const onAssign = vi.fn();
+
+    render(
+      <ThemeProvider theme={theme}>
+        <ThreeDotsActions
+          showThreeDots={false}
+          directActions={[
+            {
+              id: 'assign',
+              label: 'Assign Riya Shah',
+              icon: 'mdi:account-arrow-right-outline',
+              onClick: onAssign,
+            },
+          ]}
+        />
+      </ThemeProvider>
+    );
+
+    const assign = screen.getByRole('button', { name: 'Assign Riya Shah' });
+    expect(assign).toHaveStyle({ width: '30px', height: '30px' });
+    fireEvent.click(assign);
+    expect(onAssign).toHaveBeenCalledOnce();
+  });
 });

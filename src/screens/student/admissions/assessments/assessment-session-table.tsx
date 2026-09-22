@@ -6,6 +6,8 @@ import { Label } from 'src/components/label';
 import { Stack, Button } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
+import { assessmentDateTimeTimestamp, normalizeAssessmentDateTime } from './assessment-date-time';
+
 type Props = {
   sessions: AssessmentSession[];
   loading: boolean;
@@ -22,13 +24,15 @@ export function AssessmentSessionTable({ sessions, loading, canManage, onEdit, o
       id: 'startsAt',
       label: 'Starts',
       minWidth: 180,
-      render: (value: string) => dayjs(value).format('DD MMM YYYY, h:mm A'),
+      render: (value: string) =>
+        dayjs(normalizeAssessmentDateTime(value)).format('DD MMM YYYY, h:mm A'),
     },
     {
       id: 'endsAt',
       label: 'Ends',
       minWidth: 180,
-      render: (value: string) => dayjs(value).format('DD MMM YYYY, h:mm A'),
+      render: (value: string) =>
+        dayjs(normalizeAssessmentDateTime(value)).format('DD MMM YYYY, h:mm A'),
     },
     { id: 'location', label: 'Location', minWidth: 160 },
     {
@@ -44,9 +48,9 @@ export function AssessmentSessionTable({ sessions, loading, canManage, onEdit, o
         const session = row as AssessmentSession;
         const status = session.isCancelled
           ? 'Cancelled'
-          : Date.parse(session.endsAt) <= now
+          : assessmentDateTimeTimestamp(session.endsAt) <= now
             ? 'Ended'
-            : Date.parse(session.startsAt) <= now
+            : assessmentDateTimeTimestamp(session.startsAt) <= now
               ? 'In progress'
               : 'Scheduled';
         return (
@@ -72,7 +76,7 @@ export function AssessmentSessionTable({ sessions, loading, canManage, onEdit, o
           <Stack direction="row" spacing={0.5}>
             <Button
               size="small"
-              disabled={!dayjs(session.startsAt).isAfter(dayjs())}
+              disabled={assessmentDateTimeTimestamp(session.startsAt) <= now}
               onClick={() => onEdit(session)}
             >
               Edit

@@ -1,6 +1,8 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
+import type { AdmissionApplicationStatus } from './admission-applications-api';
+
 export type AdmissionApplicantProfile = {
   id: string;
   familyId: string;
@@ -29,7 +31,10 @@ export type AdmissionApplicant360 = {
   applications: {
     id: string;
     applicationNumber: string;
-    status: number;
+    status: AdmissionApplicationStatus;
+    creationTime: string;
+    lastSavedAt?: string | null;
+    submittedAt?: string | null;
     decisionReason?: string | null;
     offerExpiresAt?: string | null;
     enrolledStudentId?: string | null;
@@ -40,6 +45,8 @@ export type AdmissionApplicant360 = {
       stageType: number;
       status: number;
       displayOrder: number;
+      enteredAt?: string | null;
+      completedAt?: string | null;
     }[];
   }[];
   activities: { id: string; activityType: string; description: string; occurredAt: string }[];

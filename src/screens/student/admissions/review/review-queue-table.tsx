@@ -11,6 +11,7 @@ import { studentPaths } from 'src/constants/student-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { reviewStatusLabels } from './review-model';
+import { formatAdmissionReference } from '../admission-reference';
 
 export function ReviewQueueTable({
   items,
@@ -35,7 +36,7 @@ export function ReviewQueueTable({
       isSort: false,
       render: (value, row) => (
         <NextLink href={`${studentPaths.enrollment.applications}/${row.applicationId}`}>
-          {String(value)}
+          {formatAdmissionReference(String(value))}
         </NextLink>
       ),
     },
@@ -76,7 +77,7 @@ export function ReviewQueueTable({
   return (
     <CustomizableTable
       tableId="admission-review-queue"
-      tableTitle="Review queue"
+      tableTitle="Application reviews"
       columns={columns}
       data={items}
       isLoading={loading}

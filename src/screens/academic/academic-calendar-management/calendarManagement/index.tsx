@@ -32,7 +32,9 @@ import {
   useDeleteCalendarDayMutation,
 } from 'src/redux/academicAPI/AcademicCalendarApi/academic-calendar-api';
 
+import { buildCalendarDayMap } from './calendarViewModel';
 import CalendarYearView from './components/CalendarYearView';
+import { calculateCalendarSummary } from './calendarSummary';
 import CalendarMonthView from './components/CalendarMonthView';
 import CalendarDayFormDialog from './components/CalendarDayFormDialog';
 import { CalendarYearSkeleton, CalendarMonthSkeleton } from './components/CalendarSkeleton';
@@ -55,106 +57,13 @@ const TABS = [
   },
 ];
 
-const NON_WORKING_DAY_TYPES = new Set<number>([
-  DayType.Holiday,
-  DayType.Vacation,
-  DayType.EmergencyClosure,
-]);
-
-const addDateRangeToSet = (dateSet: Set<string>, startDate?: string, endDate?: string) => {
-  if (!startDate) return;
-
-  let cursor = dayjs(startDate).startOf('day');
-  let end = dayjs(endDate || startDate).startOf('day');
-
-  if (!cursor.isValid()) return;
-  if (!end.isValid() || end.isBefore(cursor, 'day')) end = cursor;
-
-  while (cursor.isBefore(end, 'day') || cursor.isSame(end, 'day')) {
-    dateSet.add(cursor.format('YYYY-MM-DD'));
-    cursor = cursor.add(1, 'day');
-  }
-};
-
-const expandCalendarDayRanges = (days: any[]) =>
-  days.flatMap((day) => {
-    let cursor = dayjs(day.date).startOf('day');
-    let end = dayjs(day.endDate || day.date).startOf('day');
-
-    if (!cursor.isValid()) return [];
-    if (!end.isValid() || end.isBefore(cursor, 'day')) end = cursor;
-
-    const expandedDays: any[] = [];
-    while (cursor.isBefore(end, 'day') || cursor.isSame(end, 'day')) {
-      expandedDays.push({
-        ...day,
-        date: cursor.format('YYYY-MM-DDTHH:mm:ssZ'),
-        rangeStartDate: day.date,
-        rangeEndDate: day.endDate,
-      });
-      cursor = cursor.add(1, 'day');
-    }
-    return expandedDays;
-  });
-
-const calculateCalendarSummary = (
-  days: any[],
-  calendarStartDate?: string,
-  calendarEndDate?: string
-) => {
-  const start = dayjs(calendarStartDate).startOf('day');
-  const end = dayjs(calendarEndDate).startOf('day');
-  const holidayDates = new Set<string>();
-  const nonWorkingDates = new Set<string>();
-  const workingOverrideDates = new Set<string>();
-
-  days
-    .filter((day) => !day.status || Number(day.status) === CalendarDayStatus.Active)
-    .forEach((day) => {
-      const dayType = Number(day.dayType);
-
-      if (dayType === DayType.Holiday) {
-        addDateRangeToSet(holidayDates, day.date, day.endDate);
-      }
-
-      if (NON_WORKING_DAY_TYPES.has(dayType)) {
-        addDateRangeToSet(nonWorkingDates, day.date, day.endDate);
-      }
-
-      if (dayType === DayType.WorkingDay) {
-        addDateRangeToSet(workingOverrideDates, day.date, day.endDate);
-      }
-    });
-
-  if (!start.isValid() || !end.isValid()) {
-    return { totalWorkingDays: 0, totalHolidays: holidayDates.size };
-  }
-
-  let totalWorkingDays = 0;
-  let cursor = start;
-
-  while (cursor.isBefore(end, 'day') || cursor.isSame(end, 'day')) {
-    const dateKey = cursor.format('YYYY-MM-DD');
-    const isWeekend = cursor.day() === 0 || cursor.day() === 6;
-
-    if (workingOverrideDates.has(dateKey)) {
-      totalWorkingDays += 1;
-    } else if (!isWeekend && !nonWorkingDates.has(dateKey)) {
-      totalWorkingDays += 1;
-    }
-
-    cursor = cursor.add(1, 'day');
-  }
-
-  return { totalWorkingDays, totalHolidays: holidayDates.size };
-};
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const CalendarManagement = () => {
   const theme = useTheme();
   const { getAllParams, setParam } = useCustomSearchParams({ tab: 'yearView' });
   const searchParams = getAllParams();
+  const activeTab = searchParams.tab || 'yearView';
   const { permissions } = useSelector((state: RootState) => state.auth);
   const {
     currentYear,
@@ -262,17 +171,27 @@ const CalendarManagement = () => {
     return calendarDays.filter((d) => d.appliesToAll || d.standardId === filterStandardId);
   }, [calendarDays, filterStandardId]);
 
-  const visibleCalendarDays = useMemo(
-    () => expandCalendarDayRanges(filteredCalendarDays),
-    [filteredCalendarDays]
-  );
-
   const calendarStartDate = selectedCalendar?.startDate || currentBoard?.startDate || '';
   const calendarEndDate = selectedCalendar?.endDate || currentBoard?.endDate || '';
-  const calendarSummary = calculateCalendarSummary(
-    calendarDays,
-    calendarStartDate,
-    calendarEndDate
+
+  /**
+   * Memoization Justification:
+   * - Range expansion and class-record deduplication can process hundreds of API rows.
+   * - Reusing the index prevents that work on dialog, permission, and tab state renders.
+   */
+  const visibleCalendarDayMap = useMemo(
+    () => buildCalendarDayMap(filteredCalendarDays, calendarStartDate, calendarEndDate),
+    [filteredCalendarDays, calendarStartDate, calendarEndDate]
+  );
+
+  /**
+   * Memoization Justification:
+   * - Summary calculation scans the academic year and indexes all calendar markers.
+   * - It only needs to rerun when the API data or selected calendar boundaries change.
+   */
+  const calendarSummary = useMemo(
+    () => calculateCalendarSummary(calendarDays, calendarStartDate, calendarEndDate),
+    [calendarDays, calendarStartDate, calendarEndDate]
   );
 
   // Auto-create calendar if none exists for the selected academic medium.
@@ -634,7 +553,7 @@ const CalendarManagement = () => {
           }}
         >
           <CustomTabs
-            value={searchParams.tab}
+            value={activeTab}
             onChange={(_, val) => setParam('tab', val)}
             sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
           >
@@ -648,7 +567,7 @@ const CalendarManagement = () => {
       {/* Tab Content */}
       <Box sx={{ flex: 1, overflow: 'auto' }}>
         {/* YEAR VIEW TAB */}
-        {searchParams.tab === 'yearView' && (
+        {activeTab === 'yearView' && (
           <>
             {calendarsLoading ? (
               <CalendarYearSkeleton />
@@ -658,7 +577,7 @@ const CalendarManagement = () => {
               </Paper>
             ) : (
               <CalendarYearView
-                calendarDays={visibleCalendarDays}
+                dayMap={visibleCalendarDayMap}
                 calendarStartDate={calendarStartDate}
                 calendarEndDate={calendarEndDate}
                 isLoading={daysLoading && calendarDays.length === 0}
@@ -673,7 +592,7 @@ const CalendarManagement = () => {
         )}
 
         {/* MONTH VIEW TAB */}
-        {searchParams.tab === 'monthView' && (
+        {activeTab === 'monthView' && (
           <>
             {calendarsLoading ? (
               <CalendarMonthSkeleton />
@@ -683,7 +602,7 @@ const CalendarManagement = () => {
               </Paper>
             ) : (
               <CalendarMonthView
-                calendarDays={visibleCalendarDays}
+                dayMap={visibleCalendarDayMap}
                 currentMonth={currentMonth}
                 onMonthChange={setCurrentMonth}
                 onDayClick={handleDayClick}

@@ -15,6 +15,11 @@ type Props = {
 };
 
 export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly }: Props) {
+  const availableStageTypes = stageTypes.filter(
+    (item) =>
+      (item.type !== 0 && item.isRuntimeReady && item.isSelectable !== false) ||
+      item.type === formik.values.stageType
+  );
   const changeType = (value: string) => {
     const next = stageTypes.find((item) => String(item.type) === value);
     if (!next || next.type === formik.values.stageType) return;
@@ -58,18 +63,20 @@ export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly }: 
         onChange={(event) => changeType(event.target.value)}
         helperText={metadata?.description}
       >
-        {stageTypes.map((item) => (
+        {availableStageTypes.map((item) => (
           <MenuItem key={item.type} value={String(item.type)}>
             <Iconify icon={item.icon} sx={{ mr: 1 }} />
             {item.displayName}
-            {!item.isRuntimeReady ? ' (configuration only)' : ''}
+            {item.isSelectable === false || !item.isRuntimeReady
+              ? ' (not available for new stages)'
+              : ''}
           </MenuItem>
         ))}
       </TextField>
-      {metadata && !metadata.isRuntimeReady && (
-        <Alert severity="warning">
-          This stage can be configured and published, but its business-specific checks are not yet
-          available.
+      {metadata && (!metadata.isRuntimeReady || metadata.isDeprecated) && (
+        <Alert severity="error">
+          {metadata.replacementGuidance ||
+            'This existing stage is not available for new workflows. Replace it before publishing a new version.'}
         </Alert>
       )}
       <TextField

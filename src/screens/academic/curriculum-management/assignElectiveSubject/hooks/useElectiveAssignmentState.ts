@@ -45,10 +45,16 @@ export default function useElectiveAssignmentState({
     return () => cancelAnimationFrame(frame);
   }, [serverRecords]);
 
-  const assignSubject = useCallback(
+  // Keep the row callback stable because it is passed to every subject-pill control in the table.
+  const toggleSubject = useCallback(
     (studentId: string, subjectId: string) => {
       if (isLocked) return;
-      setStudentSelections((prev) => ({ ...prev, [studentId]: subjectId }));
+      setStudentSelections((prev) => {
+        const next = { ...prev };
+        if (next[studentId] === subjectId) delete next[studentId];
+        else next[studentId] = subjectId;
+        return next;
+      });
     },
     [isLocked]
   );
@@ -226,7 +232,7 @@ export default function useElectiveAssignmentState({
   return {
     studentSelections,
     setStudentSelections,
-    assignSubject,
+    toggleSubject,
     bulkAssignSubject,
     clearSelections,
     resetSelections,

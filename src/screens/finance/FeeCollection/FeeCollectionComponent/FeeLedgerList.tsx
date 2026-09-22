@@ -154,9 +154,10 @@ const FeeLedgerList = ({
     due: number,
     itemYear?: number,
     dueFeeId?: string,
-    installmentLabel?: string
+    installmentLabel?: string,
+    lateFeeAmount?: number
   ) => {
-    if (due === 0) return;
+    if (due === 0 && (lateFeeAmount ?? 0) === 0) return;
     const period = toPeriod(month, itemYear ?? year);
     const exists = isItemSelected(selectedItems, feeHeadId, period, dueFeeId);
     if (exists) {
@@ -170,7 +171,7 @@ const FeeLedgerList = ({
     } else {
       onSelectionChange([
         ...selectedItems,
-        { dueFeeId, feeHeadId, period, dueAmount: due, installmentLabel },
+        { dueFeeId, feeHeadId, period, dueAmount: due, lateFeeAmount, installmentLabel },
       ]);
     }
   };
@@ -178,7 +179,7 @@ const FeeLedgerList = ({
   // ── Month group toggle ─────────────────────────────────────────────────────
   const toggleMonthGroup = (group: MonthWiseGroup) => {
     const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
-    const selectableItems = group.items.filter((i) => i.due > 0);
+    const selectableItems = group.items.filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0);
     const isAllSelected = selectableItems.every((i) =>
       isItemSelected(selectedItems, i.feeHeadId, period, i.dueFeeId)
     );
@@ -203,6 +204,7 @@ const FeeLedgerList = ({
           feeHeadId: i.feeHeadId,
           period,
           dueAmount: i.due,
+          lateFeeAmount: i.lateFeeAmount,
           installmentLabel: i.installmentLabel,
         }));
       onSelectionChange([...selectedItems, ...toAdd]);
@@ -213,7 +215,7 @@ const FeeLedgerList = ({
   const toggleFeeHeadGroup = (group: FeeHeadWiseGroup) => {
     const getPeriod = (item: { month: any; year?: number }) =>
       toPeriod(FeeMonth[item.month] as string, item.year ?? year);
-    const selectableItems = group.items.filter((i) => i.due > 0);
+    const selectableItems = group.items.filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0);
     const isAllSelected = selectableItems.every((i) => {
       const period = getPeriod(i);
       return isItemSelected(selectedItems, group.feeHeadId, period, i.dueFeeId);
@@ -243,6 +245,7 @@ const FeeLedgerList = ({
           feeHeadId: group.feeHeadId,
           period: getPeriod(i),
           dueAmount: i.due,
+          lateFeeAmount: i.lateFeeAmount,
           installmentLabel: i.installmentLabel,
         }));
       onSelectionChange([...selectedItems, ...toAdd]);

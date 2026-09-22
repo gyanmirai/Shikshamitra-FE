@@ -11,6 +11,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 import { getAdmissionWizardSchema } from '../form-wizard-model';
 import { getAdmissionFormInitialValues } from '../form-dialog-model';
+import { clearAdmissionFormDraft, useAdmissionFormDraftOwner } from '../form-draft-recovery';
 
 type Props = {
   editing?: AdmissionForm | null;
@@ -19,27 +20,24 @@ type Props = {
 };
 
 export function useAdmissionFormWizard({ editing, onClose, onSave }: Props) {
+  const draftOwner = useAdmissionFormDraftOwner();
   const [activeStep, setActiveStep] = useState(0);
   const [initialValues] = useState(() => getAdmissionFormInitialValues(editing));
   const submitting = useBoolean();
   const savingRef = useRef(false);
-  const next = async (
-    isLastStep: boolean,
+  const saveDraft = async (
+    _isLastStep: boolean,
     values: CreateUpdateAdmissionForm,
     formik: FormikProps<CreateUpdateAdmissionForm>,
     setLoading: (loading: boolean) => void
   ) => {
-    if (!isLastStep) {
-      setActiveStep(Math.min(activeStep + 1, 2));
-      return;
-    }
-    // The shared stepper validates asynchronously, so lock before React updates busy state.
     if (savingRef.current) return;
     savingRef.current = true;
     setLoading(true);
     submitting.onTrue();
     try {
       await onSave({ ...values, name: values.name.trim(), code: values.code.trim().toUpperCase() });
+      clearAdmissionFormDraft(draftOwner, editing?.id);
       formik.resetForm();
       onClose();
     } catch (error) {
@@ -52,12 +50,26 @@ export function useAdmissionFormWizard({ editing, onClose, onSave }: Props) {
       submitting.onFalse();
     }
   };
+  const next = async (
+    isLastStep: boolean,
+    values: CreateUpdateAdmissionForm,
+    formik: FormikProps<CreateUpdateAdmissionForm>,
+    setLoading: (loading: boolean) => void
+  ) => {
+    if (!isLastStep) {
+      setActiveStep(Math.min(activeStep + 1, 2));
+      return;
+    }
+    // The shared stepper validates asynchronously, so lock before React updates busy state.
+    await saveDraft(isLastStep, values, formik, setLoading);
+  };
   return {
     activeStep,
     initialValues,
     validationSchema: getAdmissionWizardSchema(activeStep),
     submitting: submitting.value,
     next,
+    saveDraft,
     back: () => setActiveStep((step) => Math.max(step - 1, 0)),
     goTo: (step: number) => setActiveStep(step),
   };

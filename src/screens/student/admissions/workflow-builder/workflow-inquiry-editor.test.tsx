@@ -1,13 +1,14 @@
-import { vi, it, expect } from 'vitest';
-import { addIcon } from '@iconify/react';
-import { http, HttpResponse } from 'msw';
-import userEvent from '@testing-library/user-event';
-import { screen, waitFor } from '@testing-library/react';
-import { mswServer } from 'src/test/mswServer';
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
+
+import { vi, it, expect } from 'vitest';
+import { addIcon } from '@iconify/react';
+import { http, HttpResponse } from 'msw';
+import { mswServer } from 'src/test/mswServer';
+import userEvent from '@testing-library/user-event';
+import { screen, waitFor } from '@testing-library/react';
 
 import { AdmissionWorkflowStageDrawer } from '../admission-workflow-stage-drawer';
 import { renderDocumentUi } from '../document-verification/document-ui-test-fixture';
@@ -74,6 +75,7 @@ it(
         onClose={vi.fn()}
       />
     );
+    expect(screen.getByRole('region', { name: 'Stage configuration' })).toBeInTheDocument();
     await user.click(
       screen.getByRole('radio', { name: 'Managed inquiry, follow-up and qualification' })
     );

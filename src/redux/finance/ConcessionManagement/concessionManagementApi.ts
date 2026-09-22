@@ -24,6 +24,8 @@ type PreviewCommand = Pick<
   | 'academicYearId'
   | 'studentId'
   | 'studentFeeStructureId'
+  | 'concessionPolicyId'
+  | 'concessionPolicyVersionId'
   | 'concessionTypeId'
   | 'feeHeadConcessions'
 >;

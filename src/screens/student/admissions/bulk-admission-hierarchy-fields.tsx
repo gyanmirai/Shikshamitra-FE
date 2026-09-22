@@ -4,9 +4,10 @@ import type { AcademicOrganizationOption } from 'src/redux/academicOrganizationO
 
 import { Grid, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import { useGetAdmissionCampusesQuery } from 'src/redux/student/admissions/admission-campuses-api';
 
+import { AdmissionCampusSelect } from './admission-campus-select';
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
+import { useAdmissionCampusOptions } from './use-admission-campus-options';
 
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
 
@@ -25,8 +26,7 @@ export function BulkAdmissionHierarchyFields({
   loading,
   change,
 }: Props) {
-  const campusesQuery = useGetAdmissionCampusesQuery();
-  const campuses = campusesQuery.data?.items ?? [];
+  const fetchCampuses = useAdmissionCampusOptions();
   const { values, errors, touched } = formik;
   const options = getAdmissionHierarchyOptions(hierarchy, values.boardId, values.mediumId);
   const visibleStandards = standards.filter(
@@ -36,15 +36,12 @@ export function BulkAdmissionHierarchyFields({
   return (
     <Grid container spacing={1.5}>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <CustomSelect
-          options={campuses}
-          label="Campus"
-          labelKey="name"
-          valueKey="id"
-          value={values.campusId ?? ''}
-          isLoading={campusesQuery.isFetching}
-          onChange={(id) => change('campusId', id || null)}
-          noOptionsMessage="No active campuses configured"
+        <AdmissionCampusSelect
+          label="Campus (optional)"
+          valueId={values.campusId ?? null}
+          fetchOptions={fetchCampuses}
+          onChange={(id) => change('campusId', id)}
+          helperText="Select a campus when these intakes are campus-specific."
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
@@ -85,7 +82,7 @@ export function BulkAdmissionHierarchyFields({
       <Grid size={{ xs: 12, sm: 6 }}>
         <CustomSelect
           options={options.stages}
-          label="Stage *"
+          label="School level *"
           labelKey="name"
           valueKey="id"
           value={values.stageId}

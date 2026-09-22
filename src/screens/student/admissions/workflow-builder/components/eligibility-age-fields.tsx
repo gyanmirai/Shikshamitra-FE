@@ -1,6 +1,10 @@
 import type { AdmissionEligibilityCriterion } from 'src/redux/student/admissions/admission-eligibility-policy';
 
+import dayjs from 'dayjs';
+import { DatePicker } from '@mui/x-date-pickers';
 import { Grid, Stack, Button, TextField, Typography } from '@mui/material';
+
+import { ADMISSION_DATE_FORMAT } from '../../admission-date-formats';
 
 type Props = {
   value: AdmissionEligibilityCriterion;
@@ -87,16 +91,27 @@ export function EligibilityAgeFields({ value, onChange, readOnly }: Props) {
         readOnly={readOnly}
         onChange={(maxAgeMonths) => onChange({ ...value, maxAgeMonths })}
       />
-      <TextField
-        fullWidth
-        size="small"
-        type="date"
+      <DatePicker
         label="Age cutoff date *"
-        value={value.cutoffDate ?? ''}
+        format={ADMISSION_DATE_FORMAT}
+        enableAccessibleFieldDOMStructure={false}
+        value={value.cutoffDate ? dayjs(value.cutoffDate) : null}
         disabled={readOnly}
-        onChange={(event) => onChange({ ...value, cutoffDate: event.target.value })}
-        slotProps={{ inputLabel: { shrink: true } }}
-        helperText="Age is checked on this fixed date, using the applicant or linked student date of birth."
+        onChange={(date) =>
+          onChange({
+            ...value,
+            cutoffDate: date?.isValid() ? date.format('YYYY-MM-DD') : null,
+          })
+        }
+        slotProps={{
+          textField: {
+            fullWidth: true,
+            size: 'small',
+            required: true,
+            helperText:
+              'Age is checked on this fixed date, using the applicant or linked student date of birth.',
+          },
+        }}
       />
       <Typography variant="caption" color="text.secondary">
         Set at least one limit. Age uses completed calendar months; the maximum includes the

@@ -3,7 +3,8 @@ import type {
   AdmissionApplicationStatus,
 } from 'src/redux/student/admissions/admission-applications-api';
 
-export const APPLICATION_APPROVED_STATUS: AdmissionApplicationStatus = 6;
+const ACTIVE_POST_SUBMISSION_STATUSES = new Set<AdmissionApplicationStatus>([1, 4, 5, 6, 7, 8]);
+const RECORDED_DECISION_STATUSES = new Set<AdmissionApplicationStatus>([3, 5, 6]);
 
 export const STAGE_STATUS_LABELS: Record<number, string> = {
   0: 'Not started',
@@ -32,6 +33,70 @@ export function isFormStage(stage?: AdmissionApplicationStage) {
   return stage?.stageType === 1;
 }
 
+export function canStageTypeCompleteForStatus(
+  stage: AdmissionApplicationStage | undefined,
+  applicationStatus: AdmissionApplicationStatus
+) {
+  if (!stage) return false;
+
+  switch (stage.stageType) {
+    case 0: // Inquiry
+    case 11: // Custom
+      return true;
+    case 1: // Form
+      return applicationStatus === 1;
+    case 2: // Assessment
+      return applicationStatus === 0 || ACTIVE_POST_SUBMISSION_STATUSES.has(applicationStatus);
+    case 7: // Approval
+      return RECORDED_DECISION_STATUSES.has(applicationStatus);
+    default:
+      return ACTIVE_POST_SUBMISSION_STATUSES.has(applicationStatus);
+  }
+}
+
+export function canRequestNormalStageAdvance(
+  stage: AdmissionApplicationStage | undefined,
+  applicationStatus: AdmissionApplicationStatus
+) {
+  if (!stage) return false;
+
+  const managedRuntimeOwnsStatusRule =
+    (stage.stageType === 4 && stage.paymentStageEnabled) ||
+    (stage.stageType === 6 && stage.reviewEnabled) ||
+    (stage.stageType === 8 && stage.offerStageEnabled) ||
+    (stage.stageType === 9 && stage.seatStageEnabled);
+
+  return managedRuntimeOwnsStatusRule || canStageTypeCompleteForStatus(stage, applicationStatus);
+}
+
+export function hasManagedStageWorkspace(stage?: AdmissionApplicationStage) {
+  return Boolean(
+    stage?.assessmentEnabled ||
+    stage?.formStageEnabled ||
+    stage?.paymentStageEnabled ||
+    stage?.offerStageEnabled ||
+    stage?.seatStageEnabled ||
+    stage?.documentVerificationEnabled ||
+    stage?.eligibilityEnabled ||
+    stage?.reviewEnabled
+  );
+}
+
+export function isAdmissionDecisionStage(stage?: AdmissionApplicationStage) {
+  return Boolean(
+    stage &&
+    ((stage.stageType === 6 && stage.reviewEnabled) ||
+      (stage.stageType >= 7 && stage.stageType <= 10))
+  );
+}
+
+export function canRetrySubmittedFormHandoff(
+  stage: AdmissionApplicationStage | undefined,
+  applicationStatus: AdmissionApplicationStatus
+) {
+  return isFormStage(stage) && applicationStatus === 1 && !stage?.formStageEnabled;
+}
+
 export function canCompleteStageFromProgress(
   stage: AdmissionApplicationStage | undefined,
   applicationStatus: AdmissionApplicationStatus,
@@ -50,7 +115,7 @@ export function canCompleteStageFromProgress(
     stage.seatStageEnabled
   )
     return false;
-  return !isApprovalStage(stage) || applicationStatus === APPLICATION_APPROVED_STATUS;
+  return canStageTypeCompleteForStatus(stage, applicationStatus);
 }
 
 export function getStageActionLabel(stage?: AdmissionApplicationStage) {
@@ -80,9 +145,12 @@ export function getStageGuidance(
   if (stage.assessmentEnabled)
     return 'Manage the assessment below. The configured requirements determine when this step can continue.';
   if (isFormStage(stage)) {
-    return 'Complete the five registration sections below, save each step, then submit the application.';
+    if (applicationStatus === 1) {
+      return 'The application form is submitted. Continue to the next admission step.';
+    }
+    return 'Complete each registration section below, save every step, then submit the application.';
   }
-  if (isApprovalStage(stage) && applicationStatus !== APPLICATION_APPROVED_STATUS) {
+  if (isApprovalStage(stage) && !RECORDED_DECISION_STATUSES.has(applicationStatus)) {
     return 'Review the submitted details, then approve or reject the application in Admission decision.';
   }
   if (stage.code === 'PHYSICAL_FORM_ISSUED') {

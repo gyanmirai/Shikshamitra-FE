@@ -6,16 +6,15 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
+import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import ToggleButton from '@mui/material/ToggleButton';
-import InputAdornment from '@mui/material/InputAdornment';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-
-import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
+import InputAdornment from '@mui/material/InputAdornment';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 
 export type ReviewDateFilterMode = 'all' | 'day' | 'range';
 
@@ -41,6 +40,8 @@ export type FilterToolbarProps = {
   onRangeEndChange: (val: Dayjs | null) => void;
   onResetFilters: () => void;
   isFiltered: boolean;
+  onRefresh?: () => void;
+  isRefreshing?: boolean;
 };
 
 export const FilterToolbar = ({
@@ -65,8 +66,9 @@ export const FilterToolbar = ({
   onRangeEndChange,
   onResetFilters,
   isFiltered,
-}: FilterToolbarProps) => {
-  return (
+  onRefresh,
+  isRefreshing = false,
+}: FilterToolbarProps) => (
     <Stack
       direction={{ xs: 'column', lg: 'row' }}
       spacing={1}
@@ -189,6 +191,23 @@ export const FilterToolbar = ({
         alignItems="center"
         sx={{ flexShrink: 0, ml: { lg: 'auto' } }}
       >
+        {onRefresh && (
+          <CustomTooltip title="Refresh review queue" arrow>
+            <span>
+              <IconButton
+                size="small"
+                color="primary"
+                aria-label="Refresh review queue"
+                onClick={onRefresh}
+                disabled={isRefreshing}
+                sx={{ flexShrink: 0 }}
+              >
+                <Iconify icon="solar:refresh-bold" width={20} />
+              </IconButton>
+            </span>
+          </CustomTooltip>
+        )}
+
         {/* Date Filter Mode Toggle */}
         <ToggleButtonGroup
           value={dateFilterMode}
@@ -219,6 +238,5 @@ export const FilterToolbar = ({
       </Stack>
     </Stack>
   );
-};
 
 export default FilterToolbar;

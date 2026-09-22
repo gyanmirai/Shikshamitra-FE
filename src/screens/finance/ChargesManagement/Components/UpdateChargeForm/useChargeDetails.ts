@@ -100,7 +100,11 @@ export const useChargeDetails = (chargeId?: string) => {
         grNumber: s.grNumber,
         divisionName: s.divisionName,
       })),
-      selectionMode: 'students',
+	  selectionMode:
+		chargeDetail.audience?.selection?.mode === 'AllInScope' ||
+		chargeDetail.audience?.selection?.mode === 0
+			? 'all'
+			: 'selected',
     };
   }, [chargeDetail, currentYear]);
 

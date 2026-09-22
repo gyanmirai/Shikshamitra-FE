@@ -29,6 +29,7 @@ const admissionFormFieldSchema = Yup.object({
   validationJson: Yup.string().nullable().optional(),
   visibilityRuleJson: Yup.string().nullable().optional(),
   requiredRuleJson: Yup.string().nullable().optional(),
+  translations: Yup.object().optional(),
 });
 
 const admissionFormSectionSchema = Yup.object({
@@ -46,6 +47,18 @@ const admissionFormSectionSchema = Yup.object({
   stepVisibilityRuleJson: Yup.string().nullable().optional(),
   visibilityRuleJson: Yup.string().nullable().optional(),
   requiredRuleJson: Yup.string().nullable().optional(),
+  isRepeatable: Yup.boolean().optional(),
+  minEntries: Yup.number().integer().min(0).max(25).optional(),
+  maxEntries: Yup.number()
+    .integer()
+    .min(1)
+    .max(25)
+    .test('repeat-range', 'Maximum entries must be at least the minimum', function (value) {
+      return !this.parent.isRepeatable || Number(value ?? 1) >= Number(this.parent.minEntries ?? 0);
+    })
+    .optional(),
+  entryLabel: Yup.string().nullable().optional(),
+  translations: Yup.object().optional(),
   fields: Yup.array().of(admissionFormFieldSchema).min(1, 'Add at least one field'),
 });
 
@@ -59,6 +72,17 @@ export const admissionFormSchema = Yup.object({
     .required('Form code is required'),
   layoutType: Yup.number().oneOf([0, 1]).required('Choose a form layout'),
   fieldsPerRow: Yup.number().oneOf([1, 2, 3, 4]).required('Choose fields per row'),
+  defaultLanguage: Yup.string().trim().required('Choose the default language'),
+  supportedLanguages: Yup.array()
+    .of(Yup.string().trim().required())
+    .min(1, 'Choose at least one language')
+    .test(
+      'includes-default',
+      'Supported languages must include the default language',
+      function (value) {
+        return Boolean(value?.includes(this.parent.defaultLanguage));
+      }
+    ),
   sections: Yup.array().of(admissionFormSectionSchema).min(1, 'Add at least one section'),
 });
 
@@ -77,6 +101,23 @@ export const FIELD_TYPES: [string, AdmissionFormField['fieldType']][] = [
   ['Address group', 11],
   ['Static text', 12],
 ];
+
+/**
+ * File fields are part of the persisted contract for existing forms, but the
+ * backend marks them as unavailable at runtime. Keep the type readable while
+ * preventing it from being selected for new fields.
+ */
+export const CREATABLE_FIELD_TYPES = FIELD_TYPES.filter(([, value]) => value !== 10);
+
+export function getConfigurableFieldTypes(fieldType: AdmissionFormField['fieldType']) {
+  if (fieldType !== 10) return CREATABLE_FIELD_TYPES;
+
+  return FIELD_TYPES.map(([label, value]) =>
+    value === 10
+      ? ([`${label} (unavailable)`, value] as (typeof FIELD_TYPES)[number])
+      : [label, value]
+  );
+}
 
 const FIELD_TYPE_ICONS: Record<AdmissionFormField['fieldType'], string> = {
   0: 'mdi:form-textbox',
@@ -112,9 +153,7 @@ export function hasSystemBinding(
 ) {
   if (!bindingKey) return false;
   return sections.some((section) =>
-    section.fields.some(
-      (field) => field.bindingType === 0 && field.bindingKey === bindingKey
-    )
+    section.fields.some((field) => field.bindingType === 0 && field.bindingKey === bindingKey)
   );
 }
 
@@ -154,6 +193,8 @@ export function getAdmissionFormInitialValues(
     concurrencyStamp: editing?.concurrencyStamp,
     layoutType: editing?.layoutType ?? 1,
     fieldsPerRow: editing?.fieldsPerRow ?? 1,
+    defaultLanguage: editing?.defaultLanguage ?? 'en',
+    supportedLanguages: editing?.supportedLanguages?.length ? editing.supportedLanguages : ['en'],
     sections: editing?.sections ?? [
       {
         id: sectionId,
@@ -164,6 +205,9 @@ export function getAdmissionFormInitialValues(
         stepCode: 'STEP_1',
         stepName: 'Student details',
         stepDisplayOrder: 0,
+        isRepeatable: false,
+        minEntries: 1,
+        maxEntries: 1,
         fields: [newField(sectionId, 0)],
       },
     ],

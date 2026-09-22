@@ -34,6 +34,7 @@ interface StudentSelectionLayoutProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   divisionFilter?: string;
+	disabled?: boolean;
 }
 
 /**
@@ -49,6 +50,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
   searchQuery = '',
   onSearchChange,
   divisionFilter,
+	disabled = false,
 }) => {
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
   const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
@@ -123,7 +125,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+	<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', opacity: disabled ? 0.6 : 1 }}>
       {/* Search Header */}
       <Paper
         variant="outlined"
@@ -142,6 +144,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
               fullWidth
               placeholder="Search by name, admission #, or roll #"
               value={localSearchQuery}
+			  disabled={disabled}
               onChange={(e) => handleSearchChange(e.target.value)}
               InputProps={{
                 startAdornment: <Iconify icon="solar:magnifer-linear" sx={{ mr: 1 }} />,
@@ -152,7 +155,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
               variant={selectAllChecked ? 'contained' : 'outlined'}
               onClick={handleSelectAllToggle}
               color="success"
-              disabled={filteredStudents.length === 0}
+			  disabled={disabled || filteredStudents.length === 0}
               sx={{ whiteSpace: 'nowrap', minWidth: 96 }}
             >
               {selectAllChecked ? 'Clear All' : 'Select All'}
@@ -186,6 +189,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
               {filteredStudents.map((student) => (
                 <ListItem key={student.id} disablePadding>
                   <ListItemButton
+					disabled={disabled}
                     onClick={() => handleStudentToggle(student.id)}
                     sx={{ py: 1, px: 1 }}
                   >
@@ -195,6 +199,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
                         checked={selectedStudentIds.includes(student.id)}
                         tabIndex={-1}
                         disableRipple
+						disabled={disabled}
                       />
                     </ListItemIcon>
                     <ListItemText

@@ -51,10 +51,11 @@ const QuickActionToolbar = ({
   const currentMonthName = new Date().toLocaleString('en-IN', { month: 'long' });
   const currentMonthEnum = FeeMonth[currentMonthName as keyof typeof FeeMonth];
   const currentMonthGroup = allMonthWise.find((g) => g.month === currentMonthEnum);
-  const currentMonthCount = currentMonthGroup?.items.filter((i) => i.due > 0).length ?? 0;
+  const currentMonthCount =
+    currentMonthGroup?.items.filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0).length ?? 0;
 
   const totalDueFeeItems = allMonthWise.reduce(
-    (s, g) => s + g.items.filter((i) => i.due > 0).length,
+    (s, g) => s + g.items.filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0).length,
     0
   );
 
@@ -71,8 +72,17 @@ const QuickActionToolbar = ({
     allMonthWise.forEach((g) => {
       const period = toPeriod(FeeMonth[g.month] as string, currentYear);
       g.items
-        .filter((i) => i.due > 0)
-        .forEach((i) => items.push({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));
+        .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
+        .forEach((i) =>
+          items.push({
+            dueFeeId: i.dueFeeId,
+            feeHeadId: i.feeHeadId,
+            period,
+            dueAmount: i.due,
+            lateFeeAmount: i.lateFeeAmount,
+            installmentLabel: i.installmentLabel,
+          })
+        );
     });
     onSelectionChange(items);
     const allCharges = chargesData
@@ -85,8 +95,15 @@ const QuickActionToolbar = ({
     if (!currentMonthGroup) return;
     const period = toPeriod(FeeMonth[currentMonthGroup.month] as string, currentYear);
     const items: SelectedItem[] = currentMonthGroup.items
-      .filter((i) => i.due > 0)
-      .map((i) => ({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));
+      .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
+      .map((i) => ({
+        dueFeeId: i.dueFeeId,
+        feeHeadId: i.feeHeadId,
+        period,
+        dueAmount: i.due,
+        lateFeeAmount: i.lateFeeAmount,
+        installmentLabel: i.installmentLabel,
+      }));
     onSelectionChange(items);
     onChargesChange([]);
   };
@@ -103,8 +120,17 @@ const QuickActionToolbar = ({
       if (!quarterMonthEnums.includes(g.month)) return;
       const period = toPeriod(FeeMonth[g.month] as string, currentYear);
       g.items
-        .filter((i) => i.due > 0)
-        .forEach((i) => items.push({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));
+        .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
+        .forEach((i) =>
+          items.push({
+            dueFeeId: i.dueFeeId,
+            feeHeadId: i.feeHeadId,
+            period,
+            dueAmount: i.due,
+            lateFeeAmount: i.lateFeeAmount,
+            installmentLabel: i.installmentLabel,
+          })
+        );
     });
     onSelectionChange(items);
   };

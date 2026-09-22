@@ -1,6 +1,5 @@
-import React from 'react';
-import ChargesManagement from 'src/screens/finance/ChargesManagement/Components/ChargesManage';
+import { redirect } from 'next/navigation';
 
-const page = () => <ChargesManagement />;
+const page = () => redirect('/finance/charge-management');
 
 export default page;

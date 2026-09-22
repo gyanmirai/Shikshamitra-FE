@@ -3,6 +3,10 @@ import type { Dayjs } from 'dayjs';
 import * as Yup from 'yup';
 
 export const admissionOfferingSchema = Yup.object({
+  name: Yup.string()
+    .trim()
+    .max(128, 'Offering name cannot exceed 128 characters')
+    .required('Offering name is required'),
   campusId: Yup.string().nullable().optional(),
   boardId: Yup.string().required('Board is required'),
   mediumId: Yup.string().required('Medium is required'),

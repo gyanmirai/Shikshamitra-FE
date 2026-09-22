@@ -11,6 +11,10 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Chip, Stack, Button, Skeleton, Typography, IconButton, LinearProgress } from '@mui/material';
 
 import { QuickSubjectSwitcher } from './QuickSubjectSwitcher';
+import {
+  getUnifiedTeachers,
+  toTeacherOption,
+} from '../subjectAssignmentForm/teacherOptions';
 
 import type {
   ISubjectDetail,
@@ -80,6 +84,7 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
   const isElective =
     activeNavigatorItem?.subjectType === 1 || !!activeNavigatorItem?.electiveGroupId;
   const statusInfo = getStatusLabelAndColor(activeNavigatorItem?.status ?? 0);
+  const teachers = getUnifiedTeachers(subject ?? activeNavigatorItem ?? {}).map(toTeacherOption);
 
   return (
     <Box
@@ -198,20 +203,22 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
               />
             )}
 
-            {/* Primary Teacher Pill */}
-            {subject?.primaryTeacher?.name || activeNavigatorItem?.primaryTeacher?.name ? (
-              <Chip
-                size="small"
-                icon={<Iconify icon="mdi:account-tie" width={14} />}
-                label={`Teacher: ${subject?.primaryTeacher?.name || activeNavigatorItem?.primaryTeacher?.name}`}
-                variant="outlined"
-                sx={{
-                  height: 22,
-                  fontSize: '0.725rem',
-                  borderColor: varAlpha(theme.palette.primary.mainChannel, 0.3),
-                  color: 'text.secondary',
-                }}
-              />
+            {teachers.length > 0 ? (
+              teachers.map((teacher) => (
+                <Chip
+                  key={teacher.id}
+                  size="small"
+                  icon={<Iconify icon="mdi:account-tie" width={14} />}
+                  label={teacher.label}
+                  variant="outlined"
+                  sx={{
+                    height: 22,
+                    fontSize: '0.725rem',
+                    borderColor: varAlpha(theme.palette.primary.mainChannel, 0.3),
+                    color: 'text.secondary',
+                  }}
+                />
+              ))
             ) : isLoading ? (
               <Skeleton variant="rounded" width={120} height={22} sx={{ borderRadius: 1 }} />
             ) : null}

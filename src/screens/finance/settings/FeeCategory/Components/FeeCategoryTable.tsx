@@ -14,6 +14,8 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
 import { usePatchFeeHeadMutation } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import { getFeeHeadModuleDisplayName } from 'src/redux/feeHeadModule/feeHeadModuleApi';
 import {
   feeCategoryApi,
@@ -35,6 +37,10 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   onView,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canView = hasGrantedPermission(permissions, financePermissions.fees.settings.feeCategoryActions.view);
+  const canAdd = hasGrantedPermission(permissions, financePermissions.fees.settings.feeCategoryActions.add);
+  const canDelete = hasGrantedPermission(permissions, financePermissions.fees.settings.feeCategoryActions.delete);
 
   const [queryParams, setQueryParams] = React.useState({ page: 1, pageSize: 10, search: '' });
 
@@ -164,12 +170,12 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
               color={row.isActive ? 'success' : 'default'}
               variant="soft"
             />
-            <Switch
+            {canAdd && <Switch
               size="small"
               checked={row.isActive || false}
               onClick={(event) => event.stopPropagation()}
               onChange={() => handleOpenFeeHeadStatusConfirm(row)}
-            />
+            />}
           </Stack>
         ),
       },
@@ -294,12 +300,12 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 color={category.isActive ? 'success' : 'default'}
                 variant="soft"
               />
-              <Switch
+              {canAdd && <Switch
                 size="small"
                 checked={category.isActive || false}
                 onClick={(event) => event.stopPropagation()}
                 onChange={() => handleOpenStatusConfirm(category)}
-              />
+              />}
             </Stack>
           );
         },
@@ -317,9 +323,9 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             <ThreeDotsActions
               showThreeDots={false}
               placement="right-top"
-              showDeleteIcon
-              showEditIcon
-              showViewIcon
+              showDeleteIcon={canDelete}
+              showEditIcon={canAdd}
+              showViewIcon={canView}
               handleDeleteClick={() => {
                 setSelectedFeeCategory(row as IFeeCategory);
                 deleteFeeCategoryDialog.onTrue();
@@ -337,8 +343,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         },
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [canAdd, canDelete, canView]
   );
 
   return (
@@ -458,6 +463,13 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 minRows={2}
                 size="small"
                 label="Deactivation reason"
+                required
+                error={!!deactivationReason && !deactivationReason.trim()}
+                helperText={
+                  deactivationReason && !deactivationReason.trim()
+                    ? 'Enter a reason containing text.'
+                    : undefined
+                }
                 value={deactivationReason}
                 onChange={(event) => setDeactivationReason(event.target.value)}
               />
@@ -470,6 +482,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
+            disabled={!nextStatus && !deactivationReason.trim()}
             onClick={async () => {
               if (!statusData) return;
               try {
@@ -477,7 +490,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                   id: statusData.id,
                   body: {
                     isActive: nextStatus,
-                    deactivationReason: nextStatus ? null : deactivationReason || null,
+                    deactivationReason: nextStatus ? null : deactivationReason.trim(),
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
@@ -519,6 +532,13 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 minRows={2}
                 size="small"
                 label="Deactivation reason"
+                required
+                error={!!feeHeadDeactivationReason && !feeHeadDeactivationReason.trim()}
+                helperText={
+                  feeHeadDeactivationReason && !feeHeadDeactivationReason.trim()
+                    ? 'Enter a reason containing text.'
+                    : undefined
+                }
                 value={feeHeadDeactivationReason}
                 onChange={(event) => setFeeHeadDeactivationReason(event.target.value)}
               />
@@ -531,6 +551,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
             variant="contained"
             color={nextFeeHeadStatus ? 'primary' : 'warning'}
             size="small"
+            disabled={!nextFeeHeadStatus && !feeHeadDeactivationReason.trim()}
             onClick={async () => {
               if (!feeHeadStatusData) return;
               try {
@@ -540,7 +561,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                     isActive: nextFeeHeadStatus,
                     deactivationReason: nextFeeHeadStatus
                       ? null
-                      : feeHeadDeactivationReason || null,
+                      : feeHeadDeactivationReason.trim(),
                   },
                 }).unwrap();
                 shikshaMitraToast.success({

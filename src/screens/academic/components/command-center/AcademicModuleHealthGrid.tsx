@@ -8,20 +8,30 @@ import type { AcademicModuleHealthItem } from './types';
 
 type AcademicModuleHealthGridProps = {
   items: AcademicModuleHealthItem[];
+  subtitle?: string;
 };
 
-export function AcademicModuleHealthGrid({ items }: AcademicModuleHealthGridProps) {
+export function AcademicModuleHealthGrid({
+  items,
+  subtitle = 'Setup, workload and readiness by academic area',
+}: AcademicModuleHealthGridProps) {
   return (
     <Card sx={{ p: 2, height: '100%', border: (theme) => `1px solid ${theme.palette.divider}` }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
         <Box>
           <Typography variant="subtitle1">Module Health</Typography>
           <Typography variant="caption" color="text.secondary">
-            Setup, workload and readiness by academic area
+            {subtitle}
           </Typography>
         </Box>
       </Stack>
-      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 1 }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+          gap: 1,
+        }}
+      >
         {items.map((item) => (
           <Box
             key={item.id}

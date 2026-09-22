@@ -22,7 +22,10 @@ const FeeRefundReasonApprovalForm = ({ onClose, mode, loading }: IFeeRefundAppro
       reason: '',
     },
     validationSchema: Yup.object().shape({
-      reason: mode === 'Reject' ? Yup.string().required('Reason is required') : Yup.string(),
+      reason:
+        mode === 'Reject' || mode === 'Cancel'
+          ? Yup.string().trim().required('Reason is required')
+          : Yup.string(),
     }),
     onSubmit: (values) => {
       onClose(null, true, values.reason || undefined);
@@ -37,7 +40,7 @@ const FeeRefundReasonApprovalForm = ({ onClose, mode, loading }: IFeeRefundAppro
             <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
               <TextField
                 fullWidth
-                label={`Reason${mode === 'Reject' ? ' *' : ''}`}
+                label={`Reason${mode === 'Reject' || mode === 'Cancel' ? ' *' : ''}`}
                 name="reason"
                 size="small"
                 multiline
@@ -70,7 +73,7 @@ const FeeRefundReasonApprovalForm = ({ onClose, mode, loading }: IFeeRefundAppro
         <LoadingButton
           size="small"
           variant="contained"
-          color={mode === 'Reject' ? 'error' : 'success'}
+          color={mode === 'Reject' || mode === 'Cancel' ? 'error' : 'success'}
           startIcon={<Iconify icon={mode === 'Reject' ? GlobalIcons.cancel : GlobalIcons.tick} />}
           loading={loading}
           onClick={(e: any) => {

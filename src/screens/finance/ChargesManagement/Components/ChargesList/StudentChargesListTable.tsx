@@ -2,14 +2,11 @@ import type { LabelColor } from 'src/components/label';
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Grid, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Grid, Typography } from '@mui/material';
 import { ChargesPriorityStatus } from 'src/enums/charges-priority-status';
 import {
   ChargesPaymentStatus,
@@ -19,29 +16,7 @@ import {
 
 import type { IChargeData, IStudentChargeData } from '../ChargesManage/Component/type';
 
-const ViewStudentAllCharges = ({
-  data,
-  onDelete,
-}: {
-  data: IStudentChargeData;
-  onDelete: (charge: IChargeData) => void;
-}) => {
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        <MenuItem
-          onClick={() => {
-            onDelete?.(row as IChargeData);
-            pop.onClose();
-          }}
-        >
-          <Iconify icon={GlobalIcons.cancel} />
-          Remove
-        </MenuItem>
-      </MenuList>
-    ),
-    [onDelete]
-  );
+const ViewStudentAllCharges = ({ data }: { data: IStudentChargeData }) => {
 
   const tableData = useMemo(
     () =>
@@ -186,21 +161,6 @@ const ViewStudentAllCharges = ({
                 </Label>
               );
             },
-          },
-          {
-            id: 'actions',
-            label: 'Action',
-            align: 'left',
-            isSort: false,
-            isFilter: false,
-            sticky: true,
-            minWidth: 40,
-            render: (value, row) => (
-              <ThreeDotsActions
-                placement="right-center"
-                actions={(prop) => actions({ ...prop, row })}
-              />
-            ),
           },
         ]}
         data={tableData || []}

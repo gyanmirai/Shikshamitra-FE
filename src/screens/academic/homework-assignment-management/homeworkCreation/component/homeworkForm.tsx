@@ -12,35 +12,28 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import React, { useRef, useMemo, useState, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
-import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
-import {
-  RubricStatus,
-  RubricWorkType,
-  useGetRubricsQuery,
-  useCreateRubricFromTemplateMutation,
-} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
 import {
   Box,
   Grid,
   Chip,
-  Radio,
   Stack,
   Button,
   Skeleton,
@@ -55,6 +48,12 @@ import {
   useUploadCurriculumFileMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
+  RubricStatus,
+  RubricWorkType,
+  useGetRubricsQuery,
+  useCreateRubricFromTemplateMutation,
+} from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+import {
   useAddHomeworkMutation,
   useGetHomeworkByIdQuery,
   useUpdateHomeworkMutation,
@@ -64,7 +63,9 @@ import {
 import { getHomeworkInitialValues } from './homeworkInitialValues';
 import { serializeHomeworkFormData } from './homework-serialization';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
+import { SubmissionTypeCard } from '../../components/SubmissionTypeCard';
 import HomeworkTypeForm from '../../setting/homeworkType/homeworkTypeForm';
+import { useHomeworkRubricTemplateSelection } from '../hooks/useHomeworkRubricTemplateSelection';
 
 import type { IHomeWorkCreationFormProps } from '../type';
 
@@ -74,107 +75,6 @@ export const cardStyle = {
   boxShadow: '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
   border: '1px solid rgba(145, 158, 171, 0.08)',
 };
-
-const SubmissionTypeCard = ({
-  value,
-  label,
-  description,
-  icon,
-  selected,
-  onClick,
-}: {
-  value: number;
-  label: string;
-  description: string;
-  icon: string;
-  selected: boolean;
-  onClick: () => void;
-}) => (
-  <Box
-    onClick={onClick}
-    sx={{
-      cursor: 'pointer',
-      p: 2.5,
-      width: '100%',
-      height: '100%',
-      borderRadius: 2,
-      border: (theme) =>
-        `2px solid ${selected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.12)}`,
-      bgcolor: (theme) => (selected ? alpha(theme.palette.primary.main, 0.04) : 'background.paper'),
-      boxShadow: (theme) =>
-        selected
-          ? `0 8px 16px -4px ${alpha(theme.palette.primary.main, 0.12)}, 0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`
-          : 'none',
-      transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      gap: 2,
-      '&:hover': {
-        borderColor: (theme) => (selected ? theme.palette.primary.main : 'text.disabled'),
-        boxShadow: (theme) =>
-          selected
-            ? `0 8px 16px -4px ${alpha(theme.palette.primary.main, 0.16)}, 0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`
-            : `0 4px 12px -2px ${alpha(theme.palette.grey[500], 0.08)}`,
-        transform: 'translateY(-2px)',
-      },
-    }}
-  >
-    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
-      <Box
-        sx={{
-          p: 1,
-          borderRadius: 1.5,
-          color: selected ? 'primary.main' : 'text.secondary',
-          bgcolor: (theme) =>
-            selected
-              ? alpha(theme.palette.primary.main, 0.12)
-              : alpha(theme.palette.grey[500], 0.08),
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: 'all 0.25s',
-        }}
-      >
-        <Iconify icon={icon} width={24} height={24} />
-      </Box>
-      <Radio
-        checked={selected}
-        value={value}
-        sx={{
-          p: 0,
-          color: 'text.disabled',
-          '&.Mui-checked': {
-            color: 'primary.main',
-          },
-        }}
-      />
-    </Stack>
-
-    <Stack spacing={0.5}>
-      <Typography
-        variant="subtitle2"
-        sx={{
-          fontWeight: 700,
-          color: selected ? 'primary.darker' : 'text.primary',
-          transition: 'all 0.25s',
-        }}
-      >
-        {label}
-      </Typography>
-      <Typography
-        variant="caption"
-        sx={{
-          color: 'text.secondary',
-          lineHeight: 1.3,
-          fontSize: '11px',
-        }}
-      >
-        {description}
-      </Typography>
-    </Stack>
-  </Box>
-);
 
 const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   classes,
@@ -189,7 +89,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   });
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [previewFileState, setPreviewFileState] = useState<any>(null);
-  const [selectedRubricTemplateId, setSelectedRubricTemplateId] = useState('');
   const [createRubricFromTemplate, { isLoading: isRubricCopyLoading }] =
     useCreateRubricFromTemplateMutation();
   const submitModeRef = useRef<'draft' | 'publish' | 'schedule'>('draft');
@@ -232,6 +131,22 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // State to control homework type dialog visibility
   const homeworkTypeDialog = useBoolean();
+
+  const { data: homeworkRubrics, isFetching: isHomeworkRubricFetching } = useGetRubricsQuery(
+    {
+      homeworkId: editData?.id,
+      isTemplate: false,
+      status: RubricStatus.Published,
+    },
+    {
+      skip: !editData?.id,
+    }
+  );
+  const {
+    assignedRubricTemplateId,
+    selectedRubricTemplateId,
+    setSelectedRubricTemplateId,
+  } = useHomeworkRubricTemplateSelection(editData?.id, homeworkRubrics);
 
   // State to store all available divisions for the selected class
   const [allDivision, setAllDivision] = useState<Division[]>([]);
@@ -303,6 +218,21 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             }),
           };
           await updateHomework(updatePayload).unwrap();
+          if (
+            selectedRubricTemplateId &&
+            selectedRubricTemplateId !== assignedRubricTemplateId
+          ) {
+            await createRubricFromTemplate({
+              templateId: selectedRubricTemplateId,
+              body: {
+                standardId:
+                  values.classId || values.standardId || values.class || activeClassId || '',
+                subjectId: values.subjectId || values.subject,
+                homeworkId: editData.id,
+                title: `${values.title} Rubric`,
+              },
+            }).unwrap();
+          }
           shikshaMitraToast.success({
             message: `Homework "${values.title}" has been updated successfully.`,
           });
@@ -363,31 +293,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       skip: !medium?.id,
     }
   );
-
-  const { data: homeworkRubrics = [], isFetching: isHomeworkRubricFetching } = useGetRubricsQuery(
-    {
-      homeworkId: editData?.id,
-      isTemplate: false,
-    },
-    {
-      skip: !editData?.id,
-    }
-  );
-
-  useEffect(() => {
-    if (!editData?.id) {
-      setSelectedRubricTemplateId('');
-      return;
-    }
-
-    const assignedRubric = homeworkRubrics.find(
-      (rubric) => rubric.homeworkId === editData.id
-    );
-
-    // The dropdown contains template IDs, while the saved task rubric has its own ID.
-    // Bind the source template that was used to create the task rubric.
-    setSelectedRubricTemplateId(assignedRubric?.sourceTemplateId ?? '');
-  }, [editData?.id, homeworkRubrics]);
 
   // Update divisions when class changes
   useEffect(() => {
@@ -875,7 +780,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     labelKey="title"
                     valueKey="id"
                     value={selectedRubricTemplateId}
-                    disabled={!!editData?.id}
                     isLoading={isRubricTemplateFetching || isHomeworkRubricFetching}
                     onChange={(value) => setSelectedRubricTemplateId(String(value))}
                     formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}

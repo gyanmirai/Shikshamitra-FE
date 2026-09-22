@@ -6,6 +6,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Grid, Alert, Checkbox, Typography, FormControlLabel } from '@mui/material';
 
 import type { AdmissionOfferingFormValues } from './admission-offering-model';
+import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 
 type Props = {
   formik: FormikProps<AdmissionOfferingFormValues>;
@@ -50,6 +51,7 @@ export function AdmissionOfferingWindowFields({ formik, cycle }: Props) {
           <Grid size={{ xs: 12, sm: 6 }}>
             <DatePicker
               label="Applications open *"
+              format={ADMISSION_DATE_FORMAT}
               value={formik.values.openDate}
               minDate={minDate}
               maxDate={maxDate}
@@ -67,6 +69,7 @@ export function AdmissionOfferingWindowFields({ formik, cycle }: Props) {
           <Grid size={{ xs: 12, sm: 6 }}>
             <DatePicker
               label="Applications close *"
+              format={ADMISSION_DATE_FORMAT}
               value={formik.values.closeDate}
               minDate={formik.values.openDate ?? minDate}
               maxDate={maxDate}

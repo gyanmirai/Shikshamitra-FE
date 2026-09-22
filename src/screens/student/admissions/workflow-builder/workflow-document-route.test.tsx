@@ -78,7 +78,7 @@ describe('document outcome route interactions', { timeout: 15000 }, () => {
       expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
     );
     expect(screen.queryByRole('textbox', { name: 'Application field *' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0].isDefault).toBe(false);
     expect(JSON.parse(onSave.mock.calls[0][0].conditionRuleJson)).toEqual({
@@ -101,7 +101,7 @@ describe('document outcome route interactions', { timeout: 15000 }, () => {
     await waitFor(() =>
       expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Save transition' }));
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       isDefault: true,
@@ -109,25 +109,16 @@ describe('document outcome route interactions', { timeout: 15000 }, () => {
     });
   });
   it.each([
-    ['{"field":"documents.status","operator":"Equals","value":"verified"}', true],
-    ['{"field":"application.CATEGORY","operator":"Equals","value":"transfer"}', false],
-  ] as const)(
-    'clears only document presets when changing the source stage: %s',
-    async (condition, cleared) => {
-      const { user, onSave } = setup(condition);
-      await user.click(screen.getByRole('combobox', { name: 'From stage *' }));
-      await user.click(screen.getByRole('option', { name: 'Staff review' }));
-      await waitFor(() =>
-        expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
-      );
-      await user.click(screen.getByRole('button', { name: 'Save transition' }));
-      await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-      expect(onSave.mock.calls[0][0].isDefault).toBe(cleared);
-      if (cleared) expect(onSave.mock.calls[0][0].conditionRuleJson).toBeUndefined();
-      else
-        expect(JSON.parse(onSave.mock.calls[0][0].conditionRuleJson)).toEqual(
-          JSON.parse(condition)
-        );
-    }
-  );
+    ['{"field":"documents.status","operator":"Equals","value":"verified"}'],
+    ['{"field":"application.CATEGORY","operator":"Equals","value":"transfer"}'],
+  ] as const)('keeps the path attached to its document stage: %s', async (condition) => {
+    const { user, onSave } = setup(condition);
+    expect(screen.getByRole('heading', { name: 'Document verification' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'From stage *' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save path' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(onSave.mock.calls[0][0].fromStageId).toBe(source.id);
+    expect(onSave.mock.calls[0][0].isDefault).toBe(false);
+    expect(JSON.parse(onSave.mock.calls[0][0].conditionRuleJson)).toEqual(JSON.parse(condition));
+  });
 });

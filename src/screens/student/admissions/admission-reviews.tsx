@@ -31,12 +31,13 @@ export default function AdmissionReviewsScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Review queue"
+        heading="Application Reviews"
         description="Find assigned reviews, check deadlines and open the application to review its evidence."
         links={[
           { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Applications', href: studentPaths.enrollment.applications },
-          { name: 'Review queue' },
+          { name: 'Application Reviews' },
         ]}
         action={
           <Button variant="outlined" disabled={query.isFetching} onClick={query.refetch}>

@@ -21,6 +21,8 @@ export interface IChargeData {
   educationMediumId?: string;
   requestorName?: string;
   requestedOn?: string;
+	concurrencyStamp?: string;
+	availableActions?: string[];
   // Legacy per-student fields (charge lines view)
   studentId?: string;
   studentName?: string;
@@ -46,6 +48,8 @@ export interface IChargeDetailData {
   additionalNotes?: string;
   appliedOn?: string;
   chargeName?: string;
+	concurrencyStamp?: string;
+	availableActions?: string[];
   audience?: {
     scope?: {
       boardId?: string;

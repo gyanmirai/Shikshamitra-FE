@@ -4,6 +4,8 @@ import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { Box, Stack, Typography } from '@mui/material';
 
+import { normalizeAssessmentDateTime } from './assessment-date-time';
+
 export function AssessmentAttemptHistory({ attempts }: { attempts: AssessmentAttempt[] }) {
   return (
     <Stack spacing={1}>
@@ -36,9 +38,12 @@ export function AssessmentAttemptHistory({ attempts }: { attempts: AssessmentAtt
           </Typography>
           {attempt.sessionStartsAt && (
             <Typography variant="body2" sx={{ mt: 0.5 }}>
-              Scheduled: {dayjs(attempt.sessionStartsAt).format('DD MMM YYYY, h:mm A')}
+              Scheduled:{' '}
+              {dayjs(normalizeAssessmentDateTime(attempt.sessionStartsAt)).format(
+                'DD MMM YYYY, h:mm A'
+              )}
               {attempt.sessionEndsAt
-                ? ` – ${dayjs(attempt.sessionEndsAt).format('DD MMM YYYY, h:mm A')}`
+                ? ` – ${dayjs(normalizeAssessmentDateTime(attempt.sessionEndsAt)).format('DD MMM YYYY, h:mm A')}`
                 : ''}
               {attempt.sessionLocation ? ` · ${attempt.sessionLocation}` : ''}
             </Typography>

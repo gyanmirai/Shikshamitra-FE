@@ -76,7 +76,7 @@ export function ApplicationReviewPanel({
                 <Button
                   variant="contained"
                   disabled={!summary.canComplete || query.isFetching || advancing}
-                  onClick={onComplete}
+                  onClick={() => onComplete?.()}
                 >
                   {advancing ? 'Continuing…' : 'Continue admission'}
                 </Button>

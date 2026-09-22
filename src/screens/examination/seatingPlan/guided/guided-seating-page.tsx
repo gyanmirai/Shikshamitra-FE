@@ -4,7 +4,6 @@ import { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import Skeleton from '@mui/material/Skeleton';
 import { academicPaths } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -12,6 +11,7 @@ import { useGetSeatingPlanWorkspaceQuery } from 'src/redux/academicAPI/Examinati
 
 import { normalizeWorkspace } from './normalize-workspace';
 import { GuidedSeatingWorkspace } from './guided-seating-workspace';
+import { GuidedSeatingWorkspaceSkeleton } from './guided-seating-workspace-skeleton';
 
 export default function GuidedSeatingPage() {
   const router = useRouter();
@@ -48,7 +48,7 @@ export default function GuidedSeatingPage() {
       />
 
       {isLoading || (isFetching && !currentData) ? (
-        <Skeleton variant="rounded" sx={{ flex: 1, minHeight: 520, borderRadius: 2 }} />
+        <GuidedSeatingWorkspaceSkeleton />
       ) : isError || !normalizedWorkspace ? (
         <Alert severity="error" action={<Button onClick={() => refetch()}>Try again</Button>}>
           The seating workspace could not be loaded.

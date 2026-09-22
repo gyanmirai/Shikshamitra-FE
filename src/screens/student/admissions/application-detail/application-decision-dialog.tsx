@@ -14,6 +14,8 @@ import { ReviewDialog } from '../review/review-dialog';
 import { ReviewRecoveryAlert } from '../review/review-recovery-alert';
 import { useApplicationDecisionForm } from './use-application-decision-form';
 import { ApplicationDecisionDialogActions } from './application-decision-dialog-actions';
+import { formatAdmissionReference } from '../admission-reference';
+import { ADMISSION_DATE_TIME_FORMAT } from '../admission-date-formats';
 import {
   isDangerousAdmissionDecision,
   ADMISSION_DECISION_ACTION_LABELS,
@@ -77,7 +79,8 @@ export function ApplicationDecisionDialog({
           />
           <Alert severity={isDangerous ? 'warning' : 'info'}>
             <Typography variant="body2">
-              This decision is recorded in the application history for {current.applicationNumber}.
+              This decision is recorded in the application history for{' '}
+              {formatAdmissionReference(current.applicationNumber)}.
             </Typography>
           </Alert>
           {concurrencyUnavailable && (
@@ -89,6 +92,7 @@ export function ApplicationDecisionDialog({
           {requiresExpiry && (
             <DateTimePicker
               label="Offer expires at"
+              format={ADMISSION_DATE_TIME_FORMAT}
               value={formik.values.offerExpiresAt ? dayjs(formik.values.offerExpiresAt) : null}
               minDateTime={dayjs()}
               onChange={(value) =>

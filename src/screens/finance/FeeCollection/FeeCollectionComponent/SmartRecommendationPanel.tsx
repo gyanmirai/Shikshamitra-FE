@@ -61,11 +61,15 @@ const SmartRecommendationPanel = ({
   const nowMonth = new Date().getMonth();
 
   const overdueGroups = allMonthWise.filter(
-    (g) => g.month < nowMonth && g.items.some((i) => i.due > 0)
+    (g) => g.month < nowMonth && g.items.some((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
   );
 
   const overdueTotal = overdueGroups.reduce(
-    (s, g) => s + g.items.filter((i) => i.due > 0).reduce((ss, i) => ss + i.due, 0),
+    (s, g) =>
+      s +
+      g.items
+        .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
+        .reduce((ss, i) => ss + i.due + (i.lateFeeAmount ?? 0), 0),
     0
   );
 
@@ -79,10 +83,16 @@ const SmartRecommendationPanel = ({
   );
   const quarterMonthEnums = quarterMonthNames.map((m) => FeeMonth[m as keyof typeof FeeMonth]);
   const quarterGroups = allMonthWise.filter(
-    (g) => quarterMonthEnums.includes(g.month) && g.items.some((i) => i.due > 0)
+    (g) =>
+      quarterMonthEnums.includes(g.month) &&
+      g.items.some((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
   );
   const quarterTotal = quarterGroups.reduce(
-    (s, g) => s + g.items.filter((i) => i.due > 0).reduce((ss, i) => ss + i.due, 0),
+    (s, g) =>
+      s +
+      g.items
+        .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
+        .reduce((ss, i) => ss + i.due + (i.lateFeeAmount ?? 0), 0),
     0
   );
 
@@ -105,8 +115,17 @@ const SmartRecommendationPanel = ({
         overdueGroups.forEach((g) => {
           const period = toPeriod(FeeMonth[g.month] as string, currentYear);
           g.items
-            .filter((i) => i.due > 0)
-            .forEach((i) => items.push({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));
+            .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
+            .forEach((i) =>
+              items.push({
+                dueFeeId: i.dueFeeId,
+                feeHeadId: i.feeHeadId,
+                period,
+                dueAmount: i.due,
+                lateFeeAmount: i.lateFeeAmount,
+                installmentLabel: i.installmentLabel,
+              })
+            );
         });
         onSelectionChange(items);
       },
@@ -128,8 +147,17 @@ const SmartRecommendationPanel = ({
         quarterGroups.forEach((g) => {
           const period = toPeriod(FeeMonth[g.month] as string, currentYear);
           g.items
-            .filter((i) => i.due > 0)
-            .forEach((i) => items.push({ feeHeadId: i.feeHeadId, period, dueAmount: i.due }));
+            .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
+            .forEach((i) =>
+              items.push({
+                dueFeeId: i.dueFeeId,
+                feeHeadId: i.feeHeadId,
+                period,
+                dueAmount: i.due,
+                lateFeeAmount: i.lateFeeAmount,
+                installmentLabel: i.installmentLabel,
+              })
+            );
         });
         onSelectionChange(items);
       },

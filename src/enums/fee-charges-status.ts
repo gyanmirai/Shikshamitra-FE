@@ -2,6 +2,7 @@ export enum ChargesPaymentStatus {
   Pending,
   Approved,
   Rejected,
+  Voided,
 }
 
 export const ChargesPaymentStatusOptions = [
@@ -17,10 +18,15 @@ export const ChargesPaymentStatusOptions = [
     label: 'Rejected',
     value: ChargesPaymentStatus.Rejected,
   },
+  {
+    label: 'Voided',
+    value: ChargesPaymentStatus.Voided,
+  },
 ];
 
 export const ChargesPaymentStatusColors = {
   [ChargesPaymentStatus.Pending]: 'warning',
   [ChargesPaymentStatus.Approved]: 'success',
   [ChargesPaymentStatus.Rejected]: 'error',
+  [ChargesPaymentStatus.Voided]: 'default',
 };

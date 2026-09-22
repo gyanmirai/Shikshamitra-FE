@@ -93,7 +93,7 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
     setSelectedDivisionId,
     classesLoading,
   } = filters;
-  const tabs = useTabs(ConcessionStatusType.Pending);
+  const tabs = useTabs('pending');
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const actions = financePermissions.fees.concessionActions;
   const canAdd = hasGrantedPermission(permissions, actions.add);
@@ -174,19 +174,31 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
 
   // Filter items by tab
   const filteredItems = useMemo(
-    () => allItems.filter((item: any) => item.status === tabs.value),
+    () => {
+      const groupedStatuses: Record<string, ConcessionStatusType[]> = {
+        pending: [ConcessionStatusType.Draft, ConcessionStatusType.Pending],
+        approved: [
+          ConcessionStatusType.Approved,
+          ConcessionStatusType.PartiallyReversed,
+          ConcessionStatusType.Reversed,
+        ],
+        rejected: [ConcessionStatusType.Rejected, ConcessionStatusType.Cancelled],
+      };
+      return allItems.filter((item: any) => groupedStatuses[tabs.value]?.includes(item.status));
+    },
     [allItems, tabs.value]
   );
 
   const concessionCounts = useMemo(
     () => ({
-      pending: allConcessionData?.pendingCount ?? 0,
-      draft: allConcessionData?.draftCount ?? 0,
-      approved: allConcessionData?.approvedCount ?? 0,
-      rejected: allConcessionData?.rejectedCount ?? 0,
-      cancelled: allConcessionData?.cancelledCount ?? 0,
-      partiallyReversed: allConcessionData?.partiallyReversedCount ?? 0,
-      reversed: allConcessionData?.reversedCount ?? 0,
+      pending:
+        (allConcessionData?.pendingCount ?? 0) + (allConcessionData?.draftCount ?? 0),
+      approved:
+        (allConcessionData?.approvedCount ?? 0) +
+        (allConcessionData?.partiallyReversedCount ?? 0) +
+        (allConcessionData?.reversedCount ?? 0),
+      rejected:
+        (allConcessionData?.rejectedCount ?? 0) + (allConcessionData?.cancelledCount ?? 0),
     }),
     [allConcessionData]
   );
@@ -194,46 +206,22 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   const TABS = useMemo(
     () => [
       {
-        label: 'Draft',
-        value: ConcessionStatusType.Draft,
-        count: concessionCounts.draft,
-        color: 'default',
-      },
-      {
         label: 'Pending',
-        value: ConcessionStatusType.Pending,
+        value: 'pending',
         count: concessionCounts.pending,
         color: 'warning',
       },
       {
         label: 'Approved',
-        value: ConcessionStatusType.Approved,
+        value: 'approved',
         count: concessionCounts.approved,
         color: 'success',
       },
       {
         label: 'Rejected',
-        value: ConcessionStatusType.Rejected,
+        value: 'rejected',
         count: concessionCounts.rejected,
         color: 'error',
-      },
-      {
-        label: 'Cancelled',
-        value: ConcessionStatusType.Cancelled,
-        count: concessionCounts.cancelled,
-        color: 'error',
-      },
-      {
-        label: 'Partially reversed',
-        value: ConcessionStatusType.PartiallyReversed,
-        count: concessionCounts.partiallyReversed,
-        color: 'warning',
-      },
-      {
-        label: 'Reversed',
-        value: ConcessionStatusType.Reversed,
-        count: concessionCounts.reversed,
-        color: 'default',
       },
     ],
     [concessionCounts]

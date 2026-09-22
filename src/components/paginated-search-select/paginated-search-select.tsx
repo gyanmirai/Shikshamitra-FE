@@ -23,6 +23,7 @@ export function PaginatedSearchSelect<
   helperText,
   error,
   isLoading,
+  loadingLabel = 'Loading options',
   getOptionLabel,
   getOptionKey,
   renderOption,
@@ -140,7 +141,7 @@ export function PaginatedSearchSelect<
           </Box>
         ) : loading ? (
           <Box display="flex" justifyContent="center" p={2}>
-            <CircularProgress size={16} />
+            <CircularProgress size={16} aria-label={loadingLabel} />
           </Box>
         ) : options?.length === 0 ? (
           <SearchNotFound query={inputValue} />
@@ -158,7 +159,9 @@ export function PaginatedSearchSelect<
             ...params.InputProps,
             endAdornment: (
               <>
-                {loading ? <CircularProgress color="inherit" size={16} /> : null}
+                {loading ? (
+                  <CircularProgress color="inherit" size={16} aria-label={loadingLabel} />
+                ) : null}
                 {params.InputProps.endAdornment}
               </>
             ),

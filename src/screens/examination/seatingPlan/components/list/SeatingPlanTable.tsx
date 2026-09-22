@@ -6,6 +6,10 @@ import SeatingPlanMobileList from './SeatingPlanMobileList';
 import { buildSeatingPlanColumns } from './seating-plan-table-columns';
 
 import type { SeatingPlanListRow } from '../../types';
+import { Box, Button, Typography } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import Link from 'next/link';
+import { academicPaths } from 'src/constants/academic-menu';
 
 interface Props {
   rows: SeatingPlanListRow[];
@@ -48,8 +52,33 @@ export default function SeatingPlanTable({
     <CustomizableTable
       tableId="seating-plan-table"
       tableTitle="Examination seating plans"
-      noDataText={emptyState}
-      isLoading={isLoading}
+      noDataText={
+        <Box width="100%" display="flex" flexDirection="column" alignItems="center">
+          <Typography variant="body1" color="text.secondary" mb={1}>
+            {isFiltered ? 'No seating plans match this status' : 'No exams are ready for seating'}
+          </Typography>
+          {isFiltered ? (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:filter-remove-outline" />}
+              onClick={onClearFilter}
+            >
+              Clear status filter
+            </Button>
+          ) : (
+            <Button
+              component={Link}
+              href={academicPaths.examination.schedule}
+              size="small"
+              variant="contained"
+              startIcon={<Iconify icon="mdi:calendar-edit-outline" />}
+            >
+              Open examination schedule
+            </Button>
+          )}
+        </Box>
+      } isLoading={isLoading}
       handleRowClick={(row) => onRowClick(row as SeatingPlanListRow)}
       columns={buildSeatingPlanColumns(canAdd, onPrimaryAction)}
       data={rows}

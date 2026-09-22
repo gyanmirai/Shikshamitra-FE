@@ -16,6 +16,7 @@ export type WorkflowActionPermissions = {
 type Props = WorkflowActionPermissions & {
   workflow: AdmissionWorkflow;
   onView: () => void;
+  onEdit: () => void;
   onClone: () => void;
   onCreateVersion: () => void;
   onUsage: () => void;
@@ -23,9 +24,26 @@ type Props = WorkflowActionPermissions & {
   onDelete: () => void;
 };
 
-export function WorkflowRowActions({ workflow, canEdit, canDelete, canClone, canCreateVersion, canArchive, canViewUsage, onView, onClone, onCreateVersion, onUsage, onArchive, onDelete }: Props) {
+export function WorkflowRowActions({
+  workflow,
+  canEdit,
+  canDelete,
+  canClone,
+  canCreateVersion,
+  canArchive,
+  canViewUsage,
+  onView,
+  onEdit,
+  onClone,
+  onCreateVersion,
+  onUsage,
+  onArchive,
+  onDelete,
+}: Props) {
   const item = (label: string, icon: string, action: () => void, color?: string) => (
-    <MenuItem onClick={action}><Iconify icon={icon} color={color} /> {label}</MenuItem>
+    <MenuItem aria-label={`${label} ${workflow.name}`} onClick={action}>
+      <Iconify icon={icon} color={color} /> {label}
+    </MenuItem>
   );
   return (
     <ThreeDotsActions
@@ -33,17 +51,31 @@ export function WorkflowRowActions({ workflow, canEdit, canDelete, canClone, can
       moreLabel={`More actions for ${workflow.name}`}
       showViewIcon
       viewIcon="mdi:eye-outline"
-      viewLabel={workflow.status === 0 && canEdit ? 'Open builder' : 'View workflow'}
+      viewLabel={`Preview ${workflow.name}`}
       handleViewClick={onView}
+      showEditIcon={canEdit}
+      editLabel={`Edit ${workflow.name}`}
+      disableEditIcon={workflow.status !== 0}
+      handleEditClick={onEdit}
+      showDeleteIcon={canDelete}
+      deleteLabel={`Delete ${workflow.name}`}
+      disableDeleteIcon={workflow.status !== 0}
+      handleDeleteClick={onDelete}
       actions={({ popover }) => {
-        const run = (action: () => void) => { popover.onClose(); action(); };
+        const run = (action: () => void) => {
+          popover.onClose();
+          action();
+        };
         return (
-          <MenuList>
+          <MenuList dense>
             {canClone && item('Clone as draft', 'mdi:content-copy', () => run(onClone))}
-            {canCreateVersion && workflow.status !== 0 && item('Create new version', 'mdi:file-plus-outline', () => run(onCreateVersion))}
+            {canCreateVersion &&
+              [1, 2, 7].includes(workflow.status) &&
+              item('Create new version', 'mdi:file-plus-outline', () => run(onCreateVersion))}
             {canViewUsage && item('View usage', 'mdi:chart-box-outline', () => run(onUsage))}
-            {canArchive && workflow.status === 1 && item('Archive', 'mdi:archive-outline', () => run(onArchive), 'warning.main')}
-            {canDelete && workflow.status === 0 && item('Delete draft', 'mdi:delete-outline', () => run(onDelete), 'error.main')}
+            {canArchive &&
+              [1, 7].includes(workflow.status) &&
+              item('Archive', 'mdi:archive-outline', () => run(onArchive), 'warning.main')}
           </MenuList>
         );
       }}

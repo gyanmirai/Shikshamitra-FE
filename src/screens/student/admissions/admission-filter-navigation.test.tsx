@@ -63,4 +63,18 @@ describe('admission filter navigation', () => {
       { scroll: false }
     );
   });
+
+  it('clears offering criteria while preserving cycle, sorting, and page size context', () => {
+    mocks.pathname = '/student/admissions/settings/offerings';
+    mocks.query =
+      'cycle=cycle-1&campus=campus-1&board=board-1&active=true&availability=2&search=grade&page=3&size=25&sort=code+asc';
+    const { result } = renderHook(() => useAdmissionOfferingFilters());
+
+    act(() => result.current.clearFilters());
+
+    expect(mocks.replace).toHaveBeenCalledWith(
+      '/student/admissions/settings/offerings?cycle=cycle-1&sort=code+asc&size=25',
+      { scroll: false }
+    );
+  });
 });

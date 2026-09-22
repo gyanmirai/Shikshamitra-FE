@@ -308,17 +308,13 @@ export interface ConcessionTypeOption {
   documents: ConcessionDocumentRequirement[];
 }
 
-export interface ConcessionRequestContext {
-  academicYearId: string;
-  studentId: string;
-  studentName: string;
-  studentFeeStructureId: string;
-  feeStructureName: string;
+export interface ConcessionPolicyOption {
   concessionPolicyId: string;
   concessionPolicyVersionId: string;
-  concessionPolicyName: string;
-  concessionPolicyCode: string;
-  concessionPolicyVersion: number;
+  policyName: string;
+  policyCode: string;
+  version: number;
+  isDefault: boolean;
   valueSource: 'PolicyFixed' | 'RequestEnteredWithinLimits';
   calculationMethod: 'Percentage' | 'FixedAmount' | 'FullWaiver';
   percentageValue?: number | null;
@@ -327,6 +323,14 @@ export interface ConcessionRequestContext {
   maximumFixedAmount?: number | null;
   applyOn: 'CurrentInstallment' | 'FutureInstallments' | 'AllOutstanding';
   roundingMethod: string;
+}
+
+export interface ConcessionRequestContext {
+  academicYearId: string;
+  studentId: string;
+  studentName: string;
+  studentFeeStructureId: string;
+  feeStructureName: string;
   currency: string;
   assignmentSelectionRequired: boolean;
   assignments: {
@@ -339,6 +343,7 @@ export interface ConcessionRequestContext {
   blockers: string[];
   feeHeads: ConcessionEligibleFeeHead[];
   eligibleDueFees: ConcessionEligibleDueFee[];
+  concessionPolicies: ConcessionPolicyOption[];
   concessionTypes: ConcessionTypeOption[];
 }
 
@@ -358,6 +363,8 @@ export interface ConcessionDraftCommand {
   academicYearId: string;
   studentId: string;
   studentFeeStructureId?: string;
+  concessionPolicyId: string;
+  concessionPolicyVersionId: string;
   concessionTypeId: string;
   sourceRequestId?: string;
   idempotencyKey?: string;

@@ -16,12 +16,6 @@ const JSON_SETTINGS = [
     placeholder: '{"minLength":2,"messages":{"minLength":"Enter at least 2 characters."}}',
     help: 'Set additional checks and applicant-facing error messages.',
   },
-  {
-    key: 'visibilityRuleJson',
-    label: 'Visibility rule JSON',
-    placeholder: '{"field":"Applicant.Age","operator":"GreaterThan","value":5}',
-    help: 'Configure a visibility condition. Invalid rules hide the field.',
-  },
 ] as const;
 
 export function FieldJsonSettings({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {

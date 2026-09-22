@@ -6,6 +6,7 @@ import type {
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useLazyGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
 import {
@@ -27,10 +28,17 @@ import AdmissionRuntimeField from '../admission-runtime-field';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
+import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
   parseRuntimeOptionsSource,
   resolveRuntimeOptionsJson,
 } from './application-runtime-options';
+import {
+  readRepeatableValues,
+  writeRepeatableValue,
+  removeRepeatableEntry,
+  getRepeatableEntryCount,
+} from '../form-repeatable-values';
 
 type Props = {
   application: AdmissionApplication;
@@ -77,17 +85,25 @@ export function ApplicationRuntimeForm({
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const fieldsPerRow = form.definition.fieldsPerRow ?? 1;
   const [activeStep, setActiveStep] = useState(0);
+  const [language, setLanguage] = useState(form.definition.defaultLanguage ?? 'en');
+  const supportedLanguages = form.definition.supportedLanguages?.length
+    ? form.definition.supportedLanguages
+    : [form.definition.defaultLanguage ?? 'en'];
   const [loadOptions] = useLazyGetAdmissionFormOptionsQuery();
   const [resolvedOptions, setResolvedOptions] = useState<Record<string, string>>({});
+  const localizedSections = useMemo(
+    () => form.definition.sections.map((section) => localizeAdmissionSection(section, language)),
+    [form.definition.sections, language]
+  );
   const visibleSections = useMemo(
     () =>
-      form.definition.sections.filter((section) =>
+      localizedSections.filter((section) =>
         isAdmissionRuleVisible(section.visibilityRuleJson, values)
       ),
-    [form.definition.sections, values]
+    [localizedSections, values]
   );
   const isStepper = form.definition.layoutType === 1;
-  const visibleSteps = getAdmissionFormStepGroups(form.definition.sections)
+  const visibleSteps = getAdmissionFormStepGroups(localizedSections)
     .filter((step) => isAdmissionRuleVisible(step.visibilityRuleJson, values))
     .map((step) => ({
       ...step,
@@ -98,8 +114,8 @@ export function ApplicationRuntimeForm({
     ? (visibleSteps[activeStep]?.sections.map(({ section }) => section) ?? [])
     : visibleSections;
   const fields = useMemo(
-    () => form.definition.sections.flatMap((section) => section.fields),
-    [form.definition.sections]
+    () => localizedSections.flatMap((section) => section.fields),
+    [localizedSections]
   );
   const updateField = (code: string, value: string) => {
     onChange(code, value);
@@ -109,7 +125,7 @@ export function ApplicationRuntimeForm({
   };
   const optionRequests = useMemo<RuntimeOptionRequest[]>(
     () =>
-      form.definition.sections
+      localizedSections
         .flatMap((section) => section.fields)
         .reduce<RuntimeOptionRequest[]>((requests, field) => {
           const source = parseRuntimeOptionsSource(field.optionsJson);
@@ -122,7 +138,7 @@ export function ApplicationRuntimeForm({
             });
           return requests;
         }, []),
-    [form.academicYearId, form.definition.sections, values]
+    [form.academicYearId, localizedSections, values]
   );
   const optionRequestKey = JSON.stringify(optionRequests);
   useEffect(() => {
@@ -161,11 +177,30 @@ export function ApplicationRuntimeForm({
     setActiveStep((step) => Math.min(step + 1, visibleSteps.length - 1));
   };
 
-  const renderSection = (section: (typeof form.definition.sections)[number]) => (
-    <SectionCard key={section.id} title={section.name} gridProps={{ spacing: 1 }}>
-      {section.fields
-        .filter((field) => isAdmissionRuleVisible(field.visibilityRuleJson, values))
-        .map((field) => (
+  const renderSectionFields = (
+    section: (typeof localizedSections)[number],
+    entryIndex?: number
+  ) => {
+    const rowValues =
+      entryIndex === undefined
+        ? values
+        : {
+            ...values,
+            ...Object.fromEntries(
+              section.fields.map((field) => [
+                field.code,
+                readRepeatableValues(values[field.code])[entryIndex] ?? '',
+              ])
+            ),
+          };
+    return section.fields
+      .filter((field) => isAdmissionRuleVisible(field.visibilityRuleJson, rowValues))
+      .map((field) => {
+        const value =
+          entryIndex === undefined
+            ? (values[field.code] ?? '')
+            : (readRepeatableValues(values[field.code])[entryIndex] ?? '');
+        return (
           <Grid key={field.code} size={{ xs: 12, sm: 12 / fieldsPerRow }}>
             <AdmissionRuntimeField
               field={{
@@ -173,21 +208,95 @@ export function ApplicationRuntimeForm({
                 optionsJson: resolveRuntimeOptionsJson({
                   configuredOptionsJson: field.optionsJson,
                   resolvedOptionsJson: resolvedOptions[field.code],
-                  currentValue: values[field.code] ?? '',
+                  currentValue: value,
                   multiple: field.fieldType === 7,
                 }),
               }}
-              value={values[field.code] ?? ''}
+              value={value}
               disabled={field.readOnly || application.status !== 0}
-              error={fieldErrors[field.code]}
+              error={
+                fieldErrors[`${field.code}[${entryIndex}]`] || fieldErrors[field.code]
+                  ? field.translations?.[language]?.validationMessage ||
+                    fieldErrors[`${field.code}[${entryIndex}]`] ||
+                    fieldErrors[field.code]
+                  : undefined
+              }
               onBlur={() => onBlur(field.code)}
-              formValues={values}
-              onChange={(value) => updateField(field.code, value)}
+              formValues={rowValues}
+              onChange={(nextValue) =>
+                entryIndex === undefined
+                  ? updateField(field.code, nextValue)
+                  : onChange(
+                      field.code,
+                      writeRepeatableValue(values[field.code], entryIndex, nextValue)
+                    )
+              }
             />
           </Grid>
+        );
+      });
+  };
+
+  const renderSection = (section: (typeof localizedSections)[number]) => {
+    if (!section.isRepeatable)
+      return (
+        <SectionCard key={section.id} title={section.name} gridProps={{ spacing: 1 }}>
+          {renderSectionFields(section)}
+        </SectionCard>
+      );
+
+    const count = getRepeatableEntryCount(
+      section.fields.map((field) => values[field.code]),
+      section.minEntries
+    );
+    const entryLabel = section.entryLabel || section.name.replace(/s$/i, '') || 'Entry';
+    const maxEntries = section.maxEntries ?? 1;
+    return (
+      <Stack key={section.id} spacing={1.5}>
+        <Typography variant="subtitle1">{section.name}</Typography>
+        {Array.from({ length: count }, (_, entryIndex) => (
+          <SectionCard
+            key={`${section.id}-${entryIndex}`}
+            title={`${entryLabel} ${entryIndex + 1}`}
+            gridProps={{ spacing: 1 }}
+          >
+            {renderSectionFields(section, entryIndex)}
+            {count > Math.max(section.minEntries ?? 0, 1) && application.status === 0 && (
+              <Grid size={{ xs: 12 }}>
+                <Button
+                  size="small"
+                  color="error"
+                  variant="text"
+                  onClick={() =>
+                    section.fields.forEach((field) =>
+                      onChange(field.code, removeRepeatableEntry(values[field.code], entryIndex))
+                    )
+                  }
+                >
+                  Remove {entryLabel.toLowerCase()}
+                </Button>
+              </Grid>
+            )}
+          </SectionCard>
         ))}
-    </SectionCard>
-  );
+        {count < maxEntries && application.status === 0 && (
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:plus" />}
+            onClick={() =>
+              section.fields.forEach((field) =>
+                onChange(field.code, writeRepeatableValue(values[field.code], count, ''))
+              )
+            }
+            sx={{ alignSelf: 'flex-start' }}
+          >
+            Add {entryLabel.toLowerCase()}
+          </Button>
+        )}
+      </Stack>
+    );
+  };
 
   return (
     <>
@@ -204,6 +313,21 @@ export function ApplicationRuntimeForm({
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
             {form.status === 1 ? 'Submitted' : form.status === 2 ? 'Reopened' : 'Draft'}
           </Typography>
+          {supportedLanguages.length > 1 && (
+            <Stack direction="row" justifyContent="flex-end" sx={{ mb: 2 }}>
+              <CustomSelect
+                size="small"
+                label="Form language"
+                value={language}
+                options={supportedLanguages.map((code) => ({
+                  value: code,
+                  label: getAdmissionLanguageLabel(code),
+                }))}
+                onChange={(value) => setLanguage(String(value))}
+                sx={{ width: { xs: 1, sm: 220 } }}
+              />
+            </Stack>
+          )}
           {isStepper &&
             visibleSteps.length > 0 &&
             (isMobile ? (

@@ -29,7 +29,7 @@ export function CancelAssessmentSessionDialog({
       open
       title={`Cancel ${session.name}`}
       handleClose={onClose}
-      hasUnsavedChanges={false}
+      guardUnsavedChanges={false}
       disableClose={state.isLoading}
     >
       <DialogScrollContent>

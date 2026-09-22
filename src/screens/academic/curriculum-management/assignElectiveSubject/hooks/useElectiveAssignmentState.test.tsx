@@ -61,17 +61,34 @@ describe('useElectiveAssignmentState dirty tracking', () => {
       expect(result.current.studentSelections['student-one']).toBe('computer-science');
     });
 
-    act(() => result.current.assignSubject('student-one', 'pt'));
+    act(() => result.current.toggleSubject('student-one', 'pt'));
     expect(result.current.hasUnsavedChanges).toBe(true);
     expect(result.current.unsavedChangesCount).toBe(1);
 
-    act(() => result.current.assignSubject('student-one', 'computer-science'));
+    act(() => result.current.toggleSubject('student-one', 'computer-science'));
     expect(result.current.hasUnsavedChanges).toBe(false);
 
-    act(() => result.current.assignSubject('student-two', 'pt'));
+    act(() => result.current.toggleSubject('student-two', 'pt'));
     expect(result.current.hasUnsavedChanges).toBe(true);
 
     act(() => result.current.resetSelections());
     expect(result.current.hasUnsavedChanges).toBe(false);
+  });
+
+  it('unassigns a student when the selected subject is toggled again', async () => {
+    const { result } = renderHook(() =>
+      useElectiveAssignmentState({ students, serverRecords: students, isLocked: false })
+    );
+
+    await waitFor(() => {
+      expect(result.current.studentSelections['student-one']).toBe('computer-science');
+    });
+
+    act(() => result.current.toggleSubject('student-one', 'computer-science'));
+
+    expect(result.current.studentSelections['student-one']).toBeUndefined();
+    expect(result.current.rowStatus(students[0])).toBe('unassigned');
+    expect(result.current.summary).toMatchObject({ assigned: 0, unassigned: 2 });
+    expect(result.current.hasUnsavedChanges).toBe(true);
   });
 });

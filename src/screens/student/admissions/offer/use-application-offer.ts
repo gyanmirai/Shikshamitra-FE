@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { useIssueAdmissionOfferMutation, useExtendAdmissionOfferMutation,
+import { useIssueAdmissionStageOfferMutation, useExtendAdmissionOfferMutation,
   useRespondAdmissionOfferMutation, useReissueAdmissionOfferMutation,
   useWithdrawAdmissionOfferMutation } from 'src/redux/student/admissions/admission-offer-api';
 
@@ -11,7 +11,7 @@ export function useApplicationOffer(applicationId: string, stageId: string, conc
   canAdvance: boolean, onComplete: (concurrencyStamp?: string) => void) {
   const [action, setAction] = useState<OfferAction>(null);
 	const idempotencyKey = useRef('');
-  const [issue, issueState] = useIssueAdmissionOfferMutation();
+  const [issue, issueState] = useIssueAdmissionStageOfferMutation();
   const [respond, respondState] = useRespondAdmissionOfferMutation();
   const [extend, extendState] = useExtendAdmissionOfferMutation();
   const [withdraw, withdrawState] = useWithdrawAdmissionOfferMutation();

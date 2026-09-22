@@ -10,6 +10,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -19,11 +20,11 @@ import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
@@ -63,6 +64,18 @@ import type { IConcessionFormProps } from '../type';
 
 type ValueEntry = { basedOn: 0 | 1; amount: number; netAmount: number };
 
+const FEE_STRUCTURE_ASSIGNMENT_REQUIRED = 'Finance:Concession:010029';
+const FEE_STRUCTURE_ASSIGNMENT_MESSAGE =
+  'No fee structure is assigned to this student for the selected academic year. Assign a fee structure before creating a concession request.';
+
+type RequestContextError = {
+  data?: {
+    errorCode?: string;
+    detail?: string;
+    message?: string;
+  };
+};
+
 type FormValues = {
   boardId: string;
   boardName: string;
@@ -75,6 +88,8 @@ type FormValues = {
   studentId: string;
   studentName: string;
   selectedStudent: any;
+  concessionPolicyId: string;
+  concessionPolicyVersionId: string;
   concessionTypeId: string;
   concessionTypeDocuments: any[];
   selectedFeeHeads: Record<string, string[]>;
@@ -143,6 +158,8 @@ function buildInitialValues(
       studentId: detailData.studentId || '',
       studentName: detailData.studentName || '',
       selectedStudent: null,
+      concessionPolicyId: detailData.concessionPolicyId || '',
+      concessionPolicyVersionId: detailData.concessionPolicyVersionId || '',
       concessionTypeId: typeId || '',
       concessionTypeDocuments: [{ concessionTypeId: typeId, documents: docs }],
       selectedFeeHeads,
@@ -164,6 +181,8 @@ function buildInitialValues(
     studentId: defaults?.studentId || '',
     studentName: defaults?.studentName || '',
     selectedStudent: null,
+    concessionPolicyId: '',
+    concessionPolicyVersionId: '',
     concessionTypeId: defaults?.concessionTypeId || '',
     concessionTypeDocuments: [],
     selectedFeeHeads: {},
@@ -179,6 +198,8 @@ const validationSchema = Yup.object({
   standardId: Yup.string().required('Class is required'),
   divisionId: Yup.string().required('Division is required'),
   studentId: Yup.string().required('Student is required'),
+  concessionPolicyId: Yup.string().required('Concession policy is required'),
+  concessionPolicyVersionId: Yup.string().required('Concession policy version is required'),
   concessionTypeId: Yup.string().required('Concession type is required'),
 });
 
@@ -203,6 +224,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   defaultStandardId = '',
   defaultDivisionId = '',
 }) => {
+  const router = useRouter();
   const isEditMode = !!editData?.id;
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -221,6 +243,10 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     concessionPermissions.uploadDocument
   );
   const canViewDocuments = hasGrantedPermission(permissions, concessionPermissions.viewDocument);
+  const canOpenFeeStructureAssignment = hasGrantedPermission(
+    permissions,
+    `${financePermissions.fees.structureAssign}.View`
+  );
   const theme = useTheme();
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
 
@@ -335,6 +361,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           academicYearId: currentYear?.id || '',
           studentId: values.studentId,
           studentFeeStructureId: requestContext?.studentFeeStructureId,
+          concessionPolicyId: values.concessionPolicyId,
+          concessionPolicyVersionId: values.concessionPolicyVersionId,
           concessionTypeId: typeId,
           feeHeadConcessions,
         }).unwrap();
@@ -352,6 +380,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
           academicYearId: currentYear?.id || '',
           studentId: values.studentId,
           studentFeeStructureId: requestContext?.studentFeeStructureId,
+          concessionPolicyId: values.concessionPolicyId,
+          concessionPolicyVersionId: values.concessionPolicyVersionId,
           concessionTypeId: typeId,
           sourceRequestId: student?.sourceRequestId,
           remarks: values.remarks,
@@ -435,6 +465,33 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     [requestContext?.concessionTypes]
   );
 
+  const concessionPoliciesList = useMemo(
+    () => requestContext?.concessionPolicies || [],
+    [requestContext?.concessionPolicies]
+  );
+
+  const selectedPolicy = useMemo(
+    () =>
+      concessionPoliciesList.find(
+        (policy) =>
+          policy.concessionPolicyId === values.concessionPolicyId &&
+          policy.concessionPolicyVersionId === values.concessionPolicyVersionId
+      ),
+    [concessionPoliciesList, values.concessionPolicyId, values.concessionPolicyVersionId]
+  );
+
+  useEffect(() => {
+    if (values.concessionPolicyId || concessionPoliciesList.length === 0) return;
+    const initialPolicy =
+      concessionPoliciesList.find((policy) => policy.isDefault) || concessionPoliciesList[0];
+    setFieldValue('concessionPolicyId', initialPolicy.concessionPolicyId, false);
+    setFieldValue('concessionPolicyVersionId', initialPolicy.concessionPolicyVersionId, false);
+  }, [
+    concessionPoliciesList,
+    setFieldValue,
+    values.concessionPolicyId,
+  ]);
+
   const feeHeads: any[] = useMemo(
     () =>
       (requestContext?.feeHeads || []).map((item) => ({
@@ -444,14 +501,17 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     [requestContext]
   );
 
-  // Detect the "no fee structure assigned" business-rule error
-  const noFeeStructureError = feeStructureIsError;
+  const requestContextError = (feeStructureError as RequestContextError | undefined)?.data;
+  const noFeeStructureError =
+    feeStructureIsError && requestContextError?.errorCode === FEE_STRUCTURE_ASSIGNMENT_REQUIRED;
 
   const previewRequest = useMemo(
     () => ({
       academicYearId: currentYear?.id || '',
       studentId: values.studentId,
       studentFeeStructureId: requestContext?.studentFeeStructureId,
+      concessionPolicyId: values.concessionPolicyId,
+      concessionPolicyVersionId: values.concessionPolicyVersionId,
       concessionTypeId: values.concessionTypeId,
       feeHeadConcessions: buildFeeHeadConcessions(values),
     }),
@@ -460,10 +520,14 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
   const previewReady =
     Boolean(
-      previewRequest.academicYearId && previewRequest.studentId && previewRequest.concessionTypeId
+      previewRequest.academicYearId &&
+        previewRequest.studentId &&
+        previewRequest.concessionPolicyId &&
+        previewRequest.concessionPolicyVersionId &&
+        previewRequest.concessionTypeId
     ) &&
     previewRequest.feeHeadConcessions.length > 0 &&
-    (requestContext?.valueSource === 'PolicyFixed' ||
+    (selectedPolicy?.valueSource === 'PolicyFixed' ||
       previewRequest.feeHeadConcessions.every((item) => Number(item.amount) > 0));
 
   useEffect(() => {
@@ -557,10 +621,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         standardId: true,
         divisionId: true,
         studentId: true,
+        concessionPolicyId: true,
+        concessionPolicyVersionId: true,
         concessionTypeId: true,
       });
       shikshaMitraToast.error({
-        message: 'Select the student and concession type before saving.',
+        message: 'Select the student, concession policy, and concession type before saving.',
       });
       return;
     }
@@ -576,6 +642,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
       academicYearId: currentYear?.id || '',
       studentId: values.studentId,
       studentFeeStructureId: requestContext.studentFeeStructureId,
+      concessionPolicyId: values.concessionPolicyId,
+      concessionPolicyVersionId: values.concessionPolicyVersionId,
       concessionTypeId: typeId,
       sourceRequestId: student?.sourceRequestId,
       remarks: values.remarks,
@@ -939,6 +1007,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                               setFieldTouched('studentId', false);
                               setFieldValue('studentName', value?.name || '');
                               setFieldValue('selectedStudent', value || null);
+                              setFieldValue('concessionPolicyId', '');
+                              setFieldValue('concessionPolicyVersionId', '');
                             }}
                             getOptionLabel={(option: any) => option.name || ''}
                             renderOption={(props, option: any) => (
@@ -967,8 +1037,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                     <Paper variant="outlined" sx={paperSx}>
                       <Alert severity="info" sx={{ mb: 1.5 }}>
                         This student has more than one fee assignment. Select the assignment that
-                        owns the dues for this request; the assigned policy will be loaded
-                        automatically.
+                        owns the dues for this request. You will choose the concession policy in
+                        this request.
                       </Alert>
                       <CustomSelect
                         label="Fee assignment *"
@@ -985,6 +1055,8 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         value={selectedAssignmentId}
                         onChange={(value) => {
                           setSelectedAssignmentId(String(value));
+                          setFieldValue('concessionPolicyId', '');
+                          setFieldValue('concessionPolicyVersionId', '');
                           setFieldValue('concessionTypeId', '');
                           setFieldValue('selectedFeeHeads', {});
                           setFieldValue('valueEntries', {});
@@ -1031,6 +1103,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         borderColor: 'warning.main',
                         bgcolor: 'warning.lighter',
                         display: 'flex',
+                        flexDirection: { xs: 'column', sm: 'row' },
                         alignItems: 'flex-start',
                         gap: 1.5,
                       }}
@@ -1040,28 +1113,39 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         width={24}
                         sx={{ color: 'warning.dark', flexShrink: 0, mt: 0.25 }}
                       />
-                      <Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="subtitle2" color="warning.dark">
+                          Fee structure assignment required
+                        </Typography>
                         <Typography variant="body2" color="text.secondary" mt={0.25}>
-                          {(feeStructureError as { data?: { errorCode?: string } } | undefined)
-                            ?.data?.errorCode ||
-                            'No fee structure has been assigned to this student. Please assign a fee structure before creating a concession request.'}
+                          {FEE_STRUCTURE_ASSIGNMENT_MESSAGE}
                         </Typography>
                       </Box>
+                      {canOpenFeeStructureAssignment && (
+                        <Button
+                          variant="contained"
+                          color="warning"
+                          size="small"
+                          startIcon={<Iconify icon="mdi:file-document-edit-outline" />}
+                          onClick={() => router.push(financePaths.fees.structureAssign)}
+                          sx={{ flexShrink: 0 }}
+                        >
+                          Assign Fee Structure
+                        </Button>
+                      )}
                     </Paper>
                   </Grid>
                 )}
 
-                {values.studentId &&
-                  !feeStructureLoading &&
-                  requestContext?.concessionPolicyName && (
+                {values.studentId && !feeStructureLoading && selectedPolicy && (
                     <Grid size={{ xs: 12 }}>
                       <Alert severity="info" variant="outlined" sx={{ mb: 1.5 }}>
-                        Policy: <strong>{requestContext.concessionPolicyName}</strong> (
-                        {requestContext.concessionPolicyCode}, version{' '}
-                        {requestContext.concessionPolicyVersion}). It applies to{' '}
-                        {requestContext.applyOn === 'AllOutstanding'
+                        Policy: <strong>{selectedPolicy.policyName}</strong> (
+                        {selectedPolicy.policyCode}, version {selectedPolicy.version}). It applies
+                        to{' '}
+                        {selectedPolicy.applyOn === 'AllOutstanding'
                           ? ' all outstanding installments'
-                          : requestContext.applyOn === 'CurrentInstallment'
+                          : selectedPolicy.applyOn === 'CurrentInstallment'
                             ? ' the earliest unpaid installment'
                             : ' installments after the earliest unpaid installment'}
                         .
@@ -1179,6 +1263,47 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, md: 6 }}>
                           <ShakingTextField
+                            error={!!(touched.concessionPolicyId && errors.concessionPolicyId)}
+                          >
+                            <Autocomplete
+                              options={concessionPoliciesList}
+                              value={selectedPolicy || null}
+                              onChange={(_, newValue) => {
+                                setFieldValue(
+                                  'concessionPolicyId',
+                                  newValue?.concessionPolicyId || ''
+                                );
+                                setFieldValue(
+                                  'concessionPolicyVersionId',
+                                  newValue?.concessionPolicyVersionId || ''
+                                );
+                                setFieldValue('selectedFeeHeads', {});
+                                setFieldValue('valueEntries', {});
+                              }}
+                              size="small"
+                              getOptionLabel={(option) =>
+                                `${option.policyName} (${option.policyCode}, v${option.version})`
+                              }
+                              renderInput={(params) => (
+                                <TextField
+                                  {...params}
+                                  size="small"
+                                  label="Concession Policy *"
+                                  fullWidth
+                                  error={
+                                    !!errors.concessionPolicyId && touched.concessionPolicyId
+                                  }
+                                  helperText={
+                                    (touched.concessionPolicyId &&
+                                      errors.concessionPolicyId) as string
+                                  }
+                                />
+                              )}
+                            />
+                          </ShakingTextField>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 6 }}>
+                          <ShakingTextField
                             error={!!(touched.concessionTypeId && errors.concessionTypeId)}
                           >
                             <Autocomplete
@@ -1283,7 +1408,11 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         </Box>
                       </Stack>
                       <Divider sx={{ mb: 2 }} />
-                      {!values.concessionTypeId ? (
+                      {!values.concessionPolicyId ? (
+                        <Typography color="text.secondary" textAlign="center" py={2}>
+                          Please select a concession policy above to calculate eligible fee heads.
+                        </Typography>
+                      ) : !values.concessionTypeId ? (
                         <Typography color="text.secondary" textAlign="center" py={2}>
                           Please select a concession type above to map fee heads.
                         </Typography>
@@ -1444,6 +1573,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         }}
                         concessionTypes={concessionTypesList}
                         requestContext={requestContext}
+                        policy={selectedPolicy}
                         preview={authoritativePreview ?? undefined}
                       />
                     </Paper>

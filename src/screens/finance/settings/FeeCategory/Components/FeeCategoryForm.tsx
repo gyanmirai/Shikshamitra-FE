@@ -18,27 +18,30 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetFeeHeadModulesQuery } from 'src/redux/feeHeadModule/feeHeadModuleApi';
-import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
-import {
-  Box,
-  Grid,
-  Paper,
-  Button,
-  Switch,
-  TextField,
-  Typography,
-  DialogActions,
-  FormControlLabel,
-} from '@mui/material';
 import {
   useGetFeeCategoriesQuery,
   useAddFeeCategoryMutation,
   useGetFeeCategoryByIdQuery,
   useUpdateFeeCategoryMutation,
 } from 'src/redux/feeCategory/feeCategoryApi';
+import {
+  Box,
+  Grid,
+  Paper,
+  Button,
+  Switch,
+  Tooltip,
+  TextField,
+  Typography,
+  IconButton,
+  Autocomplete,
+  DialogActions,
+  FormControlLabel,
+} from '@mui/material';
 
 import { feeCategoryValidationSchema } from './FeeCategoryValidation';
 import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
@@ -247,18 +250,10 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                 size="small"
                 value={formik.values.name}
                 onChange={(e) => {
-                  let value = e.target.value
-                    .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, spaces
-                    .replace(/^\s+/g, '') // Remove leading spaces
-                    .replace(/^\d+/, ''); // Remove leading numbers
-                  value = value
-                    .split(' ')
-                    .map((word) =>
-                      word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : ''
-                    )
-                    .join(' ');
-
-                  formik.setFieldValue('name', value);
+                  formik.setFieldValue(
+                    'name',
+                    e.target.value.replace(/\s+/g, ' ').replace(/^\s+/g, '')
+                  );
                 }}
                 error={formik.touched.name && Boolean(formik.errors.name)}
                 helperText={
@@ -348,6 +343,11 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                       ? formik.touched.feeHeads[idx]
                       : undefined;
 
+                    const selectedIncomeCategory =
+                      incomeCategoryOptions.find(
+                        (option: any) => option.id === fh.incomeCategoryId
+                      ) ?? null;
+
                     return (
                       <Paper
                         key={idx}
@@ -359,9 +359,41 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                           borderColor: 'divider',
                         }}
                       >
-                        <Grid container spacing={2}>
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          justifyContent="space-between"
+                          mb={2}
+                        >
+                          <Typography variant="subtitle2" fontWeight={600}>
+                            Fee Head {idx + 1}
+                          </Typography>
+                          <Tooltip title="Remove fee head">
+                            <IconButton
+                              color="error"
+                              size="small"
+                              aria-label={`Remove fee head ${idx + 1}`}
+                              onClick={() => handleRemoveClick(idx)}
+                            >
+                              <Iconify icon={GlobalIcons.delete} />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+
+                        <Box
+                          sx={{
+                            display: 'grid',
+                            gridTemplateColumns: {
+                              xs: 'minmax(0, 1fr)',
+                              sm: 'repeat(2, minmax(0, 1fr))',
+                              md: 'minmax(150px, 1fr) minmax(220px, 1.45fr) minmax(130px, 0.8fr) minmax(170px, auto)',
+                            },
+                            gap: 2,
+                            alignItems: 'start',
+                          }}
+                        >
                           {/* Fee Head Name */}
-                          <Grid size={{ xs: 12, md: 3 }}>
+                          <Box minWidth={0}>
                             <ShakingTextField
                               error={!!(feeHeadTouched?.name && feeHeadError?.name)}
                             >
@@ -372,19 +404,10 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                 name={`feeHeads.${idx}.name`}
                                 value={fh.name}
                                 onChange={(e) => {
-                                  let value = e.target.value
-                                    .replace(/[^a-zA-Z0-9\s]/g, '') // Allow letters, numbers, spaces
-                                    .replace(/^\s+/g, '') // Remove leading spaces
-                                    .replace(/^\d+/, ''); // Remove leading numbers
-                                  value = value
-                                    .split(' ')
-                                    .map((word) =>
-                                      word
-                                        ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-                                        : ''
-                                    )
-                                    .join(' ');
-                                  formik.setFieldValue(`feeHeads.${idx}.name`, value);
+                                  formik.setFieldValue(
+                                    `feeHeads.${idx}.name`,
+                                    e.target.value.replace(/\s+/g, ' ').replace(/^\s+/g, '')
+                                  );
                                 }}
                                 error={!!(feeHeadTouched?.name && feeHeadError?.name)}
                                 helperText={
@@ -395,10 +418,10 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                 inputProps={{ maxLength: 40 }}
                               />
                             </ShakingTextField>
-                          </Grid>
+                          </Box>
 
                           {/* Income Category */}
-                          <Grid size={{ xs: 12, md: 4 }}>
+                          <Box minWidth={0}>
                             <ShakingTextField
                               error={
                                 !!(
@@ -406,40 +429,96 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                 )
                               }
                             >
-                              <CustomSelect
-                                name={`feeHeads.${idx}.incomeCategoryId`}
-                                label="Income Category *"
+                              <Autocomplete
+                                size="small"
+                                fullWidth
                                 options={incomeCategoryOptions}
-                                value={fh.incomeCategoryId || ''}
-                                labelKey="displayName"
-                                valueKey="id"
-                                isLoading={isIncomeCategoryLoading || isIncomeCategoryFetching}
+                                value={selectedIncomeCategory}
+                                loading={isIncomeCategoryLoading || isIncomeCategoryFetching}
                                 disabled={Boolean(fh.isUsedInDownstream)}
-                                onChange={(value) => {
-                                  formik.setFieldValue(`feeHeads.${idx}.incomeCategoryId`, value);
+                                getOptionLabel={(option: any) => option?.displayName || ''}
+                                isOptionEqualToValue={(option: any, value: any) =>
+                                  option?.id === value?.id
+                                }
+                                onChange={(_event, value: any) => {
+                                  formik.setFieldValue(
+                                    `feeHeads.${idx}.incomeCategoryId`,
+                                    value?.id || ''
+                                  );
                                   formik.setFieldTouched(`feeHeads.${idx}.incomeCategoryId`, false);
                                 }}
-                                error={
-                                  !!(
-                                    feeHeadTouched?.incomeCategoryId &&
-                                    feeHeadError?.incomeCategoryId
-                                  )
+                                onBlur={() =>
+                                  formik.setFieldTouched(`feeHeads.${idx}.incomeCategoryId`, true)
                                 }
-                                helperText={
-                                  feeHeadTouched?.incomeCategoryId && feeHeadError?.incomeCategoryId
-                                    ? (feeHeadError.incomeCategoryId as string)
-                                    : 'Determines the Income Account Head for posting.'
-                                }
-                                formControlProps={{
-                                  fullWidth: true,
-                                  sx: { maxWidth: 'unset' },
+                                noOptionsText="No income categories found"
+                                renderOption={(props, option: any) => {
+                                  const { key, ...optionProps } = props;
+
+                                  return (
+                                    <Box
+                                      component="li"
+                                      key={key}
+                                      {...optionProps}
+                                      sx={{ minWidth: 0 }}
+                                    >
+                                      <Typography
+                                        noWrap
+                                        title={option.displayName}
+                                        sx={{
+                                          minWidth: 0,
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                        }}
+                                      >
+                                        {option.displayName}
+                                      </Typography>
+                                    </Box>
+                                  );
+                                }}
+                                renderInput={(params) => (
+                                  <TextField
+                                    {...params}
+                                    name={`feeHeads.${idx}.incomeCategoryId`}
+                                    label="Income Category *"
+                                    error={
+                                      !!(
+                                        feeHeadTouched?.incomeCategoryId &&
+                                        feeHeadError?.incomeCategoryId
+                                      )
+                                    }
+                                    helperText={
+                                      feeHeadTouched?.incomeCategoryId &&
+                                      feeHeadError?.incomeCategoryId
+                                        ? (feeHeadError.incomeCategoryId as string)
+                                        : 'Determines the Income Account Head for posting.'
+                                    }
+                                    inputProps={{
+                                      ...params.inputProps,
+                                      title: selectedIncomeCategory?.displayName || '',
+                                    }}
+                                  />
+                                )}
+                                slotProps={{
+                                  paper: { sx: { overflowX: 'hidden' } },
+                                  listbox: { sx: { overflowX: 'hidden' } },
+                                }}
+                                sx={{
+                                  minWidth: 0,
+                                  '& .MuiAutocomplete-inputRoot': {
+                                    minWidth: 0,
+                                    flexWrap: 'nowrap',
+                                  },
+                                  '& .MuiAutocomplete-input': {
+                                    minWidth: '0 !important',
+                                    textOverflow: 'ellipsis',
+                                  },
                                 }}
                               />
                             </ShakingTextField>
-                          </Grid>
+                          </Box>
 
                           {/* Module */}
-                          <Grid size={{ xs: 12, md: 3 }}>
+                          <Box minWidth={0}>
                             <ShakingTextField
                               error={!!(feeHeadTouched?.module && feeHeadError?.module)}
                             >
@@ -463,11 +542,23 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                               />
                             </ShakingTextField>
-                          </Grid>
+                          </Box>
 
                           {/* Concession Applicable Switch */}
-                          <Grid size={{ xs: 12, md: 2 }}>
+                          <Box
+                            sx={{
+                              minWidth: 0,
+                              minHeight: 40,
+                              display: 'flex',
+                              alignItems: 'center',
+                            }}
+                          >
                             <FormControlLabel
+                              sx={{
+                                m: 0,
+                                gap: 0.5,
+                                '& .MuiFormControlLabel-label': { whiteSpace: 'nowrap' },
+                              }}
                               control={
                                 <Switch
                                   checked={fh.isConcessionApplied}
@@ -481,23 +572,20 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                 />
                               }
                               label={
-                                <Box>
-                                  <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    display="block"
-                                  >
-                                    Enable concessions.
-                                  </Typography>
-                                </Box>
+                                <Typography variant="body2" color="text.secondary" noWrap>
+                                  Enable concessions
+                                </Typography>
                               }
                             />
-                          </Grid>
+                          </Box>
 
                           {/* Description */}
-                          <Grid size={{ xs: 12, md: 3 }}>
+                          <Box sx={{ gridColumn: { xs: '1', sm: '1 / -1' }, minWidth: 0 }}>
                             <TextField
                               fullWidth
+                              multiline
+                              minRows={2}
+                              maxRows={4}
                               label="Description"
                               name={`feeHeads.${idx}.description`}
                               value={fh.description}
@@ -510,21 +598,8 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                               }
                               inputProps={{ maxLength: 500 }}
                             />
-                          </Grid>
-                          <Grid
-                            size={{ xs: 12, md: 1 }}
-                            display="flex"
-                            alignItems="center"
-                            justifyContent="center"
-                          >
-                            <Button
-                              color="error"
-                              size="small"
-                              startIcon={<Iconify icon={GlobalIcons.delete} />}
-                              onClick={() => handleRemoveClick(idx)}
-                            />
-                          </Grid>
-                        </Grid>
+                          </Box>
+                        </Box>
                       </Paper>
                     );
                   })}

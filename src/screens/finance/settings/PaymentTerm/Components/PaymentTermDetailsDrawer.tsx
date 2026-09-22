@@ -16,6 +16,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
+import { alpha } from '@mui/material/styles';
 import {
   useGetPaymentTermByIdQuery,
   useGetPaymentTermVersionHistoryQuery,
@@ -91,7 +92,8 @@ function InstallmentCard({ installment }: { installment: PaymentTermInstallmentR
                 borderRadius: '50%',
                 placeItems: 'center',
                 color: 'primary.main',
-                bgcolor: 'primary.lighter',
+                bgcolor: (theme) =>
+                  alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.12),
               }}
             >
               <Typography variant="subtitle2">{installment.sequence}</Typography>
@@ -233,8 +235,14 @@ function VersionList({
                 borderRadius: 1,
                 alignItems: 'flex-start',
                 borderColor: selected ? 'primary.main' : 'divider',
-                bgcolor: selected ? 'primary.lighter' : 'background.paper',
-                '&.Mui-selected, &.Mui-selected:hover': { bgcolor: 'primary.lighter' },
+                bgcolor: (theme) =>
+                  selected
+                    ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.2 : 0.12)
+                    : theme.palette.background.paper,
+                '&.Mui-selected, &.Mui-selected:hover': {
+                  bgcolor: (theme) =>
+                    alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.2 : 0.12),
+                },
               }}
             >
               <ListItemText
@@ -300,7 +308,8 @@ function VersionSnapshot({
                 borderRadius: 1,
                 placeItems: 'center',
                 color: 'primary.main',
-                bgcolor: 'primary.lighter',
+                bgcolor: (theme) =>
+                  alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.12),
               }}
             >
               <Iconify icon="solar:document-text-bold-duotone" width={22} />

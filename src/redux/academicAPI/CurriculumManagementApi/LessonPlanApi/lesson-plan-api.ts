@@ -2,6 +2,46 @@ import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../../academicApi';
 
+export type LessonPlanTimelinePlan = {
+  id: string;
+  topic: string;
+  status: number | string;
+  actualCompletionPercentage: number;
+  diaryStatus: number | string;
+};
+
+export type LessonPlanTimelineSlot = {
+  timetableSlotId: string;
+  periodName: string;
+  startTime: string;
+  endTime: string;
+  standardId: string;
+  standardName: string;
+  divisionId: string;
+  divisionName: string;
+  subjectId: string;
+  subjectName: string;
+  lessonPlan?: LessonPlanTimelinePlan | null;
+  isTimetableSlotOnly: boolean;
+  insightType?: string | null;
+  insightSeverity?: string | null;
+  insightMessage?: string | null;
+  isPlanCreationBlocked: boolean;
+};
+
+export type LessonPlanTimelineData = {
+  date: string;
+  teacherId: string;
+  slots: LessonPlanTimelineSlot[];
+  isNonWorkingDay?: boolean;
+};
+
+export type LessonPlanTimelineParams = {
+  date?: string;
+  teacherId?: string;
+  academicMediumId?: string;
+};
+
 export const lessonPlanApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // ─── Lesson Plans ───────────────────────────────────────────────────────
@@ -10,7 +50,7 @@ export const lessonPlanApi = academicApi.injectEndpoints({
       providesTags: [academicType.lessonPlan],
     }),
 
-    getLessonPlanTimeline: builder.query({
+    getLessonPlanTimeline: builder.query<LessonPlanTimelineData, LessonPlanTimelineParams>({
       query: (params) => ({
         url: '/academic/curriculum/lesson-plans/timeline',
         method: 'GET',
@@ -53,7 +93,11 @@ export const lessonPlanApi = academicApi.injectEndpoints({
 
     createLessonPlan: builder.mutation({
       query: (body) => ({ url: '/academic/curriculum/lesson-plans', method: 'POST', body }),
-      invalidatesTags: [academicType.lessonPlan, academicType.coverageTracker, academicType.chapter],
+      invalidatesTags: [
+        academicType.lessonPlan,
+        academicType.coverageTracker,
+        academicType.chapter,
+      ],
     }),
 
     updateLessonPlan: builder.mutation({
@@ -67,7 +111,11 @@ export const lessonPlanApi = academicApi.injectEndpoints({
 
     deleteLessonPlan: builder.mutation({
       query: ({ id }) => ({ url: `/academic/curriculum/lesson-plans/${id}`, method: 'DELETE' }),
-      invalidatesTags: [academicType.lessonPlan, academicType.coverageTracker, academicType.chapter],
+      invalidatesTags: [
+        academicType.lessonPlan,
+        academicType.coverageTracker,
+        academicType.chapter,
+      ],
     }),
 
     submitLessonPlan: builder.mutation({
@@ -177,7 +225,11 @@ export const lessonPlanApi = academicApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [academicType.teacherDiary, academicType.coverageTracker, academicType.chapter],
+      invalidatesTags: [
+        academicType.teacherDiary,
+        academicType.coverageTracker,
+        academicType.chapter,
+      ],
     }),
 
     // ─── Evidence ────────────────────────────────────────────────────────────
@@ -323,16 +375,6 @@ export const lessonPlanApi = academicApi.injectEndpoints({
       }),
     }),
 
-    // ─── Review Queue ────────────────────────────────────────────────────────
-    getReviewQueue: builder.query({
-      query: (params) => ({
-        url: '/academic/curriculum/lesson-plans/review-queue',
-        method: 'GET',
-        params,
-      }),
-      providesTags: [academicType.lessonPlanReview],
-    }),
-
     // ─── Audit Log ───────────────────────────────────────────────────────────
     getLessonPlanAuditLog: builder.query({
       query: ({ entityType, entityId }) => ({
@@ -467,7 +509,6 @@ export const {
   useGetSyllabusDelayReportQuery,
   useGetPlannedVsActualReportQuery,
   useExportLessonPlanReportMutation,
-  useGetReviewQueueQuery,
   useGetLessonPlanAuditLogQuery,
   useAiGenerateLessonPlanMutation,
   useAiGenerateDiarySummaryMutation,

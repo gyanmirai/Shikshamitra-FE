@@ -6,6 +6,7 @@ export type AdmissionOfferingConfigurationStatus = 0 | 1;
 
 export type AdmissionOfferingListItem = {
   id: string;
+  name: string;
   admissionCycleId: string;
   admissionCycleName: string;
   campusId?: string | null;
@@ -26,6 +27,7 @@ export type AdmissionOfferingListItem = {
   isActive: boolean;
   availabilityStatus: AdmissionOfferingAvailabilityStatus;
   configurationStatus: AdmissionOfferingConfigurationStatus;
+  canActivate: boolean;
   applicationCount: number;
   canEditIdentity: boolean;
   canDelete: boolean;
@@ -68,6 +70,7 @@ export type AdmissionOffering = AdmissionOfferingListItem & {
 };
 
 export type AdmissionOfferingWriteInput = {
+  name: string;
   campusId?: string | null;
   boardId: string;
   mediumId: string;
@@ -106,10 +109,10 @@ export type ValidateAdmissionOfferingInput = AdmissionOfferingWriteInput & {
 
 export type BulkAdmissionOfferingInput = Omit<
   AdmissionOfferingWriteInput,
-  'standardId' | 'code'
+  'standardId' | 'code' | 'name'
 > & {
   previewOnly: boolean;
-  items: { standardId: string; code: string }[];
+  items: { standardId: string; code: string; name?: string }[];
 };
 
 export type BulkAdmissionOfferingResult = {
@@ -121,6 +124,8 @@ export type BulkAdmissionOfferingResult = {
     code: string;
     offeringId?: string | null;
     isValid: boolean;
+    canSaveInactive: boolean;
+    canActivate: boolean;
     errors: AdmissionOfferingValidationError[];
   }>;
 };
@@ -222,7 +227,7 @@ export const admissionOfferingsApi = api.injectEndpoints({
         id: string;
         body: Pick<
           AdmissionOfferingWriteInput,
-          'campusId' | 'boardId' | 'mediumId' | 'stageId' | 'standardId' | 'code'
+          'name' | 'campusId' | 'boardId' | 'mediumId' | 'stageId' | 'standardId' | 'code'
         > & { admissionCycleId: string; isActive?: boolean };
       }
     >({
@@ -276,6 +281,7 @@ export const admissionOfferingsApi = api.injectEndpoints({
 
 export const {
   useGetAdmissionOfferingsQuery,
+  useLazyGetAdmissionOfferingsQuery,
   useGetAdmissionOfferingQuery,
   useLazyGetAdmissionOfferingQuery,
   useCreateAdmissionOfferingMutation,

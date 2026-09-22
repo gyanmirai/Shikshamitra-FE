@@ -108,7 +108,56 @@ describe('parseApiProblemDetail', () => {
       },
     });
 
-    expect(parsed.detail).toBe('Cannot evaluate feedback as the student has not submitted their work yet.');
+    expect(parsed.detail).toBe(
+      'Cannot evaluate feedback as the student has not submitted their work yet.'
+    );
     expect(parsed.errorCode).toBe('ShikshaMitra.Submission.CannotEvaluateMissingSubmission');
+  });
+
+  it('explains that a different user must review a form approval request', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        status: 400,
+        title: 'Business rule violated',
+        detail: 'One or more business rules were violated.',
+        errorCode: 'Admissions.FormMakerCheckerRequired',
+      },
+    });
+
+    expect(parsed.detail).toBe(
+      'A different authorized user must review this form. The user who requested approval cannot approve or reject the same form.'
+    );
+  });
+
+  it('maps an admission workflow concurrency conflict to a safe retry message', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        status: 400,
+        title: 'Business rule violated',
+        detail: 'One or more business rules were violated.',
+        errorCode: 'Admissions.WorkflowConcurrencyConflict',
+      },
+    });
+
+    expect(parsed.detail).toBe(
+      'This workflow changed after the list was loaded. Refresh the latest version, review it, and try again.'
+    );
+    expect(parsed.errorCode).toBe('Admissions.WorkflowConcurrencyConflict');
+  });
+
+  it('maps an admission stage status conflict to an actionable message', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        status: 400,
+        title: 'Business rule violated',
+        detail: 'One or more business rules were violated.',
+        errorCode: 'Admissions:ApplicationStageCannotAdvance',
+      },
+    });
+
+    expect(parsed.detail).toBe(
+      "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again."
+    );
+    expect(parsed.errorCode).toBe('Admissions:ApplicationStageCannotAdvance');
   });
 });

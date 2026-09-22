@@ -1,22 +1,33 @@
 import { it, vi, expect, describe } from 'vitest';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
 import { useOnboardingSettings, OnboardingSettingsProvider } from '../onboarding-settings-context';
-import {
-  GrNumberSettingsScreen,
-  RollNumberSettingsScreen,
-  DivisionChangesSettingsPanel,
-} from './onboarding-number-settings';
 import {
   AccountsAccessSettingsScreen,
   ReadinessAccessSettingsScreen,
   OnboardingRulesSettingsScreen,
 } from './onboarding-policy-settings';
+import {
+  GrNumberSettingsScreen,
+  RollNumberSettingsScreen,
+  DivisionChangesSettingsPanel,
+  NumberingPlacementSettingsScreen,
+} from './onboarding-number-settings';
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
+
+vi.mock('src/components/custom-tabs', () => ({
+  CustomTabs: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('src/routes/hooks', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/student/onboarding/settings/numbering-placement',
+  useSearchParams: () => new URLSearchParams('tab=gr-number'),
 }));
 
 vi.mock('src/components/custom-breadcrumbs', () => ({
@@ -45,15 +56,40 @@ vi.mock('src/components/customizabaleTable', () => ({
   default: ({
     tableTitle,
     columns,
+    data = [],
   }: {
     tableTitle: string;
-    columns: Array<{ id: string; label: string }>;
+    columns: Array<{
+      id: string;
+      label: string;
+      render?: (value: unknown, row: Record<string, unknown>) => React.ReactNode;
+    }>;
+    data?: Array<Record<string, unknown>>;
   }) => (
-    <div data-testid="numbering-configurations-table">
+    <div data-testid="customizable-table">
       <h3>{tableTitle}</h3>
-      {columns.map((column) => (
-        <span key={column.id}>{column.label}</span>
-      ))}
+      <table>
+        <thead>
+          <tr>
+            {columns.map((column) => (
+              <th key={column.id}>{column.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, rowIndex) => (
+            <tr key={String(row.id ?? rowIndex)}>
+              {columns.map((column) => (
+                <td key={column.id}>
+                  {column.render
+                    ? column.render(row[column.id], row)
+                    : String(row[column.id] ?? '')}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   ),
 }));
@@ -61,8 +97,52 @@ vi.mock('src/components/customizabaleTable', () => ({
 vi.mock('src/screens/finance/hooks/useFinanceAcademicFilters', () => ({
   useFinanceAcademicFilters: () => ({
     boards: [
-      { id: 'board-cbse', name: 'CBSE' },
-      { id: 'board-gseb', name: 'GSEB' },
+      {
+        id: 'board-cbse',
+        name: 'CBSE',
+        educationMediums: [
+          {
+            id: 'medium-cbse-english',
+            name: 'English',
+            educationMediumStages: [
+              {
+                id: 'stage-cbse-secondary',
+                name: 'Secondary',
+                standards: [
+                  {
+                    id: 'grade-6',
+                    name: 'Grade 6',
+                    divisions: [{ id: 'division-cbse-6-a', name: 'A' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: 'board-gseb',
+        name: 'GSEB',
+        educationMediums: [
+          {
+            id: 'medium-gseb-gujarati',
+            name: 'Gujarati',
+            educationMediumStages: [
+              {
+                id: 'stage-gseb-primary',
+                name: 'Primary',
+                standards: [
+                  {
+                    id: 'standard-4',
+                    name: 'Standard 4',
+                    divisions: [{ id: 'division-gseb-4-a', name: 'A' }],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     ],
     classOptions: [{ id: 'grade-6', name: 'Grade 6' }],
     setSelectedBoard: vi.fn(),
@@ -73,29 +153,33 @@ describe('ReadinessAccessSettingsScreen UI', () => {
   const renderWithSettings = (component: React.ReactNode) =>
     render(<OnboardingSettingsProvider>{component}</OnboardingSettingsProvider>);
 
-  it('renders a compact profile overview and opens the detailed rules drawer', () => {
+  it('renders readiness rules in the common table and opens the detailed rules drawer', () => {
     renderWithSettings(<ReadinessAccessSettingsScreen />);
 
-    // Breadcrumbs & Notice Banner
     expect(screen.getByTestId('breadcrumb-heading')).toHaveTextContent('Readiness & Access');
+    expect(screen.queryByTestId('configuration-scope')).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Frontend session mode — applying these rules updates Student Setup/i)
+      screen.getByText(/Rules applied here update Student Setup for the current frontend session/i)
     ).toBeInTheDocument();
 
-    // Profile overview
-    expect(screen.getByText('Readiness profiles')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Readiness & access rules' })).toBeInTheDocument();
     expect(screen.getAllByText('Fresh admission').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Transfer student').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Mid-year admission').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Returning student').length).toBeGreaterThan(0);
     expect(screen.getByText('Required checks')).toBeInTheDocument();
     expect(screen.getByText('Access release')).toBeInTheDocument();
-    expect(screen.getByText('Connected to Setup')).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Edit Fresh admission rules' })[0]);
 
-    // Detailed drawer
     expect(screen.getByRole('heading', { name: 'Edit Fresh admission Rules' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Academic applicability' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Board coverage' })).toHaveTextContent(
+      'All Boards'
+    );
+    expect(screen.getByRole('combobox', { name: 'Medium coverage' })).toHaveTextContent(
+      'All Media'
+    );
     expect(screen.getByRole('heading', { name: 'Readiness checks' })).toBeInTheDocument();
     expect(screen.getByText('Admission approved')).toBeInTheDocument();
     expect(screen.getByText('Class and Division')).toBeInTheDocument();
@@ -138,23 +222,19 @@ describe('ReadinessAccessSettingsScreen UI', () => {
     const docSwitch = screen.getByRole('switch', { name: 'Required documents required' });
     expect(docSwitch).toBeChecked();
 
-    // Toggle off
     fireEvent.click(docSwitch);
     expect(docSwitch).not.toBeChecked();
 
-    // Buttons become enabled
     const resetButton = screen.getByRole('button', { name: 'Reset' });
     const saveButton = screen.getByRole('button', { name: 'Apply to Setup' });
     expect(resetButton).toBeEnabled();
     expect(saveButton).toBeEnabled();
 
-    // Test Reset
     fireEvent.click(resetButton);
     expect(docSwitch).toBeChecked();
     expect(resetButton).toBeDisabled();
     expect(saveButton).toBeDisabled();
 
-    // Toggle off and Save
     fireEvent.click(docSwitch);
     expect(docSwitch).not.toBeChecked();
     expect(saveButton).toBeEnabled();
@@ -222,6 +302,32 @@ describe('ReadinessAccessSettingsScreen UI', () => {
     expect(screen.getByTestId('mid-year-documents')).toHaveTextContent('false');
     expect(screen.getByTestId('fresh-documents')).toHaveTextContent('true');
   });
+
+  it('allows a school to add its own readiness rule', () => {
+    renderWithSettings(<ReadinessAccessSettingsScreen />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add readiness rule' }));
+
+    expect(screen.getByRole('heading', { name: 'Add readiness rule' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Rule name' })).toHaveValue('New readiness rule');
+    expect(screen.getByRole('combobox', { name: 'Admission route' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Board coverage' })).toHaveTextContent(
+      'Selected Boards'
+    );
+    expect(screen.getByRole('button', { name: 'Add rule' })).toBeDisabled();
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Selected Boards' }));
+    fireEvent.click(screen.getByRole('option', { name: 'GSEB' }));
+    fireEvent.keyDown(screen.getByRole('listbox', { name: 'Selected Boards' }), {
+      key: 'Escape',
+    });
+
+    const addButton = screen.getByRole('button', { name: 'Add rule' });
+    expect(addButton).toBeEnabled();
+    fireEvent.click(addButton);
+
+    expect(screen.getAllByText('New readiness rule').length).toBeGreaterThan(0);
+  });
 });
 
 describe('OnboardingRulesSettingsScreen and AccountsAccessSettingsScreen UI', () => {
@@ -236,6 +342,39 @@ describe('OnboardingRulesSettingsScreen and AccountsAccessSettingsScreen UI', ()
     const switches = screen.getAllByRole('switch');
     expect(switches.length).toBe(4);
     expect(switches[0]).toBeChecked();
+  });
+
+  it('adds a narrower Readiness academic override while keeping the route fallback', () => {
+    render(
+      <OnboardingSettingsProvider>
+        <ReadinessAccessSettingsScreen />
+      </OnboardingSettingsProvider>
+    );
+
+    fireEvent.click(
+      screen.getAllByRole('button', { name: 'Add Fresh admission academic override' })[0]
+    );
+
+    expect(
+      screen.getByRole('heading', { name: 'Add Fresh admission Academic Override' })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Board coverage' })).toHaveTextContent(
+      'Selected Boards'
+    );
+    expect(screen.getByRole('button', { name: 'Add override' })).toBeDisabled();
+
+    const boardField = screen.getByRole('combobox', { name: 'Selected Boards' });
+    fireEvent.mouseDown(boardField);
+    fireEvent.click(screen.getByRole('option', { name: 'GSEB' }));
+    fireEvent.keyDown(screen.getByRole('listbox', { name: 'Selected Boards' }), {
+      key: 'Escape',
+    });
+
+    const applyButton = screen.getByRole('button', { name: 'Add override' });
+    expect(applyButton).toBeEnabled();
+    fireEvent.click(applyButton);
+
+    expect(screen.getAllByText('Fresh admission academic override').length).toBeGreaterThan(0);
   });
 
   it('renders AccountsAccessSettingsScreen properly', () => {
@@ -253,7 +392,20 @@ describe('OnboardingRulesSettingsScreen and AccountsAccessSettingsScreen UI', ()
 });
 
 describe('Numbering settings drawer UI', () => {
-  it('shows the configured Boards directly in the GR configuration drawer', () => {
+  it('removes the shared configuration scope and header assignment selector', () => {
+    render(
+      <OnboardingSettingsProvider>
+        <NumberingPlacementSettingsScreen />
+      </OnboardingSettingsProvider>
+    );
+
+    expect(screen.getByTestId('breadcrumb-heading')).toHaveTextContent('Numbering & Placement');
+    expect(screen.queryByTestId('configuration-scope')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Assignment method' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add configuration' })).toBeInTheDocument();
+  });
+
+  it('requires explicit Board and Medium selections in the GR configuration drawer', async () => {
     render(
       <OnboardingSettingsProvider>
         <GrNumberSettingsScreen embedded />
@@ -262,14 +414,66 @@ describe('Numbering settings drawer UI', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Add configuration' }));
 
+    expect(screen.getByText('Academic Path')).toBeInTheDocument();
+    expect(screen.queryByText('Applies To')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Assignment method' })).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Applicable onboarding profiles')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Board coverage' })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Series name' }), {
+      target: { value: 'GSEB GR series' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Apply configuration' }));
+    await waitFor(() => expect(screen.getByText('Select one Board.')).toBeInTheDocument());
+
     const boardField = screen.getByRole('combobox', { name: 'Board' });
-    expect(boardField).toHaveTextContent('All boards');
+    expect(boardField).toHaveTextContent('Select Board');
     fireEvent.mouseDown(boardField);
+    expect(screen.queryByRole('option', { name: 'All Boards' })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'CBSE' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'GSEB' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('option', { name: 'GSEB' }));
+
+    expect(boardField).toHaveTextContent('GSEB');
+    const mediumField = screen.getByRole('combobox', { name: 'Medium' });
+    expect(mediumField).toHaveTextContent('Select Medium');
+    fireEvent.mouseDown(mediumField);
+    expect(screen.queryByRole('option', { name: 'All Media' })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'GSEB / Gujarati' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'CBSE / English' })).not.toBeInTheDocument();
+  });
+
+  it('does not restore All options when editing the legacy default GR series', () => {
+    render(
+      <OnboardingSettingsProvider>
+        <GrNumberSettingsScreen embedded />
+      </OnboardingSettingsProvider>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+
+    const boardField = screen.getByRole('combobox', { name: 'Board' });
+    expect(boardField).toHaveTextContent('Select Board');
+    expect(screen.getByRole('combobox', { name: 'Medium' })).toHaveTextContent(
+      'Select Board first'
+    );
+    expect(screen.getByRole('combobox', { name: 'School Level' })).toHaveTextContent(
+      'Select Medium first'
+    );
+    expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent(
+      'Select School Level first'
+    );
+    expect(screen.getByRole('combobox', { name: 'Division' })).toHaveTextContent(
+      'Select Class first'
+    );
+
+    fireEvent.mouseDown(boardField);
+    expect(screen.queryByRole('option', { name: 'All Boards' })).not.toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'CBSE' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'GSEB' })).toBeInTheDocument();
   });
 
-  it('matches the Student Setup drawer hierarchy for Roll configuration', () => {
+  it('matches the Student Setup drawer hierarchy for Roll configuration', async () => {
     render(
       <OnboardingSettingsProvider>
         <RollNumberSettingsScreen embedded />
@@ -282,8 +486,47 @@ describe('Numbering settings drawer UI', () => {
       screen.getByRole('heading', { name: 'Add Roll Number Configuration' })
     ).toBeInTheDocument();
     expect(screen.getByText('New rule')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Applicability and timing' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Board' })).toHaveTextContent('All boards');
+    expect(screen.getByRole('heading', { name: 'Academic path and timing' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Assignment method' })).not.toBeInTheDocument();
+    const boardField = screen.getByRole('combobox', { name: 'Board' });
+    const mediumField = screen.getByRole('combobox', { name: 'Medium' });
+    const schoolLevelField = screen.getByRole('combobox', { name: 'School Level' });
+    const classField = screen.getByRole('combobox', { name: 'Class' });
+    const divisionField = screen.getByRole('combobox', { name: 'Division' });
+    expect(boardField).toHaveTextContent('Select Board');
+    expect(mediumField).toHaveTextContent('Select Board first');
+    expect(schoolLevelField).toHaveTextContent('Select Medium first');
+    expect(classField).toHaveTextContent('Select School Level first');
+    expect(divisionField).toHaveTextContent('Select Class first');
+    expect(screen.queryByRole('combobox', { name: 'Class coverage' })).not.toBeInTheDocument();
+
+    fireEvent.mouseDown(boardField);
+    expect(screen.queryByRole('option', { name: 'All Boards' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('option', { name: 'CBSE' }));
+    fireEvent.mouseDown(mediumField);
+    expect(screen.queryByRole('option', { name: 'All Media' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('option', { name: 'CBSE / English' }));
+    fireEvent.mouseDown(schoolLevelField);
+    fireEvent.click(screen.getByRole('option', { name: 'CBSE / English / Secondary' }));
+    fireEvent.mouseDown(classField);
+    expect(
+      screen.getByRole('option', { name: 'CBSE / English / Secondary / Grade 6' })
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('option', { name: 'GSEB / Gujarati / Primary / Standard 4' })
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('option', { name: 'CBSE / English / Secondary / Grade 6' }));
+    fireEvent.mouseDown(divisionField);
+    fireEvent.click(
+      screen.getByRole('option', { name: 'CBSE / English / Secondary / Grade 6 / A' })
+    );
+
+    expect(boardField).toHaveTextContent('CBSE');
+    expect(mediumField).toHaveTextContent('CBSE / English');
+    expect(schoolLevelField).toHaveTextContent('CBSE / English / Secondary');
+    expect(classField).toHaveTextContent('CBSE / English / Secondary / Grade 6');
+    expect(divisionField).toHaveTextContent('CBSE / English / Secondary / Grade 6 / A');
+
     expect(screen.getByRole('heading', { name: 'Ordering and tie-breakers' })).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: 'Preservation and governance' })
@@ -292,7 +535,13 @@ describe('Numbering settings drawer UI', () => {
       screen.getByText(/Applies to Student Setup in this frontend session/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply configuration' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Apply configuration' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: 'Add Roll Number Configuration' })
+      ).not.toBeInTheDocument()
+    );
+    expect(screen.getByText('CBSE / English / Secondary / Grade 6 / A')).toBeInTheDocument();
   });
 
   it('shows Division rules in a table and opens a Board/Class override drawer', () => {
@@ -316,9 +565,12 @@ describe('Numbering settings drawer UI', () => {
     expect(
       screen.getByRole('heading', { name: 'Add Division Assignment Rule' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Applicability' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Board' })).toHaveTextContent('All boards');
-    expect(screen.getByRole('combobox', { name: 'Class applicability' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Academic path' })).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: 'Board' })).toHaveTextContent('Select Board');
+    expect(screen.getByRole('combobox', { name: 'Class' })).toHaveTextContent(
+      'Select School Level first'
+    );
+    expect(screen.queryByRole('combobox', { name: 'Board coverage' })).not.toBeInTheDocument();
 
     const applyButton = screen.getByRole('button', { name: 'Apply to Setup' });
     const resetButton = screen.getByRole('button', { name: 'Reset' });
@@ -327,7 +579,7 @@ describe('Numbering settings drawer UI', () => {
 
     const boardField = screen.getByRole('combobox', { name: 'Board' });
     fireEvent.mouseDown(boardField);
-    expect(screen.getByRole('option', { name: 'All boards' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'All Boards' })).not.toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'CBSE' })).toBeInTheDocument();
     expect(screen.getByRole('option', { name: 'GSEB' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('option', { name: 'CBSE' }));
@@ -338,7 +590,7 @@ describe('Numbering settings drawer UI', () => {
     fireEvent.click(resetButton);
     expect(applyButton).toBeDisabled();
     expect(resetButton).toBeDisabled();
-    expect(boardField).toHaveTextContent('All boards');
+    expect(boardField).toHaveTextContent('Select Board');
 
     expect(screen.getByRole('heading', { name: 'Assignment and capacity' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Approval and record impact' })).toBeInTheDocument();

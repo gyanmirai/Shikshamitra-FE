@@ -9,6 +9,7 @@ export const studentVisibilityPermissions = {
   dashboard: `${defaultModulePermissionName}Students.Dashboard`,
   records: `${defaultModulePermissionName}Students.Records`,
   admissions: `${defaultModulePermissionName}Students.Enrollment`,
+  onboarding: `${defaultModulePermissionName}Students.Onboarding`,
   attendance: `${defaultModulePermissionName}Students.Attendance`,
   notification: `${defaultModulePermissionName}Students.Notification`,
 } as const;
@@ -37,6 +38,7 @@ export const studentPaths = {
     settingsSections: {
       readinessAccess: '/student/onboarding/settings/readiness-access',
       numberingPlacement: '/student/onboarding/settings/numbering-placement',
+      operationalPolicies: '/student/onboarding/settings/operational-policies',
       rules: '/student/onboarding/settings/rules',
       grNumber: '/student/onboarding/settings/gr-number',
       rollNumber: '/student/onboarding/settings/roll-number',
@@ -98,11 +100,11 @@ export const studentPermissions = {
   },
   onboarding: {
     root: [
-      `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ViewActivation`,
-      `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ManageConfiguration`,
+      `${defaultStudentPermissionName}Onboarding.View`,
+      `${defaultStudentPermissionName}Onboarding.Add`,
     ],
-    setup: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ViewActivation`,
-    settings: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ManageConfiguration`,
+    setup: `${defaultStudentPermissionName}Onboarding.View`,
+    settings: `${defaultStudentPermissionName}Onboarding.Add`,
   },
   records: {
     root: [
@@ -169,68 +171,38 @@ const studentModule = (isDdvs: boolean) => ({
           icon: menuIconView('mdi:account-school-outline'),
           children: [
             {
-              title: 'Dashboard',
-              path: studentPaths.dashboard,
-              _action: 'student-admissions-dashboard',
-              permissionName: studentPermissions.dashboard,
-              icon: menuIconView('mdi:view-dashboard-outline'),
+              title: 'Inquiries',
+              path: studentPaths.enrollment.inquiries,
+              _action: 'student-admissions-crm-inquiries',
+              permissionName: studentPermissions.enrollment.inquiries,
+              icon: menuIconView('mdi:account-question-outline'),
             },
             {
-              title: 'CRM',
-              path: studentPaths.enrollment.inquiries,
-              _action: 'student-admissions-crm',
-              permissionName: studentPermissions.enrollment.root,
-              icon: menuIconView('mdi:account-group-outline'),
-              children: [
-                {
-                  title: 'Inquiries',
-                  path: studentPaths.enrollment.inquiries,
-                  _action: 'student-admissions-crm-inquiries',
-                  permissionName: studentPermissions.enrollment.inquiries,
-                  icon: menuIconView('mdi:account-question-outline'),
-                },
-                {
-                  title: 'Pipeline',
-                  path: studentPaths.enrollment.pipeline,
-                  _action: 'student-admissions-crm-pipeline',
-                  permissionName: studentPermissions.enrollment.applications,
-                  icon: menuIconView('mdi:chart-timeline-variant'),
-                },
-              ],
+              title: 'Pipeline',
+              path: studentPaths.enrollment.pipeline,
+              _action: 'student-admissions-crm-pipeline',
+              permissionName: studentPermissions.enrollment.inquiries,
+              icon: menuIconView('mdi:chart-timeline-variant'),
+            },
+            {
+              title: 'Assessments',
+              path: studentPaths.enrollment.assessments,
+              _action: 'student-admissions-assessments',
+              permissionName: studentPermissions.enrollment.assessments,
+              icon: menuIconView('mdi:clipboard-clock-outline'),
             },
             {
               title: 'Applications',
               path: studentPaths.enrollment.applications,
-              _action: 'student-admissions-applications',
-              permissionName: [
-                studentPermissions.enrollment.applications,
-                studentPermissions.enrollment.assessments,
-                studentPermissions.enrollment.reviews,
+              _action: 'student-admissions-applications-all',
+              permissionName: studentPermissions.enrollment.applications,
+              permissionChildren: [
+                {
+                  title: 'Application Reviews',
+                  permissionName: studentPermissions.enrollment.reviews,
+                },
               ],
               icon: menuIconView('mdi:application-edit-outline'),
-              children: [
-                {
-                  title: 'All Applications',
-                  path: studentPaths.enrollment.applications,
-                  _action: 'student-admissions-applications-all',
-                  permissionName: studentPermissions.enrollment.applications,
-                  icon: menuIconView('mdi:format-list-bulleted'),
-                },
-                {
-                  title: 'Assessments',
-                  path: studentPaths.enrollment.assessments,
-                  _action: 'student-admissions-assessments',
-                  permissionName: studentPermissions.enrollment.assessments,
-                  icon: menuIconView('mdi:clipboard-clock-outline'),
-                },
-                {
-                  title: 'Review queue',
-                  path: studentPaths.enrollment.reviews,
-                  _action: 'student-admissions-reviews',
-                  permissionName: studentPermissions.enrollment.reviews,
-                  icon: menuIconView('mdi:clipboard-check-outline'),
-                },
-              ],
             },
             {
               title: 'Settings',
@@ -240,32 +212,32 @@ const studentModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:cog-outline'),
               children: [
                 {
-                  title: 'Admission Cycles',
+                  title: 'Admission Periods',
                   path: studentPaths.enrollment.settings.cycles,
                   _action: 'student-admissions-settings-cycles',
                   permissionName: studentPermissions.enrollment.settings.cycles,
                   icon: menuIconView('mdi:calendar-sync-outline'),
                 },
                 {
-                  title: 'Admission Offerings',
-                  path: studentPaths.enrollment.settings.offerings,
-                  _action: 'student-admissions-settings-offerings',
-                  permissionName: studentPermissions.enrollment.settings.offerings,
-                  icon: menuIconView('mdi:school-outline'),
+                  title: 'Admission Forms',
+                  path: studentPaths.enrollment.settings.forms,
+                  _action: 'student-admissions-settings-forms',
+                  permissionName: studentPermissions.enrollment.settings.forms,
+                  icon: menuIconView('mdi:form-select'),
                 },
                 {
-                  title: 'Workflow Builder',
+                  title: 'Admission Process',
                   path: studentPaths.enrollment.settings.workflows,
                   _action: 'student-admissions-settings-workflows',
                   permissionName: studentPermissions.enrollment.settings.workflows,
                   icon: menuIconView('mdi:graph-outline'),
                 },
                 {
-                  title: 'Form Builder',
-                  path: studentPaths.enrollment.settings.forms,
-                  _action: 'student-admissions-settings-forms',
-                  permissionName: studentPermissions.enrollment.settings.forms,
-                  icon: menuIconView('mdi:form-select'),
+                  title: 'Admission Setup',
+                  path: studentPaths.enrollment.settings.offerings,
+                  _action: 'student-admissions-settings-offerings',
+                  permissionName: studentPermissions.enrollment.settings.offerings,
+                  icon: menuIconView('mdi:school-outline'),
                 },
               ],
             },
@@ -276,7 +248,7 @@ const studentModule = (isDdvs: boolean) => ({
           path: studentPaths.onboarding.root,
           _action: 'student-onboarding',
           permissionName: studentPermissions.onboarding.root,
-          visibilityPermissionName: studentVisibilityPermissions.admissions,
+          visibilityPermissionName: studentVisibilityPermissions.onboarding,
           icon: menuIconView('mdi:account-arrow-right-outline'),
           children: [
             {

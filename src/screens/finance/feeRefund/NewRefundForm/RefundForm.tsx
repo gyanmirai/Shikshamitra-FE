@@ -30,7 +30,9 @@ import {
   type FeeRefundRequestDto,
   type RefundEligibilityDto,
   useCreateFeeRefundMutation,
+  useSubmitFeeRefundMutation,
   useUpdateFeeRefundMutation,
+  usePreviewFeeRefundMutation,
   useLazyGetRefundEligibilityQuery,
 } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
@@ -179,6 +181,14 @@ const FeeRefundFormComponent = ({
     type: 'mutation',
     currentQueryAndMutation: useUpdateFeeRefundMutation,
   });
+  const [previewFeeRefund, { isLoading: isPreviewing }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: usePreviewFeeRefundMutation,
+  });
+  const [submitFeeRefund, { isLoading: isSubmittingDraft }] = useQueryAndMutation({
+    type: 'mutation',
+    currentQueryAndMutation: useSubmitFeeRefundMutation,
+  });
   const {
     data: editRefundDetail,
     isLoading: editLoading,
@@ -217,8 +227,11 @@ const FeeRefundFormComponent = ({
 
       setLoadingEditData(true);
       const detail = editRefundDetail as FeeRefundRequestDto;
-      const lineAmountByDueFeeId = new Map<string, number>(
-        (detail.lines || []).map((line) => [line.dueFeeId, Number(line.amount) || 0])
+      const lineAmountByAllocationId = new Map<string, number>(
+        (detail.lines || []).map((line) => [
+          line.sourceAllocationId || line.dueFeeId,
+          Number(line.amount) || 0,
+        ])
       );
 
       try {
@@ -230,11 +243,13 @@ const FeeRefundFormComponent = ({
         const mappedFeeHeads: IFeeHeadRefundItem[] = (eligibility?.feeHeads || [])
           .map((feeHead) => {
             const months = (feeHead.months || [])
-              .filter((m) => lineAmountByDueFeeId.has(m.dueFeeId))
+              .filter((m) => lineAmountByAllocationId.has(m.sourceAllocationId))
               .map((m) => ({
                 dueFeeId: m.dueFeeId,
+                sourceAllocationId: m.sourceAllocationId,
+                sourceReceiptId: m.sourceReceiptId,
                 month: `${FeeMonth[m.month] ?? `Month ${m.month}`} ${m.year}`,
-                amount: lineAmountByDueFeeId.get(m.dueFeeId) ?? 0,
+                amount: lineAmountByAllocationId.get(m.sourceAllocationId) ?? 0,
               }));
 
             return {
@@ -315,11 +330,13 @@ const FeeRefundFormComponent = ({
           return;
         }
 
+        await previewFeeRefund(payload).unwrap();
         if (isEdit && editRefundId) {
           await updateFeeRefund({ id: editRefundId, body: payload }).unwrap();
-          shikshaMitraToast.success({ message: 'Refund request updated successfully.' });
+          shikshaMitraToast.success({ message: 'Refund draft updated successfully.' });
         } else {
-          await createFeeRefund(payload).unwrap();
+          const draft = await createFeeRefund(payload).unwrap();
+          await submitFeeRefund(draft.id).unwrap();
           shikshaMitraToast.success({ message: 'Refund request submitted successfully.' });
         }
 
@@ -466,7 +483,7 @@ const FeeRefundFormComponent = ({
               variant="outlined"
               color="inherit"
               size="small"
-              disabled={loading || isSubmitting || isUpdating}
+              disabled={loading || isSubmitting || isUpdating || isPreviewing || isSubmittingDraft}
               startIcon={<Iconify icon={GlobalIcons.cancel} />}
               onClick={(e) => onCancel?.(e, false)}
             >
@@ -476,7 +493,15 @@ const FeeRefundFormComponent = ({
               type="submit"
               variant="contained"
               size="small"
-              loading={loading || isSubmitting || isUpdating || editLoading || editFetching}
+              loading={
+                loading ||
+                isSubmitting ||
+                isUpdating ||
+                isPreviewing ||
+                isSubmittingDraft ||
+                editLoading ||
+                editFetching
+              }
               loadingPosition="start"
               startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
               onClick={() => formik.handleSubmit()}

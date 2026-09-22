@@ -33,8 +33,8 @@ describe('eligibility stage setup', { timeout: 15000 }, () => {
     await user.click(within(dialog).getByRole('textbox', { name: 'Criterion name *' }));
     await user.paste('Age requirement');
     await user.type(within(dialog).getByRole('spinbutton', { name: 'Minimum age years' }), '5');
-    fireEvent.change(within(dialog).getByLabelText('Age cutoff date *'), {
-      target: { value: '2027-04-01' },
+    fireEvent.change(within(dialog).getByRole('textbox', { name: /Age cutoff date/i }), {
+      target: { value: '01-04-2027' },
     });
     await user.click(within(dialog).getByRole('button', { name: 'Save criterion' }));
     await waitFor(() =>

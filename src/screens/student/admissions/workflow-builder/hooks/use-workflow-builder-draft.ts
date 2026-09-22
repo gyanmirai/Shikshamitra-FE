@@ -12,10 +12,15 @@ import type {
 import { useState, useEffect } from 'react';
 
 import { createStage, reorderStages } from '../../workflow-builder-utils';
-import { getRegistrationWorkflowTemplate } from '../../workflow-template';
 import { useAdmissionUnsavedChanges } from '../../use-admission-unsaved-changes';
+import { type WorkflowTemplateId, getAdmissionWorkflowTemplate } from '../../workflow-template';
 
 import type { WorkflowSidePanel } from '../workflow-builder-types';
+
+type WorkflowSnapshot = {
+  stages: AdmissionWorkflowStage[];
+  transitions: AdmissionWorkflowTransition[];
+};
 
 export function useWorkflowBuilderDraft(
   workflow: AdmissionWorkflow | undefined,
@@ -34,6 +39,10 @@ export function useWorkflowBuilderDraft(
   const [sidePanel, setSidePanel] = useState<WorkflowSidePanel>(initialPanel);
   const [validation, setValidation] = useState<AdmissionWorkflowValidationResult | null>(null);
   const [stageToDelete, setStageToDelete] = useState<AdmissionWorkflowStage | null>(null);
+  const [history, setHistory] = useState<{
+    past: WorkflowSnapshot[];
+    future: WorkflowSnapshot[];
+  }>({ past: [], future: [] });
   useAdmissionUnsavedChanges(true, dirty);
 
   useEffect(() => {
@@ -42,6 +51,8 @@ export function useWorkflowBuilderDraft(
     setTransitions(workflow.transitions);
     setLoadedStamp(workflow.concurrencyStamp);
     setDirty(false);
+    setValidation(null);
+    setHistory({ past: [], future: [] });
   }, [loadedStamp, workflow]);
 
   useEffect(() => {
@@ -59,13 +70,50 @@ export function useWorkflowBuilderDraft(
     },
     {}
   );
-  const handleDragEnd = ({ active, over }: DragEndEvent) => {
-    if (!over || active.id === over.id) return;
-    setStages((current) => reorderStages(current, String(active.id), String(over.id)));
+  const markDirty = () => {
+    setValidation(null);
     setDirty(true);
   };
+  const recordHistory = () => {
+    const snapshot = { stages, transitions };
+    setHistory((current) => ({
+      past: [...current.past, snapshot].slice(-30),
+      future: [],
+    }));
+  };
+  const restoreSnapshot = (snapshot: WorkflowSnapshot) => {
+    setStages(snapshot.stages);
+    setTransitions(snapshot.transitions);
+    markDirty();
+  };
+  const undo = () => {
+    const previous = history.past.at(-1);
+    if (!previous) return;
+    setHistory((current) => ({
+      past: current.past.slice(0, -1),
+      future: [{ stages, transitions }, ...current.future].slice(0, 30),
+    }));
+    restoreSnapshot(previous);
+  };
+  const redo = () => {
+    const next = history.future[0];
+    if (!next) return;
+    setHistory((current) => ({
+      past: [...current.past, { stages, transitions }].slice(-30),
+      future: current.future.slice(1),
+    }));
+    restoreSnapshot(next);
+  };
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    recordHistory();
+    setStages((current) => reorderStages(current, String(active.id), String(over.id)));
+    markDirty();
+  };
   const addStage = (stageTypes: AdmissionWorkflowStageTypeMetadata[]) => {
-    const metadata = stageTypes.find((item) => item.isRuntimeReady);
+    const metadata = stageTypes.find(
+      (item) => item.type !== 0 && item.isRuntimeReady && item.isSelectable !== false
+    );
     if (!metadata) return;
     setEditingStage(
       createStage(metadata, stages.length, !stages.some((stage) => stage.isEntryStage))
@@ -73,6 +121,7 @@ export function useWorkflowBuilderDraft(
     setStageDrawerOpen(true);
   };
   const saveStage = (stage: AdmissionWorkflowStage) => {
+    recordHistory();
     setStages((current) => {
       const normalized = stage.isEntryStage
         ? current.map((item) => ({ ...item, isEntryStage: false }))
@@ -81,9 +130,10 @@ export function useWorkflowBuilderDraft(
         ? normalized.map((item) => (item.id === stage.id ? stage : item))
         : [...normalized, stage];
     });
-    setDirty(true);
+    markDirty();
   };
   const deleteStage = (stageId: string) => {
+    recordHistory();
     setStages((current) =>
       current
         .filter((stage) => stage.id !== stageId)
@@ -94,9 +144,10 @@ export function useWorkflowBuilderDraft(
         (transition) => transition.fromStageId !== stageId && transition.toStageId !== stageId
       )
     );
-    setDirty(true);
+    markDirty();
   };
   const saveTransition = (transition: AdmissionWorkflowTransition) => {
+    recordHistory();
     setTransitions((current) => {
       const normalized = transition.isDefault
         ? current.map((item) =>
@@ -107,10 +158,11 @@ export function useWorkflowBuilderDraft(
         ? normalized.map((item) => (item.id === transition.id ? transition : item))
         : [...normalized, transition];
     });
-    setDirty(true);
+    markDirty();
   };
-  const applyRegistrationTemplate = (formDefinitionId?: string) => {
-    const template = getRegistrationWorkflowTemplate(formDefinitionId);
+  const applyWorkflowTemplate = (templateId: WorkflowTemplateId, formDefinitionId?: string) => {
+    recordHistory();
+    const template = getAdmissionWorkflowTemplate(templateId, formDefinitionId);
     setStages(template.stages);
     setTransitions(template.transitions);
     setValidation(null);
@@ -126,6 +178,7 @@ export function useWorkflowBuilderDraft(
     setLoadedStamp,
     dirty,
     setDirty,
+    markDirty,
     editingStage,
     setEditingStage,
     editingTransition,
@@ -140,12 +193,17 @@ export function useWorkflowBuilderDraft(
     setValidation,
     stageToDelete,
     setStageToDelete,
+    canUndo: history.past.length > 0,
+    canRedo: history.future.length > 0,
+    recordHistory,
+    undo,
+    redo,
     issueCountByStage,
     handleDragEnd,
     addStage,
     saveStage,
     deleteStage,
     saveTransition,
-    applyRegistrationTemplate,
+    applyWorkflowTemplate,
   };
 }

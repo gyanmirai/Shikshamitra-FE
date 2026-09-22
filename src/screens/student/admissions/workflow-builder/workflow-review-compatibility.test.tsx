@@ -6,7 +6,7 @@ import { DEFAULT_REVIEW_POLICY } from 'src/redux/student/admissions/admission-re
 import { setupReviewEditor } from './review-editor-test-fixture';
 
 describe('review configuration compatibility', { timeout: 15000 }, () => {
-  it('disallows managed skip and restores the saved legacy skip setting when returning to basic', async () => {
+  it('disallows a legacy skip setting when the stage is required', async () => {
     const user = userEvent.setup();
     const { onSave } = setupReviewEditor(
       JSON.stringify({ review: DEFAULT_REVIEW_POLICY }),
@@ -19,11 +19,11 @@ describe('review configuration compatibility', { timeout: 15000 }, () => {
     expect(skip).toBeDisabled();
     expect(skip).not.toBeChecked();
     await user.click(screen.getByRole('radio', { name: 'Basic completion (existing process)' }));
-    expect(skip).toBeEnabled();
-    expect(skip).toBeChecked();
+    expect(skip).toBeDisabled();
+    expect(skip).not.toBeChecked();
     await user.click(screen.getByRole('button', { name: 'Save stage' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    expect(onSave.mock.calls[0][0].allowManualSkip).toBe(true);
+    expect(onSave.mock.calls[0][0].allowManualSkip).toBe(false);
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).review.enabled).toBe(false);
   });
 

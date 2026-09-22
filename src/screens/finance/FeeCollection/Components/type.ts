@@ -172,7 +172,7 @@ export interface MonthWiseFeeItem {
   dueDate?: string;
   total: number;
   scheduledTotal?: number;
-	prorationPolicyVersionId?: string | null;
+  prorationPolicyVersionId?: string | null;
   prorationExplanation?: string | null;
   paid: number;
   due: number;
@@ -201,7 +201,7 @@ export interface FeeHeadWiseFeeItem {
   dueDate?: string;
   total: number;
   scheduledTotal?: number;
-	prorationPolicyVersionId?: string | null;
+  prorationPolicyVersionId?: string | null;
   prorationExplanation?: string | null;
   paid: number;
   due: number;
@@ -235,6 +235,8 @@ export interface SelectedItem {
   feeHeadId: string;
   period: string; // e.g. "2026-04"
   dueAmount: number;
+  /** Net late fee currently collectible after approved waivers. */
+  lateFeeAmount?: number;
   installmentLabel?: string;
 }
 

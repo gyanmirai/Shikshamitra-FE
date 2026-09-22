@@ -11,7 +11,6 @@ import type {
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import {
   useLazyGetAdmissionOfferingQuery,
   useCloneAdmissionOfferingMutation,
@@ -23,6 +22,7 @@ import {
 } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { getAdmissionApiError } from './admission-offering-model';
+import { getAdmissionOfferingPermissions } from './admission-offering-permissions';
 
 export type OfferingDialogMode = 'create' | 'edit' | 'clone';
 export type PendingOfferingAction = {
@@ -58,7 +58,7 @@ export function useAdmissionOfferingActions(cycle: AdmissionCycle | null) {
     }
   };
 
-  const save = async (values: AdmissionOfferingWriteInput) => {
+  const save = async (values: AdmissionOfferingWriteInput, targetCycleId: string) => {
     if (!cycle || !dialogMode) return;
     try {
       if (dialogMode === 'create')
@@ -72,7 +72,8 @@ export function useAdmissionOfferingActions(cycle: AdmissionCycle | null) {
         await cloneOffering({
           id: selected.id,
           body: {
-            admissionCycleId: cycle.id,
+            admissionCycleId: targetCycleId,
+            name: values.name,
             campusId: values.campusId,
             boardId: values.boardId,
             mediumId: values.mediumId,
@@ -116,9 +117,6 @@ export function useAdmissionOfferingActions(cycle: AdmissionCycle | null) {
       });
     }
   };
-  const permission = (name: string) =>
-    hasGrantedPermission(granted, `Students.Admissions.Offerings.${name}`);
-
   return {
     selected,
     dialogMode,
@@ -128,15 +126,7 @@ export function useAdmissionOfferingActions(cycle: AdmissionCycle | null) {
     loadingDetail: detailState.isFetching,
     saving: createState.isLoading || updateState.isLoading || cloneState.isLoading,
     commanding: activateState.isLoading || deactivateState.isLoading || deleteState.isLoading,
-    permissions: {
-      create: permission('Create'),
-      bulkCreate: permission('BulkCreate'),
-      edit: permission('Edit'),
-      clone: permission('Clone'),
-      activate: permission('Activate'),
-      deactivate: permission('Deactivate'),
-      delete: permission('Delete'),
-    },
+    permissions: getAdmissionOfferingPermissions(granted),
     openCreate: () => {
       setSelected(null);
       setDialogMode('create');

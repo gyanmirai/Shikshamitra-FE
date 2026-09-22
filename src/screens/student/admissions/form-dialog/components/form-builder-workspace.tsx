@@ -10,7 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
 const PANELS = [
-  { id: 'fields', label: 'Add fields', icon: 'mdi:plus-box-outline' },
+  { id: 'outline', label: 'Outline', icon: 'mdi:format-list-bulleted' },
   { id: 'form', label: 'Your form', icon: 'mdi:form-select' },
   { id: 'settings', label: 'Field settings', icon: 'mdi:tune-variant' },
 ] as const;
@@ -19,7 +19,7 @@ type Panel = (typeof PANELS)[number]['id'];
 type Props = {
   panel: Panel;
   onPanelChange: (panel: Panel) => void;
-  fields: ReactNode;
+  outline: ReactNode;
   form: ReactNode;
   settings: ReactNode;
   children: ReactNode;
@@ -28,7 +28,7 @@ type Props = {
 export function FormBuilderWorkspace({
   panel,
   onPanelChange,
-  fields,
+  outline,
   form,
   settings,
   children,
@@ -48,7 +48,7 @@ export function FormBuilderWorkspace({
       workspace.querySelector<HTMLElement>(`#builder-panel-${panel}`)?.focus();
     }
   }, [desktop, panel]);
-  const contents = { fields, form, settings };
+  const contents = { outline, form, settings };
   return (
     <Stack ref={workspaceRef} spacing={1.5} sx={{ flex: 1, width: 1, minWidth: 0, minHeight: 0 }}>
       <Tabs
@@ -76,8 +76,8 @@ export function FormBuilderWorkspace({
           display: 'grid',
           gridTemplateColumns: {
             xs: 'minmax(0, 1fr)',
-            lg: '260px minmax(0, 1fr) 320px',
-            xl: '280px minmax(0, 1fr) 350px',
+            lg: '240px minmax(0, 1fr) 320px',
+            xl: '260px minmax(0, 1fr) 350px',
           },
           gap: 2,
           flex: 1,

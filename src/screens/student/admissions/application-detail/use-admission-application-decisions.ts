@@ -25,16 +25,15 @@ import {
   useGetAdmissionApplicationDecisionHistoryQuery,
 } from 'src/redux/student/admissions/admission-applications-api';
 
+import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
+
 export type AdmissionDecisionAction =
   'review' | 'approve' | 'reject' | 'waitlist' | 'offer' | 'accept' | 'decline';
 
 export function useAdmissionApplicationDecisions(id: string, status?: AdmissionApplicationStatus) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const historyQuery = useGetAdmissionApplicationDecisionHistoryQuery(id);
-  const canFinalize = hasGrantedPermission(
-    permissions,
-    'Students.Admissions.Applications.Finalize'
-  );
+  const canFinalize = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
   const finalizationPreviewQuery = useGetAdmissionFinalizationPreviewQuery(id, {
     skip: !canFinalize || status !== 8,
   });
@@ -121,8 +120,8 @@ export function useAdmissionApplicationDecisions(id: string, status?: AdmissionA
       acceptState.isLoading ||
       declineState.isLoading ||
       finalizeState.isLoading,
-    canDecide: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Decide'),
-    canOffer: hasGrantedPermission(permissions, 'Students.Admissions.Applications.Offer'),
+    canDecide: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
+    canOffer: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
     canFinalize,
   };
 }

@@ -4,6 +4,20 @@ type CreateSubstitutionActionOptions<TSegment, TResult> = {
   resetMutation: () => void;
 };
 
+type TeacherReference = {
+  teacherId?: string | null;
+  teacherName?: string | null;
+};
+
+export const resolveAvailabilityTeacherSelection = (
+  availabilityTeacher: TeacherReference,
+  lectureTeacher: TeacherReference
+) => ({
+  originalTeacherId: availabilityTeacher.teacherId || lectureTeacher.teacherId || '',
+  originalTeacherName:
+    availabilityTeacher.teacherName?.trim() || lectureTeacher.teacherName?.trim() || '',
+});
+
 export const createSubstitutionSegments = async <TSegment, TResult>({
   segments,
   create,

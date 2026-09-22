@@ -7,6 +7,7 @@ import type {
   ChargeDetail,
   FeeLedgerLine,
   FeeLedgerMonth,
+  CollectFeeInput,
   CollectFeeOutput,
 } from 'src/redux/feeCollection/feeCollection';
 
@@ -385,6 +386,17 @@ const FeeCollectComponentForm = ({
     currentQueryAndMutation: useCollectFeeMutation,
   });
 
+  const submissionRef = useRef<{ fingerprint: string; key: string } | null>(null);
+  const withIdempotencyKey = (
+    payload: Omit<CollectFeeInput, 'idempotencyKey'>
+  ): CollectFeeInput => {
+    const fingerprint = JSON.stringify(payload);
+    if (!submissionRef.current || submissionRef.current.fingerprint !== fingerprint) {
+      submissionRef.current = { fingerprint, key: crypto.randomUUID() };
+    }
+    return { ...payload, idempotencyKey: submissionRef.current.key };
+  };
+
   const [downloadReceiptPdf] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useDownloadReceiptPdfMutation,
@@ -449,7 +461,7 @@ const FeeCollectComponentForm = ({
           dueDate: item.dueDate,
           total: item.total,
           scheduledTotal: item.scheduledTotal,
-			prorationPolicyVersionId: item.prorationPolicyVersionId,
+          prorationPolicyVersionId: item.prorationPolicyVersionId,
           prorationExplanation: item.prorationExplanation,
           paid: item.paid,
           due: item.due,
@@ -476,7 +488,7 @@ const FeeCollectComponentForm = ({
               year: m.year,
               total: item.total,
               scheduledTotal: item.scheduledTotal,
-			  prorationPolicyVersionId: item.prorationPolicyVersionId,
+              prorationPolicyVersionId: item.prorationPolicyVersionId,
               prorationExplanation: item.prorationExplanation,
               paid: item.paid,
               due: item.due,
@@ -633,7 +645,10 @@ const FeeCollectComponentForm = ({
     validateOnChange: true,
     validate: (values) => {
       const errors: any = {};
-      const itemsTotal = values.selectedItems.reduce((s, i) => s + i.dueAmount, 0);
+      const itemsTotal = values.selectedItems.reduce(
+        (s, i) => s + i.dueAmount + (i.lateFeeAmount ?? 0),
+        0
+      );
       const chargesTotal = (chargesData ?? [])
         .filter((c) => values.charges.includes(c.chargeId))
         .reduce((s, c) => s + c.amount, 0);
@@ -696,7 +711,10 @@ const FeeCollectComponentForm = ({
   });
   // ── Derived amounts ────────────────────────────────────────────────────────
   const subtotal = useMemo(() => {
-    const itemsTotal = formik.values.selectedItems.reduce((s, i) => s + i.dueAmount, 0);
+    const itemsTotal = formik.values.selectedItems.reduce(
+      (s, i) => s + i.dueAmount + (i.lateFeeAmount ?? 0),
+      0
+    );
     const chargesTotal = (chargesData ?? [])
       .filter((c) => formik.values.charges.includes(c.chargeId))
       .reduce((s, c) => s + c.amount, 0);
@@ -704,6 +722,18 @@ const FeeCollectComponentForm = ({
   }, [formik.values.selectedItems, formik.values.charges, chargesData]);
 
   const finalAmount = subtotal;
+
+  const resolveAllocatedDueFeeId = (row: AllocatedFeeRow): string => {
+    if (row.dueFeeId) return row.dueFeeId;
+    const matchingItem = formik.values.selectedItems.find(
+      (item) => `${item.feeHeadId}-${item.period}` === row.key
+    );
+    if (!matchingItem) throw new Error(`Matching item not found for key ${row.key}`);
+    const [yearStr, monthStr] = matchingItem.period.split('-');
+    const dueFeeId = dueFeeIdMap[`${matchingItem.feeHeadId}|${Number(monthStr) - 1}|${yearStr}`];
+    if (!dueFeeId) throw new Error(`Due fee id not found for key ${row.key}`);
+    return dueFeeId;
+  };
 
   const totalAllocated = useMemo(() => {
     const n = Number(String(formik.values.payment.amount || 0).replace(/[₹,\s]/g, ''));
@@ -814,7 +844,7 @@ const FeeCollectComponentForm = ({
       );
 
       const dueFeePayments = allocation.allocatedRows
-        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.paidAmount > 0)
+        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.principalPaidAmount > 0)
         .map((r) => {
           const matchingItem = formik.values.selectedItems.find(
             (item) =>
@@ -834,9 +864,16 @@ const FeeCollectComponentForm = ({
           return {
             dueFeeId,
             feeHeadId: matchingItem.feeHeadId,
-            amount: r.paidAmount,
+            amount: r.principalPaidAmount,
           };
         });
+
+      const lateFeePayments = allocation.allocatedRows
+        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.lateFeePaidAmount > 0)
+        .map((r) => ({
+          dueFeeId: resolveAllocatedDueFeeId(r),
+          amount: r.lateFeePaidAmount,
+        }));
 
       const chargePayments = allocation.allocatedRows
         .filter((r): r is AllocatedChargeRow => r.type === 'charge' && r.paidAmount > 0)
@@ -845,21 +882,24 @@ const FeeCollectComponentForm = ({
           amount: r.paidAmount,
         }));
 
-      const collectResponse = await collectFee({
-        studentId: String(student?.id ?? ''),
-        studentName: student?.name ?? '',
-        academicYearId: currentYear?.id ?? '',
-        notes: formik.values.remarks ?? undefined,
-        paymentConfirmed: isCashierDecided ? true : undefined,
-        dueFeePayments,
-        chargePayments,
-        payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
-      }).unwrap();
+      const collectResponse = await collectFee(
+        withIdempotencyKey({
+          studentId: String(student?.id ?? ''),
+          academicYearId: currentYear?.id ?? '',
+          notes: formik.values.remarks ?? undefined,
+          paymentConfirmed: isCashierDecided ? true : undefined,
+          dueFeePayments,
+          lateFeePayments,
+          chargePayments,
+          payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
+        })
+      ).unwrap();
 
       shikshaMitraToast.success({
         message: collectResponse.auditSummary?.headline || 'Fee collected successfully',
       });
       setFinalReviewOpen(false);
+      submissionRef.current = null;
       setLastCollectResponse(collectResponse);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
         if (collectResponse.auditSummary) {
@@ -899,7 +939,7 @@ const FeeCollectComponentForm = ({
       );
 
       const dueFeePayments = allocation.allocatedRows
-        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.paidAmount > 0)
+        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.principalPaidAmount > 0)
         .map((r) => {
           const matchingItem = formik.values.selectedItems.find(
             (item) =>
@@ -919,9 +959,16 @@ const FeeCollectComponentForm = ({
           return {
             dueFeeId,
             feeHeadId: matchingItem.feeHeadId,
-            amount: r.paidAmount,
+            amount: r.principalPaidAmount,
           };
         });
+
+      const lateFeePayments = allocation.allocatedRows
+        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.lateFeePaidAmount > 0)
+        .map((r) => ({
+          dueFeeId: resolveAllocatedDueFeeId(r),
+          amount: r.lateFeePaidAmount,
+        }));
 
       const chargePayments = allocation.allocatedRows
         .filter((r): r is AllocatedChargeRow => r.type === 'charge' && r.paidAmount > 0)
@@ -930,21 +977,24 @@ const FeeCollectComponentForm = ({
           amount: r.paidAmount,
         }));
 
-      const collectResponse = await collectFee({
-        studentId: String(student?.id ?? ''),
-        studentName: student?.name ?? '',
-        academicYearId: currentYear?.id ?? '',
-        notes: formik.values.remarks ?? undefined,
-        paymentConfirmed: isCashierDecided ? false : undefined,
-        dueFeePayments,
-        chargePayments,
-        payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
-      }).unwrap();
+      const collectResponse = await collectFee(
+        withIdempotencyKey({
+          studentId: String(student?.id ?? ''),
+          academicYearId: currentYear?.id ?? '',
+          notes: formik.values.remarks ?? undefined,
+          paymentConfirmed: isCashierDecided ? false : undefined,
+          dueFeePayments,
+          lateFeePayments,
+          chargePayments,
+          payments: buildPaymentPayload(paymentMethodNum, receivedAmount),
+        })
+      ).unwrap();
 
       shikshaMitraToast.success({
         message: collectResponse.auditSummary?.headline || 'Payment saved as pending verification',
       });
       setFinalReviewOpen(false);
+      submissionRef.current = null;
       setLastCollectResponse(collectResponse);
       if (!(await showGeneratedReceiptDialog(collectResponse))) {
         if (collectResponse.auditSummary) {
@@ -974,7 +1024,7 @@ const FeeCollectComponentForm = ({
     const uniquePeriods = new Map<string, number>();
 
     (filteredLedgerData.monthWise ?? []).forEach((group) => {
-      if (!group.items.some((item) => item.due > 0)) {
+      if (!group.items.some((item) => item.due > 0 || (item.lateFeeAmount ?? 0) > 0)) {
         return;
       }
 
@@ -1011,7 +1061,7 @@ const FeeCollectComponentForm = ({
         g.year ?? currentYear?.year ?? new Date().getFullYear()
       );
       g.items
-        .filter((i) => i.due > 0)
+        .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
         .forEach((i) => {
           if (
             hasSelectionFilters &&
@@ -1029,6 +1079,7 @@ const FeeCollectComponentForm = ({
             feeHeadId: i.feeHeadId,
             period,
             dueAmount: i.due,
+            lateFeeAmount: i.lateFeeAmount,
             installmentLabel: i.installmentLabel,
           });
         });
@@ -1501,7 +1552,7 @@ const FeeCollectComponentForm = ({
                                   id={`${item.feeHeadId}-${item.period}`}
                                   label={feeHeadMap[item.feeHeadId] ?? item.feeHeadId}
                                   sub={dayjs(`${item.period}-01`).format('MMM YYYY')}
-                                  amount={item.dueAmount}
+                                  amount={item.dueAmount + (item.lateFeeAmount ?? 0)}
                                   onRemove={() => {
                                     formik.setFieldValue(
                                       'selectedItems',

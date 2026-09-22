@@ -23,7 +23,8 @@ export interface ByMonthViewProps {
     due: number,
     itemYear?: number,
     dueFeeId?: string,
-    installmentLabel?: string
+    installmentLabel?: string,
+    lateFeeAmount?: number
   ) => void;
   onToggleGroup: (group: MonthWiseGroup) => void;
 }
@@ -40,7 +41,8 @@ interface MonthGroupProps {
     due: number,
     itemYear?: number,
     dueFeeId?: string,
-    installmentLabel?: string
+    installmentLabel?: string,
+    lateFeeAmount?: number
   ) => void;
   onToggleGroup: (group: MonthWiseGroup) => void;
 }
@@ -56,7 +58,7 @@ const MonthGroup = ({
   const theme = useTheme();
 
   const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
-  const selectableItems = group.items.filter((i) => i.due > 0);
+  const selectableItems = group.items.filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0);
   const selectedCount = selectableItems.filter((i) =>
     selectedItems.some((s) => s.feeHeadId === i.feeHeadId && s.period === period)
   ).length;
@@ -145,8 +147,9 @@ const MonthGroup = ({
         <Divider />
         <ColHeader firstLabel="Fee Head" showStatus />
         {group.items.map((item, idx) => {
+          const isCollectible = item.due > 0 || (item.lateFeeAmount ?? 0) > 0;
           const isSelected =
-            item.due === 0 ||
+            !isCollectible ||
             selectedItems.some(
               (s) =>
                 (item.dueFeeId && s.dueFeeId === item.dueFeeId) ||
@@ -159,7 +162,7 @@ const MonthGroup = ({
                 subtitle={item.installmentLabel}
                 total={item.total}
                 scheduledTotal={item.scheduledTotal}
-				prorationPolicyVersionId={item.prorationPolicyVersionId}
+                prorationPolicyVersionId={item.prorationPolicyVersionId}
                 prorationExplanation={item.prorationExplanation}
                 paid={item.paid}
                 due={item.due}
@@ -174,7 +177,7 @@ const MonthGroup = ({
                 status={item.status}
                 showStatus
                 isSelected={isSelected}
-                isDisabled={item.due === 0}
+                isDisabled={!isCollectible}
                 onToggle={() =>
                   onToggleItem(
                     item.feeHeadId,
@@ -182,7 +185,8 @@ const MonthGroup = ({
                     item.due,
                     group.year,
                     item.dueFeeId,
-                    item.installmentLabel
+                    item.installmentLabel,
+                    item.lateFeeAmount
                   )
                 }
               />

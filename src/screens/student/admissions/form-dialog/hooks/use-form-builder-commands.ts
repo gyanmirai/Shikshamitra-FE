@@ -6,6 +6,10 @@ import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissio
 
 import { newField, nextFieldOrder, hasSystemBinding } from '../form-dialog-model';
 import { nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
+import {
+  type AdmissionFormSectionTemplateId,
+  materializeAdmissionFormSectionTemplate,
+} from '../admission-form-section-template-catalog';
 
 import type { AdmissionFieldPreset } from '../form-field-presets';
 
@@ -34,6 +38,9 @@ export function useFormBuilderCommands(
         stepCode: stepId ? `STEP_${stepOrder + 1}` : undefined,
         stepName: stepId ? `Step ${stepOrder + 1}` : undefined,
         stepDisplayOrder: stepId ? stepOrder : undefined,
+        isRepeatable: false,
+        minEntries: 1,
+        maxEntries: 1,
         fields: [],
       },
     ]);
@@ -59,6 +66,9 @@ export function useFormBuilderCommands(
       code: 'SECTION_1',
       name: 'Student Details',
       displayOrder: 0,
+      isRepeatable: false,
+      minEntries: 1,
+      maxEntries: 1,
       fields: [],
     };
     const metadata = systemFields.find((item) => item.key === systemBinding);
@@ -82,5 +92,26 @@ export function useFormBuilderCommands(
     onSelect(section.id, field.id);
   };
 
-  return { addCanvasUnit, addField, systemFieldsQuery };
+  const addSectionTemplate = (templateId: AdmissionFormSectionTemplateId) => {
+    const result = materializeAdmissionFormSectionTemplate(
+      templateId,
+      formik.values,
+      selectedSectionId
+    );
+    if (!result.section.fields.length) {
+      shikshaMitraToast.error({
+        message: 'Every linked student field in this section is already present in the form.',
+      });
+      return;
+    }
+    formik.setFieldValue('sections', [...formik.values.sections, result.section]);
+    onSelect(result.section.id, null);
+    if (result.skippedSystemBindings.length) {
+      shikshaMitraToast.info({
+        message: `${result.skippedSystemBindings.length} linked student ${result.skippedSystemBindings.length === 1 ? 'field was' : 'fields were'} skipped because ${result.skippedSystemBindings.length === 1 ? 'it is' : 'they are'} already in the form.`,
+      });
+    }
+  };
+
+  return { addCanvasUnit, addField, addSectionTemplate, systemFieldsQuery };
 }

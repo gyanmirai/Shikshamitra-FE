@@ -11,6 +11,8 @@ describe('admission form builder validation', () => {
       code: 'STUDENT_ADMISSION',
       layoutType: 1,
       fieldsPerRow: 1,
+      defaultLanguage: 'en',
+      supportedLanguages: ['en'],
       sections: [
         {
           id: 'section-1',

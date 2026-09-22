@@ -1,12 +1,10 @@
 'use client';
 
-import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { alpha, useTheme } from '@mui/material/styles';
 import { Box, Paper, Stack, Skeleton } from '@mui/material';
-import { DayType, DAY_TYPE_COLORS, DAY_TYPE_LABELS } from 'src/enums/academic-calendar';
+import { DayType, DAY_TYPE_COLORS } from 'src/enums/academic-calendar';
 
-const WEEKDAY_ABBR = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const LEGEND_ITEMS = [
@@ -52,43 +50,17 @@ export const MonthCardSkeleton = () => {
         <Skeleton variant="text" width={110} height={20} sx={{ borderRadius: 1 }} />
       </Box>
 
-      {/* Weekday headers */}
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', px: 1, pt: 1.5, pb: 0.5 }}>
-        {WEEKDAY_ABBR.map((lbl, i) => (
-          <Box key={`${lbl}-${i}`} sx={{ textAlign: 'center', py: 0.25 }}>
-            <Skeleton
-              variant="text"
-              width={12}
-              height={14}
-              sx={{ mx: 'auto', borderRadius: 0.5 }}
-            />
-          </Box>
-        ))}
-      </Box>
-
-      {/* Day grid: 35 cells */}
+      {/* A single painted placeholder replaces 42 animated skeleton components. */}
       <Box
-        sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', px: 1, pb: 1.5, gap: '3px' }}
-      >
-        {Array.from({ length: 35 }).map((_, idx) => (
-          <Box
-            key={idx}
-            sx={{
-              height: 34,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            <Skeleton
-              variant="rounded"
-              width={26}
-              height={26}
-              sx={{ borderRadius: 1.5, opacity: idx < 2 || idx > 31 ? 0.3 : 0.7 }}
-            />
-          </Box>
-        ))}
-      </Box>
+        sx={{
+          height: 222,
+          mx: 1,
+          mb: 1.5,
+          backgroundImage: `radial-gradient(circle, ${alpha(theme.palette.text.secondary, 0.1)} 0 11px, transparent 12px)`,
+          backgroundPosition: 'center 18px',
+          backgroundSize: 'calc(100% / 7) 34px',
+        }}
+      />
     </Paper>
   );
 };
@@ -99,7 +71,11 @@ export const CalendarYearSkeleton = () => {
   const theme = useTheme();
 
   return (
-    <Box>
+    <Box
+      aria-busy="true"
+      aria-label="Loading academic calendar"
+      sx={{ '& .MuiSkeleton-root': { animation: 'none' } }}
+    >
       {/* Legend & Filter Bar Skeleton */}
       <Paper
         elevation={0}
@@ -133,7 +109,7 @@ export const CalendarYearSkeleton = () => {
 
           {/* Legend chips skeleton */}
           <Stack direction="row" flexWrap="wrap" gap={0.75} alignItems="center" flex={1}>
-            {LEGEND_ITEMS.map(({ type, label }) => (
+            {LEGEND_ITEMS.map(({ type }) => (
               <Stack
                 key={type}
                 direction="row"
@@ -217,11 +193,14 @@ export const CalendarMonthSkeleton = () => {
 
   return (
     <Box
+      aria-busy="true"
+      aria-label="Loading calendar month"
       sx={{
         display: 'flex',
         flexDirection: { xs: 'column', lg: 'row' },
         gap: 1,
         alignItems: 'flex-start',
+        '& .MuiSkeleton-root': { animation: 'none' },
       }}
     >
       {/* ── Main Calendar Grid Skeleton ───────────────────────────────────── */}

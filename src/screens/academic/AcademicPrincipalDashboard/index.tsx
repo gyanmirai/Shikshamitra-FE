@@ -1,15 +1,16 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
-import type { Standards, Organization } from 'src/types/school';
-
+import React from 'react';
 import Link from 'next/link';
-import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
 import { alpha, useTheme } from '@mui/material/styles';
 import { Chart, useChart } from 'src/components/chart';
+import { EmptyContent } from 'src/components/empty-content';
 import { academicPaths } from 'src/constants/academic-menu';
+import {
+  type PrincipalAcademicDashboardData,
+  useGetPrincipalAcademicDashboardQuery,
+} from 'src/redux/academicAPI/academicDashboardApi';
 import {
   Box,
   Grid,
@@ -23,21 +24,16 @@ import {
   CardHeader,
   LinearProgress,
 } from '@mui/material';
-import {
-  useRefreshAcademicDashboardMutation,
-  type PrincipalAcademicDashboardData,
-  useGetPrincipalAcademicDashboardQuery,
-} from 'src/redux/academicAPI/academicDashboardApi';
 
 import { PerformersList } from '../AcademicDashboard/Components/Performers';
 import AcademicDashboardExams from '../dashboard/components/AcademicDashboardExams';
-import SubjectPassFailChart from '../AcademicDashboard/Components/SubjectPassFailChart';
-import ChapterCompletionChart from '../AcademicDashboard/Components/ChapterCompletionChart';
-import TeacherPerformanceComparisonChart from '../AcademicDashboard/Components/TeacherPerformanceComparisonChart';
 import { AcademicActionQueue } from '../components/command-center/AcademicActionQueue';
+import SubjectPassFailChart from '../AcademicDashboard/Components/SubjectPassFailChart';
 import { AcademicCommandHeader } from '../components/command-center/AcademicCommandHeader';
+import ChapterCompletionChart from '../AcademicDashboard/Components/ChapterCompletionChart';
 import { AcademicHealthScoreCard } from '../components/command-center/AcademicHealthScoreCard';
 import { AcademicModuleHealthGrid } from '../components/command-center/AcademicModuleHealthGrid';
+import TeacherPerformanceComparisonChart from '../AcademicDashboard/Components/TeacherPerformanceComparisonChart';
 
 import type {
   AcademicActionItem,
@@ -57,7 +53,9 @@ const toPrincipalActions = (data: PrincipalAcademicDashboardData): AcademicActio
     actionHref: insight.actionHref,
   }));
 
-const toPrincipalModuleHealth = (data: PrincipalAcademicDashboardData): AcademicModuleHealthItem[] => [
+const toPrincipalModuleHealth = (
+  data: PrincipalAcademicDashboardData
+): AcademicModuleHealthItem[] => [
   {
     id: 'school-performance',
     module: 'School Performance',
@@ -437,6 +435,8 @@ const SchoolAcademicSnapshotCard = ({ data }: { data: PrincipalAcademicDashboard
 
 const SyllabusCoveragePulseCard = ({ data }: { data: PrincipalAcademicDashboardData }) => {
   const { syllabusProgress } = data;
+  const hasSubjectBreakdown =
+    data.mathTarget > 0 || data.scienceTarget > 0 || data.englishTarget > 0;
 
   return (
     <DashboardSectionCard
@@ -501,36 +501,46 @@ const SyllabusCoveragePulseCard = ({ data }: { data: PrincipalAcademicDashboardD
           </Box>
         </Box>
 
-        <Grid container spacing={1}>
-          <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
-            <CommandMetricRow
-              label="Math Syllabus"
-              value={`${data.mathProgress}%`}
-              helper={`Target: ${data.mathTarget}%`}
-              icon="solar:book-bold"
-              tone="primary"
-            />
+        {hasSubjectBreakdown ? (
+          <Grid container spacing={1}>
+            <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
+              <CommandMetricRow
+                label="Math Syllabus"
+                value={`${data.mathProgress}%`}
+                helper={`Target: ${data.mathTarget}%`}
+                icon="solar:book-bold"
+                tone="primary"
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
+              <CommandMetricRow
+                label="Science Syllabus"
+                value={`${data.scienceProgress}%`}
+                helper={`Target: ${data.scienceTarget}%`}
+                icon="solar:book-bookmark-bold"
+                tone="warning"
+                emphasis={data.scienceProgress < data.scienceTarget}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
+              <CommandMetricRow
+                label="English Syllabus"
+                value={`${data.englishProgress}%`}
+                helper={`Target: ${data.englishTarget}%`}
+                icon="solar:book-open-bold"
+                tone="info"
+              />
+            </Grid>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
-            <CommandMetricRow
-              label="Science Syllabus"
-              value={`${data.scienceProgress}%`}
-              helper={`Target: ${data.scienceTarget}%`}
-              icon="solar:book-bookmark-bold"
-              tone="warning"
-              emphasis={data.scienceProgress < data.scienceTarget}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
-            <CommandMetricRow
-              label="English Syllabus"
-              value={`${data.englishProgress}%`}
-              helper={`Target: ${data.englishTarget}%`}
-              icon="solar:book-open-bold"
-              tone="info"
-            />
-          </Grid>
-        </Grid>
+        ) : (
+          <EmptyContent
+            filled
+            title="Subject-level progress is not configured"
+            description="The overall syllabus score is available. Subject targets will appear after they are configured."
+            sx={{ minHeight: 132 }}
+            slotProps={{ img: { maxWidth: 72 } }}
+          />
+        )}
       </Stack>
     </DashboardSectionCard>
   );
@@ -746,71 +756,11 @@ const DashboardSkeleton = () => (
 );
 
 const AcademicPrincipalDashboardScreen = () => {
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  const [classes, setClasses] = useState<string>('');
-
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const { data, isLoading, isFetching, isError, refetch } = useGetPrincipalAcademicDashboardQuery();
-  const [refresh, { isLoading: isRefreshing }] = useRefreshAcademicDashboardMutation();
 
-  const handleRefresh = async () => {
-    try {
-      await refresh().unwrap();
-      refetch();
-    } catch {
-      // Ignored fallback
-    }
+  const handleRefresh = () => {
+    refetch();
   };
-
-  useEffect(() => {
-    const allClasses =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(allClasses);
-    setClasses(allClasses[0]?.id || '');
-  }, [medium]);
-
-  const topPerformersData = [
-    {
-      id: '1',
-      name: 'Priya Patel',
-      avatarUrl: '/static/images/avatars/avatar_1.png',
-      totalMarks: 98,
-    },
-    {
-      id: '2',
-      name: 'Raj Kumar',
-      avatarUrl: '/static/images/avatars/avatar_2.png',
-      totalMarks: 95,
-    },
-    {
-      id: '3',
-      name: 'Meera Singh',
-      avatarUrl: '/static/images/avatars/avatar_3.png',
-      totalMarks: 92,
-    },
-  ];
-
-  const bottomPerformersData = [
-    {
-      id: '1',
-      name: 'Rohan Singh',
-      avatarUrl: '/static/images/avatars/avatar_4.png',
-      totalMarks: 45,
-    },
-    {
-      id: '2',
-      name: 'Sneha Kumari',
-      avatarUrl: '/static/images/avatars/avatar_5.png',
-      totalMarks: 42,
-    },
-    {
-      id: '3',
-      name: 'Vijay Pratap',
-      avatarUrl: '/static/images/avatars/avatar_6.png',
-      totalMarks: 38,
-    },
-  ];
 
   if (isLoading) {
     return (
@@ -843,15 +793,21 @@ const AcademicPrincipalDashboardScreen = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, pb: 2 }}>
       <AcademicCommandHeader
-        eyebrow="Principal View"
         title="School Academic Command Center"
         description="Track school quality, weak areas, student risk and academic readiness before issues become visible late."
-        lastUpdatedLabel="Macro academic overview"
-        isBusy={isRefreshing || isFetching}
+        isBusy={isFetching}
         onRefresh={handleRefresh}
         actions={[
-          { label: 'Student 360', href: academicPaths.studentAcademic360, icon: 'mdi:account-school-outline' },
-          { label: 'Curriculum', href: academicPaths.curriculum.chaptersManagement, icon: 'solar:book-open-linear' },
+          {
+            label: 'Student 360',
+            href: academicPaths.studentAcademic360,
+            icon: 'mdi:account-school-outline',
+          },
+          {
+            label: 'Curriculum',
+            href: academicPaths.curriculum.chaptersManagement,
+            icon: 'solar:book-open-linear',
+          },
           {
             label: 'Timetables',
             href: academicPaths.timetable.management,
@@ -861,14 +817,20 @@ const AcademicPrincipalDashboardScreen = () => {
         ]}
       />
 
-      {isRefreshing || isFetching ? <LinearProgress /> : null}
+      {isFetching ? <LinearProgress /> : null}
 
       <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 4 }}>
           <AcademicHealthScoreCard
             title="School Academic Health"
-            score={Math.round((data.schoolPerformanceIndex + data.syllabusProgress + data.readinessRate) / 3)}
-            status={data.readinessRate >= 85 && data.syllabusProgress >= 80 ? 'Healthy' : 'Needs Attention'}
+            score={Math.round(
+              (data.schoolPerformanceIndex + data.syllabusProgress + data.readinessRate) / 3
+            )}
+            status={
+              data.readinessRate >= 85 && data.syllabusProgress >= 80
+                ? 'Healthy'
+                : 'Needs Attention'
+            }
             description="Combines performance index, syllabus progress and assessment readiness."
             factors={[
               { label: 'Performance', value: `${data.schoolPerformanceIndex}`, tone: 'success' },
@@ -928,11 +890,7 @@ const AcademicPrincipalDashboardScreen = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <PerformersList
             title="Top Performers"
-            list={
-              data.topPerformers && data.topPerformers.length > 0
-                ? data.topPerformers
-                : topPerformersData
-            }
+            list={data.topPerformers}
             type="top"
             sx={{ height: '100%' }}
           />
@@ -941,11 +899,7 @@ const AcademicPrincipalDashboardScreen = () => {
         <Grid size={{ xs: 12, md: 6 }}>
           <PerformersList
             title="Bottom Performers"
-            list={
-              data.bottomPerformers && data.bottomPerformers.length > 0
-                ? data.bottomPerformers
-                : bottomPerformersData
-            }
+            list={data.bottomPerformers}
             type="bottom"
             sx={{ height: '100%' }}
           />

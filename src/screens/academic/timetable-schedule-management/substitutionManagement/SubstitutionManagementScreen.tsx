@@ -44,7 +44,6 @@ import {
   Send,
   FactCheck,
   PersonOff,
-  AutoAwesome,
   Close as CloseIcon,
   ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
@@ -85,14 +84,27 @@ import { DutyActionDialog } from './components/DutyActionDialog';
 import { TeacherDutyActions } from './components/TeacherDutyActions';
 import { resolveDutyActionErrorMessage } from './services/duty-actions';
 import { useTeacherDutyActions } from './hooks/use-teacher-duty-actions';
-import { createSubstitutionSegments } from './services/create-substitution-action';
+import { AffectedLecturePicker } from './components/AffectedLecturePicker';
+import { TeacherFirstOriginFields } from './components/TeacherFirstOriginFields';
+import { CreateSubstitutionModeTabs } from './components/CreateSubstitutionModeTabs';
 import { SubstitutionCreationOverlay } from './components/SubstitutionCreationOverlay';
+import {
+  createSubstitutionSegments,
+  resolveAvailabilityTeacherSelection,
+} from './services/create-substitution-action';
 import {
   getActiveFilters,
   SubstitutionActiveFilters,
   DEFAULT_SUBSTITUTION_FILTERS,
   SubstitutionFilters as FiltersBar,
 } from './components/SubstitutionFilters';
+import {
+  type CreateTeacherOrigin,
+  createDefaultTeacherOrigin,
+  hasValidTeacherOriginRange,
+  type CreateSubstitutionOriginMode,
+  createTeacherOriginFromAvailability,
+} from './services/create-substitution-origin';
 import {
   todayIso,
   roomOptions,
@@ -119,10 +131,11 @@ import {
   useCreateSubstitutionAction,
   useDailySheetExcelLazyQuery,
   useEmployeeOptionsLazyQuery,
-  useAffectedLecturesLazyQuery,
   useAffectedLecturesDataQuery,
   useCompleteSubstitutionAction,
   useSuggestedTeachersDataQuery,
+  type SubstitutionManagementTab,
+  getSubstitutionTabQueryOptions,
   useTeacherAvailabilityDataQuery,
   useAcknowledgeSubstitutionAction,
   useMySubstitutionDutiesDataQuery,
@@ -638,24 +651,6 @@ const priorityColor: Record<SubstitutionPriority, 'default' | 'primary' | 'error
   Urgent: 'error',
 };
 
-const notificationMethods = [
-  { value: 'In-app', label: 'In-app' },
-  { value: 'In-app, Email', label: 'In-app + Email' },
-  { value: 'In-app, Email, SMS', label: 'In-app + Email + SMS' },
-  { value: 'In-app, Email, SMS, WhatsApp', label: 'All channels' },
-];
-
-const autoReminderOptions = [
-  { value: '10 / 20 / 30 minutes', label: '10 / 20 / 30 minutes' },
-  { value: '5 / 10 / 15 minutes', label: 'Urgent: 5 / 10 / 15 minutes' },
-  { value: 'Manual reminder only', label: 'Manual reminder only' },
-];
-
-const sourceCreateOptions = [
-  { value: 'Manual', label: 'Manual' },
-  { value: 'AI Suggested', label: 'AI Suggested' },
-];
-
 const quickFilters = [
   { label: 'Today', status: 'all', source: 'all', conflict: 'all' },
   { label: 'Uncovered', status: 'Pending', source: 'all', conflict: 'all' },
@@ -689,7 +684,7 @@ const uniqueLookupOptions = <T extends ApiLookupOption>(items: T[]): T[] => {
 };
 
 const SubstitutionManagementScreen = () => {
-  const [activeTab, setActiveTab] = useState('board');
+  const [activeTab, setActiveTab] = useState<SubstitutionManagementTab>('board');
   const isViewportTab = ['board', 'availability'].includes(activeTab);
   const [boardView, setBoardView] = useState<SubstitutionViewType>('table');
   const [filters, setFilters] = useState(DEFAULT_SUBSTITUTION_FILTERS);
@@ -709,11 +704,10 @@ const SubstitutionManagementScreen = () => {
   const [availabilityError, setAvailabilityError] = useState('');
   const [createSubmitType, setCreateSubmitType] = useState<'assign' | null>(null);
   const [substitutionForm, setSubstitutionForm] = useState(defaultSubstitutionForm);
+  const [createOriginMode, setCreateOriginMode] = useState<CreateSubstitutionOriginMode>('teacher');
+  const [createTeacherOrigin, setCreateTeacherOrigin] = useState(createDefaultTeacherOrigin);
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
-  const [creatingFromAvailabilityRowId, setCreatingFromAvailabilityRowId] = useState<string | null>(
-    null
-  );
 
   const availabilityStartTimeStr = useMemo(() => {
     if (availabilityForm.isFullDay) return '09:00';
@@ -789,13 +783,19 @@ const SubstitutionManagementScreen = () => {
     academicMediumId: medium?.id || undefined,
   };
   const selectedFilterDate = filters.filterDate || dayjs(todayIso);
-  const { data: substitutionResult, isLoading: isSubstitutionsLoading } = useSubstitutionsDataQuery(
+  const tabQueryOptions = getSubstitutionTabQueryOptions(activeTab, availabilityDialogOpen);
+  const {
+    data: substitutionResult,
+    isLoading: isSubstitutionsLoading,
+    isFetching: isSubstitutionsFetching,
+  } = useSubstitutionsDataQuery(
     {
       ...academicContextParams,
       fromDate: toDateTimeOffset(selectedFilterDate.startOf('day')),
       toDate: toDateTimeOffset(selectedFilterDate.endOf('day')),
       maxResultCount: 200,
-    }
+    },
+    tabQueryOptions.board
   );
   const {
     data: dashboardResult,
@@ -809,19 +809,28 @@ const SubstitutionManagementScreen = () => {
     data: myDutiesResult,
     isLoading: isMyDutiesLoading,
     isFetching: isMyDutiesFetching,
-  } = useMySubstitutionDutiesDataQuery({
-    ...academicContextParams,
-    fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
-    toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
-    maxResultCount: 200,
-  });
-  const { data: availabilityResult, isLoading: isAvailabilityLoading } =
-    useTeacherAvailabilityDataQuery({
+  } = useMySubstitutionDutiesDataQuery(
+    {
+      ...academicContextParams,
+      fromDate: toDateTimeOffset(dayjs().subtract(30, 'day').startOf('day')),
+      toDate: toDateTimeOffset(dayjs().add(30, 'day').endOf('day')),
+      maxResultCount: 200,
+    },
+    tabQueryOptions.myDuties
+  );
+  const {
+    data: availabilityResult,
+    isLoading: isAvailabilityLoading,
+    isFetching: isAvailabilityFetching,
+  } = useTeacherAvailabilityDataQuery(
+    {
       ...academicContextParams,
       fromDate: toDateTimeOffset(availabilityDate.startOf('day')),
       toDate: toDateTimeOffset(availabilityDate.endOf('day')),
       maxResultCount: 200,
-    });
+    },
+    tabQueryOptions.availability
+  );
   const {
     data: rawCreateMetadata,
     isLoading: isCreateMetadataLoading,
@@ -878,8 +887,50 @@ const SubstitutionManagementScreen = () => {
         !availabilityDialogOpen || (!availabilityForm.teacherId && !availabilityForm.teacherName),
     }
   );
+  const createOriginStartTime = createTeacherOrigin.isFullDay
+    ? '09:00'
+    : createTeacherOrigin.startTime;
+  const createOriginEndTime = createTeacherOrigin.isFullDay ? '14:15' : createTeacherOrigin.endTime;
+  const isCreateOriginRangeValid = hasValidTeacherOriginRange(createTeacherOrigin);
+  const {
+    data: createAffectedLectureResult,
+    isLoading: isCreateAffectedLecturesLoading,
+    isFetching: isCreateAffectedLecturesFetching,
+    isError: isCreateAffectedLecturesError,
+  } = useAffectedLecturesDataQuery(
+    {
+      ...academicContextParams,
+      teacherId: createTeacherOrigin.teacherId || undefined,
+      teacherName: createTeacherOrigin.teacherName || undefined,
+      availabilityDate: toDateTimeOffset(createTeacherOrigin.date?.startOf('day')),
+      startTime: createOriginStartTime,
+      endTime: createOriginEndTime,
+      isFullDay: createTeacherOrigin.isFullDay,
+      reason: createTeacherOrigin.reason,
+      maxResultCount: 100,
+    },
+    {
+      skip:
+        !createDialogOpen ||
+        createOriginMode !== 'teacher' ||
+        (!createTeacherOrigin.teacherId && !createTeacherOrigin.teacherName) ||
+        !createTeacherOrigin.date ||
+        !isCreateOriginRangeValid,
+    }
+  );
+  const createAffectedLectures = useMemo(
+    () => createAffectedLectureResult?.items.map(mapApiAffectedLecture) ?? [],
+    [createAffectedLectureResult]
+  );
   const selectedCreateLecture = createLectureResult.find(
     (lecture) => lecture.slotSubjectId === substitutionForm.timetableSlotSubjectId
+  );
+  const hasCreateLectureSelection = Boolean(
+    (substitutionForm.timetableSlotSubjectId || substitutionForm.period) &&
+    substitutionForm.startTime &&
+    substitutionForm.endTime &&
+    substitutionForm.className &&
+    substitutionForm.divisionName
   );
   const {
     data: createSuggestedTeacherResult,
@@ -901,7 +952,7 @@ const SubstitutionManagementScreen = () => {
       skip:
         !createDialogOpen ||
         !substitutionForm.date ||
-        !(selectedCreateLecture || (substitutionForm.startTime && substitutionForm.endTime)) ||
+        !hasCreateLectureSelection ||
         !substitutionForm.originalTeacherName,
     }
   );
@@ -936,8 +987,6 @@ const SubstitutionManagementScreen = () => {
     useCreateTeacherAvailabilityAction();
   const [downloadDailyPdf, { isLoading: isDownloadingPdf }] = useDailySheetPdfLazyQuery();
   const [downloadDailyExcel, { isLoading: isDownloadingExcel }] = useDailySheetExcelLazyQuery();
-  const [getAffectedLectures, { isLoading: isFetchingAffectedLectures }] =
-    useAffectedLecturesLazyQuery();
   const [getEmployeeOptions, { isLoading: isFetchingEmployeeOptions }] =
     useEmployeeOptionsLazyQuery();
   const seenAvailabilityTeacherIdsRef = useRef<Set<string>>(new Set());
@@ -947,6 +996,8 @@ const SubstitutionManagementScreen = () => {
     isFetchingCreateMetadata ||
     isLecturesLoading ||
     isFetchingLectures ||
+    isCreateAffectedLecturesLoading ||
+    isCreateAffectedLecturesFetching ||
     isCreateSuggestedTeachersLoading ||
     isFetchingSuggestedTeachers;
 
@@ -1214,11 +1265,16 @@ const SubstitutionManagementScreen = () => {
   const suggestedTeacherRows = useMemo<AvailableTeacherRow[]>(
     () =>
       createDialogOpen
-        ? selectedCreateLecture
+        ? hasCreateLectureSelection
           ? (createSuggestedTeacherResult?.map(mapApiSuggestedTeacher) ?? [])
           : []
         : (suggestedTeacherResult?.map(mapApiSuggestedTeacher) ?? suggestedTeachers),
-    [createDialogOpen, createSuggestedTeacherResult, selectedCreateLecture, suggestedTeacherResult]
+    [
+      createDialogOpen,
+      createSuggestedTeacherResult,
+      hasCreateLectureSelection,
+      suggestedTeacherResult,
+    ]
   );
   const availableTeacherSelectOptions =
     suggestedTeacherRows.length > 0
@@ -1677,10 +1733,32 @@ const SubstitutionManagementScreen = () => {
       reason: string;
       remarks?: string;
       sourceType: string;
+      departmentName?: string;
+      isFullDay?: boolean;
+      availabilityStartTime?: string;
+      availabilityEndTime?: string;
       openAsDrawer?: boolean;
     }
   ) => {
+    const unavailableTeacher = resolveAvailabilityTeacherSelection(
+      { teacherId: context.teacherId, teacherName: context.teacherName },
+      { teacherId: lecture.teacherId, teacherName: lecture.teacherName }
+    );
+
     setFormError('');
+    setCreateOriginMode('teacher');
+    setCreateTeacherOrigin({
+      teacherId: unavailableTeacher.originalTeacherId,
+      teacherName: unavailableTeacher.originalTeacherName,
+      departmentName: context.departmentName || '',
+      date: context.availabilityDate,
+      startTime: context.availabilityStartTime || lecture.startTime,
+      endTime: context.availabilityEndTime || lecture.endTime,
+      isFullDay: context.isFullDay ?? false,
+      reason: context.reason || 'Teacher Unavailable',
+      remarks: context.remarks || '',
+      sourceType: context.sourceType,
+    });
     setSubstitutionForm({
       ...defaultSubstitutionForm,
       date: context.availabilityDate,
@@ -1690,7 +1768,7 @@ const SubstitutionManagementScreen = () => {
       timetableSlotId: lecture.timetableSlotId || '',
       timetableSlotSubjectId: lecture.slotSubjectId || '',
       subjectId: lecture.subjectId || '',
-      originalTeacherId: lecture.teacherId || context.teacherId || '',
+      originalTeacherId: unavailableTeacher.originalTeacherId,
       originalRoomId: lecture.roomId || '',
       assignedRoomId: lecture.roomId || '',
       startTime: lecture.startTime,
@@ -1699,7 +1777,7 @@ const SubstitutionManagementScreen = () => {
       divisionName: lecture.divisionName,
       period: lecture.period,
       subjectName: lecture.subjectName,
-      originalTeacherName: lecture.teacherName || context.teacherName,
+      originalTeacherName: unavailableTeacher.originalTeacherName,
       roomName: lecture.roomName,
       assignedRoomName: lecture.roomName,
       reason: context.reason || 'Teacher Unavailable',
@@ -1722,7 +1800,7 @@ const SubstitutionManagementScreen = () => {
     setCreateDialogOpen(true);
   };
 
-  const handleCreateSubstitutionFromAvailability = async (row: TeacherAvailabilityRow) => {
+  const handleCreateSubstitutionFromAvailability = (row: TeacherAvailabilityRow) => {
     if (row.affectedLectureCount <= 0) {
       shikshaMitraToast.error({
         message: 'No affected lecture is available for this teacher.',
@@ -1730,55 +1808,84 @@ const SubstitutionManagementScreen = () => {
       return;
     }
 
-    setCreatingFromAvailabilityRowId(row.id);
-    try {
-      const result = await getAffectedLectures({
-        teacherId: row.teacherId || undefined,
-        teacherName: row.teacherName,
-        availabilityDate: toDateTimeOffset(dayjs(row.availabilityDate).startOf('day')),
-        startTime: row.startTime,
-        endTime: row.endTime,
-        isFullDay: row.isFullDay,
-        reason: row.reason || 'Teacher Unavailable',
-        maxResultCount: 100,
-      }).unwrap();
-      const lecture =
-        result.items
-          .map(mapApiAffectedLecture)
-          .find((item) => item.canCreateSubstitution !== false) ||
-        (result.items.length > 0 ? mapApiAffectedLecture(result.items[0]) : null);
+    const origin = createTeacherOriginFromAvailability(row);
+    setFormError('');
+    setCreateOriginMode('teacher');
+    setCreateTeacherOrigin(origin);
+    setSubstitutionForm({
+      ...defaultSubstitutionForm,
+      date: origin.date,
+      originalTeacherId: origin.teacherId,
+      originalTeacherName: origin.teacherName,
+      reason: origin.reason,
+      startTime: origin.startTime,
+      endTime: origin.endTime,
+      remarks: origin.remarks,
+      assignmentSource: toAssignmentSourceFromAvailability(origin.sourceType),
+    });
+    setCameFromAvailability(false);
+    setCreateDialogOpen(true);
+  };
 
-      if (lecture) {
-        openSubstitutionForLecture(lecture, {
-          availabilityDate: dayjs(row.availabilityDate),
-          teacherId: row.teacherId,
-          teacherName: row.teacherName,
-          reason: row.reason || 'Teacher Unavailable',
-          remarks: row.remarks,
-          sourceType: row.sourceType,
-        });
-      } else {
-        setFormError('');
-        setSubstitutionForm({
-          ...defaultSubstitutionForm,
-          date: dayjs(row.availabilityDate),
-          originalTeacherId: row.teacherId || '',
-          originalTeacherName: row.teacherName,
-          reason: row.reason || 'Teacher Unavailable',
-          startTime: row.startTime,
-          endTime: row.endTime,
-          remarks: row.remarks || '',
-          assignmentSource: toAssignmentSourceFromAvailability(row.sourceType),
-        });
-        setCameFromAvailability(false);
-        setCreateDialogOpen(true);
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to load affected lectures.';
-      shikshaMitraToast.error({ message });
-    } finally {
-      setCreatingFromAvailabilityRowId(null);
-    }
+  const handleCreateOriginModeChange = (mode: CreateSubstitutionOriginMode) => {
+    setCreateOriginMode(mode);
+    setCreateSubmitted(false);
+    setEmployeeSearchTerm('');
+    setSubstitutionForm({
+      ...defaultSubstitutionForm,
+      date: mode === 'teacher' ? createTeacherOrigin.date : defaultSubstitutionForm.date,
+      originalTeacherId: mode === 'teacher' ? createTeacherOrigin.teacherId : '',
+      originalTeacherName: mode === 'teacher' ? createTeacherOrigin.teacherName : '',
+      reason: mode === 'teacher' ? createTeacherOrigin.reason : defaultSubstitutionForm.reason,
+      startTime: mode === 'teacher' ? createOriginStartTime : '',
+      endTime: mode === 'teacher' ? createOriginEndTime : '',
+      remarks: mode === 'teacher' ? createTeacherOrigin.remarks : '',
+      assignmentSource:
+        mode === 'teacher'
+          ? toAssignmentSourceFromAvailability(createTeacherOrigin.sourceType)
+          : defaultSubstitutionForm.assignmentSource,
+    });
+  };
+
+  const handleCreateTeacherOriginChange = (patch: Partial<CreateTeacherOrigin>) => {
+    const nextOrigin = { ...createTeacherOrigin, ...patch };
+    const lectureContextChanged = [
+      'teacherId',
+      'teacherName',
+      'date',
+      'startTime',
+      'endTime',
+      'isFullDay',
+    ].some((key) => key in patch);
+
+    setCreateTeacherOrigin(nextOrigin);
+    setSubstitutionForm((current) => ({
+      ...(lectureContextChanged ? defaultSubstitutionForm : current),
+      date: nextOrigin.date,
+      originalTeacherId: nextOrigin.teacherId,
+      originalTeacherName: nextOrigin.teacherName,
+      reason: nextOrigin.reason,
+      startTime: nextOrigin.isFullDay ? '09:00' : nextOrigin.startTime,
+      endTime: nextOrigin.isFullDay ? '14:15' : nextOrigin.endTime,
+      remarks: nextOrigin.remarks,
+      assignmentSource: toAssignmentSourceFromAvailability(nextOrigin.sourceType),
+    }));
+    if (lectureContextChanged) setEmployeeSearchTerm('');
+  };
+
+  const handleCreateAffectedLectureSelect = (lecture: AffectedLectureRow) => {
+    openSubstitutionForLecture(lecture, {
+      availabilityDate: createTeacherOrigin.date || dayjs(),
+      teacherId: createTeacherOrigin.teacherId,
+      teacherName: createTeacherOrigin.teacherName,
+      departmentName: createTeacherOrigin.departmentName,
+      reason: createTeacherOrigin.reason,
+      remarks: createTeacherOrigin.remarks,
+      sourceType: createTeacherOrigin.sourceType,
+      isFullDay: createTeacherOrigin.isFullDay,
+      availabilityStartTime: createTeacherOrigin.startTime,
+      availabilityEndTime: createTeacherOrigin.endTime,
+    });
   };
 
   const availabilityStartTime = availabilityStartTimeStr;
@@ -2351,15 +2458,14 @@ const SubstitutionManagementScreen = () => {
 
         if (canCreate && canManageSubstitutions) {
           return (
-            <LoadingButton
+            <Button
               size="small"
               variant="outlined"
-              loading={creatingFromAvailabilityRowId === row.id}
               startIcon={<Iconify icon="mdi:plus-circle-outline" width={16} />}
               onClick={() => handleCreateSubstitutionFromAvailability(row)}
             >
               Create Substitution
-            </LoadingButton>
+            </Button>
           );
         }
 
@@ -2932,7 +3038,7 @@ const SubstitutionManagementScreen = () => {
         tableTitle="Substitution Board"
         data={filteredSubstitutions}
         columns={substitutionColumns}
-        isLoading={isSubstitutionsLoading}
+        isLoading={isSubstitutionsLoading || isSubstitutionsFetching}
       />
     );
   };
@@ -2979,6 +3085,8 @@ const SubstitutionManagementScreen = () => {
                   onClick={() => {
                     setFormError('');
                     setSubstitutionForm(defaultSubstitutionForm);
+                    setCreateOriginMode('teacher');
+                    setCreateTeacherOrigin(createDefaultTeacherOrigin());
                     setCameFromAvailability(false);
                     setCreateDialogOpen(true);
                   }}
@@ -3193,7 +3301,7 @@ const SubstitutionManagementScreen = () => {
             <CustomizableTable
               tableId="teacher-availability-table"
               tableTitle="Teacher Availability"
-              isLoading={isAvailabilityLoading}
+              isLoading={isAvailabilityLoading || isAvailabilityFetching}
               data={teacherAvailability}
               columns={availabilityColumns}
             />
@@ -3337,263 +3445,301 @@ const SubstitutionManagementScreen = () => {
               </Box>
             )}
             <Stack spacing={2}>
-              <Alert severity="info" icon={<AutoAwesome />}>
-                Select the affected lecture, review auto-filled details, choose a substitute
-                teacher, then save draft or assign and notify.
-              </Alert>
-              <SectionCard
-                title="Lecture & Timetable Details"
-                paperProps={{ sx: cardStyle }}
-                gridProps={{ sx: { spacing: 0 } }}
-                headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Select date, class, division and lecture slot for substitution.
-                  </Typography>
-                }
-              >
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <DatePicker
-                    label="Date *"
-                    value={substitutionForm.date}
-                    format={viewDateFormat}
-                    disablePast
+              <CreateSubstitutionModeTabs
+                value={createOriginMode}
+                onChange={handleCreateOriginModeChange}
+              />
+              {createOriginMode === 'teacher' ? (
+                <SectionCard
+                  title="Unavailable Teacher & Affected Lectures"
+                  paperProps={{ sx: cardStyle }}
+                  gridProps={{ spacing: 1 }}
+                >
+                  <TeacherFirstOriginFields
+                    value={createTeacherOrigin}
+                    reasonOptions={reasonOptions}
                     minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
                     maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
-                    onChange={(value) => {
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        date: value,
-                        timetableId: '',
-                        timetableSlotId: '',
-                        timetableSlotSubjectId: '',
-                        period: '',
-                        startTime: '',
-                        endTime: '',
-                        subjectId: '',
-                        subjectName: '',
-                        originalTeacherId: '',
-                        originalTeacherName: '',
-                        originalRoomId: '',
-                        roomName: '',
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                      }));
-                      setEmployeeSearchTerm('');
-                    }}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        error: createSubmitted && !!createFieldErrors.date,
-                        helperText: createSubmitted ? createFieldErrors.date : '',
-                      },
-                    }}
+                    dateFormat={viewDateFormat}
+                    loadingTeachers={isFetchingEmployeeOptions}
+                    fetchTeachers={fetchAvailabilityTeacherOptions}
+                    onChange={handleCreateTeacherOriginChange}
                   />
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <CustomSelect
-                    label="Class *"
-                    options={classSelectOptions}
-                    value={substitutionForm.standardId || substitutionForm.className}
-                    error={createSubmitted && !!createFieldErrors.class}
-                    helperText={createSubmitted ? createFieldErrors.class : ''}
-                    onChange={(value) => {
-                      const selected =
-                        academicStandards.find((item) => item.id === value) ||
-                        createMetadata?.standards.find((item) => item.id === value);
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        standardId: selected?.id || '',
-                        className: selected?.name || (value as string),
-                        divisionId: '',
-                        divisionName: '',
-                        timetableId: '',
-                        timetableSlotId: '',
-                        timetableSlotSubjectId: '',
-                        period: '',
-                        startTime: '',
-                        endTime: '',
-                        subjectId: '',
-                        subjectName: '',
-                        originalTeacherId: '',
-                        originalTeacherName: '',
-                        originalRoomId: '',
-                        roomName: '',
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                      }));
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <CustomSelect
-                    label="Division *"
-                    options={divisionSelectOptions}
-                    value={substitutionForm.divisionId || substitutionForm.divisionName}
-                    error={createSubmitted && !!createFieldErrors.division}
-                    helperText={createSubmitted ? createFieldErrors.division : ''}
-                    onChange={(value) => {
-                      const selected =
-                        selectedAcademicStandard?.divisions?.find((item) => item.id === value) ||
-                        createMetadata?.divisions.find((item) => item.id === value);
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        divisionId: selected?.id || '',
-                        divisionName: selected?.name || (value as string),
-                        timetableId: '',
-                        timetableSlotId: '',
-                        timetableSlotSubjectId: '',
-                        period: '',
-                        startTime: '',
-                        endTime: '',
-                        subjectId: '',
-                        subjectName: '',
-                        originalTeacherId: '',
-                        originalTeacherName: '',
-                        originalRoomId: '',
-                        roomName: '',
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                      }));
-                    }}
-                    disabled={!substitutionForm.standardId}
-                    noOptionsMessage={
-                      substitutionForm.standardId ? 'No divisions found' : 'Select class first'
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <CustomSelect
-                    label="Lecture Slot *"
-                    options={lectureSelectOptions}
-                    value={substitutionForm.timetableSlotSubjectId || substitutionForm.period}
-                    error={createSubmitted && !!createFieldErrors.slot}
-                    helperText={createSubmitted ? createFieldErrors.slot : ''}
-                    disabled={
-                      !substitutionForm.date ||
-                      !substitutionForm.standardId ||
-                      !substitutionForm.divisionId
-                    }
-                    noOptionsMessage="No lecture slots found for the selected date, class and division"
-                    onChange={(value) => {
-                      const lecture = createLectureResult.find(
-                        (item) => item.slotSubjectId === value
-                      );
-                      const template = affectedLectureTemplates.find(
-                        (item) => item.period === value
-                      );
-                      const assignedSubject = createMetadata?.subjects.find(
-                        (item) =>
-                          item.id === lecture?.subjectId &&
-                          item.standardId === (lecture?.standardId || substitutionForm.standardId)
-                      );
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        timetableId: lecture?.timetableId || current.timetableId,
-                        timetableSlotId: lecture?.timetableSlotId || current.timetableSlotId,
-                        timetableSlotSubjectId: lecture?.slotSubjectId || '',
-                        period: lecture?.period || (value as string),
-                        startTime: lecture?.startTime || current.startTime,
-                        endTime: lecture?.endTime || current.endTime,
-                        subjectId: lecture?.subjectId || current.subjectId,
-                        subjectName:
-                          lecture?.subjectName || template?.subjectName || current.subjectName,
-                        originalTeacherId:
-                          lecture?.originalTeacherId ||
-                          assignedSubject?.primaryTeacherId ||
-                          current.originalTeacherId,
-                        originalTeacherName:
-                          lecture?.originalTeacherName ||
-                          assignedSubject?.primaryTeacherName ||
-                          template?.teacherName ||
-                          current.originalTeacherName,
-                        originalRoomId: lecture?.originalRoomId || current.originalRoomId,
-                        roomName: lecture?.roomName || template?.roomName || current.roomName,
-                        assignedRoomId: lecture?.originalRoomId || current.assignedRoomId,
-                        assignedRoomName: lecture?.roomName || current.assignedRoomName,
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                        standardId: lecture?.standardId || current.standardId,
-                        className: lecture?.className || template?.className || current.className,
-                        divisionId: lecture?.divisionId || current.divisionId,
-                        divisionName:
-                          lecture?.divisionName || template?.divisionName || current.divisionName,
-                      }));
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <CustomSelect
-                    label="Subject *"
-                    options={subjectSelectOptions}
-                    value={substitutionForm.subjectId || substitutionForm.subjectName}
-                    error={createSubmitted && !!createFieldErrors.subject}
-                    helperText={createSubmitted ? createFieldErrors.subject : ''}
-                    disabled={!substitutionForm.timetableSlotSubjectId}
-                    onChange={(value) => {
-                      const selected = createMetadata?.subjects.find(
-                        (item) =>
-                          item.id === value &&
-                          (!substitutionForm.standardId ||
-                            item.standardId === substitutionForm.standardId)
-                      );
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        subjectId: selected?.id || '',
-                        subjectName: selected?.name || (value as string),
-                        originalTeacherId: selected?.primaryTeacherId || current.originalTeacherId,
-                        originalTeacherName:
-                          selected?.primaryTeacherName || current.originalTeacherName,
-                        substituteTeacherId: '',
-                        substituteTeacherName: '',
-                        selectedSubstitutes: [],
-                      }));
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <CustomSelect
-                    label="Original Teacher"
-                    options={teacherSelectOptions}
-                    value={
-                      substitutionForm.originalTeacherId || substitutionForm.originalTeacherName
-                    }
-                    error={createSubmitted && !!createFieldErrors.originalTeacher}
-                    helperText={createSubmitted ? createFieldErrors.originalTeacher : ''}
-                    disabled={!substitutionForm.timetableSlotSubjectId}
-                    onChange={(value) => {
-                      const selected = createMetadata?.teachers.find((item) => item.id === value);
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        originalTeacherId: selected?.id || '',
-                        originalTeacherName: selected?.name || (value as string),
-                      }));
-                    }}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <CustomSelect
-                    label="Original Room"
-                    options={roomSelectOptions}
-                    value={substitutionForm.originalRoomId || substitutionForm.roomName}
-                    error={createSubmitted && !!createFieldErrors.originalRoom}
-                    helperText={createSubmitted ? createFieldErrors.originalRoom : ''}
-                    disabled={!substitutionForm.timetableSlotSubjectId}
-                    onChange={(value) => {
-                      const selected = createMetadata?.rooms.find((item) => item.id === value);
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        originalRoomId: selected?.id || '',
-                        roomName: selected?.name || (value as string),
-                      }));
-                    }}
-                  />
-                </Grid>
-              </SectionCard>
+                  <Grid size={{ xs: 12 }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                      Affected lectures ({createAffectedLectures.length})
+                    </Typography>
+                    <AffectedLecturePicker
+                      lectures={createAffectedLectures}
+                      selectedLectureId={
+                        substitutionForm.timetableSlotSubjectId || substitutionForm.period
+                      }
+                      hasTeacher={Boolean(
+                        createTeacherOrigin.teacherId || createTeacherOrigin.teacherName
+                      )}
+                      hasValidRange={isCreateOriginRangeValid}
+                      loading={isCreateAffectedLecturesLoading || isCreateAffectedLecturesFetching}
+                      loadError={isCreateAffectedLecturesError}
+                      onSelect={handleCreateAffectedLectureSelect}
+                    />
+                  </Grid>
+                </SectionCard>
+              ) : (
+                <SectionCard
+                  title="Lecture & Timetable Details"
+                  paperProps={{ sx: cardStyle }}
+                  gridProps={{ sx: { spacing: 0 } }}
+                  headerContent={
+                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                      Select date, class, division and lecture slot for substitution.
+                    </Typography>
+                  }
+                >
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <DatePicker
+                      label="Date *"
+                      value={substitutionForm.date}
+                      format={viewDateFormat}
+                      disablePast
+                      minDate={currentYear?.startDate ? dayjs(currentYear.startDate) : undefined}
+                      maxDate={currentYear?.endDate ? dayjs(currentYear.endDate) : undefined}
+                      onChange={(value) => {
+                        setSubstitutionForm((current) => ({
+                          ...current,
+                          date: value,
+                          timetableId: '',
+                          timetableSlotId: '',
+                          timetableSlotSubjectId: '',
+                          period: '',
+                          startTime: '',
+                          endTime: '',
+                          subjectId: '',
+                          subjectName: '',
+                          originalTeacherId: '',
+                          originalTeacherName: '',
+                          originalRoomId: '',
+                          roomName: '',
+                          substituteTeacherId: '',
+                          substituteTeacherName: '',
+                          selectedSubstitutes: [],
+                        }));
+                        setEmployeeSearchTerm('');
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          fullWidth: true,
+                          error: createSubmitted && !!createFieldErrors.date,
+                          helperText: createSubmitted ? createFieldErrors.date : '',
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <CustomSelect
+                      label="Class *"
+                      options={classSelectOptions}
+                      value={substitutionForm.standardId || substitutionForm.className}
+                      error={createSubmitted && !!createFieldErrors.class}
+                      helperText={createSubmitted ? createFieldErrors.class : ''}
+                      onChange={(value) => {
+                        const selected =
+                          academicStandards.find((item) => item.id === value) ||
+                          createMetadata?.standards.find((item) => item.id === value);
+                        setSubstitutionForm((current) => ({
+                          ...current,
+                          standardId: selected?.id || '',
+                          className: selected?.name || (value as string),
+                          divisionId: '',
+                          divisionName: '',
+                          timetableId: '',
+                          timetableSlotId: '',
+                          timetableSlotSubjectId: '',
+                          period: '',
+                          startTime: '',
+                          endTime: '',
+                          subjectId: '',
+                          subjectName: '',
+                          originalTeacherId: '',
+                          originalTeacherName: '',
+                          originalRoomId: '',
+                          roomName: '',
+                          substituteTeacherId: '',
+                          substituteTeacherName: '',
+                          selectedSubstitutes: [],
+                        }));
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 4 }}>
+                    <CustomSelect
+                      label="Division *"
+                      options={divisionSelectOptions}
+                      value={substitutionForm.divisionId || substitutionForm.divisionName}
+                      error={createSubmitted && !!createFieldErrors.division}
+                      helperText={createSubmitted ? createFieldErrors.division : ''}
+                      onChange={(value) => {
+                        const selected =
+                          selectedAcademicStandard?.divisions?.find((item) => item.id === value) ||
+                          createMetadata?.divisions.find((item) => item.id === value);
+                        setSubstitutionForm((current) => ({
+                          ...current,
+                          divisionId: selected?.id || '',
+                          divisionName: selected?.name || (value as string),
+                          timetableId: '',
+                          timetableSlotId: '',
+                          timetableSlotSubjectId: '',
+                          period: '',
+                          startTime: '',
+                          endTime: '',
+                          subjectId: '',
+                          subjectName: '',
+                          originalTeacherId: '',
+                          originalTeacherName: '',
+                          originalRoomId: '',
+                          roomName: '',
+                          substituteTeacherId: '',
+                          substituteTeacherName: '',
+                          selectedSubstitutes: [],
+                        }));
+                      }}
+                      disabled={!substitutionForm.standardId}
+                      noOptionsMessage={
+                        substitutionForm.standardId ? 'No divisions found' : 'Select class first'
+                      }
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <CustomSelect
+                      label="Lecture Slot *"
+                      options={lectureSelectOptions}
+                      value={substitutionForm.timetableSlotSubjectId || substitutionForm.period}
+                      error={createSubmitted && !!createFieldErrors.slot}
+                      helperText={createSubmitted ? createFieldErrors.slot : ''}
+                      disabled={
+                        !substitutionForm.date ||
+                        !substitutionForm.standardId ||
+                        !substitutionForm.divisionId
+                      }
+                      noOptionsMessage="No lecture slots found for the selected date, class and division"
+                      onChange={(value) => {
+                        const lecture = createLectureResult.find(
+                          (item) => item.slotSubjectId === value
+                        );
+                        const template = affectedLectureTemplates.find(
+                          (item) => item.period === value
+                        );
+                        const assignedSubject = createMetadata?.subjects.find(
+                          (item) =>
+                            item.id === lecture?.subjectId &&
+                            item.standardId === (lecture?.standardId || substitutionForm.standardId)
+                        );
+                        setSubstitutionForm((current) => ({
+                          ...current,
+                          timetableId: lecture?.timetableId || current.timetableId,
+                          timetableSlotId: lecture?.timetableSlotId || current.timetableSlotId,
+                          timetableSlotSubjectId: lecture?.slotSubjectId || '',
+                          period: lecture?.period || (value as string),
+                          startTime: lecture?.startTime || current.startTime,
+                          endTime: lecture?.endTime || current.endTime,
+                          subjectId: lecture?.subjectId || current.subjectId,
+                          subjectName:
+                            lecture?.subjectName || template?.subjectName || current.subjectName,
+                          originalTeacherId:
+                            lecture?.originalTeacherId ||
+                            assignedSubject?.primaryTeacherId ||
+                            current.originalTeacherId,
+                          originalTeacherName:
+                            lecture?.originalTeacherName ||
+                            assignedSubject?.primaryTeacherName ||
+                            template?.teacherName ||
+                            current.originalTeacherName,
+                          originalRoomId: lecture?.originalRoomId || current.originalRoomId,
+                          roomName: lecture?.roomName || template?.roomName || current.roomName,
+                          assignedRoomId: lecture?.originalRoomId || current.assignedRoomId,
+                          assignedRoomName: lecture?.roomName || current.assignedRoomName,
+                          substituteTeacherId: '',
+                          substituteTeacherName: '',
+                          selectedSubstitutes: [],
+                          standardId: lecture?.standardId || current.standardId,
+                          className: lecture?.className || template?.className || current.className,
+                          divisionId: lecture?.divisionId || current.divisionId,
+                          divisionName:
+                            lecture?.divisionName || template?.divisionName || current.divisionName,
+                        }));
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <CustomSelect
+                      label="Subject *"
+                      options={subjectSelectOptions}
+                      value={substitutionForm.subjectId || substitutionForm.subjectName}
+                      error={createSubmitted && !!createFieldErrors.subject}
+                      helperText={createSubmitted ? createFieldErrors.subject : ''}
+                      disabled={!substitutionForm.timetableSlotSubjectId}
+                      onChange={(value) => {
+                        const selected = createMetadata?.subjects.find(
+                          (item) =>
+                            item.id === value &&
+                            (!substitutionForm.standardId ||
+                              item.standardId === substitutionForm.standardId)
+                        );
+                        setSubstitutionForm((current) => ({
+                          ...current,
+                          subjectId: selected?.id || '',
+                          subjectName: selected?.name || (value as string),
+                          originalTeacherId:
+                            selected?.primaryTeacherId || current.originalTeacherId,
+                          originalTeacherName:
+                            selected?.primaryTeacherName || current.originalTeacherName,
+                          substituteTeacherId: '',
+                          substituteTeacherName: '',
+                          selectedSubstitutes: [],
+                        }));
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <CustomSelect
+                      label="Original Teacher"
+                      options={teacherSelectOptions}
+                      value={
+                        substitutionForm.originalTeacherId || substitutionForm.originalTeacherName
+                      }
+                      error={createSubmitted && !!createFieldErrors.originalTeacher}
+                      helperText={createSubmitted ? createFieldErrors.originalTeacher : ''}
+                      disabled={!substitutionForm.timetableSlotSubjectId}
+                      onChange={(value) => {
+                        const selected = createMetadata?.teachers.find((item) => item.id === value);
+                        setSubstitutionForm((current) => ({
+                          ...current,
+                          originalTeacherId: selected?.id || '',
+                          originalTeacherName: selected?.name || (value as string),
+                        }));
+                      }}
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, md: 6 }}>
+                    <CustomSelect
+                      label="Original Room"
+                      options={roomSelectOptions}
+                      value={substitutionForm.originalRoomId || substitutionForm.roomName}
+                      error={createSubmitted && !!createFieldErrors.originalRoom}
+                      helperText={createSubmitted ? createFieldErrors.originalRoom : ''}
+                      disabled={!substitutionForm.timetableSlotSubjectId}
+                      onChange={(value) => {
+                        const selected = createMetadata?.rooms.find((item) => item.id === value);
+                        setSubstitutionForm((current) => ({
+                          ...current,
+                          originalRoomId: selected?.id || '',
+                          roomName: selected?.name || (value as string),
+                        }));
+                      }}
+                    />
+                  </Grid>
+                </SectionCard>
+              )}
 
               <SectionCard
                 title="Substitute Assignment"
@@ -3636,12 +3782,12 @@ const SubstitutionManagementScreen = () => {
                     </Stack>
                     <Scrollbar sx={{ maxHeight: 340, pr: 0.5 }}>
                       <Stack spacing={1}>
-                        {!selectedCreateLecture && (
+                        {!hasCreateLectureSelection && (
                           <Alert severity="info">
-                            Select date, class, division and lecture slot to load free employees.
+                            Select an affected lecture to load free employees.
                           </Alert>
                         )}
-                        {selectedCreateLecture &&
+                        {hasCreateLectureSelection &&
                           suggestedTeacherRows.filter((teacher) =>
                             teacher.teacherName
                               .toLowerCase()
@@ -3827,7 +3973,7 @@ const SubstitutionManagementScreen = () => {
                         ? createFieldErrors.substituteTeacher
                         : ''
                     }
-                    disabled={!selectedCreateLecture}
+                    disabled={!hasCreateLectureSelection}
                     noOptionsMessage="No free employees found for this slot"
                     onChange={(value) => {
                       const selected = suggestedTeacherRows.find(
@@ -3850,142 +3996,6 @@ const SubstitutionManagementScreen = () => {
                         assignedRoomName: selected?.name || '',
                       }));
                     }}
-                  />
-                </Grid>
-              </SectionCard>
-
-              <SectionCard
-                title="Substitution Parameters & Settings"
-                paperProps={{ sx: cardStyle }}
-                gridProps={{ spacing: 1 }}
-                headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Configure substitution reason, priority, notification rules, and additional
-                    notes.
-                  </Typography>
-                }
-              >
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <CustomSelect
-                    label="Reason *"
-                    options={reasonOptions}
-                    value={substitutionForm.reason}
-                    error={createSubmitted && !!createFieldErrors.reason}
-                    helperText={createSubmitted ? createFieldErrors.reason : ''}
-                    onChange={(value) =>
-                      setSubstitutionForm((current) => ({ ...current, reason: value as string }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <CustomSelect
-                    label="Priority"
-                    options={priorityOptions}
-                    value={substitutionForm.priority}
-                    onChange={(value) =>
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        priority: value as SubstitutionPriority,
-                      }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <CustomSelect
-                    label="Assignment Source"
-                    options={sourceCreateOptions}
-                    value={substitutionForm.assignmentSource}
-                    onChange={(value) =>
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        assignmentSource: value as SubstitutionRow['source'],
-                      }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <CustomSelect
-                    label="Notification Method"
-                    options={notificationMethods}
-                    value={substitutionForm.notificationMethod}
-                    onChange={(value) =>
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        notificationMethod: value as string,
-                      }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <CustomSelect
-                    label="Auto Reminder"
-                    options={autoReminderOptions}
-                    value={substitutionForm.autoReminderRule}
-                    onChange={(value) =>
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        autoReminderRule: value as string,
-                      }))
-                    }
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={substitutionForm.acknowledgementRequired}
-                          onChange={(event) =>
-                            setSubstitutionForm((current) => ({
-                              ...current,
-                              acknowledgementRequired: event.target.checked,
-                            }))
-                          }
-                        />
-                      }
-                      label="Acknowledgement required"
-                    />
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={substitutionForm.sendNotification}
-                          onChange={(event) =>
-                            setSubstitutionForm((current) => ({
-                              ...current,
-                              sendNotification: event.target.checked,
-                            }))
-                          }
-                        />
-                      }
-                      label="Send notification"
-                    />
-                  </Stack>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Alert severity="success">
-                    {substitutionForm.selectedSubstitutes.length > 0
-                      ? `You are assigning ${substitutionForm.selectedSubstitutes
-                          .map((item) => `${item.teacherName} ${item.startTime}-${item.endTime}`)
-                          .join(
-                            ', '
-                          )} to Class ${substitutionForm.className}-${substitutionForm.divisionName} ${substitutionForm.subjectName || 'lecture'}.`
-                      : 'Select a substitute teacher to preview the final notification.'}
-                  </Alert>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    size="small"
-                    label="Attachment / Note"
-                    value={substitutionForm.remarks}
-                    onChange={(event) =>
-                      setSubstitutionForm((current) => ({
-                        ...current,
-                        remarks: event.target.value,
-                      }))
-                    }
-                    fullWidth
-                    multiline
-                    minRows={3}
                   />
                 </Grid>
               </SectionCard>
@@ -4748,9 +4758,13 @@ const SubstitutionManagementScreen = () => {
                                         availabilityForm.availabilityDate || dayjs(),
                                       teacherId: availabilityForm.teacherId,
                                       teacherName: availabilityForm.teacherName,
+                                      departmentName: availabilityForm.departmentName,
                                       reason: availabilityForm.reason || 'Teacher Unavailable',
                                       remarks: availabilityForm.remarks,
                                       sourceType: availabilityForm.sourceType,
+                                      isFullDay: availabilityForm.isFullDay,
+                                      availabilityStartTime: availabilityForm.startTime,
+                                      availabilityEndTime: availabilityForm.endTime,
                                       openAsDrawer: true,
                                     })
                                   }

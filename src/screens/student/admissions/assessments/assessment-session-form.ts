@@ -5,6 +5,8 @@ import type {
 
 import * as Yup from 'yup';
 
+import { normalizeAssessmentDateTime } from './assessment-date-time';
+
 export const assessmentSessionSchema = Yup.object({
   name: Yup.string().trim().required('Session name is required').max(128),
   location: Yup.string().trim().required('Location is required').max(256),
@@ -54,8 +56,8 @@ export function assessmentSessionInitialValues(
     workflowStageDefinitionId: scope.workflowStageDefinitionId,
     name: session?.name ?? '',
     location: session?.location ?? '',
-    startsAt: session?.startsAt ?? '',
-    endsAt: session?.endsAt ?? '',
+    startsAt: session?.startsAt ? normalizeAssessmentDateTime(session.startsAt) : '',
+    endsAt: session?.endsAt ? normalizeAssessmentDateTime(session.endsAt) : '',
     capacity: session?.capacity ?? 30,
     concurrencyStamp: session?.concurrencyStamp,
   };
