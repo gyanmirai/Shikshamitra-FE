@@ -397,7 +397,7 @@ const PaymentTerm = () => {
       <Drawer
         anchor="right"
         open={addPaymentTermDrawer.value}
-        onClose={handleClose}
+        onClose={() => handleClose()}
         PaperProps={{
           sx: { width: { xs: '100%', sm: 'min(1180px, 92vw)' }, maxWidth: '100%' },
         }}
