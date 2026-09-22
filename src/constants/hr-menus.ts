@@ -53,8 +53,9 @@ export const hrPaths = {
       professionalTax: '/hr/payroll/setting/professional-tax',
       statutorySchemes: '/hr/payroll/setting/statutory-schemes',
       salaryTemplates: '/hr/payroll/setting/salary-templates',
-      salaryTemplateEditor: (templateId: string, versionId: string) =>
-        `/hr/payroll/setting/salary-templates/${templateId}/${versionId}`,
+      salaryTemplateCreate: '/hr/payroll/setting/salary-templates/new',
+      salaryTemplateEditor: (templateId: string) =>
+        `/hr/payroll/setting/salary-templates/${templateId}`,
     },
   },
   attendance: {
@@ -162,6 +163,7 @@ export const hrPermissions = {
       },
       salaryTemplates: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates`,
       salaryTemplateActions: {
+        view: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.View`,
         add: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.Add`,
         edit: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.Edit`,
         publish: `${defaultHrPermissionName}PayrollManagement.Settings.SalaryTemplates.Publish`,

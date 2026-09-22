@@ -159,10 +159,25 @@ System-managed statutory lines stay visible in the calculation but are never per
 Run Payroll and payslips show revision provenance and protected-target drift without silently changing salary or blocking lock.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
 Salary Template settings uses one full-height table for Active, Needs setup, and Archived templates.
-Selecting an editable table row, template-name link, or Edit action opens the URL-backed editor directly in edit mode.
+The shared inline breadcrumb header owns the Create template action and places reusable-default guidance in its information tooltip.
+Dedicated create and edit pages use Configure and Review, with compact shared controls, a month picker, and a fixed action footer.
+Configure shows Basic Information above side-by-side Earnings and Deductions on large screens, stacking the collections on smaller screens.
+Component values remain directly editable, while expandable details expose formulas, purpose, dependencies, ordering, and removal.
+New rows expand and focus their first setting; validation expands invalid rows.
+Review validates configuration without saving or calculating; Create Template or Save Changes creates the version after a current successful preview.
+The title and breadcrumb return action remain available while loading and when loading fails.
+Selecting an editable table row, template-name link, or Edit action opens the dedicated template page directly in edit mode.
+The create page requires Add and a template detail page requires View; mutation controls additionally require Edit.
+The page guards unsaved navigation and pins the loaded version so background refreshes do not overwrite edits.
 View-only users and archived templates open the same editor read-only.
 The editor adds, removes, configures, and reorders active earning and deduction components in separate sections.
 Save changes validates the complete template and atomically creates the next active immutable version.
+Calculate previews the current rules for new and existing templates before saving.
+Changes to rules, values, dependencies, order, compensation defaults, PF, sample amount, or effective month clear the result and disable Save until another successful calculation.
+Name and description edits retain the preview.
+Late responses for superseded inputs are ignored, calculation errors remain inline, and the preview expires after 30 minutes.
+Review shows the sample earning and deduction breakdown, employer contributions, target difference, and statutory warnings.
+The sample does not establish universal employee eligibility.
 The review step explains that the new version applies to future salary setups while existing employees remain pinned to their saved version.
 Template formulas override component-master formulas only when the template generates an employee salary structure.
 Template versions define a default quote basis, protection policy, PF applicability, and PF rule.

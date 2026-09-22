@@ -1,5 +1,5 @@
+import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import { Close, DeleteOutline } from '@mui/icons-material';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Button, Typography, DialogActions, DialogContent } from '@mui/material';
 
@@ -53,7 +53,11 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
         return;
       }
       const anchor = event.target.closest<HTMLAnchorElement>('a[href]');
-      if (!anchor || anchor.hasAttribute('download') || (anchor.target && anchor.target !== '_self')) {
+      if (
+        !anchor ||
+        anchor.hasAttribute('download') ||
+        (anchor.target && anchor.target !== '_self')
+      ) {
         return;
       }
       const destination = new URL(anchor.href, window.location.href);
@@ -121,14 +125,20 @@ export function useUnsavedNavigation(isDirty: boolean, options: Options = {}) {
         </Typography>
       </DialogContent>
       <DialogActions sx={{ p: 2, gap: 1, flexWrap: 'wrap' }}>
-        <Button autoFocus onClick={() => setPending(null)} startIcon={<Close />} sx={{ minHeight: 44 }}>
+        <Button
+          autoFocus
+          size="small"
+          variant="outlined"
+          onClick={() => setPending(null)}
+          startIcon={<Iconify icon="mdi:close" />}
+        >
           Keep editing
         </Button>
         <Button
           color="error"
           variant="contained"
-          startIcon={<DeleteOutline />}
-          sx={{ minHeight: 44 }}
+          startIcon={<Iconify icon="mdi:delete-outline" />}
+          size="small"
           onClick={() => {
             const proceed = pending;
             setPending(null);

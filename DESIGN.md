@@ -233,7 +233,11 @@ Show a workflow preview when the decision affects downstream handoffs or gates.
 Show scoring presets and representative outcome previews before exposing individual numeric weights.
 Group advanced numeric controls by purpose instead of rendering an unexplained wall of fields.
 
-Long policy and template editors use the shared right-side editor drawer.
+Use dedicated pages for complex template configuration that requires comparing interdependent settings.
+Salary Template create and edit pages use Configure and Review, with Basic Information above equal-width Earnings and Deductions collections on large screens.
+Stack the collections on narrow screens, use one content scroll region, and keep the action footer visible.
+Use compact component rows with inline values and expandable advanced settings.
+Use the shared right-side editor drawer for focused edits and policy workflows that benefit from retaining list context.
 The drawer owns a stable title, concise description, ordered stepper, scrollable body, and sticky action footer.
 It becomes full width on small screens and keeps the underlying list in context on desktop.
 
@@ -285,6 +289,9 @@ Avoid automatic focus on mobile unless it is necessary for an immediate confirma
 Design and validate at 390 by 844, 768 by 1024, and 1440 by 900 pixels.
 Primary actions remain reachable without precision tapping.
 Touch targets are at least 44 by 44 CSS pixels unless a documented platform convention requires otherwise.
+Standard labeled application buttons use the compact theme convention in [10. Button](#10-button): their visible height remains 30 px.
+Do not apply the general touch-target rule as a local 44 px minimum height on these buttons.
+Keep adequate spacing around compact controls; icon-only controls retain their accessible touch targets.
 Filter grids collapse to one column on small screens.
 Tab rows may scroll horizontally inside their own container.
 Dense table columns may scroll horizontally, but the page itself must not.
@@ -774,6 +781,8 @@ For a contextual detail or edit state, keep the hierarchy and add an explicit ba
 - Do not add margin, padding, gap, or other page spacing through `sx`, `slotProps`, wrapper props, or an extra layout wrapper around `CustomBreadcrumbs`.
 - Keep layout spacing in the owning page layout or the shared page shell, not in individual breadcrumb usages.
 - Do not use `action` for filters, table controls, or unrelated secondary actions; place those in their owning region.
+- Keep the primary page action right-aligned on desktop, tablet, and mobile.
+- If a narrow header wraps the action onto another row, align it to the right edge of the header content; never left-align or stretch it to full width.
 - Preserve the component’s default responsive breadcrumb overflow and do not create document-level horizontal scrolling.
 
 **Accessibility**
@@ -790,6 +799,7 @@ For a contextual detail or edit state, keep the hierarchy and add an explicit ba
 - Verify `isBack` invokes the owning close/return behavior and protects unsaved changes where applicable.
 - Verify the description is present and meaningful in list, detail, and form states.
 - Verify the header remains usable at 390 px, 768 px, and 1440 px without document-level horizontal overflow.
+- Measure the primary action at each breakpoint: standard labeled buttons must be 30 px high and aligned to the header content right edge.
 
 ### 02. FilterPanel pattern
 
@@ -1376,6 +1386,7 @@ The fields inside `renderItem` must use the supplied `formik` object and the for
 - Keep `activeStep` state in the parent workflow so the parent can coordinate dialogs, drawers, routes, dirty-state protection, and successful submission.
 - Keep the stepper’s scrollable content region separate from its sticky action footer; long step forms must not push actions out of view.
 - Use `handleBack` for backward navigation and preserve entered values unless the workflow explicitly requires a reset.
+- Pass `onCancel` when the first step needs an enabled Cancel action; it must invoke the owning workflow's unsaved-navigation guard.
 - Use optional `backButtonProps` for a workflow-specific icon or to disable backward navigation after a terminal result. The shared stepper still enforces first-step and busy-state disabling and owns the click handler.
 - Keep Save, Save & Next, Back, and Submit semantics clear; do not silently submit the entire workflow when the user selects Save for the current step.
 - Respect the component’s loading state and do not trigger duplicate next, save, or submit requests while it is busy.
@@ -1475,9 +1486,15 @@ The established shared implementation is exported from `src/screens/hr/employee/
 - Prefer MUI buttons and the shared button variants already configured by the theme.
 - Use `LoadingButton` for async submit or mutation actions and disable duplicate submission while loading.
 - Use `variant="outlined"` for secondary or cancel actions and `variant="contained"` for the primary action unless the surrounding component contract says otherwise.
-- Use `size="small"` in tables, dialogs, drawers, and dense forms when it matches the surrounding UI.
+- Use `size="small"` for standard page actions, table actions, dialog and drawer footer actions, and dense forms.
+- The theme defines small labeled buttons as 30 px high, with its existing typography, icon spacing, and horizontal padding.
+- Do not override their `height`, `minHeight`, padding, or font size locally; `size="small"` together with `minHeight: 44` is not compliant.
+- Keep standard action buttons content-width on every breakpoint; use `fullWidth` only when an explicitly approved workflow requires it.
+- An explicitly approved minimum width may give a header action more room without changing its theme height, typography, or padding; Salary Templates uses `minWidth: 140` for Create Template.
+- Keep primary page actions on the right, including when responsive layout moves them onto their own row.
 - Use `Iconify` through `startIcon` or `endIcon`; icon-only buttons require an accessible `aria-label`.
 - Keep button labels action-oriented and specific, such as `Save`, `Update`, `Delete`, or `Cancel`.
+- Use title case for multiword action labels, such as `Create Template` and `Add Employee`; do not force all-uppercase styling.
 - Do not add local colors, padding, shadows, or spacing that duplicate the theme.
 
 ### 11. Types

@@ -3,6 +3,9 @@ import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 
 import { useUnsavedNavigation } from './use-unsaved-navigation';
 
+// Navigation assertions do not depend on downloading icon assets.
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 vi.mock('react-redux', () => ({
   useSelector: () => ({ isChanges: false }),
   useDispatch: () => vi.fn(),

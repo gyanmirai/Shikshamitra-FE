@@ -17,6 +17,7 @@ describe('salary template API contract', () => {
 
   it('creates a complete active template and updates through the same contract', () => {
     const body = {
+      previewToken: 'proof', sampleMonthlyAmount: 20000, sampleEffectiveMonth: '2026-09-01T00:00:00.000Z',
       name: 'Gujarat Staff',
       description: 'Reusable salary setup',
       defaultSalaryBasis: 'EMPLOYER_COST' as const,
