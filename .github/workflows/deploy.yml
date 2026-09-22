@@ -12,7 +12,10 @@ env:
   HUSKY: 0 # ✅ disable husky in CI
 
 jobs:
+  security:
+    uses: ./.github/workflows/security-regression.yml
   build:
+    needs: security
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
