@@ -1,7 +1,11 @@
 import type { LabelColor } from 'src/components/label';
 import type { StudentLookupItem } from 'src/redux/student';
+import type {
+  StudentOnboardingCase,
+  StudentOnboardingStepStatus,
+} from 'src/redux/student/onboarding/student-onboarding-types';
 
-import type { ReadinessAccessRules } from '../onboarding-settings-model';
+import type { AcademicPathContext, ReadinessAccessRules } from '../onboarding-settings-model';
 
 export type OnboardingStage =
   | 'all'
@@ -9,7 +13,8 @@ export type OnboardingStage =
   | 'awaiting-approval'
   | 'ready-to-activate'
   | 'action-required'
-  | 'completed';
+  | 'completed'
+  | 'cancelled';
 
 export type OnboardingItemStatus = Exclude<OnboardingStage, 'all'>;
 
@@ -49,11 +54,15 @@ export type StudentOnboardingItem = {
   admissionRoute: string;
   admissionDate?: string | null;
   ownerName: string;
+  assignedToUserId?: string | null;
   boardId?: string | null;
   boardName: string;
+  academicMediumId?: string | null;
   mediumName: string;
+  academicMediumStageId?: string | null;
   standardId?: string | null;
   standardName: string;
+  divisionId?: string | null;
   divisionName: string;
   grNo?: string | number | null;
   grPreview?: string | null;
@@ -69,8 +78,24 @@ export type StudentOnboardingItem = {
   readinessItems: OnboardingChecklistItem[];
   activity: OnboardingActivityItem[];
   updatedAt: string;
-  source: 'student-records' | 'preview';
+  source: 'onboarding-case' | 'student-records' | 'preview';
+  concurrencyStamp?: string | null;
+  backendStatus?: StudentOnboardingCase['status'];
+  primaryBlocker?: string | null;
+  dueAt?: string | null;
+  isOverdue?: boolean;
+  documentUploadsEnabled?: boolean;
 };
+
+export const getStudentAcademicPathContext = (
+  student: StudentOnboardingItem
+): AcademicPathContext => ({
+  boardId: student.boardId,
+  academicMediumId: student.academicMediumId,
+  academicMediumStageId: student.academicMediumStageId,
+  standardId: student.standardId,
+  divisionId: student.divisionId,
+});
 
 export const onboardingStageMeta: Record<
   OnboardingStage,
@@ -79,7 +104,7 @@ export const onboardingStageMeta: Record<
   all: { label: 'All', icon: 'mdi:format-list-bulleted', color: 'default' },
   'to-prepare': { label: 'To Prepare', icon: 'mdi:clipboard-edit-outline', color: 'warning' },
   'awaiting-approval': {
-    label: 'Awaiting Approval',
+    label: 'In Progress',
     icon: 'mdi:account-clock-outline',
     color: 'info',
   },
@@ -94,6 +119,7 @@ export const onboardingStageMeta: Record<
     color: 'error',
   },
   completed: { label: 'Completed', icon: 'mdi:check-decagram-outline', color: 'success' },
+  cancelled: { label: 'Cancelled', icon: 'mdi:cancel', color: 'default' },
 };
 
 export const onboardingStageOptions = (
@@ -232,7 +258,9 @@ export const mapStudentLookupToOnboardingItem = (
   context?: {
     boardId?: string | null;
     boardName?: string | null;
+    academicMediumId?: string | null;
     mediumName?: string | null;
+    academicMediumStageId?: string | null;
   }
 ): StudentOnboardingItem => ({
   id: student.studentId,
@@ -245,9 +273,12 @@ export const mapStudentLookupToOnboardingItem = (
   ownerName: 'Not assigned',
   boardId: context?.boardId ?? null,
   boardName: context?.boardName || 'Selected board',
+  academicMediumId: context?.academicMediumId ?? null,
   mediumName: context?.mediumName || 'Selected medium',
+  academicMediumStageId: context?.academicMediumStageId ?? null,
   standardId: student.standardId ?? null,
   standardName: student.standardName || '—',
+  divisionId: student.divisionId ?? null,
   divisionName: student.divisionName || '—',
   grNo: student.grNo,
   grPreview: null,
@@ -269,3 +300,98 @@ export const mapStudentLookupToOnboardingItem = (
   updatedAt: 'Current session',
   source: 'student-records',
 });
+
+const onboardingCaseStage: Record<StudentOnboardingCase['status'], OnboardingItemStatus> = {
+  0: 'to-prepare',
+  1: 'awaiting-approval',
+  2: 'ready-to-activate',
+  3: 'action-required',
+  4: 'completed',
+  5: 'cancelled',
+};
+
+const onboardingStepStatus: Record<StudentOnboardingStepStatus, OnboardingCheckStatus> = {
+  0: 'pending',
+  1: 'pending',
+  2: 'passed',
+  3: 'failed',
+  4: 'not-required',
+  5: 'not-required',
+};
+
+export const mapOnboardingCaseToItem = (
+  onboardingCase: StudentOnboardingCase
+): StudentOnboardingItem => {
+  const documentStep = onboardingCase.steps.find((step) => step.key === 'documents');
+  const accountStep = onboardingCase.steps.find((step) => step.key === 'finance_accounts_services');
+  const documentPassed = documentStep?.status === 2 || documentStep?.status === 4;
+  const accountsReady = accountStep?.status === 2 || accountStep?.status === 4;
+
+  return {
+    id: onboardingCase.id,
+    studentId: onboardingCase.studentId,
+    studentName: onboardingCase.studentName,
+    applicationNumber: onboardingCase.applicationNumber,
+    admissionReference: onboardingCase.offeringCode,
+    admissionRoute: onboardingCase.isHistoricalBackfill
+      ? 'Historical admission backfill'
+      : 'Admission finalization',
+    admissionDate: onboardingCase.creationTime ?? null,
+    ownerName: onboardingCase.assignedToUserName || 'Not assigned',
+    assignedToUserId: onboardingCase.assignedToUserId ?? null,
+    boardId: onboardingCase.intendedBoardId,
+    boardName: 'Admission board',
+    academicMediumId: onboardingCase.intendedMediumId,
+    mediumName: 'Admission medium',
+    academicMediumStageId: onboardingCase.intendedStageId,
+    standardId: onboardingCase.intendedStandardId,
+    standardName: onboardingCase.intendedStandardName,
+    divisionId: onboardingCase.divisionId ?? null,
+    divisionName: onboardingCase.divisionName || 'Pending',
+    grNo: onboardingCase.grNumber ?? null,
+    grPreview: null,
+    rollNo: onboardingCase.rollNumber ?? null,
+    rollNumberLocked: onboardingCase.status === 4,
+    status: onboardingCaseStage[onboardingCase.status],
+    documentsPassed: documentPassed ? 1 : 0,
+    documentsRequired: documentStep?.required ? 1 : 0,
+    studentAccountStatus: accountStep?.required
+      ? accountsReady
+        ? 'ready'
+        : 'pending'
+      : 'not-required',
+    guardianAccountStatus: accountStep?.required
+      ? accountsReady
+        ? 'ready'
+        : 'pending'
+      : 'not-required',
+    readinessItems: onboardingCase.steps.map((step) => ({
+      key: step.key,
+      label: step.label,
+      detail:
+        step.detail ||
+        (step.waiverReason ? `Waived: ${step.waiverReason}` : 'No additional detail available.'),
+      status: onboardingStepStatus[step.status],
+      blocking: step.key !== 'final_readiness' && step.required && ![2, 4, 5].includes(step.status),
+      owner: onboardingCase.assignedToUserName || 'Student Onboarding',
+    })),
+    activity: onboardingCase.events.map((event) => ({
+      id: event.id,
+      title: event.eventType,
+      detail: event.description,
+      occurredAt: event.occurredAt,
+    })),
+    updatedAt:
+      onboardingCase.lastModificationTime ||
+      onboardingCase.creationTime ||
+      onboardingCase.startedAt ||
+      'Not available',
+    source: 'onboarding-case',
+    concurrencyStamp: onboardingCase.concurrencyStamp,
+    backendStatus: onboardingCase.status,
+    primaryBlocker: onboardingCase.primaryBlocker,
+    dueAt: onboardingCase.dueAt,
+    isOverdue: onboardingCase.isOverdue,
+    documentUploadsEnabled: onboardingCase.documentUploadsEnabled,
+  };
+};

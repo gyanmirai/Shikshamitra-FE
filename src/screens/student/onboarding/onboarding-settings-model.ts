@@ -57,21 +57,44 @@ export type OnboardingProfile = {
   name: string;
   description: string;
   admissionRoutes: string[];
+  applicability: AcademicApplicableRule;
   rules: ReadinessAccessRules;
 };
 
-export type BoardApplicabilityMode = 'all' | 'selected';
+export type AcademicApplicabilityMode = 'all' | 'selected';
+
+export type BoardApplicabilityMode = AcademicApplicabilityMode;
 
 export type BoardApplicableRule = {
   boardMode: BoardApplicabilityMode;
   boardIds: string[];
 };
 
+export type AcademicApplicableRule = BoardApplicableRule & {
+  mediumMode: AcademicApplicabilityMode;
+  academicMediumIds: string[];
+  stageMode: AcademicApplicabilityMode;
+  academicMediumStageIds: string[];
+  classMode: AcademicApplicabilityMode;
+  standardIds: string[];
+  divisionMode: AcademicApplicabilityMode;
+  divisionIds: string[];
+  includeFutureStructures: boolean;
+};
+
+export type AcademicPathContext = {
+  boardId?: string | null;
+  academicMediumId?: string | null;
+  academicMediumStageId?: string | null;
+  standardId?: string | null;
+  divisionId?: string | null;
+};
+
 export type GrSequenceScope = 'school' | 'academic-year';
 
 export type GrResetPolicy = 'continuous' | 'academic-year';
 
-export type GrNumberConfiguration = BoardApplicableRule & {
+export type GrNumberConfiguration = AcademicApplicableRule & {
   id: string;
   name: string;
   prefix: string;
@@ -112,7 +135,7 @@ export type RollOrderingRule = {
   direction: RollArrangeType;
 };
 
-export type RollNumberConfiguration = BoardApplicableRule & {
+export type RollNumberConfiguration = AcademicApplicableRule & {
   id: string;
   classId: string;
   className: string;
@@ -151,7 +174,7 @@ export type DivisionChangeRules = {
   effectiveDate: string;
 };
 
-export type DivisionChangeConfiguration = BoardApplicableRule &
+export type DivisionChangeConfiguration = AcademicApplicableRule &
   DivisionChangeRules & {
     id: string;
     name: string;
@@ -235,6 +258,20 @@ export const defaultReadinessAccessRules: ReadinessAccessRules = {
   ],
 };
 
+export const createAllAcademicApplicability = (): AcademicApplicableRule => ({
+  boardMode: 'all',
+  boardIds: [],
+  mediumMode: 'all',
+  academicMediumIds: [],
+  stageMode: 'all',
+  academicMediumStageIds: [],
+  classMode: 'all',
+  standardIds: [],
+  divisionMode: 'all',
+  divisionIds: [],
+  includeFutureStructures: false,
+});
+
 const cloneReadinessRules = (rules: ReadinessAccessRules): ReadinessAccessRules => ({
   ...rules,
   approvalTriggers: [...rules.approvalTriggers],
@@ -247,6 +284,7 @@ export const defaultOnboardingProfiles: OnboardingProfile[] = [
     name: 'Fresh admission',
     description: 'Standard first-time admission readiness and access requirements.',
     admissionRoutes: ['Fresh admission'],
+    applicability: createAllAcademicApplicability(),
     rules: cloneReadinessRules(defaultReadinessAccessRules),
   },
   {
@@ -254,6 +292,7 @@ export const defaultOnboardingProfiles: OnboardingProfile[] = [
     name: 'Transfer student',
     description: 'Transfer admission checks with controlled approval for exceptions.',
     admissionRoutes: ['Transfer student'],
+    applicability: createAllAcademicApplicability(),
     rules: cloneReadinessRules(defaultReadinessAccessRules),
   },
   {
@@ -261,6 +300,7 @@ export const defaultOnboardingProfiles: OnboardingProfile[] = [
     name: 'Mid-year admission',
     description: 'Expedited placement with approval for the mid-year exception.',
     admissionRoutes: ['Mid-year admission'],
+    applicability: createAllAcademicApplicability(),
     rules: {
       ...cloneReadinessRules(defaultReadinessAccessRules),
       approvalMode: 'conditional',
@@ -272,6 +312,7 @@ export const defaultOnboardingProfiles: OnboardingProfile[] = [
     name: 'Returning student',
     description: 'Reconfirm identity, placement, access, and changed information.',
     admissionRoutes: ['Returning student'],
+    applicability: createAllAcademicApplicability(),
     rules: {
       ...cloneReadinessRules(defaultReadinessAccessRules),
       approvalMode: 'conditional',
@@ -281,10 +322,9 @@ export const defaultOnboardingProfiles: OnboardingProfile[] = [
 ];
 
 export const defaultGrNumberConfiguration: GrNumberConfiguration = {
+  ...createAllAcademicApplicability(),
   id: 'default-gr-series',
   name: 'Default GR series',
-  boardMode: 'all',
-  boardIds: [],
   prefix: 'GR-',
   startingNumber: 1,
   padding: 6,
@@ -302,9 +342,8 @@ export const defaultGrNumberConfiguration: GrNumberConfiguration = {
 };
 
 export const defaultRollNumberConfiguration: RollNumberConfiguration = {
+  ...createAllAcademicApplicability(),
   id: 'default-roll-rule',
-  boardMode: 'all',
-  boardIds: [],
   classId: '*',
   className: 'All classes',
   arrangeBy: 'studentName',
@@ -342,10 +381,9 @@ export const defaultDivisionChangeRules: DivisionChangeRules = {
 
 export const defaultDivisionChangeConfiguration: DivisionChangeConfiguration = {
   ...defaultDivisionChangeRules,
+  ...createAllAcademicApplicability(),
   id: 'default-division-rule',
   name: 'Default Division rule',
-  boardMode: 'all',
-  boardIds: [],
   classId: '*',
   className: 'All classes',
   isActive: true,
@@ -401,85 +439,176 @@ export const formatGrNumber = (
     .replaceAll('{SCHOOL_CODE}', context.schoolCode?.trim() || 'SCHOOL');
 };
 
+const isSelectedValueApplicable = (
+  mode: AcademicApplicabilityMode,
+  selectedIds: string[],
+  value?: string | null
+) => mode === 'all' || Boolean(value && selectedIds.includes(value));
+
+const getStandardApplicability = (
+  configuration: AcademicApplicableRule & { classId?: string }
+): Pick<AcademicApplicableRule, 'classMode' | 'standardIds'> => {
+  if (configuration.standardIds.length) {
+    return { classMode: configuration.classMode, standardIds: configuration.standardIds };
+  }
+  if (configuration.classId && configuration.classId !== '*') {
+    return { classMode: 'selected', standardIds: [configuration.classId] };
+  }
+  return { classMode: configuration.classMode, standardIds: configuration.standardIds };
+};
+
+export const isAcademicApplicabilityMatch = (
+  configuration: AcademicApplicableRule & { classId?: string },
+  context: AcademicPathContext = {}
+) => {
+  const standardApplicability = getStandardApplicability(configuration);
+  return (
+    isSelectedValueApplicable(configuration.boardMode, configuration.boardIds, context.boardId) &&
+    isSelectedValueApplicable(
+      configuration.mediumMode,
+      configuration.academicMediumIds,
+      context.academicMediumId
+    ) &&
+    isSelectedValueApplicable(
+      configuration.stageMode,
+      configuration.academicMediumStageIds,
+      context.academicMediumStageId
+    ) &&
+    isSelectedValueApplicable(
+      standardApplicability.classMode,
+      standardApplicability.standardIds,
+      context.standardId
+    ) &&
+    isSelectedValueApplicable(
+      configuration.divisionMode,
+      configuration.divisionIds,
+      context.divisionId
+    )
+  );
+};
+
+export const getAcademicApplicabilityScore = (
+  configuration: AcademicApplicableRule & { classId?: string }
+) => {
+  const standardApplicability = getStandardApplicability(configuration);
+  return (
+    (configuration.boardMode === 'selected' ? 16 : 0) +
+    (configuration.mediumMode === 'selected' ? 8 : 0) +
+    (configuration.stageMode === 'selected' ? 4 : 0) +
+    (standardApplicability.classMode === 'selected' ? 2 : 0) +
+    (configuration.divisionMode === 'selected' ? 1 : 0)
+  );
+};
+
+export const compareAcademicApplicability = (
+  first: AcademicApplicableRule & { classId?: string },
+  second: AcademicApplicableRule & { classId?: string }
+) => getAcademicApplicabilityScore(second) - getAcademicApplicabilityScore(first);
+
+const selectedTargetsOverlap = (
+  firstMode: AcademicApplicabilityMode,
+  firstIds: string[],
+  secondMode: AcademicApplicabilityMode,
+  secondIds: string[]
+) =>
+  firstMode === 'all' ||
+  secondMode === 'all' ||
+  (firstMode === 'selected' &&
+    secondMode === 'selected' &&
+    firstIds.some((id) => secondIds.includes(id)));
+
+export const academicTargetsOverlap = (
+  first: AcademicApplicableRule & { classId?: string },
+  second: AcademicApplicableRule & { classId?: string }
+) => {
+  const firstStandard = getStandardApplicability(first);
+  const secondStandard = getStandardApplicability(second);
+  return (
+    selectedTargetsOverlap(first.boardMode, first.boardIds, second.boardMode, second.boardIds) &&
+    selectedTargetsOverlap(
+      first.mediumMode,
+      first.academicMediumIds,
+      second.mediumMode,
+      second.academicMediumIds
+    ) &&
+    selectedTargetsOverlap(
+      first.stageMode,
+      first.academicMediumStageIds,
+      second.stageMode,
+      second.academicMediumStageIds
+    ) &&
+    selectedTargetsOverlap(
+      firstStandard.classMode,
+      firstStandard.standardIds,
+      secondStandard.classMode,
+      secondStandard.standardIds
+    ) &&
+    selectedTargetsOverlap(
+      first.divisionMode,
+      first.divisionIds,
+      second.divisionMode,
+      second.divisionIds
+    )
+  );
+};
+
+export const getAcademicApplicabilityValidationError = (configuration: AcademicApplicableRule) => {
+  const requirements: Array<[AcademicApplicabilityMode, string[], string]> = [
+    [configuration.boardMode, configuration.boardIds, 'Board'],
+    [configuration.mediumMode, configuration.academicMediumIds, 'Medium'],
+    [configuration.stageMode, configuration.academicMediumStageIds, 'School Level'],
+    [configuration.classMode, configuration.standardIds, 'Class'],
+    [configuration.divisionMode, configuration.divisionIds, 'Division'],
+  ];
+  const missing = requirements.find(([mode, ids]) => mode === 'selected' && ids.length === 0);
+  return missing ? `Select at least one ${missing[2]}.` : null;
+};
+
 export const isGrConfigurationApplicable = (
   configuration: GrNumberConfiguration,
   profileId?: string,
   effectiveDate = new Date().toISOString().slice(0, 10),
-  boardId?: string
+  context: AcademicPathContext = {}
 ) =>
   configuration.isActive &&
   (!configuration.effectiveFrom || configuration.effectiveFrom <= effectiveDate) &&
-  (configuration.boardMode === 'all' ||
-    Boolean(boardId && configuration.boardIds.includes(boardId))) &&
-  (!profileId || configuration.applicableProfileIds.includes(profileId));
-
-const isBoardApplicable = (configuration: BoardApplicableRule, boardId?: string) =>
-  configuration.boardMode === 'all' ||
-  Boolean(boardId && configuration.boardIds.includes(boardId));
-
-const isClassApplicable = (
-  configuration: { classId: string; className: string },
-  className: string,
-  classId?: string
-) =>
-  configuration.classId === '*' ||
-  Boolean(classId && configuration.classId === classId) ||
-  configuration.className === className;
-
-const getApplicabilityScore = (
-  configuration: BoardApplicableRule & { classId: string },
-  classId?: string
-) => {
-  const classScore =
-    configuration.classId !== '*' && (!classId || configuration.classId === classId) ? 2 : 0;
-  const boardScore = configuration.boardMode === 'selected' ? 1 : 0;
-  return classScore + boardScore;
-};
+  isAcademicApplicabilityMatch(configuration, context) &&
+  Boolean(profileId && configuration.applicableProfileIds.includes(profileId));
 
 export const findRollNumberConfiguration = (
   configurations: RollNumberConfiguration[],
-  className: string,
-  effectiveDate = new Date().toISOString().slice(0, 10),
-  boardId?: string,
-  classId?: string
+  context: AcademicPathContext = {},
+  effectiveDate = new Date().toISOString().slice(0, 10)
 ) =>
   [...configurations]
     .filter(
       (configuration) =>
         configuration.isActive &&
         (!configuration.effectiveFrom || configuration.effectiveFrom <= effectiveDate) &&
-        isBoardApplicable(configuration, boardId) &&
-        isClassApplicable(configuration, className, classId)
+        isAcademicApplicabilityMatch(configuration, context)
     )
-    .sort(
-      (first, second) =>
-        getApplicabilityScore(second, classId) - getApplicabilityScore(first, classId)
-    )[0] ?? defaultRollNumberConfiguration;
+    .sort(compareAcademicApplicability)[0] ?? defaultRollNumberConfiguration;
 
 export const findDivisionChangeConfiguration = (
   configurations: DivisionChangeConfiguration[],
-  className: string,
-  effectiveDate = new Date().toISOString().slice(0, 10),
-  boardId?: string,
-  classId?: string
+  context: AcademicPathContext = {},
+  effectiveDate = new Date().toISOString().slice(0, 10)
 ) =>
   [...configurations]
     .filter(
       (configuration) =>
         configuration.isActive &&
         (!configuration.effectiveDate || configuration.effectiveDate <= effectiveDate) &&
-        isBoardApplicable(configuration, boardId) &&
-        isClassApplicable(configuration, className, classId)
+        isAcademicApplicabilityMatch(configuration, context)
     )
-    .sort(
-      (first, second) =>
-        getApplicabilityScore(second, classId) - getApplicabilityScore(first, classId)
-    )[0] ?? defaultDivisionChangeConfiguration;
+    .sort(compareAcademicApplicability)[0] ?? defaultDivisionChangeConfiguration;
 
 export const getDivisionAssignmentMode = (
   configurations: DivisionChangeConfiguration[]
 ): AssignmentModePolicy => {
-  const modes = new Set(configurations.filter((item) => item.isActive).map((item) => item.assignmentMode));
+  const modes = new Set(
+    configurations.filter((item) => item.isActive).map((item) => item.assignmentMode)
+  );
   if (modes.size !== 1) return 'both';
   return modes.values().next().value ?? 'both';
 };
@@ -492,14 +621,27 @@ export const isAssignmentModeAllowed = (
   mode: Exclude<AssignmentModePolicy, 'both'>
 ) => policy === 'both' || policy === mode;
 
-export const findOnboardingProfile = (profiles: OnboardingProfile[], admissionRoute: string) =>
-  profiles.find((profile) => profile.admissionRoutes.includes(admissionRoute));
+export const findOnboardingProfile = (
+  profiles: OnboardingProfile[],
+  admissionRoute: string,
+  context: AcademicPathContext = {}
+) =>
+  profiles
+    .filter(
+      (profile) =>
+        profile.admissionRoutes.includes(admissionRoute) &&
+        isAcademicApplicabilityMatch(profile.applicability, context)
+    )
+    .sort((first, second) =>
+      compareAcademicApplicability(first.applicability, second.applicability)
+    )[0];
 
 export const getEffectiveReadinessRules = (
   settings: OnboardingSettingsConfiguration,
-  admissionRoute: string
+  admissionRoute: string,
+  context: AcademicPathContext = {}
 ) =>
-  findOnboardingProfile(settings.onboardingProfiles, admissionRoute)?.rules ??
+  findOnboardingProfile(settings.onboardingProfiles, admissionRoute, context)?.rules ??
   settings.readinessAccess;
 
 export const isApprovalTriggerRequired = (

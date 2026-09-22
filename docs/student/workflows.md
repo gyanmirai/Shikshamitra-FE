@@ -73,6 +73,23 @@ Single and bulk setup distinguish safe inactive preparation from full activation
 create performs an all-or-nothing server preview before either commit mode. Action confirmations
 show the Offering identity, linked Application count, and the effect on new and existing intake.
 
+## Student Onboarding configuration
+
+Configure the academic structure in Institute Setup before authoring onboarding rules. Board, Medium, School Level, Class, and Division are separate dimensions; a board selection never implies a medium or school level.
+
+1. Open **Student Onboarding > Settings > Readiness & Access**. Use **Saved defaults** to persist the current academic year's required details, service handoffs, student and guardian accounts, completion SLA, and active state. Use **Add readiness rule** for advanced preview rules by admission route and academic applicability.
+2. Open **Numbering & Placement**. Use **Saved GR & seat settings** to persist the seat-reservation window and create at least one active GR identifier series before operators prepare identifiers. Add advanced GR Number, Roll Number, or Division preview configurations by choosing one value in each cascading **Board**, **Medium**, **School Level**, **Class**, and **Division** field.
+3. Readiness rules may use independent **All** or **Selected** coverage, while Numbering and Placement rules require all five explicit academic selections. Changing a parent clears child selections that no longer belong to the path.
+4. Use the qualified option labels to distinguish repeated names across academic structures. Selecting GSEB filters the Medium choices but does not select Gujarati or infer a school level.
+5. GR configurations apply to all onboarding profiles; there is no profile selector. GR and Roll workspaces also have no separate Assignment method selector beside **Add configuration**.
+6. Save the advanced rule and inspect its **Academic Path** summary. Overlapping enabled rules at the same academic specificity are rejected, while a narrower path can coexist with its broader fallback.
+7. In the Numbering & Placement policy preview, choose one complete Board / Medium / School Level / Class / Division path. Setup uses the same path to resolve the most specific GR, Roll, Division, and Readiness preview policies for each student.
+8. Finalize the accepted Admission application. The finalization response includes the onboarding case ID, and the application detail links directly to Student Setup with the application number selected as the search handoff.
+9. In **Student Setup**, use the task navigation and table filters directly; no clickable summary-card filter sits above the worklist. Assign an owner where needed, reserve a Division from live capacity, prepare GR and Roll identifiers, upload required documents, and refresh readiness. Manual identifier entry requires an audit reason. Every live command uses the case concurrency stamp.
+10. For a ready case, open **Activate Student**. The confirmation loads a fresh backend activation preview, blocks stale or newly ineligible cases, and submits the preview's latest concurrency stamp. After activation, review service handoffs and retry failed handoffs when necessary. Cancelling a case is separately permission-controlled, requires a reason, and releases its reserved placement and identifiers. Bulk actions remain previews until a backend bulk command exists.
+
+Specificity is deterministic: Board, then Medium, then School Level, then Class, then Division. Numbering and placement rules require a complete explicit path, while Readiness rules may still use broader coverage. The frontend still owns the richer configuration-editor projection and preview matching for fields not represented by the backend policy DTO. The backend is authoritative for the durable worklist, permissions, unique and atomic identifier allocation, seat capacity and concurrency, activation, audit history, service handoffs, and multi-user conflict handling. Do not present a local settings preview as a saved operational policy.
+
 ## Managed assessments
 
 An Assessment stage keeps **Basic completion (existing process)** unless an administrator opts a draft workflow into **Record an assessment result** or **Schedule an entrance exam**. Published workflows remain read-only; create and publish a new version to change these settings. Existing applications keep their pinned workflow version.

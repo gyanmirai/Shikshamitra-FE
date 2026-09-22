@@ -31,7 +31,7 @@ describe('student navigation', () => {
       Dashboard: studentVisibilityPermissions.dashboard,
       'Student Records': studentVisibilityPermissions.records,
       Admissions: studentVisibilityPermissions.admissions,
-      'Student Onboarding': studentVisibilityPermissions.admissions,
+      'Student Onboarding': studentVisibilityPermissions.onboarding,
       Attendance: studentVisibilityPermissions.attendance,
       Notification: studentVisibilityPermissions.notification,
     });
@@ -44,10 +44,20 @@ describe('student navigation', () => {
       NestedMenuItem | undefined;
 
     expect(onboarding?.path).toBe('/student/onboarding');
+    expect(onboarding?.permissionName).toEqual([
+      'Students.Onboarding.View',
+      'Students.Onboarding.Add',
+    ]);
+    expect(onboarding?.visibilityPermissionName).toBe('ShikshaMitra.Module.Students.Onboarding');
     expect(onboarding?.children?.map((item) => item.title)).toEqual(['Student Setup', 'Settings']);
-    expect(onboarding?.children?.find((item) => item.title === 'Student Setup')?.path).toBe(
-      '/student/onboarding/setup'
-    );
+    expect(onboarding?.children?.find((item) => item.title === 'Student Setup')).toMatchObject({
+      path: '/student/onboarding/setup',
+      permissionName: 'Students.Onboarding.View',
+    });
+    expect(onboarding?.children?.find((item) => item.title === 'Settings')).toMatchObject({
+      path: '/student/onboarding/settings',
+      permissionName: 'Students.Onboarding.Add',
+    });
     expect(
       onboarding?.children
         ?.find((item) => item.title === 'Settings')

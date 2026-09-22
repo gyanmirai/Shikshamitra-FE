@@ -1,12 +1,15 @@
+import type { StudentOnboardingAnalytics } from 'src/redux/student/onboarding/student-onboarding-types';
+
+import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Stack, Typography } from '@mui/material';
-import { varAlpha } from 'src/theme/styles';
 
-import type { StudentOnboardingItem, OnboardingStage } from './student-onboarding-model';
+import type { OnboardingStage, StudentOnboardingItem } from './student-onboarding-model';
 
 type StudentSetupKpiStripProps = {
   students: StudentOnboardingItem[];
   activeStage: OnboardingStage;
+  analytics?: StudentOnboardingAnalytics;
   onCardClick?: (stage: OnboardingStage) => void;
 };
 
@@ -15,43 +18,67 @@ type StatColor = 'primary' | 'secondary' | 'info' | 'success' | 'warning' | 'err
 export default function StudentSetupKpiStrip({
   students,
   activeStage,
+  analytics,
   onCardClick,
 }: StudentSetupKpiStripProps) {
   const cards = [
     {
-      label: 'All Students',
+      label: 'Active cases',
       stage: 'all' as OnboardingStage,
-      value: students.length,
+      value: analytics?.activeCases ?? students.length,
       icon: 'solar:users-group-rounded-bold-duotone',
       color: 'primary' as StatColor,
     },
     {
-      label: 'To Prepare',
+      label: 'Pending',
       stage: 'to-prepare' as OnboardingStage,
-      value: students.filter((student) => student.status === 'to-prepare').length,
+      value:
+        analytics?.pending ?? students.filter((student) => student.status === 'to-prepare').length,
       icon: 'solar:document-text-bold-duotone',
       color: 'warning' as StatColor,
     },
     {
-      label: 'Awaiting Approval',
+      label: 'In progress',
       stage: 'awaiting-approval' as OnboardingStage,
-      value: students.filter((student) => student.status === 'awaiting-approval').length,
+      value:
+        analytics?.inProgress ??
+        students.filter((student) => student.status === 'awaiting-approval').length,
       icon: 'solar:cloud-upload-bold-duotone',
       color: 'info' as StatColor,
     },
     {
-      label: 'Action Required',
+      label: 'Ready to activate',
+      stage: 'ready-to-activate' as OnboardingStage,
+      value:
+        analytics?.readyForActivation ??
+        students.filter((student) => student.status === 'ready-to-activate').length,
+      icon: 'solar:user-check-rounded-bold-duotone',
+      color: 'success' as StatColor,
+    },
+    {
+      label: 'Needs attention',
       stage: 'action-required' as OnboardingStage,
-      value: students.filter((student) => student.status === 'action-required').length,
+      value:
+        analytics?.needsAttention ??
+        students.filter((student) => student.status === 'action-required').length,
       icon: 'solar:danger-triangle-bold-duotone',
       color: 'error' as StatColor,
     },
     {
-      label: 'First-Day Ready',
+      label: 'Completed',
       stage: 'completed' as OnboardingStage,
-      value: students.filter((student) => student.status === 'completed').length,
+      value:
+        analytics?.completed ?? students.filter((student) => student.status === 'completed').length,
       icon: 'solar:verified-check-bold-duotone',
       color: 'success' as StatColor,
+    },
+    {
+      label: 'Cancelled',
+      stage: 'cancelled' as OnboardingStage,
+      value:
+        analytics?.cancelled ?? students.filter((student) => student.status === 'cancelled').length,
+      icon: 'solar:close-circle-bold-duotone',
+      color: 'secondary' as StatColor,
     },
   ];
 
@@ -94,31 +121,31 @@ export default function StudentSetupKpiStrip({
               }),
             }}
           >
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Box
-              sx={{
-                width: 36,
-                height: 36,
-                borderRadius: 1.25,
-                display: 'grid',
-                placeItems: 'center',
-                bgcolor: (theme) => varAlpha(theme.vars.palette[card.color].mainChannel, 0.12),
-                color: (theme) => theme.vars.palette[card.color].main,
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon={card.icon} width={20} />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h5" sx={{ lineHeight: 1 }}>
-                {card.value}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {card.label}
-              </Typography>
-            </Box>
-          </Stack>
-        </Card>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Box
+                sx={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 1.25,
+                  display: 'grid',
+                  placeItems: 'center',
+                  bgcolor: (theme) => varAlpha(theme.vars.palette[card.color].mainChannel, 0.12),
+                  color: (theme) => theme.vars.palette[card.color].main,
+                  flexShrink: 0,
+                }}
+              >
+                <Iconify icon={card.icon} width={20} />
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="h5" sx={{ lineHeight: 1 }}>
+                  {card.value}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {card.label}
+                </Typography>
+              </Box>
+            </Stack>
+          </Card>
         );
       })}
     </Box>

@@ -28,6 +28,10 @@ import {
 } from '@mui/material';
 
 import {
+  type StudentOnboardingItem,
+  getStudentAcademicPathContext,
+} from './student-onboarding-model';
+import {
   formatGrNumber,
   findOnboardingProfile,
   isAssignmentModeAllowed,
@@ -38,10 +42,10 @@ import {
   getEffectiveReadinessRules,
   isGrConfigurationApplicable,
   findRollNumberConfiguration,
+  compareAcademicApplicability,
   findDivisionChangeConfiguration,
 } from '../onboarding-settings-model';
 
-import type { StudentOnboardingItem } from './student-onboarding-model';
 import type {
   DivisionChangeRules,
   RollNumberConfiguration,
@@ -207,26 +211,12 @@ const buildManualValues = (
 const resolveRollRule = (
   configurations: RollNumberConfiguration[],
   student: StudentOnboardingItem
-) =>
-  findRollNumberConfiguration(
-    configurations,
-    student.standardName,
-    undefined,
-    student.boardId ?? undefined,
-    student.standardId ?? undefined
-  );
+) => findRollNumberConfiguration(configurations, getStudentAcademicPathContext(student));
 
 const resolveDivisionRule = (
   configurations: DivisionChangeConfiguration[],
   student: StudentOnboardingItem
-) =>
-  findDivisionChangeConfiguration(
-    configurations,
-    student.standardName,
-    undefined,
-    student.boardId ?? undefined,
-    student.standardId ?? undefined
-  );
+) => findDivisionChangeConfiguration(configurations, getStudentAcademicPathContext(student));
 
 export default function StudentAssignmentDialog({
   assignmentType,
@@ -251,20 +241,18 @@ export default function StudentAssignmentDialog({
           students.every((student) => {
             const profile = findOnboardingProfile(
               configuration.onboardingProfiles,
-              student.admissionRoute
+              student.admissionRoute,
+              getStudentAcademicPathContext(student)
             );
             return isGrConfigurationApplicable(
               item,
               profile?.id,
               undefined,
-              student.boardId ?? undefined
+              getStudentAcademicPathContext(student)
             );
           })
         )
-        .sort(
-          (first, second) =>
-            Number(second.boardMode === 'selected') - Number(first.boardMode === 'selected')
-        ),
+        .sort(compareAcademicApplicability),
     [configuration.grNumber.configurations, configuration.onboardingProfiles, students]
   );
   const selectedGrConfiguration =
@@ -336,10 +324,7 @@ export default function StudentAssignmentDialog({
       >();
 
       students.forEach((student) => {
-        const rollConfiguration = resolveRollRule(
-          configuration.rollNumber.configurations,
-          student
-        );
+        const rollConfiguration = resolveRollRule(configuration.rollNumber.configurations, student);
         const groupKey =
           rollConfiguration.numberingScope === 'class'
             ? `${rollConfiguration.id}-${student.standardName}`
@@ -494,7 +479,11 @@ export default function StudentAssignmentDialog({
         ? Boolean(selectedGrConfiguration?.requireManualReason)
         : applicableRollConfigurations.some((rule) => rule.requireChangeReason);
   const profileApprovalRequired = students.some((student) => {
-    const rules = getEffectiveReadinessRules(configuration, student.admissionRoute);
+    const rules = getEffectiveReadinessRules(
+      configuration,
+      student.admissionRoute,
+      getStudentAcademicPathContext(student)
+    );
     if (assignmentType === 'division') {
       return isApprovalTriggerRequired(rules, 'division-change');
     }
@@ -510,8 +499,8 @@ export default function StudentAssignmentDialog({
           rule.requireApproval ||
           Boolean(
             rule.approvalRequiredAfter &&
-              (rule.effectiveDate || new Date().toISOString().slice(0, 10)) >=
-                rule.approvalRequiredAfter
+            (rule.effectiveDate || new Date().toISOString().slice(0, 10)) >=
+              rule.approvalRequiredAfter
           )
       )) ||
     (assignmentType === 'gr-number' &&
@@ -837,7 +826,8 @@ export default function StudentAssignmentDialog({
               {assignmentType === 'division' ? (
                 <Paper variant="outlined" sx={{ p: 1.5, gridColumn: '1 / -1' }}>
                   <Typography variant="subtitle2" gutterBottom>
-                    Applied Division {applicableDivisionConfigurations.length === 1 ? 'policy' : 'policies'}
+                    Applied Division{' '}
+                    {applicableDivisionConfigurations.length === 1 ? 'policy' : 'policies'}
                   </Typography>
                   <Stack spacing={0.75}>
                     {applicableDivisionConfigurations.map((rule) => (

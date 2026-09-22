@@ -31,6 +31,14 @@ The backend owns lifecycle, dependency, permission, institution-timezone, and co
 | `admission-applicants-api.ts`   | Applicant 360 identity/family context, application and stage progress with stage timestamps, bounded recent activity, and notes                                                                                                              | Applicant 360                                               |
 | `admission-applications-api.ts` | Start application, list, frozen workflow, form values, draft save, submit, stage advance, and transition history                                                                                                                             | Application list and detail                                 |
 
+### Student Onboarding
+
+`src/redux/student/onboarding/student-onboarding-api.ts` owns the durable post-admission worklist contract. It covers server-paged cases, filter options, analytics, detail, live placement capacity, identifier series, readiness refresh, owner and step updates, placement reservation, identifier preparation, activation preview and activation, cancellation, service handoffs, policies, identifier-series settings, historical reconciliation, and onboarding documents. The client unwraps the shared `Result<T>` response at the API boundary and invalidates case, list, analytics, and related operational tags after commands.
+
+`student-onboarding-types.ts` mirrors the backend numeric lifecycle enums and DTOs. Do not reuse the generic Student Records lookup as the onboarding source of truth: admission finalization returns `onboardingCaseId`, while the onboarding case owns preparation until activation creates the operational enrollment.
+
+`onboarding-operational-settings.tsx` provides the shared persisted editors used inside Readiness & Access and Numbering & Placement. The former saves school-default readiness and access requirements; the latter saves seat-reservation duration and GR identifier series. Advanced fields absent from the backend DTO must not be described as durable.
+
 ## Endpoint ownership
 
 Assessment sessions and offering/stage choices use `src/redux/student/admissions/admission-assessment-sessions-api.ts`.

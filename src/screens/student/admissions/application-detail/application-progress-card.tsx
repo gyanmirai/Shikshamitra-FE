@@ -26,8 +26,8 @@ import {
 import {
   isApprovalStage,
   getWorkflowProgress,
-  APPLICATION_APPROVED_STATUS,
   canRetrySubmittedFormHandoff,
+  canStageTypeCompleteForStatus,
   canCompleteStageFromProgress,
 } from './application-progress-model';
 
@@ -66,7 +66,8 @@ export function ApplicationProgressCard({
   const canComplete = canCompleteStageFromProgress(currentStage, application.status, canAdvance);
   const canRetryFormHandoff = canRetrySubmittedFormHandoff(currentStage, application.status);
   const awaitingDecision =
-    isApprovalStage(currentStage) && application.status !== APPLICATION_APPROVED_STATUS;
+    isApprovalStage(currentStage) &&
+    !canStageTypeCompleteForStatus(currentStage, application.status);
 
   return (
     <Card variant="outlined">

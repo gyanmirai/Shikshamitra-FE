@@ -30,7 +30,6 @@ import {
   Switch,
   Divider,
   Tooltip,
-  Checkbox,
   MenuItem,
   TextField,
   IconButton,
@@ -39,21 +38,36 @@ import {
 } from '@mui/material';
 
 import { useOnboardingSettings } from '../onboarding-settings-context';
-import { OnboardingConfigurationScopeBar } from '../onboarding-configuration-scope-bar';
 import { OnboardingSettingsBreadcrumbInfo } from './onboarding-settings-breadcrumb-info';
 import {
+  usePersistedOnboardingPolicy,
+  usePersistedIdentifierSeries,
+  PersistedNumberingPolicyFields,
+} from './onboarding-operational-settings';
+import {
+  SingleAcademicPathFields,
+  getAcademicApplicabilitySummary,
+  normalizeSingleAcademicApplicability,
+  getSingleAcademicPathValidationError,
+  createEmptySingleAcademicApplicability,
+  buildOnboardingAcademicStructureOptions,
+} from './onboarding-academic-applicability';
+import {
   formatGrNumber,
+  findOnboardingProfile,
+  academicTargetsOverlap,
   findRollNumberConfiguration,
   isGrConfigurationApplicable,
+  compareAcademicApplicability,
+  getAcademicApplicabilityScore,
   findDivisionChangeConfiguration,
   defaultDivisionChangeConfiguration,
 } from '../onboarding-settings-model';
 
 import type {
   DivisionChangeRules,
-  AssignmentModePolicy,
+  AcademicPathContext,
   GrNumberConfiguration,
-  BoardApplicabilityMode,
   RollNumberConfiguration,
   DivisionChangeConfiguration,
 } from '../onboarding-settings-model';
@@ -96,85 +110,6 @@ const divisionStrategyOptions = [
   { value: 'sequential', label: 'Fill Divisions sequentially' },
   { value: 'preserve-preferred', label: 'Preserve preferred Division' },
 ];
-
-type BoardOption = { id: string; name: string };
-
-const boardTargetsOverlap = (
-  first: { boardMode: BoardApplicabilityMode; boardIds: string[] },
-  second: { boardMode: BoardApplicabilityMode; boardIds: string[] }
-) =>
-  (first.boardMode === 'all' && second.boardMode === 'all') ||
-  (first.boardMode === 'selected' &&
-    second.boardMode === 'selected' &&
-    first.boardIds.some((boardId) => second.boardIds.includes(boardId)));
-
-const getBoardApplicabilityLabel = (
-  configuration: { boardMode: BoardApplicabilityMode; boardIds: string[] },
-  boards: BoardOption[]
-) => {
-  if (configuration.boardMode === 'all') return 'All boards';
-  const names = boards
-    .filter((board) => configuration.boardIds.includes(board.id))
-    .map((board) => board.name);
-  return names.join(', ') || `${configuration.boardIds.length} selected board(s)`;
-};
-
-function BoardApplicabilityFields({
-  boardMode,
-  boardIds,
-  boards,
-  onModeChange,
-  onBoardIdsChange,
-  error,
-}: {
-  boardMode: BoardApplicabilityMode;
-  boardIds: string[];
-  boards: BoardOption[];
-  onModeChange: (mode: BoardApplicabilityMode) => void;
-  onBoardIdsChange: (boardIds: string[]) => void;
-  error?: string;
-}) {
-  const selectedBoardId = boardMode === 'all' ? '__all_boards__' : (boardIds[0] ?? '');
-  const selectedBoardName = boards.find((board) => board.id === boardIds[0])?.name;
-
-  return (
-    <TextField
-      select
-      fullWidth
-      size="small"
-      label="Board"
-      value={selectedBoardId}
-      onChange={(event) => {
-        const nextBoardId = event.target.value;
-
-        if (nextBoardId === '__all_boards__') {
-          onModeChange('all');
-          onBoardIdsChange([]);
-          return;
-        }
-
-        onModeChange('selected');
-        onBoardIdsChange([nextBoardId]);
-      }}
-      error={Boolean(error)}
-      helperText={
-        error ||
-        (boardMode === 'selected' && selectedBoardName
-          ? `This rule applies only to ${selectedBoardName}.`
-          : boards.length
-            ? 'All boards is the fallback; choose a Board to create a specific override.'
-            : 'No Board options are available for the selected academic year.')
-      }
-    >
-      <MenuItem value="__all_boards__">All boards</MenuItem>
-      {boards.map((board) => (
-        <MenuItem key={board.id} value={board.id}>
-          {board.name}
-        </MenuItem>
-      ))}
-    </TextField>
-  );
-}
 
 export function SettingsDrawer({
   open,
@@ -376,8 +311,6 @@ function NumberingWorkspaceBar({
   title,
   icon,
   summaries,
-  assignmentMode,
-  onAssignmentModeChange,
   buttonLabel,
   buttonIcon = 'mdi:plus',
   onClick,
@@ -385,8 +318,6 @@ function NumberingWorkspaceBar({
   title: string;
   icon: string;
   summaries: string[];
-  assignmentMode?: AssignmentModePolicy;
-  onAssignmentModeChange?: (mode: AssignmentModePolicy) => void;
   buttonLabel: string;
   buttonIcon?: string;
   onClick: () => void;
@@ -431,22 +362,6 @@ function NumberingWorkspaceBar({
           alignItems={{ sm: 'center' }}
           sx={{ width: { xs: '100%', md: 'auto' }, flexShrink: 0 }}
         >
-          {assignmentMode && onAssignmentModeChange ? (
-            <TextField
-              select
-              size="small"
-              label="Assignment method"
-              value={assignmentMode}
-              onChange={(event) =>
-                onAssignmentModeChange(event.target.value as AssignmentModePolicy)
-              }
-              sx={{ minWidth: { xs: '100%', sm: 210 } }}
-            >
-              <MenuItem value="automatic">Automatic only</MenuItem>
-              <MenuItem value="manual">Manual only</MenuItem>
-              <MenuItem value="both">Automatic and manual</MenuItem>
-            </TextField>
-          ) : null}
           <Button
             variant="contained"
             size="small"
@@ -462,7 +377,24 @@ function NumberingWorkspaceBar({
   );
 }
 
+const academicApplicabilitySchemaFields = {
+  boardMode: Yup.string().oneOf(['selected'], 'Select one Board').required(),
+  boardIds: Yup.array().of(Yup.string().required()).length(1, 'Select one Board'),
+  mediumMode: Yup.string().oneOf(['selected'], 'Select one Medium').required(),
+  academicMediumIds: Yup.array().of(Yup.string().required()).length(1, 'Select one Medium'),
+  stageMode: Yup.string().oneOf(['selected'], 'Select one School Level').required(),
+  academicMediumStageIds: Yup.array()
+    .of(Yup.string().required())
+    .length(1, 'Select one School Level'),
+  classMode: Yup.string().oneOf(['selected'], 'Select one Class').required(),
+  standardIds: Yup.array().of(Yup.string().required()).length(1, 'Select one Class'),
+  divisionMode: Yup.string().oneOf(['selected'], 'Select one Division').required(),
+  divisionIds: Yup.array().of(Yup.string().required()).length(1, 'Select one Division'),
+  includeFutureStructures: Yup.boolean().required(),
+};
+
 const grSchema = Yup.object({
+  ...academicApplicabilitySchemaFields,
   name: Yup.string().trim().required('Enter a series name').max(80),
   prefix: Yup.string().max(12, 'Prefix must be 12 characters or fewer'),
   startingNumber: Yup.number().integer().min(1, 'Starting number must be at least 1').required(),
@@ -474,16 +406,6 @@ const grSchema = Yup.object({
     .test('sequence-token', 'Format must include {SEQUENCE}', (value) =>
       Boolean(value?.includes('{SEQUENCE}'))
     ),
-  applicableProfileIds: Yup.array()
-    .of(Yup.string().required())
-    .min(1, 'Select at least one onboarding profile'),
-  boardMode: Yup.string().oneOf(['all', 'selected']).required(),
-  boardIds: Yup.array()
-    .of(Yup.string().required())
-    .when('boardMode', {
-      is: 'selected',
-      then: (schema) => schema.length(1, 'Select one specific Board'),
-    }),
   sequenceScope: Yup.string().required(),
   resetPolicy: Yup.string().required(),
   maximumNumber: Yup.number()
@@ -505,14 +427,7 @@ const grSchema = Yup.object({
 });
 
 const rollSchema = Yup.object({
-  classId: Yup.string().required('Select a class'),
-  boardMode: Yup.string().oneOf(['all', 'selected']).required(),
-  boardIds: Yup.array()
-    .of(Yup.string().required())
-    .when('boardMode', {
-      is: 'selected',
-      then: (schema) => schema.length(1, 'Select one specific Board'),
-    }),
+  ...academicApplicabilitySchemaFields,
   numberingScope: Yup.string().required('Select a numbering scope'),
   assignmentTiming: Yup.string().required('Select assignment timing'),
   midYearHandling: Yup.string().required('Select mid-year handling'),
@@ -534,9 +449,8 @@ const rollSchema = Yup.object({
 type GrNumberFormValues = Omit<GrNumberConfiguration, 'id'>;
 
 const createGrNumberFormValues = (): GrNumberFormValues => ({
+  ...createEmptySingleAcademicApplicability(),
   name: '',
-  boardMode: 'all',
-  boardIds: [],
   prefix: 'GR-',
   startingNumber: 1,
   padding: 6,
@@ -573,7 +487,8 @@ const hasGrSeriesOverlap = (
       existing.padding === candidate.padding;
 
     return (
-      boardTargetsOverlap(candidate, existing) &&
+      getAcademicApplicabilityScore(candidate) === getAcademicApplicabilityScore(existing) &&
+      academicTargetsOverlap(candidate, existing) &&
       sharesProfile &&
       sharesRange &&
       sharesFormat &&
@@ -594,7 +509,7 @@ function SettingsPageHeader({ title, description }: { title: string; description
               title={`${title} settings`}
               description={description}
               items={[
-                'Review the rules for the active configuration scope.',
+                'Review the configured rules and their academic paths.',
                 'Add or edit a configuration from the settings workspace.',
               ]}
             />
@@ -629,8 +544,7 @@ function SettingsPageHeader({ title, description }: { title: string; description
 
 export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolean }) {
   const filters = useFinanceAcademicFilters();
-  const { settings, scope, saveGrNumberConfiguration, setGrAssignmentMode } =
-    useOnboardingSettings();
+  const { settings, scope, saveGrNumberConfiguration } = useOnboardingSettings();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingConfigurationId, setEditingConfigurationId] = useState<string | null>(null);
   const { configurations } = settings.grNumber;
@@ -638,14 +552,17 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
     initialValues: createGrNumberFormValues(),
     validationSchema: grSchema,
     onSubmit: (values, helpers) => {
+      const applicability = normalizeSingleAcademicApplicability(values, filters.boards);
       const configuration: GrNumberConfiguration = {
         ...values,
+        ...applicability,
+        applicableProfileIds: settings.onboardingProfiles.map((profile) => profile.id),
         id: editingConfigurationId ?? `gr-session-${Date.now()}`,
       };
 
       if (hasGrSeriesOverlap(configuration, configurations)) {
         helpers.setStatus(
-          'This active series overlaps another series for the same profiles, format, scope, and number range.'
+          'This active series overlaps another series for the same academic path, format, scope, and number range.'
         );
         return;
       }
@@ -662,8 +579,6 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
     formik.resetForm({
       values: {
         ...createGrNumberFormValues(),
-        boardMode: 'all',
-        boardIds: [],
         applicableProfileIds: settings.onboardingProfiles.map((profile) => profile.id),
       },
     });
@@ -671,12 +586,13 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
   };
 
   const openExistingConfiguration = (configuration: GrNumberConfiguration) => {
+    const applicability = normalizeSingleAcademicApplicability(configuration, filters.boards);
     setEditingConfigurationId(configuration.id);
     formik.resetForm({
       values: {
         ...configuration,
-        boardIds: [...configuration.boardIds],
-        applicableProfileIds: [...configuration.applicableProfileIds],
+        ...applicability,
+        applicableProfileIds: settings.onboardingProfiles.map((profile) => profile.id),
       },
     });
     setEditorOpen(true);
@@ -692,34 +608,14 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
   const columns = [
     { id: 'name', label: 'Series Name', width: 210, minWidth: 180 },
     {
-      id: 'boardIds',
-      label: 'Board',
-      width: 170,
-      minWidth: 150,
+      id: 'academicCoverage',
+      label: 'Academic Path',
+      width: 360,
+      minWidth: 280,
       isFilter: false,
       render: (_value: string, row: IData) => {
         const configuration = configurations.find((item) => item.id === String(row.id));
-        return configuration ? getBoardApplicabilityLabel(configuration, filters.boards) : '—';
-      },
-    },
-    {
-      id: 'applicableProfileIds',
-      label: 'Applies To',
-      isFilter: false,
-      width: 280,
-      minWidth: 220,
-      maxWidth: 320,
-      cellSx: { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' },
-      render: (_value: string, row: IData) => {
-        const profileIds = Array.isArray(row.applicableProfileIds)
-          ? row.applicableProfileIds.map(String)
-          : [];
-        const labels = settings.onboardingProfiles
-          .filter((profile) => profileIds.includes(profile.id))
-          .map((profile) => profile.name);
-        return labels.length === settings.onboardingProfiles.length
-          ? 'All onboarding profiles'
-          : labels.join(', ') || 'No profiles';
+        return configuration ? getAcademicApplicabilitySummary(configuration, filters.boards) : '—';
       },
     },
     {
@@ -727,10 +623,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
       label: 'Sequence Scope',
       width: 160,
       minWidth: 145,
-      render: (value: string) =>
-        value === 'academic-year'
-            ? 'Academic year'
-            : 'School-wide',
+      render: (value: string) => (value === 'academic-year' ? 'Academic year' : 'School-wide'),
     },
     {
       id: 'preview',
@@ -802,8 +695,6 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
           }`,
           'Current session',
         ]}
-        assignmentMode={settings.grNumber.assignmentMode}
-        onAssignmentModeChange={setGrAssignmentMode}
         buttonLabel="Add configuration"
         onClick={openNewConfiguration}
       />
@@ -841,8 +732,8 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
 
           <SettingsSectionCard
             icon="mdi:target-account"
-            title="Series coverage"
-            description="Give staff a clear series name and limit it to the admission flows that should use it."
+            title="Series details"
+            description="Give staff a clear series name and choose one Board, Medium, School Level, Class, and Division."
           >
             <TextField
               fullWidth
@@ -853,70 +744,16 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={formik.touched.name ? formik.errors.name : 'Example: Fresh admission GR'}
+              helperText={formik.touched.name ? formik.errors.name : undefined}
             />
-            <TextField
-              select
-              fullWidth
-              size="small"
-              name="applicableProfileIds"
-              label="Applicable onboarding profiles"
-              value={formik.values.applicableProfileIds}
-              onChange={(event) => {
-                const { value } = event.target;
-                formik.setFieldValue(
-                  'applicableProfileIds',
-                  typeof value === 'string' ? value.split(',') : value
-                );
-                formik.setStatus(undefined);
-              }}
-              onBlur={formik.handleBlur}
-              error={
-                formik.touched.applicableProfileIds && Boolean(formik.errors.applicableProfileIds)
-              }
-              helperText={
-                formik.touched.applicableProfileIds && formik.errors.applicableProfileIds
-                  ? String(formik.errors.applicableProfileIds)
-                  : 'Only eligible series appear in Student Setup.'
-              }
-              SelectProps={{
-                multiple: true,
-                renderValue: (selected) => {
-                  const selectedIds = selected as string[];
-                  const names = settings.onboardingProfiles
-                    .filter((profile) => selectedIds.includes(profile.id))
-                    .map((profile) => profile.name);
-                  return names.length === settings.onboardingProfiles.length
-                    ? 'All onboarding profiles'
-                    : names.join(', ');
-                },
-              }}
-            >
-              {settings.onboardingProfiles.map((profile) => (
-                <MenuItem key={profile.id} value={profile.id}>
-                  <Checkbox checked={formik.values.applicableProfileIds.includes(profile.id)} />
-                  {profile.name}
-                </MenuItem>
-              ))}
-            </TextField>
-            <BoardApplicabilityFields
-              boardMode={formik.values.boardMode}
-              boardIds={formik.values.boardIds}
+            <SingleAcademicPathFields
+              value={formik.values}
               boards={filters.boards}
-              onModeChange={(boardMode) => {
-                formik.setFieldValue('boardMode', boardMode);
-                if (boardMode === 'all') formik.setFieldValue('boardIds', []);
+              showErrors={formik.submitCount > 0}
+              onChange={(applicability) => {
+                formik.setValues({ ...formik.values, ...applicability }, false);
                 formik.setStatus(undefined);
               }}
-              onBoardIdsChange={(boardIds) => {
-                formik.setFieldValue('boardIds', boardIds);
-                formik.setStatus(undefined);
-              }}
-              error={
-                formik.touched.boardIds && typeof formik.errors.boardIds === 'string'
-                  ? formik.errors.boardIds
-                  : undefined
-              }
             />
             <Box
               sx={{
@@ -933,7 +770,6 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 label="Sequence scope"
                 value={formik.values.sequenceScope}
                 onChange={formik.handleChange}
-                helperText="Where the sequence must stay unique."
               >
                 <MenuItem value="school">School-wide</MenuItem>
                 <MenuItem value="academic-year">Academic year</MenuItem>
@@ -946,7 +782,6 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 label="Reset policy"
                 value={formik.values.resetPolicy}
                 onChange={formik.handleChange}
-                helperText="When numbering restarts."
               >
                 <MenuItem value="continuous">Never reset</MenuItem>
                 <MenuItem value="academic-year">Reset each academic year</MenuItem>
@@ -993,7 +828,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={formik.touched.prefix && Boolean(formik.errors.prefix)}
-                helperText={formik.touched.prefix ? formik.errors.prefix : 'Example: GR-'}
+                helperText={formik.touched.prefix ? formik.errors.prefix : undefined}
               />
               <TextField
                 fullWidth
@@ -1019,9 +854,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={formik.touched.padding && Boolean(formik.errors.padding)}
-                helperText={
-                  formik.touched.padding ? formik.errors.padding : 'Example: 6 produces 000001'
-                }
+                helperText={formik.touched.padding ? formik.errors.padding : undefined}
               />
               <TextField
                 fullWidth
@@ -1032,7 +865,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={formik.touched.suffix && Boolean(formik.errors.suffix)}
-                helperText={formik.touched.suffix ? formik.errors.suffix : 'Optional'}
+                helperText={formik.touched.suffix ? formik.errors.suffix : undefined}
               />
               <TextField
                 fullWidth
@@ -1044,11 +877,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 error={formik.touched.maximumNumber && Boolean(formik.errors.maximumNumber)}
-                helperText={
-                  formik.touched.maximumNumber && formik.errors.maximumNumber
-                    ? formik.errors.maximumNumber
-                    : 'Optional safety limit.'
-                }
+                helperText={formik.touched.maximumNumber ? formik.errors.maximumNumber : undefined}
               />
             </Box>
             <Card variant="outlined" sx={{ p: 1.5, bgcolor: 'background.neutral' }}>
@@ -1131,7 +960,6 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 value={formik.values.effectiveFrom}
                 onChange={formik.handleChange}
                 InputLabelProps={{ shrink: true }}
-                helperText="Optional activation date."
               />
               <FormControlLabel
                 sx={{ m: 0, minHeight: 40 }}
@@ -1152,7 +980,10 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
   );
 }
 
-type RollNumberFormValues = Omit<RollNumberConfiguration, 'id' | 'className' | 'orderingRules'> & {
+type RollNumberFormValues = Omit<
+  RollNumberConfiguration,
+  'id' | 'classId' | 'className' | 'orderingRules'
+> & {
   tieBreakerOne: '' | RollNumberConfiguration['arrangeBy'];
   tieBreakerOneDirection: RollNumberConfiguration['arrangeType'];
   tieBreakerTwo: '' | RollNumberConfiguration['arrangeBy'];
@@ -1160,9 +991,7 @@ type RollNumberFormValues = Omit<RollNumberConfiguration, 'id' | 'className' | '
 };
 
 const createRollNumberFormValues = (): RollNumberFormValues => ({
-  boardMode: 'all',
-  boardIds: [],
-  classId: '*',
+  ...createEmptySingleAcademicApplicability(),
   arrangeBy: 'studentName',
   arrangeType: 'ascending',
   startingNumber: 1,
@@ -1190,13 +1019,13 @@ const hasRollConfigurationOverlap = (
       existing.id !== candidate.id &&
       existing.isActive &&
       candidate.isActive &&
-      existing.classId === candidate.classId &&
-      boardTargetsOverlap(existing, candidate)
+      getAcademicApplicabilityScore(existing) === getAcademicApplicabilityScore(candidate) &&
+      academicTargetsOverlap(existing, candidate)
   );
 
 export function RollNumberSettingsScreen({ embedded = false }: { embedded?: boolean }) {
   const filters = useFinanceAcademicFilters();
-  const { settings, saveRollNumberConfiguration, setRollAssignmentMode } = useOnboardingSettings();
+  const { settings, saveRollNumberConfiguration } = useOnboardingSettings();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingConfigurationId, setEditingConfigurationId] = useState<string | null>(null);
   const { configurations } = settings.rollNumber;
@@ -1204,7 +1033,11 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
     initialValues: createRollNumberFormValues(),
     validationSchema: rollSchema,
     onSubmit: (values, helpers) => {
-      const selectedClass = filters.classOptions.find((item) => item.id === values.classId);
+      const applicability = normalizeSingleAcademicApplicability(values, filters.boards);
+      const academicOptions = buildOnboardingAcademicStructureOptions(filters.boards);
+      const selectedStandards = academicOptions.standards.filter((item) =>
+        applicability.standardIds.includes(item.id)
+      );
       const orderingRules = [
         { field: values.arrangeBy, direction: values.arrangeType },
         values.tieBreakerOne
@@ -1224,9 +1057,17 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
 
       const configuration: RollNumberConfiguration = {
         ...configurationValues,
+        ...applicability,
         orderingRules,
         id: editingConfigurationId ?? `roll-session-${Date.now()}`,
-        className: values.classId === '*' ? 'All classes' : selectedClass?.name || values.classId,
+        classId:
+          applicability.classMode === 'selected' && applicability.standardIds.length === 1
+            ? applicability.standardIds[0]
+            : '*',
+        className:
+          applicability.classMode === 'all'
+            ? 'All classes'
+            : selectedStandards.map((item) => item.name).join(', ') || 'Selected classes',
       };
 
       if (hasRollConfigurationOverlap(configuration, configurations)) {
@@ -1250,11 +1091,12 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
   };
 
   const openExistingConfiguration = (configuration: RollNumberConfiguration) => {
+    const applicability = normalizeSingleAcademicApplicability(configuration, filters.boards);
     setEditingConfigurationId(configuration.id);
     formik.resetForm({
       values: {
         ...configuration,
-        boardIds: [...configuration.boardIds],
+        ...applicability,
         tieBreakerOne: configuration.orderingRules[1]?.field ?? '',
         tieBreakerOneDirection: configuration.orderingRules[1]?.direction ?? 'ascending',
         tieBreakerTwo: configuration.orderingRules[2]?.field ?? '',
@@ -1266,17 +1108,16 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
 
   const columns = [
     {
-      id: 'boardIds',
-      label: 'Board',
-      width: 170,
-      minWidth: 150,
+      id: 'academicCoverage',
+      label: 'Academic Path',
+      width: 380,
+      minWidth: 300,
       isFilter: false,
       render: (_value: unknown, row: IData) => {
         const configuration = configurations.find((item) => item.id === String(row.id));
-        return configuration ? getBoardApplicabilityLabel(configuration, filters.boards) : '—';
+        return configuration ? getAcademicApplicabilitySummary(configuration, filters.boards) : '—';
       },
     },
-    { id: 'className', label: 'Class', width: 160, minWidth: 140 },
     {
       id: 'numberingScope',
       label: 'Scope',
@@ -1369,11 +1210,9 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
         icon="mdi:format-list-numbered"
         summaries={[
           `${configurations.length} configured rules`,
-          `${new Set(configurations.map((configuration) => configuration.classId)).size} classes`,
+          `${configurations.filter((configuration) => configuration.classMode === 'selected').length} specific academic paths`,
           'Current session',
         ]}
-        assignmentMode={settings.rollNumber.assignmentMode}
-        onAssignmentModeChange={setRollAssignmentMode}
         buttonLabel="Add configuration"
         onClick={openNewConfiguration}
       />
@@ -1410,48 +1249,18 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
           {formik.status ? <Alert severity="error">{String(formik.status)}</Alert> : null}
           <SettingsSectionCard
             icon="mdi:calendar-account-outline"
-            title="Applicability and timing"
-            description="Define where the sequence is unique and when assignment becomes eligible."
+            title="Academic path and timing"
+            description="Choose one Board, Medium, School Level, Class, and Division, then define when assignment becomes eligible."
           >
-            <BoardApplicabilityFields
-              boardMode={formik.values.boardMode}
-              boardIds={formik.values.boardIds}
+            <SingleAcademicPathFields
+              value={formik.values}
               boards={filters.boards}
-              onModeChange={(boardMode) => {
-                formik.setFieldValue('boardMode', boardMode);
-                if (boardMode === 'all') formik.setFieldValue('boardIds', []);
+              showErrors={formik.submitCount > 0}
+              onChange={(applicability) => {
+                formik.setValues({ ...formik.values, ...applicability }, false);
                 formik.setStatus(undefined);
               }}
-              onBoardIdsChange={(boardIds) => {
-                formik.setFieldValue('boardIds', boardIds);
-                if (boardIds.length === 1) filters.setSelectedBoard(boardIds[0]);
-                formik.setStatus(undefined);
-              }}
-              error={
-                formik.touched.boardIds && typeof formik.errors.boardIds === 'string'
-                  ? formik.errors.boardIds
-                  : undefined
-              }
             />
-            <TextField
-              select
-              fullWidth
-              size="small"
-              name="classId"
-              label="Class"
-              value={formik.values.classId}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.classId && Boolean(formik.errors.classId)}
-              helperText={formik.touched.classId ? formik.errors.classId : undefined}
-            >
-              <MenuItem value="*">All classes</MenuItem>
-              {filters.classOptions.map((item) => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.name}
-                </MenuItem>
-              ))}
-            </TextField>
             <Box
               sx={{
                 display: 'grid',
@@ -1638,11 +1447,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched.startingNumber && Boolean(formik.errors.startingNumber)}
-              helperText={
-                formik.touched.startingNumber
-                  ? formik.errors.startingNumber
-                  : 'The first available roll number for this class.'
-              }
+              helperText={formik.touched.startingNumber ? formik.errors.startingNumber : undefined}
             />
             <TextField
               select
@@ -1818,7 +1623,7 @@ const createDivisionChangeConfiguration = (): DivisionChangeConfiguration => ({
   ...defaultDivisionChangeConfiguration,
   id: '',
   name: '',
-  boardIds: [],
+  ...createEmptySingleAcademicApplicability(),
 });
 
 const hasDivisionConfigurationOverlap = (
@@ -1830,8 +1635,8 @@ const hasDivisionConfigurationOverlap = (
       existing.id !== candidate.id &&
       existing.isActive &&
       candidate.isActive &&
-      existing.classId === candidate.classId &&
-      boardTargetsOverlap(existing, candidate)
+      getAcademicApplicabilityScore(existing) === getAcademicApplicabilityScore(candidate) &&
+      academicTargetsOverlap(existing, candidate)
   );
 
 export function DivisionChangesSettingsPanel() {
@@ -1873,7 +1678,11 @@ export function DivisionChangesSettingsPanel() {
     setEditorOpen(true);
   };
   const openExistingConfiguration = (configuration: DivisionChangeConfiguration) => {
-    const initial = { ...configuration, boardIds: [...configuration.boardIds] };
+    const applicability = normalizeSingleAcademicApplicability(configuration, filters.boards);
+    const initial = {
+      ...configuration,
+      ...applicability,
+    };
     setEditingConfigurationId(configuration.id);
     setBaseline(initial);
     setDraft(initial);
@@ -1890,20 +1699,33 @@ export function DivisionChangesSettingsPanel() {
       setValidationError('Enter a rule name.');
       return;
     }
-    if (draft.boardMode === 'selected' && draft.boardIds.length !== 1) {
-      setValidationError('Select one specific Board.');
+    const applicability = normalizeSingleAcademicApplicability(draft, filters.boards);
+    const applicabilityError = getSingleAcademicPathValidationError(applicability);
+    if (applicabilityError) {
+      setValidationError(applicabilityError);
       return;
     }
-    const selectedClass = filters.classOptions.find((item) => item.id === draft.classId);
+    const academicOptions = buildOnboardingAcademicStructureOptions(filters.boards);
+    const selectedStandards = academicOptions.standards.filter((item) =>
+      applicability.standardIds.includes(item.id)
+    );
     const configuration: DivisionChangeConfiguration = {
       ...draft,
+      ...applicability,
       id: editingConfigurationId ?? `division-session-${Date.now()}`,
       name: draft.name.trim(),
-      className: draft.classId === '*' ? 'All classes' : selectedClass?.name || draft.classId,
+      classId:
+        applicability.classMode === 'selected' && applicability.standardIds.length === 1
+          ? applicability.standardIds[0]
+          : '*',
+      className:
+        applicability.classMode === 'all'
+          ? 'All classes'
+          : selectedStandards.map((item) => item.name).join(', ') || 'Selected classes',
     };
     if (hasDivisionConfigurationOverlap(configuration, configurations)) {
       setValidationError(
-        'An active Division rule already targets the same Board and Class applicability.'
+        'An active Division rule already targets an overlapping academic applicability path.'
       );
       return;
     }
@@ -1912,7 +1734,7 @@ export function DivisionChangesSettingsPanel() {
   };
   const tableData = configurations.map((configuration) => ({
     ...configuration,
-    board: getBoardApplicabilityLabel(configuration, filters.boards),
+    academicCoverage: getAcademicApplicabilitySummary(configuration, filters.boards),
     assignmentMethod:
       configuration.assignmentMode === 'both'
         ? 'Automatic and manual'
@@ -1920,9 +1742,8 @@ export function DivisionChangesSettingsPanel() {
           ? 'Automatic only'
           : 'Manual only',
     strategy:
-      divisionStrategyOptions.find(
-        (option) => option.value === configuration.automaticStrategy
-      )?.label ?? configuration.automaticStrategy,
+      divisionStrategyOptions.find((option) => option.value === configuration.automaticStrategy)
+        ?.label ?? configuration.automaticStrategy,
     capacity: `${configuration.capacityRequired ? 'Required' : 'Optional'} · Warn at ${configuration.capacityWarningThreshold}`,
     approval: configuration.requireApproval
       ? 'Always required'
@@ -1938,8 +1759,7 @@ export function DivisionChangesSettingsPanel() {
   }));
   const columns = [
     { id: 'name', label: 'Rule', width: 190, minWidth: 170 },
-    { id: 'board', label: 'Board', width: 170, minWidth: 150 },
-    { id: 'className', label: 'Class', width: 150, minWidth: 135 },
+    { id: 'academicCoverage', label: 'Academic Path', width: 380, minWidth: 300 },
     { id: 'assignmentMethod', label: 'Assignment Method', width: 175, minWidth: 155 },
     { id: 'strategy', label: 'Strategy', width: 190, minWidth: 170 },
     { id: 'capacity', label: 'Capacity', width: 170, minWidth: 150 },
@@ -1998,7 +1818,7 @@ export function DivisionChangesSettingsPanel() {
         icon="mdi:account-switch-outline"
         summaries={[
           `${activeConfigurations.length} active rules`,
-          `${configurations.filter((item) => item.boardMode === 'selected').length} Board overrides`,
+          `${configurations.filter((item) => getAcademicApplicabilityScore(item) > 0).length} specific academic paths`,
           'Current session',
         ]}
         buttonLabel="Add override"
@@ -2040,8 +1860,8 @@ export function DivisionChangesSettingsPanel() {
           {validationError ? <Alert severity="error">{validationError}</Alert> : null}
           <SettingsSectionCard
             icon="mdi:target-account"
-            title="Applicability"
-            description="Use All boards as the fallback, then add Board or Class-specific overrides only where needed."
+            title="Academic path"
+            description="Choose one Board, Medium, School Level, Class, and Division path."
           >
             <TextField
               fullWidth
@@ -2053,53 +1873,17 @@ export function DivisionChangesSettingsPanel() {
                 setValidationError('');
               }}
               error={Boolean(validationError && !draft.name.trim())}
-              helperText="Example: CBSE Division placement"
+              helperText={validationError && !draft.name.trim() ? validationError : undefined}
             />
-            <BoardApplicabilityFields
-              boardMode={draft.boardMode}
-              boardIds={draft.boardIds}
+            <SingleAcademicPathFields
+              value={draft}
               boards={filters.boards}
-              onModeChange={(boardMode) => {
-                setDraft((current) => ({
-                  ...current,
-                  boardMode,
-                  boardIds: boardMode === 'all' ? [] : current.boardIds,
-                }));
+              showErrors={Boolean(validationError && validationError.startsWith('Select one'))}
+              onChange={(applicability) => {
+                setDraft((current) => ({ ...current, ...applicability }));
                 setValidationError('');
               }}
-              onBoardIdsChange={(boardIds) => {
-                setDraft((current) => ({ ...current, boardIds }));
-                if (boardIds.length === 1) filters.setSelectedBoard(boardIds[0]);
-                setValidationError('');
-              }}
-              error={
-                validationError &&
-                draft.boardMode === 'selected' &&
-                draft.boardIds.length !== 1
-                  ? 'Select one specific Board'
-                  : undefined
-              }
             />
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label="Class applicability"
-              value={draft.classId}
-              onChange={(event) =>
-                setDraft((current) => ({ ...current, classId: event.target.value }))
-              }
-              helperText="Exact Class rules take priority over Board-wide and All-boards rules."
-            >
-              <MenuItem value="*">All classes</MenuItem>
-              {filters.classOptions
-                .filter((item) => item.id !== 'All Classes')
-                .map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.name}
-                  </MenuItem>
-                ))}
-            </TextField>
             <FormControlLabel
               sx={{ m: 0 }}
               control={
@@ -2181,7 +1965,6 @@ export function DivisionChangesSettingsPanel() {
                     }))
                   }
                   inputProps={{ min: 0 }}
-                  helperText="Maximum allowed student-count difference between Divisions."
                 />
               ) : null}
             </Stack>
@@ -2212,7 +1995,6 @@ export function DivisionChangesSettingsPanel() {
                   }))
                 }
                 inputProps={{ min: 0 }}
-                helperText="Warn when remaining seats reach this number."
               />
               <TextField
                 select
@@ -2265,7 +2047,6 @@ export function DivisionChangesSettingsPanel() {
                 textField: {
                   fullWidth: true,
                   size: 'small',
-                  helperText: 'Optional date-based approval threshold.',
                 },
               }}
             />
@@ -2308,7 +2089,7 @@ export function DivisionChangesSettingsPanel() {
                   ? ' · recalculate Roll number'
                   : ' · preserve Roll number'}
                 {' · '}
-                {getBoardApplicabilityLabel(draft, filters.boards)}
+                {getAcademicApplicabilitySummary(draft, filters.boards)}
               </Typography>
             </Card>
           </SettingsSectionCard>
@@ -2321,38 +2102,50 @@ export function DivisionChangesSettingsPanel() {
 function EffectivePolicyPreview({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { settings, scope } = useOnboardingSettings();
   const filters = useFinanceAcademicFilters();
-  const [profileId, setProfileId] = useState(settings.onboardingProfiles[0]?.id ?? '');
-  const [boardId, setBoardId] = useState('');
-  const [classId, setClassId] = useState('*');
-  const profile =
-    settings.onboardingProfiles.find((item) => item.id === profileId) ??
-    settings.onboardingProfiles[0];
-  const selectedClass = filters.classOptions.find((item) => item.id === classId);
+  const admissionRoutes = Array.from(
+    new Set(settings.onboardingProfiles.flatMap((profile) => profile.admissionRoutes))
+  );
+  const [admissionRoute, setAdmissionRoute] = useState(admissionRoutes[0] ?? '');
+  const [academicPathId, setAcademicPathId] = useState('');
+  const academicOptions = buildOnboardingAcademicStructureOptions(filters.boards);
+  const academicPaths = academicOptions.divisions.length
+    ? academicOptions.divisions
+    : academicOptions.standards;
+  const selectedAcademicPath = academicPaths.find((item) => item.id === academicPathId);
+  const academicContext: AcademicPathContext = selectedAcademicPath
+    ? {
+        boardId: selectedAcademicPath.boardId,
+        academicMediumId: selectedAcademicPath.academicMediumId,
+        academicMediumStageId: selectedAcademicPath.academicMediumStageId,
+        standardId: selectedAcademicPath.standardId,
+        divisionId: selectedAcademicPath.divisionId,
+      }
+    : {};
+  const profile = findOnboardingProfile(
+    settings.onboardingProfiles,
+    admissionRoute,
+    academicContext
+  );
   const grConfiguration = [...settings.grNumber.configurations]
     .filter((configuration) =>
-      isGrConfigurationApplicable(configuration, profile?.id, undefined, boardId || undefined)
+      isGrConfigurationApplicable(configuration, profile?.id, undefined, academicContext)
     )
-    .sort((first, second) => Number(second.boardMode === 'selected') - Number(first.boardMode === 'selected'))[0];
+    .sort(compareAcademicApplicability)[0];
   const rollConfiguration = findRollNumberConfiguration(
     settings.rollNumber.configurations,
-    selectedClass?.name ?? 'All classes',
-    undefined,
-    boardId || undefined,
-    classId === '*' ? undefined : classId
+    academicContext
   );
   const divisionConfiguration = findDivisionChangeConfiguration(
     settings.divisionChange.configurations,
-    selectedClass?.name ?? 'All classes',
-    undefined,
-    boardId || undefined,
-    classId === '*' ? undefined : classId
+    academicContext
   );
+  const readinessRules = profile?.rules ?? settings.readinessAccess;
   const approvalSummary =
-    profile?.rules.approvalMode === 'always' ||
+    readinessRules.approvalMode === 'always' ||
     rollConfiguration.requireApproval ||
     divisionConfiguration.requireApproval
       ? 'Required by at least one effective policy'
-      : profile?.rules.approvalMode === 'conditional'
+      : readinessRules.approvalMode === 'conditional'
         ? 'Required only for configured exceptions'
         : 'Not required by the selected policies';
 
@@ -2377,80 +2170,42 @@ function EffectivePolicyPreview({ open, onClose }: { open: boolean; onClose: () 
         <SettingsSectionCard
           icon="mdi:clipboard-text-search-outline"
           title="Resolved onboarding policy"
-          description="Select a profile to inspect the effective numbering, placement, and approval result."
+          description="Select an admission route and academic path to inspect the effective profile, numbering, placement, and approval result."
         >
           <TextField
             select
             fullWidth
             size="small"
-            label="Onboarding profile"
-            value={profileId}
-            onChange={(event) => setProfileId(event.target.value)}
+            label="Admission route"
+            value={admissionRoute}
+            onChange={(event) => setAdmissionRoute(event.target.value)}
           >
-            {settings.onboardingProfiles.map((item) => (
-              <MenuItem key={item.id} value={item.id}>
-                {item.name}
+            {admissionRoutes.map((route) => (
+              <MenuItem key={route} value={route}>
+                {route}
               </MenuItem>
             ))}
           </TextField>
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-              gap: 1.25,
-            }}
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Academic path context"
+            value={academicPathId}
+            onChange={(event) => setAcademicPathId(event.target.value)}
           >
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label="Board context"
-              value={boardId}
-              onChange={(event) => {
-                const nextBoardId = event.target.value;
-                setBoardId(nextBoardId);
-                setClassId('*');
-                if (nextBoardId) filters.setSelectedBoard(nextBoardId);
-              }}
-              helperText="Choose a Board to resolve its override."
-            >
-              <MenuItem value="">All Boards fallback</MenuItem>
-              {filters.boards.map((item) => (
-                <MenuItem key={item.id} value={item.id}>
-                  {item.name}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label="Class context"
-              value={classId}
-              onChange={(event) => setClassId(event.target.value)}
-              helperText="Choose a Class to resolve its most specific rule."
-            >
-              <MenuItem value="*">All classes fallback</MenuItem>
-              {filters.classOptions
-                .filter((item) => item.id !== 'All Classes')
-                .map((item) => (
-                  <MenuItem key={item.id} value={item.id}>
-                    {item.name}
-                  </MenuItem>
-                ))}
-            </TextField>
-          </Box>
+            <MenuItem value="">All academic paths fallback</MenuItem>
+            {academicPaths.map((item) => (
+              <MenuItem key={item.id} value={item.id}>
+                {item.label}
+              </MenuItem>
+            ))}
+          </TextField>
           <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
             {[
-              ['Profile', profile?.name ?? 'No profile'],
+              ['Profile', profile?.name ?? 'School default — no matching academic profile'],
               ['Scope', scope.label],
-              [
-                'Board',
-                boardId
-                  ? filters.boards.find((item) => item.id === boardId)?.name ?? boardId
-                  : 'All Boards fallback',
-              ],
-              ['Class', selectedClass?.name ?? 'All classes fallback'],
+              ['Academic path', selectedAcademicPath?.label ?? 'All academic paths fallback'],
               [
                 'GR rule',
                 grConfiguration
@@ -2516,11 +2271,43 @@ const numberingPlacementTabs = [
   { value: 'division-changes', label: 'Division Changes', icon: 'mdi:account-switch-outline' },
 ] as const;
 
+function SavedNumberingSettingsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const persistedPolicy = usePersistedOnboardingPolicy(open);
+  const persistedSeries = usePersistedIdentifierSeries(open);
+
+  return (
+    <SettingsDrawer
+      open={open}
+      title="Saved GR & seat settings"
+      description="Manage the backend GR sequence and seat-reservation duration for the selected academic year."
+      icon="mdi:database-check-outline"
+      statusLabel={
+        persistedPolicy.schoolDefaultPolicy
+          ? persistedPolicy.schoolDefaultPolicy.isActive
+            ? 'Active'
+            : 'Inactive'
+          : 'New'
+      }
+      footerNote="GR series are created separately; Save applies the seat-reservation duration."
+      onClose={onClose}
+      onSubmit={persistedPolicy.savePolicy}
+      submitLabel={persistedPolicy.isSaving ? 'Saving...' : 'Save seat setting'}
+      submitDisabled={!persistedPolicy.canSave}
+    >
+      <PersistedNumberingPolicyFields
+        policyEditor={persistedPolicy}
+        seriesEditor={persistedSeries}
+      />
+    </SettingsDrawer>
+  );
+}
+
 export function NumberingPlacementSettingsScreen() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [policyPreviewOpen, setPolicyPreviewOpen] = useState(false);
+  const [savedSettingsOpen, setSavedSettingsOpen] = useState(false);
   const requestedTab = searchParams.get('tab');
   const activeTab = numberingPlacementTabs.some((tab) => tab.value === requestedTab)
     ? requestedTab
@@ -2578,7 +2365,6 @@ export function NumberingPlacementSettingsScreen() {
           '& .MuiTypography-h6': { overflowWrap: 'normal !important' },
         }}
       />
-      <OnboardingConfigurationScopeBar compact />
       <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -2605,19 +2391,26 @@ export function NumberingPlacementSettingsScreen() {
               ))}
             </CustomTabs>
           </Box>
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:eye-outline" width={16} />}
-            onClick={() => setPolicyPreviewOpen(true)}
-            sx={{
-              mx: { xs: 1, sm: 0 },
-              borderRadius: 1.5,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Policy preview
-          </Button>
+          <Stack direction="row" spacing={1} sx={{ mx: { xs: 1, sm: 0 }, flexShrink: 0 }}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:database-check-outline" width={16} />}
+              onClick={() => setSavedSettingsOpen(true)}
+              sx={{ borderRadius: 1.5, whiteSpace: 'nowrap' }}
+            >
+              Saved GR & seat settings
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Iconify icon="mdi:eye-outline" width={16} />}
+              onClick={() => setPolicyPreviewOpen(true)}
+              sx={{ borderRadius: 1.5, whiteSpace: 'nowrap' }}
+            >
+              Policy preview
+            </Button>
+          </Stack>
         </Stack>
       </Paper>
       <Box
@@ -2634,6 +2427,12 @@ export function NumberingPlacementSettingsScreen() {
         open={policyPreviewOpen}
         onClose={() => setPolicyPreviewOpen(false)}
       />
+      {savedSettingsOpen ? (
+        <SavedNumberingSettingsDrawer
+          open={savedSettingsOpen}
+          onClose={() => setSavedSettingsOpen(false)}
+        />
+      ) : null}
     </Stack>
   );
 }

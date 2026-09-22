@@ -4,6 +4,8 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useRef, useState, useEffect, type ReactNode } from 'react';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { usePreviewStudentOnboardingActivationQuery } from 'src/redux/student/onboarding/student-onboarding-api';
 import {
   Box,
   Card,
@@ -15,10 +17,14 @@ import {
   Divider,
   IconButton,
   Typography,
+  DialogActions,
   LinearProgress,
 } from '@mui/material';
 
+import StudentOnboardingDocuments from './student-onboarding-documents';
 import { defaultReadinessAccessRules } from '../onboarding-settings-model';
+import StudentOnboardingCaseOperations from './student-onboarding-case-operations';
+import StudentOnboardingStepWaiverDialog from './student-onboarding-step-waiver-dialog';
 import {
   accountStatusMeta,
   onboardingCheckMeta,
@@ -26,8 +32,8 @@ import {
   getReadinessSummary,
 } from './student-onboarding-model';
 
-import type { StudentOnboardingItem } from './student-onboarding-model';
 import type { ReadinessAccessRules } from '../onboarding-settings-model';
+import type { StudentOnboardingItem, OnboardingChecklistItem } from './student-onboarding-model';
 
 type StudentSetupDrawerProps = {
   open: boolean;
@@ -37,17 +43,26 @@ type StudentSetupDrawerProps = {
   onAssignDivision?: () => void;
   onAssignGrNumber?: () => void;
   onAssignRollNumber?: () => void;
+  onPrimaryAction?: (
+    student: StudentOnboardingItem,
+    concurrencyStamp?: string,
+    action?: 'refresh' | 'activate'
+  ) => void | Promise<void>;
+  primaryActionLoading?: boolean;
+  canManage?: boolean;
+  canCancel?: boolean;
 };
 
 const displayValue = (value?: string | number | null) =>
   value === undefined || value === null || value === '' ? '—' : value;
 
 const primaryActions = {
-  'to-prepare': { label: 'Run Readiness Check', icon: 'mdi:clipboard-check-outline' },
-  'awaiting-approval': { label: 'Review Approval', icon: 'mdi:account-check-outline' },
+  'to-prepare': { label: 'Refresh Readiness', icon: 'mdi:clipboard-check-outline' },
+  'awaiting-approval': { label: 'Refresh Readiness', icon: 'mdi:refresh' },
   'ready-to-activate': { label: 'Activate Student', icon: 'mdi:account-arrow-right-outline' },
-  'action-required': { label: 'Repair Activation', icon: 'mdi:wrench-outline' },
+  'action-required': { label: 'Refresh Readiness', icon: 'mdi:refresh' },
   completed: { label: 'View Student Record', icon: 'mdi:open-in-new' },
+  cancelled: { label: 'Cancelled', icon: 'mdi:cancel' },
 } as const;
 
 function SectionCard({
@@ -128,6 +143,10 @@ export default function StudentSetupDrawer({
   onAssignDivision,
   onAssignGrNumber,
   onAssignRollNumber,
+  onPrimaryAction,
+  primaryActionLoading = false,
+  canManage = false,
+  canCancel = false,
 }: StudentSetupDrawerProps) {
   const lastStudentRef = useRef(student);
   if (student) {
@@ -135,10 +154,26 @@ export default function StudentSetupDrawer({
   }
   const activeStudent = student || lastStudentRef.current;
   const [showAlert, setShowAlert] = useState(true);
+  const [confirmActivation, setConfirmActivation] = useState(false);
+  const [waiverCheck, setWaiverCheck] = useState<OnboardingChecklistItem | null>(null);
+  const activationPreviewQuery = usePreviewStudentOnboardingActivationQuery(
+    activeStudent?.id ?? '',
+    {
+      skip:
+        !confirmActivation ||
+        !activeStudent ||
+        activeStudent.source !== 'onboarding-case' ||
+        activeStudent.backendStatus === 4 ||
+        activeStudent.backendStatus === 5,
+      refetchOnMountOrArgChange: true,
+    }
+  );
 
   useEffect(() => {
     if (student) {
       setShowAlert(true);
+      setConfirmActivation(false);
+      setWaiverCheck(null);
     }
   }, [student]);
 
@@ -146,10 +181,20 @@ export default function StudentSetupDrawer({
 
   const status = onboardingStageMeta[activeStudent.status];
   const readiness = getReadinessSummary(activeStudent);
-  const primaryAction =
-    activeStudent.status === 'awaiting-approval' && !readinessRules.requireApproval
-      ? primaryActions['ready-to-activate']
-      : primaryActions[activeStudent.status];
+  const canOpenActivation =
+    activeStudent.source === 'onboarding-case' &&
+    (activeStudent.backendStatus === 2 || readiness.blockingCount === 0);
+  const primaryAction = canOpenActivation
+    ? { label: 'Activate Student', icon: 'mdi:account-arrow-right-outline' }
+    : primaryActions[activeStudent.status];
+  const activationPreview = activationPreviewQuery.data;
+  const activationPreviewReady = activationPreview?.status === 2;
+  const canRunPrimaryAction =
+    activeStudent.source === 'onboarding-case' &&
+    activeStudent.backendStatus !== 4 &&
+    activeStudent.backendStatus !== 5 &&
+    canManage &&
+    Boolean(onPrimaryAction);
   const accountRows = [
     ['Student account', activeStudent.studentAccountStatus] as const,
     ['Guardian account', activeStudent.guardianAccountStatus] as const,
@@ -196,7 +241,8 @@ export default function StudentSetupDrawer({
               {activeStudent.studentName}
             </Typography>
             <Typography variant="caption" color="text.secondary" noWrap>
-              {activeStudent.applicationNumber} · {activeStudent.standardName} / {activeStudent.divisionName}
+              {activeStudent.applicationNumber} · {activeStudent.standardName} /{' '}
+              {activeStudent.divisionName}
             </Typography>
           </Box>
         </Stack>
@@ -218,13 +264,15 @@ export default function StudentSetupDrawer({
         <Stack spacing={1.5}>
           {showAlert ? (
             <Alert
-              severity={activeStudent.source === 'preview' ? 'info' : 'warning'}
+              severity={activeStudent.source === 'student-records' ? 'warning' : 'info'}
               variant="outlined"
               onClose={() => setShowAlert(false)}
             >
               {activeStudent.source === 'preview'
                 ? 'Frontend preview data is active. The layout and workflow are ready, but actions are not persisted.'
-                : 'This compatibility view uses Student Records. Admission readiness, approvals and account state require the Onboarding API.'}
+                : activeStudent.source === 'onboarding-case'
+                  ? 'This is a live onboarding case. Readiness refresh and activation actions are persisted and protected by backend permissions.'
+                  : 'This compatibility view uses Student Records. Admission readiness, approvals and account state require the Onboarding API.'}
             </Alert>
           ) : null}
 
@@ -264,10 +312,32 @@ export default function StudentSetupDrawer({
                 ['Admission route', activeStudent.admissionRoute],
                 ['Admission date', displayValue(activeStudent.admissionDate)],
                 ['Owner', activeStudent.ownerName],
-                ['Source', activeStudent.source === 'preview' ? 'Frontend preview' : 'Student Records'],
+                [
+                  'Source',
+                  activeStudent.source === 'preview'
+                    ? 'Frontend preview'
+                    : activeStudent.source === 'onboarding-case'
+                      ? 'Student Onboarding service'
+                      : 'Student Records',
+                ],
               ]}
             />
           </SectionCard>
+
+          {activeStudent.source === 'onboarding-case' ? (
+            <SectionCard
+              icon="mdi:account-cog-outline"
+              title="Case ownership & operations"
+              description="Assign accountability, inspect downstream handoffs, or cancel the case with an audit reason."
+            >
+              <StudentOnboardingCaseOperations
+                student={activeStudent}
+                canManage={canManage}
+                canCancel={canCancel}
+                onCancelled={onClose}
+              />
+            </SectionCard>
+          ) : null}
 
           <SectionCard
             icon="mdi:account-school-outline"
@@ -288,6 +358,7 @@ export default function StudentSetupDrawer({
                 size="small"
                 startIcon={<Iconify icon="mdi:google-classroom" width={18} />}
                 onClick={onAssignDivision}
+                disabled={!canManage}
               >
                 {activeStudent.divisionName && activeStudent.divisionName !== '—'
                   ? 'Change Division'
@@ -315,6 +386,7 @@ export default function StudentSetupDrawer({
                 size="small"
                 startIcon={<Iconify icon="mdi:identifier" width={18} />}
                 onClick={onAssignGrNumber}
+                disabled={!canManage}
               >
                 {activeStudent.grNo ? 'Change GR No.' : 'Assign GR No.'}
               </Button>
@@ -323,6 +395,7 @@ export default function StudentSetupDrawer({
                 size="small"
                 startIcon={<Iconify icon="mdi:format-list-numbered" width={18} />}
                 onClick={onAssignRollNumber}
+                disabled={!canManage}
               >
                 {activeStudent.rollNo !== undefined && activeStudent.rollNo !== null
                   ? 'Change Roll No.'
@@ -334,35 +407,45 @@ export default function StudentSetupDrawer({
           <SectionCard
             icon="mdi:file-document-check-outline"
             title="Documents"
-            description="Document verification remains owned by Enrollment Documents."
+            description="Review accepted admission evidence and Student document uploads."
           >
-            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
-              <Box>
-                <Typography variant="body2" fontWeight={600}>
-                  {activeStudent.documentsRequired
-                    ? `${activeStudent.documentsPassed} of ${activeStudent.documentsRequired} verified`
-                    : 'Document summary unavailable'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Corrections and uploads should open the owning document workflow.
-                </Typography>
-              </Box>
-              <Label
-                color={
-                  activeStudent.documentsRequired && activeStudent.documentsPassed === activeStudent.documentsRequired
-                    ? 'success'
+            {activeStudent.source === 'onboarding-case' ? (
+              <StudentOnboardingDocuments
+                caseId={activeStudent.id}
+                enabled={activeStudent.documentUploadsEnabled !== false}
+                canManage={canManage}
+              />
+            ) : (
+              <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+                <Box>
+                  <Typography variant="body2" fontWeight={600}>
+                    {activeStudent.documentsRequired
+                      ? `${activeStudent.documentsPassed} of ${activeStudent.documentsRequired} verified`
+                      : 'Document summary unavailable'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Corrections and uploads require a live onboarding case.
+                  </Typography>
+                </Box>
+                <Label
+                  color={
+                    activeStudent.documentsRequired &&
+                    activeStudent.documentsPassed === activeStudent.documentsRequired
+                      ? 'success'
+                      : activeStudent.documentsRequired
+                        ? 'warning'
+                        : 'default'
+                  }
+                >
+                  {activeStudent.documentsRequired &&
+                  activeStudent.documentsPassed === activeStudent.documentsRequired
+                    ? 'Verified'
                     : activeStudent.documentsRequired
-                      ? 'warning'
-                      : 'default'
-                }
-              >
-                {activeStudent.documentsRequired && activeStudent.documentsPassed === activeStudent.documentsRequired
-                  ? 'Verified'
-                  : activeStudent.documentsRequired
-                    ? 'Pending'
-                    : 'Not connected'}
-              </Label>
-            </Stack>
+                      ? 'Pending'
+                      : 'Not connected'}
+                </Label>
+              </Stack>
+            )}
           </SectionCard>
 
           <SectionCard
@@ -440,7 +523,29 @@ export default function StudentSetupDrawer({
                         </Typography>
                       </Box>
                     </Stack>
-                    <Label color={meta.color}>{meta.label}</Label>
+                    <Stack
+                      direction={{ xs: 'row', sm: 'column' }}
+                      alignItems={{ xs: 'center', sm: 'flex-end' }}
+                      spacing={0.5}
+                      sx={{ flexShrink: 0 }}
+                    >
+                      <Label color={meta.color}>{meta.label}</Label>
+                      {activeStudent.source === 'onboarding-case' &&
+                      canManage &&
+                      check.blocking &&
+                      check.status === 'failed' &&
+                      check.key !== 'final_readiness' ? (
+                        <Button
+                          variant="text"
+                          color="warning"
+                          size="small"
+                          aria-label={`Review exception for ${check.label}`}
+                          onClick={() => setWaiverCheck(check)}
+                        >
+                          Review exception
+                        </Button>
+                      ) : null}
+                    </Stack>
                   </Stack>
                 );
               })}
@@ -495,7 +600,13 @@ export default function StudentSetupDrawer({
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
           {activeStudent.source === 'preview'
             ? 'This action is disabled because preview changes are not persisted.'
-            : 'Connect the Onboarding activation contract to enable this action.'}
+            : activeStudent.source === 'onboarding-case'
+              ? activeStudent.backendStatus === 4
+                ? 'Onboarding is complete. Open Student Records for the operational profile.'
+                : activeStudent.backendStatus === 5
+                  ? 'Cancelled cases are retained for audit and cannot be activated.'
+                  : 'The service revalidates concurrency and blockers before saving this action.'
+              : 'Connect the Onboarding activation contract to enable this action.'}
         </Typography>
         <Stack direction="row" justifyContent="flex-end" gap={1} sx={{ flexShrink: 0 }}>
           <Button variant="outlined" size="small" onClick={onClose}>
@@ -505,13 +616,93 @@ export default function StudentSetupDrawer({
             variant="contained"
             size="small"
             startIcon={<Iconify icon={primaryAction.icon} />}
-            disabled
+            disabled={!canRunPrimaryAction || primaryActionLoading}
+            onClick={() => {
+              if (canOpenActivation) {
+                setConfirmActivation(true);
+                return;
+              }
+              onPrimaryAction?.(activeStudent, undefined, 'refresh');
+            }}
           >
-            {primaryAction.label}
+            {primaryActionLoading ? 'Saving...' : primaryAction.label}
           </Button>
         </Stack>
       </Stack>
+
+      <CustomDialog
+        open={confirmActivation}
+        handleClose={() => setConfirmActivation(false)}
+        title="Activate student?"
+        maxWidth="sm"
+      >
+        <DialogScrollContent dividers>
+          <Stack spacing={1.5}>
+            <Typography variant="body2">
+              This will commit the reserved placement and identifiers, create the operational
+              enrollment, and start required service handoffs for {activeStudent.studentName}.
+            </Typography>
+            <Alert severity="warning" variant="outlined">
+              Confirm only after reviewing every required readiness step. The backend will reject
+              activation if the case changed or a blocker is still active.
+            </Alert>
+            {activationPreviewQuery.isFetching ? (
+              <Stack spacing={0.75}>
+                <LinearProgress />
+                <Typography variant="caption" color="text.secondary">
+                  Rechecking placement, identifiers, documents, and readiness…
+                </Typography>
+              </Stack>
+            ) : null}
+            {activationPreviewQuery.isError ? (
+              <Alert severity="error" variant="outlined">
+                The latest activation preview could not be loaded. Close this dialog, refresh the
+                case, and retry.
+              </Alert>
+            ) : null}
+            {activationPreview ? (
+              <Alert severity={activationPreviewReady ? 'success' : 'error'} variant="outlined">
+                {activationPreviewReady
+                  ? `Backend readiness confirmed at ${activationPreview.progressPercent}%.`
+                  : activationPreview.primaryBlocker ||
+                    'This case is no longer ready to activate. Refresh the case before continuing.'}
+              </Alert>
+            ) : null}
+          </Stack>
+        </DialogScrollContent>
+        <DialogActions sx={{ px: 2, pb: 2 }}>
+          <Button color="inherit" onClick={() => setConfirmActivation(false)}>
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            disabled={
+              primaryActionLoading ||
+              activationPreviewQuery.isFetching ||
+              activationPreviewQuery.isError ||
+              !activationPreviewReady
+            }
+            onClick={async () => {
+              await onPrimaryAction?.(
+                activeStudent,
+                activationPreview?.concurrencyStamp,
+                'activate'
+              );
+              setConfirmActivation(false);
+            }}
+          >
+            {primaryActionLoading ? 'Activating...' : 'Confirm activation'}
+          </Button>
+        </DialogActions>
+      </CustomDialog>
+
+      {waiverCheck ? (
+        <StudentOnboardingStepWaiverDialog
+          check={waiverCheck}
+          student={activeStudent}
+          onClose={() => setWaiverCheck(null)}
+        />
+      ) : null}
     </Drawer>
   );
 }
-

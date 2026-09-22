@@ -9,6 +9,7 @@ export const studentVisibilityPermissions = {
   dashboard: `${defaultModulePermissionName}Students.Dashboard`,
   records: `${defaultModulePermissionName}Students.Records`,
   admissions: `${defaultModulePermissionName}Students.Enrollment`,
+  onboarding: `${defaultModulePermissionName}Students.Onboarding`,
   attendance: `${defaultModulePermissionName}Students.Attendance`,
   notification: `${defaultModulePermissionName}Students.Notification`,
 } as const;
@@ -37,6 +38,7 @@ export const studentPaths = {
     settingsSections: {
       readinessAccess: '/student/onboarding/settings/readiness-access',
       numberingPlacement: '/student/onboarding/settings/numbering-placement',
+      operationalPolicies: '/student/onboarding/settings/operational-policies',
       rules: '/student/onboarding/settings/rules',
       grNumber: '/student/onboarding/settings/gr-number',
       rollNumber: '/student/onboarding/settings/roll-number',
@@ -98,11 +100,11 @@ export const studentPermissions = {
   },
   onboarding: {
     root: [
-      `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ViewActivation`,
-      `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ManageConfiguration`,
+      `${defaultStudentPermissionName}Onboarding.View`,
+      `${defaultStudentPermissionName}Onboarding.Add`,
     ],
-    setup: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ViewActivation`,
-    settings: `${defaultStudentPermissionName}Enrollment.AdmissionsCrm.ManageConfiguration`,
+    setup: `${defaultStudentPermissionName}Onboarding.View`,
+    settings: `${defaultStudentPermissionName}Onboarding.Add`,
   },
   records: {
     root: [
@@ -246,7 +248,7 @@ const studentModule = (isDdvs: boolean) => ({
           path: studentPaths.onboarding.root,
           _action: 'student-onboarding',
           permissionName: studentPermissions.onboarding.root,
-          visibilityPermissionName: studentVisibilityPermissions.admissions,
+          visibilityPermissionName: studentVisibilityPermissions.onboarding,
           icon: menuIconView('mdi:account-arrow-right-outline'),
           children: [
             {

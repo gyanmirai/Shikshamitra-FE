@@ -2,9 +2,11 @@
 
 import type { AdmissionApplication } from 'src/redux/student/admissions/admission-applications-api';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Card, Chip, Alert, Stack, Typography, CardContent } from '@mui/material';
+import { studentPaths } from 'src/constants/student-menu';
+import { Card, Chip, Alert, Stack, Button, Typography, CardContent } from '@mui/material';
 import { useLazyGetAdmissionApplicationQuery } from 'src/redux/student/admissions/admission-applications-api';
 
 import { ApplicationDecisionDialog } from './application-decision-dialog';
@@ -49,7 +51,7 @@ export function ApplicationDecisionCard({ application, managedOffer }: Props) {
   );
   const { canDecide, canOffer, canFinalize } = decisions;
   const visibleActions = ACTIONS.filter((item) => {
-	if (managedOffer && (item === 'offer' || item === 'accept' || item === 'decline')) return false;
+    if (managedOffer && (item === 'offer' || item === 'accept' || item === 'decline')) return false;
     if (
       !canPerformAdmissionDecision(application.status, item) &&
       !(item === 'approve' && reaffirmApproval)
@@ -97,6 +99,25 @@ export function ApplicationDecisionCard({ application, managedOffer }: Props) {
             onOpen={finalizationDialog.onTrue}
           />
         )}
+        {application.status === 11 && application.onboardingCaseId ? (
+          <Alert
+            severity="success"
+            sx={{ mt: 2 }}
+            action={
+              <Button
+                component={Link}
+                color="inherit"
+                size="small"
+                href={`${studentPaths.onboarding.setup}?search=${encodeURIComponent(application.applicationNumber)}`}
+              >
+                Continue onboarding
+              </Button>
+            }
+          >
+            Admission is finalized. The student&apos;s durable onboarding case is ready for
+            placement, identifiers, readiness checks, and activation.
+          </Alert>
+        ) : null}
         {!canDecide &&
           !canOffer &&
           !canFinalize &&

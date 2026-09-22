@@ -3,14 +3,14 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-09-19
+updated_on: 2026-09-21
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Student Admissions routes
 
-TL;DR: use this page to map the implemented Admissions inquiry and application routes to their screens and visible Student menu entries.
+TL;DR: use this page to map the implemented Admissions and Student Onboarding routes to their screens and visible Student menu entries.
 
 ## Admissions route map
 
@@ -28,6 +28,22 @@ TL;DR: use this page to map the implemented Admissions inquiry and application r
 | Admissions → Assessments                             | `/student/admissions/assessments`                 | `src/screens/student/admissions/admission-assessments.tsx`        | `Students.Admissions.Assessments.View`                                 |
 | Admissions → Applications                            | `/student/admissions/applications`                | `src/screens/student/admissions/admission-applications.tsx`       | `Students.Admissions.Applications`                                     |
 | Admissions → Application detail                      | `/student/admissions/applications/[id]`           | `src/screens/student/admissions/admission-application-detail.tsx` | inherited from Applications                                            |
+
+## Student Onboarding route map
+
+| Area                                              | Route                                                      | Screen                                                                         | Frontend permission                                    |
+| ------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| Student Onboarding → Student Setup                | `/student/onboarding/setup`                                | `src/screens/student/onboarding/student-setup/index.tsx`                       | `Students.Onboarding.View`; commands use `Add`         |
+| Student Onboarding → Readiness                    | `/student/onboarding/setup/readiness`                      | Student Setup task view                                                        | `Students.Onboarding.View`                             |
+| Student Onboarding → GR Number                    | `/student/onboarding/setup/gr-number`                      | Student Setup task view                                                        | `Students.Onboarding.View`                             |
+| Student Onboarding → Roll Number                  | `/student/onboarding/setup/roll-number`                    | Student Setup task view                                                        | `Students.Onboarding.View`                             |
+| Student Onboarding → Division                     | `/student/onboarding/setup/division`                       | Student Setup task view                                                        | `Students.Onboarding.View`                             |
+| Student Onboarding → Settings                     | `/student/onboarding/settings`                             | `src/screens/student/onboarding/setting/onboarding-settings-page.tsx`          | `Students.Onboarding.Add`                              |
+| Legacy Operational Policies redirect              | `/student/onboarding/settings/operational-policies`        | Redirects to Readiness & Access                                              | `Students.Onboarding.Add`                              |
+| Settings → Readiness & Access                     | `/student/onboarding/settings/readiness-access`            | `src/screens/student/onboarding/setting/onboarding-policy-settings.tsx`        | `Students.Onboarding.Add`                              |
+| Settings → Numbering & Placement                  | `/student/onboarding/settings/numbering-placement`         | `src/screens/student/onboarding/setting/onboarding-number-settings.tsx`        | `Students.Onboarding.Add`                              |
+
+Student Setup reads the durable onboarding worklist and analytics from the backend. Placement, identifier preparation, readiness refresh, ownership, activation, cancellation, document upload, and service-handoff retry are live commands. Cancellation additionally requires `Students.Onboarding.Delete`. Readiness & Access persists the academic-year school-default readiness policy, while Numbering & Placement persists the seat-reservation duration and GR identifier series. Advanced fields without a backend DTO equivalent remain a frontend projection and are identified as such.
 
 ## Menu ownership
 

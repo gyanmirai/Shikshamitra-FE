@@ -144,4 +144,20 @@ describe('parseApiProblemDetail', () => {
     );
     expect(parsed.errorCode).toBe('Admissions.WorkflowConcurrencyConflict');
   });
+
+  it('maps an admission stage status conflict to an actionable message', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        status: 400,
+        title: 'Business rule violated',
+        detail: 'One or more business rules were violated.',
+        errorCode: 'Admissions:ApplicationStageCannotAdvance',
+      },
+    });
+
+    expect(parsed.detail).toBe(
+      "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again."
+    );
+    expect(parsed.errorCode).toBe('Admissions:ApplicationStageCannotAdvance');
+  });
 });

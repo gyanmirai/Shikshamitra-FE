@@ -5,6 +5,7 @@ import { act, renderHook } from '@testing-library/react';
 
 import { useOnboardingSettings, OnboardingSettingsProvider } from './onboarding-settings-context';
 import {
+  defaultOnboardingSettings,
   defaultRollNumberConfiguration,
   type OnboardingConfigurationScope,
 } from './onboarding-settings-model';
@@ -104,5 +105,31 @@ describe('OnboardingSettingsProvider configuration scopes', () => {
     expect(result.current.settings.rollNumber.configurations).toHaveLength(1);
     expect(result.current.settings.rollNumber.configurations[0].startingNumber).toBe(25);
     expect(result.current.revision).toBe(2);
+  });
+
+  it('appends a Readiness academic override without replacing its route fallback', () => {
+    const { result } = renderHook(() => useOnboardingSettings(), { wrapper });
+    const source = defaultOnboardingSettings.onboardingProfiles[0];
+
+    act(() => {
+      result.current.applyOnboardingProfile({
+        ...source,
+        id: 'fresh-gseb-override',
+        name: 'Fresh admission GSEB override',
+        applicability: {
+          ...source.applicability,
+          boardMode: 'selected',
+          boardIds: ['board-gseb'],
+        },
+      });
+    });
+
+    expect(result.current.settings.onboardingProfiles).toHaveLength(5);
+    expect(result.current.settings.onboardingProfiles[0].id).toBe('fresh-admission');
+    expect(result.current.settings.onboardingProfiles[4]).toMatchObject({
+      id: 'fresh-gseb-override',
+      admissionRoutes: ['Fresh admission'],
+      applicability: { boardMode: 'selected', boardIds: ['board-gseb'] },
+    });
   });
 });
