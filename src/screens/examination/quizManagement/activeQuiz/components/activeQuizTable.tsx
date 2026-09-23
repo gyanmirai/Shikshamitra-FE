@@ -9,9 +9,9 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Tabs, Card, Button, MenuList, MenuItem, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Card, Button, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   ScheduleExamStatus,
   ScheduleExamStatusColor,
@@ -35,44 +35,36 @@ const QuizTable = ({
   const viewSubmissionDialog = useBoolean();
 
   // Boolean state to control view analytics dialog visibility
-  const actions = ({ row, popover }: any) => (
-    <Box>
-      <MenuList>
-        {tabs.value === ScheduleExamStatus.Pending && (
-          <>
-            <MenuItem onClick={() => onAttemptClick(row)}>
-              <Iconify icon="fluent:quiz-new-20-filled" sx={{ height: '16px', width: '16px' }} />
-              Attempt Quiz
-            </MenuItem>
-
-            <MenuItem onClick={() => {}}>
-              <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-              View Questions
-            </MenuItem>
-          </>
-        )}
-
-        {tabs.value === ScheduleExamStatus.Completed && (
-          <>
-            <MenuItem onClick={() => {}}>
-              <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-              View Questions
-            </MenuItem>
-
-            <MenuItem
-              onClick={() => {
-                viewSubmissionDialog.onTrue();
-                popover.onClose();
-              }}
-            >
-              <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-              View Submission
-            </MenuItem>
-          </>
-        )}
-      </MenuList>
-    </Box>
-  );
+  const getActions = (row: IQuizData) =>
+    tabs.value === ScheduleExamStatus.Pending
+      ? [
+          {
+            id: 'attempt',
+            label: 'Attempt quiz',
+            icon: 'fluent:quiz-new-20-filled',
+            onClick: () => onAttemptClick(row),
+          },
+          {
+            id: 'questions',
+            label: 'View questions',
+            icon: 'mdi:eye',
+            onClick: () => undefined,
+          },
+        ]
+      : [
+          {
+            id: 'questions',
+            label: 'View questions',
+            icon: 'mdi:eye',
+            onClick: () => undefined,
+          },
+          {
+            id: 'submission',
+            label: 'View submission',
+            icon: 'mdi:eye',
+            onClick: viewSubmissionDialog.onTrue,
+          },
+        ];
 
   // Calculate counts of exams by status
   const examCounts = useMemo(
@@ -285,17 +277,24 @@ const QuizTable = ({
                   minWidth: 70,
                   render(value, row) {
                     return (
-                      <ThreeDotsActions
-                        actions={(props) => actions({ ...props, row })}
+                      <AdaptiveThreeDotsActions
+                        actions={[
+                          {
+                            id: 'edit',
+                            label: 'Edit quiz',
+                            icon: 'solar:pen-bold',
+                            onClick: () => onEdit(row as IQuizData),
+                          },
+                          {
+                            id: 'delete',
+                            label: 'Delete quiz',
+                            icon: 'solar:trash-bin-trash-bold',
+                            color: 'error.main',
+                            onClick: () => onDelete(row as IQuizData),
+                          },
+                          ...getActions(row as IQuizData),
+                        ]}
                         placement="right-top"
-                        showEditIcon
-                        showDeleteIcon
-                        handleEditClick={() => {
-                          onEdit(row as IQuizData);
-                        }}
-                        handleDeleteClick={() => {
-                          onDelete(row as IQuizData);
-                        }}
                       />
                     );
                   },
@@ -418,8 +417,8 @@ const QuizTable = ({
                   minWidth: 70,
                   render(value, row) {
                     return (
-                      <ThreeDotsActions
-                        actions={(props) => actions({ ...props, row })}
+                      <AdaptiveThreeDotsActions
+                        actions={getActions(row as IQuizData)}
                         placement="right-top"
                       />
                     );

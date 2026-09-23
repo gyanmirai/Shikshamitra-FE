@@ -2,11 +2,8 @@
 
 import React from 'react';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Stack, IconButton } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import type { IHomeworkType, IHomeworkTypeTableProps } from './type';
 
@@ -122,41 +119,54 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
         render: (_value, row) => {
           const homeworkType = row as IHomeworkType;
           const isArchived = homeworkType.status === 2;
-          return (
-            <Stack direction="row" spacing={1} justifyContent="center">
-              {isArchived ? (
-                <TypeActionButton
-                  title="Restore homework type"
-                  icon="solar:restart-bold"
-                  color="success"
-                  onClick={() => onRestore(homeworkType)}
-                />
-              ) : (
-                <>
-                  <ThreeDotsActions
-                    showThreeDots={false}
-                    placement="right-top"
-                    showDeleteIcon={canDelete}
-                    showEditIcon={canAdd}
-                    disableDeleteIcon={(homeworkType.usageCount || 0) > 0}
-                    handleDeleteClick={() => {
-                      onDelete(homeworkType);
-                    }}
-                    handleEditClick={() => {
-                      onEdit(homeworkType);
-                    }}
-                  />
-                  <TypeActionButton
-                    title="Archive homework type"
-                    icon="solar:archive-bold"
-                    color="warning"
-                    disabled={!canDelete}
-                    onClick={() => onArchive(homeworkType)}
-                  />
-                </>
-              )}
-            </Stack>
-          );
+          const actions = isArchived
+            ? [
+                {
+                  id: 'restore',
+                  label: 'Restore homework type',
+                  icon: 'solar:restart-bold',
+                  color: 'success.main',
+                  onClick: () => onRestore(homeworkType),
+                },
+              ]
+            : [
+                ...(canAdd
+                  ? [
+                      {
+                        id: 'edit',
+                        label: 'Edit homework type',
+                        icon: 'solar:pen-bold',
+                        onClick: () => onEdit(homeworkType),
+                      },
+                    ]
+                  : []),
+                ...(canDelete
+                  ? [
+                      {
+                        id: 'delete',
+                        label: 'Delete homework type',
+                        icon: 'solar:trash-bin-trash-bold',
+                        color: 'error.main',
+                        disabled: (homeworkType.usageCount || 0) > 0,
+                        tooltip:
+                          (homeworkType.usageCount || 0) > 0
+                            ? 'This homework type is in use and cannot be deleted.'
+                            : undefined,
+                        onClick: () => onDelete(homeworkType),
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'archive',
+                  label: 'Archive homework type',
+                  icon: 'solar:archive-bold',
+                  color: 'warning.main',
+                  disabled: !canDelete,
+                  onClick: () => onArchive(homeworkType),
+                },
+              ];
+
+          return <AdaptiveThreeDotsActions actions={actions} placement="right-top" />;
         },
       },
     ]}
@@ -165,35 +175,3 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
 );
 
 export default HomeworkTypeTable;
-
-const TypeActionButton = ({
-  title,
-  icon,
-  color,
-  disabled = false,
-  onClick,
-}: {
-  title: string;
-  icon: string;
-  color: 'success' | 'warning';
-  disabled?: boolean;
-  onClick: () => void;
-}) => (
-  <CustomTooltip title={title} arrow placement="top">
-    <span>
-      <IconButton
-        size="small"
-        color={color}
-        disabled={disabled}
-        aria-label={title}
-        onClick={(event) => {
-          event.stopPropagation();
-          onClick();
-        }}
-        sx={{ width: 18, height: 18, p: 0 }}
-      >
-        <Iconify icon={icon} width={16} height={16} />
-      </IconButton>
-    </span>
-  </CustomTooltip>
-);

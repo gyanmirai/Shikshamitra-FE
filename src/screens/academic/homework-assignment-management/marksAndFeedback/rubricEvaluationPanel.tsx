@@ -2,13 +2,13 @@
 
 import React from 'react';
 import { LoadingButton } from '@mui/lab';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Alert, Stack, Divider, TextField, Typography } from '@mui/material';
+import { Box, Card, Chip, Paper, Stack, Divider, TextField, Typography } from '@mui/material';
 import { RubricStatus } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import { useRubricEvaluation } from './useRubricEvaluation';
 import RubricCriterionScoring from './rubricCriterionScoring';
+import RubricEvaluationErrorAlert from './rubricEvaluationErrorAlert';
 
 import type { RubricEvaluationPanelRef, RubricEvaluationPanelProps } from './rubricEvaluationTypes';
 
@@ -23,20 +23,24 @@ const RubricEvaluationPanel = React.forwardRef<
   React.useImperativeHandle(ref, () => ({ save: evaluation.save }));
 
   return (
-    <Card variant="outlined" sx={{ p: 2, borderRadius: 1 }}>
+    <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
         <Box>
-          <Typography variant="subtitle2">Rubric Assessment</Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography component="h2" variant="subtitle1" fontWeight={700}>
+            Rubric Assessment
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
             Select a performance level and add focused feedback for every criterion.
           </Typography>
         </Box>
         {evaluation.activeRubric ? (
-          <Label
-            color={evaluation.activeRubric.status === RubricStatus.Published ? 'success' : 'warning'}
-          >
-            {evaluation.activeRubric.status === RubricStatus.Published ? 'Published' : 'Draft'}
-          </Label>
+          <Chip
+            size="small"
+            variant="outlined"
+            label={
+              evaluation.activeRubric.status === RubricStatus.Published ? 'Published' : 'Draft'
+            }
+          />
         ) : null}
       </Stack>
 
@@ -60,9 +64,10 @@ const RubricEvaluationPanel = React.forwardRef<
       ) : (
         <Stack spacing={1.5}>
           {evaluation.hasEvaluationError ? (
-            <Alert severity="error">
-              Unable to load this student&apos;s existing evaluation. Please try again.
-            </Alert>
+            <RubricEvaluationErrorAlert
+              isLoading={evaluation.isLoading}
+              onRetry={evaluation.retryEvaluation}
+            />
           ) : null}
           {evaluation.isLoading ? (
             <Typography variant="body2" color="text.secondary">
@@ -78,20 +83,52 @@ const RubricEvaluationPanel = React.forwardRef<
             />
           )}
 
-          <Alert severity="info" sx={{ py: 0.5 }}>
-            Total rubric score: {evaluation.totalMarks} / {evaluation.activeRubric.totalMarks}
-          </Alert>
+          <Paper
+            component="section"
+            aria-labelledby="rubric-score-summary"
+            variant="outlined"
+            sx={{ p: 2, borderRadius: 2, bgcolor: 'background.neutral' }}
+          >
+            <Stack spacing={1.5}>
+              <Stack
+                direction={{ xs: 'column', sm: 'row' }}
+                justifyContent="space-between"
+                alignItems={{ xs: 'flex-start', sm: 'center' }}
+                spacing={0.5}
+              >
+                <Box>
+                  <Typography id="rubric-score-summary" component="h3" variant="subtitle2">
+                    Score summary
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Updates automatically as criteria are scored.
+                  </Typography>
+                </Box>
+                <Typography variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                  {evaluation.totalMarks}
+                  <Typography component="span" variant="body2" color="text.secondary">
+                    {' '}
+                    / {evaluation.activeRubric.totalMarks}
+                  </Typography>
+                </Typography>
+              </Stack>
 
-          <TextField
-            size="small"
-            label="Overall Rubric Feedback"
-            value={evaluation.remarks}
-            onChange={(event) => evaluation.setRemarks(event.target.value)}
-            multiline
-            rows={2}
-            disabled={props.readOnly}
-            helperText="Summarize the student's overall performance across all criteria."
-          />
+              <Divider />
+
+              <TextField
+                fullWidth
+                size="small"
+                label="Overall rubric feedback (optional)"
+                value={evaluation.remarks}
+                onChange={(event) => evaluation.setRemarks(event.target.value)}
+                placeholder="Summarize the student's overall performance"
+                multiline
+                rows={3}
+                disabled={props.readOnly}
+                helperText="This note applies to the complete rubric assessment."
+              />
+            </Stack>
+          </Paper>
         </Stack>
       )}
     </Card>

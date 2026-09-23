@@ -4,44 +4,23 @@ import type { Dayjs } from 'dayjs';
 
 import dayjs from 'dayjs';
 import React from 'react';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { Stack, Button, Tooltip, IconButton } from '@mui/material';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
-import {
-  Stack,
-  Button,
-  IconButton,
-  Typography,
-  Tooltip,
-} from '@mui/material';
 
 type Props = {
   selectedDate: Dayjs;
   onChangeDate: (date: Dayjs) => void;
-  plannedCount?: number;
-  totalCount?: number;
-  onOpenSummaryDrawer?: () => void;
 };
 
-export const DayHeaderNavigator: React.FC<Props> = ({
-  selectedDate,
-  onChangeDate,
-  plannedCount = 0,
-  totalCount = 0,
-  onOpenSummaryDrawer,
-}) => {
-  const theme = useTheme();
-
+export const DayHeaderNavigator: React.FC<Props> = ({ selectedDate, onChangeDate }) => {
   const handlePrevDay = () => onChangeDate(selectedDate.subtract(1, 'day').startOf('day'));
   const handleNextDay = () => onChangeDate(selectedDate.add(1, 'day').startOf('day'));
   const handleToday = () => onChangeDate(dayjs().startOf('day'));
 
-  const isToday = selectedDate.isSame(dayjs(), 'day');
-
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
-      justifyContent="space-between"
       alignItems={{ xs: 'stretch', sm: 'center' }}
       spacing={1.25}
       sx={{
@@ -107,36 +86,22 @@ export const DayHeaderNavigator: React.FC<Props> = ({
         </Tooltip>
 
         <Button
-          variant={isToday ? 'contained' : 'outlined'}
-          color={isToday ? 'primary' : 'inherit'}
+          variant="outlined"
+          color="inherit"
           size="small"
           onClick={handleToday}
-          startIcon={<Iconify icon="solar:calendar-bold" width={15} />}
+          startIcon={<Iconify icon="solar:calendar-linear" width={15} />}
           sx={{
-            fontWeight: 700,
+            fontWeight: 600,
             fontSize: 12,
             px: 1.25,
             py: 0.5,
-            bgcolor: isToday ? 'primary.main' : 'background.paper',
+            bgcolor: 'background.paper',
+            '&:hover': { bgcolor: 'action.hover' },
           }}
         >
           Today
         </Button>
-      </Stack>
-
-      {/* Right: Date Label & Day Summary Drawer Action */}
-      <Stack
-        direction="row"
-        spacing={1.25}
-        alignItems="center"
-        justifyContent={{ xs: 'space-between', sm: 'flex-end' }}
-      >
-        <Stack direction="row" spacing={0.75} alignItems="center">
-          <Iconify icon="solar:calendar-date-bold" width={18} sx={{ color: 'primary.main' }} />
-          <Typography variant="subtitle2" fontWeight={700} color="text.primary">
-            {selectedDate.format('dddd, DD MMMM YYYY')}
-          </Typography>
-        </Stack>
       </Stack>
     </Stack>
   );

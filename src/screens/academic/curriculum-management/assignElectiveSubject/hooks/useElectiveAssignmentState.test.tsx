@@ -27,6 +27,35 @@ const students: StudentElectiveRow[] = [
 ];
 
 describe('useElectiveAssignmentState dirty tracking', () => {
+  it('searches students by name, roll number, and GR number', () => {
+    const searchableStudents: StudentElectiveRow[] = [
+      { ...students[0], grNo: 'GR-101' },
+      { ...students[1], studentName: 'Mira Chauhan', rollNo: '42', grNo: 'GR-202' },
+    ];
+    const { result } = renderHook(() =>
+      useElectiveAssignmentState({
+        students: searchableStudents,
+        serverRecords: searchableStudents,
+        isLocked: true,
+      })
+    );
+
+    act(() => result.current.setSearchTerm('mira'));
+    expect(result.current.filteredStudents.map((student) => student.studentId)).toEqual([
+      'student-two',
+    ]);
+
+    act(() => result.current.setSearchTerm('42'));
+    expect(result.current.filteredStudents.map((student) => student.studentId)).toEqual([
+      'student-two',
+    ]);
+
+    act(() => result.current.setSearchTerm('gr-101'));
+    expect(result.current.filteredStudents.map((student) => student.studentId)).toEqual([
+      'student-one',
+    ]);
+  });
+
   it('keeps initial server hydration and empty context transitions pristine', async () => {
     const { result, rerender } = renderHook(
       ({ visibleStudents, serverRecords }) =>

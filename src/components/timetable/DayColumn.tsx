@@ -1,5 +1,5 @@
+import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
-import { alpha, useTheme } from '@mui/material/styles';
 import { Box, Chip, Menu, Tooltip, MenuItem, IconButton } from '@mui/material';
 
 import { Iconify } from '../iconify';
@@ -60,7 +60,6 @@ const DayColumn: React.FC<DayColumnProps> = ({
     () => slots.filter((s) => s.type === 'LECTURE').length,
     [slots]
   );
-  const isComplete = totalLectureSlots > 0 && filledSlots === totalLectureSlots;
   const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase() === day;
 
   const handleMenuOpen = (e: React.MouseEvent<HTMLElement>) => {
@@ -94,17 +93,15 @@ const DayColumn: React.FC<DayColumnProps> = ({
           px: 1,
           fontWeight: 700,
           fontSize: '0.78rem',
-          bgcolor: 'background.paper',
-          backgroundImage: isToday
-            ? `linear-gradient(${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.primary.main, 0.08)})`
-            : 'none',
+          bgcolor: isToday ? 'action.selected' : 'background.paper',
           borderBottom: 1,
           borderColor: 'divider',
           position: 'sticky',
           top: 0,
           zIndex: 4,
-          color: isToday ? 'primary.main' : 'text.primary',
-          borderTop: isToday ? `2px solid ${theme.palette.primary.main}` : '2px solid transparent',
+          color: 'text.primary',
+          borderTop: '2px solid',
+          borderTopColor: isToday ? 'text.secondary' : 'transparent',
           gap: 0.5,
         }}
       >
@@ -124,8 +121,8 @@ const DayColumn: React.FC<DayColumnProps> = ({
           <Chip
             label={`${filledSlots}/${totalLectureSlots}`}
             size="small"
-            color={isComplete ? 'success' : filledSlots > 0 ? 'primary' : 'default'}
-            variant={isComplete ? 'filled' : 'outlined'}
+            color="default"
+            variant="outlined"
             sx={{
               height: '18px',
               fontSize: '0.62rem',

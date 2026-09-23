@@ -116,7 +116,8 @@ export function buildSeatingPlanColumns(
         return (
           <Button
             size="small"
-            variant={row.status === 'not-started' ? 'contained' : 'outlined'}
+            variant="outlined"
+            color="inherit"
             aria-label={`${action.label} for ${row.examName}`}
             startIcon={<Iconify icon={action.icon} width={18} />}
             onClick={(event) => {

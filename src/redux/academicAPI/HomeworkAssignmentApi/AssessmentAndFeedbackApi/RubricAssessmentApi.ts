@@ -280,7 +280,7 @@ export const rubricAssessmentApi = academicApi.injectEndpoints({
     }),
 
     getStudentAssignmentEvaluation: builder.query<
-      RubricEvaluationDto,
+      RubricEvaluationDto | null,
       StudentAssignmentEvaluationParams
     >({
       query: ({ studentId, assignmentId }) => ({

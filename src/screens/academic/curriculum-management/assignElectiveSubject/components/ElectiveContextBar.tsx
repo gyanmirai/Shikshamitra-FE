@@ -1,11 +1,10 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { Division, Standards } from 'src/types/school';
 
+import { Box, Card } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Card, Divider, Typography } from '@mui/material';
-
-import type { StudentElectiveRow } from '../types';
 
 interface ElectiveContextBarProps {
   allClass: Standards[];
@@ -21,7 +20,7 @@ interface ElectiveContextBarProps {
   onElectiveGroupChange: (value: string) => void;
 
   isLoading?: boolean;
-  students: StudentElectiveRow[];
+  actions?: ReactNode;
 }
 
 export default function ElectiveContextBar({
@@ -35,68 +34,80 @@ export default function ElectiveContextBar({
   electiveGroupId,
   onElectiveGroupChange,
   isLoading,
-  students,
+  actions,
 }: ElectiveContextBarProps) {
-  const subjectNames = students[0]?.selectableSubjects?.map((s) => s.subjectName) ?? [];
-  const groupName = electiveGroups.find((g) => g.id === electiveGroupId)?.name;
-
   return (
-    <Card sx={{ p: 1.5, mb: 1 }}>
+    <Card variant="outlined" sx={{ p: 1, mb: 1, boxShadow: 'none' }}>
       <Box
         sx={{
           display: 'flex',
-          alignItems: { sm: 'center' },
-          gap: 1.25,
-          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'stretch', lg: 'center' },
+          gap: 1,
+          flexDirection: { xs: 'column', lg: 'row' },
         }}
       >
-        <CustomSelect
-          label="Class"
-          options={allClass}
-          value={classes}
-          labelKey="name"
-          valueKey="id"
-          onChange={(v) => onClassChange(v as string)}
-          formControlProps={{ sx: { minWidth: '200px' } }}
-        />
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 1,
+            width: { xs: 1, lg: 'auto' },
+            flexShrink: 0,
+          }}
+        >
+          <CustomSelect
+            label="Class"
+            options={allClass}
+            value={classes}
+            labelKey="name"
+            valueKey="id"
+            onChange={(v) => onClassChange(v as string)}
+            formControlProps={{ sx: { minWidth: { xs: 1, sm: 180 } } }}
+          />
 
-        <CustomSelect
-          label="Division"
-          options={allDivision}
-          value={division}
-          labelKey="name"
-          valueKey="id"
-          isLoading={isLoading}
-          disabled={!classes}
-          onChange={(v) => onDivisionChange(v as string)}
-          formControlProps={{ sx: { minWidth: '200px' } }}
-        />
+          <CustomSelect
+            label="Division"
+            options={allDivision}
+            value={division}
+            labelKey="name"
+            valueKey="id"
+            isLoading={isLoading}
+            disabled={!classes}
+            onChange={(v) => onDivisionChange(v as string)}
+            formControlProps={{ sx: { minWidth: { xs: 1, sm: 180 } } }}
+          />
 
-        <CustomSelect
-          label="Elective Group"
-          value={electiveGroupId}
-          onChange={(v) => onElectiveGroupChange(v as string)}
-          labelKey="name"
-          valueKey="id"
-          isLoading={isLoading}
-          options={electiveGroups}
-          disabled={!division}
-          formControlProps={{ sx: { minWidth: '220px' } }}
-        />
+          <CustomSelect
+            label="Elective Group"
+            value={electiveGroupId}
+            onChange={(v) => onElectiveGroupChange(v as string)}
+            labelKey="name"
+            valueKey="id"
+            isLoading={isLoading}
+            options={electiveGroups}
+            disabled={!division}
+            formControlProps={{ sx: { minWidth: { xs: 1, sm: 210 } } }}
+          />
+        </Box>
+
+        {actions && (
+          <Box
+            role="group"
+            aria-label="Elective assignment context actions"
+            sx={{
+              display: 'flex',
+              flex: 1,
+              minWidth: 0,
+              justifyContent: 'flex-end',
+              width: { xs: 1, lg: 'auto' },
+              ml: { lg: 'auto' },
+            }}
+          >
+            {actions}
+          </Box>
+        )}
       </Box>
-
-      {groupName && subjectNames.length > 0 && (
-        <>
-          <Divider sx={{ my: 1 }} />
-          <Typography variant="body2" color="text.secondary">
-            <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {groupName}
-            </Box>{' '}
-            · {students.length} student{students.length === 1 ? '' : 's'} · Subjects:{' '}
-            {subjectNames.join(', ')}
-          </Typography>
-        </>
-      )}
     </Card>
   );
 }

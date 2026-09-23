@@ -6,9 +6,9 @@ import React from 'react';
 import { Add } from '@mui/icons-material';
 import { Label } from 'src/components/label';
 import { CalendarView } from 'src/sections/calendar/view';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { Box, Card, Grid, Button, Typography, CardContent } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 const ExaminationDashboardExamlistComponent = (props: TabComponentType) => (
   <Box sx={{ mt: 2 }}>
@@ -46,14 +46,23 @@ const ExaminationDashboardExamlistComponent = (props: TabComponentType) => (
           isSort: false,
           render(value, row) {
             return (
-              <ThreeDotsActions
-                // actions={(prop) => actions({ ...prop, row })}
-                showThreeDots={false}
+              <AdaptiveThreeDotsActions
+                actions={[
+                  {
+                    id: 'edit',
+                    label: 'Edit exam',
+                    icon: 'solar:pen-bold',
+                    onClick: () => undefined,
+                  },
+                  {
+                    id: 'delete',
+                    label: 'Delete exam',
+                    icon: 'solar:trash-bin-trash-bold',
+                    color: 'error.main',
+                    onClick: () => undefined,
+                  },
+                ]}
                 placement="right-top"
-                showEditIcon
-                showDeleteIcon
-                handleEditClick={() => {}}
-                handleDeleteClick={() => {}}
               />
             );
           },

@@ -4,6 +4,7 @@ import type { RootState } from 'src/redux/store';
 
 import { Box, Card } from '@mui/material';
 import { useSelector } from 'react-redux';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 
@@ -21,6 +22,7 @@ import { ViewSubject } from './component/viewDetailComponents/viewSubjectCompone
 import SubjectAssignmentForm from './component/subjectAssignmentForm/subjectAssignmentForm';
 
 const Subject = () => {
+  const insightsDrawer = useBoolean();
   const {
     allClass,
     classes,
@@ -112,12 +114,18 @@ const Subject = () => {
               onTeacherSearchChange={handleTeacherSearchChange}
               onAddNew={handleAddNew}
               onCopySubjects={copySubjectsDialog.onTrue}
+              onViewInsights={classId ? insightsDrawer.onTrue : undefined}
             />
           )}
 
           {/* KPI summary cards – only shown on list view, when class is selected */}
           {!showSubjectDialog.value && classId && (
-            <SubjectKpiCards kpi={kpiData?.data} isLoading={isKpiLoading} />
+            <SubjectKpiCards
+              kpi={kpiData?.data}
+              isLoading={isKpiLoading}
+              open={insightsDrawer.value}
+              onClose={insightsDrawer.onFalse}
+            />
           )}
 
           {!showSubjectDialog.value && (
@@ -126,7 +134,7 @@ const Subject = () => {
               classId={classId}
               addSubjectDialog={addSubjectDialog}
               editData={selectedSubject}
-              setEditData={() => { }}
+              setEditData={() => {}}
               subjectTableData={subjectTableData?.data?.items || []}
               onView={handleViewSubject}
               onEdit={handleEditSubject}

@@ -3,14 +3,14 @@
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
-import React, { useMemo, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
-import { alpha } from '@mui/material/styles';
+import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
+import { Box, Button, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -20,10 +20,10 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Paper, Stack, Button, IconButton, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
+import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   examinationTypeApi,
   useGetExaminationTypesQuery,
@@ -32,7 +32,6 @@ import {
   useRestoreExaminationTypeMutation,
 } from 'src/redux/academicAPI/ExaminationApi/examSetting/exam-type-api';
 
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import ExamTypeForm from './examTypeForm';
 
 import type { IExamType } from '../type';
@@ -300,15 +299,15 @@ const ExamTypeSettings = () => {
             render(value, row) {
               const examType = row as any;
               const isArchived = examType.status === 3 || examType.status === 'Archived';
-              return (
-                <Stack direction="row" spacing={1} justifyContent="center">
-                  {isArchived ? (
-                    <ArchiveActionButton
-                      title="Restore exam type"
-                      icon="solar:restart-bold"
-                      color="success"
-                      disabled={!canAdd || isRestoreLoading}
-                      onClick={async () => {
+              const actions = isArchived
+                ? [
+                    {
+                      id: 'restore',
+                      label: 'Restore exam type',
+                      icon: 'solar:restart-bold',
+                      color: 'success.main',
+                      disabled: !canAdd || isRestoreLoading,
+                      onClick: async () => {
                         try {
                           await restoreExamType({
                             academicMediumId: (currentMedium as any).id,
@@ -322,40 +321,57 @@ const ExamTypeSettings = () => {
                             message: error?.data?.message || 'Failed to restore exam type.',
                           });
                         }
-                      }}
-                    />
-                  ) : (
-                    <>
-                      <ThreeDotsActions
-                        placement="right-top"
-                        showThreeDots={false}
-                        showEditIcon={canAdd}
-                        showDeleteIcon={canDelete}
-                        disableDeleteIcon={(examType.usageCount || 0) > 0}
-                        handleDeleteClick={() => {
-                          confirmDeleteDialog.onTrue();
-                          setSelectedExamType(row as IExamType);
-                        }}
-                        handleEditClick={() => {
-                          addExamTypeDialog.onTrue();
-                          setSelectedExamType(row as IExamType);
-                          setIsEdit(true);
-                        }}
-                      />
-                      <ArchiveActionButton
-                        title="Archive exam type"
-                        icon="solar:archive-bold"
-                        color="warning"
-                        disabled={!canDelete || isArchiveLoading}
-                        onClick={() => {
-                          archiveDialog.onTrue();
-                          setSelectedExamType(row as IExamType);
-                        }}
-                      />
-                    </>
-                  )}
-                </Stack>
-              );
+                      },
+                    },
+                  ]
+                : [
+                    ...(canAdd
+                      ? [
+                          {
+                            id: 'edit',
+                            label: 'Edit exam type',
+                            icon: 'solar:pen-bold',
+                            onClick: () => {
+                              addExamTypeDialog.onTrue();
+                              setSelectedExamType(row as IExamType);
+                              setIsEdit(true);
+                            },
+                          },
+                        ]
+                      : []),
+                    ...(canDelete
+                      ? [
+                          {
+                            id: 'delete',
+                            label: 'Delete exam type',
+                            icon: 'solar:trash-bin-trash-bold',
+                            color: 'error.main',
+                            disabled: (examType.usageCount || 0) > 0,
+                            tooltip:
+                              (examType.usageCount || 0) > 0
+                                ? 'This exam type is in use and cannot be deleted.'
+                                : undefined,
+                            onClick: () => {
+                              confirmDeleteDialog.onTrue();
+                              setSelectedExamType(row as IExamType);
+                            },
+                          },
+                        ]
+                      : []),
+                    {
+                      id: 'archive',
+                      label: 'Archive exam type',
+                      icon: 'solar:archive-bold',
+                      color: 'warning.main',
+                      disabled: !canDelete || isArchiveLoading,
+                      onClick: () => {
+                        archiveDialog.onTrue();
+                        setSelectedExamType(row as IExamType);
+                      },
+                    },
+                  ];
+
+              return <AdaptiveThreeDotsActions actions={actions} placement="right-top" />;
             },
           },
         ]}
@@ -504,35 +520,3 @@ const ExamTypeSettings = () => {
 };
 
 export default ExamTypeSettings;
-
-const ArchiveActionButton = ({
-  title,
-  icon,
-  color,
-  disabled = false,
-  onClick,
-}: {
-  title: string;
-  icon: string;
-  color: 'success' | 'warning';
-  disabled?: boolean;
-  onClick: () => void;
-}) => (
-  <CustomTooltip title={title} arrow placement="top">
-    <span>
-      <IconButton
-        size="small"
-        color={color}
-        disabled={disabled}
-        aria-label={title}
-        onClick={(event) => {
-          event.stopPropagation();
-          onClick();
-        }}
-        sx={{ width: 18, height: 18, p: 0 }}
-      >
-        <Iconify icon={icon} width={16} height={16} />
-      </IconButton>
-    </span>
-  </CustomTooltip>
-);

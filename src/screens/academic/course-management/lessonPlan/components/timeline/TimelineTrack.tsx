@@ -7,6 +7,9 @@ import { Box } from '@mui/material';
 
 import { TimelineLessonItem } from './TimelineLessonItem';
 
+import type { LessonPlanRow } from '../../lessonPlanData';
+import type { LessonFormState } from '../AddLessonPlanModal';
+
 type Props = {
   slots: any[];
   selectedDate: Dayjs;
@@ -15,7 +18,13 @@ type Props = {
   onViewDetails: (plan: any) => void;
   onSubmitDiary: (plan: any) => void;
   onSubmitPlan: (planId: string) => void;
+  onCreateLesson?: (form: LessonFormState, submitAfterSave: boolean) => void | Promise<void>;
   onCreateHomework?: (plan: any) => void;
+  academicYearId?: string;
+  academicYearName?: string;
+  teacherId?: string;
+  teacherName?: string;
+  lessonPlans?: LessonPlanRow[];
   canView?: boolean;
   canManage?: boolean;
 };
@@ -28,7 +37,13 @@ export const TimelineTrack: React.FC<Props> = ({
   onViewDetails,
   onSubmitDiary,
   onSubmitPlan,
+  onCreateLesson,
   onCreateHomework,
+  academicYearId,
+  academicYearName,
+  teacherId,
+  teacherName,
+  lessonPlans,
   canView,
   canManage,
 }) => {
@@ -40,9 +55,9 @@ export const TimelineTrack: React.FC<Props> = ({
     <Box sx={{ width: '100%' }}>
       {slots.map((slot, index) => (
         <TimelineLessonItem
-          key={
+          key={`${selectedDate.format('YYYY-MM-DD')}-${
             slot.timetableSlotId ?? `manual-${slot.lessonPlan?.id ?? slot.lessonPlan?.Id ?? index}`
-          }
+          }`}
           slot={slot}
           selectedDate={selectedDate}
           onAddLesson={onAddLesson}
@@ -50,7 +65,13 @@ export const TimelineTrack: React.FC<Props> = ({
           onViewDetails={onViewDetails}
           onSubmitDiary={onSubmitDiary}
           onSubmitPlan={onSubmitPlan}
+          onCreateLesson={onCreateLesson}
           onCreateHomework={onCreateHomework}
+          academicYearId={academicYearId}
+          academicYearName={academicYearName}
+          teacherId={teacherId}
+          teacherName={teacherName}
+          lessonPlans={lessonPlans}
           canView={canView}
           canManage={canManage}
         />

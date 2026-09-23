@@ -1,7 +1,7 @@
 import { LoadingButton } from '@mui/lab';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 
 import { ReviewStep } from './steps/review-step';
 import { PublishStep } from './steps/publish-step';
@@ -58,7 +58,7 @@ export function GuidedSeatingStepper(props: GuidedStepProps) {
         saveAndNextButtonProps={{
           disabled: workflow.nextDisabled,
           loading: workflow.isBusy,
-          sx: { minHeight: 44, px: 2.5 },
+          sx: { minHeight: 44, minWidth: 0, px: 1.5 },
         }}
         viewMode="vertical"
       />

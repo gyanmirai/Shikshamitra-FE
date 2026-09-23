@@ -1,8 +1,8 @@
 // AssessmentManagementTable.tsx
 import { Box, Switch } from '@mui/material';
 import { Label } from 'src/components/label';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import type { IAssessment, IAssessmentManagementTableProps } from './type';
 
@@ -89,14 +89,26 @@ const AssessmentManagementTable = ({
         isFilter: false,
         sticky: true,
         render(_, row) {
+          const assessment = row as IAssessment;
           return (
-            <ThreeDotsActions
-              actions={(prop) => actions({ ...prop, row })}
+            <AdaptiveThreeDotsActions
+              actions={[
+                {
+                  id: 'edit',
+                  label: 'Edit assessment',
+                  icon: 'solar:pen-bold',
+                  onClick: () => onEdit(assessment),
+                },
+                {
+                  id: 'delete',
+                  label: 'Delete assessment',
+                  icon: 'solar:trash-bin-trash-bold',
+                  color: 'error.main',
+                  onClick: () => onDelete(assessment),
+                },
+                ...actions(assessment),
+              ]}
               placement="right-top"
-              showEditIcon
-              showDeleteIcon
-              handleEditClick={() => onEdit(row as IAssessment)}
-              handleDeleteClick={() => onDelete(row as IAssessment)}
             />
           );
         },

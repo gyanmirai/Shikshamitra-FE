@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 
 export interface IAssesmentFormikValues {
   className: string;
@@ -81,7 +82,7 @@ export interface IAssessmentManagementTableProps {
   setOpenDialog: (value: boolean) => void;
   editData?: IAssessment | null;
   setEditData: (value: IAssessment | null) => void;
-  actions: (props: any) => React.ReactNode;
+  actions: (row: IAssessment) => AdaptiveThreeDotsAction[];
   data: IAssessment[];
   onEdit: (assessment: IAssessment) => void;
   onDelete: (assessment: IAssessment) => void;

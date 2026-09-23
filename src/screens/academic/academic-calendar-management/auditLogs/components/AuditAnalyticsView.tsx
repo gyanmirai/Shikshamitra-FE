@@ -16,9 +16,9 @@ import {
   LinearProgress,
 } from '@mui/material';
 import {
-  TimetableSettingsSummaryCards,
   type ITimetableSummaryCard,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
+  TimetableSettingsSummaryCards,
+} from 'src/screens/academic/components/AcademicSummaryInsights';
 
 import { buildMockAnalytics } from '../constants/auditLogs.mock';
 import { RISK_LABELS, RISK_COLOR_KEYS } from '../constants/auditLogs.constants';

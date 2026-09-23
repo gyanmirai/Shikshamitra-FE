@@ -25,7 +25,7 @@ const renderControl = (onToggle = vi.fn(), disabled = false) =>
   );
 
 describe('SubjectSelectionControl', () => {
-  it('exposes each pill as a pressed button and toggles either choice', () => {
+  it('makes the available choices and current selection explicit', () => {
     const onToggle = vi.fn();
     renderControl(onToggle);
 
@@ -38,6 +38,9 @@ describe('SubjectSelectionControl', () => {
 
     expect(selected).toHaveAttribute('aria-pressed', 'true');
     expect(unselected).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByText('Choose one subject')).toBeVisible();
+    expect(screen.getByText('Selected')).toBeVisible();
+    expect(screen.getByText('Choose')).toBeVisible();
 
     fireEvent.click(selected);
     fireEvent.click(unselected);
@@ -54,6 +57,7 @@ describe('SubjectSelectionControl', () => {
       screen.getByRole('button', { name: 'Unassign Computer Science from Mira Chauhan' })
     );
 
+    expect(screen.getByText('Assignment locked')).toBeVisible();
     expect(onToggle).not.toHaveBeenCalled();
   });
 });

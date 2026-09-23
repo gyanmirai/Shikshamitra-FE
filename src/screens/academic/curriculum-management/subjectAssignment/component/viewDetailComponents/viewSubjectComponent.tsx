@@ -8,7 +8,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Tab, Tabs, Grid, Card, Drawer, Paper, Button, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Grid, Card, Paper, Drawer, Button, Typography } from '@mui/material';
 
 import SubjectOverview from './subjectOverview';
 import SubjectSyllabus from './subjectSyllabus';
@@ -23,6 +23,7 @@ import type { ISubjectDetail, IViewSubjectProps } from '../type';
 export interface StudentTabsComponentType {
   tabs?: UseTabsReturn;
   subject?: ISubjectDetail | null;
+  subjectStatus?: number | string;
   isLoading?: boolean;
 }
 
@@ -31,15 +32,15 @@ const TABS = [
     value: 'overview',
     label: 'Overview',
     icon: <Iconify icon="solar:widget-2-bold-duotone" width={18} />,
-    component: (props: { tabs: UseTabsReturn; subject: ISubjectDetail | null; isLoading?: boolean }) => (
-      <SubjectOverview {...props} />
+    component: (props: StudentTabsComponentType) => (
+      <SubjectOverview subject={props.subject ?? null} status={props.subjectStatus} isLoading={props.isLoading} />
     ),
   },
   {
     value: 'syllabus',
     label: 'Syllabus',
     icon: <Iconify icon="solar:notebook-bold-duotone" width={18} />,
-    component: (props: { tabs: UseTabsReturn; subject: ISubjectDetail | null; isLoading?: boolean }) => (
+    component: (props: StudentTabsComponentType) => (
       <SubjectSyllabus {...props} />
     ),
   },
@@ -47,7 +48,7 @@ const TABS = [
     value: 'documents',
     label: 'Documents',
     icon: <Iconify icon="solar:document-bold-duotone" width={18} />,
-    component: (props: { tabs: UseTabsReturn; subject: ISubjectDetail | null; isLoading?: boolean }) => (
+    component: (props: StudentTabsComponentType) => (
       <SubjectDocument {...props} />
     ),
   },
@@ -269,6 +270,7 @@ export const ViewSubject: React.FC<IViewSubjectProps> = ({ subject, classId, cla
               <currentActiveComponent.component
                 tabs={tabs}
                 subject={activeSubjectDetail}
+                subjectStatus={activeNavigatorItem?.status}
                 isLoading={isFetchingDetail}
               />
             )}

@@ -30,13 +30,13 @@ export default function BulkAssignmentBar({
 
   return (
     <Paper
-      elevation={8}
+      elevation={2}
       sx={{
         position: 'sticky',
         top: 0,
         zIndex: 10,
-        p: 1.5,
-        mb: 1.5,
+        p: 1,
+        mb: 1,
         display: 'flex',
         alignItems: 'center',
         gap: 1.5,

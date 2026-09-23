@@ -2,14 +2,14 @@ import type { LabelColor } from 'src/components/label';
 
 import { useState } from 'react';
 import { Label } from 'src/components/label';
+import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, MenuList, MenuItem, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { QuizStatusType, QuizStatusOptions, QuizStatusTypeColors } from 'src/enums/quiz-status';
 
 import { ViewAnswers } from './viewStudentAnswer';
@@ -170,70 +170,33 @@ export const StudentSubmissions = () => {
               sticky: true,
               render(value, row) {
                 return (
-                  <ThreeDotsActions
+                  <AdaptiveThreeDotsActions
                     placement="right-top"
-                    actions={(pop) => (
-                      <MenuList>
-                        {row.status === 2 && (
-                          <MenuItem
-                            onClick={() => {
-                              viewAnsweresDialog.onTrue();
-                              setSelectedStudent(row);
-                              pop.popover.onClose();
-                            }}
-                          >
-                            {' '}
-                            <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                            View Submission
-                          </MenuItem>
-                        )}
-
-                        {(row.status === 1 || row.status === 0) && (
-                          <MenuItem onClick={() => {}}>
-                            {' '}
-                            <Iconify icon="mdi:bell" sx={{ height: '16px', width: '16px' }} />
-                            Send Reminder
-                          </MenuItem>
-                        )}
-                        {/* {row.grade === 'Assign Grade' ? (
-                        <MenuItem>
-                          <Iconify
-                            icon="mingcute:notification-fill"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Remind To Teacher
-                        </MenuItem>
-                      ) : (
-                        <MenuItem>
-                          <Iconify
-                            icon="material-symbols:upload"
-                            sx={{ height: '16px', width: '16px' }}
-                          />
-                          Upload to Student
-                        </MenuItem>
-                      )} */}
-                        {/* <MenuItem
-                        onClick={() => {
-                          viewResultDialog.onTrue();
-                          setSelectedStudent(row);
-                        }}
-                      >
-                        {' '}
-                        <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                        View Result
-                      </MenuItem> */}
-
-                        {/* <MenuItem
-                        onClick={() => {
-                          viewProfile.onTrue();
-                        }}
-                      >
-                        {' '}
-                        <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                        View Profile
-                      </MenuItem> */}
-                      </MenuList>
-                    )}
+                    actions={[
+                      ...(row.status === 2
+                        ? [
+                            {
+                              id: 'view',
+                              label: 'View submission',
+                              icon: 'mdi:eye',
+                              onClick: () => {
+                                viewAnsweresDialog.onTrue();
+                                setSelectedStudent(row);
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(row.status === 1 || row.status === 0
+                        ? [
+                            {
+                              id: 'reminder',
+                              label: 'Send reminder',
+                              icon: 'mdi:bell',
+                              onClick: () => undefined,
+                            },
+                          ]
+                        : []),
+                    ]}
                   />
                 );
               },

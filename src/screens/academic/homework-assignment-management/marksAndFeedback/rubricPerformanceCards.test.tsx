@@ -8,9 +8,7 @@ import {
   RubricScoringModel,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
-import RubricPerformanceMatrix from './rubricPerformanceMatrix';
-
-vi.mock('src/components/iconify', () => ({ Iconify: () => <span data-testid="selected-level" /> }));
+import RubricPerformanceCards from './rubricPerformanceCards';
 
 const rubric: AssessmentRubricDto = {
   id: 'rubric-1',
@@ -32,6 +30,8 @@ const rubric: AssessmentRubricDto = {
       id: 'accuracy',
       rubricId: 'rubric-1',
       title: 'Accuracy',
+      description: 'Uses correct facts and clear reasoning.',
+      teacherGuidance: 'Check the supporting evidence.',
       isRequired: true,
       maxMarks: 4,
       displayOrder: 1,
@@ -39,12 +39,12 @@ const rubric: AssessmentRubricDto = {
   ],
 };
 
-describe('RubricPerformanceMatrix', () => {
-  it('renders configured levels and changes the selected criterion score', () => {
+describe('RubricPerformanceCards', () => {
+  it('presents one clear criterion card and changes the selected score', () => {
     const onMarksChange = vi.fn();
 
     render(
-      <RubricPerformanceMatrix
+      <RubricPerformanceCards
         rubric={rubric}
         values={{ accuracy: { marks: '3', comments: 'Good work' } }}
         onMarksChange={onMarksChange}
@@ -52,16 +52,19 @@ describe('RubricPerformanceMatrix', () => {
       />
     );
 
-    expect(screen.getByRole('columnheader', { name: /Excellent 4 points/i })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /Good 3 points/i })).toBeInTheDocument();
-    expect(screen.getByRole('columnheader', { name: /Developing 2 points/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Accuracy' })).toBeInTheDocument();
+    expect(screen.getByText('Uses correct facts and clear reasoning.')).toBeInTheDocument();
     expect(
-      screen.getByRole('columnheader', { name: /Needs Improvement 1 point/i })
+      screen.getByText('Teacher guidance: Check the supporting evidence.')
     ).toBeInTheDocument();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: 'Accuracy: Good, 3 points' })).toHaveAttribute(
       'aria-pressed',
       'true'
+    );
+    expect(screen.getByRole('textbox', { name: 'Accuracy feedback (optional)' })).toHaveValue(
+      'Good work'
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Accuracy: Excellent, 4 points' }));

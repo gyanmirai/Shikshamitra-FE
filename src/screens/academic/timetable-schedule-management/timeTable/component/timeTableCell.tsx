@@ -10,9 +10,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Paper, Button, MenuList, MenuItem, TableCell, Typography } from '@mui/material';
+import { Box, Paper, Button, TableCell, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import AssignRoom from './assignRoomDialog';
 import AssignTeacher from './assignTeacherDialog';
@@ -116,7 +116,7 @@ const TimeTableCell = ({
   if (slotData?.slotType === 'break' || isBreak) {
     return (
       <TableCell
-        colSpan={isBreak && colSpan ? colSpan : (slotData?.colSpan || 1)}
+        colSpan={isBreak && colSpan ? colSpan : slotData?.colSpan || 1}
         sx={{
           bgcolor: 'grey.100',
           backgroundImage:
@@ -209,12 +209,35 @@ const TimeTableCell = ({
                 <Typography variant="subtitle2" fontWeight="medium">
                   {slotData.electiveGroupId && slotData.subjects.length > 1
                     ? slotData.electiveGroupName
-                    : slotData.subjects.map((sub: any) => sub.name || sub.subjectName || sub.subject).join(' / ')}
+                    : slotData.subjects
+                        .map((sub: any) => sub.name || sub.subjectName || sub.subject)
+                        .join(' / ')}
                 </Typography>
               </CustomTooltip>
               <Box className="action-menu">
                 {showThreeDots && (
-                  <ThreeDotsActions
+                  <AdaptiveThreeDotsActions
+                    actions={[
+                      {
+                        id: 'teacher',
+                        label: 'Assign teacher',
+                        icon: 'mdi:teacher',
+                        onClick: teacherDialog.onTrue,
+                      },
+                      {
+                        id: 'room',
+                        label: 'Assign room',
+                        icon: 'mdi:google-classroom',
+                        onClick: roomDialog.onTrue,
+                      },
+                      {
+                        id: 'delete',
+                        label: 'Delete timetable entry',
+                        icon: GlobalIcons.delete,
+                        color: 'error.main',
+                        onClick: deleteDialog.onTrue,
+                      },
+                    ]}
                     placement="bottom-center"
                     onClickThreeDots={(e) => {
                       e.stopPropagation();
@@ -227,47 +250,6 @@ const TimeTableCell = ({
                         padding: '4px',
                       },
                     }}
-                    actions={({ popover }) => (
-                      <MenuList>
-                        <MenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            teacherDialog.onTrue();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify icon="mdi:teacher" sx={{ height: '18px', width: '18px' }} />
-                          Teacher
-                        </MenuItem>
-                        <MenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            roomDialog.onTrue();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify
-                            icon="mdi:google-classroom"
-                            sx={{ height: '18px', width: '18px' }}
-                          />
-                          Room
-                        </MenuItem>
-                        <MenuItem
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteDialog.onTrue();
-                            popover.onClose();
-                          }}
-                        >
-                          <Iconify
-                            icon={GlobalIcons.delete}
-                            sx={{ height: '18px', width: '18px' }}
-                            color="red"
-                          />
-                          Delete
-                        </MenuItem>
-                      </MenuList>
-                    )}
                   />
                 )}
               </Box>
@@ -276,7 +258,9 @@ const TimeTableCell = ({
               {isRoomVisible && (
                 <Typography variant="caption" color="text.secondary">
                   {slotData?.subjects?.length
-                    ? slotData.subjects.map((sub: any) => sub?.room || sub?.roomName || 'No Room').join('/')
+                    ? slotData.subjects
+                        .map((sub: any) => sub?.room || sub?.roomName || 'No Room')
+                        .join('/')
                     : 'No Room'}
                 </Typography>
               )}
@@ -289,11 +273,11 @@ const TimeTableCell = ({
                       <Box>
                         {slotData?.subjects?.length
                           ? slotData.subjects.map((sub: any, index: number) => (
-                            <Typography key={index} variant="caption">
-                              {sub?.teacher || sub?.teacherName || 'No Teacher'}
-                              {index < slotData.subjects.length - 1 && <br />}
-                            </Typography>
-                          ))
+                              <Typography key={index} variant="caption">
+                                {sub?.teacher || sub?.teacherName || 'No Teacher'}
+                                {index < slotData.subjects.length - 1 && <br />}
+                              </Typography>
+                            ))
                           : 'No Teacher'}
                       </Box>
                     }
@@ -301,14 +285,14 @@ const TimeTableCell = ({
                     <Typography variant="caption" color="text.secondary">
                       {slotData?.subjects?.length
                         ? slotData.subjects.map((sub: any, index: number) => {
-                          const teacherName = sub?.teacher || sub?.teacherName || 'No Teacher';
-                          const nameParts = teacherName.split(' ');
-                          const shortName =
-                            nameParts.length > 1
-                              ? `${nameParts[0]} ${nameParts[1]}`
-                              : teacherName;
-                          return `${shortName}${index < slotData.subjects.length - 1 ? '/' : ''}`;
-                        })
+                            const teacherName = sub?.teacher || sub?.teacherName || 'No Teacher';
+                            const nameParts = teacherName.split(' ');
+                            const shortName =
+                              nameParts.length > 1
+                                ? `${nameParts[0]} ${nameParts[1]}`
+                                : teacherName;
+                            return `${shortName}${index < slotData.subjects.length - 1 ? '/' : ''}`;
+                          })
                         : 'No Teacher'}
                     </Typography>
                   </CustomTooltip>
@@ -318,12 +302,12 @@ const TimeTableCell = ({
                 <Typography variant="caption" color="text.secondary">
                   {slotData?.subjects?.length
                     ? slotData.subjects
-                      .map((sub: any) => {
-                        const className = sub?.class || 'No Class';
-                        const divisionName = sub?.division || 'No Division';
-                        return `${className}-${divisionName}`;
-                      })
-                      .join('/')
+                        .map((sub: any) => {
+                          const className = sub?.class || 'No Class';
+                          const divisionName = sub?.division || 'No Division';
+                          return `${className}-${divisionName}`;
+                        })
+                        .join('/')
                     : 'No Class/Division'}
                 </Typography>
               )}
@@ -397,7 +381,12 @@ const TimeTableCell = ({
             content={
               <>
                 Are you sure you want to remove{' '}
-                <strong>{slotData?.subjects?.map((sub: any) => sub.name || sub.subjectName || sub.subject).join(', ')}</strong> ?
+                <strong>
+                  {slotData?.subjects
+                    ?.map((sub: any) => sub.name || sub.subjectName || sub.subject)
+                    .join(', ')}
+                </strong>{' '}
+                ?
               </>
             }
             action={
@@ -409,7 +398,7 @@ const TimeTableCell = ({
                   onDeleteSlot(rowIndex, colIndex);
                   deleteDialog.onFalse();
                 }}
-              // startIcon={<Iconify icon={GlobalIcons.delete} />}
+                // startIcon={<Iconify icon={GlobalIcons.delete} />}
               >
                 Yes
               </Button>

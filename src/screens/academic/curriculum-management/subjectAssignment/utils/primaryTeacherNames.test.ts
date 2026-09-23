@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { it, expect, describe } from 'vitest';
 
 import { getPrimaryTeacherNames } from './primaryTeacherNames';
 
@@ -51,5 +51,31 @@ describe('getPrimaryTeacherNames', () => {
         primaryTeacherName: 'Akshay Patel',
       })
     ).toEqual(['Akshay Patel']);
+  });
+
+  it('removes employee codes from table teacher labels', () => {
+    expect(
+      getPrimaryTeacherNames({
+        status: 1,
+        classId: 'class-1',
+        className: 'UKG',
+        subjectName: 'Pt & Computer Group',
+        subjectType: 1,
+        teacherNames: ['PRI100001 - Hiren Vadher', 'HOD130001 - Akshay Patel'],
+      })
+    ).toEqual(['Hiren Vadher', 'Akshay Patel']);
+  });
+
+  it('keeps plain teacher names and removes duplicates after normalization', () => {
+    expect(
+      getPrimaryTeacherNames({
+        status: 1,
+        classId: 'class-1',
+        className: 'UKG',
+        subjectName: 'Computer Science',
+        subjectType: 0,
+        teacherNames: ['Hiren Vadher', 'PRI100001 - Hiren Vadher'],
+      })
+    ).toEqual(['Hiren Vadher']);
   });
 });

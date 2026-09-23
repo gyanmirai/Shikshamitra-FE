@@ -1,3 +1,5 @@
+import type { Division } from 'src/types/school';
+
 import { divisionType } from 'src/redux/tagTypes';
 
 import { api } from '../service';
@@ -8,7 +10,7 @@ export const divisionApi = api.injectEndpoints({
       query: () => ({ url: '/app/division', redirect: 'follow' }),
       providesTags: [divisionType.division],
     }),
-    getDivisionById: builder.query({
+    getDivisionById: builder.query<Division, string>({
       query: (id) => ({ url: `/app/division/${id}` }),
       providesTags: [divisionType.division],
     }),

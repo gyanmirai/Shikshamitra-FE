@@ -3,42 +3,41 @@
 import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
-import { varAlpha } from 'src/theme/styles';
+import { GlobalIcons } from 'src/utils/icons';
 import { useReactToPrint } from 'react-to-print';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { GlobalIcons } from 'src/utils/icons';
 import { academicPaths } from 'src/constants/academic-menu';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { EmptyContent } from 'src/components/empty-content';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   Box,
   Alert,
   Stack,
   Button,
-  Popover,
-  Typography,
-  DialogActions,
-  MenuItem,
-  MenuList,
-  FormControl,
-  InputLabel,
   Select,
+  Popover,
+  MenuItem,
+  Typography,
+  InputLabel,
+  FormControl,
+  DialogActions,
 } from '@mui/material';
 import {
   useGetPaperPreviewQuery,
-  useGetQuestionPaperByIdQuery,
   useGetQuestionPapersQuery,
+  useGetQuestionPaperByIdQuery,
   useDeleteQuestionPaperMutation,
   useArchiveQuestionPaperMutation,
   useGetQuestionPaperSettingsQuery,
@@ -47,11 +46,11 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/QuestionPaperApi/question-paper-api';
 
 import CreatePaperWizard from './components/CreatePaperWizard';
+import { STATUS_LABEL, STATUS_COLOR, CREATION_MODE_OPTIONS } from './constants';
 import QuestionPaperPreviewDrawer from './components/QuestionPaperPreviewDrawer';
 import { useQuestionPaperPermissions } from './hooks/useQuestionPaperPermissions';
-import { STATUS_LABEL, STATUS_COLOR, CREATION_MODE_OPTIONS } from './constants';
 
-import type { SectionPattern, WizardMode, QuestionPaperMetadata } from './types';
+import type { WizardMode, SectionPattern, QuestionPaperMetadata } from './types';
 
 interface RowAction {
   key: string;
@@ -641,50 +640,25 @@ export default function QuestionPaperScreen() {
         label: 'Actions',
         isFilter: false,
         isSort: false,
-        width: 80,
-        minWidth: 80,
+        width: 150,
+        minWidth: 150,
         align: 'left' as const,
         sticky: true,
         stickyPosition: 'right' as const,
         render: (_: any, row: any) => {
           const actions = rowActions[row.status] || rowActions[1];
-          const viewAction = actions.find((a: any) => a.key === 'view' || a.key === 'preview');
-          const editAction = actions.find((a: any) => a.key === 'edit');
-          const deleteAction = actions.find((a: any) => a.key === 'delete');
-          const menuActions = actions.filter(
-            (a: any) =>
-              a.key !== 'view' && a.key !== 'preview' && a.key !== 'edit' && a.key !== 'delete'
-          );
 
           return (
-            <ThreeDotsActions
+            <AdaptiveThreeDotsActions
+              actions={actions.map((action: RowAction) => ({
+                id: action.key,
+                label: action.label,
+                icon: action.icon,
+                color: action.color === 'inherit' ? undefined : action.color,
+                disabled: action.disabled,
+                onClick: () => action.onClick(row),
+              }))}
               placement="right-top"
-              showViewIcon={!!viewAction}
-              showEditIcon={!!editAction}
-              showDeleteIcon={!!deleteAction}
-              handleViewClick={() => viewAction?.onClick(row)}
-              handleEditClick={() => editAction?.onClick(row)}
-              handleDeleteClick={() => deleteAction?.onClick(row)}
-              disableEditIcon={!!editAction?.disabled}
-              disableDeleteIcon={!!deleteAction?.disabled}
-              showThreeDots={menuActions.length > 0}
-              actions={({ popover }) => (
-                <MenuList>
-                  {menuActions.map((action: any) => (
-                    <MenuItem
-                      key={action.key}
-                      onClick={() => {
-                        action.onClick(row);
-                        popover.onClose();
-                      }}
-                      sx={{ typography: 'body2', gap: 1 }}
-                    >
-                      <Iconify icon={action.icon} width={20} />
-                      {action.label}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              )}
             />
           );
         },
@@ -787,7 +761,9 @@ export default function QuestionPaperScreen() {
             value={card.value}
             icon={card.icon}
             color={card.color}
-            selected={statusFilter === card.status || (card.status === null && statusFilter === null)}
+            selected={
+              statusFilter === card.status || (card.status === null && statusFilter === null)
+            }
             onClick={() => setStatusFilter(card.status)}
           />
         ))}
@@ -810,11 +786,13 @@ export default function QuestionPaperScreen() {
           alignItems={{ lg: 'center' }}
           sx={{ flexWrap: { lg: 'nowrap' } }}
         >
-          {([
-            ['standardName', 'Class'],
-            ['subjectName', 'Subject'],
-            ['examTitle', 'Exam'],
-          ] as const).map(([key, label]) => (
+          {(
+            [
+              ['standardName', 'Class'],
+              ['subjectName', 'Subject'],
+              ['examTitle', 'Exam'],
+            ] as const
+          ).map(([key, label]) => (
             <FormControl key={key} size="small" fullWidth>
               <InputLabel>{label}</InputLabel>
               <Select
@@ -885,14 +863,14 @@ export default function QuestionPaperScreen() {
       {/* ── Papers table ───────────────────────────────────────────── */}
       {viewMode === 'table' ? (
         <CustomizableTable
-        tableId="question-papers-list"
-        tableTitle="School Question Papers"
-        columns={paperColumns}
-        data={filteredPapers}
-        isLoading={isFetching}
-        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
-        tableContainerProps={{ sx: { height: '100%' } }}
-        noDataText="No question papers found"
+          tableId="question-papers-list"
+          tableTitle="School Question Papers"
+          columns={paperColumns}
+          data={filteredPapers}
+          isLoading={isFetching}
+          wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+          tableContainerProps={{ sx: { height: '100%' } }}
+          noDataText="No question papers found"
           rowProps={(row) => ({
             selected: row.id === wizardPaper?.id,
           })}
@@ -904,46 +882,48 @@ export default function QuestionPaperScreen() {
           ) : (
             <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1.5}>
               {filteredPapers.map((paper) => (
-              <Box
-                key={paper.id}
-                component="button"
-                type="button"
-                onClick={() => {
-                  setPreviewPaperId(paper.id);
-                  setPreviewDrawerOpen(true);
-                }}
-                sx={{
-                  flex: '1 1 280px',
-                  maxWidth: { md: 'calc(50% - 12px)', xl: 'calc(33.333% - 12px)' },
-                  minWidth: 260,
-                  textAlign: 'left',
-                  p: 2,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  borderRadius: 1.5,
-                  bgcolor: 'background.paper',
-                  color: 'text.primary',
-                  cursor: 'pointer',
-                  '&:hover': { borderColor: 'primary.main', boxShadow: 2 },
-                }}
-              >
-                <Stack spacing={1}>
-                  <Stack direction="row" justifyContent="space-between" spacing={1}>
-                    <Typography variant="subtitle2" fontWeight={700} noWrap>
-                      {paper.paperTitle || 'Untitled question paper'}
+                <Box
+                  key={paper.id}
+                  component="button"
+                  type="button"
+                  onClick={() => {
+                    setPreviewPaperId(paper.id);
+                    setPreviewDrawerOpen(true);
+                  }}
+                  sx={{
+                    flex: '1 1 280px',
+                    maxWidth: { md: 'calc(50% - 12px)', xl: 'calc(33.333% - 12px)' },
+                    minWidth: 260,
+                    textAlign: 'left',
+                    p: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1.5,
+                    bgcolor: 'background.paper',
+                    color: 'text.primary',
+                    cursor: 'pointer',
+                    '&:hover': { borderColor: 'primary.main', boxShadow: 2 },
+                  }}
+                >
+                  <Stack spacing={1}>
+                    <Stack direction="row" justifyContent="space-between" spacing={1}>
+                      <Typography variant="subtitle2" fontWeight={700} noWrap>
+                        {paper.paperTitle || 'Untitled question paper'}
+                      </Typography>
+                      <Label variant="soft" color={STATUS_COLOR[paper.status] || 'default'}>
+                        {STATUS_LABEL[paper.status] || '—'}
+                      </Label>
+                    </Stack>
+                    <Typography variant="caption" color="text.secondary">
+                      {[paper.examTitle, paper.standardName, paper.subjectName]
+                        .filter(Boolean)
+                        .join(' · ') || '—'}
                     </Typography>
-                    <Label variant="soft" color={STATUS_COLOR[paper.status] || 'default'}>
-                      {STATUS_LABEL[paper.status] || '—'}
-                    </Label>
+                    <Typography variant="body2" color="text.secondary">
+                      {paper.totalMarks ?? '—'} marks · {paper.durationMinutes ?? '—'} minutes
+                    </Typography>
                   </Stack>
-                  <Typography variant="caption" color="text.secondary">
-                    {[paper.examTitle, paper.standardName, paper.subjectName].filter(Boolean).join(' · ') || '—'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {paper.totalMarks ?? '—'} marks · {paper.durationMinutes ?? '—'} minutes
-                  </Typography>
-                </Stack>
-              </Box>
+                </Box>
               ))}
             </Stack>
           )}

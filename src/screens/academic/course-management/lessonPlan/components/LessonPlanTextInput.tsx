@@ -1,4 +1,4 @@
-import type { Ref } from 'react';
+import type { Ref, FocusEventHandler } from 'react';
 
 import { useId } from 'react';
 import { Box, TextField } from '@mui/material';
@@ -14,9 +14,18 @@ type Props = {
   disabled?: boolean;
   inputRef?: Ref<HTMLInputElement | HTMLTextAreaElement>;
   onChange: (value: string) => void;
+  onBlur?: FocusEventHandler<HTMLInputElement | HTMLTextAreaElement>;
 };
 
-export function LessonPlanTextInput({ field, value, error, disabled, inputRef, onChange }: Props) {
+export function LessonPlanTextInput({
+  field,
+  value,
+  error,
+  disabled,
+  inputRef,
+  onChange,
+  onBlur,
+}: Props) {
   const id = useId();
   const { label, maxLength, helper, placeholder } = lessonPlanTextFields[field];
   const multiline = field !== 'topic';
@@ -29,6 +38,7 @@ export function LessonPlanTextInput({ field, value, error, disabled, inputRef, o
       label={field === 'topic' ? `${label} *` : label}
       value={value}
       onChange={(event) => onChange(event.target.value)}
+      onBlur={onBlur}
       inputRef={inputRef}
       disabled={disabled}
       fullWidth

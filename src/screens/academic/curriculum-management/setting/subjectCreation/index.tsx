@@ -7,6 +7,7 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -26,6 +27,7 @@ import { useSubjectCreation } from './hooks/useSubjectCreation';
 import type { ISubject } from './type';
 
 const SubjectCreation = () => {
+  const insightsDrawer = useBoolean();
   const { permissions } = useSelector((state: RootState) => state.auth);
 
   // Permission checks
@@ -99,28 +101,43 @@ const SubjectCreation = () => {
           { name: 'Subject Creation' },
         ]}
         action={
-          canAdd && (
-            <Box display="flex" gap={1} flexWrap="wrap">
-              <Button
-                sx={{ px: '24px' }}
-                startIcon={<Add />}
-                variant="contained"
-                onClick={() => {
-                  setSelectedSubject(null);
-                  addSubjectDialog.onTrue();
-                }}
-                size="small"
-              >
-                Subject
-              </Button>
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={drawerOpen.onTrue}
-                startIcon={<Iconify icon="mdi:cloud-upload-outline" width={18} />}
-              >
-                Bulk Add
-              </Button>
+          (canView || canAdd) && (
+            <Box display="flex" gap={1} flexWrap="wrap" justifyContent="flex-end">
+              {canView && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+                  onClick={insightsDrawer.onTrue}
+                >
+                  View full insights
+                </Button>
+              )}
+              {canAdd && (
+                <>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={drawerOpen.onTrue}
+                    startIcon={<Iconify icon="mdi:cloud-upload-outline" width={18} />}
+                  >
+                    Bulk Add
+                  </Button>
+                  <Button
+                    sx={{ px: '24px' }}
+                    startIcon={<Add />}
+                    variant="contained"
+                    onClick={() => {
+                      setSelectedSubject(null);
+                      addSubjectDialog.onTrue();
+                    }}
+                    size="small"
+                  >
+                    Subject
+                  </Button>
+                </>
+              )}
             </Box>
           )
         }
@@ -130,6 +147,8 @@ const SubjectCreation = () => {
         canAdd={canAdd}
         canView={canView}
         canDelete={canDelete}
+        insightsOpen={insightsDrawer.value}
+        onCloseInsights={insightsDrawer.onFalse}
         onViewUsage={(data) => {
           setSelectedSubject(data);
           usageDrawer.onTrue();

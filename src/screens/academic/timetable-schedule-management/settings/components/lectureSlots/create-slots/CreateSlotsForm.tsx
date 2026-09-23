@@ -1,17 +1,15 @@
 'use client';
 
 import React from 'react';
-import AddIcon from '@mui/icons-material/Add';
-import { Iconify } from 'src/components/iconify';
-import { alpha, lighten } from '@mui/material/styles';
-import { Box, Fade, Alert, Stack, Button, Tooltip, Typography } from '@mui/material';
+import { Box } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { useSlotForm } from './useSlotForm';
 import FormFooter from './components/FormFooter';
 import FormSkeleton from './components/FormSkeleton';
-import CapacitySummary from './components/CapacitySummary';
-import SlotConfigurationAccordion from './components/SlotConfigurationAccordion';
+import SlotConfigurationsBody from './components/SlotConfigurationsBody';
+import SlotConfigurationsHeader from './components/SlotConfigurationsHeader';
 
 import type { ICreateSlotsFormProps } from '../type';
 
@@ -21,28 +19,21 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
   isEdit,
   data,
 }) => {
+  const slotForm = useSlotForm({ isEdit, data, handleClose });
   const {
     formik,
-    allClass,
     canConfigureSlots,
-    classShiftMessage,
-    selectedClassShift,
+    isClassTimingLoading,
     isLectureSlotsLoading,
     isSubmitting,
-    handleClassChange,
     handleAddSlotConfiguration,
-    handleRemoveSlotConfiguration,
-    handleTotalSlotsChange,
-  } = useSlotForm({ isEdit, data, handleClose });
+  } = slotForm;
 
   if (isLectureSlotsLoading) {
     return <FormSkeleton />;
   }
 
   const slotConfigs = formik.values.slotConfigurations || [];
-  const showRemove = slotConfigs.length > 1;
-  const hasSlotConfigs = slotConfigs.length > 0;
-
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <Box
@@ -83,150 +74,25 @@ const CreateSlotsForm: React.FC<ICreateSlotsFormProps> = ({
               gap: 1,
             }}
           >
-            {/* Slot Configurations Header */}
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              alignItems={{ xs: 'flex-start', sm: 'center' }}
-              justifyContent="space-between"
-              spacing={1}
-              sx={{ mt: 0.5 }}
-            >
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 1.5,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    bgcolor: (theme) =>
-                      alpha(
-                        theme.palette.primary.main,
-                        theme.palette.mode === 'dark' ? 0.22 : 0.12
-                      ),
-                    color: (theme) =>
-                      theme.palette.mode === 'dark'
-                        ? lighten(theme.palette.primary.main, 0.7)
-                        : theme.palette.primary.main,
-                  }}
-                >
-                  <Iconify icon="mdi:clock-time-four-outline" width={18} />
-                </Box>
-                <Box>
-                  <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                    Slot Configurations
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {hasSlotConfigs
-                      ? `${slotConfigs.length} group${slotConfigs.length > 1 ? 's' : ''} configured`
-                      : 'Add a group to start configuring slots'}
-                  </Typography>
-                </Box>
-              </Stack>
-
-              {!disabled && (
-                <Tooltip title="Add new slot group" arrow>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<AddIcon fontSize="small" />}
-                    onClick={handleAddSlotConfiguration}
-                    disabled={!canConfigureSlots}
-                  >
-                    Add Slot Group
-                  </Button>
-                </Tooltip>
-              )}
-            </Stack>
-
-            <Alert
-              severity={selectedClassShift ? 'info' : 'warning'}
-              icon={
-                <Iconify
-                  icon={
-                    selectedClassShift ? 'mdi:clock-check-outline' : 'mdi:clock-alert-outline'
-                  }
-                />
-              }
-              sx={{
-                borderRadius: 1.5,
-                '& .MuiAlert-message': { width: '100%' },
-              }}
-            >
-              <Typography variant="body2" fontWeight={600}>
-                Class Timing
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {classShiftMessage}
-              </Typography>
-            </Alert>
-
-            {hasSlotConfigs && <CapacitySummary slotConfigurations={slotConfigs} />}
-
-            {/* Empty state */}
-            {!hasSlotConfigs && (
-              <Fade in timeout={300}>
-                <Box
-                  sx={{
-                    borderRadius: 2.5,
-                    border: '1px dashed',
-                    borderColor: 'divider',
-                    p: 4,
-                    textAlign: 'center',
-                    bgcolor: (theme) => alpha(theme.palette.primary.main, 0.02),
-                  }}
-                >
-                  <Iconify
-                    icon="mdi:calendar-clock-outline"
-                    width={42}
-                    sx={{ color: 'text.disabled', mb: 1 }}
-                  />
-                  <Typography variant="subtitle2" color="text.primary" fontWeight={600}>
-                    No slot groups yet
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                    Click &quot;Add Slot Group&quot; to define active days and time slots.
-                  </Typography>
-                </Box>
-              </Fade>
-            )}
-
-            {slotConfigs.map((config: any, configIndex: number) => (
-              <Fade key={config.id} in timeout={300 + configIndex * 60}>
-                <Box>
-                  <SlotConfigurationAccordion
-                    config={config}
-                    configIndex={configIndex}
-                    formik={formik}
-                    disabled={disabled}
-                    isEdit={isEdit}
-                    hasData={!!data}
-                    canRemove={showRemove}
-                    onRemove={() => handleRemoveSlotConfiguration(configIndex)}
-                    onTotalSlotsChange={(value) => handleTotalSlotsChange(configIndex, value)}
-                    classes={allClass}
-                    className={formik.values.className}
-                    canConfigureSlots={canConfigureSlots}
-                    classShiftMessage={classShiftMessage}
-                    shiftStartTime={selectedClassShift?.start ?? null}
-                    shiftEndTime={selectedClassShift?.end ?? null}
-                    classNameError={
-                      formik.touched.className && typeof formik.errors.className === 'string'
-                        ? formik.errors.className
-                        : undefined
-                    }
-                    onClassChange={handleClassChange}
-                    isFirstGroup={configIndex === 0}
-                  />
-                </Box>
-              </Fade>
-            ))}
+            <SlotConfigurationsHeader
+              canAdd={canConfigureSlots}
+              disabled={disabled}
+              groupCount={slotConfigs.length}
+              isLoading={isClassTimingLoading}
+              onAdd={handleAddSlotConfiguration}
+            />
+            <SlotConfigurationsBody
+              data={data}
+              disabled={disabled}
+              isEdit={isEdit}
+              slotForm={slotForm}
+            />
           </Box>
         </Box>
 
         {!disabled && (
           <FormFooter
+            disabled={isClassTimingLoading}
             isEdit={isEdit}
             loading={isSubmitting}
             onCancel={() => handleClose?.(null, false)}

@@ -3,6 +3,7 @@ import { it, expect, describe } from 'vitest';
 import {
   getLessonPlanListQuery,
   getLessonPlanTabQueryState,
+  getLessonPlanTabLoadingState,
   shouldSkipLessonPlanListQuery,
 } from './lessonPlanTabQueries';
 
@@ -62,5 +63,47 @@ describe('getLessonPlanTabQueryState', () => {
         academicMediumId: undefined,
       })
     ).toBe(true);
+  });
+});
+
+describe('getLessonPlanTabLoadingState', () => {
+  const idleQuery = { isLoading: false, isFetching: false };
+
+  it('shows loading for cached lesson-plan requests that are fetching after a tab change', () => {
+    const state = getLessonPlanTabLoadingState({
+      timeline: idleQuery,
+      lessonPlans: { isLoading: false, isFetching: true },
+      teacherDiaries: idleQuery,
+      reviewQueue: idleQuery,
+    });
+
+    expect(state.lessonList).toBe(true);
+    expect(state.teacherDiary).toBe(true);
+    expect(state.reviewQueue).toBe(true);
+  });
+
+  it('shows loading for each tab-specific request while it is fetching', () => {
+    const timelineState = getLessonPlanTabLoadingState({
+      timeline: { isLoading: false, isFetching: true },
+      lessonPlans: idleQuery,
+      teacherDiaries: idleQuery,
+      reviewQueue: idleQuery,
+    });
+    const diaryState = getLessonPlanTabLoadingState({
+      timeline: idleQuery,
+      lessonPlans: idleQuery,
+      teacherDiaries: { isLoading: false, isFetching: true },
+      reviewQueue: idleQuery,
+    });
+    const reviewState = getLessonPlanTabLoadingState({
+      timeline: idleQuery,
+      lessonPlans: idleQuery,
+      teacherDiaries: idleQuery,
+      reviewQueue: { isLoading: false, isFetching: true },
+    });
+
+    expect(timelineState.dailyTimeline).toBe(true);
+    expect(diaryState.teacherDiary).toBe(true);
+    expect(reviewState.reviewQueue).toBe(true);
   });
 });

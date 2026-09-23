@@ -32,7 +32,7 @@ export function BreadcrumbsLink({ link, activeLast, disabled, ...props }: Props)
     '&:hover': {
       color: 'primary.main',
       textDecoration: 'none',
-      backgroundColor: activeLast ? 'unset' : 'action.hover',
+      // backgroundColor: activeLast ? 'unset' : 'action.hover',
       borderRadius: 0.9,
     },
     '&:focus-visible': {

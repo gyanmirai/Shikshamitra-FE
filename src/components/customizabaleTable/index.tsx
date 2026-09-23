@@ -461,6 +461,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 aria-label={`${tableTitle} table`}
                 size={dense ? 'small' : 'medium'}
                 sx={{
+                  height: (data.length >0 || isLoading) ? 'auto': '100%',
                   '&:focus-visible': {
                     outline: '2px solid',
                     outlineColor: 'primary.main',

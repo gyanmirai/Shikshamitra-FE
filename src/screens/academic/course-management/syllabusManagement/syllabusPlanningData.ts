@@ -1,3 +1,5 @@
+import type { LabelColor } from 'src/components/label/types';
+
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
@@ -46,8 +48,22 @@ export const mappingStatusOptions = ['Not Mapped', 'Mapped', 'Partially Mapped']
 export const resourceStatusOptions = ['Missing', 'Partial', 'Ready'];
 export const visibilityOptions = ['Teacher', 'Students', 'Parents', 'All'];
 
-export const statusColor = (status?: string) => {
+export const statusColor = (status?: string): LabelColor => {
   const normalized = (status || '').toLowerCase();
+
+  if (
+    normalized.includes('delay') ||
+    normalized.includes('request') ||
+    normalized.includes('missing')
+  ) {
+    return 'error';
+  }
+
+  // Incomplete states must be evaluated before positive keywords such as "linked" or "mapped".
+  if (normalized.startsWith('not ') || normalized.includes('draft')) {
+    return 'warning';
+  }
+
   if (
     normalized.includes('complete') ||
     normalized.includes('approved') ||
@@ -61,20 +77,13 @@ export const statusColor = (status?: string) => {
   if (
     normalized.includes('progress') ||
     normalized.includes('review') ||
-    normalized.includes('partial')
+    normalized.includes('partial') ||
+    normalized.includes('assigned') ||
+    normalized.includes('submitted')
   ) {
     return 'info';
   }
-  if (
-    normalized.includes('delay') ||
-    normalized.includes('request') ||
-    normalized.includes('missing')
-  ) {
-    return 'error';
-  }
-  if (normalized.includes('draft') || normalized.includes('not')) {
-    return 'warning';
-  }
+
   return 'default';
 };
 

@@ -21,7 +21,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -29,6 +28,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomUpload from 'src/components/custom-upload/custom-upload';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
@@ -47,8 +47,6 @@ import {
   Tooltip,
   Checkbox,
   Skeleton,
-  MenuList,
-  MenuItem,
   TextField,
   Typography,
   IconButton,
@@ -2336,7 +2334,8 @@ export default function QuestionBankScreen() {
         id: 'marks',
         label: 'Marks',
         filterType: 'number' as const,
-        width: 80,
+        width: 150,
+        minWidth: 150,
         align: 'center' as const,
         render: (v: any) => (
           <Typography variant="body2" fontWeight={700}>
@@ -2441,112 +2440,84 @@ export default function QuestionBankScreen() {
         align: 'right' as const,
         sticky: true,
         stickyPosition: 'right' as const,
-        render: (_: any, row: any) => (
-          <ThreeDotsActions
-            placement="right-top"
-            showEditIcon={false}
-            disableEditIcon={row.isLocked}
-            handleEditClick={(e) => {
-              e.stopPropagation();
-              handleOpenEdit(row);
-            }}
-            actions={({ popover }) => (
-              <MenuList>
-                {canView && (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      setPreviewQuestion(row);
-                    }}
-                  >
-                    <Iconify icon="carbon:view-filled" sx={{ mr: 1, height: 16, width: 16 }} />
-                    Preview
-                  </MenuItem>
-                )}
-                {canAdd && (row.status === 1 || row.status === 4) && (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      handleSubmitQuestion(row.id);
-                    }}
-                  >
-                    <Iconify icon="mingcute:send-line" sx={{ mr: 1, height: 16, width: 16 }} />
-                    Submit for Review
-                  </MenuItem>
-                )}
-                {canAdd && row.status === 2 && (
-                  <>
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        handleApproveQuestion(row.id);
-                      }}
-                      disabled={isApproveLoading}
-                    >
-                      <Iconify
-                        icon="mingcute:check-2-line"
-                        sx={{ mr: 1, height: 16, width: 16, color: 'success.main' }}
-                      />
-                      Approve
-                    </MenuItem>
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        setRejectQuestionId(row.id);
-                      }}
-                      disabled={isRejectLoading}
-                    >
-                      <Iconify
-                        icon="mingcute:close-line"
-                        sx={{ mr: 1, height: 16, width: 16, color: 'error.main' }}
-                      />
-                      Reject
-                    </MenuItem>
-                  </>
-                )}
-                {canAdd && (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      handleDuplicateQuestion(row.id);
-                    }}
-                  >
-                    <Iconify icon="mingcute:copy-2-line" sx={{ mr: 1, height: 16, width: 16 }} />
-                    Duplicate
-                  </MenuItem>
-                )}
-                {canAdd && row.status !== 5 && (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      setArchiveQuestionId(row.id);
-                    }}
-                  >
-                    <Iconify
-                      icon="mingcute:archive-line"
-                      sx={{ mr: 1, height: 16, width: 16, color: 'warning.main' }}
-                    />
-                    Archive
-                  </MenuItem>
-                )}
-                {canDelete && row.status === 1 && (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      setDeleteQuestionId(row.id);
-                    }}
-                  >
-                    <Iconify
-                      icon="mingcute:delete-2-line"
-                      sx={{ mr: 1, height: 16, width: 16, color: 'error.main' }}
-                    />
-                    Delete
-                  </MenuItem>
-                )}
-              </MenuList>
-            )}
-          />
-        ),
+        render: (_: any, row: any) => {
+          const actions = [
+            ...(canView
+              ? [
+                  {
+                    id: 'preview',
+                    label: 'Preview',
+                    icon: 'carbon:view-filled',
+                    onClick: () => setPreviewQuestion(row),
+                  },
+                ]
+              : []),
+            ...(canAdd && (row.status === 1 || row.status === 4)
+              ? [
+                  {
+                    id: 'submit',
+                    label: 'Submit for review',
+                    icon: 'mingcute:send-line',
+                    onClick: () => handleSubmitQuestion(row.id),
+                  },
+                ]
+              : []),
+            ...(canAdd && row.status === 2
+              ? [
+                  {
+                    id: 'approve',
+                    label: 'Approve',
+                    icon: 'mingcute:check-2-line',
+                    color: 'success.main',
+                    disabled: isApproveLoading,
+                    onClick: () => handleApproveQuestion(row.id),
+                  },
+                  {
+                    id: 'reject',
+                    label: 'Reject',
+                    icon: 'mingcute:close-line',
+                    color: 'error.main',
+                    disabled: isRejectLoading,
+                    onClick: () => setRejectQuestionId(row.id),
+                  },
+                ]
+              : []),
+            ...(canAdd
+              ? [
+                  {
+                    id: 'duplicate',
+                    label: 'Duplicate',
+                    icon: 'mingcute:copy-2-line',
+                    onClick: () => handleDuplicateQuestion(row.id),
+                  },
+                ]
+              : []),
+            ...(canAdd && row.status !== 5
+              ? [
+                  {
+                    id: 'archive',
+                    label: 'Archive',
+                    icon: 'mingcute:archive-line',
+                    color: 'warning.main',
+                    onClick: () => setArchiveQuestionId(row.id),
+                  },
+                ]
+              : []),
+            ...(canDelete && row.status === 1
+              ? [
+                  {
+                    id: 'delete',
+                    label: 'Delete',
+                    icon: 'mingcute:delete-2-line',
+                    color: 'error.main',
+                    onClick: () => setDeleteQuestionId(row.id),
+                  },
+                ]
+              : []),
+          ];
+
+          return <AdaptiveThreeDotsActions actions={actions} placement="right-top" />;
+        },
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps

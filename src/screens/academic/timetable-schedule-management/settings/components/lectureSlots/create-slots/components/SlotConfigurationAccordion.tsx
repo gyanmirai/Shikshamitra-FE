@@ -29,7 +29,7 @@ import SlotTimesTable from '../../slotTimesTable';
 import ActiveDaysSlider from './ActiveDaysSlider';
 import SlotCounterControl from './SlotCounterControl';
 
-interface ISlotConfig {
+export interface ISlotConfig {
   id: React.Key | null | undefined;
   expanded?: boolean;
   totalSlots: unknown;

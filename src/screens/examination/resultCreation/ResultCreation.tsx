@@ -1275,46 +1275,6 @@ export function StudentDetailsDialog({
           </Card>
         )}
 
-        <Card
-          sx={{
-            p: 1.25,
-            bgcolor: 'background.paper',
-            border: (theme) => `1px solid ${theme.palette.divider}`,
-            borderRadius: 1.5,
-            boxShadow: 'none',
-          }}
-        >
-          <Box display="flex" alignItems="center" gap={1} mb={1}>
-            <Iconify
-              icon="mdi:calculator-variant-outline"
-              width={20}
-              sx={{ color: 'primary.main' }}
-            />
-            <Typography
-              variant="subtitle2"
-              fontWeight="bold"
-              sx={{ letterSpacing: 0.5, textTransform: 'uppercase' }}
-            >
-              Calculation Explanation
-            </Typography>
-          </Box>
-          <Typography variant="body2" color="text.secondary">
-            Percentage is calculated from the generated result snapshot as obtained marks divided by
-            maximum marks. Grade and pass/fail status are returned by the backend result calculation
-            so this view stays aligned with the result list and reports.
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap mt={1.5}>
-            <Label variant="soft" color="info">
-              {totalValueStr} / {totalMaxMarksStr}
-            </Label>
-            <Label variant="soft" color={getPercentageColor(pctRaw)}>
-              {pctRaw}
-            </Label>
-            <Label variant="soft" color={getStatusColor(status)}>
-              {gradeValue || 'Grade -'}
-            </Label>
-          </Stack>
-        </Card>
       </DialogScrollContent>
       {/* </Box> */}
 

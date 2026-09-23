@@ -1,5 +1,7 @@
-import Stack from '@mui/material/Stack';
+import type { ReactNode } from 'react';
+
 import Box from '@mui/material/Box';
+import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
 
@@ -62,7 +64,10 @@ export function WorkflowSummary({ workspace, workflow }: GuidedStepProps) {
             label="Subjects"
             value={plan.subjects.map((subject) => subject.subjectName).join(', ')}
           />
-          <SummaryRow label="Schedule" value={formatPlanSchedules(plan.subjects)} />
+          <SummaryRow
+            label="Schedule"
+            value={<ScheduleValue value={formatPlanSchedules(plan.subjects)} />}
+          />
           <SummaryRow label="Students" value={plan.totalStudents} />
           <SummaryRow label="Proposed" value={allocatedStudents} />
           <SummaryRow label="Rooms" value={workflow.formik.values.selectedRoomIds.length} />
@@ -80,7 +85,21 @@ export function WorkflowSummary({ workspace, workflow }: GuidedStepProps) {
   );
 }
 
-export function SummaryRow({ label, value }: { label: string; value: string | number }) {
+function ScheduleValue({ value }: { value: string }) {
+  const separatorIndex = value.indexOf(' · ');
+  if (separatorIndex < 0) return value;
+
+  return (
+    <Stack spacing={0} alignItems="flex-end">
+      <Box component="span">{value.slice(0, separatorIndex)}</Box>
+      <Box component="span" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+        {value.slice(separatorIndex + 3)}
+      </Box>
+    </Stack>
+  );
+}
+
+export function SummaryRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <Box
       sx={{

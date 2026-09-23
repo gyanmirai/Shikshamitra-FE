@@ -51,7 +51,7 @@ const ExamBasicReview = ({
       onEdit={onEdit}
       status={statusLabel}
     >
-      <Grid container spacing={1}>
+      <Grid container spacing={2}>
         {/* Exam Name */}
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <ExamReviewInfoItem
@@ -88,7 +88,7 @@ const ExamBasicReview = ({
                       key={division.id}
                       label={division.name}
                       size="small"
-                      variant="soft"
+                      variant="outlined"
                       sx={{ fontSize: '0.75rem', height: 24 }}
                     />
                   ))}
@@ -126,7 +126,7 @@ const ExamBasicReview = ({
                       key={subject.subjectId}
                       label={subject.subjectName}
                       size="small"
-                      variant="soft"
+                      variant="outlined"
                       sx={{ fontSize: '0.75rem', height: 24 }}
                     />
                   ))}

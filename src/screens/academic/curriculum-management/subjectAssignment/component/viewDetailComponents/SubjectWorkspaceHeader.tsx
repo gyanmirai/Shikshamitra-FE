@@ -1,50 +1,19 @@
 'use client';
 
-import type { LabelColor } from 'src/components/label';
-
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
-import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Chip, Stack, Button, Skeleton, Typography, IconButton, LinearProgress } from '@mui/material';
+import { Box, Stack, Button, Typography, IconButton, LinearProgress } from '@mui/material';
 
 import { QuickSubjectSwitcher } from './QuickSubjectSwitcher';
-import {
-  getUnifiedTeachers,
-  toTeacherOption,
-} from '../subjectAssignmentForm/teacherOptions';
 
 import type {
   ISubjectDetail,
   INavigatorSubjectItem,
   INavigatorElectiveGroup,
 } from '../type';
-
-const STATUS_CONFIG: Record<string | number, { label: string; color: LabelColor }> = {
-  0: { label: 'Draft', color: 'info' },
-  1: { label: 'Published', color: 'success' },
-  2: { label: 'In Review', color: 'warning' },
-  3: { label: 'Needs Setup', color: 'error' },
-  4: { label: 'Archived', color: 'default' },
-  5: { label: 'Inactive', color: 'default' },
-  Draft: { label: 'Draft', color: 'info' },
-  Published: { label: 'Published', color: 'success' },
-  InReview: { label: 'In Review', color: 'warning' },
-  NeedsSetup: { label: 'Needs Setup', color: 'error' },
-  Archived: { label: 'Archived', color: 'default' },
-  Inactive: { label: 'Inactive', color: 'default' },
-};
-
-const getStatusLabelAndColor = (status: any) => {
-  if (status === undefined || status === null) {
-    return { label: 'Draft', color: 'info' as LabelColor };
-  }
-  const config = STATUS_CONFIG[status];
-  if (config) return config;
-  return { label: String(status), color: 'default' as LabelColor };
-};
 
 interface SubjectWorkspaceHeaderProps {
   subject: ISubjectDetail | null;
@@ -83,8 +52,6 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
 
   const isElective =
     activeNavigatorItem?.subjectType === 1 || !!activeNavigatorItem?.electiveGroupId;
-  const statusInfo = getStatusLabelAndColor(activeNavigatorItem?.status ?? 0);
-  const teachers = getUnifiedTeachers(subject ?? activeNavigatorItem ?? {}).map(toTeacherOption);
 
   return (
     <Box
@@ -120,7 +87,7 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
       >
         {/* Left Area: Mobile Nav Button + Quick Switcher + Metadata */}
         <Box sx={{ minWidth: 0, flex: 1 }}>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.75 }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
             {onOpenMobileNav && (
               <IconButton
                 size="small"
@@ -146,83 +113,6 @@ const SubjectWorkspaceHeader: React.FC<SubjectWorkspaceHeaderProps> = ({
             />
           </Stack>
 
-          {/* Metadata Chips Bar */}
-          <Stack
-            direction="row"
-            alignItems="center"
-            spacing={1}
-            flexWrap="wrap"
-            useFlexGap
-            sx={{ pl: { xs: 0, sm: 0.75 } }}
-          >
-            {/* Subject Code */}
-            {subject?.subjectCode || activeNavigatorItem?.subjectCode ? (
-              <Chip
-                size="small"
-                label={subject?.subjectCode || activeNavigatorItem?.subjectCode}
-                variant="outlined"
-                sx={{
-                  height: 22,
-                  fontFamily: 'monospace',
-                  fontWeight: 600,
-                  fontSize: '0.725rem',
-                  borderColor: theme.palette.divider,
-                }}
-              />
-            ) : isLoading ? (
-              <Skeleton variant="rounded" width={56} height={22} sx={{ borderRadius: 1 }} />
-            ) : null}
-
-            {/* Core / Elective Tag */}
-            <Chip
-              size="small"
-              label={isElective ? 'Elective' : 'Core'}
-              variant="soft"
-              color={isElective ? 'secondary' : 'primary'}
-              sx={{ height: 22, fontSize: '0.725rem', fontWeight: 600 }}
-            />
-
-            {/* Status Label */}
-            <Label variant="soft" color={statusInfo.color} sx={{ height: 22, fontSize: '0.725rem' }}>
-              {statusInfo.label}
-            </Label>
-
-            {/* Elective Group Name if applicable */}
-            {isElective && activeNavigatorItem?.electiveGroupName && (
-              <Chip
-                size="small"
-                icon={<Iconify icon="solar:folder-with-files-bold" width={14} />}
-                label={activeNavigatorItem.electiveGroupName}
-                variant="soft"
-                color="secondary"
-                sx={{
-                  height: 22,
-                  fontSize: '0.725rem',
-                  fontWeight: 500,
-                }}
-              />
-            )}
-
-            {teachers.length > 0 ? (
-              teachers.map((teacher) => (
-                <Chip
-                  key={teacher.id}
-                  size="small"
-                  icon={<Iconify icon="mdi:account-tie" width={14} />}
-                  label={teacher.label}
-                  variant="outlined"
-                  sx={{
-                    height: 22,
-                    fontSize: '0.725rem',
-                    borderColor: varAlpha(theme.palette.primary.mainChannel, 0.3),
-                    color: 'text.secondary',
-                  }}
-                />
-              ))
-            ) : isLoading ? (
-              <Skeleton variant="rounded" width={120} height={22} sx={{ borderRadius: 1 }} />
-            ) : null}
-          </Stack>
         </Box>
 
         {/* Right Area: Position Indicator + Prev/Next Controls */}
