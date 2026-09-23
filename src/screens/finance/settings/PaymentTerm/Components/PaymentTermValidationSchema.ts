@@ -34,6 +34,7 @@ const installmentSchema = Yup.object().shape({
     .moreThan(0, 'Allocation percentage must be greater than 0')
     .max(100, 'Allocation percentage cannot exceed 100')
     .required('Allocation percentage is required'),
+  demandEnabled: Yup.boolean().required(),
   gracePeriod: Yup.number().min(0, 'Grace days cannot be negative').nullable(),
 });
 
@@ -72,6 +73,8 @@ export const paymentTermValidationSchema = (
         return !isDefault || this.parent.status === 'Active';
       }
     ),
+
+    invoiceCreationEnabled: Yup.boolean().required(),
 
     installments: Yup.array()
       .of(installmentSchema)
@@ -134,11 +137,15 @@ export const paymentTermValidationSchema = (
       )
       .test(
         'specific-demand-dates',
-        'A scheduled bill date on or before the due date is required when invoice sending is enabled',
+        'An invoice date on or before the due date is required when invoice creation is enabled',
         function (items) {
-          if (this.parent.demandGenerationRule !== 'SpecificDate') return true;
+          if (
+            this.parent.demandGenerationRule !== 'SpecificDate' ||
+            !this.parent.invoiceCreationEnabled
+          ) {
+            return true;
+          }
           return items?.every((item) => {
-            if (item?.demandEnabled === false) return true;
             if (!item?.demandDate || !item?.dueDate) return false;
             return !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day');
           });
@@ -148,7 +155,7 @@ export const paymentTermValidationSchema = (
     demandGenerationRule: Yup.mixed<DemandGenerationRule>()
       .oneOf(
         ['OnInstallmentStartDate', 'XDaysBeforeDue', 'OnDueDate', 'SpecificDate'] as const,
-        'Invalid demand rule'
+        'Invalid invoice date rule'
       )
       .required('Demand generation rule is required'),
 

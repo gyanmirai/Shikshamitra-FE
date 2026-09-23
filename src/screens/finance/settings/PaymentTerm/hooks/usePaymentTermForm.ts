@@ -114,6 +114,7 @@ const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
     detail.versions?.find((v) => v.id === detail.currentVersionId) ??
     detail.versions?.find((v) => v.status === 'Published') ??
     detail.versions?.[0];
+  const installments = (current?.installments ?? []).map(mapApiInstallmentToUi);
 
   return {
     id: detail.id,
@@ -124,7 +125,9 @@ const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
     status: detail.status,
     academicYearId: detail.academicYearId,
     totalInstallments: detail.totalInstallments,
-    installments: (current?.installments ?? []).map(mapApiInstallmentToUi),
+    installments,
+    invoiceCreationEnabled:
+      installments.length === 0 || installments.every((installment) => installment.demandEnabled),
     isDefaultTerm: detail.isDefault,
     holidayShiftingMethod: current?.holidayShiftingMethod ?? detail.holidayShiftingMethod,
     demandGenerationRule: current?.demandGenerationRule ?? detail.demandGenerationRule,
@@ -141,7 +144,8 @@ const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
 const mapUiInstallmentToApi = (
   inst: IInstallment,
   index: number,
-  demandGenerationRule: DemandGenerationRule
+  demandGenerationRule: DemandGenerationRule,
+  invoiceCreationEnabled: boolean
 ): CreateInstallmentRequest => ({
   sequence: inst.sequence || index + 1,
   name: inst.installmentName,
@@ -150,12 +154,14 @@ const mapUiInstallmentToApi = (
   demandDate:
     demandGenerationRule === 'SpecificDate'
       ? toDateTimeOffsetString(
-          inst.demandEnabled ? inst.demandDate : inst.demandDate || inst.dueDate || inst.startDate
+          invoiceCreationEnabled
+            ? inst.demandDate
+            : inst.demandDate || inst.dueDate || inst.startDate
         )
       : undefined,
   dueDate: toDateTimeOffsetString(inst.dueDate),
   allocationPercentage: Number(inst.allocationPercentage) || 0,
-  demandEnabled: inst.demandEnabled ?? true,
+  demandEnabled: invoiceCreationEnabled,
   reminderEnabled: inst.reminderEnabled ?? true,
   reminderDate: inst.reminderDate ? toDateTimeOffsetString(inst.reminderDate) : undefined,
   allowPartialOverride: inst.allowPartialOverride ?? null,
@@ -262,7 +268,12 @@ export function usePaymentTermForm(
       demandGenerationRule: values.demandGenerationRule,
       demandOffsetDays: values.demandOffsetDays,
       installments: values.installments.map((item, index) =>
-        mapUiInstallmentToApi(item, index, values.demandGenerationRule)
+        mapUiInstallmentToApi(
+          item,
+          index,
+          values.demandGenerationRule,
+          values.invoiceCreationEnabled
+        )
       ),
     }),
     []
@@ -307,7 +318,12 @@ export function usePaymentTermForm(
         demandGenerationRule: values.demandGenerationRule,
         demandOffsetDays: values.demandOffsetDays,
         installments: values.installments.map((item, index) =>
-          mapUiInstallmentToApi(item, index, values.demandGenerationRule)
+          mapUiInstallmentToApi(
+            item,
+            index,
+            values.demandGenerationRule,
+            values.invoiceCreationEnabled
+          )
         ),
       });
       shikshaMitraToast.success({
@@ -388,7 +404,7 @@ export function usePaymentTermForm(
       reminderDate: null,
       gracePeriod: null,
       allowPartialOverride: null,
-      demandEnabled: true,
+      demandEnabled: formik.values.invoiceCreationEnabled,
       reminderEnabled: false,
     };
     const next = [...formik.values.installments, newInst];
@@ -506,11 +522,11 @@ export function usePaymentTermForm(
       (v.demandOffsetDays !== null && v.demandOffsetDays >= 1);
     const specificDatesValid =
       v.demandGenerationRule !== 'SpecificDate' ||
+      !v.invoiceCreationEnabled ||
       v.installments.every(
         (item) =>
-          item.demandEnabled === false ||
-          (Boolean(item.demandDate && item.dueDate) &&
-            !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day'))
+          Boolean(item.demandDate && item.dueDate) &&
+          !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day')
       );
     const isReadyToPublish =
       boardValid &&

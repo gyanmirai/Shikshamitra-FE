@@ -47,7 +47,7 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
             subtitle={
               editData
                 ? 'Update the schedule, billing rule, and lifecycle status.'
-                : 'Configure a reusable installment and billing schedule.'
+                : 'Configure a reusable installment and invoice schedule.'
             }
             helpText="Payment Terms define when student-fee installments are billed and due. Payment behaviour remains controlled by Finance policies."
             onClose={requestClose}

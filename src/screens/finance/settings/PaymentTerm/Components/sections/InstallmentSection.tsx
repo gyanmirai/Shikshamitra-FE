@@ -3,8 +3,9 @@
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
+import { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Add, Delete } from '@mui/icons-material';
+import { Add, Delete, AutoAwesome } from '@mui/icons-material';
 import { toDateOnly, parseDateOnly } from 'src/utils/date-only';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import {
@@ -15,8 +16,8 @@ import {
   Alert,
   Stack,
   Button,
-  Tooltip,
   Switch,
+  Tooltip,
   TextField,
   IconButton,
   Typography,
@@ -24,6 +25,7 @@ import {
 } from '@mui/material';
 
 import { SectionCard } from '../ui/SectionCard';
+import { InstallmentTemplateDialog } from '../InstallmentTemplateDialog';
 
 import type { IPaymentTerm } from '../../type';
 import type { IBoard } from '../../hooks/usePaymentTermForm';
@@ -41,12 +43,8 @@ interface InstallmentSectionProps {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function InstallmentSection({
-  formik,
-  onAdd,
-  onRemove,
-  board,
-}: InstallmentSectionProps) {
+export function InstallmentSection({ formik, onAdd, onRemove, board }: InstallmentSectionProps) {
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const allocationTotal = formik.values.installments.reduce(
     (sum, i) => sum + (Number(i.allocationPercentage) || 0),
     0
@@ -73,18 +71,30 @@ export function InstallmentSection({
   return (
     <SectionCard
       title="Installment Schedule"
-      subtitle="Define each installment period, due date, and percentage allocation (must total 100%)."
-      info="Every installment start, end, and due date must fall inside the selected board period. Periods cannot overlap and allocations must total 100%."
+      subtitle="Define each installment's start and end dates, due date, and percentage allocation (must total 100%)."
+      info="Every installment start date, end date, and due date must fall inside the selected board period. Installments cannot overlap and allocations must total 100%."
       action={
-        <Button
-          size="small"
-          variant="contained"
-          startIcon={<Add />}
-          onClick={onAdd}
-          sx={{ flexShrink: 0 }}
-        >
-          Add Installment
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<AutoAwesome />}
+            onClick={() => setTemplateDialogOpen(true)}
+            disabled={!formik.values.boardId}
+            sx={{ flexShrink: 0 }}
+          >
+            Apply Template
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Add />}
+            onClick={onAdd}
+            sx={{ flexShrink: 0 }}
+          >
+            Add Installment
+          </Button>
+        </Stack>
       }
     >
       {board?.startDate && board?.endDate && (
@@ -93,6 +103,39 @@ export function InstallmentSection({
           {dayjs(board.endDate).format('DD/MM/YYYY')} for {board.name}.
         </Alert>
       )}
+
+      <Card variant="outlined" sx={{ p: 1.5, mb: 2, borderRadius: 1.5 }}>
+        <FormControlLabel
+          sx={{ m: 0, alignItems: 'flex-start' }}
+          control={
+            <Switch
+              size="small"
+              checked={formik.values.invoiceCreationEnabled}
+              onChange={(event) => {
+                const enabled = event.target.checked;
+                formik.setValues({
+                  ...formik.values,
+                  invoiceCreationEnabled: enabled,
+                  installments: formik.values.installments.map((installment) => ({
+                    ...installment,
+                    demandEnabled: enabled,
+                  })),
+                });
+              }}
+            />
+          }
+          label={
+            <Box>
+              <Typography variant="body2" fontWeight={600}>
+                Create invoices for all installments
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                One setting controls invoice creation for the complete payment schedule.
+              </Typography>
+            </Box>
+          }
+        />
+      </Card>
 
       {/* Array-level error */}
       {formik.touched.installments && typeof formik.errors.installments === 'string' && (
@@ -184,11 +227,11 @@ export function InstallmentSection({
                   />
                 </Grid>
 
-                {/* Coverage Period */}
+                {/* Installment start and end dates */}
                 <Grid size={{ xs: 10, sm: 6 }}>
                   <CustomDateRangePicker
-                    label="Coverage Period *"
-                    title="Select Coverage Period"
+                    label="Installment Start–End Date *"
+                    title="Select Installment Start–End Date"
                     value={[parseDateOnly(inst.startDate), parseDateOnly(inst.endDate)]}
                     dateFormat="DD/MM/YYYY"
                     minDate={parseDateOnly(board?.startDate) ?? undefined}
@@ -221,36 +264,11 @@ export function InstallmentSection({
                   </Tooltip>
                 </Grid>
 
-                {/* Invoice generation */}
-                <Grid size={{ xs: 12, sm: inst.demandEnabled ? 3 : 4 }}>
-                  <FormControlLabel
-                    sx={{
-                      m: 0,
-                      minHeight: 40,
-                      width: '100%',
-                      border: '1px solid',
-                      borderColor: 'divider',
-                      borderRadius: 1,
-                      px: 1,
-                    }}
-                    control={
-                      <Switch
-                        size="small"
-                        checked={inst.demandEnabled}
-                        onChange={(event) =>
-                          formik.setFieldValue(`${prefix}.demandEnabled`, event.target.checked)
-                        }
-                      />
-                    }
-                    label="Send invoice for payment"
-                  />
-                </Grid>
-
-                {/* Scheduled bill date: entered only for the specific-date rule. */}
-                {inst.demandEnabled && (
-                  <Grid size={{ xs: 12, sm: 3 }}>
+                {/* Invoice date: entered only for the specific-date rule. */}
+                {formik.values.invoiceCreationEnabled && (
+                  <Grid size={{ xs: 12, sm: 4 }}>
                     <DatePicker
-                      label={usesSpecificDate ? 'Scheduled Bill Date *' : 'Scheduled Bill Date'}
+                      label={usesSpecificDate ? 'Invoice Date *' : 'Invoice Date'}
                       format="DD/MM/YYYY"
                       value={getBillGenerationDate(inst)}
                       onChange={(date) =>
@@ -265,7 +283,7 @@ export function InstallmentSection({
                           helperText:
                             errObj?.demandDate ||
                             (!usesSpecificDate
-                              ? 'Calculated from the bill generation rule'
+                              ? 'Calculated from the invoice date rule'
                               : undefined),
                         },
                       }}
@@ -274,7 +292,7 @@ export function InstallmentSection({
                 )}
 
                 {/* Due Date */}
-                <Grid size={{ xs: 12, sm: inst.demandEnabled ? 3 : 4 }}>
+                <Grid size={{ xs: 12, sm: formik.values.invoiceCreationEnabled ? 4 : 6 }}>
                   <DatePicker
                     label="Payment Due Date *"
                     format="DD/MM/YYYY"
@@ -296,7 +314,7 @@ export function InstallmentSection({
                 </Grid>
 
                 {/* Allocation % */}
-                <Grid size={{ xs: 12, sm: inst.demandEnabled ? 3 : 4 }}>
+                <Grid size={{ xs: 12, sm: formik.values.invoiceCreationEnabled ? 4 : 6 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -317,6 +335,24 @@ export function InstallmentSection({
         })}
       </Stack>
 
+      <InstallmentTemplateDialog
+        open={templateDialogOpen}
+        boardId={formik.values.boardId}
+        existingInstallmentCount={formik.values.installments.length}
+        demandGenerationRule={formik.values.demandGenerationRule}
+        demandOffsetDays={formik.values.demandOffsetDays}
+        onClose={() => setTemplateDialogOpen(false)}
+        onApply={(installments) => {
+          formik.setFieldValue(
+            'installments',
+            installments.map((installment) => ({
+              ...installment,
+              demandEnabled: formik.values.invoiceCreationEnabled,
+            }))
+          );
+          formik.setFieldTouched('installments', true, false);
+        }}
+      />
     </SectionCard>
   );
 }

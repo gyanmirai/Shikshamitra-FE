@@ -11,6 +11,11 @@ export const getInitialPaymentTermData = (
   description: editData?.description || '',
   status: editData?.status || 'Draft',
   academicYearId: editData?.academicYearId || currentAcademicYearId || '',
+  invoiceCreationEnabled:
+    editData?.invoiceCreationEnabled ??
+    (editData?.installments?.length
+      ? editData.installments.every((installment) => installment.demandEnabled !== false)
+      : true),
   installments: (editData?.installments || []).map((inst) => ({
     ...inst,
     startDate: inst.startDate || null,

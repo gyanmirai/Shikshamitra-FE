@@ -47,9 +47,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
         borderColor: 'divider',
         overflow: 'hidden',
         bgcolor: (theme) =>
-          theme.palette.mode === 'dark'
-            ? theme.palette.background.neutral
-            : theme.palette.grey[50],
+          theme.palette.mode === 'dark' ? theme.palette.background.neutral : theme.palette.grey[50],
       }}
     >
       <Scrollbar sx={{ flex: 1 }}>
@@ -144,7 +142,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
               }
             />
             <SummaryRow
-              label="Bill Generation"
+              label="Invoice Date Rule"
               value={
                 <Typography
                   variant="caption"
@@ -153,6 +151,18 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
                 >
                   {demandLabel}
                 </Typography>
+              }
+            />
+            <SummaryRow
+              label="Invoice Creation"
+              value={
+                <Chip
+                  label={values.invoiceCreationEnabled ? 'Enabled' : 'Disabled'}
+                  size="small"
+                  color={values.invoiceCreationEnabled ? 'success' : 'default'}
+                  variant="outlined"
+                  sx={{ height: 18, fontSize: '0.6rem' }}
+                />
               }
             />
           </Stack>
@@ -233,7 +243,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
               valid={checks.periodsWithinBoard}
             />
             <ValidationCheck label="Due dates in ascending order" valid={checks.datesSequential} />
-            <ValidationCheck label="Demand rule selected" valid={checks.demandSet} />
+            <ValidationCheck label="Invoice date rule selected" valid={checks.demandSet} />
             {values.demandGenerationRule === 'XDaysBeforeDue' && (
               <ValidationCheck
                 label="Offset days configured (≥1)"
@@ -241,10 +251,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
               />
             )}
             {values.demandGenerationRule === 'SpecificDate' && (
-              <ValidationCheck
-                label="Scheduled bill dates configured for enabled invoices"
-                valid={checks.specificDatesValid}
-              />
+              <ValidationCheck label="Invoice dates configured" valid={checks.specificDatesValid} />
             )}
           </Stack>
 
