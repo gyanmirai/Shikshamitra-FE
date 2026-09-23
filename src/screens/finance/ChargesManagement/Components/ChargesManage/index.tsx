@@ -129,6 +129,32 @@ const ChargesManagement = () => {
     }
   };
 
+  const openApprovalReview = (data: IChargeData, mode: 'Approve' | 'Reject') => {
+    const chargeId = data.chargeId || data.id;
+    const permitted =
+      mode === 'Approve'
+        ? permissions.canApprove && data.availableActions?.includes('Approve')
+        : permissions.canReject && data.availableActions?.includes('Reject');
+
+    if (!permitted) {
+      shikshaMitraToast.error({
+        message: `You are not allowed to ${mode.toLowerCase()} this charge.`,
+      });
+      return;
+    }
+
+    if (!chargeId) {
+      shikshaMitraToast.error({
+        message: 'The charge could not be opened. Refresh the list and try again.',
+      });
+      return;
+    }
+
+    setSelectedChargeData({ ...data, chargeId });
+    setSelectedMode(mode);
+    approvalReviewDialog.onTrue();
+  };
+
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {viewChargeDetailsDialog.value ? (
@@ -270,14 +296,10 @@ const ChargesManagement = () => {
               addChargeDialog.onTrue();
             }}
             onApprove={(data) => {
-              approvalReviewDialog.onTrue();
-              setSelectedMode('Approve');
-              setSelectedChargeData(data);
+              openApprovalReview(data, 'Approve');
             }}
             onReject={(data) => {
-              approvalReviewDialog.onTrue();
-              setSelectedMode('Reject');
-              setSelectedChargeData(data);
+              openApprovalReview(data, 'Reject');
             }}
             onVoid={(data) => {
               setSelectedChargeData(data);

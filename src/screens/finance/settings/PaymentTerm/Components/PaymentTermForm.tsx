@@ -25,12 +25,9 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
     demandLabel,
     isSubmitting,
     isLoadingDetail,
-    codeManuallyEdited,
-    setCodeManuallyEdited,
     handleSubmit,
     addInstallment,
     removeInstallment,
-    duplicateInstallment,
   } = usePaymentTermForm(editData, onClose);
 
   const requestClose = () => {
@@ -91,23 +88,14 @@ export default function PaymentTermForm({ open: _open, onClose, editData }: IPay
               <Alert severity="info" variant="outlined" sx={{ mb: 2.5 }}>
                 Choose <strong>Draft</strong> to keep the schedule editable, or{' '}
                 <strong>Active</strong> to publish it. If this is selected as default, the previous
-                default for the same board is replaced automatically.
+                default for the selected board is replaced automatically.
               </Alert>
-              <GeneralInfoSection
-                formik={formik}
-                boards={boards}
-                codeManuallyEdited={codeManuallyEdited}
-                setCodeManuallyEdited={setCodeManuallyEdited}
-                isDefaultSelectionLocked={Boolean(
-                  formik.values.id && formik.initialValues.isDefaultTerm
-                )}
-              />
+              <GeneralInfoSection formik={formik} boards={boards} />
               <InstallmentSection
                 formik={formik}
                 board={boards.find((board) => board.id === formik.values.boardId)}
                 onAdd={addInstallment}
                 onRemove={removeInstallment}
-                onDuplicate={duplicateInstallment}
               />
               <BillingScheduleSection formik={formik} />
             </Box>

@@ -3,7 +3,7 @@ module: finance
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-09-21
+updated_on: 2026-09-23
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -25,6 +25,7 @@ Use this table for visible Finance navigation.
 | Audit Trail          | `/finance/audit-trail`                      | `src/constants/finance-menu.ts` |
 | Collections          | `/finance/fee-collection`                   | `src/constants/finance-menu.ts` |
 | Charges              | `/finance/charge-management`                | `src/constants/finance-menu.ts` |
+| Waivers              | `/finance/waiver-management`                | `src/constants/finance-menu.ts` |
 | Refunds              | `/finance/fee-refund`                       | `src/constants/finance-menu.ts` |
 | Receipts             | `/finance/invoice-receipt`                  | `src/constants/finance-menu.ts` |
 | Concessions          | `/finance/concession`                       | `src/constants/finance-menu.ts` |
@@ -45,6 +46,9 @@ Use this table for visible Finance navigation.
 | Reports              | `/finance/reports`                          | `src/constants/finance-menu.ts` |
 | Notifications        | `/finance/finance-notification`             | `src/constants/finance-menu.ts` |
 
+The Waivers row reflects the current source only.
+The approved target removes that menu item and `/finance/waiver-management` route without adding a replacement; waiver application moves into Fee Collection as documented in [Fee Collection waiver end to end](../../../Shikshamitra-BE/docs/modules/finance/references/fee-collection-waiver-end-to-end.md).
+
 ## Nested charge routes
 
 Charge Management has nested pages under the active menu route.
@@ -52,8 +56,8 @@ Charge Management has nested pages under the active menu route.
 | Surface | Route | Source | Current status |
 |---|---|---|---|
 | Charge workspace | `/finance/charge-management` | `src/app/(auth-route)/finance/charge-management/page.tsx` | Active menu destination |
-| Charge requests | `/finance/charge-management/chargesRequest` | `src/app/(auth-route)/finance/charge-management/chargesRequest/page.tsx` | Duplicate rendering of the active workspace; consolidate or redirect |
-| Charge list | `/finance/charge-management/chargesList` | `src/app/(auth-route)/finance/charge-management/chargesList/page.tsx` | Orphan/partial student history; its Remove action is not backed by an API |
+| Charge requests (legacy) | `/finance/charge-management/chargesRequest` | `src/app/(auth-route)/finance/charge-management/chargesRequest/page.tsx` | Redirects to `/finance/charge-management` for bookmark compatibility |
+| Charge list (legacy) | `/finance/charge-management/chargesList` | `src/app/(auth-route)/finance/charge-management/chargesList/page.tsx` | Redirects to `/finance/charge-management`; the legacy screen is not user-accessible |
 
 The supported current and target route flow is documented in [Charge Management frontend flow](./references/charge-management-frontend-flow.md).
 

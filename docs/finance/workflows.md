@@ -42,6 +42,20 @@ Fee collection and receipt flows span Finance and shared fee client folders.
 | Invoice and receipt | `src/app/(auth-route)/finance/invoice-receipt/**` and `src/redux/invoiceAndReceipt/**` |
 | Receipt rendering   | `src/screens/finance/viewReceipt/**`                                                   |
 
+### Direct late-fee and charge waiver
+
+The current screen supports a late-fee request and approval lifecycle only.
+The approved target removes the Waiver tab, request queue, and approval/rejection flow.
+
+1. Each effective late-fee rule captures its own `Allow waiver` toggle.
+2. Each Charge Management charge captures its own `Allow waiver` toggle.
+3. Fee Collection shows `Waive` only for a positive eligible balance and authorized user.
+4. The collector enters only amount and reason.
+5. Confirmation immediately applies the non-cash reduction and refreshes collection totals.
+6. There is no global setting, pending request, approver action, or `/finance/waiver-management` route.
+
+See the [approved Fee Collection waiver target](../../../Shikshamitra-BE/docs/modules/finance/references/fee-collection-waiver-end-to-end.md).
+
 ## Trace concession and adjustment changes
 
 Concession and adjustment workflows should preserve approval and audit behavior.
@@ -85,7 +99,7 @@ Use `src/constants/finance-menu.ts` to confirm active visibility before changing
 3. Every installment period and due date must be inside the selected board's own start/end dates, which may be narrower than the academic year. Dates are entered as `DD/MM/YYYY`.
 4. Fee Structure lists published and superseded versions of active terms and stores the explicitly selected version ID. Existing pins never upgrade automatically; see [the active workspace flow](./references/fee-structure-workspace.md).
 5. Student fee assignment creates immutable DueFee schedule snapshots for the full year.
-6. Only one Payment Term may be selected as the default for a board in an academic year. The flag may be set while the term is a draft, but the term remains unavailable to Fee Structures until activation. Selecting a new default clears the previous default in the same transaction, and a filtered unique database index enforces the invariant.
+6. Only one Active Payment Term may be selected as the default for each Education Board in an academic year. Draft and Archived terms cannot be defaults. Selecting a new Active default clears the previous default for the same board in the same transaction, while other boards retain their defaults. A filtered unique database index enforces the invariant, and the workspace board selector scopes the list to one board.
 7. The list separates current and archived records and presents one user-facing status: `Draft`, `Active`, or `Archived`. Internal version lifecycle states remain available in version history and assignment checks.
 8. Activation is a one-way Draft-to-Published version action in the current API and is exposed through row actions, not a Status-column toggle. Archive and restore are separate master-record transitions; archiving requires a reason and is blocked while fee structures reference the term. Restoring preserves the version state and returns the term to Current as Draft or Active.
 9. Version History opens in the details drawer as a simple audit table showing version/status, action, creation date and user, and change reason. Its paged data is loaded only when the history tab opens.

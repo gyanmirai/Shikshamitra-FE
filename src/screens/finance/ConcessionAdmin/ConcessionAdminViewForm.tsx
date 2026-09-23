@@ -488,6 +488,7 @@ const AdminDocumentDialog: React.FC<IAdminDocumentDialogProps> = ({
 
 interface IConcessionCardProps {
   item: IConcessionRequestItem;
+  onEdit: (item: IConcessionRequestItem) => void;
   onApprove: (item: IConcessionRequestItem) => void;
   onReject: (item: IConcessionRequestItem) => void;
   onCancel: (item: IConcessionRequestItem) => void;
@@ -497,6 +498,7 @@ interface IConcessionCardProps {
 
 const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   item,
+  onEdit,
   onApprove,
   onReject,
   onCancel,
@@ -508,6 +510,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   const actions = financePermissions.fees.concessionActions;
   const canApprove = hasGrantedPermission(permissions, actions.approve);
   const canReject = hasGrantedPermission(permissions, actions.reject);
+  const canEdit = hasGrantedPermission(permissions, actions.edit);
   const canReverse = hasGrantedPermission(permissions, actions.reverse);
   const canDelete = hasGrantedPermission(permissions, actions.delete);
   const canViewDocuments = hasGrantedPermission(permissions, actions.viewDocument);
@@ -518,8 +521,14 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   const isPartiallyReversed = item.status === ConcessionStatusType.PartiallyReversed;
   const isRejected = item.status === ConcessionStatusType.Rejected;
   const isCancelled = item.status === ConcessionStatusType.Cancelled;
-  const statusLabel = ConcessionStatusType[item.status] as keyof typeof ConcessionStatusType;
-  const statusColor = ConcessionStatusTypeColors[item.status as ConcessionStatusType] as LabelColor;
+  const isDraft = item.status === ConcessionStatusType.Draft;
+  const isPending = isDraft || item.status === ConcessionStatusType.Pending;
+  const statusLabel = isPending
+    ? 'Pending'
+    : (ConcessionStatusType[item.status] as keyof typeof ConcessionStatusType);
+  const statusColor = isPending
+    ? ConcessionStatusTypeColors[ConcessionStatusType.Pending]
+    : (ConcessionStatusTypeColors[item.status as ConcessionStatusType] as LabelColor);
 
   // Use requiredDocuments if available, otherwise fall back to submittedDocuments
   const requiredDocs = item.requiredDocuments || [];
@@ -533,7 +542,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   const displayDocs = hasRequiredDocs ? uploadedDocs : (item.submittedDocuments || []).slice(0, 1);
 
   // Approve should be disabled if any required document is not uploaded
-  const approveDisabled = item.status !== ConcessionStatusType.Pending || !allMandatoryDocsUploaded;
+  const approveDisabled = !isPending || !allMandatoryDocsUploaded;
 
   return (
     <Card
@@ -584,7 +593,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
               {formatNumber(item.totalRequestedAmount ?? item.totalAmount, 'INR')}
             </Typography>
           </Box>
-          {item.status !== ConcessionStatusType.Pending && (
+          {!isPending && (
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography variant="body2" fontWeight={700}>
                 {item.totalReversedAmount > 0 ? 'Net approved' : 'Approved'}
@@ -806,6 +815,18 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           alignItems: 'flex-start',
         }}
       >
+        {canEdit && isDraft && serverAllows('edit') && (
+          <LoadingButton
+            fullWidth
+            size="small"
+            variant="outlined"
+            color="primary"
+            startIcon={<Iconify icon="solar:pen-bold" width={16} />}
+            onClick={() => onEdit(item)}
+          >
+            Edit
+          </LoadingButton>
+        )}
         {/* Approve button with tooltip when docs are missing */}
         {canApprove && serverAllows('approve') && (
           <Tooltip
@@ -839,7 +860,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
             size="small"
             variant="soft"
             color="error"
-            disabled={item.status !== ConcessionStatusType.Pending}
+            disabled={!isPending}
             startIcon={<Cancel fontSize="small" />}
             onClick={() => onReject(item)}
           >
@@ -876,7 +897,11 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student, onClose }) => {
+const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
+  student,
+  onEdit,
+  onClose,
+}) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -1135,6 +1160,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({ student,
               <Grid key={item.studentConcessionTypeRequestId} size={{ xs: 12, sm: 6, md: 4 }}>
                 <ConcessionItemCard
                   item={item}
+                  onEdit={() => onEdit?.()}
                   onApprove={handleApproveClick}
                   onReject={handleRejectClick}
                   onCancel={handleCancelClick}

@@ -20,7 +20,6 @@ export type ImpactPolicyData = Partial<
     | 'enableLateFee'
     | 'enableWaiver'
     | 'lateFeeApplyOnFeeHeads'
-    | 'waiverApplyOnFeeHeads'
   > &
     Pick<IProrationPolicy, 'feeHeadRules'> &
     Pick<IRefundPolicy, 'feeHeadScope' | 'applicableFeeHeadIds'>
@@ -62,8 +61,7 @@ export function policyImpactRows(
     family === 'collection' &&
     (typeof policy.enableLateFee !== 'boolean' ||
       typeof policy.enableWaiver !== 'boolean' ||
-      !Array.isArray(policy.lateFeeApplyOnFeeHeads) ||
-      !Array.isArray(policy.waiverApplyOnFeeHeads))
+      !Array.isArray(policy.lateFeeApplyOnFeeHeads))
   )
     return undefined;
   if (
@@ -91,7 +89,7 @@ export function policyImpactRows(
         const late =
           policy.enableLateFee && policy.lateFeeApplyOnFeeHeads?.includes(line.feeHeadId);
         const waiver =
-          policy.enableWaiver && policy.waiverApplyOnFeeHeads?.includes(line.feeHeadId);
+          policy.enableWaiver && policy.lateFeeApplyOnFeeHeads?.includes(line.feeHeadId);
         treatment = `${late ? 'Late fee applies' : 'No late fee'}${waiver ? '; waiver eligible' : ''}`;
         break;
       }

@@ -53,6 +53,11 @@ export interface IConcessionTypeForm {
 }
 
 export interface IConcessionTableProps {
+  archived: boolean;
+  canView: boolean;
+  canEdit: boolean;
+  canChangeStatus: boolean;
+  canDelete: boolean;
   data: IConcessionTypeForm[];
   isLoading: boolean;
   addConcessionType: UseBooleanReturn;

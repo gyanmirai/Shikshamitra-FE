@@ -277,7 +277,7 @@ Retain the existing policy workspace pattern, but keep the staff editor to two s
 | Section | Visible fields |
 |---|---|
 | General Information | Name, optional description, and Draft or Active status. Status uses the same labelled dropdown and single status-aware submit action as Collection Policy. |
-| What Can Be Refunded? | Payment requirement, all or selected fee heads, optional request deadline, partial-refund choice, paid charges, and paid late fees. |
+| What Can Be Refunded? | All or selected fee heads, partial-refund choice, paid charges, and paid late fees. |
 
 Do not show Archived as an editable status.
 Archive and Unarchive are confirmed row actions.
@@ -297,11 +297,9 @@ The frontend renders only controls that have the following explicit source and e
 | Description | Refund Policy | Optional bounded setup guidance. |
 | Status | Refund Policy | Draft or Active only; changing Active to Draft shows impact and may be blocked when attached. |
 | Version and Concurrency Stamp | Server response | Read-only; the stamp is sent on edits and status actions. |
-| Eligible Payment State | Refund Policy, evaluated by Collections | Fully Paid Only or Partially/Fully Paid; explanatory copy makes clear that only settled money is eligible. |
 | Fee Head Scope and Fee Heads | Active same-year Finance Fee Heads | All Refundable or Selected; selected values show attachment coverage and backend errors. |
 | Include Paid Charges | Refund Policy plus paid Charge allocations | Boolean with an explanation that unpaid charges remain excluded. |
 | Include Paid Late Fee | Refund Policy plus paid late-fee allocations | Boolean; do not call it clawback. |
-| Request Deadline Days and Basis | Refund Policy | Eligibility window; keep separate from the processing SLA. |
 | Allow Partial Request | Refund Policy | Controls whether request amount entry is offered; disabled or forced when incompatible with Amount Mode. |
 | Refund Amount | Refund transaction | Staff enter the requested amount while processing a refund; the backend caps it at the eligible settled balance. It is not configured in the policy editor. |
 | Calculation, Caps, Rounding, and Deduction | Backend compatibility profile | Hidden from the standard staff editor. New policies use Manual Up to Eligible, no extra cap, exact decimals, and no automatic deduction. Existing advanced values remain intact when an older policy is edited. |

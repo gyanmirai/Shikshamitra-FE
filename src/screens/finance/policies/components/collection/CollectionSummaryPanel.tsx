@@ -25,7 +25,6 @@ interface CollectionSummaryPanelProps {
     graceTypeValid: boolean;
     headsValid: boolean;
     lateFeeValid: boolean;
-    waiverHeadsValid: boolean;
     waiverApprovalValid: boolean;
     incomeHeadValid: boolean;
     slabValid: boolean;
@@ -153,13 +152,24 @@ export default function CollectionSummaryPanel({
               }
             />
             <SummaryRow
-              label="Waivers"
+              label="Late-fee waiver"
               value={
                 <Label
                   color={formik.values.enableWaiver ? 'info' : 'default'}
                   sx={{ height: 18, fontSize: '0.65rem' }}
                 >
                   {formik.values.enableWaiver ? 'Enabled' : 'Disabled'}
+                </Label>
+              }
+            />
+            <SummaryRow
+              label="Charge waiver"
+              value={
+                <Label
+                  color={formik.values.enableChargeWaiver ? 'info' : 'default'}
+                  sx={{ height: 18, fontSize: '0.65rem' }}
+                >
+                  {formik.values.enableChargeWaiver ? 'Enabled' : 'Disabled'}
                 </Label>
               }
             />
@@ -346,7 +356,6 @@ export default function CollectionSummaryPanel({
             <ValidationCheck label="Late fee heads selected" valid={checks.headsValid} />
             <ValidationCheck label="Late fee formula configured" valid={checks.lateFeeValid} />
             <ValidationCheck label="Escalation slabs valid (no gaps/overlaps)" valid={checks.slabValid} />
-            <ValidationCheck label="Waiver fee heads selected" valid={checks.waiverHeadsValid} />
             <ValidationCheck label="Waiver approvers configured" valid={checks.waiverApprovalValid} />
             <ValidationCheck label="Income ledger head selected" valid={checks.incomeHeadValid} />
             <ValidationCheck

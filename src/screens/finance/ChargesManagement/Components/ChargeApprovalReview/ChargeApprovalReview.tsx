@@ -12,6 +12,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
 import {
+  Alert,
   Box,
   Grid,
   Chip,
@@ -54,7 +55,12 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
   const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false);
 
   // Fetch charge details
-  const { data: chargeData, isLoading: chargeLoading } = useQueryAndMutation({
+  const {
+    data: chargeData,
+    isLoading: chargeLoading,
+    isError: chargeError,
+    refetch: refetchCharge,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetChargeByIdQuery,
     params: { id: chargeId },
@@ -222,6 +228,44 @@ const ChargeApprovalReview: React.FC<IChargeApprovalReviewProps> = ({
         <Skeleton variant="rectangular" height={200} sx={{ mb: 2, borderRadius: 1 }} />
         <Skeleton variant="rectangular" height={200} sx={{ mb: 2, borderRadius: 1 }} />
         <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 1 }} />
+      </Box>
+    );
+  }
+
+  if (chargeError || !chargeData) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" size="small" onClick={() => refetchCharge()}>
+              Retry
+            </Button>
+          }
+        >
+          Charge details could not be loaded. Refresh the data or return to the charge list.
+        </Alert>
+        <Button onClick={onClose} variant="outlined" size="small" sx={{ mt: 2 }}>
+          Back to charges
+        </Button>
+      </Box>
+    );
+  }
+
+  const requiredAction = isRejectMode ? 'Reject' : 'Approve';
+  const hasActionPermission = isRejectMode ? permissions.canReject : permissions.canApprove;
+  const isActionAvailable =
+    hasActionPermission && chargeData.availableActions?.includes(requiredAction);
+
+  if (!isActionAvailable) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Alert severity="warning">
+          This charge is not available for {requiredAction.toLowerCase()} by the current user.
+        </Alert>
+        <Button onClick={onClose} variant="outlined" size="small" sx={{ mt: 2 }}>
+          Back to charges
+        </Button>
       </Box>
     );
   }

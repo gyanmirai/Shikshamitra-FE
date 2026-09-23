@@ -42,12 +42,10 @@ export const emptyValues = (academicYearId: string): IRefundPolicyFormValues => 
   description: '',
   status: 'Draft',
   isDefault: false,
-  eligiblePaymentState: 'PartialAndFullPayment',
   feeHeadScope: 'AllFeeHeads',
   applicableFeeHeadIds: [],
   includePaidCharges: false,
   includePaidLateFee: false,
-  requestDeadlineDays: null,
   allowPartialRefund: true,
   amountMode: 'ManualUpToEligible',
   percentageValue: null,
@@ -245,13 +243,11 @@ export function useRefundPolicyForm({
         description: values.description?.trim() || '',
         status: values.status,
         isDefault: values.status === 'Active' ? Boolean(values.isDefault) : false,
-        eligiblePaymentState: values.eligiblePaymentState,
         feeHeadScope: values.feeHeadScope,
         applicableFeeHeadIds:
           values.feeHeadScope === 'SelectedFeeHeads' ? values.applicableFeeHeadIds : [],
         includePaidCharges: values.includePaidCharges,
         includePaidLateFee: values.includePaidLateFee,
-        requestDeadlineDays: values.requestDeadlineDays,
         allowPartialRefund: values.allowPartialRefund,
         amountMode: values.amountMode,
         percentageValue: values.amountMode === 'Percentage' ? values.percentageValue : null,
@@ -447,7 +443,6 @@ export function useRefundPolicyForm({
       !errors.status;
 
     const eligibilityValid =
-      !errors.eligiblePaymentState &&
       !errors.feeHeadScope &&
       (values.feeHeadScope === 'AllFeeHeads' || (values.applicableFeeHeadIds?.length ?? 0) > 0);
 

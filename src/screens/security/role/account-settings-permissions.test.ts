@@ -91,6 +91,20 @@ it('does not invent actions missing from the permission catalog', () => {
   expect(getNodePermissionActions('Finance.Settings.FeeCategory', [])).toEqual([]);
 });
 
+it('exposes every server-defined generic action, including disabled grants', () => {
+  const base = 'Finance.Fees.Concession';
+  const actions = ['View', 'Add', 'Edit', 'Submit', 'UploadDocument', 'Approve', 'Reject', 'Reverse'];
+  const catalog = actions.map((action) => ({
+    name: `${base}.${action}`,
+    isGranted: ['View', 'Add', 'Approve', 'Reject'].includes(action),
+  }));
+
+  expect(getNodePermissionActions(`${base}.View`, catalog)).toEqual(actions);
+  expect(getNodeActionPermissionNames({ permissionName: `${base}.View` }, catalog)).toEqual(
+    actions.map((action) => `${base}.${action}`)
+  );
+});
+
 it('groups specialized Student Admissions actions behind View, Add, and Delete', () => {
   const base = 'Students.Admissions.Inquiries';
   const actions = ['View', 'Add', 'Delete', 'Manage', 'Create', 'Edit', 'Assign'];

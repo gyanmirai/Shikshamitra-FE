@@ -2,22 +2,18 @@
 
 import type { FormikProps } from 'formik';
 
-import { Iconify } from 'src/components/iconify';
 import {
   Box,
   Card,
   Grid,
   Select,
   Switch,
-  Tooltip,
   MenuItem,
   TextField,
   InputLabel,
   Typography,
-  IconButton,
   FormControl,
   FormHelperText,
-  InputAdornment,
   FormControlLabel,
 } from '@mui/material';
 
@@ -32,21 +28,14 @@ import type { IBoard } from '../../hooks/usePaymentTermForm';
 interface GeneralInfoSectionProps {
   formik: FormikProps<IPaymentTerm>;
   boards: IBoard[];
-  codeManuallyEdited: boolean;
-  setCodeManuallyEdited: (v: boolean) => void;
-  isDefaultSelectionLocked?: boolean;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function GeneralInfoSection({
-  formik,
-  boards,
-  codeManuallyEdited,
-  setCodeManuallyEdited,
-  isDefaultSelectionLocked = false,
-}: GeneralInfoSectionProps) {
+export function GeneralInfoSection({ formik, boards }: GeneralInfoSectionProps) {
+  const defaultSelectionDisabled = formik.values.status !== 'Active';
+
   return (
     <SectionCard
       title="General Information"
@@ -89,14 +78,18 @@ export function GeneralInfoSection({
             size="small"
             error={formik.touched.status && Boolean(formik.errors.status)}
           >
-            <InputLabel>Status *</InputLabel>
+            <InputLabel id="payment-term-status-label">Status *</InputLabel>
             <Select
+              labelId="payment-term-status-label"
               label="Status *"
               name="status"
               value={formik.values.status === 'Archived' ? 'Draft' : formik.values.status}
               onChange={(event) => {
                 const status = event.target.value as 'Draft' | 'Active';
                 formik.setFieldValue('status', status);
+                if (status !== 'Active') {
+                  formik.setFieldValue('isDefaultTerm', false);
+                }
               }}
               onBlur={formik.handleBlur}
             >
@@ -105,13 +98,6 @@ export function GeneralInfoSection({
             </Select>
             {formik.touched.status && formik.errors.status && (
               <FormHelperText>{formik.errors.status}</FormHelperText>
-            )}
-            {!formik.errors.status && (
-              <FormHelperText>
-                {formik.values.status === 'Active'
-                  ? 'Submitting publishes this version for fee-structure use.'
-                  : 'Drafts remain unavailable for new fee-structure assignments.'}
-              </FormHelperText>
             )}
           </FormControl>
         </Grid>
@@ -133,44 +119,6 @@ export function GeneralInfoSection({
               `${(formik.values.paymentTermName || '').length}/100`
             }
             inputProps={{ maxLength: 100 }}
-          />
-        </Grid>
-
-        {/* Code */}
-        <Grid size={{ xs: 12, sm: 5 }}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Payment Term Code"
-            name="paymentTermCode"
-            value={formik.values.paymentTermCode || ''}
-            onChange={(e) => {
-              setCodeManuallyEdited(true);
-              formik.setFieldValue(
-                'paymentTermCode',
-                e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '')
-              );
-            }}
-            error={formik.touched.paymentTermCode && Boolean(formik.errors.paymentTermCode)}
-            helperText={
-              formik.touched.paymentTermCode && formik.errors.paymentTermCode
-                ? formik.errors.paymentTermCode
-                : codeManuallyEdited
-                  ? 'Custom code set'
-                  : 'Auto-generated from name'
-            }
-            InputProps={{
-              endAdornment: codeManuallyEdited && (
-                <InputAdornment position="end">
-                  <Tooltip title="Reset to auto-generated" arrow>
-                    <IconButton size="small" onClick={() => setCodeManuallyEdited(false)}>
-                      <Iconify icon="mdi:refresh" width={14} />
-                    </IconButton>
-                  </Tooltip>
-                </InputAdornment>
-              ),
-              sx: { fontFamily: 'monospace', fontSize: '0.8rem', letterSpacing: '0.04em' },
-            }}
           />
         </Grid>
 
@@ -207,10 +155,10 @@ export function GeneralInfoSection({
               bgcolor: formik.values.isDefaultTerm ? 'primary.lighter' : 'transparent',
               borderColor: formik.values.isDefaultTerm ? 'primary.main' : 'divider',
               transition: 'all 0.2s ease',
-              cursor: isDefaultSelectionLocked ? 'not-allowed' : 'pointer',
+              cursor: defaultSelectionDisabled ? 'not-allowed' : 'pointer',
             }}
             onClick={() => {
-              if (!isDefaultSelectionLocked) {
+              if (!defaultSelectionDisabled) {
                 formik.setFieldValue('isDefaultTerm', !formik.values.isDefaultTerm);
               }
             }}
@@ -221,7 +169,7 @@ export function GeneralInfoSection({
                 <Switch
                   size="small"
                   checked={formik.values.isDefaultTerm}
-                  disabled={isDefaultSelectionLocked}
+                  disabled={defaultSelectionDisabled}
                   onChange={() => {}}
                 />
               }
@@ -236,9 +184,9 @@ export function GeneralInfoSection({
                     display="block"
                     fontSize="0.68rem"
                   >
-                    {isDefaultSelectionLocked
-                      ? 'This is the current board default. Select another payment term as default to replace it.'
-                      : 'Only one default is allowed per board. Selecting this replaces the previous default.'}
+                    {defaultSelectionDisabled
+                      ? 'Only an Active payment term can be the default.'
+                      : 'Only one default is allowed per board. Selecting this replaces that board’s previous default.'}
                   </Typography>
                 </Box>
               }

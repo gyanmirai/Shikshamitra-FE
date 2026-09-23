@@ -14,6 +14,7 @@ export interface IFeeCategoryFormHead {
 }
 
 export interface IFeeCategoryTableProps {
+  archived: boolean;
   onAddFeeCategory: any;
   editData: IFeeCategory | null;
   open: boolean;

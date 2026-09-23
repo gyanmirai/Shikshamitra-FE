@@ -77,12 +77,9 @@ export interface UsePaymentTermFormReturn {
   demandLabel: string;
   isSubmitting: boolean;
   isLoadingDetail: boolean;
-  codeManuallyEdited: boolean;
-  setCodeManuallyEdited: (v: boolean) => void;
   handleSubmit: () => Promise<void>;
   addInstallment: () => void;
   removeInstallment: (index: number) => void;
-  duplicateInstallment: (index: number) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -152,7 +149,9 @@ const mapUiInstallmentToApi = (
   coverageEndDate: toDateTimeOffsetString(inst.endDate),
   demandDate:
     demandGenerationRule === 'SpecificDate'
-      ? toDateTimeOffsetString(inst.demandDate)
+      ? toDateTimeOffsetString(
+          inst.demandEnabled ? inst.demandDate : inst.demandDate || inst.dueDate || inst.startDate
+        )
       : undefined,
   dueDate: toDateTimeOffsetString(inst.dueDate),
   allocationPercentage: Number(inst.allocationPercentage) || 0,
@@ -173,8 +172,6 @@ export function usePaymentTermForm(
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
-
   // ── Data queries ──────────────────────────────────────────────────────────
   const { data: boardData } = useGetBoardsQuery('');
 
@@ -239,14 +236,9 @@ export function usePaymentTermForm(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editData?.id, getPaymentTermDetail]);
 
-  // ── Reset manual-edit flag when switching create ↔ edit ──────────────────
-  useEffect(() => {
-    setCodeManuallyEdited(Boolean(editData?.paymentTermCode));
-  }, [editData]);
-
   // ── Auto-generate code from name ──────────────────────────────────────────
   useEffect(() => {
-    if (!codeManuallyEdited && formik.values.paymentTermName) {
+    if (!editData?.id && formik.values.paymentTermName) {
       const slug = formik.values.paymentTermName
         .toUpperCase()
         .replace(/\s+/g, '-')
@@ -256,7 +248,7 @@ export function usePaymentTermForm(
     }
     // formik.setFieldValue is stable; no suppression needed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.paymentTermName, codeManuallyEdited]);
+  }, [editData?.id, formik.values.paymentTermName]);
 
   // ── Build API payload ─────────────────────────────────────────────────────
   const buildDraftBody = useCallback(
@@ -264,7 +256,7 @@ export function usePaymentTermForm(
       name: values.paymentTermName,
       code: values.paymentTermCode,
       description: values.description || undefined,
-      isDefault: values.isDefaultTerm,
+      isDefault: values.status === 'Active' && values.isDefaultTerm,
       status: values.status === 'Active' ? 'Active' : 'Draft',
       holidayShiftingMethod: values.holidayShiftingMethod,
       demandGenerationRule: values.demandGenerationRule,
@@ -309,7 +301,7 @@ export function usePaymentTermForm(
         name: values.paymentTermName,
         code: values.paymentTermCode,
         description: values.description || undefined,
-        isDefault: values.isDefaultTerm,
+        isDefault: values.status === 'Active' && values.isDefaultTerm,
         status: values.status === 'Active' ? 'Active' : 'Draft',
         holidayShiftingMethod: values.holidayShiftingMethod,
         demandGenerationRule: values.demandGenerationRule,
@@ -356,7 +348,6 @@ export function usePaymentTermForm(
       formik.setTouched({
         boardId: true,
         paymentTermName: true,
-        paymentTermCode: true,
         status: true,
         demandGenerationRule: true,
         demandOffsetDays: true,
@@ -424,33 +415,6 @@ export function usePaymentTermForm(
         .filter((_, i) => i !== index)
         .map((inst, i) => ({ ...inst, sequence: i + 1 }));
       formik.setFieldValue('installments', updated);
-    },
-    [formik]
-  );
-
-  /**
-   * Memoization Justification:
-   * duplicateInstallment follows the same pattern as removeInstallment — passed
-   * as a prop to InstallmentCard components in a list, requiring reference
-   * stability to allow React.memo to be effective.
-   */
-  const duplicateInstallment = useCallback(
-    (index: number) => {
-      const src = formik.values.installments[index];
-      const seq = formik.values.installments.length + 1;
-      formik.setFieldValue('installments', [
-        ...formik.values.installments,
-        {
-          ...src,
-          id: undefined,
-          installmentName: `${src.installmentName} (Copy)`,
-          sequence: seq,
-          startDate: null,
-          endDate: null,
-          demandDate: null,
-          dueDate: null,
-        },
-      ]);
     },
     [formik]
   );
@@ -544,8 +508,9 @@ export function usePaymentTermForm(
       v.demandGenerationRule !== 'SpecificDate' ||
       v.installments.every(
         (item) =>
-          Boolean(item.demandDate && item.dueDate) &&
-          !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day')
+          item.demandEnabled === false ||
+          (Boolean(item.demandDate && item.dueDate) &&
+            !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day'))
       );
     const isReadyToPublish =
       boardValid &&
@@ -612,11 +577,8 @@ export function usePaymentTermForm(
     demandLabel,
     isSubmitting,
     isLoadingDetail,
-    codeManuallyEdited,
-    setCodeManuallyEdited,
     handleSubmit,
     addInstallment,
     removeInstallment,
-    duplicateInstallment,
   };
 }

@@ -218,7 +218,6 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
           <Stack spacing={0.4} mt={1}>
             <ValidationCheck label="Board selected" valid={checks.boardValid} />
             <ValidationCheck label="Term name (3+ characters)" valid={checks.nameValid} />
-            <ValidationCheck label="Valid payment term code" valid={checks.codeValid} />
             <ValidationCheck label="At least 1 installment" valid={checks.hasInstallments} />
             <ValidationCheck label="All installment names set" valid={checks.allNames} />
             <ValidationCheck label="All due dates configured" valid={checks.allDueDates} />
@@ -243,7 +242,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
             )}
             {values.demandGenerationRule === 'SpecificDate' && (
               <ValidationCheck
-                label="All bill generation dates configured"
+                label="Scheduled bill dates configured for enabled invoices"
                 valid={checks.specificDatesValid}
               />
             )}

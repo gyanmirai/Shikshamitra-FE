@@ -112,7 +112,7 @@ const ChargesList = () => {
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/charge-management' },
-          { name: 'Charges', href: '/finance/charge-management/chargesRequest' },
+          { name: 'Charges', href: '/finance/charge-management' },
           { name: 'Charges List' },
         ]}
       />

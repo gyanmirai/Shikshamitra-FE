@@ -42,7 +42,7 @@ export default function RefundEligibilitySection({
   feeHeads = [],
   isFeeHeadsLoading = false,
 }: RefundEligibilitySectionProps) {
-  const { values, errors, touched, setFieldValue, handleChange, handleBlur } = formik;
+  const { values, errors, touched, setFieldValue, handleBlur } = formik;
 
   const isFieldInvalid = (name: keyof IRefundPolicyFormValues) =>
     Boolean(touched[name] && errors[name]);
@@ -57,47 +57,8 @@ export default function RefundEligibilitySection({
       icon="solar:shield-check-bold-duotone"
     >
       <Grid container spacing={2}>
-        {/* Eligible Payment State */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <FormControl fullWidth size="small" error={isFieldInvalid('eligiblePaymentState')}>
-            <InputLabel id="eligible-payment-state-label">Payment Requirement</InputLabel>
-            <Select
-              labelId="eligible-payment-state-label"
-              label="Payment Requirement"
-              name="eligiblePaymentState"
-              value={values.eligiblePaymentState}
-              onChange={handleChange}
-              onBlur={handleBlur}
-            >
-              <MenuItem value="PartialAndFullPayment">
-                <Box>
-                  <Box component="span" sx={{ fontWeight: 600, display: 'block', fontSize: '0.8125rem' }}>
-                    Any Paid Amount
-                  </Box>
-                  <Box component="span" sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>
-                    Refund a settled partial or full payment
-                  </Box>
-                </Box>
-              </MenuItem>
-              <MenuItem value="FullyPaidOnly">
-                <Box>
-                  <Box component="span" sx={{ fontWeight: 600, display: 'block', fontSize: '0.8125rem' }}>
-                    Full Fee Payment Only
-                  </Box>
-                  <Box component="span" sx={{ fontSize: '0.72rem', color: 'text.secondary' }}>
-                    Refund allowed only when entire demand is cleared
-                  </Box>
-                </Box>
-              </MenuItem>
-            </Select>
-            {getHelperText('eligiblePaymentState') && (
-              <FormHelperText>{getHelperText('eligiblePaymentState')}</FormHelperText>
-            )}
-          </FormControl>
-        </Grid>
-
         {/* Fee Head Scope */}
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12 }}>
           <FormControl fullWidth size="small" error={isFieldInvalid('feeHeadScope')}>
             <InputLabel id="fee-head-scope-label">Refundable Fee Heads</InputLabel>
             <Select
@@ -120,36 +81,6 @@ export default function RefundEligibilitySection({
               <FormHelperText>{getHelperText('feeHeadScope')}</FormHelperText>
             )}
           </FormControl>
-        </Grid>
-
-        {/* Request Deadline Days */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <TextField
-            fullWidth
-            size="small"
-            type="number"
-            name="requestDeadlineDays"
-            label="Request Deadline (Days)"
-            placeholder="e.g. 30"
-            value={values.requestDeadlineDays ?? ''}
-            onChange={(e) =>
-              setFieldValue(
-                'requestDeadlineDays',
-                e.target.value === '' ? null : Number(e.target.value)
-              )
-            }
-            onBlur={handleBlur}
-            error={isFieldInvalid('requestDeadlineDays')}
-            helperText={
-              getHelperText('requestDeadlineDays') ||
-               'Number of days after payment when a refund may be requested. Leave blank for no deadline.'
-            }
-            slotProps={{
-              input: {
-                inputProps: { min: 0 },
-              },
-            }}
-          />
         </Grid>
 
         {/* Multi-Select Autocomplete when SelectedFeeHeads */}

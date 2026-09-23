@@ -25,8 +25,8 @@ Backend behavior, financial invariants, gaps, and the target lifecycle are canon
 | Surface | Current role | Source | Disposition |
 |---|---|---|---|
 | `/finance/charge-management` | Active menu destination; renders `ChargesManage` | `src/app/(auth-route)/finance/charge-management/page.tsx` | Keep as the one workspace |
-| `/finance/charge-management/chargesRequest` | Renders the same management screen | `.../chargesRequest/page.tsx` | Redirect or remove after preserving bookmarks |
-| `/finance/charge-management/chargesList` | Student charge history | `.../chargesList/page.tsx` | Integrate as a workspace/detail view before advertising it |
+| `/finance/charge-management/chargesRequest` | Legacy bookmark compatibility | `.../chargesRequest/page.tsx` | Redirects to `/finance/charge-management` |
+| `/finance/charge-management/chargesList` | Legacy bookmark compatibility | `.../chargesList/page.tsx` | Redirects to `/finance/charge-management` |
 | `ChargesManagement/index.tsx` | Older Fees/Approvals shell | `src/screens/finance/ChargesManagement/index.tsx` | Remove after confirming no imports |
 | `ChargeForm.tsx` | Older form | `src/screens/finance/ChargesManagement/Components/ChargesManage/Component/ChargeForm.tsx` | Remove after confirming no imports |
 | `UpdateChargeForm` | Active create/edit form | `src/screens/finance/ChargesManagement/Components/UpdateChargeForm/UpdateChargeForm.tsx` | Refactor onto typed context/preview contract |
@@ -43,7 +43,7 @@ The route layout and menu protect navigation with Charge View. Navigation access
 4. Approved lines are fetched by Fee Collection. The collector can include full or partial charge allocations with normal fee allocations.
 5. The backend issues a separate charge receipt and collection views can display the paid charge lines.
 
-This is a partial flow. Charge correction, void, waiver, refund, source drill-through, account classification, and a complete audit timeline are not available from Charge Management.
+This is a partial flow. Charge correction, void, the charge-level `Allow waiver` toggle, refund, source drill-through, account classification, and a complete audit timeline are not available from Charge Management.
 
 ## Confirmed frontend gaps
 

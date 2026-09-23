@@ -566,10 +566,16 @@ export default function FinancePolicyDetailsDrawer({
                       )}
                     </DetailSection>
 
-                    <DetailSection title="Waiver Rules & Controls" icon="solar:tag-price-bold">
+                    <DetailSection title="Waiver Rules" icon="solar:tag-price-bold">
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>
-                          <BooleanChip label="Waivers Allowed" value={policyDetails.enableWaiver} />
+                          <BooleanChip label="Late-fee waiver" value={policyDetails.enableWaiver} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                          <BooleanChip
+                            label="Created-charge waiver"
+                            value={policyDetails.enableChargeWaiver}
+                          />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
                           <BooleanChip
@@ -579,17 +585,7 @@ export default function FinancePolicyDetailsDrawer({
                         </Grid>
                         {policyDetails.requiresApproval && (
                           <>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                              <DetailField
-                                label="Approval Threshold"
-                                value={
-                                  policyDetails.approvalThresholdAmount != null
-                                    ? `Above ₹${policyDetails.approvalThresholdAmount}`
-                                    : 'All amounts require approval'
-                                }
-                              />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
+                            <Grid size={{ xs: 12 }}>
                               <Box sx={{ mb: 0.5 }}>
                                 <Typography
                                   variant="caption"
@@ -621,31 +617,11 @@ export default function FinancePolicyDetailsDrawer({
                             </Grid>
                           </>
                         )}
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <DetailField
-                            label="Maximum Waiver Amount Cap"
-                            value={
-                              policyDetails.maximumWaiverAmount != null
-                                ? `₹${policyDetails.maximumWaiverAmount}`
-                                : 'No monetary ceiling'
-                            }
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <DetailField
-                            label="Maximum Waiver Percentage"
-                            value={
-                              policyDetails.maximumWaiverPercentage != null
-                                ? `${policyDetails.maximumWaiverPercentage}%`
-                                : '100%'
-                            }
-                          />
-                        </Grid>
-                        {policyDetails.waiverExpiry && (
-                          <Grid size={{ xs: 12, sm: 6 }}>
+                        {policyDetails.enableWaiver && (
+                          <Grid size={{ xs: 12 }}>
                             <DetailField
-                              label="Waiver Policy Expiry"
-                              value={dayjs(policyDetails.waiverExpiry).format('DD-MM-YYYY')}
+                              label="Late-fee eligibility"
+                              value="Uses the fee heads configured in Late Fee Rules"
                             />
                           </Grid>
                         )}
@@ -872,36 +848,11 @@ export default function FinancePolicyDetailsDrawer({
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>
                           <DetailField
-                            label="Eligible Payment State"
-                            value={
-                              policyDetails.eligiblePaymentState === 'FullyPaidOnly'
-                                ? 'Fully Paid Only'
-                                : 'Partial & Full Payments'
-                            }
-                            secondary={
-                              policyDetails.eligiblePaymentState === 'FullyPaidOnly'
-                                ? 'Student demand must be 100% settled'
-                                : 'Any settled receipt is eligible'
-                            }
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <DetailField
                             label="Fee Head Scope"
                             value={
                               policyDetails.feeHeadScope === 'AllFeeHeads'
                                 ? 'All Fee Heads Included'
                                 : `${(policyDetails.applicableFeeHeadIds ?? []).length} Selected Fee Heads`
-                            }
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <DetailField
-                            label="Request Deadline Window"
-                            value={
-                              policyDetails.requestDeadlineDays != null
-                                ? `${policyDetails.requestDeadlineDays} days from settlement`
-                                : 'No deadline (Open window)'
                             }
                           />
                         </Grid>

@@ -215,6 +215,11 @@ const Concession = () => {
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <ViewConcessionRequest
             student={selectedConcessionForView}
+            onEdit={() => {
+              setSelectedConcession(selectedConcessionForView);
+              viewConcessionRequest.onFalse();
+              addConcessionRequest.onTrue();
+            }}
             onClose={() => {
               viewConcessionRequest.onFalse();
               setSelectedConcessionForView(null);

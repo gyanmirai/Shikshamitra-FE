@@ -12,13 +12,9 @@ export enum ConcessionStatusType {
 }
 // Options for dropdowns / select inputs
 export const ConcessionStatusOptions = [
-  { label: 'Draft', value: ConcessionStatusType.Draft },
   { label: 'Pending', value: ConcessionStatusType.Pending },
   { label: 'Approved', value: ConcessionStatusType.Approved },
   { label: 'Rejected', value: ConcessionStatusType.Rejected },
-  { label: 'Cancelled', value: ConcessionStatusType.Cancelled },
-  { label: 'Partially reversed', value: ConcessionStatusType.PartiallyReversed },
-  { label: 'Reversed', value: ConcessionStatusType.Reversed },
 ];
 
 // Colors (matching your screenshot styling)
