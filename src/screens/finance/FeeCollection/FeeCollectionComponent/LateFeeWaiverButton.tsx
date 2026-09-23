@@ -1,9 +1,14 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { financePermissions } from 'src/constants/finance-menu';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useApplyLateFeeWaiverMutation } from 'src/redux/feeCollection/lateFeeWaiver';
 import {
@@ -33,6 +38,13 @@ const LateFeeWaiverButton = ({ dueFeeId, computedLateFeeAmount }: LateFeeWaiverB
   const [amount, setAmount] = useState(String(computedLateFeeAmount));
   const [reason, setReason] = useState('');
   const [applyWaiver, { isLoading }] = useApplyLateFeeWaiverMutation();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canRequest = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.waiverActions.request
+  );
+
+  if (!canRequest) return null;
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();

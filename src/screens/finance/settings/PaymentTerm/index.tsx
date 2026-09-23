@@ -8,12 +8,13 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Card,
@@ -47,6 +48,7 @@ import PaymentTermTable from './Components/PaymentTermTable';
 import PaymentTermDetailsDrawer from './Components/PaymentTermDetailsDrawer';
 
 import type { IPaymentTerm } from './type';
+import type { IBoard } from './hooks/usePaymentTermForm';
 
 type PaymentTermArchiveView = 'current' | 'archived';
 type PaymentTermDetailsTab = 'details' | 'versions';
@@ -101,12 +103,14 @@ const PaymentTerm = () => {
   const [archiveTarget, setArchiveTarget] = useState<PaymentTermListItem | null>(null);
   const [archiveReason, setArchiveReason] = useState('');
   const [cloneSourceYearId, setCloneSourceYearId] = useState('');
+  const [selectedBoardId, setSelectedBoardId] = useState('');
 
   const addPaymentTermDrawer = useBoolean();
   const deletePaymentTermDialog = useBoolean();
   const cloneDialog = useBoolean();
 
   const { currentYear, academicYears } = useSelector((state: RootState) => state.globalState);
+  const { data: boardData, isLoading: boardsLoading } = useGetBoardsQuery('');
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const paymentTermPermissions = financePermissions.fees.settings.paymentTermActions;
   const canView = hasGrantedPermission(permissions, paymentTermPermissions.view);
@@ -119,27 +123,39 @@ const PaymentTerm = () => {
   const canDelete = hasGrantedPermission(permissions, paymentTermPermissions.delete);
   const targetAcademicYearId = currentYear?.id ?? '';
   const isArchived = archiveView === 'archived';
+  const boards = useMemo<IBoard[]>(() => {
+    if (!boardData?.items || !targetAcademicYearId) return [];
+    return boardData.items.filter((board: IBoard) => board.academicYearId === targetAcademicYearId);
+  }, [boardData?.items, targetAcademicYearId]);
+
+  useEffect(() => {
+    if (boards.some((board) => board.id === selectedBoardId)) return;
+    setSelectedBoardId(boards[0]?.id ?? '');
+    setTableQuery((current) => ({ ...current, page: 1 }));
+  }, [boards, selectedBoardId]);
 
   const paymentTermPage = useGetPaymentTermsQuery(
     {
       academicYearId: targetAcademicYearId,
+      boardId: selectedBoardId,
       status: isArchived ? 'Archived' : 'Active',
       includeArchived: isArchived,
       search: tableQuery.search || undefined,
       page: tableQuery.page,
       pageSize: tableQuery.pageSize,
     },
-    { skip: !targetAcademicYearId || !canView }
+    { skip: !targetAcademicYearId || !selectedBoardId || !canView }
   );
   const archivedSummary = useGetPaymentTermsQuery(
     {
       academicYearId: targetAcademicYearId,
+      boardId: selectedBoardId,
       status: 'Archived',
       includeArchived: true,
       page: 1,
       pageSize: 1,
     },
-    { skip: !targetAcademicYearId || !canView }
+    { skip: !targetAcademicYearId || !selectedBoardId || !canView }
   );
 
   const [fetchSourceTerms] = useLazyGetPaymentTermsQuery();
@@ -288,28 +304,59 @@ const PaymentTerm = () => {
       />
 
       <Card sx={{ p: 1 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1}>
-          <Stack direction="row" spacing={1}>
-            <Button
-              size="small"
-              variant={!isArchived ? 'contained' : 'outlined'}
-              onClick={() => {
-                setTableQuery((current) => ({ ...current, page: 1 }));
-                setArchiveView('current');
-              }}
-            >
-              Current
-            </Button>
-            <Button
-              size="small"
-              variant={isArchived ? 'contained' : 'outlined'}
-              onClick={() => {
-                setTableQuery((current) => ({ ...current, page: 1 }));
-                setArchiveView('archived');
-              }}
-            >
-              Archived ({archivedSummary.data?.totalCount ?? 0})
-            </Button>
+        <Stack
+          direction={{ xs: 'column', md: 'row' }}
+          alignItems={{ xs: 'stretch', md: 'center' }}
+          justifyContent="space-between"
+          spacing={1}
+        >
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+            spacing={1}
+          >
+            <FormControl size="small" sx={{ width: { xs: '100%', sm: 300 } }}>
+              <InputLabel id="payment-term-board-filter-label">Education Board</InputLabel>
+              <Select
+                labelId="payment-term-board-filter-label"
+                label="Education Board"
+                value={selectedBoardId}
+                disabled={boardsLoading || boards.length === 0}
+                onChange={(event) => {
+                  setSelectedBoardId(event.target.value);
+                  setTableQuery((current) => ({ ...current, page: 1 }));
+                }}
+              >
+                {boards.map((board) => (
+                  <MenuItem key={board.id} value={board.id}>
+                    {board.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+
+            <Stack direction="row" spacing={1}>
+              <Button
+                size="small"
+                variant={!isArchived ? 'contained' : 'outlined'}
+                onClick={() => {
+                  setTableQuery((current) => ({ ...current, page: 1 }));
+                  setArchiveView('current');
+                }}
+              >
+                Current
+              </Button>
+              <Button
+                size="small"
+                variant={isArchived ? 'contained' : 'outlined'}
+                onClick={() => {
+                  setTableQuery((current) => ({ ...current, page: 1 }));
+                  setArchiveView('archived');
+                }}
+              >
+                Archived ({archivedSummary.data?.totalCount ?? 0})
+              </Button>
+            </Stack>
           </Stack>
 
           {!isArchived ? (
@@ -397,7 +444,7 @@ const PaymentTerm = () => {
       <Drawer
         anchor="right"
         open={addPaymentTermDrawer.value}
-        onClose={handleClose}
+        onClose={() => handleClose()}
         PaperProps={{
           sx: { width: { xs: '100%', sm: 'min(1180px, 92vw)' }, maxWidth: '100%' },
         }}

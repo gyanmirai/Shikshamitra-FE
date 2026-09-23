@@ -65,6 +65,14 @@ export const paymentTermValidationSchema = (
       .oneOf(['Draft', 'Active'] as const, 'Status must be Draft or Active')
       .required('Status is required'),
 
+    isDefaultTerm: Yup.boolean().test(
+      'default-requires-active',
+      'Only an Active payment term can be the default',
+      function validateDefaultStatus(isDefault) {
+        return !isDefault || this.parent.status === 'Active';
+      }
+    ),
+
     installments: Yup.array()
       .of(installmentSchema)
       .min(1, 'At least one installment is required')
@@ -126,10 +134,11 @@ export const paymentTermValidationSchema = (
       )
       .test(
         'specific-demand-dates',
-        'A bill generation date on or before the due date is required for every installment',
+        'A scheduled bill date on or before the due date is required when invoice sending is enabled',
         function (items) {
           if (this.parent.demandGenerationRule !== 'SpecificDate') return true;
           return items?.every((item) => {
+            if (item?.demandEnabled === false) return true;
             if (!item?.demandDate || !item?.dueDate) return false;
             return !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day');
           });

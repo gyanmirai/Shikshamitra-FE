@@ -41,11 +41,12 @@ export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode:
 
     amount: Yup.string()
       .required('Amount is required')
-      .transform((value) => value.replace(/[^0-9.]/g, ''))
+      .matches(/^\d+(\.\d{1,2})?$/, 'Amount must have at most 2 decimal places')
       .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
         const numericValue = Number(value);
-        return numericValue > 0;
-      }),
+        return Number.isFinite(numericValue) && numericValue > 0;
+      })
+      .test('maximum', 'Amount cannot exceed 9,999,999.00', (value) => Number(value) <= 9999999),
 
     dueDate: Yup.mixed()
       .required('Due Date is required')

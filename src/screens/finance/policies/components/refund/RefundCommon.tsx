@@ -171,14 +171,6 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
             <Stack spacing={0.75}>
               <Box display="flex" justifyContent="space-between">
                 <Typography variant="caption" color="text.secondary">
-                  Eligible Base:
-                </Typography>
-                <Typography variant="caption" fontWeight={600}>
-                  {values.eligiblePaymentState === 'FullyPaidOnly' ? 'Fully Paid Only' : 'Partial & Full'}
-                </Typography>
-              </Box>
-              <Box display="flex" justifyContent="space-between">
-                <Typography variant="caption" color="text.secondary">
                   Fee Scope:
                 </Typography>
                 <Typography variant="caption" fontWeight={600}>

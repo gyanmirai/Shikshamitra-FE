@@ -2,20 +2,37 @@ import { financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from './financeModuleApi';
 
+export interface ChargeCategoryListParams {
+  academicYearId: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  isActive?: boolean;
+}
+
+export const buildChargeCategoryListRequest = (params: ChargeCategoryListParams) => ({
+  url: '/charge-categories',
+  method: 'GET' as const,
+  params,
+});
+
+export const buildChargeCategoryStatusRequest = ({
+  id,
+  body,
+}: {
+  id: string;
+  body: { isActive: boolean; reason?: string | null };
+}) => ({
+  url: `/charge-categories/${id}/status`,
+  method: 'PUT' as const,
+  body,
+});
+
 export const chargeCategoryApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get charge categories data (paginated)
     getChargeCategories: builder.query({
-      query: (params: {
-        academicYearId: string;
-        page?: number;
-        pageSize?: number;
-        search?: string;
-      }) => ({
-        url: '/charge-categories',
-        method: 'GET',
-        params,
-      }),
+      query: buildChargeCategoryListRequest,
       providesTags: [financeModuleType.chargeCategory],
     }),
 
@@ -60,13 +77,9 @@ export const chargeCategoryApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.chargeCategory],
     }),
 
-    // Patch charge category status
+    // Update charge category status
     patchChargeCategoryStatus: builder.mutation({
-      query: ({ id, body }) => ({
-        url: `/charge-categories/${id}/status`,
-        method: 'PATCH',
-        body,
-      }),
+      query: buildChargeCategoryStatusRequest,
       invalidatesTags: [financeModuleType.chargeCategory],
     }),
   }),

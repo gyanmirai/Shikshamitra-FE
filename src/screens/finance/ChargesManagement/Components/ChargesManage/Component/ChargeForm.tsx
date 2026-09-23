@@ -78,8 +78,18 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     currentQueryAndMutation: useGetChargeCategoriesQuery,
     params: {
       academicYearId: currentYear?.id,
+      page: 1,
+      pageSize: 100,
+      isActive: true,
     },
   });
+  const availableChargeCategories = useMemo(
+    () =>
+      (chargeCategories?.items ?? []).filter(
+        (category: any) => category.isActive === true && category.isAccountingReady === true
+      ),
+    [chargeCategories?.items]
+  );
   const [postCharge, { isLoading: postChargeLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePostChargeMutation,
@@ -137,11 +147,12 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
         .max(500, 'Purpose/Description cannot exceed 500 characters'),
       amount: Yup.string()
         .required('Amount is required')
-        .transform((value) => value.replace(/[^0-9.]/g, ''))
+        .matches(/^\d+(\.\d{1,2})?$/, 'Amount must have at most 2 decimal places')
         .test('is-number', 'Amount must be a valid number greater than zero', (value) => {
           const numericValue = Number(value);
-          return numericValue > 0;
-        }),
+          return Number.isFinite(numericValue) && numericValue > 0;
+        })
+        .test('maximum', 'Amount cannot exceed 9,999,999.00', (value) => Number(value) <= 9999999),
       dueDate: Yup.mixed()
         .required('Due Date is required')
         .test(
@@ -195,7 +206,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
           const createPayload = {
             ...payload,
             chargeName:
-              chargeCategories?.items?.find((c: any) => c.id === values.chargeCategoryId)?.name ??
+              availableChargeCategories.find((c: any) => c.id === values.chargeCategoryId)?.name ??
               '',
             audience: {
               scope: {
@@ -371,7 +382,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             name="chargeCategoryId"
                             label="Charge Category *"
                             isLoading={chargeCategoriesLoading}
-                            options={chargeCategories?.items || []}
+                            options={availableChargeCategories}
                             labelKey="name"
                             valueKey="id"
                             value={values.chargeCategoryId}
@@ -383,7 +394,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         </ShakingTextField>
                         {values.chargeCategoryId && (
                           <Typography variant="body2" color="text.secondary">
-                            {chargeCategories?.items?.find(
+                            {availableChargeCategories.find(
                               (item: any) => item.id === values.chargeCategoryId
                             )?.isApprovalRequired
                               ? 'This charge need the approval from the authority'
@@ -401,12 +412,11 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                             label="Amount *"
                             name="amount"
                             value={values.amount || ''}
-                            onChange={(e: { target: { value: any } }) => {
-                              let val = e.target.value;
-                              val = val.replace(/\D/g, '');
-                              if (/^\d*$/.test(val)) {
-                                setFieldValue('amount', val);
-                              }
+                            decimalScale={2}
+                            allowLeadingZeros={false}
+                            valueIsNumericString
+                            onValueChange={(numericValues) => {
+                              setFieldValue('amount', numericValues.value);
                             }}
                             sx={{
                               width: '100%',

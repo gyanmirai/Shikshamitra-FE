@@ -1,22 +1,36 @@
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import React, { useMemo, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
+import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 import { usePatchFeeHeadMutation } from 'src/redux/feeHeadManage/feeHeadManageApi';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { financePermissions } from 'src/constants/finance-menu';
 import { getFeeHeadModuleDisplayName } from 'src/redux/feeHeadModule/feeHeadModuleApi';
+import {
+  Box,
+  Chip,
+  Stack,
+  Drawer,
+  Switch,
+  Divider,
+  MenuItem,
+  MenuList,
+  TextField,
+  Typography,
+} from '@mui/material';
 import {
   feeCategoryApi,
   useGetFeeCategoriesQuery,
@@ -27,6 +41,7 @@ import {
 import type { IFeeCategory, IFeeCategoryTableProps } from './type';
 
 const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
+  archived,
   onAddFeeCategory,
   setOpenDialog,
   setEditData,
@@ -38,9 +53,18 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canView = hasGrantedPermission(permissions, financePermissions.fees.settings.feeCategoryActions.view);
-  const canAdd = hasGrantedPermission(permissions, financePermissions.fees.settings.feeCategoryActions.add);
-  const canDelete = hasGrantedPermission(permissions, financePermissions.fees.settings.feeCategoryActions.delete);
+  const canView = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.settings.feeCategoryActions.view
+  );
+  const canAdd = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.settings.feeCategoryActions.add
+  );
+  const canDelete = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.settings.feeCategoryActions.delete
+  );
 
   const [queryParams, setQueryParams] = React.useState({ page: 1, pageSize: 10, search: '' });
 
@@ -53,7 +77,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetFeeCategoriesQuery,
-    params: { academicYearId: currentYear?.id, ...queryParams },
+    params: { academicYearId: currentYear?.id, ...queryParams, isActive: !archived },
   });
 
   const [deleteFeeCategory, { isLoading: isDeleteLoading }] = useQueryAndMutation({
@@ -74,6 +98,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   const deleteFeeCategoryDialog = useBoolean();
   const statusConfirm = useBoolean();
   const [selectedFeeCategory, setSelectedFeeCategory] = React.useState<IFeeCategory | null>(null);
+  const [feeHeadsCategoryId, setFeeHeadsCategoryId] = useState<string | null>(null);
   const [statusData, setStatusData] = useState<null | IFeeCategory>(null);
   const [deactivationReason, setDeactivationReason] = useState('');
   const { confirmWithUndo } = useConfirmWithUndo();
@@ -81,6 +106,9 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
   const feeHeadStatusConfirm = useBoolean();
   const [feeHeadStatusData, setFeeHeadStatusData] = useState<any | null>(null);
   const [feeHeadDeactivationReason, setFeeHeadDeactivationReason] = useState('');
+  const feeHeadsCategory = feeCategoryData?.items?.find(
+    (category: IFeeCategory) => category.id === feeHeadsCategoryId
+  );
 
   const handleOpenStatusConfirm = (row: IFeeCategory) => {
     setStatusData(row);
@@ -170,12 +198,14 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
               color={row.isActive ? 'success' : 'default'}
               variant="soft"
             />
-            {canAdd && <Switch
-              size="small"
-              checked={row.isActive || false}
-              onClick={(event) => event.stopPropagation()}
-              onChange={() => handleOpenFeeHeadStatusConfirm(row)}
-            />}
+            {canAdd && (
+              <Switch
+                size="small"
+                checked={row.isActive || false}
+                onClick={(event) => event.stopPropagation()}
+                onChange={() => handleOpenFeeHeadStatusConfirm(row)}
+              />
+            )}
           </Stack>
         ),
       },
@@ -210,141 +240,159 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
     );
   };
 
-  const columns: IColumn[] = useMemo(
-    () => [
-      {
-        id: 'name',
-        label: 'Name',
-        align: 'left',
-        sticky: true,
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {value}
-          </Typography>
-        ),
-        children: (row: any) => renderFeeHeadsTable(row as IFeeCategory),
-      },
-      {
-        id: 'description',
-        label: 'Description',
-        align: 'left',
-        render: (value) => (
-          <Typography
-            variant="caption"
-            fontSize="13px"
-            sx={{
-              maxWidth: 300,
-              whiteSpace: 'nowrap',
-              textOverflow: 'ellipsis',
-              overflow: 'hidden',
-            }}
-          >
-            {value || '-'}
-          </Typography>
-        ),
-      },
-      {
-        id: 'feeHeads',
-        label: 'Fee Heads',
-        align: 'left',
-        render(value, row) {
-          const category = row as IFeeCategory;
-          const heads = category.feeHeads || [];
-          if (heads.length === 0) return '-';
-          const displayedHeads = heads
-            .slice(0, 3)
-            .map((h) => h.name || '')
-            .filter(Boolean);
-          const displayString = displayedHeads.join(', ');
-          const moreCount = heads.length - displayedHeads.length;
-          const tooltipTitle = heads
-            .map((h) => h.name || '')
-            .filter(Boolean)
-            .join(', ');
+  const columns: IColumn[] = [
+    {
+      id: 'name',
+      label: 'Name',
+      align: 'left',
+      sticky: true,
+      render: (value) => (
+        <Typography variant="caption" fontSize="13px">
+          {value}
+        </Typography>
+      ),
+    },
+    {
+      id: 'description',
+      label: 'Description',
+      align: 'left',
+      render: (value) => (
+        <Typography
+          variant="caption"
+          fontSize="13px"
+          sx={{
+            maxWidth: 300,
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+            overflow: 'hidden',
+          }}
+        >
+          {value || '-'}
+        </Typography>
+      ),
+    },
+    {
+      id: 'feeHeads',
+      label: 'Fee Heads',
+      align: 'left',
+      render(value, row) {
+        const category = row as IFeeCategory;
+        const heads = category.feeHeads || [];
+        if (heads.length === 0) return '-';
+        const displayedHeads = heads
+          .slice(0, 3)
+          .map((h) => h.name || '')
+          .filter(Boolean);
+        const displayString = displayedHeads.join(', ');
+        const moreCount = heads.length - displayedHeads.length;
+        const tooltipTitle = heads
+          .map((h) => h.name || '')
+          .filter(Boolean)
+          .join(', ');
 
-          return (
-            <CustomTooltip title={tooltipTitle} arrow sx={{ textAlign: 'justify' }}>
-              <Typography variant="caption" fontSize="13px">
-                {displayString}
-                {moreCount > 0 ? ` +${moreCount} More` : ''}
-              </Typography>
-            </CustomTooltip>
-          );
-        },
-      },
-      {
-        id: 'totalFeeHeads',
-        label: 'Total Fee Heads',
-        align: 'left',
-        render(value, row) {
-          const category = row as IFeeCategory;
-          return (
+        return (
+          <CustomTooltip title={tooltipTitle} arrow sx={{ textAlign: 'justify' }}>
             <Typography variant="caption" fontSize="13px">
-              {category.totalFeeHeads ?? category.feeHeads?.length ?? 0}
+              {displayString}
+              {moreCount > 0 ? ` +${moreCount} More` : ''}
             </Typography>
-          );
-        },
+          </CustomTooltip>
+        );
       },
-      {
-        id: 'isActive',
-        label: 'Status',
-        minWidth: 140,
-        sticky: true,
-        render(value, row) {
-          const category = row as IFeeCategory;
-          return (
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
-                size="small"
-                label={category.isActive ? 'Active' : 'Inactive'}
-                color={category.isActive ? 'success' : 'default'}
-                variant="soft"
-              />
-              {canAdd && <Switch
-                size="small"
-                checked={category.isActive || false}
-                onClick={(event) => event.stopPropagation()}
-                onChange={() => handleOpenStatusConfirm(category)}
-              />}
-            </Stack>
-          );
-        },
+    },
+    {
+      id: 'totalFeeHeads',
+      label: 'Total Fee Heads',
+      align: 'left',
+      render(value, row) {
+        const category = row as IFeeCategory;
+        return (
+          <Typography variant="caption" fontSize="13px">
+            {category.totalFeeHeads ?? category.feeHeads?.length ?? 0}
+          </Typography>
+        );
       },
-      {
-        id: 'action',
-        label: 'Actions',
-        minWidth: 50,
-        align: 'left',
-        isSort: false,
-        sticky: true,
-        isFilter: false,
-        render(value, row) {
-          return (
-            <ThreeDotsActions
-              showThreeDots={false}
-              placement="right-top"
-              showDeleteIcon={canDelete}
-              showEditIcon={canAdd}
-              showViewIcon={canView}
-              handleDeleteClick={() => {
-                setSelectedFeeCategory(row as IFeeCategory);
-                deleteFeeCategoryDialog.onTrue();
-              }}
-              disableDeleteIcon={row?.isUsedInDownstream}
-              handleEditClick={() => {
-                setEditData(row as IFeeCategory);
-                onAddFeeCategory.onTrue();
-              }}
-              handleViewClick={() => {
-                onView?.(row as IFeeCategory);
-              }}
-            />
-          );
-        },
+    },
+    {
+      id: 'isActive',
+      label: 'Status',
+      minWidth: 140,
+      sticky: true,
+      render(value, row) {
+        const category = row as IFeeCategory;
+        return (
+          <Chip
+            size="small"
+            label={category.isActive ? 'Active' : 'Archived'}
+            color={category.isActive ? 'success' : 'default'}
+            variant="soft"
+          />
+        );
       },
-    ],
-    [canAdd, canDelete, canView]
-  );
+    },
+    {
+      id: 'action',
+      label: 'Actions',
+      minWidth: 50,
+      align: 'left',
+      isSort: false,
+      sticky: true,
+      isFilter: false,
+      render(value, row) {
+        return (
+          <ThreeDotsActions
+            placement="right-top"
+            showDeleteIcon={canDelete && !archived}
+            showEditIcon={canAdd && !archived}
+            showViewIcon={canView}
+            handleDeleteClick={() => {
+              setSelectedFeeCategory(row as IFeeCategory);
+              deleteFeeCategoryDialog.onTrue();
+            }}
+            disableDeleteIcon={row?.isUsedInDownstream}
+            handleEditClick={() => {
+              setEditData(row as IFeeCategory);
+              onAddFeeCategory.onTrue();
+            }}
+            handleViewClick={() => {
+              onView?.(row as IFeeCategory);
+            }}
+            showThreeDots={canView || canAdd}
+            moreLabel={`More actions for ${(row as IFeeCategory).name}`}
+            actions={({ popover }) => (
+              <MenuList>
+                {canView ? (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      setFeeHeadsCategoryId((row as IFeeCategory).id);
+                    }}
+                  >
+                    <Iconify icon="solar:list-bold-duotone" />
+                    View Fee Heads
+                  </MenuItem>
+                ) : null}
+                {canAdd ? (
+                  <MenuItem
+                    disabled={!archived && Boolean(row?.isUsedInDownstream)}
+                    onClick={() => {
+                      popover.onClose();
+                      handleOpenStatusConfirm(row as IFeeCategory);
+                    }}
+                  >
+                    <Iconify
+                      icon={archived ? 'mdi:archive-arrow-up-outline' : 'mdi:archive-outline'}
+                    />
+                    {archived ? 'Restore' : 'Archive'}
+                  </MenuItem>
+                ) : null}
+              </MenuList>
+            )}
+          />
+        );
+      },
+    },
+  ];
 
   return (
     <>
@@ -352,26 +400,30 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         tableId="fee-category-data-table"
         isLoading={isFeeCategoryLoading || isFeeCategoryFetching}
         noDataText={
-          <>
-            Fee Category Data Not Found{' '}
-            <Box
-              onClick={() => {
-                onAddFeeCategory.onTrue();
-                setOpenDialog(true);
-                setEditData(null);
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add Fee Category
-            </Box>
-          </>
+          archived ? (
+            'No archived fee categories.'
+          ) : (
+            <>
+              Fee Category Data Not Found{' '}
+              <Box
+                onClick={() => {
+                  onAddFeeCategory.onTrue();
+                  setOpenDialog(true);
+                  setEditData(null);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Fee Category
+              </Box>
+            </>
+          )
         }
         columns={columns}
         data={feeCategoryData?.items || []}
@@ -387,6 +439,26 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           onServerSearch?.(search);
         }}
       />
+
+      <Drawer
+        anchor="right"
+        open={Boolean(feeHeadsCategoryId)}
+        onClose={() => setFeeHeadsCategoryId(null)}
+        PaperProps={{ sx: { width: { xs: '100%', md: 980 }, maxWidth: '100%' } }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <DrawerHeader
+            title={feeHeadsCategory?.name ?? 'Fee Heads'}
+            subtitle="Review the Fee Heads mapped to this category."
+            onClose={() => setFeeHeadsCategoryId(null)}
+          />
+          <Divider />
+          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+            {feeHeadsCategory ? renderFeeHeadsTable(feeHeadsCategory) : null}
+          </Scrollbar>
+        </Box>
+      </Drawer>
+
       <ConfirmDialog
         open={deleteFeeCategoryDialog.value}
         onClose={() => {
@@ -413,7 +485,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                   dispatchFn(
                     feeCategoryApi.util.updateQueryData(
                       'getFeeCategories',
-                      { academicYearId: currentYear?.id, ...queryParams },
+                      { academicYearId: currentYear?.id, ...queryParams, isActive: !archived },
                       (draft: any) => {
                         const index = draft.items?.findIndex(
                           (b: any) => b.id === (selectedFeeCategory as any)?.id
@@ -446,11 +518,11 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
           setStatusData(null);
           setDeactivationReason('');
         }}
-        title={nextStatus ? 'Activate Fee Category' : 'Deactivate Fee Category'}
+        title={nextStatus ? 'Restore Fee Category' : 'Archive Fee Category'}
         content={
           <Stack spacing={2}>
             <Typography variant="body2">
-              {nextStatus ? 'Activate' : 'Deactivate'}{' '}
+              {nextStatus ? 'Restore' : 'Archive'}{' '}
               <Box component="span" fontWeight="bold" color="text.primary">
                 {statusData?.name}
               </Box>
@@ -462,7 +534,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                 multiline
                 minRows={2}
                 size="small"
-                label="Deactivation reason"
+                label="Archive reason"
                 required
                 error={!!deactivationReason && !deactivationReason.trim()}
                 helperText={
@@ -494,7 +566,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
-                  message: `Fee Category ${nextStatus ? 'activated' : 'deactivated'} successfully`,
+                  message: `Fee Category ${nextStatus ? 'restored' : 'archived'} successfully`,
                 });
                 statusConfirm.onFalse();
                 setStatusData(null);
@@ -504,7 +576,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
               }
             }}
           >
-            {nextStatus ? 'Activate' : 'Deactivate'}
+            {nextStatus ? 'Restore' : 'Archive'}
           </LoadingButton>
         }
       />
@@ -559,9 +631,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
                   feeHeadId: feeHeadStatusData.id,
                   body: {
                     isActive: nextFeeHeadStatus,
-                    deactivationReason: nextFeeHeadStatus
-                      ? null
-                      : feeHeadDeactivationReason.trim(),
+                    deactivationReason: nextFeeHeadStatus ? null : feeHeadDeactivationReason.trim(),
                   },
                 }).unwrap();
                 shikshaMitraToast.success({

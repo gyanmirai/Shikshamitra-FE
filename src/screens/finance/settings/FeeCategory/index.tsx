@@ -3,17 +3,19 @@
 import type { RootState } from 'src/redux/store';
 
 import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
+import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 
 import FeeCategoryForm from './Components/FeeCategoryForm';
 import FeeCategoryView from './Components/FeeCategoryView';
@@ -22,6 +24,7 @@ import FeeCategoryTable from './Components/FeeCategoryTable';
 import type { IFeeCategory } from './Components/type';
 
 const FeeCategoryCreation = () => {
+  const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
   // Dialog control states
   const addFeeCategoryDialog = useBoolean(); // Controls add/edit fee category dialog
   const viewFeeCategoryDialog = useBoolean(); // Controls view details dialog
@@ -29,7 +32,20 @@ const FeeCategoryCreation = () => {
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canAdd = hasGrantedPermission(permissions, financePermissions.fees.settings.feeCategoryActions.add);
+  const canAdd = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.settings.feeCategoryActions.add
+  );
+  const academicYearId = currentYear?.id ?? '';
+  const { data: archivedSummary } = useGetFeeCategoriesQuery(
+    {
+      academicYearId,
+      page: 1,
+      pageSize: 1,
+      isActive: false,
+    },
+    { skip: !academicYearId }
+  );
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
 
@@ -88,20 +104,48 @@ const FeeCategoryCreation = () => {
           { name: 'Settings' },
           { name: 'Fee Category' },
         ]}
-        action={canAdd ? (
-          <Button
-            onClick={() => addFeeCategoryDialog.onTrue()}
-            size="small"
-            startIcon={<Add />}
-            variant="contained"
-            sx={{ px: '32px' }}
-          >
-            Fee Category
-          </Button>
-        ) : undefined}
+        action={
+          canAdd && archiveView === 'current' ? (
+            <Button
+              onClick={() => addFeeCategoryDialog.onTrue()}
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              sx={{ px: '32px' }}
+            >
+              Fee Category
+            </Button>
+          ) : undefined
+        }
       />
 
+      <Card sx={{ p: 1, mb: 1.5 }}>
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant={archiveView === 'current' ? 'contained' : 'outlined'}
+            onClick={() => setArchiveView('current')}
+          >
+            Current
+          </Button>
+          <Button
+            size="small"
+            variant={archiveView === 'archived' ? 'contained' : 'outlined'}
+            onClick={() => setArchiveView('archived')}
+            endIcon={
+              <Label color="default" variant="soft">
+                {archivedSummary?.totalCount ?? 0}
+              </Label>
+            }
+          >
+            Archived
+          </Button>
+        </Stack>
+      </Card>
+
       <FeeCategoryTable
+        key={archiveView}
+        archived={archiveView === 'archived'}
         open={open}
         onAddFeeCategory={addFeeCategoryDialog}
         setOpenDialog={setOpen}

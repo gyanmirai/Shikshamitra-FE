@@ -103,8 +103,19 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
     currentQueryAndMutation: useGetChargeCategoriesQuery,
     params: {
       academicYearId: currentYear?.id,
+      page: 1,
+      pageSize: 100,
+      isActive: true,
     },
   });
+
+  const availableChargeCategories = useMemo(
+    () =>
+      (chargeCategories?.items ?? []).filter(
+        (category: any) => category.isActive === true && category.isAccountingReady === true
+      ),
+    [chargeCategories?.items]
+  );
 
   // Both mutations - use one based on mode
   const [postCharge, { isLoading: postChargeLoading }] = useQueryAndMutation({
@@ -139,7 +150,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       divisionIds: defaultDivisionId ? [defaultDivisionId] : [],
       studentIds: [],
       selectedStudents: [],
-	  selectionMode: 'selected',
+      selectionMode: 'selected',
     };
   }, [prefillValues, defaultBoardId, defaultMediumId, defaultStandardId, defaultDivisionId]);
 
@@ -160,29 +171,41 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
         }
 
         const categoryName =
-          chargeCategories?.items?.find(
+          availableChargeCategories.find(
             (item: { id: string }) => item.id === values.chargeCategoryId
           )?.name ?? values.chargeName;
 
+        if (values.selectionMode === 'all' && candidateStudentIdsRef.current.length === 0) {
+          shikshaMitraToast.error({
+            message: 'No students are available in the selected scope.',
+          });
+          return;
+        }
+
+        if (
+          values.selectionMode === 'all' &&
+          !window.confirm(
+            `Create this charge for all ${candidateStudentIdsRef.current.length} students currently in scope?`
+          )
+        ) {
+          return;
+        }
+
         const audience = buildAudiencePayload(values, candidateStudentIdsRef.current);
-		if (values.selectionMode === 'all' &&
-			!window.confirm(`Create this charge for all ${candidateStudentIdsRef.current.length} students currently in scope?`)) {
-			return;
-		}
         const payload = {
           chargeName: values.chargeName,
           chargeCategoryId: values.chargeCategoryId,
           purposeDescription: values.purposeDescription,
           amount: parseFloat(String(values.amount)),
-		  dueDate: dayjs(values.dueDate).toISOString(),
+          dueDate: dayjs(values.dueDate).toISOString(),
           audience,
         };
 
         if (isEditMode && chargeId) {
-		  await updateCharge({
-			id: chargeId,
-			body: { ...payload, concurrencyStamp: chargeDetail?.concurrencyStamp ?? '' },
-		  }).unwrap();
+          await updateCharge({
+            id: chargeId,
+            body: { ...payload, concurrencyStamp: chargeDetail?.concurrencyStamp ?? '' },
+          }).unwrap();
           shikshaMitraToast.success({
             message: `Charge updated successfully for ${categoryName}`,
           });
@@ -488,14 +511,14 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             name="chargeCategoryId"
                             label="Charge Category"
                             isLoading={chargeCategoriesLoading}
-                            options={chargeCategories?.items || []}
+                            options={availableChargeCategories}
                             labelKey="name"
                             valueKey="id"
                             value={values.chargeCategoryId}
                             onChange={(value) => {
                               setFieldValue('chargeCategoryId', value);
                               setFieldTouched('chargeCategoryId', false);
-                              const category = chargeCategories?.items?.find(
+                              const category = availableChargeCategories.find(
                                 (item: { id: string }) => item.id === value
                               );
                               setFieldValue('chargeCategoryName', category?.name ?? '');
@@ -508,7 +531,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                           />
                           {values.chargeCategoryId && (
                             <Typography variant="caption" color="text.secondary" fontSize="0.75rem">
-                              {chargeCategories?.items?.find(
+                              {availableChargeCategories.find(
                                 (item: any) => item.id === values.chargeCategoryId
                               )?.isApprovalRequired
                                 ? 'Need the approval from the authority'
@@ -527,12 +550,11 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                             label="Amount *"
                             name="amount"
                             value={values.amount || ''}
-                            onChange={(e) => {
-                              let val = e.target.value;
-                              val = val.replace(/\D/g, '');
-                              if (/^\d*$/.test(val)) {
-                                setFieldValue('amount', val);
-                              }
+                            decimalScale={2}
+                            allowLeadingZeros={false}
+                            valueIsNumericString
+                            onValueChange={(numericValues) => {
+                              setFieldValue('amount', numericValues.value);
                             }}
                             error={!!(touched.amount && errors.amount)}
                             helperText={(touched.amount && errors.amount) as string}

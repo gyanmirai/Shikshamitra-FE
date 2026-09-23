@@ -258,6 +258,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
   const {
     data: concessionData,
+    refetch: refetchConcessionData,
     isLoading: isLoadingConcession,
     isFetching: isFetchingConcession,
   } = useQueryAndMutation({
@@ -390,10 +391,14 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
         };
 
         if (isEditing) {
+          // A draft may have been changed in another tab or by another user
+          // while this form was open. Always use the server's latest stamp.
+          const latestDraft = await refetchConcessionData().unwrap();
           const updateResult = await updateConcessionRequest({
             ...baseCommand,
             concessionRequestId: values.concessionRequestId,
-            concurrencyStamp: concessionData?.data?.concurrencyStamp || '',
+            concurrencyStamp:
+              latestDraft?.data?.concurrencyStamp || concessionData?.data?.concurrencyStamp || '',
             idempotencyKey: getCommandKey('update-draft'),
           }).unwrap();
           clearCommandKey('update-draft');
@@ -653,10 +658,12 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
     try {
       if (values.concessionRequestId) {
+        const latestDraft = await refetchConcessionData().unwrap();
         await updateConcessionRequest({
           ...command,
           concessionRequestId: values.concessionRequestId,
-          concurrencyStamp: concessionData?.data?.concurrencyStamp || '',
+          concurrencyStamp:
+            latestDraft?.data?.concurrencyStamp || concessionData?.data?.concurrencyStamp || '',
           idempotencyKey: getCommandKey('update-draft'),
         }).unwrap();
         clearCommandKey('update-draft');
@@ -687,6 +694,7 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     getCommandKey,
     hasResolvedAssignment,
     onClose,
+    refetchConcessionData,
     requestContext,
     student?.sourceRequestId,
     updateConcessionRequest,

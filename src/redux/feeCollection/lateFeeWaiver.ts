@@ -10,6 +10,12 @@ export interface LateFeeWaiverApplication {
   dueFeeId: string;
   collectionPolicyId: string;
   academicYearId: string;
+  studentName: string;
+  grNumber?: string;
+  rollNo?: number;
+  feeHeadId: string;
+  feeHeadName: string;
+  dueDate?: string;
   computedLateFeeAmount: number;
   requestedAmount: number;
   effectiveAmount: number;
@@ -18,7 +24,21 @@ export interface LateFeeWaiverApplication {
   appliedByUserId: string;
   approvedByUserId?: string;
   approvedAt?: string;
+  decisionReason?: string;
   creationTime: string;
+}
+
+export interface GetLateFeeWaiversInput {
+  academicYearId?: string;
+  status?: 'Applied' | 'PendingApproval' | 'Rejected' | '';
+  search?: string;
+  skipCount?: number;
+  maxResultCount?: number;
+}
+
+export interface PagedLateFeeWaivers {
+  items: LateFeeWaiverApplication[];
+  totalCount: number;
 }
 
 export interface ApplyLateFeeWaiverInput {
@@ -32,6 +52,14 @@ export interface ApplyLateFeeWaiverInput {
 
 export const lateFeeWaiverApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getLateFeeWaivers: builder.query<PagedLateFeeWaivers, GetLateFeeWaiversInput>({
+      query: (params) => ({
+        url: `${LATE_FEE_WAIVERS_BASE_URL}/list`,
+        method: 'GET',
+        params,
+      }),
+      providesTags: [financeModuleType.feeCollection],
+    }),
     getLateFeeWaiversForDueFee: builder.query<LateFeeWaiverApplication[], { dueFeeId: string }>({
       query: ({ dueFeeId }) => ({
         url: LATE_FEE_WAIVERS_BASE_URL,
@@ -58,18 +86,22 @@ export const lateFeeWaiverApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.feeCollection, financeModuleType.financeAudit],
     }),
 
-    rejectLateFeeWaiver: builder.mutation<LateFeeWaiverApplication, string>({
-      query: (id) => ({
-        url: `${LATE_FEE_WAIVERS_BASE_URL}/${id}/reject`,
-        method: 'POST',
-      }),
-      invalidatesTags: [financeModuleType.feeCollection, financeModuleType.financeAudit],
-    }),
+    rejectLateFeeWaiver: builder.mutation<LateFeeWaiverApplication, { id: string; reason: string }>(
+      {
+        query: ({ id, reason }) => ({
+          url: `${LATE_FEE_WAIVERS_BASE_URL}/${id}/reject`,
+          method: 'POST',
+          body: { reason },
+        }),
+        invalidatesTags: [financeModuleType.feeCollection, financeModuleType.financeAudit],
+      }
+    ),
   }),
   overrideExisting: true,
 });
 
 export const {
+  useGetLateFeeWaiversQuery,
   useGetLateFeeWaiversForDueFeeQuery,
   useApplyLateFeeWaiverMutation,
   useApproveLateFeeWaiverMutation,

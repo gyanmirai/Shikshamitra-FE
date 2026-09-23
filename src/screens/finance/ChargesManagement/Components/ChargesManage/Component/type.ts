@@ -3,6 +3,7 @@ import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 // Batch list item returned by GET /charges (inbox)
 export interface IChargeData {
   chargeId: string;
+  id?: string;
   chargeName?: string;
   chargeCategoryId?: string;
   categoryName?: string;

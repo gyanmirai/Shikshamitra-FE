@@ -46,6 +46,7 @@ Add or update tests when a change affects these areas.
 | Charge request payload                    | Client or mapper test                          |
 | Optimistic cache update                   | Client cache test                              |
 | Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test |
+| Late-fee waiver queue and decisions        | Type check, exact permission visibility, Pending/Applied/Rejected tabs, reason-required rejection, maker-checker API denial, student-scope isolation, and collection refresh after approval |
 | Audit Trail mapping                       | Mapper test                                    |
 | Route-level behavior                      | Playwright test before release sign-off        |
 
