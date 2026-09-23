@@ -15,6 +15,7 @@ const values: IPaymentTerm = {
   status: 'Draft',
   academicYearId: 'year-1',
   installments: [],
+  invoiceCreationEnabled: true,
   isDefaultTerm: true,
   holidayShiftingMethod: 'None',
   demandGenerationRule: 'OnInstallmentStartDate',
@@ -35,9 +36,7 @@ const boards = [
 function renderSection(status: 'Draft' | 'Active', isDefaultTerm = false) {
   return render(
     <Formik<IPaymentTerm> initialValues={{ ...values, status, isDefaultTerm }} onSubmit={() => {}}>
-      {(formik) => (
-        <GeneralInfoSection formik={formik} boards={boards} />
-      )}
+      {(formik) => <GeneralInfoSection formik={formik} boards={boards} />}
     </Formik>
   );
 }

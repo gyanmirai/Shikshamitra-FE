@@ -55,6 +55,8 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   'Finance:ConcessionPolicy:010022': 'Only an Active concession policy can be the default.',
   'Finance:RefundPolicy:010028': 'Only an Active refund policy can be the default.',
   'Finance:ProrationPolicy:010025': 'Only an Active proration policy can be the default.',
+  'Finance:PaymentTerm:000039':
+    'These template options cannot produce a valid schedule for the selected board period. Review the installment count and date rules, then try again.',
   'Finance:Concession:030002':
     'Refresh the request before approval; concurrency information is missing.',
   'Finance:Concession:030003':

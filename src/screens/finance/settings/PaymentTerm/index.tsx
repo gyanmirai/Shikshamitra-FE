@@ -74,6 +74,7 @@ const mapListItemToPaymentTerm = (item: PaymentTermListItem): IPaymentTerm => ({
   academicYearId: item.academicYearId,
   totalInstallments: item.installmentCount,
   installments: [],
+  invoiceCreationEnabled: true,
   isDefaultTerm: item.isDefault,
   holidayShiftingMethod: 'None',
   demandGenerationRule: 'OnInstallmentStartDate',

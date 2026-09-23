@@ -94,6 +94,8 @@ Use `src/constants/finance-menu.ts` to confirm active visibility before changing
 
 ### Payment Term lifecycle
 
+Before manually entering installment rows, a user may choose **Apply Template** after selecting a board. Annual, half-yearly, quarterly, monthly, and custom-count presets are previewed by the backend using the board's exact period and the form's invoice-date rule. The user reviews dates and percentages, explicitly applies or replaces the local schedule, may edit any generated row, and then follows the normal Draft/Active save lifecycle. One schedule-level toggle controls invoice creation for every installment; manual and template-generated rows inherit its value. The form labels the demand date as **Invoice Date** and the coverage range as **Installment Start-End Date** while preserving the existing API contract.
+
 1. The drawer exposes the same editable lifecycle as HR Attendance Policy: `Draft` or `Active`. Archive remains a separate guarded action.
 2. Saving as `Draft` keeps the schedule unassignable. Saving as `Active` atomically publishes an immutable version; the backend derives its activation date inside the selected board period.
 3. Every installment period and due date must be inside the selected board's own start/end dates, which may be narrower than the academic year. Dates are entered as `DD/MM/YYYY`.

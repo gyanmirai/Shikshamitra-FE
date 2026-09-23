@@ -19,29 +19,33 @@ Active Fee Structure editor, typed client and browser checks: [workspace impleme
 
 Use this table to find the first integration file.
 
-| Surface                 | Client source                                                                                |
-| ----------------------- | -------------------------------------------------------------------------------------------- |
-| Shared Finance API base | `src/redux/finance/financeModuleApi.ts`                                                      |
-| Charges                 | `src/redux/finance/ChargeManagement/chargeApi.ts`                                            |
-| Charge mappers          | `src/redux/finance/ChargeManagement/chargeMappers.ts`                                        |
+| Surface                 | Client source                                                                                                                 |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Shared Finance API base | `src/redux/finance/financeModuleApi.ts`                                                                                       |
+| Charges                 | `src/redux/finance/ChargeManagement/chargeApi.ts`                                                                             |
+| Charge mappers          | `src/redux/finance/ChargeManagement/chargeMappers.ts`                                                                         |
 | Student charge grouping | Charge line endpoint in `src/redux/finance/ChargeManagement/chargeApi.ts`; `studentChargeDataApi.ts` is obsolete/comment-only |
-| Concessions             | `src/redux/finance/ConcessionManagement/**`                                                  |
-| Adjustments             | `src/redux/finance/adjustments/adjustmentApi.ts`                                             |
-| Audit Trail             | `src/redux/finance/audit/financeAuditApi.ts`                                                 |
-| Reconciliation          | `src/redux/finance/reconciliation.ts`                                                        |
-| Receipt Book            | `src/redux/finance/receiptBookApi.ts`                                                        |
-| Fee collection          | `src/redux/feeCollection/**`                                                                 |
-| Late-fee waiver queue   | `src/redux/feeCollection/lateFeeWaiver.ts`                                                   |
-| Invoice and receipt     | `src/redux/invoiceAndReceipt/**`                                                             |
-| Fee structure           | `src/redux/finance/financeFeeStructure.tsx`                                                  |
-| Payment terms           | `src/redux/finance/paymentTerm.tsx`                                                          |
-| Collection policies     | `src/redux/finance/collectionPolicy.ts`                                                      |
-| Concession Types        | `src/redux/finance/concessionType.ts`                                                        |
-| Categories and settings | `src/redux/finance/*Category*`, `src/redux/feeCategory/**`, and `src/redux/feeHeadManage/**` |
+| Concessions             | `src/redux/finance/ConcessionManagement/**`                                                                                   |
+| Adjustments             | `src/redux/finance/adjustments/adjustmentApi.ts`                                                                              |
+| Audit Trail             | `src/redux/finance/audit/financeAuditApi.ts`                                                                                  |
+| Reconciliation          | `src/redux/finance/reconciliation.ts`                                                                                         |
+| Receipt Book            | `src/redux/finance/receiptBookApi.ts`                                                                                         |
+| Fee collection          | `src/redux/feeCollection/**`                                                                                                  |
+| Late-fee waiver queue   | `src/redux/feeCollection/lateFeeWaiver.ts`                                                                                    |
+| Invoice and receipt     | `src/redux/invoiceAndReceipt/**`                                                                                              |
+| Fee structure           | `src/redux/finance/financeFeeStructure.tsx`                                                                                   |
+| Payment terms           | `src/redux/finance/paymentTerm.tsx`                                                                                           |
+| Collection policies     | `src/redux/finance/collectionPolicy.ts`                                                                                       |
+| Concession Types        | `src/redux/finance/concessionType.ts`                                                                                         |
+| Categories and settings | `src/redux/finance/*Category*`, `src/redux/feeCategory/**`, and `src/redux/feeHeadManage/**`                                  |
 
 Fee-head module options are defined by the numeric `FeeHeadModule` enum in `src/redux/feeHeadModule/feeHeadModuleApi.ts`. Fee-category and fee-head clients send the selected number, or `null` when no module is selected, so create and edit forms use the same value type as backend responses. Both Fee Head entry surfaces load active Income Categories for the selected academic year and send the required `incomeCategoryId`. Lists and details show the category together with its server-resolved default Income Account Head; used Fee Heads keep this selector locked.
 
 Payment Term create/update requests send `status` as `Draft` or `Active`. The client does not collect or send a version-effective date; when `Active` is submitted, the backend derives the next valid activation date inside the board period and publishes that version in the same unit of work. Board list responses provide `startDate` and `endDate`, which are the UI and API validation boundaries for installment periods. Payment-term responses use named enum values; the API client also normalizes legacy numeric enum responses at the boundary so form controls and derived bill-generation dates receive one stable string contract.
+
+The installment-template dialog calls `POST /finance/payment-terms/templates/preview` with the selected board, preset, due-date choice, and current demand-generation rule. It presents the server-generated schedule before applying it. Applying replaces only local Formik installment rows; the ordinary create/update request remains the persistence boundary and the backend revalidates the full schedule.
+
+Invoice creation is controlled once for the complete payment-term schedule. The editor synchronizes that choice to every installment's `demandEnabled` field, and manual or template-generated installments inherit the current choice.
 
 The Payment Terms workspace selects an Education Board at the top and sends its `boardId` when querying the paged current and archived master-record lists. Its Status column presents one user-facing lifecycle value only: `Draft`, `Active`, or `Archived`; version lifecycle fields remain internal to version history and assignment checks. Draft terms are activated from the row actions through `POST /finance/payment-terms/{paymentTermId}/versions/{versionId}/publish`, and the Status column has no toggle. Archiving moves a term to the Archived tab; restoring preserves the underlying version state, so the term returns to the Current tab as Draft or Active. Details come from `GET /finance/payment-terms/{paymentTermId}`; the audit-style history table lazily queries `GET /finance/payment-terms/{paymentTermId}/versions` when its drawer tab opens. The Default chip is shown in the Status column. Only an Active term can be selected as default, and create/update requests that select a new default atomically clear the previous default for the same board. Other boards retain their own defaults. Draft and Archived terms cannot retain the flag; there is no standalone set-default endpoint.
 

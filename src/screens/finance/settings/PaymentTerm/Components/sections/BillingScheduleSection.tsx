@@ -25,9 +25,9 @@ export function BillingScheduleSection({ formik }: BillingScheduleSectionProps) 
 
   return (
     <SectionCard
-      title="Billing Schedule"
-      subtitle="Choose how the bill generation date is calculated for every installment."
-      info="This rule calculates when each student bill is generated. It does not change the installment due date."
+      title="Invoice Schedule"
+      subtitle="Choose how the invoice date is calculated for every installment."
+      info="This rule calculates the invoice date for each installment. It does not change the payment due date."
     >
       <Grid container spacing={2.5}>
         <Grid size={{ xs: 12, sm: isXDays ? 7 : 12 }}>
@@ -37,7 +37,7 @@ export function BillingScheduleSection({ formik }: BillingScheduleSectionProps) 
             }
           >
             <CustomSelect
-              label="Generate Bills *"
+              label="Invoice Date Rule *"
               options={[
                 { value: 'OnInstallmentStartDate', label: 'On installment start date' },
                 { value: 'XDaysBeforeDue', label: 'X days before due date' },

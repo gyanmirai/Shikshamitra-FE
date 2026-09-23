@@ -67,6 +67,8 @@ export interface IPaymentTerm {
   academicYearName?: string;
   totalInstallments?: number | string;
   installments: IInstallment[];
+  /** UI-level control that keeps invoice creation consistent across every installment. */
+  invoiceCreationEnabled: boolean;
   isDefaultTerm: boolean;
 
   // Holiday Rules (due-date shifting is a scheduling concern, kept here rather than on Payment Policy)
