@@ -2,179 +2,20 @@
 
 import { useRouter } from 'src/routes/hooks';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
-import React, { useMemo, useState } from 'react';
-import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
 import CancelButton from 'src/components/cancel-button';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { academicPaths } from 'src/constants/academic-menu';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import {
-  Box,
-  Card,
-  Chip,
-  Stack,
-  Button,
-  Avatar,
-  Skeleton,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Stack, Skeleton, Typography, DialogActions } from '@mui/material';
 
-import { type ISubject, getSubjectIcon } from './type';
 import { getSubjectMasterStatusLabel } from '../subjectMasterStatus';
+import { useSubjectUsageViewModel } from './hooks/useSubjectUsageViewModel';
 import { SubjectLifecycleAction } from './components/SubjectLifecycleAction';
 import { SubjectImpactStatusCard } from './components/SubjectImpactStatusCard';
+import { SubjectDependencyActions } from './components/SubjectDependencyActions';
+import { SubjectUsageLabelsSection } from './components/SubjectUsageLabelsSection';
+import { SubjectUsageMetricsSection } from './components/SubjectUsageMetricsSection';
 
-// ----------------------------------------------------------------------
-
-interface SubjectUsageData {
-  canDelete?: boolean;
-  subjectAllocations?: any[];
-  electiveGroups?: any[];
-  usage?: {
-    subjectAllocations?: any[];
-    classes?: any[];
-    electiveGroups?: any[];
-    chaptersCount?: number;
-    timetablePeriodsCount?: number;
-    examSchedulesCount?: number;
-    lessonPlansCount?: number;
-    homeworkCount?: number;
-    teacherMappingsCount?: number;
-  };
-}
-
-interface SubjectUsageDrawerProps {
-  open: boolean;
-  onClose: () => void;
-  selectedSubject: ISubject | null;
-  usageData?: SubjectUsageData | null;
-  isLoading?: boolean;
-  onArchive?: (subject: ISubject) => void;
-  onRestore?: (subject: ISubject) => Promise<boolean>;
-  canArchive?: boolean;
-  isRestoring?: boolean;
-}
-
-// ----------------------------------------------------------------------
-
-const getStatusColor = (status: string): 'success' | 'default' | 'warning' | 'error' => {
-  switch (status) {
-    case 'Active':
-      return 'success';
-    case 'Archived':
-      return 'warning';
-    case 'Inactive':
-      return 'default';
-    default:
-      return 'default';
-  }
-};
-
-const normalizeItemName = (item: any): string => {
-  if (!item) return '';
-  if (typeof item === 'string') return item;
-  if (typeof item === 'object') {
-    const std =
-      item.standard ||
-      item.className ||
-      item.standardName ||
-      item.class ||
-      item.name ||
-      item.groupName ||
-      item.electiveGroupName ||
-      item.title ||
-      '';
-    const code = item.code || item.subjectCode ? ` (${item.code || item.subjectCode})` : '';
-    if (std && code) return `${std}${code}`;
-    if (std) return std;
-    if (code) return code.replace(/[()]/g, '').trim();
-  }
-  return String(item);
-};
-
-interface DependencyMetricItem {
-  label: string;
-  value: number;
-  icon: string;
-  color: string;
-  path?: string;
-}
-
-function DependencyItemRow({
-  item,
-  isEven,
-  isLastRow,
-}: {
-  item: DependencyMetricItem;
-  isEven: boolean;
-  isLastRow: boolean;
-}) {
-  const isZero = item.value === 0;
-
-  return (
-    <Box
-      sx={{
-        py: 1.25,
-        px: 1.75,
-        display: 'flex',
-        alignItems: 'center',
-        minHeight: 44,
-        borderBottom: {
-          xs: isLastRow ? 'none' : '1px solid',
-          sm: isLastRow ? 'none' : '1px solid',
-        },
-        borderRight: {
-          xs: 'none',
-          sm: isEven ? '1px solid' : 'none',
-        },
-        borderColor: (t) => alpha(t.palette.grey[500], 0.08),
-        bgcolor: 'background.paper',
-      }}
-    >
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
-        <Iconify
-          icon={item.icon}
-          width={19}
-          height={19}
-          sx={{
-            color: isZero ? 'text.disabled' : item.color,
-            flexShrink: 0,
-          }}
-        />
-
-        <Typography
-          variant="body2"
-          sx={{
-            fontWeight: 800,
-            fontSize: '14.5px',
-            color: isZero ? 'text.disabled' : 'text.primary',
-            minWidth: 20,
-            lineHeight: 1,
-          }}
-        >
-          {item.value}
-        </Typography>
-
-        <Typography
-          variant="body2"
-          noWrap
-          sx={{
-            fontWeight: isZero ? 400 : 500,
-            fontSize: '12.5px',
-            color: isZero ? 'text.secondary' : 'text.primary',
-          }}
-        >
-          {item.label}
-        </Typography>
-      </Stack>
-    </Box>
-  );
-}
-
-// ----------------------------------------------------------------------
+import type { SubjectUsageDrawerProps } from './subjectUsage.types';
 
 export default function SubjectUsageDrawer({
   open,
@@ -187,124 +28,14 @@ export default function SubjectUsageDrawer({
   canArchive = false,
   isRestoring = false,
 }: SubjectUsageDrawerProps) {
-  const theme = useTheme();
   const router = useRouter();
-
-  const [showAllAllocations, setShowAllAllocations] = useState(false);
-  const [showAllElectives, setShowAllElectives] = useState(false);
-
+  const viewModel = useSubjectUsageViewModel(usageData);
   const statusLabel = getSubjectMasterStatusLabel(selectedSubject?.status);
-  const subjectColor =
-    selectedSubject?.color || (selectedSubject as any)?.subjectColor || theme.palette.primary.main;
 
-  const chaptersCount = usageData?.usage?.chaptersCount ?? 0;
-  const timetablePeriods = usageData?.usage?.timetablePeriodsCount ?? 0;
-  const examSchedules = usageData?.usage?.examSchedulesCount ?? 0;
-  const lessonPlans = usageData?.usage?.lessonPlansCount ?? 0;
-  const homeworkCount = usageData?.usage?.homeworkCount ?? 0;
-  const teacherMappings = usageData?.usage?.teacherMappingsCount ?? 0;
-
-  /**
-   * Memoization Justification:
-   * - Usage arrays can be large and are normalized for several downstream sections.
-   * - A stable result prevents the dependent metrics and navigation sections from recomputing.
-   */
-  const allocationLabels = useMemo(() => {
-    const rawAllocations =
-      usageData?.usage?.subjectAllocations ||
-      usageData?.subjectAllocations ||
-      usageData?.usage?.classes ||
-      [];
-
-    return rawAllocations
-      .map(normalizeItemName)
-      .filter((label) => Boolean(label && label.trim().length > 0));
-  }, [usageData]);
-
-  /**
-   * Memoization Justification:
-   * - Elective usage records are normalized once and consumed by multiple drawer sections.
-   * - A stable result avoids repeating the mapping work during local expand/collapse updates.
-   */
-  const electiveGroupLabels = useMemo(() => {
-    const rawElectiveGroups = usageData?.usage?.electiveGroups || usageData?.electiveGroups || [];
-
-    return rawElectiveGroups
-      .map(normalizeItemName)
-      .filter((label) => Boolean(label && label.trim().length > 0));
-  }, [usageData]);
-
-  const displayedAllocations = showAllAllocations ? allocationLabels : allocationLabels.slice(0, 6);
-  const hiddenAllocationsCount = allocationLabels.length - displayedAllocations.length;
-
-  const displayedElectives = showAllElectives
-    ? electiveGroupLabels
-    : electiveGroupLabels.slice(0, 6);
-  const hiddenElectivesCount = electiveGroupLabels.length - displayedElectives.length;
-
-  const dependentModuleCount = [
-    allocationLabels.length,
-    electiveGroupLabels.length,
-    chaptersCount,
-    timetablePeriods,
-    examSchedules,
-    lessonPlans,
-    homeworkCount,
-    teacherMappings,
-  ].filter((count) => count > 0).length;
-
-  const isInUse = !usageData?.canDelete && dependentModuleCount > 0;
-
-  const dependencyMetrics: DependencyMetricItem[] = [
-    {
-      label: 'Class Allocations',
-      value: allocationLabels.length,
-      icon: 'solar:buildings-3-bold-duotone',
-      color: theme.palette.primary.main,
-    },
-    {
-      label: 'Elective Groups',
-      value: electiveGroupLabels.length,
-      icon: 'solar:layers-bold-duotone',
-      color: theme.palette.info.main,
-    },
-    {
-      label: 'Syllabus Chapters',
-      value: chaptersCount,
-      icon: 'solar:book-2-bold-duotone',
-      color: theme.palette.primary.main,
-    },
-    {
-      label: 'Timetable Periods',
-      value: timetablePeriods,
-      icon: 'solar:calendar-date-bold-duotone',
-      color: theme.palette.warning.main,
-    },
-    {
-      label: 'Examinations',
-      value: examSchedules,
-      icon: 'solar:diploma-verified-bold-duotone',
-      color: theme.palette.error.main,
-    },
-    {
-      label: 'Lesson Plans',
-      value: lessonPlans,
-      icon: 'solar:notebook-bookmark-bold-duotone',
-      color: theme.palette.success.main,
-    },
-    {
-      label: 'Homework Records',
-      value: homeworkCount,
-      icon: 'solar:clipboard-check-bold-duotone',
-      color: theme.palette.secondary.main,
-    },
-    {
-      label: 'Assigned Teachers',
-      value: teacherMappings,
-      icon: 'solar:user-id-bold-duotone',
-      color: theme.palette.info.main,
-    },
-  ];
+  const navigateToDependency = (path: string) => {
+    onClose();
+    router.push(path);
+  };
 
   return (
     <CustomDialog
@@ -313,500 +44,69 @@ export default function SubjectUsageDrawer({
       hasForm={false}
       maxWidth="md"
       title={
-        <Stack direction="row" spacing={1.75} alignItems="center" sx={{ minWidth: 0 }}>
-          <Avatar
-            sx={{
-              width: 44,
-              height: 44,
-              borderRadius: 1.5,
-              bgcolor: alpha(subjectColor, 0.12),
-              color: subjectColor,
-              border: `1px solid ${alpha(subjectColor, 0.28)}`,
-              fontWeight: 700,
-            }}
-          >
-            {selectedSubject?.icon ? (
-              <Iconify icon={getSubjectIcon(selectedSubject.icon)} width={22} height={22} />
-            ) : selectedSubject?.name ? (
-              selectedSubject.name.slice(0, 2).toUpperCase()
-            ) : (
-              <Iconify icon="lucide:book-open" width={22} height={22} />
-            )}
-          </Avatar>
-
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-              <Typography
-                variant="subtitle1"
-                component="span"
-                sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}
-              >
-                {selectedSubject?.name || 'Subject Usage & Details'}
-              </Typography>
-              <Label color={getStatusColor(statusLabel)} variant="soft" sx={{ height: 20 }}>
-                {statusLabel}
-              </Label>
-              <CustomTooltip
-                title="Subject Dependencies & System Usage Across Modules"
-                placement="right"
-                arrow
-              >
-                <Box
-                  component="span"
-                  sx={{ display: 'inline-flex', cursor: 'pointer', verticalAlign: 'middle' }}
-                >
-                  <Iconify icon={GlobalIcons.info} color="info.main" width={16} height={16} />
-                </Box>
-              </CustomTooltip>
-            </Stack>
-
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ display: 'block', mt: 0.35, fontWeight: 500 }}
-            >
-              {selectedSubject?.category ? `${selectedSubject.category} · ` : ''}
-              {dependentModuleCount > 0
-                ? `Used across ${dependentModuleCount} module${dependentModuleCount > 1 ? 's' : ''}`
-                : 'No active dependencies'}
-            </Typography>
-          </Box>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Typography component="span" variant="subtitle1">
+            {selectedSubject?.name || 'Subject usage & details'}
+          </Typography>
+          <Label color="default" variant="soft">
+            {statusLabel}
+          </Label>
         </Stack>
       }
-      paperProps={{
-        sx: {
-          maxWidth: 640,
-          width: '100%',
-          maxHeight: '90vh',
-          borderRadius: 2,
-        },
-      }}
+      paperProps={{ sx: { maxWidth: 720, width: '100%', maxHeight: '90vh', borderRadius: 2 } }}
     >
       <DialogScrollContent
         sx={{
           bgcolor: 'background.neutral',
           display: 'flex',
           flexDirection: 'column',
-          gap: 2,
-          p: 2.5,
+          gap: 1.5,
+          p: 2,
         }}
       >
         {isLoading ? (
-          <Stack spacing={2}>
-            <Skeleton variant="rounded" height={186} sx={{ borderRadius: 1.5 }} />
-            <Skeleton variant="rounded" height={100} sx={{ borderRadius: 1.5 }} />
-            <Skeleton variant="rounded" height={120} sx={{ borderRadius: 1.5 }} />
+          <Stack spacing={1.5}>
+            <Skeleton variant="rounded" height={250} />
+            <Skeleton variant="rounded" height={120} />
+            <Skeleton variant="rounded" height={140} />
           </Stack>
         ) : (
           <>
-            {/* 1. Dependencies & Usage (Unified 2-Column Summary List) */}
-            <Box>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ mb: 1 }}
-              >
-                <Typography
-                  variant="caption"
-                  sx={{
-                    fontWeight: 700,
-                    color: 'text.secondary',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.6,
-                  }}
-                >
-                  Dependencies & Usage
-                </Typography>
-                <Typography variant="caption" color="text.disabled" sx={{ fontWeight: 500 }}>
-                  8 Tracked Metrics
-                </Typography>
-              </Stack>
-
-              <Box
-                sx={{
-                  border: '1px solid',
-                  borderColor: (t) => alpha(t.palette.grey[500], 0.08),
-                  borderRadius: 1.5,
-                  overflow: 'hidden',
-                  bgcolor: 'background.paper',
-                  display: 'grid',
-                  gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
+            <SubjectUsageMetricsSection
+              metrics={viewModel.metrics}
+              dependentModuleCount={viewModel.dependentModuleCount}
+            />
+            <SubjectUsageLabelsSection
+              icon="solar:buildings-3-linear"
+              title="Allocated classes"
+              description="Classes currently using this subject."
+              labels={viewModel.allocationLabels}
+            />
+            <SubjectUsageLabelsSection
+              icon="solar:layers-linear"
+              title="Mapped elective groups"
+              description="Elective groups currently linked to this subject."
+              labels={viewModel.electiveGroupLabels}
+            />
+            <SubjectImpactStatusCard isInUse={viewModel.isInUse} />
+            {viewModel.isInUse && (
+              <SubjectDependencyActions
+                counts={viewModel.counts}
+                onNavigate={navigateToDependency}
+                paths={{
+                  allocations: academicPaths.curriculum.subjectsAssignment,
+                  chapters: academicPaths.curriculum.chaptersManagement,
+                  timetable: academicPaths.timetable.management,
+                  examinations: academicPaths.examination.schedule,
+                  lessonPlans: academicPaths.curriculum.lessonPlan,
                 }}
-              >
-                {dependencyMetrics.map((metric, idx) => {
-                  const isEven = idx % 2 === 0;
-                  const isLastRow = idx >= dependencyMetrics.length - 2;
-                  return (
-                    <DependencyItemRow
-                      key={metric.label}
-                      item={metric}
-                      isEven={isEven}
-                      isLastRow={isLastRow}
-                    />
-                  );
-                })}
-              </Box>
-            </Box>
-
-            {/* 2. Allocated Classes */}
-            {allocationLabels.length > 0 && (
-              <Card
-                sx={{
-                  p: 2,
-                  borderRadius: 1.5,
-                  border: '1px solid',
-                  borderColor: (t) => alpha(t.palette.grey[500], 0.08),
-                  bgcolor: 'background.paper',
-                  boxShadow: 'none',
-                }}
-              >
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{ mb: 1.5 }}
-                >
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Box
-                      sx={{
-                        width: 26,
-                        height: 26,
-                        borderRadius: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: alpha(theme.palette.primary.main, 0.1),
-                        color: 'primary.main',
-                      }}
-                    >
-                      <Iconify icon="solar:buildings-3-bold-duotone" width={16} height={16} />
-                    </Box>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontWeight: 700,
-                        color: 'text.secondary',
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      Allocated Classes ({allocationLabels.length})
-                    </Typography>
-                  </Stack>
-
-                  {allocationLabels.length > 6 && (
-                    <Button
-                      size="small"
-                      variant="text"
-                      onClick={() => setShowAllAllocations(!showAllAllocations)}
-                      sx={{ p: 0, minWidth: 0, fontSize: '11.5px', fontWeight: 600 }}
-                    >
-                      {showAllAllocations ? 'Show less' : `View all (${allocationLabels.length})`}
-                    </Button>
-                  )}
-                </Stack>
-
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-                  {displayedAllocations.map((label, idx) => (
-                    <Chip
-                      key={idx}
-                      size="small"
-                      label={label}
-                      variant="outlined"
-                      sx={{
-                        height: 28,
-                        fontSize: '12px',
-                        px: 0.5,
-                        bgcolor: alpha(theme.palette.primary.main, 0.06),
-                        borderColor: alpha(theme.palette.primary.main, 0.22),
-                        color: 'text.primary',
-                        fontWeight: 600,
-                        transition: 'all 0.15s ease',
-                        '&:hover': {
-                          bgcolor: alpha(theme.palette.primary.main, 0.12),
-                        },
-                      }}
-                    />
-                  ))}
-                  {!showAllAllocations && hiddenAllocationsCount > 0 && (
-                    <Chip
-                      size="small"
-                      label={`+${hiddenAllocationsCount} more`}
-                      clickable
-                      onClick={() => setShowAllAllocations(true)}
-                      sx={{
-                        height: 28,
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                        bgcolor: alpha(theme.palette.grey[500], 0.08),
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '&:hover': {
-                          bgcolor: alpha(theme.palette.grey[500], 0.16),
-                        },
-                      }}
-                    />
-                  )}
-                </Box>
-              </Card>
-            )}
-
-            {/* 3. Mapped Elective Groups */}
-            {electiveGroupLabels.length > 0 && (
-              <Card
-                sx={{
-                  p: 2,
-                  borderRadius: 1.5,
-                  border: '1px solid',
-                  borderColor: (t) => alpha(t.palette.grey[500], 0.08),
-                  bgcolor: 'background.paper',
-                  boxShadow: 'none',
-                }}
-              >
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{ mb: 1.5 }}
-                >
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Box
-                      sx={{
-                        width: 26,
-                        height: 26,
-                        borderRadius: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: alpha(theme.palette.info.main, 0.1),
-                        color: 'info.main',
-                      }}
-                    >
-                      <Iconify icon="solar:layers-bold-duotone" width={16} height={16} />
-                    </Box>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontWeight: 700,
-                        color: 'text.secondary',
-                        textTransform: 'uppercase',
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      Mapped Elective Groups ({electiveGroupLabels.length})
-                    </Typography>
-                  </Stack>
-
-                  {electiveGroupLabels.length > 6 && (
-                    <Button
-                      size="small"
-                      variant="text"
-                      onClick={() => setShowAllElectives(!showAllElectives)}
-                      sx={{ p: 0, minWidth: 0, fontSize: '11.5px', fontWeight: 600 }}
-                    >
-                      {showAllElectives ? 'Show less' : `View all (${electiveGroupLabels.length})`}
-                    </Button>
-                  )}
-                </Stack>
-
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75 }}>
-                  {displayedElectives.map((name, idx) => (
-                    <Chip
-                      key={idx}
-                      size="small"
-                      label={name}
-                      variant="outlined"
-                      sx={{
-                        height: 28,
-                        fontSize: '12px',
-                        px: 0.5,
-                        bgcolor: alpha(theme.palette.info.main, 0.06),
-                        borderColor: alpha(theme.palette.info.main, 0.22),
-                        color: 'text.primary',
-                        fontWeight: 600,
-                        transition: 'all 0.15s ease',
-                        '&:hover': {
-                          bgcolor: alpha(theme.palette.info.main, 0.12),
-                        },
-                      }}
-                    />
-                  ))}
-                  {!showAllElectives && hiddenElectivesCount > 0 && (
-                    <Chip
-                      size="small"
-                      label={`+${hiddenElectivesCount} more`}
-                      clickable
-                      onClick={() => setShowAllElectives(true)}
-                      sx={{
-                        height: 28,
-                        fontSize: '12px',
-                        cursor: 'pointer',
-                        fontWeight: 600,
-                        bgcolor: alpha(theme.palette.grey[500], 0.08),
-                        border: '1px solid',
-                        borderColor: 'divider',
-                        '&:hover': {
-                          bgcolor: alpha(theme.palette.grey[500], 0.16),
-                        },
-                      }}
-                    />
-                  )}
-                </Box>
-              </Card>
-            )}
-
-            {/* 4. Dependency / Impact & Restrictions Card */}
-            <SubjectImpactStatusCard isInUse={isInUse} />
-
-            {/* 5. Quick Dependency Action Navigation */}
-            {isInUse && (
-              <Box>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    fontWeight: 700,
-                    color: 'text.secondary',
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.6,
-                    display: 'block',
-                    mb: 1,
-                  }}
-                >
-                  Quick Dependency Actions
-                </Typography>
-
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {allocationLabels.length > 0 && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="inherit"
-                      onClick={() => {
-                        onClose();
-                        router.push(academicPaths.curriculum.subjectsAssignment);
-                      }}
-                      startIcon={<Iconify icon="solar:buildings-3-bold" width={14} />}
-                      sx={{
-                        fontSize: '11.5px',
-                        bgcolor: 'background.paper',
-                        borderColor: 'divider',
-                        fontWeight: 600,
-                        '&:hover': { bgcolor: 'background.neutral' },
-                      }}
-                    >
-                      Class Allocations ({allocationLabels.length})
-                    </Button>
-                  )}
-
-                  {chaptersCount > 0 && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="inherit"
-                      onClick={() => {
-                        onClose();
-                        router.push(academicPaths.curriculum.chaptersManagement);
-                      }}
-                      startIcon={<Iconify icon="solar:book-2-bold" width={14} />}
-                      sx={{
-                        fontSize: '11.5px',
-                        bgcolor: 'background.paper',
-                        borderColor: 'divider',
-                        fontWeight: 600,
-                        '&:hover': { bgcolor: 'background.neutral' },
-                      }}
-                    >
-                      Syllabus ({chaptersCount})
-                    </Button>
-                  )}
-
-                  {timetablePeriods > 0 && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="inherit"
-                      onClick={() => {
-                        onClose();
-                        router.push(academicPaths.timetable.management);
-                      }}
-                      startIcon={<Iconify icon="solar:calendar-date-bold" width={14} />}
-                      sx={{
-                        fontSize: '11.5px',
-                        bgcolor: 'background.paper',
-                        borderColor: 'divider',
-                        fontWeight: 600,
-                        '&:hover': { bgcolor: 'background.neutral' },
-                      }}
-                    >
-                      Timetable ({timetablePeriods})
-                    </Button>
-                  )}
-
-                  {examSchedules > 0 && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="inherit"
-                      onClick={() => {
-                        onClose();
-                        router.push(academicPaths.examination.schedule);
-                      }}
-                      startIcon={<Iconify icon="solar:diploma-verified-bold" width={14} />}
-                      sx={{
-                        fontSize: '11.5px',
-                        bgcolor: 'background.paper',
-                        borderColor: 'divider',
-                        fontWeight: 600,
-                        '&:hover': { bgcolor: 'background.neutral' },
-                      }}
-                    >
-                      Examinations ({examSchedules})
-                    </Button>
-                  )}
-
-                  {lessonPlans > 0 && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="inherit"
-                      onClick={() => {
-                        onClose();
-                        router.push(academicPaths.curriculum.lessonPlan);
-                      }}
-                      startIcon={<Iconify icon="solar:notebook-bookmark-bold" width={14} />}
-                      sx={{
-                        fontSize: '11.5px',
-                        bgcolor: 'background.paper',
-                        borderColor: 'divider',
-                        fontWeight: 600,
-                        '&:hover': { bgcolor: 'background.neutral' },
-                      }}
-                    >
-                      Lesson Plans ({lessonPlans})
-                    </Button>
-                  )}
-                </Stack>
-              </Box>
+              />
             )}
           </>
         )}
       </DialogScrollContent>
 
-      {/* Sticky Footer */}
-      <DialogActions
-        sx={{
-          p: 2,
-          px: 2.5,
-          borderTop: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)', justifyContent: 'space-between' }}>
         <Box>
           <SubjectLifecycleAction
             canManage={canArchive}
@@ -817,7 +117,6 @@ export default function SubjectUsageDrawer({
             onClose={onClose}
           />
         </Box>
-
         <CancelButton buttonText="Close" onClick={onClose} />
       </DialogActions>
     </CustomDialog>

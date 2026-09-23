@@ -38,7 +38,7 @@ export function useBulkChapterImportForm({
   const formik = useFormik<{ chapters: IBulkChapterEntry[] }>({
     initialValues: { chapters: [] },
     validationSchema: getBulkChapterValidationSchema(currentYear),
-    onSubmit: async (values) => {
+    onSubmit: async (values, helpers) => {
       if (!classId || !subjectId) {
         shikshaMitraToast.error({
           message: 'Class and Subject must be selected before saving chapters.',
@@ -100,7 +100,8 @@ export function useBulkChapterImportForm({
         shikshaMitraToast.success({
           message: `${values.chapters.length} chapter${values.chapters.length === 1 ? '' : 's'} assigned successfully.`,
         });
-        onClose(null, true);
+        helpers.resetForm();
+        onClose();
       } catch {
         shikshaMitraToast.error({ message: 'Failed to save chapters. Please try again.' });
       }

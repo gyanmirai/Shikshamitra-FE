@@ -19,10 +19,10 @@ import { Box, Alert, Button, TextField, Typography } from '@mui/material';
 import { useGetSubjectUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 
 import SettingSubjectForm from './subjectForm';
-import SubjectAddDrawer from './subjectAddDrawer';
 import SubjectUsageDrawer from './subjectUsageDrawer';
 import SettingSubjectTable from './settingSubjectTable';
 import { useSubjectCreation } from './hooks/useSubjectCreation';
+import { BulkSubjectImportDialog } from './bulkImport/BulkSubjectImportDialog';
 
 import type { ISubject } from './type';
 
@@ -50,7 +50,7 @@ const SubjectCreation = () => {
     open,
     setOpen,
     addSubjectDialog,
-    drawerOpen,
+    bulkImportDialog,
     usageDrawer,
     archiveDialog,
     isDeleteLoading,
@@ -119,7 +119,7 @@ const SubjectCreation = () => {
                   <Button
                     variant="outlined"
                     size="small"
-                    onClick={drawerOpen.onTrue}
+                    onClick={bulkImportDialog.onTrue}
                     startIcon={<Iconify icon="mdi:cloud-upload-outline" width={18} />}
                   >
                     Bulk Add
@@ -170,10 +170,10 @@ const SubjectCreation = () => {
         open={open}
         setOpenDialog={setOpen}
         setEditData={setSelectedSubject}
-        onOpenDrawer={drawerOpen.onTrue}
+        onOpenDrawer={bulkImportDialog.onTrue}
       />
 
-      <SubjectAddDrawer open={drawerOpen.value} onClose={drawerOpen.onFalse} />
+      <BulkSubjectImportDialog open={bulkImportDialog.value} onClose={bulkImportDialog.onFalse} />
 
       <CustomDialog
         open={addSubjectDialog.value}

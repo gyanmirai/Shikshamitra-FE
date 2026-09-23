@@ -3079,6 +3079,7 @@ const SubstitutionManagementScreen = () => {
         ]}
         action={
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />
             {canManageSubstitutions && (
               <>
                 <Button
@@ -3113,35 +3114,6 @@ const SubstitutionManagementScreen = () => {
           </Stack>
         }
       />
-
-      <Accordion
-        defaultExpanded
-        disableGutters
-        sx={{
-          borderRadius: '8px !important',
-          border: (theme) => `1px solid ${theme.palette.divider}`,
-          boxShadow: 'none',
-          '&:before': { display: 'none' },
-          flexShrink: 0,
-        }}
-      >
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          sx={{
-            minHeight: 44,
-            '& .MuiAccordionSummary-content': { my: 0.75, alignItems: 'center' },
-          }}
-        >
-          <Stack direction="row" spacing={1} alignItems="center">
-            <Typography variant="subtitle2" fontWeight={700}>
-              Substitution Overview & Metrics
-            </Typography>
-          </Stack>
-        </AccordionSummary>
-        <AccordionDetails sx={{ pt: 0, pb: 1.5, px: 2 }}>
-          <TimetableSettingsSummaryCards cards={summaryCards} />
-        </AccordionDetails>
-      </Accordion>
 
       {/* ── Sticky Tabs Card ─────────────────────────────── */}
       <Card

@@ -37,7 +37,6 @@ export function getSettingSubjectTableActions(
         id: 'restore',
         label: 'Restore subject',
         icon: 'solar:restart-bold',
-        color: 'success.main',
         onClick: () => options.onRestore(subject),
       });
     }
@@ -57,7 +56,6 @@ export function getSettingSubjectTableActions(
         id: 'archive',
         label: 'Archive subject',
         icon: 'solar:archive-bold',
-        color: 'warning.main',
         onClick: () => options.onArchive(subject),
       }
     );

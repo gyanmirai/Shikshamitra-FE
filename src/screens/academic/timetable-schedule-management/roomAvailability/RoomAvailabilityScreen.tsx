@@ -2,34 +2,20 @@
 
 // ── Components ─────────────────────────────────────────────────────────────────
 import dayjs from 'dayjs';
+import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { CheckCircle } from '@mui/icons-material';
 import CustomSelect from 'src/components/custom-select';
+import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
+import { academicPaths } from 'src/constants/academic-menu';
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AcademicDatePicker } from 'src/components/academic-date-picker';
-import { useSession } from 'next-auth/react';
-import { EventBusy, MeetingRoom, CheckCircle } from '@mui/icons-material';
 import { useGetBuildingsQuery } from 'src/redux/InstituteSetup/BuildingApi/BuildingApi';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { academicPaths } from 'src/constants/academic-menu';
-import { Label } from 'src/components/label';
-import { CustomTabs } from 'src/components/custom-tabs';
-import {
-  Box,
-  Tab,
-  Paper,
-  Stack,
-  Alert,
-  Button,
-  Tooltip,
-  IconButton,
-  LinearProgress,
-  Chip,
-  Typography,
-} from '@mui/material';
+import { Box, Tab, Chip, Paper, Stack, Alert, Button, Tooltip, IconButton } from '@mui/material';
 
 // Removed MOCK_SUMMARY
 import { RoomDetailDrawer } from './components/RoomDetailDrawer';
@@ -75,7 +61,6 @@ const RoomAvailabilityScreen = () => {
     DEFAULT_ROOM_AVAILABILITY_FILTERS
   );
   const [reservationDateFilter, setReservationDateFilter] = useState<string>('');
-  const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
   const [detailRoom, setDetailRoom] = useState<RoomAvailabilityItem | null>(null);
   const [isDetailOpen, setDetailOpen] = useState(false);
   const [isReservationOpen, setReservationOpen] = useState(false);
@@ -175,12 +160,6 @@ const RoomAvailabilityScreen = () => {
     }
   }, []);
 
-  const handleViewSchedule = useCallback((roomId: string) => {
-    setSelectedRoomId(roomId);
-    setActiveTab('availability');
-    shikshaMitraToast.info({ message: 'Scroll to room schedule in table view.' });
-  }, []);
-
   const handleReservationSuccess = useCallback(
     (reservation: RoomReservation) => {
       reservationsHook.addReservation(reservation);
@@ -207,8 +186,7 @@ const RoomAvailabilityScreen = () => {
     async (id: string): Promise<boolean> => {
       setPendingAction({ id, type: 'approve' });
       try {
-        const roomName =
-          reservationsHook.data.find((r) => r.id === id)?.roomName || 'Reservation';
+        const roomName = reservationsHook.data.find((r) => r.id === id)?.roomName || 'Reservation';
         const ok = await reservationsHook.updateReservation(id, {
           approvalStatus: 'approved',
           status: 'active',
@@ -233,8 +211,7 @@ const RoomAvailabilityScreen = () => {
     async (id: string, reason?: string): Promise<boolean> => {
       setPendingAction({ id, type: 'reject' });
       try {
-        const roomName =
-          reservationsHook.data.find((r) => r.id === id)?.roomName || 'Reservation';
+        const roomName = reservationsHook.data.find((r) => r.id === id)?.roomName || 'Reservation';
         const ok = await reservationsHook.updateReservation(id, {
           approvalStatus: 'rejected',
           status: 'rejected',
@@ -269,9 +246,7 @@ const RoomAvailabilityScreen = () => {
     reservationsHook.isFetching ||
     reservationsHook.isMutationLoading;
   const isScreenFetching =
-    availability.isFetching ||
-    reservationsHook.isFetching ||
-    reservationsHook.isMutationLoading;
+    availability.isFetching || reservationsHook.isFetching || reservationsHook.isMutationLoading;
 
   // ── Pending count for approval badge ──────────────────────────────────────
   const pendingCount = useMemo(
@@ -280,7 +255,15 @@ const RoomAvailabilityScreen = () => {
   );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', gap: 0.5 }}>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        overflow: 'hidden',
+        gap: 0.5,
+      }}
+    >
       {/* ── Breadcrumbs & Header ─────────────────────────── */}
       <Box sx={{ flexShrink: 0 }}>
         <CustomBreadcrumbs
@@ -432,7 +415,9 @@ const RoomAvailabilityScreen = () => {
       </Paper>
 
       {/* ── Tab Content Container with Scrollbar ──────────────────── */}
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{ flex: 1, minHeight: 0, overflow: 'auto', display: 'flex', flexDirection: 'column' }}
+      >
         {/* Availability Tab */}
         {activeTab === 'availability' && (
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -457,7 +442,7 @@ const RoomAvailabilityScreen = () => {
               canApprove={isApprover}
               onViewRoom={handleViewRoom}
               onReserveRoom={handleOpenReservation}
-              onViewSchedule={handleViewSchedule}
+              onViewSchedule={handleViewRoom}
             />
           </Box>
         )}
@@ -502,10 +487,6 @@ const RoomAvailabilityScreen = () => {
         open={isDetailOpen}
         room={detailRoom}
         onClose={() => setDetailOpen(false)}
-        onViewFullSchedule={(roomId) => {
-          setDetailOpen(false);
-          setSelectedRoomId(roomId);
-        }}
       />
 
       {/* Smart Reservation Drawer */}

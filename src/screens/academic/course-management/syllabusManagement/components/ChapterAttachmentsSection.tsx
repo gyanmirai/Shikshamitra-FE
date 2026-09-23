@@ -1,8 +1,9 @@
 import type { FileData } from 'src/components/custom-upload';
 
 import { Iconify } from 'src/components/iconify';
+import { Box, Stack, Typography } from '@mui/material';
 import FileUploader from 'src/components/custom-upload';
-import { Box, Paper, Stack, Divider, Typography } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 interface ChapterAttachmentsSectionProps {
   documents: (File | FileData)[];
@@ -16,23 +17,11 @@ export function ChapterAttachmentsSection({
   onPreview,
 }: ChapterAttachmentsSectionProps) {
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: 2.5,
-        borderRadius: 2,
-      }}
+    <FormSectionCard
+      icon="solar:folder-with-files-linear"
+      title="Attachments"
+      description="Add supporting files and review everything attached to this chapter."
     >
-      <Stack spacing={0.5} mb={2}>
-        <Typography component="h2" variant="subtitle1" fontWeight={700}>
-          Attachments
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Add supporting files and review everything attached to this chapter.
-        </Typography>
-      </Stack>
-      <Divider sx={{ mb: 2 }} />
-
       <Box
         sx={{
           display: 'grid',
@@ -133,6 +122,6 @@ export function ChapterAttachmentsSection({
           )}
         </Box>
       </Box>
-    </Paper>
+    </FormSectionCard>
   );
 }

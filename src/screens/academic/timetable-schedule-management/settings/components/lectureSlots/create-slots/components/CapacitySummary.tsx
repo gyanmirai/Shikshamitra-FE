@@ -25,10 +25,11 @@ export default function CapacitySummary({
 }: CapacitySummaryProps) {
   const stats = useMemo(() => {
     const groups = (slotConfigurations || [])
-      .filter((c) => Array.isArray(c.weekRange) && c.weekRange.length === 2)
+      .filter((c) => Array.isArray(c.weekRange) && c.weekRange.length > 0)
       .map((c) => ({
         weekRangeStart: c.weekRange![0],
-        weekRangeEnd: c.weekRange![1],
+        weekRangeEnd: c.weekRange![c.weekRange!.length - 1],
+        activeDays: c.weekRange,
         timeSlots: c.timeSlots || [],
       }));
 

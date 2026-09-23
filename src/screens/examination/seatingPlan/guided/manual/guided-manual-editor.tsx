@@ -47,6 +47,7 @@ function GuidedManualEditorContent({
       mixDivisions: workflow.formik.values.mixDivisions,
       specialRequirementPriority: workflow.formik.values.specialRequirementPriority,
     },
+    inProgressPreview: workflow.preview,
     onPreviewChange: workflow.setManualPreview,
   });
   const sensors = useSensors(

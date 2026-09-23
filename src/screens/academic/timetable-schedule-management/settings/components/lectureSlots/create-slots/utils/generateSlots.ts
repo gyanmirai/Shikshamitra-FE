@@ -62,7 +62,7 @@ export const createDefaultConfig = () => {
   return {
     id,
     totalSlots: '',
-    weekRange: [0, 5] as [number, number],
+    weekRange: [0, 1, 2, 3, 4, 5] as number[],
     timeSlots: [] as IGeneratedSlot[],
     expanded: true,
   };

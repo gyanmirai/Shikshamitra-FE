@@ -3,9 +3,10 @@ import type { FormikProps } from 'formik';
 import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
+import { Grid, Stack, Typography, InputAdornment } from '@mui/material';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
-import { Box, Grid, Paper, Stack, Divider, Typography, InputAdornment } from '@mui/material';
 
 import { ChapterNumberField } from './ChapterNumberField';
 import { AdditionalFieldsActionButton } from './AdditionalFieldsActionButton';
@@ -43,109 +44,99 @@ export function ChapterDetailsSection({
       : 'Choose the expected teaching start and end dates.');
 
   return (
-    <Paper variant="outlined" sx={{ p: 2.5, mb: 2.5, borderRadius: 2 }}>
-      <Stack spacing={0.5} mb={2}>
-        <Typography component="h2" variant="subtitle1" fontWeight={700}>
-          Chapter details
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          Enter the chapter identity and its expected teaching window.
-        </Typography>
-      </Stack>
-      <Divider sx={{ mb: 2 }} />
-
-      <Grid container spacing={2}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChapterNumberField
-            value={formik.values.chapterNo}
-            error={formik.touched.chapterNo ? formik.errors.chapterNo : undefined}
-            onChange={formik.handleChange}
-            onBlur={formik.handleBlur}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ShakingTextField
-            error={Boolean(formik.touched.chapterName && formik.errors.chapterName)}
-          >
-            <LanguageInputField
-              fullWidth
-              label="Chapter Name *"
-              name="chapterName"
-              placeholder="e.g. Introduction to Algebra"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Iconify
-                      icon="mdi:book-open-variant"
-                      width={15}
-                      sx={{ color: 'text.disabled' }}
-                    />
-                  </InputAdornment>
-                ),
-              }}
-              value={formik.values.chapterName}
-              onChange={(event) => formik.setFieldValue('chapterName', event.target.value)}
-              size="small"
-              error={Boolean(formik.touched.chapterName && formik.errors.chapterName)}
-              helperText={formik.touched.chapterName && formik.errors.chapterName}
-            />
-          </ShakingTextField>
-        </Grid>
-
-        <Grid size={12}>
-          <ShakingTextField error={Boolean(dateError)}>
-            <CustomDateRangePicker
-              required
-              label="Expected teaching dates"
-              title="Select expected teaching dates"
-              value={[formik.values.startDate, formik.values.endDate]}
-              dateFormat="DD/MM/YYYY"
-              minDate={academicYearStart ? dayjs(academicYearStart) : undefined}
-              maxDate={academicYearEnd ? dayjs(academicYearEnd) : undefined}
-              disablePast={!isEditing}
-              error={Boolean(dateError)}
-              helperText={dateHelperText}
-              onChange={([startDate, endDate]) => {
-                formik.setFieldValue('startDate', startDate);
-                formik.setFieldValue('endDate', endDate);
-                formik.setFieldTouched('startDate', true, false);
-                formik.setFieldTouched('endDate', true, false);
-              }}
-            />
-          </ShakingTextField>
-        </Grid>
-      </Grid>
-
-      <Divider sx={{ my: 2.5 }} />
-
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        alignItems={{ xs: 'stretch', sm: 'center' }}
-        justifyContent="space-between"
-        spacing={2}
+    <Stack spacing={1.5} mb={2.5}>
+      <FormSectionCard
+        icon="mdi:book-open-page-variant-outline"
+        title="Chapter details"
+        description="Enter the chapter identity and its expected teaching window."
       >
-        <Box>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              Additional chapter details
-            </Typography>
-            {additionalFieldsCount > 0 && (
-              <Typography variant="caption" color="text.secondary">
-                {additionalFieldsCount} configured
-              </Typography>
-            )}
-          </Stack>
-          <Typography variant="body2" color="text.secondary">
-            Add planning, learning outcomes, resources, notes, and assessment details.
-          </Typography>
-        </Box>
+        <Grid container spacing={1.5}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ChapterNumberField
+              value={formik.values.chapterNo}
+              error={formik.touched.chapterNo ? formik.errors.chapterNo : undefined}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+            />
+          </Grid>
 
-        <AdditionalFieldsActionButton
-          configuredCount={additionalFieldsCount}
-          onClick={onOpenAdditionalFields}
-        />
-      </Stack>
-    </Paper>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ShakingTextField
+              error={Boolean(formik.touched.chapterName && formik.errors.chapterName)}
+            >
+              <LanguageInputField
+                fullWidth
+                label="Chapter Name *"
+                name="chapterName"
+                placeholder="e.g. Introduction to Algebra"
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Iconify
+                        icon="mdi:book-open-variant"
+                        width={15}
+                        sx={{ color: 'text.disabled' }}
+                      />
+                    </InputAdornment>
+                  ),
+                }}
+                value={formik.values.chapterName}
+                onChange={(event) => formik.setFieldValue('chapterName', event.target.value)}
+                size="small"
+                error={Boolean(formik.touched.chapterName && formik.errors.chapterName)}
+                helperText={formik.touched.chapterName && formik.errors.chapterName}
+              />
+            </ShakingTextField>
+          </Grid>
+
+          <Grid size={12}>
+            <ShakingTextField error={Boolean(dateError)}>
+              <CustomDateRangePicker
+                required
+                label="Expected teaching dates"
+                title="Select expected teaching dates"
+                value={[formik.values.startDate, formik.values.endDate]}
+                dateFormat="DD/MM/YYYY"
+                minDate={academicYearStart ? dayjs(academicYearStart) : undefined}
+                maxDate={academicYearEnd ? dayjs(academicYearEnd) : undefined}
+                disablePast={!isEditing}
+                error={Boolean(dateError)}
+                helperText={dateHelperText}
+                onChange={([startDate, endDate]) => {
+                  formik.setFieldValue('startDate', startDate);
+                  formik.setFieldValue('endDate', endDate);
+                  formik.setFieldTouched('startDate', true, false);
+                  formik.setFieldTouched('endDate', true, false);
+                }}
+              />
+            </ShakingTextField>
+          </Grid>
+        </Grid>
+      </FormSectionCard>
+
+      <FormSectionCard
+        icon="mdi:text-box-plus-outline"
+        title="Additional chapter details"
+        description="Add planning, learning outcomes, resources, notes, and assessment details."
+      >
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          justifyContent="space-between"
+          spacing={1.5}
+        >
+          <Typography variant="body2" color="text.secondary">
+            {additionalFieldsCount > 0
+              ? `${additionalFieldsCount} optional ${additionalFieldsCount === 1 ? 'field' : 'fields'} configured`
+              : 'No optional details configured yet'}
+          </Typography>
+
+          <AdditionalFieldsActionButton
+            configuredCount={additionalFieldsCount}
+            onClick={onOpenAdditionalFields}
+          />
+        </Stack>
+      </FormSectionCard>
+    </Stack>
   );
 }

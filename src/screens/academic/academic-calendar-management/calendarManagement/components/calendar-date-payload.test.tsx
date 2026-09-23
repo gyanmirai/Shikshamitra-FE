@@ -80,6 +80,9 @@ describe('calendar form DateTimeOffset payloads', () => {
         }}
       />
     );
+    expect(screen.getByRole('textbox', { name: 'Vacation dates *' })).toHaveValue(
+      '15/09/2026 - 17/09/2026'
+    );
     fireEvent.click(screen.getByRole('button', { name: 'Update Day' }));
     await waitFor(() => expect(payloads).toHaveLength(1));
     expect(payloads[0]).toMatchObject({

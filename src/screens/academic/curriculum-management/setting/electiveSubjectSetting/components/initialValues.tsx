@@ -10,6 +10,8 @@ export const getElectiveSubjectInitialValues = (editData?: IElectiveSubject | nu
   sortOrder: editData?.sortOrder ?? '',
 });
 
+export type ElectiveSubjectFormValues = ReturnType<typeof getElectiveSubjectInitialValues>;
+
 const getStatusLabel = (status?: IElectiveSubject['status']) => {
   if (status === 2 || status === 'Archived') return 'Archived';
   if (status === 1 || status === 'Inactive') return 'Inactive';

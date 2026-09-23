@@ -5,11 +5,7 @@
  */
 
 export type TimetableSettingStatus =
-  | 'PendingSlotSetup'
-  | 'PendingWeeklyLectures'
-  | 'OverCapacity'
-  | 'FreeSlotsAvailable'
-  | 'Balanced';
+  'PendingSlotSetup' | 'PendingWeeklyLectures' | 'OverCapacity' | 'FreeSlotsAvailable' | 'Balanced';
 
 export interface TimeSlotLike {
   slotType?: string | number;
@@ -18,6 +14,7 @@ export interface TimeSlotLike {
 export interface SlotGroupLike {
   weekRangeStart: number;
   weekRangeEnd: number;
+  activeDays?: number[];
   timeSlots: TimeSlotLike[];
 }
 
@@ -31,12 +28,19 @@ export const getNonTeachingSlotsPerDay = (timeSlots: TimeSlotLike[] = []) =>
   timeSlots.length - getTeachingSlotsPerDay(timeSlots);
 
 export const getActiveDaysCount = (
-  groups: Pick<SlotGroupLike, 'weekRangeStart' | 'weekRangeEnd'>[] = []
-) => groups.reduce((sum, g) => sum + (g.weekRangeEnd - g.weekRangeStart + 1), 0);
+  groups: Pick<SlotGroupLike, 'weekRangeStart' | 'weekRangeEnd' | 'activeDays'>[] = []
+) =>
+  groups.reduce(
+    (sum, g) => sum + (g.activeDays?.length ?? Math.max(0, g.weekRangeEnd - g.weekRangeStart + 1)),
+    0
+  );
 
 export const getWeeklyTeachingCapacity = (groups: SlotGroupLike[] = []) =>
   groups.reduce(
-    (sum, g) => sum + getTeachingSlotsPerDay(g.timeSlots) * (g.weekRangeEnd - g.weekRangeStart + 1),
+    (sum, g) =>
+      sum +
+      getTeachingSlotsPerDay(g.timeSlots) *
+        (g.activeDays?.length ?? Math.max(0, g.weekRangeEnd - g.weekRangeStart + 1)),
     0
   );
 
