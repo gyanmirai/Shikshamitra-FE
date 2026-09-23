@@ -6,6 +6,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Grid, Button, DialogActions } from '@mui/material';
 import { DialogScrollContent } from 'src/components/customDialog';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { useSubjectForm } from './hooks/useSubjectForm';
@@ -23,10 +24,16 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ onClose, editData }) 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={2}>
-          <SubjectIdentityFields formik={formik} />
-          <SubjectConfigurationFields formik={formik} isUsed={Boolean(editData?.isUsed)} />
-        </Grid>
+        <FormSectionCard
+          icon="mdi:book-open-page-variant-outline"
+          title="Subject details"
+          description="Define how this subject is named, grouped, and identified across academics."
+        >
+          <Grid container spacing={1.5}>
+            <SubjectIdentityFields formik={formik} />
+            <SubjectConfigurationFields formik={formik} isUsed={Boolean(editData?.isUsed)} />
+          </Grid>
+        </FormSectionCard>
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

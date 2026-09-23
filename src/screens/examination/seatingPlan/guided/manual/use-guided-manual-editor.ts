@@ -3,7 +3,7 @@ import type {
   GuidedAllocationPreviewDto,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
 import { buildEmptyDraft } from '../../utils/mappers';
 import { autoAllocate } from '../../utils/autoAllocate';
@@ -20,6 +20,7 @@ interface UseGuidedManualEditorArgs {
   plan: SeatingPlanGroupDto;
   selectedRoomIds: string[];
   rules: SeatingAllocationRules;
+  inProgressPreview?: GuidedAllocationPreviewDto;
   onPreviewChange: (preview?: GuidedAllocationPreviewDto) => void;
 }
 
@@ -29,18 +30,13 @@ export function useGuidedManualEditor({
   plan,
   selectedRoomIds,
   rules,
+  inProgressPreview,
   onPreviewChange,
 }: UseGuidedManualEditorArgs) {
   const seating = useSeatingDraft(buildEmptyDraft(examId));
   const { draft, setDraft, actions } = seating;
   const [activeRoomId, setActiveRoomId] = useState(selectedRoomIds[0] ?? '');
   const [selectedStudentId, setSelectedStudentId] = useState('');
-  /**
-   * Memoization Justification:
-   * - This callback is a dependency of the editor data-loading effect.
-   * - A stable reference prevents seat-layout and student API requests from restarting on render.
-   */
-  const resetPreview = useCallback(() => onPreviewChange(undefined), [onPreviewChange]);
   const { isLoading, loadError, isLoaded } = useGuidedManualData({
     examId,
     standardId,
@@ -48,7 +44,7 @@ export function useGuidedManualEditor({
     selectedRoomIds,
     rules,
     setDraft,
-    resetPreview,
+    inProgressPreview,
   });
 
   useEffect(() => {

@@ -14,7 +14,8 @@ export interface IBulkChapterEntry {
 }
 
 export interface IBulkChapterFormProps {
-  onClose: (e: any, isSubmit: boolean) => void;
+  open: boolean;
+  onClose: () => void;
   className?: string;
   subject?: string;
   classId?: string;

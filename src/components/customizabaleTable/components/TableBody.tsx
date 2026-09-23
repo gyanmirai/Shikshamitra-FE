@@ -12,8 +12,8 @@ import {
 } from '@mui/material';
 
 import TableEmptyState from './TableEmptyState';
-import TableBodyLoadingRows from './TableBodyLoadingRows';
 import { getColumnSizeSx } from '../utils/columnSizing';
+import TableBodyLoadingRows from './TableBodyLoadingRows';
 
 import type { IData, IColumn } from '../types';
 
@@ -31,6 +31,9 @@ interface TableBodyProps {
   noDataText?: React.ReactNode;
   tableRef: number;
   rowsPerPage?: number;
+  searchTerm?: string;
+  hasActiveFilters?: boolean;
+  onClearCriteria?: () => void;
 }
 
 export const TableBody = ({
@@ -47,6 +50,9 @@ export const TableBody = ({
   noDataText = 'No data available',
   tableRef,
   rowsPerPage = 10,
+  searchTerm = '',
+  hasActiveFilters = false,
+  onClearCriteria,
 }: TableBodyProps) => {
   const theme = useTheme();
 
@@ -66,7 +72,13 @@ export const TableBody = ({
       <MuiTableBody>
         <TableRow>
           <TableCell colSpan={columns.length} sx={{ p: 0 }}>
-            <TableEmptyState noDataText={noDataText} tableWidth={tableRef} />
+            <TableEmptyState
+              noDataText={noDataText}
+              tableWidth={tableRef}
+              searchTerm={searchTerm}
+              hasActiveFilters={hasActiveFilters}
+              onClearCriteria={onClearCriteria}
+            />
           </TableCell>
         </TableRow>
       </MuiTableBody>

@@ -44,6 +44,7 @@ interface FileUploaderProps<T extends boolean = true> {
     ? (files: (File | FileData)[]) => void
     : (files: File | FileData) => void;
   onPreview?: (file: File | FileData) => void;
+  onReject?: (message: string) => void;
   error?: string;
   multiple?: T;
   value?: T extends true ? (File | FileData)[] : File | FileData;
@@ -55,6 +56,8 @@ interface FileUploaderProps<T extends boolean = true> {
   loading?: boolean;
   disabled?: boolean;
   hideDropzone?: boolean;
+  accept?: string;
+  showPreview?: boolean;
 }
 
 const getAbsoluteFileUrl = (url: string) => {
@@ -156,6 +159,7 @@ const FileUploader = <T extends boolean = true>({
   secondaryText = '',
   onChange,
   onPreview,
+  onReject,
   error,
   multiple = true as T,
   value,
@@ -167,6 +171,8 @@ const FileUploader = <T extends boolean = true>({
   loading = false,
   disabled = false,
   hideDropzone = false,
+  accept,
+  showPreview = true,
 }: FileUploaderProps<T>) => {
   const { sx: parentSx = {}, ...remainingProps } = parentsProps;
   const { sx = {}, ...dragRemainingProps } = dragProps;
@@ -215,7 +221,9 @@ const FileUploader = <T extends boolean = true>({
       const filteredFiles = newFiles.filter((file: File | FileData) => {
         const size = file instanceof File ? file.size : (file?.size ?? 0);
         if (size > maxSizeInBytes) {
-          shikshaMitraToast.error({ message: `File exceeds the 5 MB size limit.` });
+          const message = 'File exceeds the 5 MB size limit.';
+          shikshaMitraToast.error({ message });
+          onReject?.(message);
           return false;
         }
         if (file instanceof File) return allowedTypes.includes(file.type);
@@ -239,7 +247,9 @@ const FileUploader = <T extends boolean = true>({
       }
 
       if (size > maxSizeInBytes) {
-        shikshaMitraToast.error({ message: 'File exceeds the 5 MB size limit.' });
+        const message = 'File exceeds the 5 MB size limit.';
+        shikshaMitraToast.error({ message });
+        onReject?.(message);
         return;
       }
       onChange(newFile as any);
@@ -356,16 +366,18 @@ const FileUploader = <T extends boolean = true>({
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <CustomTooltip title="Preview">
-            <IconButton
-              size="small"
-              aria-label={`Preview ${file.name}`}
-              onClick={() => handlePreview(file)}
-              disabled={isDisabled}
-            >
-              <Iconify icon={GlobalIcons.eye} sx={{ width: 16, height: 16 }} />
-            </IconButton>
-          </CustomTooltip>
+          {showPreview && (
+            <CustomTooltip title="Preview">
+              <IconButton
+                size="small"
+                aria-label={`Preview ${file.name}`}
+                onClick={() => handlePreview(file)}
+                disabled={isDisabled}
+              >
+                <Iconify icon={GlobalIcons.eye} sx={{ width: 16, height: 16 }} />
+              </IconButton>
+            </CustomTooltip>
+          )}
           <CustomTooltip title="Download">
             <IconButton
               size="small"
@@ -483,7 +495,7 @@ const FileUploader = <T extends boolean = true>({
           <input
             ref={fileInputRef}
             type="file"
-            accept={allowedTypes.join(',')}
+            accept={accept || allowedTypes.join(',')}
             multiple={multiple}
             hidden
             disabled={isDisabled}

@@ -138,20 +138,8 @@ const WeeklyLectures = () => {
           { name: 'Settings' },
           { name: 'Weekly Lectures Slots' },
         ]}
-      // action={
-      //   <Button
-      //     startIcon={<Iconify icon="mdi:plus" />}
-      //     variant="contained"
-      //     size="small"
-      //     onClick={openCreate}
-      //     sx={{ px: '32px' }}
-      //   >
-      //     Weekly Lectures
-      //   </Button>
-      // }
+        action={<TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />}
       />
-
-      <TimetableSettingsSummaryCards cards={summaryCards} />
 
       <CustomizableTable
         tableId="weekly-lectures-setting-table"

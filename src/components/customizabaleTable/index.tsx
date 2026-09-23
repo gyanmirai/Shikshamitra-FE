@@ -461,7 +461,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 aria-label={`${tableTitle} table`}
                 size={dense ? 'small' : 'medium'}
                 sx={{
-                  height: (data.length >0 || isLoading) ? 'auto': '100%',
+                  height: data.length > 0 || isLoading ? 'auto' : '100%',
                   '&:focus-visible': {
                     outline: '2px solid',
                     outlineColor: 'primary.main',
@@ -498,6 +498,12 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   noDataText={noDataText}
                   tableRef={tableRef}
                   rowsPerPage={rowsPerPage}
+                  searchTerm={searchTerm}
+                  hasActiveFilters={filters.length > 0}
+                  onClearCriteria={() => {
+                    handleClearSearch();
+                    handleClearAllFilters();
+                  }}
                 />
               </Table>
             </TableContainer>
@@ -603,6 +609,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       tableTitle,
       tableId,
       sortedData,
+      data.length,
     ]
   );
 

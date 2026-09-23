@@ -1,6 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import { buildGuidedManualPreview } from './manual-preview';
+import { buildGuidedManualPreview, restoreManualPreviewAssignments } from './manual-preview';
 
 import type { SeatingStudent, SeatingAssignment, SeatingRoomLayout } from '../../types';
 
@@ -59,5 +59,67 @@ describe('guided manual preview', () => {
     ];
 
     expect(buildGuidedManualPreview(students, rooms, assignments).assignments).toEqual([]);
+  });
+
+  it('restores an in-progress manual preview after returning from Review', () => {
+    const savedAssignments: SeatingAssignment[] = [
+      {
+        studentId: 'external-student',
+        roomId: 'room-1',
+        seatId: 'room-1:1',
+        seatNumber: 1,
+        assignedBy: 'manual',
+        isExternalExamOccupied: true,
+      },
+    ];
+
+    const restored = restoreManualPreviewAssignments(
+      savedAssignments,
+      {
+        assignments: [
+          {
+            studentId: 'student-1',
+            roomId: 'room-1',
+            seatNumber: 3,
+            benchId: 'bench-2',
+          },
+        ],
+        unallocatedStudentIds: ['student-2'],
+        totalStudents: 2,
+        roomsUsed: 1,
+        emptySeats: 0,
+        utilizationPercent: 100,
+      },
+      ['room-1']
+    );
+
+    expect(restored).toEqual([
+      savedAssignments[0],
+      {
+        studentId: 'student-1',
+        roomId: 'room-1',
+        seatId: 'room-1:3',
+        seatNumber: 3,
+        benchId: 'bench-2',
+        assignedBy: 'manual',
+      },
+    ]);
+  });
+
+  it('does not restore preview assignments from rooms removed during Configure', () => {
+    const restored = restoreManualPreviewAssignments(
+      [],
+      {
+        assignments: [{ studentId: 'student-1', roomId: 'room-2', seatNumber: 1 }],
+        unallocatedStudentIds: [],
+        totalStudents: 1,
+        roomsUsed: 1,
+        emptySeats: 0,
+        utilizationPercent: 100,
+      },
+      ['room-1']
+    );
+
+    expect(restored).toEqual([]);
   });
 });

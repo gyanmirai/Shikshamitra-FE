@@ -8,10 +8,10 @@ import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { Box, Card, Button, Typography } from '@mui/material';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { Box, Card, Stack, Button, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
@@ -85,8 +85,12 @@ const LectureSlots = () => {
             ?.map((config: any) => {
               const fromDay = getDayLabel(config.fromDay);
               const toDay = getDayLabel(config.toDay);
-              const dayRange = config.fromDay === config.toDay ? fromDay : `${fromDay} to ${toDay}`;
-              return `${dayRange} ${config.totalSlots} slot${config.totalSlots === 1 ? '' : 's'}`;
+              const daySelection = config.activeDays?.length
+                ? config.activeDays.map(getDayLabel).join(', ')
+                : config.fromDay === config.toDay
+                  ? fromDay
+                  : `${fromDay} to ${toDay}`;
+              return `${daySelection} ${config.totalSlots} slot${config.totalSlots === 1 ? '' : 's'}`;
             })
             .join(' ') ?? '';
 
@@ -217,6 +221,11 @@ const LectureSlots = () => {
               const { fromDay, toDay, totalSlots } = item;
               const startLabel = getDayLabel(fromDay);
               const endLabel = getDayLabel(toDay);
+              const daySelection = item.activeDays?.length
+                ? item.activeDays.map(getDayLabel).join(', ')
+                : fromDay === toDay
+                  ? startLabel
+                  : `${startLabel} → ${endLabel}`;
               return (
                 <Box
                   key={index}
@@ -245,7 +254,7 @@ const LectureSlots = () => {
                       mr: 0.5,
                     }}
                   >
-                    {fromDay === toDay ? startLabel : `${startLabel} → ${endLabel}`}
+                    {daySelection}
                   </Typography>
                   <Typography
                     variant="body2"
@@ -392,22 +401,25 @@ const LectureSlots = () => {
             { name: 'Lecture Slots' },
           ]}
           action={
-            canAdd ? (
-              <Button
-                sx={{ width: '160px' }}
-                startIcon={<Add />}
-                onClick={() => {
-                  setEditData(null);
-                  setIsEdit(false);
-                  addLectureSlotDialog.onTrue();
-                  router.push(`${pathname}?action=add`);
-                }}
-                variant="contained"
-                size="small"
-              >
-                Lecture Slot
-              </Button>
-            ) : null
+            <Stack direction="row" spacing={1} alignItems="center">
+              <TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />
+              {canAdd && (
+                <Button
+                  sx={{ width: '160px' }}
+                  startIcon={<Add />}
+                  onClick={() => {
+                    setEditData(null);
+                    setIsEdit(false);
+                    addLectureSlotDialog.onTrue();
+                    router.push(`${pathname}?action=add`);
+                  }}
+                  variant="contained"
+                  size="small"
+                >
+                  Lecture Slot
+                </Button>
+              )}
+            </Stack>
           }
         />
       )}
@@ -435,38 +447,35 @@ const LectureSlots = () => {
           />
         </Card>
       ) : (
-        <>
-          <TimetableSettingsSummaryCards cards={summaryCards} />
-          <CustomizableTable
-            tableId="lecture-slots-setting-table"
-            noDataText={
-              <>
-                Lecture slots not configured{' '}
-                {canAdd && (
-                  <Box
-                    onClick={() => {
-                      addLectureSlotDialog.onTrue();
-                    }}
-                    color="primary.main"
-                    fontWeight={600}
-                    sx={{
-                      '&:hover': {
-                        cursor: 'pointer',
-                        color: 'primary.main',
-                        textDecoration: 'underline',
-                      },
-                    }}
-                  >
-                    Create Slots
-                  </Box>
-                )}
-              </>
-            }
-            columns={columns}
-            data={tableData}
-            isLoading={isLectureSlotsLoading}
-          />
-        </>
+        <CustomizableTable
+          tableId="lecture-slots-setting-table"
+          noDataText={
+            <>
+              Lecture slots not configured{' '}
+              {canAdd && (
+                <Box
+                  onClick={() => {
+                    addLectureSlotDialog.onTrue();
+                  }}
+                  color="primary.main"
+                  fontWeight={600}
+                  sx={{
+                    '&:hover': {
+                      cursor: 'pointer',
+                      color: 'primary.main',
+                      textDecoration: 'underline',
+                    },
+                  }}
+                >
+                  Create Slots
+                </Box>
+              )}
+            </>
+          }
+          columns={columns}
+          data={tableData}
+          isLoading={isLectureSlotsLoading}
+        />
       )}
     </Box>
   );

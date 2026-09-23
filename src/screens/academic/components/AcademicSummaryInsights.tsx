@@ -8,7 +8,7 @@ import type { AcademicInsightMetric, AcademicInsightsProps } from './academic-in
 
 export type { ITimetableSummaryCard };
 
-type Props = Pick<AcademicInsightsProps, 'open' | 'onClose' | 'hideTrigger'> & {
+type Props = Pick<AcademicInsightsProps, 'open' | 'onClose' | 'hideTrigger' | 'buttonSx'> & {
   cards: ITimetableSummaryCard[];
   title?: string;
   description?: string;
@@ -27,6 +27,7 @@ export function AcademicSummaryInsights({
   open,
   onClose,
   hideTrigger,
+  buttonSx,
 }: Props) {
   const metrics: AcademicInsightMetric[] = cards.map((card) => ({
     id: card.label.toLowerCase().replace(/\s+/g, '-'),
@@ -51,6 +52,7 @@ export function AcademicSummaryInsights({
       open={open}
       onClose={onClose}
       hideTrigger={hideTrigger}
+      buttonSx={buttonSx}
       chart={{
         title: 'Metric comparison',
         description: 'A quick comparison of the current values shown above.',

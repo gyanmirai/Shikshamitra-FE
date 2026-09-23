@@ -1,5 +1,8 @@
 import type { Dispatch, SetStateAction } from 'react';
-import type { SeatingPlanGroupDto } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
+import type {
+  SeatingPlanGroupDto,
+  GuidedAllocationPreviewDto,
+} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
 
 import { useRef, useState, useEffect } from 'react';
 import {
@@ -9,6 +12,7 @@ import {
 
 import { buildEmptyDraft } from '../../utils/mappers';
 import { mapGuidedManualEditorData } from './manual-data-mappers';
+import { restoreManualPreviewAssignments } from './manual-preview';
 
 import type { SeatingPlanDraft, SeatingAllocationRules } from '../../types';
 import type { ManualLayoutResponseDto, ManualStudentResponseDto } from './manual-editor-types';
@@ -20,7 +24,7 @@ interface Args {
   selectedRoomIds: string[];
   rules: SeatingAllocationRules;
   setDraft: Dispatch<SetStateAction<SeatingPlanDraft>>;
-  resetPreview: () => void;
+  inProgressPreview?: GuidedAllocationPreviewDto;
 }
 
 export function useGuidedManualData({
@@ -30,7 +34,7 @@ export function useGuidedManualData({
   selectedRoomIds,
   rules,
   setDraft,
-  resetPreview,
+  inProgressPreview,
 }: Args) {
   const [loadStudents] = useLazyGetSeatAllocationStudentsQuery();
   const [loadLayout] = useLazyGetSeatLayoutQuery();
@@ -39,6 +43,8 @@ export function useGuidedManualData({
   const [isLoaded, setIsLoaded] = useState(false);
   const rulesRef = useRef(rules);
   rulesRef.current = rules;
+  const previewRef = useRef(inProgressPreview);
+  previewRef.current = inProgressPreview;
   const selectedRoomKey = [...selectedRoomIds].sort().join('|');
   const previousRoomKey = [...plan.selectedRoomIds].sort().join('|');
   const divisionKey = plan.divisions.map((division) => division.id).sort().join('|');
@@ -50,7 +56,6 @@ export function useGuidedManualData({
       setIsLoading(true);
       setIsLoaded(false);
       setLoadError('');
-      resetPreview();
       try {
         const [studentResponses, layoutResponses] = await Promise.all([
           Promise.all(
@@ -87,7 +92,11 @@ export function useGuidedManualData({
           roomIds: selectedRoomIds,
           students: data.students,
           rooms: data.rooms,
-          assignments: data.assignments,
+          assignments: restoreManualPreviewAssignments(
+            data.assignments,
+            previewRef.current,
+            selectedRoomIds
+          ),
           allocationRules: rulesRef.current,
           isLocked: plan.isLocked,
         });
@@ -109,7 +118,6 @@ export function useGuidedManualData({
     loadStudents,
     plan,
     previousRoomKey,
-    resetPreview,
     selectedRoomIds,
     selectedRoomKey,
     setDraft,

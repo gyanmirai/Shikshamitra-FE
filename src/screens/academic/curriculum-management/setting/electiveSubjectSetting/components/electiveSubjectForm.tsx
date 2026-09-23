@@ -4,219 +4,62 @@ import React from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ShakingTextField from 'src/components/shaking-text-field';
+import { Stack, Button, DialogActions } from '@mui/material';
 import { DialogScrollContent } from 'src/components/customDialog';
-import { ResponsiveMultiSelect } from 'src/components/responsiveMultiSelect';
-import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import {
-  Box,
-  Grid,
-  Alert,
-  Button,
-  Divider,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
 
 import { useElectiveSubjectForm } from '../hooks/useElectiveSubjectForm';
+import { ElectiveGroupDetailsFields } from './ElectiveGroupDetailsFields';
+import { ElectiveGroupSubjectSelection } from './ElectiveGroupSubjectSelection';
 
 import type { IElectiveSubjectFormProps } from '../type';
 
-const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
-  open,
-  onClose,
-  editData,
-}) => {
+const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({ onClose, editData }) => {
   const { formik, subjectData, isSubjectLoading, isSaveLoading, areSubjectsLocked } =
-    useElectiveSubjectForm({
-      onClose,
-      editData,
-    });
+    useElectiveSubjectForm({ onClose, editData });
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
-        <Grid container spacing={1}>
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="subtitle2">Basic Details</Typography>
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(formik.touched.name && formik.errors.name)}>
-              <TextField
-                fullWidth
-                label="Elective Group Name *"
-                name="name"
-                onChange={(e) => {
-                  const value = e.target.value
-                    .split(' ')
-                    .map((word) =>
-                      word
-                        .split('/')
-                        .map((part) =>
-                          part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : ''
-                        )
-                        .join('/')
-                    )
-                    .join(' ');
-                  formik.setFieldValue('name', value);
-                }}
-                size="small"
-                value={formik.values.name}
-                error={formik.touched.name && Boolean(formik.errors.name)}
-                helperText={formik.touched.name && formik.errors.name}
-              />
-            </ShakingTextField>
-          </Grid>
+        <Stack spacing={1.5}>
+          <FormSectionCard
+            icon="mdi:shape-outline"
+            title="Group details"
+            description="Define the elective group identity and how it appears across academics."
+          >
+            <ElectiveGroupDetailsFields formik={formik} />
+          </FormSectionCard>
 
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label="Group Type *"
-              name="groupType"
-              value={formik.values.groupType}
-              onChange={formik.handleChange}
-              error={formik.touched.groupType && Boolean(formik.errors.groupType)}
-              helperText={formik.touched.groupType && formik.errors.groupType}
-            >
-              {groupTypeOptions.map((option) => (
-                <MenuItem key={option} value={option}>
-                  {option}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }} sx={{ mb: 1 }}>
-            <ShakingTextField error={!!(formik.touched.color && formik.errors.color) || false}>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 0.5 }}>
-                <Typography
-                  variant="subtitle2"
-                  color={
-                    formik.touched.color && formik.errors.color ? 'error.main' : 'text.primary'
-                  }
-                >
-                  Elective Group Color *
-                </Typography>
-                <CustomTooltip
-                  arrow
-                  placement="right"
-                  sx={{ textAlign: 'justify' }}
-                  title="This subject color is used throughout the system to visually identify this subject."
-                >
-                  <Box component="span" sx={{ display: 'inline-flex' }}>
-                    <Iconify
-                      icon="lucide:info"
-                      sx={{ cursor: 'pointer' }}
-                      color="info.main"
-                      width={18}
-                      height={18}
-                    />
-                  </Box>
-                </CustomTooltip>
-              </Box>
-              <ColorPickerCircle
-                onSelect={(color: string) => formik.setFieldValue('color', color)}
-                initialColor={formik.values.color}
-              />
-            </ShakingTextField>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              multiline
-              minRows={2}
-              size="small"
-              label="Description"
-              name="description"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <Divider />
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="subtitle2">Subject Selection</Typography>
-          </Grid>
-
-          {areSubjectsLocked && (
-            <Grid size={{ xs: 12 }}>
-              <Alert severity="info" variant="outlined" icon={<Iconify icon="lucide:lock" />}>
-                Subject selection is locked because this elective group is already used in academic
-                records. You can still update all other group details. Create a new elective group
-                to use a different subject combination.
-              </Alert>
-            </Grid>
-          )}
-
-          <Grid size={{ xs: 12 }}>
-            <ResponsiveMultiSelect
-              label="Select Subjects *"
-              options={subjectData || []}
+          <FormSectionCard
+            icon="mdi:book-multiple-outline"
+            title="Subject selection"
+            description="Choose the subjects that belong to this elective group."
+          >
+            <ElectiveGroupSubjectSelection
+              formik={formik}
+              subjects={subjectData || []}
               isLoading={isSubjectLoading}
-              disabled={areSubjectsLocked}
-              value={formik.values.subjectIds}
-              getOptionLabel={(opt: any) => opt?.name}
-              getOptionValue={(opt: any) => opt?.id}
-              onChange={(selected: string[]) => {
-                formik.setFieldValue('subjectIds', selected);
-              }}
-              error={!!(formik.touched.subjectIds && formik.errors.subjectIds)}
-              helperText={
-                Array.isArray(formik.errors.subjectIds)
-                  ? formik.errors.subjectIds.join(', ')
-                  : (formik.touched.subjectIds && formik.errors.subjectIds) || undefined
-              }
+              isLocked={areSubjectsLocked}
             />
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <Divider />
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <Typography variant="subtitle2">Settings</Typography>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              label="Sort Order"
-              name="sortOrder"
-              value={formik.values.sortOrder}
-              onChange={formik.handleChange}
-              error={formik.touched.sortOrder && Boolean(formik.errors.sortOrder)}
-              helperText={formik.touched.sortOrder && formik.errors.sortOrder}
-              inputProps={{ min: 0 }}
-            />
-          </Grid>
-        </Grid>
+          </FormSectionCard>
+        </Stack>
       </DialogScrollContent>
 
-      <DialogActions>
+      <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           size="small"
           onClick={() => onClose(null, false)}
           variant="outlined"
+          disabled={isSaveLoading || formik.isSubmitting}
         >
           Cancel
         </Button>
         <LoadingButton
           size="small"
           variant="contained"
-          loading={isSaveLoading}
+          loading={isSaveLoading || formik.isSubmitting}
           startIcon={
             <Iconify
               icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -224,7 +67,7 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
               height={editData ? 16 : 20}
             />
           }
-          onClick={(e: any) => formik.handleSubmit(e)}
+          onClick={() => formik.submitForm()}
           type="submit"
         >
           {editData ? 'Update Group' : 'Save Group'}
@@ -235,13 +78,3 @@ const SettingElectiveSubjectForm: React.FC<IElectiveSubjectFormProps> = ({
 };
 
 export default SettingElectiveSubjectForm;
-
-const groupTypeOptions = [
-  'Language',
-  'Skill Subject',
-  'Optional Subject',
-  'Vocational Subject',
-  'Activity Subject',
-  'Stream Elective',
-  'Custom',
-];

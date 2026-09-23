@@ -1,13 +1,13 @@
 'use client';
 
 import dayjs from 'dayjs';
-import { useEffect, useState } from 'react';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
+import { useState, useEffect } from 'react';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { useBoolean } from 'src/hooks/use-boolean';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
   Tab,
@@ -34,15 +34,9 @@ interface RoomDetailDrawerProps {
   open: boolean;
   room: RoomAvailabilityItem | null;
   onClose: () => void;
-  onViewFullSchedule?: (roomId: string) => void;
 }
 
-export const RoomDetailDrawer = ({
-  open,
-  room,
-  onClose,
-  onViewFullSchedule,
-}: RoomDetailDrawerProps) => {
+export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps) => {
   const tabState = useBoolean(false); // false=schedule, true=audit
   const activeTab = tabState.value ? 'audit' : 'details';
 
@@ -211,7 +205,8 @@ export const RoomDetailDrawer = ({
             {/* Current Usage / Conflict */}
             {(() => {
               const usageText = room.occupiedBy || room.reservationPurpose;
-              const isSameAsConflict = usageText && room.conflictReason && usageText === room.conflictReason;
+              const isSameAsConflict =
+                usageText && room.conflictReason && usageText === room.conflictReason;
 
               return (
                 <>
@@ -262,7 +257,15 @@ export const RoomDetailDrawer = ({
 
             {/* Utilization */}
             {room.utilizationPercentage != null && (
-              <Box sx={{ p: 2, borderRadius: 2, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  border: 1,
+                  borderColor: 'divider',
+                  bgcolor: 'background.paper',
+                }}
+              >
                 <Stack direction="row" justifyContent="space-between" sx={{ mb: 1 }}>
                   <Typography variant="subtitle2" fontWeight={700}>
                     Utilization
@@ -333,7 +336,12 @@ export const RoomDetailDrawer = ({
                             {slot.time}
                           </Typography>
                         </Box>
-                        <Typography variant="caption" color="text.secondary" noWrap sx={{ flex: 1 }}>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          noWrap
+                          sx={{ flex: 1 }}
+                        >
                           {slot.details}
                         </Typography>
                         <Chip

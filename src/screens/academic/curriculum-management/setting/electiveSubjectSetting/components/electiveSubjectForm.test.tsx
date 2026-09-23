@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { it, vi, expect, describe, beforeEach } from 'vitest';
 
 import SettingElectiveSubjectForm from './electiveSubjectForm';
 
@@ -87,6 +87,8 @@ describe('SettingElectiveSubjectForm subject membership lock', () => {
     expect(screen.getByRole('button', { name: 'Subject selector' })).toBeDisabled();
     expect(screen.getByText(/subject selection is locked/i)).toBeVisible();
     expect(screen.getByLabelText('Elective Group Name *')).toBeEnabled();
+    expect(screen.getByRole('heading', { name: 'Group details' })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Subject selection' })).toBeVisible();
   });
 
   it('allows subject selection and omits the note for an unused group', () => {

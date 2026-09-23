@@ -438,7 +438,6 @@ const DISPLAY_STATUS_FILTER_OPTIONS = Object.keys(DISPLAY_STATUS_COLORS).map((st
   label: status,
 }));
 
-
 const TimeTableGrid = () => {
   const router = useRouter();
   // Dialog state for creating time slots modal
@@ -893,9 +892,9 @@ const TimeTableGrid = () => {
                   setSelectedStandardId(found?.id || '');
                 }}
               />
+              <TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />
             </Box>
           </Card>
-          <TimetableSettingsSummaryCards cards={summaryCards} />
           <CustomizableTable
             tableId="timetable-table"
             noDataText={
@@ -1256,7 +1255,9 @@ const TimeTableForm = ({
           id: resolvedId,
           subjectId: resolvedId,
           name: subject?.electiveGroupId
-            ? (subject?.subjects?.length === 1 ? subject?.subjects?.[0]?.subjectName : subject?.electiveGroupName)
+            ? subject?.subjects?.length === 1
+              ? subject?.subjects?.[0]?.subjectName
+              : subject?.electiveGroupName
             : subject?.subjects?.[0]?.subjectName,
           color: subject?.color,
           defaultDuration: 60,
@@ -1655,7 +1656,7 @@ const TimeTableForm = ({
               size="small"
               color={
                 assignmentProgress.teacherAssigned === assignmentProgress.totalFilledSubjects &&
-                  assignmentProgress.totalFilledSubjects > 0
+                assignmentProgress.totalFilledSubjects > 0
                   ? 'success'
                   : 'default'
               }
@@ -1673,7 +1674,7 @@ const TimeTableForm = ({
               size="small"
               color={
                 assignmentProgress.roomAssigned === assignmentProgress.totalFilledSubjects &&
-                  assignmentProgress.totalFilledSubjects > 0
+                assignmentProgress.totalFilledSubjects > 0
                   ? 'success'
                   : 'default'
               }
@@ -1852,7 +1853,9 @@ const TimeTableForm = ({
                 color: validationResult?.passed ? 'success.main' : 'error.main',
                 bgcolor: (theme) =>
                   alpha(
-                    validationResult?.passed ? theme.palette.success.main : theme.palette.error.main,
+                    validationResult?.passed
+                      ? theme.palette.success.main
+                      : theme.palette.error.main,
                     0.1
                   ),
               }}

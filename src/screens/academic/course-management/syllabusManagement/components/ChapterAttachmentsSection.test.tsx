@@ -20,6 +20,10 @@ describe('ChapterAttachmentsSection', () => {
       <ChapterAttachmentsSection documents={[]} onChange={vi.fn()} onPreview={vi.fn()} />
     );
 
+    expect(screen.getByRole('heading', { name: 'Attachments' })).toBeInTheDocument();
+    expect(
+      screen.getByText('Add supporting files and review everything attached to this chapter.')
+    ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Upload files' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'View attachments' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Drop files here or browse' })).toBeInTheDocument();
