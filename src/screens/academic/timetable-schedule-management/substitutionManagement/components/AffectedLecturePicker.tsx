@@ -8,6 +8,7 @@ type AffectedLecturePickerProps = {
   selectedLectureId: string;
   hasTeacher: boolean;
   hasValidRange: boolean;
+  invalidRangeMessage?: string;
   loading: boolean;
   loadError: boolean;
   onSelect: (lecture: AffectedLectureRow) => void;
@@ -18,6 +19,7 @@ export function AffectedLecturePicker({
   selectedLectureId,
   hasTeacher,
   hasValidRange,
+  invalidRangeMessage = 'End time must be later than start time.',
   loading,
   loadError,
   onSelect,
@@ -27,7 +29,7 @@ export function AffectedLecturePicker({
   }
 
   if (!hasValidRange) {
-    return <Alert severity="error">End time must be later than start time.</Alert>;
+    return <Alert severity="error">{invalidRangeMessage}</Alert>;
   }
 
   if (loading) {
@@ -100,12 +102,12 @@ export function AffectedLecturePicker({
                 <Button
                   size="small"
                   variant={isSelected ? 'contained' : 'outlined'}
-                  startIcon={isSelected ? <CheckCircle /> : <Add />}
+                  startIcon={isSelected || !canSelect ? <CheckCircle /> : <Add />}
                   disabled={!canSelect}
                   onClick={() => onSelect(lecture)}
                   sx={{ minHeight: 44, flexShrink: 0 }}
                 >
-                  {!canSelect ? 'Already covered' : isSelected ? 'Selected' : 'Use lecture'}
+                  {!canSelect ? 'Covered' : isSelected ? 'Selected' : 'Select lecture'}
                 </Button>
               </Stack>
             </Box>

@@ -74,6 +74,8 @@ export type TeacherAvailabilityRow = {
   reason: string;
   isFullDay: boolean;
   affectedLectureCount: number;
+  coveredLectureCount?: number;
+  uncoveredLectureCount?: number;
   canCreateSubstitution?: boolean;
   notifyLeadership: boolean;
   activeSubstitutionStatuses?: SubstitutionStatus[];

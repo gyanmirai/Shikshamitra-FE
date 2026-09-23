@@ -6,13 +6,20 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 
 interface IFormFooterProps {
+  disabled?: boolean;
   isEdit?: boolean;
   loading?: boolean;
   onCancel: () => void;
   onSubmit: () => void;
 }
 
-const FormFooter: React.FC<IFormFooterProps> = ({ isEdit, loading, onCancel, onSubmit }) => (
+const FormFooter: React.FC<IFormFooterProps> = ({
+  disabled,
+  isEdit,
+  loading,
+  onCancel,
+  onSubmit,
+}) => (
   <Box
     sx={{
       position: 'absolute',
@@ -46,6 +53,7 @@ const FormFooter: React.FC<IFormFooterProps> = ({ isEdit, loading, onCancel, onS
     <LoadingButton
       variant="contained"
       size="small"
+      disabled={disabled}
       loading={loading}
       startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
       onClick={onSubmit}

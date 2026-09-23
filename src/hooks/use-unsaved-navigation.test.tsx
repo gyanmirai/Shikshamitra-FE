@@ -13,7 +13,9 @@ function Fixture({ push, dirty = true }: { push: (href: string) => void; dirty?:
   return (
     <>
       <a href="/hr/payroll/structure">Payroll structure</a>
-      <a href="/new-window" target="_blank">New window</a>
+      <a href="/new-window" target="_blank">
+        New window
+      </a>
       {confirmation}
     </>
   );
@@ -33,7 +35,13 @@ describe('shared unsaved navigation', () => {
     expect(screen.getByRole('dialog', { name: 'Discard unsaved changes?' })).toBeVisible();
     expect(push).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    const keepEditingButton = screen.getByRole('button', { name: 'Keep editing' });
+    const discardButton = screen.getByRole('button', { name: 'Discard changes' });
+
+    expect(keepEditingButton).toHaveClass('MuiButton-sizeSmall');
+    expect(discardButton).toHaveClass('MuiButton-sizeSmall');
+
+    fireEvent.click(discardButton);
     expect(push).toHaveBeenCalledExactlyOnceWith('/hr/payroll/structure');
   });
 

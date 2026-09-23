@@ -35,14 +35,6 @@ export function useSubjectTableRows(subjects?: ISubjectFormValues[]): SubjectTab
             {item.isAiSuggested && (
               <Chip size="small" label="AI" color="secondary" sx={{ height: 18, fontSize: 10 }} />
             )}
-            {item.isCopiedFromPreviousYear && (
-              <Chip
-                size="small"
-                label="Copied"
-                variant="outlined"
-                sx={{ height: 18, fontSize: 10 }}
-              />
-            )}
           </Box>
         ),
         subjectCodeValue: item.subjects?.map((subject) => subject.subjectCode).join(', ') || '—',

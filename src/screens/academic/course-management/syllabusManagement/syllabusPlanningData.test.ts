@@ -77,9 +77,16 @@ describe('syllabusPlanningData - getChapterProgress and getCoverageStatus', () =
 
   it('evaluates status color correctly', () => {
     expect(statusColor('Completed')).toBe('success');
+    expect(statusColor('Linked')).toBe('success');
+    expect(statusColor('Mapped')).toBe('success');
     expect(statusColor('In Progress')).toBe('info');
+    expect(statusColor('Partially Mapped')).toBe('info');
+    expect(statusColor('Assigned')).toBe('info');
     expect(statusColor('Delayed')).toBe('error');
     expect(statusColor('Not Started')).toBe('warning');
+    expect(statusColor('Not Linked')).toBe('warning');
+    expect(statusColor('Not Mapped')).toBe('warning');
+    expect(statusColor('Unknown')).toBe('default');
   });
 
   it('computes syllabus metrics properly', () => {

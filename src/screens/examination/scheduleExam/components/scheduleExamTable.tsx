@@ -18,26 +18,14 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { formatWallClockTime } from 'src/utils/time-of-day';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
-import {
-  Box,
-  Tab,
-  Chip,
-  Tabs,
-  Paper,
-  Stack,
-  Alert,
-  Button,
-  MenuList,
-  MenuItem,
-  Typography,
-} from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { Box, Tab, Chip, Tabs, Paper, Stack, Alert, Button, Typography } from '@mui/material';
 import {
   usePublishExamMutation,
   useLazyGetExamScheduleQuery,
@@ -229,7 +217,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
         body: subjects.map((subject: any) => [
           `${subject.subjectName || '-'}${subject.subjectCode ? ` (${subject.subjectCode})` : ''}`,
           (subject.examDate ?? subject.date ?? subject.scheduleDate) &&
-            dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
+          dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).isValid()
             ? dayjs(subject.examDate ?? subject.date ?? subject.scheduleDate).format('DD-MM-YYYY')
             : '-',
           formatWallClockTime(subject.startTime ?? subject.fromTime ?? subject.start),
@@ -345,49 +333,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
       effectiveStatus: row.status,
     }));
   }, [getExams?.data?.items]);
-
-  // Actions component for the three dots menu
-  // Renders menu items for printing and publishing timetables
-  // Uses useCallback to memoize the component for performance
-  const actions = ({ popover: pop, row }: any) =>
-    canView || canAdd ? (
-      <>
-        {' '}
-        <MenuList>
-          <MenuItem
-            onClick={() => {
-              setPreviewExam(row);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon="solar:eye-bold" />
-            Preview
-          </MenuItem>
-
-          <MenuItem
-            onClick={() => {
-              onViewTimetable?.(row as IExamFormValues);
-              pop.onClose();
-            }}
-          >
-            <Iconify icon="solar:calendar-bold-duotone" />
-            View Timetable
-          </MenuItem>
-
-          {/* Menu item for printing the timetable */}
-          <MenuItem
-            onClick={() => {
-              handlePrintTimetable(row as IExamFormValues);
-              pop.onClose();
-            }}
-            disabled={printingExamId === row.examId}
-          >
-            <Iconify icon="solar:printer-outline" />
-            Print Timetable
-          </MenuItem>
-        </MenuList>
-      </>
-    ) : null;
 
   return (
     <>
@@ -635,10 +580,68 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               stickyPosition: 'right',
               isFilter: false,
               render(value, row) {
-                const primaryAction = getScheduleExamPrimaryAction(
-                  row.status,
-                  row.issueCount ?? 0
-                );
+                const primaryAction = getScheduleExamPrimaryAction(row.status, row.issueCount ?? 0);
+                const isPending = tabs.value === examScheduledStatus.Pending;
+                const actions = [
+                  ...(canView
+                    ? [
+                        {
+                          id: 'view',
+                          label: 'View exam',
+                          icon: 'solar:eye-bold',
+                          onClick: () => setPreviewExam(row as IExamFormValues),
+                        },
+                      ]
+                    : []),
+                  ...(isPending && canAdd
+                    ? [
+                        {
+                          id: 'edit',
+                          label: 'Edit exam',
+                          icon: 'solar:pen-bold',
+                          onClick: () => {
+                            setOpenDialog?.(true);
+                            setEditData?.(row as IExamFormValues);
+                          },
+                        },
+                      ]
+                    : []),
+                  ...(isPending && canDelete
+                    ? [
+                        {
+                          id: 'delete',
+                          label: 'Delete exam',
+                          icon: 'solar:trash-bin-trash-bold',
+                          color: 'error.main',
+                          onClick: () => onDelete?.(row as IExamFormValues),
+                        },
+                      ]
+                    : []),
+                  ...(canView || canAdd
+                    ? [
+                        {
+                          id: 'preview',
+                          label: 'Preview',
+                          icon: 'solar:eye-bold',
+                          onClick: () => setPreviewExam(row as IExamFormValues),
+                        },
+                        {
+                          id: 'timetable',
+                          label: 'View timetable',
+                          icon: 'solar:calendar-bold-duotone',
+                          onClick: () => onViewTimetable?.(row as IExamFormValues),
+                        },
+                        {
+                          id: 'print',
+                          label: 'Print timetable',
+                          icon: 'solar:printer-outline',
+                          disabled: printingExamId === row.examId,
+                          onClick: () => handlePrintTimetable(row as IExamFormValues),
+                        },
+                      ]
+                    : []),
+                ];
+
                 return (
                   <Stack direction="row" spacing={0.5} alignItems="center">
                     {canAdd && primaryAction && (
@@ -661,21 +664,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                         {primaryAction.label}
                       </Button>
                     )}
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
-                      placement="right-top"
-                      showViewIcon={canView}
-                      showDeleteIcon={tabs.value === examScheduledStatus.Pending && canDelete}
-                      showEditIcon={tabs.value === examScheduledStatus.Pending && canAdd}
-                      handleViewClick={() => setPreviewExam(row as IExamFormValues)}
-                      handleDeleteClick={() => {
-                        onDelete?.(row as IExamFormValues);
-                      }}
-                      handleEditClick={() => {
-                        setOpenDialog?.(true);
-                        setEditData?.(row as IExamFormValues);
-                      }}
-                    />
+                    <AdaptiveThreeDotsActions actions={actions} placement="right-top" />
                   </Stack>
                 );
               },

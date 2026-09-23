@@ -1,6 +1,6 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { Box, Chip, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 
 import { PeriodsPerWeekButton } from './SubjectTableCells';
 import { getPrimaryTeacherNames } from '../../utils/primaryTeacherNames';
@@ -30,7 +30,7 @@ export function getSubjectTableBaseColumns(
     },
     {
       id: 'subjectsName',
-      label: 'Subject Name',
+      label: 'Subject',
       align: 'left',
       isFilter: false,
       isSort: false,
@@ -66,26 +66,17 @@ export function getSubjectTableBaseColumns(
       render: (_value, row) => {
         const teacherNames = getPrimaryTeacherNames(row as ISubjectFormValues);
         return teacherNames.length === 0 ? (
-          <Chip
-            size="small"
-            label="Not Assigned"
-            color="warning"
-            variant="soft"
-            sx={{ height: 20, fontSize: 11 }}
-          />
+          <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic' }}>
+            Teacher not assigned
+          </Typography>
         ) : (
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-            {teacherNames.map((name) => (
-              <Chip
-                key={name}
-                size="small"
-                label={name}
-                variant="soft"
-                color="info"
-                sx={{ height: 22, fontSize: 11 }}
-              />
+          <Stack spacing={0.25}>
+            {teacherNames.map((teacherName) => (
+              <Typography key={teacherName} variant="body2" sx={{ lineHeight: 1.4 }}>
+                {teacherName}
+              </Typography>
             ))}
-          </Box>
+          </Stack>
         );
       },
     },
@@ -105,7 +96,7 @@ export function getSubjectTableBaseColumns(
     },
     {
       id: 'weeklyPeriodsDisplay',
-      label: 'Periods/Wk',
+      label: 'Periods/week',
       align: 'center',
       minWidth: 80,
       width: 80,

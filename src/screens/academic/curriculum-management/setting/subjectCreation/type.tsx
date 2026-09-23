@@ -80,6 +80,8 @@ export interface ISubjectTableProps {
   onViewUsage: (data: ISubject) => void;
   onEdit: (data: ISubject) => void;
   onOpenDrawer: () => void;
+  insightsOpen: boolean;
+  onCloseInsights: () => void;
   canAdd?: boolean;
   canView?: boolean;
   canDelete?: boolean;

@@ -808,6 +808,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                     <Box
                       sx={{
                         display: 'flex',
+                        alignItems: 'center',
                         flexWrap: 'wrap',
                         gap: 0.75,
                         pt: 0.5,
@@ -818,7 +819,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                         variant="caption"
                         color="text.secondary"
                         fontWeight={600}
-                        sx={{ width: '100%', mb: 0.5 }}
+                        sx={{ mr: 0.5, whiteSpace: 'nowrap' }}
                       >
                         {formik.values.subjects.length} subject
                         {formik.values.subjects.length !== 1 ? 's' : ''} selected
@@ -834,10 +835,8 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                             height: 26,
                             borderRadius: '13px',
                             border: '1px solid',
-                            borderColor: sub.subjectColor
-                              ? alpha(sub.subjectColor, 0.3)
-                              : 'divider',
-                            bgcolor: sub.subjectColor ? alpha(sub.subjectColor, 0.1) : 'grey.100',
+                            borderColor: 'divider',
+                            bgcolor: 'action.hover',
                           }}
                         >
                           <Box
@@ -852,7 +851,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           <Typography
                             variant="caption"
                             fontWeight={600}
-                            sx={{ color: sub.subjectColor || 'text.primary', lineHeight: 1 }}
+                            sx={{ color: 'text.primary', lineHeight: 1 }}
                           >
                             {sub.subjectName}
                           </Typography>

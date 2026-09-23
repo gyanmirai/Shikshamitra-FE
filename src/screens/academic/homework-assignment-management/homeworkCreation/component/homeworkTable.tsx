@@ -1,10 +1,10 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Stack, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Stack, Typography, IconButton } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
+import { getLearningTaskTableActions } from './learningTaskTableActions';
 import {
   getSubmissionProgress,
   getEvaluationProgress,
@@ -13,7 +13,12 @@ import {
   LearningTaskSummaryCards,
 } from './learningTaskUi';
 
-import type { IHomework, IHomeworkTableProps, DivisionHomeworkMeta } from '../type';
+import type {
+  IHomework,
+  IHomeworkDetail,
+  IHomeworkTableProps,
+  DivisionHomeworkMeta,
+} from '../type';
 
 /**
  * HomeworkTable Component - Displays a table of homework assignments with filtering and action capabilities
@@ -62,7 +67,10 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
           ...hw,
           homeworkType: hw.homeworkType || hw.homeworkTypeName,
           classDivision: `${hw.standardName || hw.className || '-'} / ${currentDivision?.divisionName || '-'}`,
-          subjectChapter: [hw.subjectName || hw.subject, hw.chapterName || hw.chapterNames?.join(', ')]
+          subjectChapter: [
+            hw.subjectName || hw.subject,
+            hw.chapterName || hw.chapterNames?.join(', '),
+          ]
             .filter(Boolean)
             .join(' / '),
           currentDivisionId: currentDivision?.divisionId,
@@ -196,57 +204,28 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
               const rowWithDivision = { ...row, divisionMeta: divisionData } as IHomework & {
                 divisionMeta?: DivisionHomeworkMeta;
               };
+              const actions = getLearningTaskTableActions({
+                canView,
+                canEdit: canAdd && isDraft,
+                canPublish: canAdd && isDraft,
+                canViewSubmissions: true,
+                canDelete,
+                deleteDisabled: !isDraft,
+                deleteTooltip: isDraft ? 'Delete' : 'Archive published tasks later',
+                onView: () => onViewDetails(rowWithDivision),
+                onEdit: () => onEditDetails(row as IHomework),
+                onPublish: () => handleSwitchChange(row as IHomework),
+                onViewSubmissions: () =>
+                  onViewSubmission(rowWithDivision as unknown as IHomeworkDetail),
+                onDelete: () => onDeleteDetails(row as IHomework),
+              });
 
               return (
-                <Stack direction="row" spacing={1}>
-                  {canView && (
-                    <CustomTooltip title="View Details" arrow>
-                      <IconButton size="small" onClick={() => onViewDetails(rowWithDivision)}>
-                        <Iconify icon="solar:eye-bold" width={18} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                  {canAdd && isDraft && (
-                    <CustomTooltip title="Edit" arrow>
-                      <IconButton size="small" onClick={() => onEditDetails(row as IHomework)}>
-                        <Iconify icon="solar:pen-bold" width={18} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                  {canAdd && isDraft && (
-                    <CustomTooltip title="Publish Now" arrow>
-                      <IconButton size="small" onClick={() => handleSwitchChange(row as IHomework)}>
-                        <Iconify icon="solar:upload-bold" width={18} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                  <CustomTooltip title="View Submissions" arrow>
-                    <IconButton size="small" onClick={() => onViewSubmission(row as any)}>
-                      <Iconify icon="solar:inbox-in-bold" width={18} />
-                    </IconButton>
-                  </CustomTooltip>
-                  <CustomTooltip title="Send Reminder will be enabled after notification wiring" arrow>
-                    <span>
-                      <IconButton size="small" disabled>
-                        <Iconify icon="solar:bell-bold" width={18} />
-                      </IconButton>
-                    </span>
-                  </CustomTooltip>
-                  {canDelete && (
-                    <CustomTooltip title={isDraft ? 'Delete' : 'Archive published tasks later'} arrow>
-                      <span>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          disabled={!isDraft}
-                          onClick={() => onDeleteDetails(row as IHomework)}
-                        >
-                          <Iconify icon="solar:trash-bin-trash-bold" width={18} />
-                        </IconButton>
-                      </span>
-                    </CustomTooltip>
-                  )}
-                </Stack>
+                <AdaptiveThreeDotsActions
+                  actions={actions}
+                  placement="right-top"
+                  moreLabel="More homework actions"
+                />
               );
             },
           },

@@ -1,12 +1,11 @@
-import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
   Chip,
   Stack,
   Button,
-  Typography,
   Accordion,
+  Typography,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
@@ -33,7 +32,7 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
         mb: 2,
         borderRadius: 2,
         border: '1px solid',
-        borderColor: readiness.isReady ? 'success.main' : 'warning.main',
+        borderColor: 'divider',
         bgcolor: 'background.paper',
         boxShadow: 'none',
         overflow: 'hidden',
@@ -42,15 +41,10 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
     >
       <AccordionSummary
         expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
-        sx={(theme) => ({
+        sx={{
           p: 2,
-          bgcolor: varAlpha(
-            readiness.isReady
-              ? theme.vars.palette.success.mainChannel
-              : theme.vars.palette.warning.mainChannel,
-            0.12
-          ),
-          color: readiness.isReady ? 'success.dark' : 'warning.dark',
+          bgcolor: 'action.hover',
+          color: 'text.primary',
           '& .MuiAccordionSummary-content': {
             my: 0,
             alignItems: 'center',
@@ -58,18 +52,7 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
           '& .MuiAccordionSummary-expandIconWrapper': {
             color: 'inherit',
           },
-          ...theme.applyStyles('dark', {
-            bgcolor: varAlpha(
-              readiness.isReady
-                ? theme.vars.palette.success.mainChannel
-                : theme.vars.palette.warning.mainChannel,
-              0.2
-            ),
-            color: readiness.isReady
-              ? theme.vars.palette.success.light
-              : theme.vars.palette.warning.light,
-          }),
-        })}
+        }}
       >
         <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
           <Iconify
@@ -79,6 +62,7 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
                 : 'solar:danger-triangle-bold-duotone'
             }
             width={24}
+            color={readiness.isReady ? 'success.main' : 'warning.main'}
           />
           <Box>
             <Typography variant="subtitle1" fontWeight={800}>

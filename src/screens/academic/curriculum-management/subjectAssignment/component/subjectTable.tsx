@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { useState, useCallback } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Button, Typography } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -14,6 +13,7 @@ import { getSubjectDisplayLabel } from '../utils/getSubjectDisplayLabel';
 import { useSubjectTableRows } from './subjectTable/useSubjectTableRows';
 import { SubjectScheduleDrawer } from './subjectTable/SubjectScheduleDrawer';
 import { useSubjectTableColumns } from './subjectTable/useSubjectTableColumns';
+import { SubjectTableEmptyState } from './subjectTable/SubjectTableEmptyState';
 
 import type { ISubjectFormValues, ISubjectTableProps } from './type';
 
@@ -34,6 +34,7 @@ const SubjectTable = ({
   const scheduleDrawer = useBoolean();
   const { onTrue: openScheduleDrawer } = scheduleDrawer;
   const [scheduleSubject, setScheduleSubject] = useState<ISubjectFormValues | null>(null);
+  const [tableSearch, setTableSearch] = useState('');
 
   const canAdd = hasGrantedPermission(
     permissions,
@@ -81,17 +82,17 @@ const SubjectTable = ({
         tableId="subject-table"
         isLoading={isLoading}
         totalCount={totalCount}
+        searchTerm={tableSearch}
+        onSearchInputChange={setTableSearch}
+        searchFieldProps={{ placeholder: 'Search subjects or codes' }}
         noDataText={
-          <Box width="100%" display="flex" flexDirection="column" alignItems="center">
-            <Typography variant="body2" color="text.secondary" mb={1}>
-              No subjects allocated for this class yet.
-            </Typography>
-            {canAdd && (
-              <Button variant="text" onClick={addSubjectDialog.onTrue}>
-                + Allocate Subjects
-              </Button>
-            )}
-          </Box>
+          <SubjectTableEmptyState
+            hasSubjects={totalCount > 0}
+            searchTerm={tableSearch}
+            canAdd={canAdd}
+            onAllocate={addSubjectDialog.onTrue}
+            onClearSearch={() => setTableSearch('')}
+          />
         }
         serverSidePagination
         onServerPagination={(page, rowPerPage) => {

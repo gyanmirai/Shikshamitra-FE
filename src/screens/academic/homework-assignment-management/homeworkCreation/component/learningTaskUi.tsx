@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
-import {
-  TimetableSettingsSummaryCards,
-  type ITimetableSummaryCard,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import { Chip } from '@mui/material';
+import {
+  type ITimetableSummaryCard,
+  TimetableSettingsSummaryCards,
+} from 'src/screens/academic/components/AcademicSummaryInsights';
 
 type LearningTaskStatus = {
   label: string;

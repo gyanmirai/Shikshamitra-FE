@@ -15,7 +15,8 @@ export function AdditionalFieldsActionButton({
 
   return (
     <Button
-      variant={hasConfiguredFields ? 'outlined' : 'contained'}
+      variant="outlined"
+      color="inherit"
       size="small"
       onClick={onClick}
       startIcon={
@@ -26,7 +27,7 @@ export function AdditionalFieldsActionButton({
       }
       sx={{ minHeight: 44, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}
     >
-      {hasConfiguredFields ? 'Edit Additional Fields' : 'Add Additional Fields'}
+      {hasConfiguredFields ? 'Edit details' : 'Add details'}
     </Button>
   );
 }

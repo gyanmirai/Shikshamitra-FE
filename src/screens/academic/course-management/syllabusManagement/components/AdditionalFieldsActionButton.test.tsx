@@ -11,8 +11,8 @@ describe('AdditionalFieldsActionButton', () => {
   it('presents an add action before any fields are configured', () => {
     render(<AdditionalFieldsActionButton configuredCount={0} onClick={vi.fn()} />);
 
-    const button = screen.getByRole('button', { name: 'Add Additional Fields' });
-    expect(button).toHaveClass('MuiButton-contained');
+    const button = screen.getByRole('button', { name: 'Add details' });
+    expect(button).toHaveClass('MuiButton-outlined');
     expect(button.querySelector('[data-icon="solar:add-circle-linear"]')).toBeInTheDocument();
   });
 
@@ -24,7 +24,7 @@ describe('AdditionalFieldsActionButton', () => {
 
     rerender(<AdditionalFieldsActionButton configuredCount={20} onClick={onClick} />);
 
-    const button = screen.getByRole('button', { name: 'Edit Additional Fields' });
+    const button = screen.getByRole('button', { name: 'Edit details' });
     expect(button).toHaveClass('MuiButton-outlined');
     expect(button.querySelector('[data-icon="solar:pen-bold"]')).toBeInTheDocument();
   });

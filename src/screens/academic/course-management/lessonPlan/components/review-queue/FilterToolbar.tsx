@@ -5,12 +5,10 @@ import type { Dayjs } from 'dayjs';
 import React from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import ToggleButton from '@mui/material/ToggleButton';
 import CustomSelect from 'src/components/custom-select';
-import InputAdornment from '@mui/material/InputAdornment';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
@@ -19,8 +17,6 @@ import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-p
 export type ReviewDateFilterMode = 'all' | 'day' | 'range';
 
 export type FilterToolbarProps = {
-  teacherSearch: string;
-  onTeacherSearchChange: (val: string) => void;
   selectedClass: string;
   onClassChange: (val: string) => void;
   classOptions: { label: string; value: string }[];
@@ -45,8 +41,6 @@ export type FilterToolbarProps = {
 };
 
 export const FilterToolbar = ({
-  teacherSearch,
-  onTeacherSearchChange,
   selectedClass,
   onClassChange,
   classOptions,
@@ -85,34 +79,6 @@ export const FilterToolbar = ({
         useFlexGap
         sx={{ flexGrow: 1 }}
       >
-        {/* Search Teacher */}
-        <TextField
-          size="small"
-          placeholder="Search Teacher..."
-          value={teacherSearch}
-          onChange={(e) => onTeacherSearchChange(e.target.value)}
-          sx={{ minWidth: { xs: 1, sm: 170, md: 190 } }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <Iconify icon="solar:magnifer-linear" width={18} sx={{ color: 'text.disabled' }} />
-              </InputAdornment>
-            ),
-            endAdornment: teacherSearch ? (
-              <InputAdornment position="end">
-                <IconButton
-                  size="small"
-                  aria-label="Clear teacher search"
-                  onClick={() => onTeacherSearchChange('')}
-                  edge="end"
-                >
-                  <Iconify icon="solar:close-circle-bold" width={16} />
-                </IconButton>
-              </InputAdornment>
-            ) : null,
-          }}
-        />
-
         {/* Class Filter */}
         {classOptions.length > 0 && (
           <Box sx={{ minWidth: { xs: 1, sm: 130 } }}>

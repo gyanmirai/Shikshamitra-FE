@@ -5,20 +5,11 @@ import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState, useCallback } from 'react';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { Box, Grid, Typography, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useGetHomeworksQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
-import {
-  Box,
-  Grid,
-  MenuList,
-  MenuItem,
-  Typography,
-  ListItemText,
-  ToggleButton,
-  ToggleButtonGroup,
-} from '@mui/material';
 
 interface HomeworkAssignmentCardsProps {
   standardId?: string;
@@ -77,21 +68,6 @@ const HomeworkAssignmentCards = ({
       dueDate: i.dueDate ?? i.endDate ?? '',
     }));
   }, [assignmentData]);
-
-  const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <>
-        {' '}
-        <MenuList>
-          <MenuItem>
-            <Iconify icon="mdi:bell" />
-            <ListItemText>Send Notification</ListItemText>
-          </MenuItem>
-        </MenuList>
-      </>
-    ),
-    []
-  );
 
   const handleChangeView = useCallback(
     (event: React.MouseEvent<HTMLElement>, newView: string | null) => {
@@ -161,8 +137,15 @@ const HomeworkAssignmentCards = ({
                 isFilter: false,
                 render(value, row) {
                   return (
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
+                    <AdaptiveThreeDotsActions
+                      actions={[
+                        {
+                          id: 'notify',
+                          label: 'Send notification',
+                          icon: 'mdi:bell',
+                          onClick: () => undefined,
+                        },
+                      ]}
                       placement="right-top"
                     />
                   );
@@ -201,8 +184,15 @@ const HomeworkAssignmentCards = ({
                 isFilter: false,
                 render(value, row) {
                   return (
-                    <ThreeDotsActions
-                      actions={(prop) => actions({ ...prop, row })}
+                    <AdaptiveThreeDotsActions
+                      actions={[
+                        {
+                          id: 'notify',
+                          label: 'Send notification',
+                          icon: 'mdi:bell',
+                          onClick: () => undefined,
+                        },
+                      ]}
                       placement="right-top"
                     />
                   );

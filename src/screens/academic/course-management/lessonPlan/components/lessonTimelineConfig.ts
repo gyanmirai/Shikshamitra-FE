@@ -1,9 +1,9 @@
 'use client';
 
 import dayjs from 'dayjs';
+import { varAlpha } from 'src/theme/styles';
 import isBetween from 'dayjs/plugin/isBetween';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { varAlpha } from 'src/theme/styles';
 
 dayjs.extend(isBetween);
 dayjs.extend(customParseFormat);
@@ -128,9 +128,9 @@ export const LESSON_STATUS_CONFIG: Record<LessonVisualStateKey, LessonStatusConf
     showProgress: false,
     progressColor: 'error',
     isActionable: true,
-    actionableReason: 'HOD returned revision',
-    primaryActionLabel: 'Edit & Resubmit',
-    primaryActionIcon: 'solar:refresh-bold',
+    actionableReason: 'Rejected plans are locked; create a replacement',
+    primaryActionLabel: 'Create New Plan',
+    primaryActionIcon: 'mdi:plus',
     primaryActionVariant: 'contained',
     primaryActionColor: 'error',
   },

@@ -10,11 +10,11 @@ import { Iconify } from 'src/components/iconify';
 import {
   Box,
   Grid,
+  Chip,
   Stack,
   Alert,
   Paper,
   Button,
-  Chip,
   Tooltip,
   Typography,
   IconButton,
@@ -53,13 +53,13 @@ export const LessonTimelineCard: React.FC<LessonTimelineCardProps> = ({
 
   const normalizedPlan = hasPlan
     ? {
-      ...plan,
-      status: plan.status || plan.planStatus || planStatus,
-      planStatus: plan.planStatus || plan.status || planStatus,
-      className: plan.className || plan.standardName || slot.standardName,
-      divisionName: plan.divisionName || slot.divisionName,
-      subjectName: plan.subjectName || slot.subjectName,
-    }
+        ...plan,
+        status: plan.status || plan.planStatus || planStatus,
+        planStatus: plan.planStatus || plan.status || planStatus,
+        className: plan.className || plan.standardName || slot.standardName,
+        divisionName: plan.divisionName || slot.divisionName,
+        subjectName: plan.subjectName || slot.subjectName,
+      }
     : null;
 
   const insightSeverity =
@@ -80,7 +80,9 @@ export const LessonTimelineCard: React.FC<LessonTimelineCardProps> = ({
   };
 
   const cardAccentColor = accentColorMap[statusConfig.accentPaletteKey] || theme.palette.divider;
-  const completionPercentage = Number(plan?.plannedCompletionPercentage ?? plan?.actualCompletionPercentage ?? 0);
+  const completionPercentage = Number(
+    plan?.plannedCompletionPercentage ?? plan?.actualCompletionPercentage ?? 0
+  );
 
   // Show progress ONLY when meaningful (> 0%) or for explicit in-progress lessons with completion
   const shouldShowProgress = hasPlan && completionPercentage > 0;
@@ -163,11 +165,7 @@ export const LessonTimelineCard: React.FC<LessonTimelineCardProps> = ({
 
               <Stack spacing={0.25}>
                 <Stack direction="row" spacing={0.5} alignItems="center">
-                  <Iconify
-                    icon="solar:clock-circle-bold"
-                    width={14}
-                    color="text.secondary"
-                  />
+                  <Iconify icon="solar:clock-circle-bold" width={14} color="text.secondary" />
                   <Typography variant="body2" fontWeight={700} color="text.primary">
                     {slot.startTime || '08:00 AM'} – {slot.endTime || '08:40 AM'}
                   </Typography>
@@ -192,7 +190,8 @@ export const LessonTimelineCard: React.FC<LessonTimelineCardProps> = ({
             <Stack spacing={1}>
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                 <Typography variant="subtitle1" fontWeight={700} color="text.primary">
-                  {slot.subjectName || plan.subjectName || 'Subject'} — {plan.chapterName || 'Curriculum'}
+                  {slot.subjectName || plan.subjectName || 'Subject'} —{' '}
+                  {plan.chapterName || 'Curriculum'}
                 </Typography>
 
                 {/* Active Indicator Pulse for In Progress */}
@@ -329,8 +328,7 @@ export const LessonTimelineCard: React.FC<LessonTimelineCardProps> = ({
               justifyContent={{ xs: 'flex-start', md: 'flex-end' }}
               alignItems="center"
             >
-              {['Draft', 'NeedsChanges', 'Rejected'].includes(statusConfig.label) ||
-                ['draft', 'needsChanges', 'rejected'].includes(statusConfig.stateKey) ? (
+              {statusConfig.label === 'Draft' || statusConfig.stateKey === 'draft' ? (
                 <Button
                   variant="contained"
                   size="small"
@@ -342,8 +340,16 @@ export const LessonTimelineCard: React.FC<LessonTimelineCardProps> = ({
                 </Button>
               ) : null}
 
-              {['Approved', 'completed', 'inProgress'].includes(statusConfig.stateKey) || planStatus === 'Approved' ? (
-                <Tooltip title={plan?.diaryStatus === 1 || plan?.diaryStatus === 'Submitted' ? "Diary already submitted" : ""} arrow>
+              {['Approved', 'completed', 'inProgress'].includes(statusConfig.stateKey) ||
+              planStatus === 'Approved' ? (
+                <Tooltip
+                  title={
+                    plan?.diaryStatus === 1 || plan?.diaryStatus === 'Submitted'
+                      ? 'Diary already submitted'
+                      : ''
+                  }
+                  arrow
+                >
                   <Box component="span">
                     <Button
                       variant="contained"

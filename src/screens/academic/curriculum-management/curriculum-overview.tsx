@@ -5,11 +5,12 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Add } from '@mui/icons-material';
+import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   Box,
   Chip,
@@ -104,11 +105,17 @@ const CurriculumOverview = (props: TabComponentType) => {
         label: 'Actions',
         isSort: false,
         render: (value: any, row: any) => (
-          <ThreeDotsActions
+          <AdaptiveThreeDotsActions
+            actions={[
+              {
+                id: 'edit',
+                label: 'Edit curriculum',
+                icon: GlobalIcons.edit,
+                onClick: () => handleEditCurriculum(row),
+              },
+            ]}
             placement="right-top"
-            showEditIcon
-            showThreeDots={false}
-            handleEditClick={() => handleEditCurriculum(row)}
+            moreLabel="More curriculum actions"
           />
         ),
       },

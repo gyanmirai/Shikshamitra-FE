@@ -249,7 +249,6 @@ const Subjects = () => {
         />
       ) : (
         <CustomBreadcrumbs
-          sx={{ mb: 1 }}
           heading="Syllabus"
           description="Select a class and subject to manage chapters, including the chapter name, number, and associated learning materials."
           links={[

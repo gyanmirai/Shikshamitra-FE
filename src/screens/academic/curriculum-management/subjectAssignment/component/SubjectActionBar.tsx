@@ -3,6 +3,7 @@ import type { Standards } from 'src/types/school';
 
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -17,6 +18,7 @@ interface SubjectActionBarProps {
   onTeacherSearchChange: (value: string) => void;
   onAddNew: () => void;
   onCopySubjects?: () => void;
+  onViewInsights?: () => void;
 }
 
 const SubjectActionBar = ({
@@ -27,6 +29,7 @@ const SubjectActionBar = ({
   onTeacherSearchChange,
   onAddNew,
   onCopySubjects,
+  onViewInsights,
 }: SubjectActionBarProps) => {
   const { permissions } = useSelector((state: RootState) => state.auth);
 
@@ -58,7 +61,7 @@ const SubjectActionBar = ({
         <TextField
           size="small"
           label="Teacher"
-          placeholder="Search teacher"
+          placeholder="Search by teacher"
           value={teacherSearch}
           onChange={(event) => onTeacherSearchChange(event.target.value)}
           sx={{ maxWidth: 260, width: '100%' }}
@@ -82,9 +85,9 @@ const SubjectActionBar = ({
             ) : undefined,
           }}
         />
-        {addEditPermission && (
+        {(addEditPermission || onViewInsights) && (
           <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
-            {onCopySubjects && (
+            {addEditPermission && onCopySubjects && (
               <Tooltip
                 title={!classId ? 'Select a class first' : ''}
                 disableHoverListener={!!classId}
@@ -98,20 +101,33 @@ const SubjectActionBar = ({
                     onClick={onCopySubjects}
                     sx={{ px: '20px' }}
                   >
-                    Copy Subject from Class
+                    Copy subjects
                   </Button>
                 </span>
               </Tooltip>
             )}
-            <Button
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              onClick={onAddNew}
-              sx={{ px: '32px' }}
-            >
-              Subject Allocation
-            </Button>
+            {onViewInsights && (
+              <Button
+                size="small"
+                startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+                variant="outlined"
+                color="inherit"
+                onClick={onViewInsights}
+              >
+                View class insights
+              </Button>
+            )}
+            {addEditPermission && (
+              <Button
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                onClick={onAddNew}
+                sx={{ px: 2 }}
+              >
+                Allocate Subjects
+              </Button>
+            )}
           </Box>
         )}
       </Box>

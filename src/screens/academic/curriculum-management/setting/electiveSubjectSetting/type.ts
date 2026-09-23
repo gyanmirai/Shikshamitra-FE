@@ -45,6 +45,8 @@ export interface IElectiveSubjectTableProps {
   onArchive: (row: IElectiveSubject) => void;
   onRestore: (row: IElectiveSubject) => void;
   onViewUsage: (row: IElectiveSubject) => void;
+  insightsOpen: boolean;
+  onCloseInsights: () => void;
   canAdd?: boolean;
   canView?: boolean;
   canDelete?: boolean;

@@ -2,11 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
-import { RemoveCircle } from '@mui/icons-material';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Button, Typography } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import { Box, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import type { ISeat, IStudentRoomAssignment } from '../type';
 
@@ -169,8 +168,14 @@ const SeatBox = ({
             position: 'absolute',
             top: 6,
             left: 8,
-            bgcolor: seat.isAssigned && !seat.isExternalExamOccupied ? 'primary.main' : 'action.disabledBackground',
-            color: seat.isAssigned && !seat.isExternalExamOccupied ? 'primary.contrastText' : 'text.disabled',
+            bgcolor:
+              seat.isAssigned && !seat.isExternalExamOccupied
+                ? 'primary.main'
+                : 'action.disabledBackground',
+            color:
+              seat.isAssigned && !seat.isExternalExamOccupied
+                ? 'primary.contrastText'
+                : 'text.disabled',
             px: 0.75,
             py: 0.25,
             borderRadius: 0.5,
@@ -188,7 +193,12 @@ const SeatBox = ({
               <Typography
                 variant="subtitle2"
                 noWrap
-                sx={{ maxWidth: '100%', fontSize: '0.8rem', fontWeight: 600, color: seat.isExternalExamOccupied ? 'text.disabled' : 'text.primary' }}
+                sx={{
+                  maxWidth: '100%',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  color: seat.isExternalExamOccupied ? 'text.disabled' : 'text.primary',
+                }}
               >
                 {seat.isExternalExamOccupied ? 'Blocked' : seat.studentName}
               </Typography>
@@ -222,7 +232,16 @@ const SeatBox = ({
 
             {!seat.isExternalExamOccupied && (
               <Box className="action-menu">
-                <ThreeDotsActions
+                <AdaptiveThreeDotsActions
+                  actions={[
+                    {
+                      id: 'remove',
+                      label: 'Remove student',
+                      icon: 'mdi:minus-circle',
+                      color: 'error.main',
+                      onClick: removeStudentDialog.onTrue,
+                    },
+                  ]}
                   placement="bottom-center"
                   onClickThreeDots={(e) => {
                     e.stopPropagation();
@@ -237,21 +256,6 @@ const SeatBox = ({
                     '& .MuiSvgIcon-root': { fontSize: 16 },
                     '&:hover': { bgcolor: 'action.hover' },
                   }}
-                  actions={({ popover }) => (
-                    <MenuList>
-                      <MenuItem
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeStudentDialog.onTrue();
-                          popover.onClose();
-                        }}
-                        sx={{ color: 'error.main' }}
-                      >
-                        <RemoveCircle sx={{ width: 18, height: 18, mr: 1 }} />
-                        Remove Student
-                      </MenuItem>
-                    </MenuList>
-                  )}
                 />
               </Box>
             )}

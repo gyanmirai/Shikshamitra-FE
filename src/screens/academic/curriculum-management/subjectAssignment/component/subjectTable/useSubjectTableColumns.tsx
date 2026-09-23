@@ -1,7 +1,6 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useMemo } from 'react';
-import { useTheme } from '@mui/material/styles';
 
 import { getSubjectTableBaseColumns } from './subjectTableBaseColumns';
 import { getSubjectTableStatusColumns } from './subjectTableStatusColumns';
@@ -19,7 +18,6 @@ type Options = Pick<
 };
 
 export function useSubjectTableColumns(options: Options): IColumn[] {
-  const theme = useTheme();
   const {
     canAdd,
     canView,
@@ -42,7 +40,6 @@ export function useSubjectTableColumns(options: Options): IColumn[] {
     () => [
       ...getSubjectTableBaseColumns(onViewSchedule),
       ...getSubjectTableStatusColumns({
-        theme,
         canAdd,
         canView,
         canDelete,
@@ -65,7 +62,6 @@ export function useSubjectTableColumns(options: Options): IColumn[] {
       onToggleStatus,
       onView,
       onViewSchedule,
-      theme,
     ]
   );
 }

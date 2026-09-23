@@ -98,7 +98,8 @@ export default function SeatingPlanMobileList({
                 {canAdd && (
                   <Button
                     fullWidth
-                    variant="contained"
+                    variant="outlined"
+                    color="inherit"
                     startIcon={<Iconify icon={action.icon} />}
                     onClick={() => onPrimaryAction(row)}
                     sx={{ minHeight: 44 }}

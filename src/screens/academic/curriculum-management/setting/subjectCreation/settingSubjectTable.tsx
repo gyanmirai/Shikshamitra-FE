@@ -8,19 +8,19 @@ import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Stack, IconButton, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetCoreSubjectsByMediumQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Core-SubjectApi';
 import {
   type ITimetableSummaryCard,
   TimetableSettingsSummaryCards,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
+} from 'src/screens/academic/components/AcademicSummaryInsights';
 
 import SubjectNameCell from './subjectNameCell';
 import { getSubjectMasterStatusLabel } from '../subjectMasterStatus';
+import { getSettingSubjectTableActions } from './settingSubjectTableActions';
 
 import type { ISubject, ISubjectTableProps } from './type';
 
@@ -34,6 +34,8 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
   onViewUsage,
   onEdit,
   onOpenDrawer,
+  insightsOpen,
+  onCloseInsights,
   canAdd = true,
   canView = true,
   canDelete = true,
@@ -212,8 +214,8 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 140,
-        width: 140,
+        minWidth: 150,
+        width: 150,
         align: 'center',
         isSort: false,
         sticky: true,
@@ -222,55 +224,23 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         render(value, row) {
           const subject = row as ISubject;
           const isArchived = getSubjectMasterStatusLabel(subject.status) === 'Archived';
+          const actions = getSettingSubjectTableActions(subject, isArchived, {
+            canAdd,
+            canView,
+            canDelete,
+            onViewUsage,
+            onEdit,
+            onArchive,
+            onRestore,
+            onDelete,
+          });
+
           return (
-            <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
-              {canView && (
-                <SubjectActionButton
-                  title="View usage"
-                  icon="solar:eye-bold"
-                  onClick={() => onViewUsage(subject)}
-                />
-              )}
-              {isArchived && canAdd ? (
-                <SubjectActionButton
-                  title="Restore subject"
-                  icon="solar:restart-bold"
-                  color="success"
-                  onClick={() => onRestore(subject)}
-                />
-              ) : !isArchived ? (
-                <>
-                  {canAdd && (
-                    <SubjectActionButton
-                      title="Edit subject"
-                      icon="solar:pen-bold"
-                      onClick={() => onEdit(subject)}
-                    />
-                  )}
-                  {canAdd && (
-                    <SubjectActionButton
-                      title="Archive subject"
-                      icon="solar:archive-bold"
-                      color="warning"
-                      onClick={() => onArchive(subject)}
-                    />
-                  )}
-                  {canDelete && (
-                    <SubjectActionButton
-                      title={
-                        subject.canDelete
-                          ? 'Delete subject'
-                          : 'This subject is already used. View usage before deleting.'
-                      }
-                      icon="solar:trash-bin-trash-bold"
-                      color="error"
-                      disabled={!subject.canDelete}
-                      onClick={() => onDelete(subject)}
-                    />
-                  )}
-                </>
-              ) : null}
-            </Stack>
+            <AdaptiveThreeDotsActions
+              actions={actions}
+              placement="right-top"
+              moreLabel="More subject actions"
+            />
           );
         },
       },
@@ -280,7 +250,12 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <TimetableSettingsSummaryCards cards={summaryCards} />
+      <TimetableSettingsSummaryCards
+        cards={summaryCards}
+        open={insightsOpen}
+        onClose={onCloseInsights}
+        hideTrigger
+      />
 
       <CustomizableTable
         tableId="subject-data-table"
@@ -317,38 +292,3 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
 };
 
 export default SettingSubjectTable;
-
-const SubjectActionButton = ({
-  title,
-  icon,
-  color = 'default',
-  disabled = false,
-  onClick,
-}: {
-  title: string;
-  icon: string;
-  color?: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
-  disabled?: boolean;
-  onClick: () => void;
-}) => (
-  <CustomTooltip title={title} arrow placement="top">
-    <span>
-      <IconButton
-        size="small"
-        color={color}
-        disabled={disabled}
-        aria-label={title}
-        onClick={onClick}
-        sx={{
-          width: 28,
-          height: 28,
-          '&:hover': {
-            bgcolor: 'action.hover',
-          },
-        }}
-      >
-        <Iconify icon={icon} width={17} height={17} />
-      </IconButton>
-    </span>
-  </CustomTooltip>
-);

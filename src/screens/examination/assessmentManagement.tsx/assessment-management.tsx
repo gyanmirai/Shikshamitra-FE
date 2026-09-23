@@ -6,6 +6,7 @@ import type { TabComponentType } from 'src/screens/hr/leave-request';
 
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
+import { Box, Card, Button } from '@mui/material';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
@@ -14,7 +15,6 @@ import { useGetClassQuery } from 'src/redux/class/classApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import React, { useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Card, Button, MenuList, MenuItem } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import assessmnentData from 'src/json/academic/examination/assessmentData.json';
@@ -166,22 +166,28 @@ const AssessmentManagement = (props: TabComponentType) => {
       ];
 
   const actions = useCallback(
-    ({ popover: pop, row }: any) => (
-      <MenuList>
-        {(row.status === 'Pending' || row.status === 'Under Review') && (
-          <MenuItem onClick={() => submissionDialog.onTrue()}>
-            <Iconify icon="solar:pen-bold" sx={{ height: '16px', width: '16px' }} />
-            Enter Marks
-          </MenuItem>
-        )}
-        {row.status === 'Completed' && (
-          <MenuItem onClick={() => {}}>
-            <Iconify icon="material-symbols:upload" sx={{ height: '16px', width: '16px' }} />
-            Publish Result
-          </MenuItem>
-        )}
-      </MenuList>
-    ),
+    (row: IAssessment) => [
+      ...(['Pending', 'Under Review'].includes(row.status)
+        ? [
+            {
+              id: 'marks',
+              label: 'Enter marks',
+              icon: 'solar:pen-bold',
+              onClick: submissionDialog.onTrue,
+            },
+          ]
+        : []),
+      ...(row.status === 'Completed'
+        ? [
+            {
+              id: 'publish',
+              label: 'Publish result',
+              icon: 'material-symbols:upload',
+              onClick: () => undefined,
+            },
+          ]
+        : []),
+    ],
     [submissionDialog]
   );
 
@@ -273,7 +279,7 @@ const AssessmentManagement = (props: TabComponentType) => {
             setOpenDialog={setOpen}
             editData={selectedAssessment}
             setEditData={setSelectedAssessment}
-            actions={(prop) => actions({ ...prop, row: prop.row }) as any}
+            actions={actions}
             data={assessmentData}
             onEdit={(assessment) => {
               setOpen(true);

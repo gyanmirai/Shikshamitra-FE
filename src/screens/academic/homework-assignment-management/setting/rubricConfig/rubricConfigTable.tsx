@@ -1,29 +1,28 @@
 'use client';
 
 import React from 'react';
-import { MenuList, MenuItem, ListItemIcon, ListItemText, Stack, Typography } from '@mui/material';
+import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Stack, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
-
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   RubricStatus,
   RubricWorkType,
   type AssessmentRubricDto,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+
+import { getRubricConfigTableActions } from './rubricConfigTableActions';
 import {
   RUBRIC_STATUS_LABELS,
-  RUBRIC_SCORING_MODEL_LABELS,
-  RUBRIC_WORK_TYPE_LABELS,
   RUBRIC_STATUS_OPTIONS,
+  RUBRIC_WORK_TYPE_LABELS,
   RUBRIC_WORK_TYPE_OPTIONS,
+  RUBRIC_SCORING_MODEL_LABELS,
   RUBRIC_SCORING_MODEL_OPTIONS,
 } from './constants';
 
 import type { RubricConfigTableProps } from './types';
-import dayjs from 'dayjs';
-import { GlobalIcons } from 'src/utils/icons';
 
 const statusColor = {
   0: 'warning',
@@ -149,71 +148,28 @@ const RubricConfigTable: React.FC<RubricConfigTableProps> = ({
         isSort: false,
         isFilter: false,
         excludeFromExport: true,
-        render: (_value, row) => (
-          <ThreeDotsActions
-            placement="right-top"
-            actions={({ popover }) => {
-              const rubric = toRubricRow(row);
-              const closeAndRun = (action: () => void) => {
-                popover.onClose();
-                action();
-              };
+        render: (_value, row) => {
+          const rubric = toRubricRow(row);
+          const actions = getRubricConfigTableActions(rubric, {
+            canAdd,
+            canDelete,
+            onPreview,
+            onEdit,
+            onDuplicate,
+            onPublish,
+            onVersion,
+            onUsage,
+            onArchive,
+          });
 
-
-              return (
-                <MenuList sx={{ p: 0.5 }}>
-                  <MenuItem onClick={() => closeAndRun(() => onPreview(rubric))} sx={{ gap: 1.5 }}>
-                    <Iconify icon={GlobalIcons.eye} width={18} height={18} />
-                    Preview
-                  </MenuItem>
-
-                  {canAdd && rubric.status === RubricStatus.Draft ? (
-                    <MenuItem onClick={() => closeAndRun(() => onEdit(rubric))} sx={{ gap: 1.5 }}>
-                      <Iconify icon={GlobalIcons.edit} width={18} height={18} />
-                      Edit
-                    </MenuItem>
-                  ) : null}
-
-                  {canAdd ? (
-                    <MenuItem onClick={() => closeAndRun(() => onDuplicate(rubric))} sx={{ gap: 1.5 }}>
-                      <Iconify icon={GlobalIcons.copy} width={18} height={18} />
-                      Duplicate
-                    </MenuItem>
-                  ) : null}
-
-                  {canAdd && rubric.status === RubricStatus.Draft ? (
-                    <MenuItem onClick={() => closeAndRun(() => onPublish(rubric))} sx={{ gap: 1.5 }}>
-                      <Iconify icon={GlobalIcons.upload} width={18} height={18} />
-                      Publish
-                    </MenuItem>
-                  ) : null}
-
-                  {canAdd && rubric.status === RubricStatus.Published ? (
-                    <MenuItem onClick={() => closeAndRun(() => onVersion(rubric))} sx={{ gap: 1.5 }}>
-                      <Iconify icon={GlobalIcons.newversion} width={18} height={18} />
-                      Create New Version
-                    </MenuItem>
-                  ) : null}
-
-                  <MenuItem onClick={() => closeAndRun(() => onUsage(rubric))} sx={{ gap: 1.5 }}>
-                    <Iconify icon={GlobalIcons.usage} width={18} height={18} />
-                    View Usage
-                  </MenuItem>
-
-                  {canDelete && rubric.status !== RubricStatus.Archived ? (
-                    <MenuItem
-                      onClick={() => closeAndRun(() => onArchive(rubric))}
-                      sx={{ gap: 1.5, color: 'error.main' }}
-                    >
-                      <Iconify icon={GlobalIcons.archive} width={18} height={18} />
-                      Archive
-                    </MenuItem>
-                  ) : null}
-                </MenuList>
-              );
-            }}
-          />
-        ),
+          return (
+            <AdaptiveThreeDotsActions
+              actions={actions}
+              placement="right-top"
+              moreLabel="More rubric actions"
+            />
+          );
+        },
       },
     ]}
     data={data}

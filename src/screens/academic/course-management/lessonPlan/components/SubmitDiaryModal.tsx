@@ -1,12 +1,20 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import LoadingButton from '@mui/lab/LoadingButton';
-import type { RootState } from 'src/redux/store';
 import { useSelector } from 'react-redux';
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import { Label } from 'src/components/label';
+import { GlobalIcons } from 'src/utils/icons';
+import { Iconify } from 'src/components/iconify';
+import LoadingButton from '@mui/lab/LoadingButton';
+import CustomSelect from 'src/components/custom-select';
+import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
+import React, { useRef, useMemo, useState, useCallback } from 'react';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import {
   Box,
   List,
@@ -24,17 +32,13 @@ import {
   LinearProgress,
   FormControlLabel,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 
-import { Iconify } from 'src/components/iconify';
-import { GlobalIcons } from 'src/utils/icons';
-import { Label } from 'src/components/label';
-import CustomTooltip from 'src/components/custom-tooltip';
-import CustomSelect from 'src/components/custom-select';
-import { shikshaMitraToast } from 'src/components/toast';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
-
+import { TeacherDiaryPlanContext } from './TeacherDiaryPlanContext';
+import { getPrimaryTeachingMethod } from '../lessonPlanTeachingMethods';
+import {
+  type TeacherDiaryStep,
+  TeacherDiaryStepNavigation,
+} from './TeacherDiaryStepNavigation';
 import {
   todayIso,
   missedReasonOptions,
@@ -110,7 +114,7 @@ export const createDraftDiaryForm = (plan: LessonPlanRow): DiaryFormState => ({
   actualDate: dayjs(plan.plannedDate),
   actualTopicCovered: plan.topic,
   actualCompletionPercentage: plan.plannedCompletionPercentage,
-  teachingMethodUsed: plan.teachingMethod,
+  teachingMethodUsed: getPrimaryTeachingMethod(plan.teachingMethod),
 });
 
 type Props = {
@@ -124,9 +128,6 @@ type Props = {
   onSave: (form: DiaryFormState, submit: boolean) => void;
   onAiSummary?: () => void;
 };
-
-const TABS = ['Teaching', 'Reflection', 'Evidence'] as const;
-type TabKey = (typeof TABS)[number];
 
 const SectionCard = ({
   title,
@@ -146,13 +147,9 @@ const SectionCard = ({
       mb: 1.5,
       position: 'relative',
       borderRadius: 2,
-      border: (theme) => `1px solid ${alpha(theme.palette.grey[500], 0.16)}`,
-      boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
+      border: '1px solid',
+      borderColor: 'divider',
       overflow: 'clip',
-      transition: 'all 0.3s ease-in-out',
-      '&:hover': {
-        boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.08)',
-      },
     }}
   >
     <Box
@@ -161,25 +158,13 @@ const SectionCard = ({
       alignItems="center"
       mb={2}
       sx={{
-        borderBottom: (theme) => `1px dashed ${alpha(theme.palette.grey[500], 0.2)}`,
+        borderBottom: '1px solid',
+        borderColor: 'divider',
         pb: 1.25,
       }}
     >
       <Stack direction="row" spacing={1.25} alignItems="center">
-        <Box
-          sx={{
-            width: 32,
-            height: 32,
-            borderRadius: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-            color: 'primary.main',
-          }}
-        >
-          <Iconify icon={icon} width={20} />
-        </Box>
+        <Iconify icon={icon} width={20} sx={{ color: 'text.secondary' }} />
         <Typography variant="subtitle1" fontWeight={700} color="text.primary">
           {title}
         </Typography>
@@ -201,7 +186,7 @@ const SubmitDiaryModal = ({
   onSave,
   onAiSummary,
 }: Props) => {
-  const [tab, setTab] = useState<TabKey>('Teaching');
+  const [tab, setTab] = useState<TeacherDiaryStep>('Teaching');
   const [form, setForm] = useState<DiaryFormState>(() => {
     if (existingDiary) {
       return {
@@ -421,7 +406,12 @@ const SubmitDiaryModal = ({
               placement="right"
               title="Record actual classroom coverage, student responses, teacher reflections, and attach evidence."
             >
-              <Iconify icon={GlobalIcons.info} sx={{ cursor: 'pointer' }} color="info.main" width={16} height={16} />
+              <Iconify
+                icon={GlobalIcons.info}
+                sx={{ color: 'text.secondary', cursor: 'pointer' }}
+                width={16}
+                height={16}
+              />
             </CustomTooltip>
             {form.isBackdated && (
               <Label color="warning" variant="soft" startIcon={<Iconify icon={GlobalIcons.history} />}>
@@ -431,185 +421,19 @@ const SubmitDiaryModal = ({
           </Box>
         }
         maxWidth="md"
-        hasForm={true}
+        hasForm
       >
-        {/* Streamlined Plan Context Summary */}
-        {plan && (
-          <Box
-            sx={{
-              px: 3,
-              py: 1.25,
-              bgcolor: 'background.neutral',
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-            }}
-          >
-            <Stack direction="row" spacing={2} flexWrap="wrap" alignItems="center" useFlexGap>
-              <Typography variant="caption">
-                <Box component="span" sx={{ color: 'text.secondary', mr: 0.5 }}>
-                  Class:
-                </Box>
-                <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  {plan.className}-{plan.divisionName}
-                </Box>
-              </Typography>
+        {plan && <TeacherDiaryPlanContext plan={plan} />}
 
-              <Typography variant="caption">
-                <Box component="span" sx={{ color: 'text.secondary', mr: 0.5 }}>
-                  Subject:
-                </Box>
-                <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  {plan.subjectName}
-                </Box>
-              </Typography>
-
-              <Typography variant="caption">
-                <Box component="span" sx={{ color: 'text.secondary', mr: 0.5 }}>
-                  Chapter:
-                </Box>
-                <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  {plan.chapterName}
-                </Box>
-              </Typography>
-
-              <Typography variant="caption" sx={{ flex: 1, minWidth: 160 }}>
-                <Box component="span" sx={{ color: 'text.secondary', mr: 0.5 }}>
-                  Planned Topic:
-                </Box>
-                <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                  {plan.topic}
-                </Box>
-              </Typography>
-
-              <Label
-                color="primary"
-                variant="soft"
-                sx={{ height: 22, px: 1, fontWeight: 700, fontSize: '0.6875rem' }}
-              >
-                Planned: {plan.plannedCompletionPercentage}%
-              </Label>
-            </Stack>
-          </Box>
-        )}
-
-        {/* Stepper Tab Navigation Bar */}
-        <Box
-          sx={{
-            px: 3,
-            py: 1.5,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
+        <TeacherDiaryStepNavigation
+          activeStep={tab}
+          completedSteps={{
+            Teaching: isTeachingComplete,
+            Reflection: isReflectionComplete,
+            Evidence: isEvidenceComplete,
           }}
-        >
-          <Stack direction="row" spacing={1.5} justifyContent="space-between" alignItems="center">
-            {TABS.map((t, idx) => {
-              const stepNum = idx + 1;
-              const isActive = tab === t;
-              const isCompleted =
-                t === 'Teaching'
-                  ? isTeachingComplete
-                  : t === 'Reflection'
-                    ? isReflectionComplete
-                    : isEvidenceComplete;
-
-              return (
-                <Box
-                  key={t}
-                  onClick={() => setTab(t)}
-                  sx={{
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1.25,
-                    p: 1.25,
-                    borderRadius: 1.5,
-                    cursor: 'pointer',
-                    border: '1.5px solid',
-                    borderColor: isActive ? 'primary.main' : 'divider',
-                    bgcolor: isActive
-                      ? (theme) =>
-                        alpha(
-                          theme.palette.primary.main,
-                          theme.palette.mode === 'dark' ? 0.16 : 0.08
-                        )
-                      : 'background.paper',
-                    transition: 'all 0.2s ease-in-out',
-                    boxShadow: isActive ? '0px 2px 6px rgba(0,0,0,0.04)' : 'none',
-                    '&:hover': {
-                      borderColor: 'primary.main',
-                      bgcolor: (theme) =>
-                        alpha(
-                          theme.palette.primary.main,
-                          theme.palette.mode === 'dark' ? 0.12 : 0.04
-                        ),
-                    },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      width: 26,
-                      height: 26,
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: 700,
-                      fontSize: '0.75rem',
-                      bgcolor: isCompleted
-                        ? 'success.main'
-                        : isActive
-                          ? 'primary.main'
-                          : (theme) => alpha(theme.palette.text.primary, 0.12),
-                      color: isCompleted || isActive ? '#fff' : 'text.primary',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {isCompleted ? <Iconify icon="mdi:check" width={16} /> : stepNum}
-                  </Box>
-
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <Typography
-                        variant="subtitle2"
-                        sx={{
-                          fontSize: '0.8125rem',
-                          fontWeight: isActive ? 700 : 600,
-                          color: isActive ? 'primary.main' : 'text.primary',
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        {t}
-                      </Typography>
-                      {isCompleted && (
-                        <Iconify
-                          icon="mdi:check-circle"
-                          width={14}
-                          sx={{ color: 'success.main' }}
-                        />
-                      )}
-                    </Stack>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: 'text.secondary',
-                        display: { xs: 'none', sm: 'block' },
-                        fontSize: '0.6875rem',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {t === 'Teaching' && 'Coverage & method'}
-                      {t === 'Reflection' && 'Notes & feedback'}
-                      {t === 'Evidence' && 'Photos & files'}
-                    </Typography>
-                  </Box>
-                </Box>
-              );
-            })}
-          </Stack>
-        </Box>
+          onChange={setTab}
+        />
 
         <DialogScrollContent onSubmit={() => handleSave(true)}>
           <Stack spacing={1}>
@@ -643,40 +467,40 @@ const SubmitDiaryModal = ({
             )}
 
             {/* Diary Quality Score */}
-            {(() => {
-              const tone = qualityScore >= 70 ? 'success' : 'warning';
-              return (
-                <Box
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 1.5,
-                    border: '1px solid',
-                    borderColor: (theme) => alpha(theme.palette[tone].main, 0.24),
-                    bgcolor: (theme) => alpha(theme.palette[tone].main, 0.08),
-                  }}
-                >
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Iconify icon="mdi:chart-donut" width={16} sx={{ color: `${tone}.main` }} />
-                      <Typography variant="caption" fontWeight={600} color="text.primary">
-                        Diary Quality Score
-                      </Typography>
-                    </Stack>
-                    <Label color={tone} variant="soft">
-                      {qualityScore}%{qualityScore < 50 && ' — Needs Improvement'}
-                      {qualityScore >= 50 && qualityScore < 75 && ' — Good'}
-                      {qualityScore >= 75 && ' — Excellent'}
-                    </Label>
-                  </Stack>
-                  <LinearProgress
-                    variant="determinate"
-                    value={qualityScore}
-                    color={tone}
-                    sx={{ mt: 1, borderRadius: 1, height: 6 }}
-                  />
-                </Box>
-              );
-            })()}
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 1.5,
+                border: '1px solid',
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+              }}
+            >
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Iconify icon="mdi:chart-donut" width={16} sx={{ color: 'text.secondary' }} />
+                  <Typography variant="caption" fontWeight={600} color="text.primary">
+                    Diary quality
+                  </Typography>
+                </Stack>
+                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
+                  {qualityScore}%{qualityScore < 50 && ' · Needs improvement'}
+                  {qualityScore >= 50 && qualityScore < 75 && ' · Good'}
+                  {qualityScore >= 75 && ' · Excellent'}
+                </Typography>
+              </Stack>
+              <LinearProgress
+                variant="determinate"
+                value={qualityScore}
+                sx={{
+                  mt: 1,
+                  borderRadius: 1,
+                  height: 5,
+                  bgcolor: 'action.selected',
+                  '& .MuiLinearProgress-bar': { bgcolor: 'text.primary' },
+                }}
+              />
+            </Box>
 
             {tab === 'Teaching' && (
               <Stack>
@@ -736,7 +560,7 @@ const SubmitDiaryModal = ({
                               <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 600 }}>
                                 Actual Completion (%)
                               </Typography>
-                              <Typography variant="subtitle2" fontWeight={700} color="primary.main">
+                              <Typography variant="subtitle2" fontWeight={700} color="text.primary">
                                 {form.actualCompletionPercentage}%
                               </Typography>
                             </Stack>
@@ -798,25 +622,13 @@ const SubmitDiaryModal = ({
                           minRows={2}
                           placeholder="How did students respond to the lesson?"
                         />
-                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-                          <TextField
-                            size="small"
-                            label="Homework Assigned"
-                            value={form.homeworkAssigned}
-                            onChange={(e) => set('homeworkAssigned', e.target.value)}
-                            fullWidth
-                          />
-                          <FormControlLabel
-                            control={
-                              <Switch
-                                checked={form.needRevision}
-                                onChange={(e) => set('needRevision', e.target.checked)}
-                              />
-                            }
-                            label="Needs Revision"
-                            sx={{ whiteSpace: 'nowrap', m: 0 }}
-                          />
-                        </Stack>
+                        <TextField
+                          size="small"
+                          label="Homework Assigned"
+                          value={form.homeworkAssigned}
+                          onChange={(e) => set('homeworkAssigned', e.target.value)}
+                          fullWidth
+                        />
                       </Stack>
                     </SectionCard>
                   </>
@@ -1157,15 +969,6 @@ const SubmitDiaryModal = ({
             >
               Cancel
             </Button>
-            <LoadingButton
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon={GlobalIcons.submit} />}
-              loading={loading}
-              onClick={() => handleSave(false)}
-            >
-              Draft
-            </LoadingButton>
             <LoadingButton
               size="small"
               variant="contained"

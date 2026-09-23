@@ -1,10 +1,9 @@
 'use client';
 
-import { Box, MenuList, MenuItem, Stack, Tooltip, Typography } from '@mui/material';
-
 import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Box, Stack, Tooltip, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { RoomStatusChip } from './RoomStatusChip';
 import { resolveFacility } from '../roomAvailability.constants';
@@ -51,52 +50,7 @@ export const RoomAvailabilityTable = ({
   onReserveRoom,
   onViewSchedule,
   onCancelReservation,
-}: RoomAvailabilityTableProps) => {
-  // Row action menu — rendered inside the ThreeDotsActions popover. Each item
-  // closes the popover before firing its handler. Visibility/`disabled` mirror
-  // the previous Tooltip+IconButton gating.
-  const renderRowActions = ({ popover, row }: { popover: any; row: RoomAvailabilityItem }) => {
-    const close = () => popover.onClose();
-    const underMaintenance = row.status === 'maintenance';
-
-    return (
-      <MenuList>
-        {canReserve && (
-          <Tooltip
-            title={underMaintenance ? 'Room under maintenance — reservations blocked' : 'Reserve Room'}
-            placement="left"
-          >
-            <span>
-              <MenuItem
-                disabled={underMaintenance}
-                onClick={() => {
-                  close();
-                  onReserveRoom?.(row);
-                }}
-              >
-                <Iconify icon="mdi:calendar-plus" />
-                Reserve Room
-              </MenuItem>
-            </span>
-          </Tooltip>
-        )}
-
-        {canApprove && row.status === 'pendingApproval' && (
-          <MenuItem
-            onClick={() => {
-              close();
-              onCancelReservation?.(row);
-            }}
-          >
-            <Iconify icon="mdi:check-decagram" />
-            View Approval
-          </MenuItem>
-        )}
-      </MenuList>
-    );
-  };
-
-  return (
+}: RoomAvailabilityTableProps) => (
     <CustomizableTable
       tableContainerProps={{ sx: { height: '100%' } }}
       tableId="room-availability-enhanced-table"
@@ -183,28 +137,61 @@ export const RoomAvailabilityTable = ({
         {
           id: 'actions',
           label: 'Actions',
-          minWidth: 50,
-          width: 50,
+          minWidth: 120,
+          width: 120,
           isSort: false,
           isFilter: false,
           sticky: true,
           stickyPosition: 'right',
           render: (_v, row) => {
             const item = row as RoomAvailabilityItem;
-            return (
-              <ThreeDotsActions
-                showViewIcon
-                showThreeDots={Boolean(
-                  canReserve || canApprove || onViewSchedule
-                )}
-                handleViewClick={() => onViewRoom?.(item.roomId)}
-                actions={(prop) => renderRowActions({ ...prop, row: item })}
-                placement="left-top"
-              />
-            );
+            const underMaintenance = item.status === 'maintenance';
+            const actions = [
+              {
+                id: 'view',
+                label: 'View room details',
+                icon: 'solar:eye-bold',
+                onClick: () => onViewRoom?.(item.roomId),
+              },
+              ...(onViewSchedule
+                ? [
+                    {
+                      id: 'schedule',
+                      label: 'View room schedule',
+                      icon: 'solar:calendar-bold-duotone',
+                      onClick: () => onViewSchedule(item.roomId),
+                    },
+                  ]
+                : []),
+              ...(canReserve
+                ? [
+                    {
+                      id: 'reserve',
+                      label: 'Reserve room',
+                      icon: 'mdi:calendar-plus',
+                      disabled: underMaintenance,
+                      tooltip: underMaintenance
+                        ? 'Room under maintenance — reservations blocked'
+                        : 'Reserve room',
+                      onClick: () => onReserveRoom?.(item),
+                    },
+                  ]
+                : []),
+              ...(canApprove && item.status === 'pendingApproval'
+                ? [
+                    {
+                      id: 'approval',
+                      label: 'View approval',
+                      icon: 'mdi:check-decagram',
+                      onClick: () => onCancelReservation?.(item),
+                    },
+                  ]
+                : []),
+            ];
+
+            return <AdaptiveThreeDotsActions actions={actions} placement="left-top" />;
           },
         },
       ]}
     />
   );
-};

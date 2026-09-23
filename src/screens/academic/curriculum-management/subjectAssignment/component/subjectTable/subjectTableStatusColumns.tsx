@@ -1,21 +1,19 @@
-import type { Theme } from '@mui/material/styles';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { GlobalIcons } from 'src/utils/icons';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Stack, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, IconButton, Typography } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { SetupHealthCell } from './SubjectTableCells';
+import { getSubjectTableActions } from './subjectTableActions';
 import { SubjectAssignmentStatus } from '../../enum/subjectType';
-import { SubjectTableActionsMenu } from './SubjectTableActionsMenu';
 
 import type { ISubjectFormValues } from '../type';
 
 type Options = {
-  theme: Theme;
   canAdd: boolean;
   canView: boolean;
   canDelete: boolean;
@@ -28,11 +26,11 @@ type Options = {
 };
 
 export function getSubjectTableStatusColumns(options: Options): IColumn[] {
-  const { theme, canAdd, canView, canDelete } = options;
+  const { canAdd } = options;
   return [
     {
       id: 'setupHealthScore',
-      label: 'Health',
+      label: 'Readiness',
       align: 'left',
       minWidth: 90,
       width: 100,
@@ -44,7 +42,7 @@ export function getSubjectTableStatusColumns(options: Options): IColumn[] {
     },
     {
       id: 'lastUpdatedDisplay',
-      label: 'Updated',
+      label: 'Last updated',
       align: 'left',
       minWidth: 100,
       width: 100,
@@ -60,8 +58,8 @@ export function getSubjectTableStatusColumns(options: Options): IColumn[] {
       id: 'statusValue',
       label: 'Status',
       align: 'left',
-      minWidth: 60,
-      width: 70,
+      // minWidth: 180,
+      // width: 184,
       isSort: false,
       isFilter: false,
       sticky: true,
@@ -69,66 +67,54 @@ export function getSubjectTableStatusColumns(options: Options): IColumn[] {
       render: (value, row) => {
         const subject = row as ISubjectFormValues;
         const isPublished = subject.status === SubjectAssignmentStatus.Published;
-        const statusColor = isPublished
-          ? theme.vars.palette.success.main
-          : theme.vars.palette.text.secondary;
+        const canPublish = canAdd && subject.status === SubjectAssignmentStatus.Draft;
+        const statusLabel = String(value || 'Draft');
+
+        if (isPublished) {
+          return <Label color="success">Published</Label>;
+        }
+
+        if (!canPublish) {
+          return <Label color="default">{statusLabel}</Label>;
+        }
+
         return (
-          <CustomTooltip title={value} arrow placement="left">
-            <Box component="span">
-              <IconButton
-                aria-label={`${value} subject assignment`}
-                disabled={isPublished}
+          <Stack direction="row" alignItems="center" spacing={0.75}>
+            <Label color="default">Draft</Label>
+            <CustomTooltip title="Publish this draft" arrow placement="left">
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon="solar:upload-minimalistic-outline" width={16} />}
+                aria-label="Current status: Draft. Publish subject allocation"
                 onClick={() => options.onToggleStatus(subject)}
-                sx={{
-                  p: 0.6,
-                  bgcolor: 'action.hover',
-                  '&:hover': {
-                    transform: isPublished ? 'none' : 'scale(1.1)',
-                    bgcolor: 'action.selected',
-                  },
-                  '&.Mui-disabled': { bgcolor: 'action.hover' },
-                }}
+                sx={{ minWidth: 92, minHeight: 32, px: 1.25, whiteSpace: 'nowrap' }}
               >
-                <Iconify
-                  icon={GlobalIcons.tick}
-                  sx={{ width: 20, height: 20, color: statusColor }}
-                />
-              </IconButton>
-            </Box>
-          </CustomTooltip>
+                Publish
+              </Button>
+            </CustomTooltip>
+          </Stack>
         );
       },
     },
     {
       id: 'action',
       label: 'Actions',
-      width: 70,
-      minWidth: 70,
+      width: 150,
+      minWidth: 150,
       align: 'left',
       sticky: true,
       isSort: false,
       isFilter: false,
       render: (_value, row) => {
         const subject = row as ISubjectFormValues;
+        const actions = getSubjectTableActions(subject, options);
+
         return (
-          <ThreeDotsActions
+          <AdaptiveThreeDotsActions
+            actions={actions}
             placement="right-top"
-            actions={({ popover }) => (
-              <SubjectTableActionsMenu
-                row={subject}
-                onClose={popover.onClose}
-                canAdd={canAdd}
-                canDelete={canDelete}
-                onDelete={options.onDelete}
-                onArchive={options.onArchive}
-                onRestore={options.onRestore}
-              />
-            )}
-            showViewIcon={canView}
-            showEditIcon={canAdd}
-            showThreeDots={canDelete}
-            handleViewClick={() => options.onView(subject)}
-            handleEditClick={() => options.onEdit(subject)}
+            moreLabel="More subject actions"
           />
         );
       },

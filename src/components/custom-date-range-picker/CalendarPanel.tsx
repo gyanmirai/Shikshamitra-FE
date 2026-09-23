@@ -4,7 +4,6 @@ import dayjs from 'dayjs';
 import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import { useTheme } from '@mui/material/styles';
 import { IconButton, Typography } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
@@ -43,12 +42,33 @@ export function CalendarPanel({
   disableWeekends,
   shouldDisableDate,
 }: CalendarPanelProps) {
-  const theme = useTheme();
-
   // Base month is the month shown in the first calendar
-  // Default to startDate or today
-  const [baseMonth, setBaseMonth] = useState<Dayjs>(startDate || dayjs());
+  // Default to the selected start or the nearest valid month in the allowed range.
+  const [baseMonth, setBaseMonth] = useState<Dayjs>(() => {
+    let initialMonth = startDate || dayjs();
+
+    if (minDate && initialMonth.isBefore(minDate, 'month')) {
+      initialMonth = minDate;
+    }
+
+    if (maxDate && initialMonth.add(calendars - 1, 'month').isAfter(maxDate, 'month')) {
+      const latestFirstMonth = maxDate.subtract(calendars - 1, 'month');
+      initialMonth =
+        minDate && latestFirstMonth.isBefore(minDate, 'month') ? minDate : latestFirstMonth;
+    }
+
+    return initialMonth.startOf('month');
+  });
   const [slideDirection, setSlideDirection] = useState<'left' | 'right'>('left');
+
+  const canGoToPreviousMonth =
+    !minDate || baseMonth.startOf('month').isAfter(minDate.startOf('month'));
+  const canGoToNextMonth =
+    !maxDate ||
+    baseMonth
+      .add(calendars - 1, 'month')
+      .startOf('month')
+      .isBefore(maxDate.startOf('month'));
 
   const variants = {
     enter: (direction: number) => ({
@@ -114,7 +134,12 @@ export function CalendarPanel({
           sx={{ mb: 1, px: 2 }}
         >
           {index === 0 ? (
-            <IconButton onClick={handlePrevMonth} size="small">
+            <IconButton
+              aria-label="Previous month"
+              onClick={handlePrevMonth}
+              size="small"
+              disabled={!canGoToPreviousMonth}
+            >
               <Iconify icon="eva:arrow-ios-back-fill" />
             </IconButton>
           ) : (
@@ -124,7 +149,12 @@ export function CalendarPanel({
           <Typography variant="subtitle1">{currentMonth.format('MMMM YYYY')}</Typography>
 
           {index === calendars - 1 ? (
-            <IconButton onClick={handleNextMonth} size="small">
+            <IconButton
+              aria-label="Next month"
+              onClick={handleNextMonth}
+              size="small"
+              disabled={!canGoToNextMonth}
+            >
               <Iconify icon="eva:arrow-ios-forward-fill" />
             </IconButton>
           ) : (

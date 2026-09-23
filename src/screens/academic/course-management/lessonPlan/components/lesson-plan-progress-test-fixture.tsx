@@ -62,12 +62,10 @@ export async function prepareProgressNetwork() {
     loadIcons(
       [
         'lucide:info',
-        'mdi:auto-fix',
         'mdi:information-outline',
         'mdi:close',
         'mdi:content-save-outline',
         'material-symbols-light:save',
-        'solar:bolt-bold-duotone',
         'solar:calendar-date-bold-duotone',
         'solar:notebook-bold-duotone',
         'solar:presentation-graph-bold-duotone',
