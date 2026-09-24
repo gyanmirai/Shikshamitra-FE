@@ -2,11 +2,29 @@
 
 ShikshaMitra frontend is a multi-tenant school operating UI built with Next.js, React, TypeScript, Redux Toolkit Query, and MUI.
 
+## Publishing approval
+
+Commits and feature-branch pushes for authorized work do not require a separate permission request.
+Always obtain explicit user approval before merging a pull request into `main`.
+Approval to push is not approval to merge; do not bypass this requirement with a direct push to `main`.
+Approval applies only to the specific pull requests and scope the user approved.
+
+## GitHub Actions policy
+
+GitHub Actions jobs must run only for `refs/heads/main` to conserve credits.
+Only pushes to `main`, normally after a merge, may start CI and deployment.
+Do not add pull-request, feature-branch, tag, scheduled, or manual-dispatch triggers.
+Every job, including reusable workflow callers and called jobs, must have `if: github.ref == 'refs/heads/main'` to reject calls from every other ref.
+Keep optional validation workflows reusable-only; do not add standalone triggers.
+Keep security and release gates on `main`, and run relevant checks locally before merging feature work.
+Do not restore PR build requirements or broaden workflow triggers without explicit user authorization.
+
 ## Start here
 
 Before changing permissions, navigation guards, identity, scope, or security-related seeders, read [the canonical backend security standard](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/common/security/permission-consistency.md).
 Follow its mandatory checklist and [frontend Security documentation](docs/security/README.md).
-Require the Security Regression PR job and review incidental permission changes and reverts explicitly.
+Run the Security Regression checks locally before merge and require the reusable security gate on `main` before deployment.
+Review incidental permission changes and reverts explicitly.
 For the security-permission-consistency release, preserve the existing Role and User UI, including separate Module Permission and Set Module Visibility dialogs.
 Do not reintroduce the catalogue-editor redesign without explicit approval.
 The user's September 17 correction makes the deployed staging UI and grouped behavior the reference, including expandable navigation groups and compact View/Add/Delete controls.

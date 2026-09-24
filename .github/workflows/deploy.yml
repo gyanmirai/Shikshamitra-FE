@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 env:
   APPLICATION_PUBLISH_PROFILE: ${{ secrets.APP_PUBLISH_PROFILE }}
@@ -14,8 +13,10 @@ env:
 jobs:
   security:
     uses: ./.github/workflows/security-regression.yml
+    if: github.ref == 'refs/heads/main'
   build:
     needs: security
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
