@@ -199,6 +199,15 @@ const EmployeeSalaryStructureScreen = () => {
         </Paper>
       ) : (
         <>
+          {effectiveRevision && (
+            <Paper variant="outlined" sx={{ p: 2, my: 1 }}>
+              <Typography variant="body2" color="text.secondary">Full-month gross</Typography>
+              <Typography variant="h5">{formatCurrency(effectiveRevision.grossSalary)}</Typography>
+              <Typography variant="caption" color="text.secondary">
+                System calculation base. Payroll adjusts this amount once using payable days.
+              </Typography>
+            </Paper>
+          )}
           {canManageCompensation && (
             <Box display="flex" justifyContent="flex-end" mt={1} mb={1}>
               <Button

@@ -26,6 +26,9 @@ interface SalarySlipData {
   slipNumber?: string | null;
   status?: string | number | null;
   generatedAt?: string | Date | null;
+  fullGrossSalary?: number | null;
+  grossSalary?: number | null;
+  additionalEarnings?: number | null;
   totalEarning: number | null | undefined;
   totalDeduction: number | null | undefined;
   netSalary: number | null | undefined;
@@ -235,6 +238,10 @@ const PaySlipPrintView = React.forwardRef<HTMLDivElement, PaySlipPrintViewProps>
       ['Proration Factor', formatDecimal(slip.prorationFactor)],
       ['Day Calculation', formatMode(slip.payrollDayCalculationMode)],
       ['Pay Period', period],
+      ['Full-month gross', formatCurrency(slip.fullGrossSalary ?? 0)],
+      ['Gross Salary', formatCurrency(slip.grossSalary ?? 0)],
+      ['Additional earnings', formatCurrency(slip.additionalEarnings ?? 0)],
+      ['Total earnings', formatCurrency(slip.totalEarning ?? 0)],
     ];
 
     return (

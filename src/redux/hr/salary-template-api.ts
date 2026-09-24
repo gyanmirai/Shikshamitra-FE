@@ -24,6 +24,10 @@ export type SalaryRuleOverride = {
 };
 
 export type SalaryTemplateComponentCatalogItem = {
+  calculationType?: string;
+  calculationBase?: string | null;
+  defaultValue?: number | null;
+  basisComponentId?: string | null;
   componentId: string;
   name: string;
   description?: string | null;
@@ -56,6 +60,9 @@ export type SalaryTemplate = {
 };
 
 export type SaveSalaryTemplate = {
+  previewToken: string;
+  sampleMonthlyAmount: number;
+  sampleEffectiveMonth: string;
   name: string;
   description?: string | null;
   defaultSalaryBasis: SalaryBasis;
@@ -66,6 +73,26 @@ export type SaveSalaryTemplate = {
   idempotencyKey: string;
   expectedActiveVersionId?: string | null;
   concurrencyStamp?: string | null;
+};
+
+export type PreviewSalaryTemplateRequest = {
+  templateId?: string | null;
+  expectedActiveVersionId?: string | null;
+  concurrencyStamp?: string | null;
+  rules: SalaryTemplateRule[];
+  salaryBasis: SalaryBasis;
+  protectionPolicy: ProtectionPolicy;
+  monthlyAmount: number;
+  effectiveMonth: string;
+  pfApplicable: boolean;
+  pfRuleId?: string | null;
+};
+
+export type SalaryTemplatePreview = {
+  isSample: boolean;
+  previewToken: string;
+  expiresAt: string;
+  calculation: SalaryTemplateCalculation;
 };
 
 export type CalculatedSalaryLine = {
@@ -181,6 +208,9 @@ export const salaryTemplateApi = api.injectEndpoints({
       query: () => salaryTemplateComponentCatalogEndpoint,
       providesTags: [payrollStructureType.salaryTemplate],
     }),
+    previewSalaryTemplate: builder.mutation<SalaryTemplatePreview, PreviewSalaryTemplateRequest>({
+      query: (body) => ({ url: `${salaryTemplateEndpoint}/preview`, method: 'POST', body }),
+    }),
     calculateSalaryTemplate: builder.mutation<
       SalaryTemplateCalculation,
       Parameters<typeof buildSalaryTemplateCalculationRequest>[0]
@@ -224,6 +254,7 @@ export const {
   useCreateSalaryTemplateMutation,
   useUpdateSalaryTemplateMutation,
   useCalculateSalaryTemplateMutation,
+  usePreviewSalaryTemplateMutation,
   useSetDefaultSalaryTemplateMutation,
   useArchiveSalaryTemplateMutation,
 } = salaryTemplateApi;

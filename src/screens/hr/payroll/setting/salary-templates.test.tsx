@@ -1,10 +1,16 @@
 import type { SalaryTemplate } from 'src/redux/hr/salary-template-api';
 
 import userEvent from '@testing-library/user-event';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, afterEach, beforeEach } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { defaultSettings } from 'src/components/settings/config-settings';
+import { screen, cleanup, fireEvent, render as renderUi } from '@testing-library/react';
 
 import SalaryTemplateSettings from './salary-templates';
+
+const theme = createTheme(defaultSettings);
+const render = (ui: React.ReactNode) => renderUi(<ThemeProvider theme={theme}>{ui}</ThemeProvider>);
 
 const mocks = vi.hoisted(() => ({
   query: '',
@@ -114,7 +120,7 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
 }));
 
 const editorPath = (mode = 'edit') =>
-  `${mocks.pathname}?templateId=${mocks.template.id}&mode=${mode}`;
+  `/hr/payroll/setting/salary-templates/${mocks.template.id}${mode === 'view' ? '?mode=view' : ''}`;
 
 describe('SalaryTemplateSettings', () => {
   beforeEach(() => {
@@ -139,6 +145,10 @@ describe('SalaryTemplateSettings', () => {
       editorPath()
     );
     expect(screen.getByText('Active')).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Salary Templates' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'HR/Staff' })).toHaveAttribute('href', '/hr/dashboard');
+    expect(screen.getByRole('link', { name: 'Payroll Management' })).toHaveAttribute('href', '/hr/payroll');
+    expect(screen.queryByText(/^Templates are reusable defaults/)).not.toBeInTheDocument();
   });
 
   it('opens row and Edit actions directly in URL-backed edit mode', async () => {
@@ -177,34 +187,14 @@ describe('SalaryTemplateSettings', () => {
     render(<SalaryTemplateSettings />);
     await user.click(screen.getByTestId('salary-template-row-template-1'));
     expect(mocks.push).toHaveBeenCalledWith(editorPath('view'));
-    expect(screen.queryByRole('button', { name: 'Create template' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Create Template' })).not.toBeInTheDocument();
   });
 
-  it('opens new template creation in the same drawer route', async () => {
+  it('opens the dedicated create page without rendering an editor in the list', async () => {
     const user = userEvent.setup();
     render(<SalaryTemplateSettings />);
-
-    await user.click(screen.getByRole('button', { name: 'Create template' }));
-    expect(mocks.push).toHaveBeenCalledWith(`${mocks.pathname}?mode=create`);
-
-    cleanup();
-    mocks.query = 'mode=create';
-    render(<SalaryTemplateSettings />);
-    expect(screen.getByTestId('salary-template-editor')).toHaveTextContent('new:create');
-  });
-
-  it('guards dirty closure but closes directly after a successful save', async () => {
-    const user = userEvent.setup();
-    mocks.query = `templateId=${mocks.template.id}&mode=edit`;
-    render(<SalaryTemplateSettings />);
-
-    await user.click(screen.getByRole('button', { name: 'Mark editor dirty' }));
-    await user.click(screen.getByRole('button', { name: 'Close editor' }));
-    expect(screen.getByRole('dialog', { name: 'Discard unsaved changes?' })).toBeVisible();
-    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
-
-    await user.click(screen.getByRole('button', { name: 'Complete save' }));
-    expect(screen.queryByRole('dialog', { name: 'Discard unsaved changes?' })).not.toBeInTheDocument();
-    expect(mocks.push).toHaveBeenLastCalledWith(mocks.pathname);
+    await user.click(screen.getByRole('button', { name: 'Create Template' }));
+    expect(mocks.push).toHaveBeenCalledWith('/hr/payroll/setting/salary-templates/new');
+    expect(screen.queryByTestId('salary-template-editor')).not.toBeInTheDocument();
   });
 });

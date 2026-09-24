@@ -20,6 +20,22 @@ const component = {
 };
 
 describe('salary template editor utilities', () => {
+  it('rejects an earning based on the remainder but allows a deduction based on it', () => {
+    const basic = applySemanticType(createTemplateRule(component, 0), 'BASIC');
+    const remainder = applySemanticType(
+      createTemplateRule({ ...component, componentId: 'remainder' }, 1),
+      'BALANCING_EARNING'
+    );
+    const dependent: SalaryTemplateRule = {
+      ...createTemplateRule({ ...component, componentId: 'dependent' }, 2),
+      formulaType: 'PERCENTAGE_OF_COMPONENT', value: 10, basisComponentId: 'remainder',
+    };
+    expect(getSaveIssues([basic, remainder, dependent])).toContain(
+      'An earning cannot depend on the gross remainder because that creates a circular calculation.'
+    );
+    expect(getSaveIssues([basic, remainder, { ...dependent, lineKind: 'DEDUCTION' }])).toEqual([]);
+  });
+
   it('allows Basic at 100% with PF and no balancing earning', () => {
     const basic = { ...applySemanticType(createTemplateRule(component, 0), 'BASIC'), value: 100 };
     const pf = applySemanticType(createTemplateRule({ ...component, componentId: 'pf', lineKind: 'DEDUCTION' }, 1), 'EMPLOYEE_PROVIDENT_FUND');
@@ -53,6 +69,13 @@ describe('salary template editor utilities', () => {
       value: 0,
     });
     expect(formulaAcceptsValue(fixed.formulaType)).toBe(true);
+  });
+
+  it.each(['EMPLOYEE_PROVIDENT_FUND', 'PROFESSIONAL_TAX'])('makes a derived %s deduction editable when changed to a manual amount', (semanticType) => {
+    const automatic = applySemanticType(createTemplateRule({ ...component, componentId: 'deduction', lineKind: 'DEDUCTION' }, 1), semanticType);
+    const manual = applyFormulaType(automatic, 'FIXED_AMOUNT');
+    expect(manual).toMatchObject({ semanticType: 'ORDINARY', formulaType: 'FIXED_AMOUNT', value: 0 });
+    expect(formulaAcceptsValue(manual.formulaType)).toBe(true);
   });
 
   it('normalizes earnings before deductions and assigns stable display order', () => {

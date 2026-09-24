@@ -16,6 +16,7 @@ import {
   Button,
   Stepper,
   StepLabel,
+  StepButton,
   StepConnector,
   CircularProgress,
 } from '@mui/material';
@@ -67,6 +68,7 @@ interface CustomStepperWithFormikProps {
     setIsLoading: (val: boolean) => void
   ) => void;
   handleBack: () => void;
+  onCancel?: () => void;
   onSave?: (
     isLastStep: boolean,
     value: any,
@@ -261,6 +263,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   formikInstance,
   handleNext,
   handleBack,
+  onCancel,
   validationSchema,
   renderItem,
   onStepClick = () => {},
@@ -467,33 +470,49 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             id={`step-label-${index}`}
             completed={hasExplicitCompletedSteps ? completedSteps.includes(index) : undefined}
             sx={{ cursor: isClickable ? 'pointer' : 'no-drop' }}
-            onClick={async () => {
-              if (!isClickable) return;
-
-              if (shouldValidateForwardStepClick(activeStep, index, validateForwardStepClick)) {
-                const validationErrors = await formik.validateForm();
-                if (Object.keys(validationErrors).length > 0) {
-                  formik.setTouched(markTouchedFromErrors(validationErrors), true);
-                  focusFirstFormikError(validationErrors);
-                  return;
-                }
-              }
-
-              onStepClick?.(index, label, formik);
-            }}
           >
-            <CustomStepLabel
-              error={errors[index]}
+            <StepButton
+              aria-label={`Step ${index + 1}: ${label}`}
+              disabled={!isClickable}
+              aria-current={index === activeStep ? 'step' : undefined}
               sx={{
-                '& span': { fontSize: '12px', mt: '2px !important' },
-                '& .MuiStepLabel-iconContainer': { display: 'block' },
+                m: 0,
+                p: 1,
+                minHeight: 44,
+                '&.Mui-focusVisible': {
+                  outline: '2px solid',
+                  outlineColor: 'primary.main',
+                  outlineOffset: -2,
+                },
               }}
-              // @ts-ignore
-              isdisabledlabel={`${isLabelDisabled}`}
-              StepIconComponent={ModernStepIcon}
+              onClick={async () => {
+                if (!isClickable) return;
+
+                if (shouldValidateForwardStepClick(activeStep, index, validateForwardStepClick)) {
+                  const validationErrors = await formik.validateForm();
+                  if (Object.keys(validationErrors).length > 0) {
+                    formik.setTouched(markTouchedFromErrors(validationErrors), true);
+                    focusFirstFormikError(validationErrors);
+                    return;
+                  }
+                }
+
+                onStepClick?.(index, label, formik);
+              }}
             >
-              {label}
-            </CustomStepLabel>
+              <CustomStepLabel
+                error={errors[index]}
+                sx={{
+                  '& span': { fontSize: '12px', mt: '2px !important' },
+                  '& .MuiStepLabel-iconContainer': { display: 'block' },
+                }}
+                // @ts-ignore
+                isdisabledlabel={`${isLabelDisabled}`}
+                StepIconComponent={ModernStepIcon}
+              >
+                {label}
+              </CustomStepLabel>
+            </StepButton>
           </Step>
         );
       })}
@@ -556,13 +575,14 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           variant="outlined"
           startIcon={<Iconify icon="mdi:arrow-left" width={20} />}
           {...backButtonProps}
-          disabled={activeStep === 0 || isBusy || Boolean(backButtonProps.disabled)}
+          disabled={(activeStep === 0 && !onCancel) || isBusy || Boolean(backButtonProps.disabled)}
           onClick={() => {
             setIsBackClick(true);
-            handleBack();
+            if (activeStep === 0 && onCancel) onCancel();
+            else handleBack();
           }}
         >
-          Back
+          {activeStep === 0 && onCancel ? 'Cancel' : 'Back'}
         </Button>
         <Box display="flex" gap={1}>
           {showSaveButton && <Button {...mergedSaveButtonProps}>{saveButtonLabel}</Button>}
