@@ -128,14 +128,15 @@ export const generateTimelineStamps = (
 export const calculateSlotPosition = (
   startTime: string,
   endTime: string,
-  timelineStartHour: number = TIMELINE_START_HOUR
+  timelineStartHour: number = TIMELINE_START_HOUR,
+  pixelsPerMinute: number = MINUTE_HEIGHT_RATIO
 ) => {
   const startMin = parseTimeToMinutes(startTime);
   const endMin = parseTimeToMinutes(endTime);
   const timelineStartMin = timelineStartHour * 60;
 
-  const top = (startMin - timelineStartMin) * MINUTE_HEIGHT_RATIO;
-  const height = (endMin - startMin) * MINUTE_HEIGHT_RATIO;
+  const top = (startMin - timelineStartMin) * pixelsPerMinute;
+  const height = (endMin - startMin) * pixelsPerMinute;
 
   return { top, height };
 };

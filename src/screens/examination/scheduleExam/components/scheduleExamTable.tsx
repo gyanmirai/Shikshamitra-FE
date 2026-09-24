@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { Standards, Organization } from 'src/types/school';
+import type { KeyboardEvent } from 'react';
 
 import dayjs from 'dayjs';
 import { jsPDF } from 'jspdf';
@@ -25,7 +26,17 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import { Box, Tab, Chip, Tabs, Paper, Stack, Alert, Button, Typography } from '@mui/material';
+import {
+  Box,
+  Tab,
+  Chip,
+  Tabs,
+  Paper,
+  Stack,
+  Alert,
+  Button,
+  Typography,
+} from '@mui/material';
 import {
   usePublishExamMutation,
   useLazyGetExamScheduleQuery,
@@ -176,6 +187,29 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     publishExamDialog.onTrue();
     setSelectedTimetable(row);
   };
+
+  const handlePreviewRowClick = (row: any) => {
+    setPreviewExam(row as IExamFormValues);
+  };
+
+  const previewRowProps = (row: any) => ({
+    tabIndex: 0,
+    'aria-label': `View ${row.examName}`,
+    onKeyDown: (event: KeyboardEvent<HTMLTableRowElement>) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        handlePreviewRowClick(row);
+      }
+    },
+    sx: {
+      cursor: 'pointer',
+      '&:focus-visible': {
+        outline: '2px solid',
+        outlineColor: 'primary.main',
+        outlineOffset: -2,
+      },
+    },
+  });
 
   const handlePrintTimetable = async (row: IExamFormValues) => {
     if (!row.examId) return;
@@ -444,6 +478,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           page={Math.max(0, (page ?? 1) - 1)}
           rowsPerPage={rowsPerPage}
           onServerPagination={onServerPagination}
+          handleRowClick={handlePreviewRowClick}
+          rowProps={previewRowProps}
           noDataText={
             <Stack alignItems="center" spacing={0.5}>
               <Box component="span">
@@ -583,13 +619,13 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                 const primaryAction = getScheduleExamPrimaryAction(row.status, row.issueCount ?? 0);
                 const isPending = tabs.value === examScheduledStatus.Pending;
                 const actions = [
-                  ...(canView
+                  ...(canAdd && primaryAction?.kind === 'publish'
                     ? [
                         {
-                          id: 'view',
-                          label: 'View exam',
-                          icon: 'solar:eye-bold',
-                          onClick: () => setPreviewExam(row as IExamFormValues),
+                          id: 'publish',
+                          label: primaryAction.label,
+                          icon: primaryAction.icon,
+                          onClick: () => requestPublishExam(row),
                         },
                       ]
                     : []),
@@ -620,12 +656,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
                   ...(canView || canAdd
                     ? [
                         {
-                          id: 'preview',
-                          label: 'Preview',
-                          icon: 'solar:eye-bold',
-                          onClick: () => setPreviewExam(row as IExamFormValues),
-                        },
-                        {
                           id: 'timetable',
                           label: 'View timetable',
                           icon: 'solar:calendar-bold-duotone',
@@ -644,20 +674,16 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
                 return (
                   <Stack direction="row" spacing={0.5} alignItems="center">
-                    {canAdd && primaryAction && (
+                    {canAdd && primaryAction?.kind === 'complete' && (
                       <Button
                         size="small"
-                        variant={primaryAction.kind === 'complete' ? 'outlined' : 'contained'}
+                        variant="outlined"
                         aria-label={`${primaryAction.label} for ${row.examName}`}
                         startIcon={<Iconify icon={primaryAction.icon} width={18} />}
                         onClick={(event) => {
                           event.stopPropagation();
-                          if (primaryAction.kind === 'complete') {
-                            setOpenDialog?.(true);
-                            setEditData?.(row as IExamFormValues);
-                          } else {
-                            requestPublishExam(row);
-                          }
+                          setOpenDialog?.(true);
+                          setEditData?.(row as IExamFormValues);
                         }}
                         sx={{ whiteSpace: 'nowrap' }}
                       >
@@ -716,6 +742,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             { id: 'createdBy', label: 'Created By', align: 'left', isFilter: false },
           ]}
           data={tableData || []}
+          handleRowClick={handlePreviewRowClick}
+          rowProps={previewRowProps}
           serverSidePagination
           page={Math.max(0, (page ?? 1) - 1)}
           rowsPerPage={rowsPerPage}

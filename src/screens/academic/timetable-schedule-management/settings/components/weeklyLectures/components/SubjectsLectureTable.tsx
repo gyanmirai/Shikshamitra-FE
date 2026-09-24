@@ -4,7 +4,7 @@ import type { FormikProps } from 'formik';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import { useMemo, useCallback } from 'react';
-import { Box, Chip, Divider, Typography } from '@mui/material';
+import { Box, Chip, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { SubjectNameCell } from './SubjectNameCell';
@@ -102,12 +102,20 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
           px: 0.5,
         }}
       >
-        <Chip
-          size="small"
-          label={`${formik.values.subjects.length} subject${formik.values.subjects.length !== 1 ? 's' : ''}`}
-          variant="outlined"
-          sx={{ fontWeight: 500, fontSize: '12px' }}
-        />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Chip
+            size="small"
+            label={`${formik.values.subjects.length} subject${formik.values.subjects.length !== 1 ? 's' : ''}`}
+            variant="outlined"
+            sx={{ fontWeight: 500, fontSize: '12px' }}
+          />
+          <Typography variant="caption" color="text.secondary">
+            Total weekly lectures:{' '}
+            <Box component="span" fontWeight={700} color="text.primary">
+              {totalLectures}
+            </Box>
+          </Typography>
+        </Box>
 
         {!isInputDisabled && <WeeklyLectureBulkApply onApply={handleApplyAll} />}
       </Box>
@@ -121,30 +129,6 @@ export function SubjectsLectureTable({ formik, disabled, isEdit }: SubjectsLectu
         columns={columns}
         data={formik.values.subjects}
       />
-
-      {/* ── Footer: total lectures (UI-only) ── */}
-      {formik.values.subjects.length > 0 && (
-        <>
-          <Divider />
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              gap: 1,
-              px: 1,
-              py: 0.5,
-            }}
-          >
-            <Typography variant="caption" color="text.secondary">
-              Total weekly lectures:
-            </Typography>
-            <Typography variant="caption" fontWeight={700} color="text.primary">
-              {totalLectures}
-            </Typography>
-          </Box>
-        </>
-      )}
     </Box>
   );
 }

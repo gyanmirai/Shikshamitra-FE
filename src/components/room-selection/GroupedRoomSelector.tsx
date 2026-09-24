@@ -81,6 +81,8 @@ export function GroupedRoomSelector({
               minWidth: 64,
               minHeight: 44,
               m: '0 !important',
+              display: 'inline-flex',
+              alignItems: 'center',
               px: 1.25,
               py: 0.75,
               gap: 0.5,
@@ -90,7 +92,8 @@ export function GroupedRoomSelector({
               bgcolor: selected ? 'action.selected' : 'background.paper',
               color: 'text.primary',
               fontWeight: selected ? 700 : 500,
-              justifyContent: 'center',
+              justifyContent: 'center !important',
+              textAlign: 'center !important',
               transition: 'border-color 120ms ease, background-color 120ms ease',
               '&:hover, &[data-focus="true"]': {
                 bgcolor: 'action.hover',
