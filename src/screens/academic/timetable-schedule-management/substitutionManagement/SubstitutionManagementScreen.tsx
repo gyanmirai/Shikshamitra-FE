@@ -83,6 +83,7 @@ import {
 
 import { DutyActionDialog } from './components/DutyActionDialog';
 import { TeacherDutyActions } from './components/TeacherDutyActions';
+import { buildLectureSelectOptions } from './services/lecture-options';
 import { resolveDutyActionErrorMessage } from './services/duty-actions';
 import { useTeacherDutyActions } from './hooks/use-teacher-duty-actions';
 import { AffectedLecturePicker } from './components/AffectedLecturePicker';
@@ -464,11 +465,6 @@ const mapApiAffectedLecture = (item: ApiAffectedLecture): AffectedLectureRow => 
   roomName: item.roomName,
   teacherName: item.teacherName,
 });
-
-const formatLectureLabel = (item: ApiSubstitutionLecture) =>
-  `${item.period} | ${item.startTime}-${item.endTime} | ${item.subjectName} | ${
-    item.originalTeacherName || 'Teacher not assigned'
-  }`;
 
 const getTeacherCoverageLabel = (teacher: AvailableTeacherRow) =>
   teacher.coverageStartTime && teacher.coverageEndTime
@@ -952,7 +948,7 @@ const SubstitutionManagementScreen = () => {
     (lecture) => lecture.slotSubjectId === substitutionForm.timetableSlotSubjectId
   );
   const hasCreateLectureSelection = Boolean(
-    (substitutionForm.timetableSlotSubjectId || substitutionForm.period) &&
+    substitutionForm.timetableSlotSubjectId &&
     substitutionForm.startTime &&
     substitutionForm.endTime &&
     substitutionForm.className &&
@@ -979,7 +975,7 @@ const SubstitutionManagementScreen = () => {
         !createDialogOpen ||
         !substitutionForm.date ||
         !hasCreateLectureSelection ||
-        !substitutionForm.originalTeacherName,
+        (!substitutionForm.originalTeacherId && !substitutionForm.originalTeacherName),
     }
   );
 
@@ -1240,32 +1236,7 @@ const SubstitutionManagementScreen = () => {
     return options;
   }, [metadataRooms, substitutionForm.originalRoomId, substitutionForm.roomName]);
 
-  const lectureSelectOptions: SelectOption[] = useMemo(() => {
-    const options =
-      createLectureResult.length > 0
-        ? createLectureResult.map((item) => ({
-            value: item.slotSubjectId,
-            label: formatLectureLabel(item),
-          }))
-        : lectureSlotOptions;
-    const currentVal = substitutionForm.timetableSlotSubjectId || substitutionForm.period;
-    if (currentVal && !options.some((o) => o.value === currentVal)) {
-      const labelText = substitutionForm.period
-        ? `${substitutionForm.period}${substitutionForm.startTime ? ` (${substitutionForm.startTime} - ${substitutionForm.endTime})` : ''}`
-        : currentVal;
-      options.unshift({
-        value: currentVal,
-        label: labelText,
-      });
-    }
-    return options;
-  }, [
-    createLectureResult,
-    substitutionForm.timetableSlotSubjectId,
-    substitutionForm.period,
-    substitutionForm.startTime,
-    substitutionForm.endTime,
-  ]);
+  const lectureSelectOptions: SelectOption[] = buildLectureSelectOptions(createLectureResult);
 
   const filteredSubstitutions = useMemo(() => {
     const dateValue = filters.filterDate?.format('YYYY-MM-DD');
@@ -3612,6 +3583,7 @@ const SubstitutionManagementScreen = () => {
                       label="Lecture Slot *"
                       options={lectureSelectOptions}
                       value={substitutionForm.timetableSlotSubjectId || substitutionForm.period}
+                      isLoading={isLecturesLoading || isFetchingLectures}
                       error={createSubmitted && !!createFieldErrors.slot}
                       helperText={createSubmitted ? createFieldErrors.slot : ''}
                       disabled={
@@ -3619,51 +3591,46 @@ const SubstitutionManagementScreen = () => {
                         !substitutionForm.standardId ||
                         !substitutionForm.divisionId
                       }
-                      noOptionsMessage="No lecture slots found for the selected date, class and division"
+                      noOptionsMessage="No timetable or lecture slots are configured for the selected date, class and division"
                       onChange={(value) => {
                         const lecture = createLectureResult.find(
                           (item) => item.slotSubjectId === value
                         );
-                        const template = affectedLectureTemplates.find(
-                          (item) => item.period === value
-                        );
+                        if (!lecture) return;
+
                         const assignedSubject = createMetadata?.subjects.find(
                           (item) =>
-                            item.id === lecture?.subjectId &&
-                            item.standardId === (lecture?.standardId || substitutionForm.standardId)
+                            item.id === lecture.subjectId && item.standardId === lecture.standardId
                         );
                         setSubstitutionForm((current) => ({
                           ...current,
-                          timetableId: lecture?.timetableId || current.timetableId,
-                          timetableSlotId: lecture?.timetableSlotId || current.timetableSlotId,
-                          timetableSlotSubjectId: lecture?.slotSubjectId || '',
-                          period: lecture?.period || (value as string),
-                          startTime: lecture?.startTime || current.startTime,
-                          endTime: lecture?.endTime || current.endTime,
-                          subjectId: lecture?.subjectId || current.subjectId,
-                          subjectName:
-                            lecture?.subjectName || template?.subjectName || current.subjectName,
+                          timetableId: lecture.timetableId,
+                          timetableSlotId: lecture.timetableSlotId,
+                          timetableSlotSubjectId: lecture.slotSubjectId,
+                          period: lecture.period,
+                          startTime: lecture.startTime,
+                          endTime: lecture.endTime,
+                          subjectId: lecture.subjectId,
+                          subjectName: lecture.subjectName,
                           originalTeacherId:
-                            lecture?.originalTeacherId ||
+                            lecture.originalTeacherId ||
                             assignedSubject?.primaryTeacherId ||
                             current.originalTeacherId,
                           originalTeacherName:
-                            lecture?.originalTeacherName ||
+                            lecture.originalTeacherName ||
                             assignedSubject?.primaryTeacherName ||
-                            template?.teacherName ||
                             current.originalTeacherName,
-                          originalRoomId: lecture?.originalRoomId || current.originalRoomId,
-                          roomName: lecture?.roomName || template?.roomName || current.roomName,
-                          assignedRoomId: lecture?.originalRoomId || current.assignedRoomId,
-                          assignedRoomName: lecture?.roomName || current.assignedRoomName,
+                          originalRoomId: lecture.originalRoomId || current.originalRoomId,
+                          roomName: lecture.roomName || current.roomName,
+                          assignedRoomId: lecture.originalRoomId || current.assignedRoomId,
+                          assignedRoomName: lecture.roomName || current.assignedRoomName,
                           substituteTeacherId: '',
                           substituteTeacherName: '',
                           selectedSubstitutes: [],
-                          standardId: lecture?.standardId || current.standardId,
-                          className: lecture?.className || template?.className || current.className,
-                          divisionId: lecture?.divisionId || current.divisionId,
-                          divisionName:
-                            lecture?.divisionName || template?.divisionName || current.divisionName,
+                          standardId: lecture.standardId,
+                          className: lecture.className,
+                          divisionId: lecture.divisionId,
+                          divisionName: lecture.divisionName,
                         }));
                       }}
                     />
@@ -3782,7 +3749,7 @@ const SubstitutionManagementScreen = () => {
                       <Stack spacing={1}>
                         {!hasCreateLectureSelection && (
                           <Alert severity="info">
-                            Select an affected lecture to load free employees.
+                            Select a configured lecture to load free employees.
                           </Alert>
                         )}
                         {hasCreateLectureSelection &&
