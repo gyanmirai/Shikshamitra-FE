@@ -7,6 +7,7 @@ type AffectedLecturePickerProps = {
   lectures: AffectedLectureRow[];
   selectedLectureId: string;
   hasTeacher: boolean;
+  hasAcademicMedium: boolean;
   hasValidRange: boolean;
   invalidRangeMessage?: string;
   loading: boolean;
@@ -18,6 +19,7 @@ export function AffectedLecturePicker({
   lectures,
   selectedLectureId,
   hasTeacher,
+  hasAcademicMedium,
   hasValidRange,
   invalidRangeMessage = 'End time must be later than start time.',
   loading,
@@ -26,6 +28,10 @@ export function AffectedLecturePicker({
 }: AffectedLecturePickerProps) {
   if (!hasTeacher) {
     return <Alert severity="info">Select the unavailable teacher to load affected lectures.</Alert>;
+  }
+
+  if (!hasAcademicMedium) {
+    return <Alert severity="info">Select an academic medium to load affected lectures.</Alert>;
   }
 
   if (!hasValidRange) {
@@ -60,6 +66,11 @@ export function AffectedLecturePicker({
 
   return (
     <Grid container spacing={1}>
+      <Grid size={{ xs: 12 }}>
+        <Typography variant="caption" color="text.secondary">
+          Lectures from the published timetable for the selected academic medium.
+        </Typography>
+      </Grid>
       {lectures.map((lecture) => {
         const lectureId = lecture.slotSubjectId || lecture.id;
         const isSelected = lectureId === selectedLectureId || lecture.period === selectedLectureId;
@@ -107,7 +118,12 @@ export function AffectedLecturePicker({
                   onClick={() => onSelect(lecture)}
                   sx={{ minHeight: 44, flexShrink: 0 }}
                 >
-                  {!canSelect ? 'Covered' : isSelected ? 'Selected' : 'Select lecture'}
+                  {!canSelect
+                    ? lecture.createSubstitutionBlockReason ||
+                      (lecture.existingSubstitutionId ? 'Already assigned' : 'Unavailable')
+                    : isSelected
+                      ? 'Selected'
+                      : 'Select lecture'}
                 </Button>
               </Stack>
             </Box>

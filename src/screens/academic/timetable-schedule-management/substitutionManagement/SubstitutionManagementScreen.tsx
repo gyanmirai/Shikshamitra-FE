@@ -453,6 +453,7 @@ const mapApiAffectedLecture = (item: ApiAffectedLecture): AffectedLectureRow => 
   existingSubstitutionId: item.existingSubstitutionId,
   existingSubstitutionStatus: item.existingSubstitutionStatus,
   canCreateSubstitution: item.canCreateSubstitution,
+  createSubstitutionBlockReason: item.createSubstitutionBlockReason,
   period: item.period,
   time: item.time,
   startTime: item.startTime,
@@ -937,6 +938,7 @@ const SubstitutionManagementScreen = () => {
       skip:
         !createDialogOpen ||
         createOriginMode !== 'teacher' ||
+        !medium?.id ||
         (!createTeacherOrigin.teacherId && !createTeacherOrigin.teacherName) ||
         !createTeacherOrigin.date ||
         !isCreateOriginRangeValid,
@@ -3467,6 +3469,7 @@ const SubstitutionManagementScreen = () => {
                       hasTeacher={Boolean(
                         createTeacherOrigin.teacherId || createTeacherOrigin.teacherName
                       )}
+                      hasAcademicMedium={Boolean(medium?.id)}
                       hasValidRange={isCreateOriginRangeValid}
                       invalidRangeMessage={
                         createTeacherOrigin.isFullDay
