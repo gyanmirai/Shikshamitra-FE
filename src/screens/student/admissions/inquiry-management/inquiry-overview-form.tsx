@@ -29,6 +29,7 @@ export function InquiryOverviewForm({
     inquiry.preferredLanguageCode || 'en'
   );
   const [update, updateState] = useUpdateAdmissionInquiryMutation();
+  const validPhone = /^[6-9]\d{9}$/.test(phone.replace(/\D/g, ''));
 
   useEffect(() => {
     setCurrent(inquiry);
@@ -49,7 +50,7 @@ export function InquiryOverviewForm({
     preferredLanguageCode !== (current.preferredLanguageCode || 'en');
 
   const save = async () => {
-    if (!applicantName.trim() || phone.replace(/\D/g, '').length < 7) return;
+    if (!applicantName.trim() || !validPhone) return;
     try {
       const result = await update({
         id: current.id,
@@ -93,12 +94,12 @@ export function InquiryOverviewForm({
           label="Mobile number"
           value={phone}
           disabled={readOnly}
-          error={Boolean(phone && phone.replace(/\D/g, '').length < 7)}
+          error={Boolean(phone && !validPhone)}
           helperText={
-            phone && phone.replace(/\D/g, '').length < 7 ? 'Enter a valid mobile number.' : ' '
+            phone && !validPhone ? 'Enter a valid 10-digit Indian mobile number.' : ' '
           }
-          onChange={(event) => setPhone(event.target.value)}
-          slotProps={{ htmlInput: { maxLength: 32, inputMode: 'tel' } }}
+          onChange={(event) => setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))}
+          slotProps={{ htmlInput: { maxLength: 10, inputMode: 'numeric' } }}
         />
         <TextField
           fullWidth

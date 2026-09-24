@@ -202,6 +202,20 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
 
 export const STANDARD_ADMISSION_JOURNEY = ADMISSION_WORKFLOW_TEMPLATES[0].stages;
 
+export const EMPTY_WORKFLOW_STARTER = {
+  id: 'empty',
+  name: 'Blank workflow',
+  description: 'Start without stages and design every route yourself.',
+  bestFor: 'Schools with a fully custom process',
+  icon: 'mdi:pencil-outline',
+  stages: [],
+} as const;
+
+export const ADMISSION_WORKFLOW_STARTERS = [
+  ...ADMISSION_WORKFLOW_TEMPLATES,
+  EMPTY_WORKFLOW_STARTER,
+] as const;
+
 export const isWorkflowTemplateId = (value: unknown): value is WorkflowTemplateId =>
   typeof value === 'string' && WORKFLOW_TEMPLATE_IDS.includes(value as WorkflowTemplateId);
 
@@ -209,6 +223,9 @@ export const getWorkflowTemplateDefinition = (id: unknown) =>
   isWorkflowTemplateId(id)
     ? ADMISSION_WORKFLOW_TEMPLATES.find((template) => template.id === id)
     : undefined;
+
+export const getWorkflowStarterDefinition = (id: unknown) =>
+  ADMISSION_WORKFLOW_STARTERS.find((template) => template.id === id);
 
 const stage = (
   code: string,

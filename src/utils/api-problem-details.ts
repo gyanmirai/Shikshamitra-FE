@@ -4,6 +4,8 @@ export interface ParsedApiProblemDetail {
 }
 
 const KNOWN_ERROR_MESSAGES: Record<string, string> = {
+  'Admissions.CycleCodeAlreadyExists':
+    'An admission cycle already uses this code. Choose a different cycle code and try again.',
   'Admissions:ApplicationStageCannotAdvance':
     "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again.",
   'Admissions.WorkflowConcurrencyConflict':

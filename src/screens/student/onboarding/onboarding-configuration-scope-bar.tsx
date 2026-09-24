@@ -102,8 +102,8 @@ export function OnboardingConfigurationScopeBar({ compact = false }: { compact?:
     setScope(defaultOnboardingConfigurationScope);
   };
 
-  const handleReset = () => {
-    resetToInherited();
+  const handleReset = async () => {
+    await resetToInherited();
     resetConfirm.onFalse();
   };
 

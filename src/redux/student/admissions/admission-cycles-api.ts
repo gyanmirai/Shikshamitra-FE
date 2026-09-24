@@ -102,6 +102,46 @@ export type AdmissionCycleHistory = {
   creatorId?: string | null;
 };
 
+export type AdmissionCycleOfferingCapacity = {
+  admissionOfferingId: string;
+  offeringName: string;
+  offeringCode: string;
+  isActive: boolean;
+  isSeatManaged: boolean;
+  isConfigured: boolean;
+  capacity?: number | null;
+  reservedCount: number;
+  confirmedCount: number;
+  waitlistedCount: number;
+  remainingCapacity?: number | null;
+  isOverCapacity: boolean;
+  poolConcurrencyStamp?: string | null;
+};
+
+export type AdmissionCycleCapacitySummary = {
+  admissionCycleId: string;
+  offeringCount: number;
+  activeOfferingCount: number;
+  seatManagedOfferingCount: number;
+  configuredOfferingCount: number;
+  unconfiguredOfferingCount: number;
+  notSeatManagedOfferingCount: number;
+  totalCapacity: number;
+  reservedCount: number;
+  confirmedCount: number;
+  waitlistedCount: number;
+  occupiedCount: number;
+  remainingCapacity: number;
+  overCapacityOfferingCount: number;
+  offerings: AdmissionCycleOfferingCapacity[];
+};
+
+export type UpdateAdmissionCycleOfferingCapacity = {
+  capacity: number;
+  reason: string;
+  poolConcurrencyStamp?: string | null;
+};
+
 type ResultEnvelope<T> = { data?: T };
 
 const unwrapResult = <T>(response: ResultEnvelope<T> | T): T => {
@@ -191,6 +231,27 @@ export const admissionCyclesApi = api.injectEndpoints({
       query: (id) => ({ url: `/student/enrollment/admissions/cycles/${id}/history`, method: 'GET' }),
       transformResponse: (response: ResultEnvelope<AdmissionCycleHistory[]> | AdmissionCycleHistory[]) => unwrapResult(response),
     }),
+    getAdmissionCycleCapacity: builder.query<AdmissionCycleCapacitySummary, string>({
+      query: (id) => ({ url: `/student/enrollment/admissions/cycles/${id}/capacity`, method: 'GET' }),
+      transformResponse: (
+        response: ResultEnvelope<AdmissionCycleCapacitySummary> | AdmissionCycleCapacitySummary
+      ) => unwrapResult(response),
+      providesTags: cycleTags,
+    }),
+    updateAdmissionCycleOfferingCapacity: builder.mutation<
+      AdmissionCycleCapacitySummary,
+      { cycleId: string; offeringId: string; body: UpdateAdmissionCycleOfferingCapacity }
+    >({
+      query: ({ cycleId, offeringId, body }) => ({
+        url: `/student/enrollment/admissions/cycles/${cycleId}/offerings/${offeringId}/capacity`,
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (
+        response: ResultEnvelope<AdmissionCycleCapacitySummary> | AdmissionCycleCapacitySummary
+      ) => unwrapResult(response),
+      invalidatesTags: cycleTags,
+    }),
   }),
   overrideExisting: true,
 });
@@ -212,4 +273,6 @@ export const {
   useGetAdmissionCycleImpactQuery,
   useLazyGetAdmissionCycleImpactQuery,
   useGetAdmissionCycleHistoryQuery,
+  useGetAdmissionCycleCapacityQuery,
+  useUpdateAdmissionCycleOfferingCapacityMutation,
 } = admissionCyclesApi;

@@ -3,7 +3,8 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
-import { Box, Chip, Stack } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import { Box, Chip, Stack, LinearProgress } from '@mui/material';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
@@ -37,14 +38,51 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
       disableClose={busy}
       hasForm={false}
       title={
-        <Stack component="span" direction="row" spacing={1.5} alignItems="center">
-          <AdmissionDialogTitle
-            title={editing ? 'Edit admission form' : 'Create admission form'}
-            helpText="Build the reusable fields, validation, and review structure used by admission applicants and staff."
-            helpLabel="Admission form information"
+        <Box component="span" sx={{ display: 'block' }}>
+          <Stack component="span" direction="row" spacing={1.25} alignItems="center">
+            <AdmissionDialogTitle
+              title={editing ? 'Edit admission form' : 'Create admission form'}
+              helpText="Build the reusable fields, validation, and review structure used by admission applicants and staff."
+              helpLabel="Admission form information"
+            />
+            <Chip component="span" size="small" label="Draft" variant="outlined" />
+          </Stack>
+          <Box
+            component="span"
+            sx={{
+              mt: 0.25,
+              display: 'block',
+              typography: 'body2',
+              fontWeight: 400,
+              color: 'text.secondary',
+            }}
+          >
+            <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
+              {wizard.activeStep === 0
+                ? 'Choose a template and add the basic details.'
+                : wizard.activeStep === 1
+                  ? 'Arrange sections and fields, then configure each field.'
+                  : 'Review the form before saving this draft.'}
+            </Box>
+            <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
+              Step {wizard.activeStep + 1} of {ADMISSION_FORM_STEPS.length} ·{' '}
+              {ADMISSION_FORM_STEPS[wizard.activeStep]}
+            </Box>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={((wizard.activeStep + 1) / ADMISSION_FORM_STEPS.length) * 100}
+            aria-label={`Step ${wizard.activeStep + 1} of ${ADMISSION_FORM_STEPS.length}`}
+            sx={{
+              mt: 1,
+              height: 4,
+              borderRadius: 1,
+              display: { xs: 'block', md: 'none' },
+              bgcolor: 'action.hover',
+              '& .MuiLinearProgress-bar': { bgcolor: 'success.main' },
+            }}
           />
-          <Chip component="span" size="small" label="Draft" variant="outlined" />
-        </Stack>
+        </Box>
       }
       maxWidth={false}
       fullScreen
@@ -81,10 +119,27 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
             validateOnChange
             scrollbarHeight="auto"
             showSaveButton={wizard.activeStep < ADMISSION_FORM_STEPS.length - 1}
-            nextButtonLabel="Next"
+            saveButtonLabel="Save draft"
+            nextButtonLabel="Continue"
             finalButtonLabel="Save draft"
+            backButtonProps={{ sx: { minHeight: 44 } }}
             saveAndNextButtonProps={{
               loading: busy,
+              startIcon:
+                wizard.activeStep === ADMISSION_FORM_STEPS.length - 1 ? (
+                  <Iconify icon="mdi:content-save-outline" width={18} />
+                ) : undefined,
+              endIcon:
+                wizard.activeStep < ADMISSION_FORM_STEPS.length - 1 ? (
+                  <Iconify icon="mdi:arrow-right" width={18} />
+                ) : undefined,
+              sx: {
+                minHeight: 44,
+                bgcolor: 'common.black',
+                color: 'common.white',
+                '&:hover': { bgcolor: 'grey.800' },
+                '&.Mui-disabled': { bgcolor: 'action.disabledBackground' },
+              },
               onClickCapture: (event) => {
                 if (event.detail > 1) {
                   event.preventDefault();
@@ -95,6 +150,8 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
             saveButtonProps={{
               loading: busy,
               title: 'Save this draft and close the form builder',
+              startIcon: <Iconify icon="mdi:content-save-outline" width={18} />,
+              sx: { minHeight: 44 },
             }}
             handleBack={wizard.back}
             handleNext={wizard.next}
@@ -107,8 +164,6 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
                 formik={formik}
                 activeStep={wizard.activeStep}
                 editing={editing}
-                busy={busy}
-                onClose={onClose}
                 onEditDetails={() => wizard.goTo(0)}
                 onEditFields={() => wizard.goTo(1)}
               />

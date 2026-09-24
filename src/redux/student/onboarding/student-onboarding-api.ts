@@ -5,6 +5,8 @@ import type {
   StudentOnboardingCase,
   StudentIdentifierSeries,
   StudentOnboardingPolicy,
+  SaveStudentOnboardingSettings,
+  StudentOnboardingSettingsRecord,
   StudentOnboardingCasePage,
   StudentOnboardingAnalytics,
   StudentOnboardingDocuments,
@@ -282,6 +284,46 @@ export const studentOnboardingApi = api.injectEndpoints({
         { type: studentOnboardingType.onboardingPolicies, id: policy.academicYearId },
       ],
     }),
+    getStudentOnboardingSettings: builder.query<
+      StudentOnboardingSettingsRecord[],
+      { academicYearId?: string } | void
+    >({
+      query: (params) => ({
+        url: '/student/onboarding/settings/configurations',
+        params: params ?? undefined,
+      }),
+      transformResponse: (
+        response:
+          | Result<StudentOnboardingSettingsRecord[]>
+          | StudentOnboardingSettingsRecord[]
+      ) => unwrap(response),
+      providesTags: [{ type: studentOnboardingType.onboardingSettings, id: 'SCOPES' }],
+    }),
+    saveStudentOnboardingSettings: builder.mutation<
+      StudentOnboardingSettingsRecord,
+      SaveStudentOnboardingSettings
+    >({
+      query: (body) => ({
+        url: '/student/onboarding/settings/configurations',
+        method: 'PUT',
+        body,
+      }),
+      transformResponse: (
+        response: Result<StudentOnboardingSettingsRecord> | StudentOnboardingSettingsRecord
+      ) => unwrap(response),
+      invalidatesTags: [{ type: studentOnboardingType.onboardingSettings, id: 'SCOPES' }],
+    }),
+    deleteStudentOnboardingSettings: builder.mutation<
+      void,
+      { id: string; concurrencyStamp: string }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
+        url: `/student/onboarding/settings/configurations/${id}`,
+        method: 'DELETE',
+        params: { concurrencyStamp },
+      }),
+      invalidatesTags: [{ type: studentOnboardingType.onboardingSettings, id: 'SCOPES' }],
+    }),
     getStudentIdentifierSeries: builder.query<StudentIdentifierSeries[], string>({
       query: (academicYearId) => ({
         url: '/student/onboarding/settings/identifier-series',
@@ -405,6 +447,9 @@ export const {
   useGetStudentOnboardingPoliciesQuery,
   useCreateStudentOnboardingPolicyMutation,
   useUpdateStudentOnboardingPolicyMutation,
+  useGetStudentOnboardingSettingsQuery,
+  useSaveStudentOnboardingSettingsMutation,
+  useDeleteStudentOnboardingSettingsMutation,
   useGetStudentIdentifierSeriesQuery,
   useCreateStudentIdentifierSeriesMutation,
   useDeactivateStudentIdentifierSeriesMutation,

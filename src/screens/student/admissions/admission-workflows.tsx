@@ -9,8 +9,8 @@ import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, Badge, Stack, Button } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
+import { Box, Badge, Paper, Stack, Button } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -83,17 +83,18 @@ export default function AdmissionWorkflowsScreen() {
           { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Process' },
         ]}
-        action={
-          <Stack
-            direction="row"
-            spacing={1}
-            useFlexGap
-            flexWrap="wrap"
-            sx={{ '& .MuiButton-root': { minHeight: 44 } }}
-          >
+      />
+      <Paper variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          spacing={1}
+          alignItems={{ xs: 'stretch', sm: 'center' }}
+          justifyContent="space-between"
+        >
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
             <Button
               size="small"
-              variant="text"
+              variant="outlined"
               startIcon={
                 <Badge
                   color="error"
@@ -103,6 +104,7 @@ export default function AdmissionWorkflowsScreen() {
                 </Badge>
               }
               onClick={notificationsDialog.onTrue}
+              sx={{ minHeight: { xs: 44, sm: 36 }, px: 1.25 }}
             >
               Notifications
             </Button>
@@ -112,28 +114,34 @@ export default function AdmissionWorkflowsScreen() {
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:shield-check-outline" />}
                 onClick={governanceDialog.onTrue}
+                sx={{ minHeight: { xs: 44, sm: 36 }, px: 1.25 }}
               >
                 Governance
               </Button>
             )}
+          </Stack>
+          <Stack direction="row" spacing={1} useFlexGap sx={{ alignSelf: { sm: 'center' } }}>
+            <WorkflowListFilters filters={filters} onUpdate={filterState.update} />
             <Button
               size="small"
               variant="contained"
               disabled={!actions.allowed.canCreate}
               startIcon={<Iconify icon="mdi:plus" />}
               onClick={actions.createDialog.onTrue}
+              sx={{
+                minHeight: { xs: 44, sm: 36 },
+                px: 1.25,
+                bgcolor: 'text.primary',
+                color: 'background.paper',
+                '&:hover': { bgcolor: 'text.secondary' },
+              }}
             >
               Create workflow
             </Button>
           </Stack>
-        }
-      />
+        </Stack>
+      </Paper>
       {query.isError && <AdmissionQueryError onRetry={() => query.refetch()} />}
-      <WorkflowListFilters
-        {...filterState}
-        onUpdate={filterState.update}
-        onClear={filterState.clear}
-      />
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="admission-workflows"

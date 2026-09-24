@@ -41,15 +41,16 @@ export type AdvanceOptions = {
 
 export function useApplicationDetail(id: string) {
   const applicationQuery = useGetAdmissionApplicationQuery(id);
-  const formQuery = useGetAdmissionApplicationFormQuery(id);
-  const workflowQuery = useGetAdmissionApplicationWorkflowQuery(id);
+  const applicationId = applicationQuery.data ? id : skipToken;
+  const formQuery = useGetAdmissionApplicationFormQuery(applicationId);
+  const workflowQuery = useGetAdmissionApplicationWorkflowQuery(applicationId);
   const currentFormStage = workflowQuery.data?.stages.find(
     (stage) => stage.id === workflowQuery.data?.currentStageInstanceId && stage.formStageEnabled
   );
   const formStageQuery = useGetAdmissionFormStageQuery(
     currentFormStage ? { applicationId: id, stageId: currentFormStage.id } : skipToken
   );
-  const formHistoryQuery = useGetAdmissionApplicationFormHistoryQuery(id);
+  const formHistoryQuery = useGetAdmissionApplicationFormHistoryQuery(applicationId);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const [updateValues, updateState] = useUpdateAdmissionApplicationFormValuesMutation();
   const [submit, submitState] = useSubmitAdmissionApplicationMutation();

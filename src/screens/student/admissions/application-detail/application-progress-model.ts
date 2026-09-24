@@ -2,6 +2,7 @@ import type {
   AdmissionApplicationStage,
   AdmissionApplicationStatus,
 } from 'src/redux/student/admissions/admission-applications-api';
+import type { LabelColor } from 'src/components/label';
 
 const ACTIVE_POST_SUBMISSION_STATUSES = new Set<AdmissionApplicationStatus>([1, 4, 5, 6, 7, 8]);
 const RECORDED_DECISION_STATUSES = new Set<AdmissionApplicationStatus>([3, 5, 6]);
@@ -13,6 +14,15 @@ export const STAGE_STATUS_LABELS: Record<number, string> = {
   3: 'Skipped',
   4: 'Failed',
   5: 'Cancelled',
+};
+
+export const getStageStatusLabel = (status: number) => STAGE_STATUS_LABELS[status] ?? 'Unknown';
+
+export const getStageStatusColor = (status: number): LabelColor => {
+  if (status === 2) return 'success';
+  if (status === 3) return 'warning';
+  if (status === 4 || status === 5) return 'error';
+  return 'default';
 };
 
 export function getWorkflowProgress(stages: AdmissionApplicationStage[]) {

@@ -176,6 +176,21 @@ export type UpsertStudentOnboardingPolicy = Omit<
   concurrencyStamp?: string | null;
 };
 
+export type StudentOnboardingSettingsRecord = {
+  id: string;
+  concurrencyStamp: string;
+  academicYearId?: string | null;
+  schemaVersion: number;
+  configurationJson: string;
+};
+
+export type SaveStudentOnboardingSettings = Omit<
+  StudentOnboardingSettingsRecord,
+  'id' | 'concurrencyStamp'
+> & {
+  concurrencyStamp?: string | null;
+};
+
 export type CreateStudentIdentifierSeries = {
   academicYearId: string;
   standardId?: string | null;

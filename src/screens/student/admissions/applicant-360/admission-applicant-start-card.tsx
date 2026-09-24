@@ -27,7 +27,11 @@ import {
   CardContent,
 } from '@mui/material';
 
-import { getCurrentStage } from './admission-applicant-360-model';
+import {
+  getCurrentStage,
+  getPrimaryApplication,
+  isActiveAdmissionApplication,
+} from './admission-applicant-360-model';
 import {
   getAdmissionApplicationStatusColor,
   getAdmissionApplicationStatusLabel,
@@ -35,17 +39,16 @@ import {
 
 type Application = AdmissionApplicant360['applications'][number];
 
-const TERMINAL_APPLICATION_STATUSES = new Set([2, 3, 9, 10, 11]);
-
-export const isActiveAdmissionApplication = (application: Application) =>
-  !TERMINAL_APPLICATION_STATUSES.has(application.status);
-
 export function AdmissionApplicantStartCard({
   applicantId,
   applications,
+  embedded = false,
+  showCurrentApplicationSummary = true,
 }: {
   applicantId: string;
   applications: Application[];
+  embedded?: boolean;
+  showCurrentApplicationSummary?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -53,7 +56,7 @@ export function AdmissionApplicantStartCard({
   const [offeringId, setOfferingId] = useState('');
   const [submitError, setSubmitError] = useState('');
   const activeApplication = applications.find(isActiveAdmissionApplication);
-  const currentApplication = activeApplication ?? applications[0];
+  const currentApplication = getPrimaryApplication(applications);
   const currentStage = getCurrentStage(currentApplication);
   const { data: offerings, isFetching } = useGetAdmissionOfferingsQuery(
     {
@@ -92,166 +95,166 @@ export function AdmissionApplicantStartCard({
     }
   };
 
-  return (
-    <Card id="next-action" variant="outlined">
-      <CardContent>
-        <Stack spacing={2}>
-          <Stack direction="row" spacing={1.5} alignItems="flex-start">
-            <Box
-              sx={{
-                p: 1,
-                borderRadius: 1.5,
-                display: 'flex',
-                color: 'primary.main',
-                bgcolor: 'action.hover',
-              }}
-            >
-              <Iconify icon="mdi:arrow-decision-outline" width={24} />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6">Next action</Typography>
-              <Typography variant="body2" color="text.secondary">
-                {activeApplication
-                  ? 'Continue the current admission journey before starting another application.'
-                  : 'Choose the school offering this family wants to apply for.'}
-              </Typography>
-            </Box>
-          </Stack>
+  const content = (
+    <Stack spacing={2}>
+      <Stack direction="row" spacing={1.5} alignItems="flex-start">
+        <Box
+          sx={{
+            p: 1,
+            borderRadius: 1.5,
+            display: 'flex',
+            color: 'primary.main',
+            bgcolor: 'action.hover',
+          }}
+        >
+          <Iconify icon="mdi:arrow-decision-outline" width={24} />
+        </Box>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h6">Next action</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {activeApplication
+              ? 'Continue the current admission journey before starting another application.'
+              : 'Choose the school offering this family wants to apply for.'}
+          </Typography>
+        </Box>
+      </Stack>
 
-          {currentApplication && (
-            <Box
-              sx={{
-                p: 2,
-                border: 1,
-                borderRadius: 2,
-                borderColor: 'divider',
-                bgcolor: 'action.hover',
-              }}
-            >
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={1.5}
-                alignItems={{ sm: 'center' }}
-                justifyContent="space-between"
-              >
-                <Stack spacing={0.5} sx={{ minWidth: 0 }}>
-                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-                    <Typography variant="subtitle1">
-                      {activeApplication ? 'Continue application' : 'Review previous application'}
-                    </Typography>
-                    <Label color={getAdmissionApplicationStatusColor(currentApplication.status)}>
-                      {getAdmissionApplicationStatusLabel(currentApplication.status)}
-                    </Label>
-                  </Stack>
-                  <Typography variant="body2" color="text.secondary">
-                    {currentStage
-                      ? `Current stage: ${currentStage.name}`
-                      : 'Review application details'}
-                  </Typography>
-                  {currentStage?.enteredAt && (
-                    <Typography variant="caption" color="text.secondary">
-                      Stage entered {fDateTime(currentStage.enteredAt)}
-                    </Typography>
-                  )}
-                </Stack>
-                <Button
-                  component={NextLink}
-                  href={`${studentPaths.enrollment.applications}/${currentApplication.id}`}
-                  variant="contained"
-                  endIcon={<Iconify icon="mdi:arrow-right" />}
-                >
-                  Open application
-                </Button>
-              </Stack>
-            </Box>
-          )}
-
-          <Box>
-            <Typography variant="subtitle2">Start application</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {activeApplication
-                ? 'Unavailable while this applicant has an active application.'
-                : 'Only offerings that are active, configured, and currently open are available.'}
-            </Typography>
-          </Box>
-
-          {applicationStartBlocked && !activeApplication && (
-            <Alert
-              severity="warning"
-              action={
-                <Button
-                  component={NextLink}
-                  href={`${studentPaths.enrollment.inquiries}?inquiryId=${encodeURIComponent(inquiryId!)}`}
-                  color="inherit"
-                  size="small"
-                >
-                  Manage inquiry
-                </Button>
-              }
-            >
-              <Typography variant="subtitle2">Complete the Inquiry handoff first</Typography>
-              <Typography variant="body2">{readinessMessage}</Typography>
-            </Alert>
-          )}
-
-          {submitError && <Alert severity="error">{submitError}</Alert>}
-
+      {showCurrentApplicationSummary && currentApplication && (
+        <Box
+          sx={{
+            p: 2,
+            border: 1,
+            borderRadius: 2,
+            borderColor: 'divider',
+            bgcolor: 'action.hover',
+          }}
+        >
           <Stack
             direction={{ xs: 'column', sm: 'row' }}
-            spacing={1}
-            alignItems={{ sm: 'flex-start' }}
+            spacing={1.5}
+            alignItems={{ sm: 'center' }}
+            justifyContent="space-between"
           >
-            <TextField
-              select
-              fullWidth
-              size="small"
-              label="Admission offering"
-              value={offeringId}
-              disabled={isFetching || applicationStartBlocked}
-              onChange={(event) => {
-                setOfferingId(event.target.value);
-                setSubmitError('');
-              }}
-              helperText={
-                activeApplication
-                  ? 'Finish the current application before starting another.'
-                  : isFetching
-                    ? 'Loading open offerings…'
-                    : !(offerings?.items.length ?? 0)
-                      ? 'No open offerings are currently available.'
-                      : 'Cycle, class, board, and medium'
-              }
+            <Stack spacing={0.5} sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+                <Typography variant="subtitle1">
+                  {activeApplication ? 'Continue application' : 'Review previous application'}
+                </Typography>
+                <Label color={getAdmissionApplicationStatusColor(currentApplication.status)}>
+                  {getAdmissionApplicationStatusLabel(currentApplication.status)}
+                </Label>
+              </Stack>
+              <Typography variant="body2" color="text.secondary">
+                {currentStage
+                  ? `Current stage: ${currentStage.name}`
+                  : 'Review application details'}
+              </Typography>
+              {currentStage?.enteredAt && (
+                <Typography variant="caption" color="text.secondary">
+                  Stage entered {fDateTime(currentStage.enteredAt)}
+                </Typography>
+              )}
+            </Stack>
+            <Button
+              component={NextLink}
+              href={`${studentPaths.enrollment.applications}/${currentApplication.id}`}
+              variant="contained"
+              endIcon={<Iconify icon="mdi:arrow-right" />}
             >
-              {(offerings?.items ?? []).map((offering) => (
-                <MenuItem key={offering.id} value={offering.id}>
-                  {offering.name || offering.code}
-                  {offering.name && offering.name !== offering.code
-                    ? ` (${offering.code})`
-                    : ''} · {offering.standardName} · {offering.boardName} / {offering.mediumName} ·{' '}
-                  {offering.admissionCycleName}
-                </MenuItem>
-              ))}
-            </TextField>
-            <LoadingButton
-              variant={currentApplication ? 'outlined' : 'contained'}
-              loading={startState.isLoading}
-              disabled={!offeringId || applicationStartBlocked}
-              onClick={start}
-              startIcon={<Iconify icon="mdi:file-document-plus-outline" />}
-              sx={{ minWidth: 170, minHeight: 40 }}
-            >
-              Start application
-            </LoadingButton>
+              Open application
+            </Button>
           </Stack>
+        </Box>
+      )}
 
-          {inquiryId && inquiryState.isError && (
-            <Alert severity="info">
-              Inquiry readiness could not be checked in advance. The application will still be
-              validated safely when you start it.
-            </Alert>
-          )}
-        </Stack>
-      </CardContent>
+      <Box>
+        <Typography variant="subtitle2">Start application</Typography>
+        <Typography variant="caption" color="text.secondary">
+          {activeApplication
+            ? 'Unavailable while this applicant has an active application.'
+            : 'Only offerings that are active, configured, and currently open are available.'}
+        </Typography>
+      </Box>
+
+      {applicationStartBlocked && !activeApplication && (
+        <Alert
+          severity="warning"
+          action={
+            <Button
+              component={NextLink}
+              href={`${studentPaths.enrollment.inquiries}?inquiryId=${encodeURIComponent(inquiryId!)}`}
+              color="inherit"
+              size="small"
+            >
+              Manage inquiry
+            </Button>
+          }
+        >
+          <Typography variant="subtitle2">Complete the Inquiry handoff first</Typography>
+          <Typography variant="body2">{readinessMessage}</Typography>
+        </Alert>
+      )}
+
+      {submitError && <Alert severity="error">{submitError}</Alert>}
+
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'flex-start' }}>
+        <TextField
+          select
+          fullWidth
+          size="small"
+          label="Admission offering"
+          value={offeringId}
+          disabled={isFetching || applicationStartBlocked}
+          onChange={(event) => {
+            setOfferingId(event.target.value);
+            setSubmitError('');
+          }}
+          helperText={
+            activeApplication
+              ? 'Finish the current application before starting another.'
+              : isFetching
+                ? 'Loading open offerings…'
+                : !(offerings?.items.length ?? 0)
+                  ? 'No open offerings are currently available.'
+                  : 'Cycle, class, board, and medium'
+          }
+        >
+          {(offerings?.items ?? []).map((offering) => (
+            <MenuItem key={offering.id} value={offering.id}>
+              {offering.name || offering.code}
+              {offering.name && offering.name !== offering.code ? ` (${offering.code})` : ''} ·{' '}
+              {offering.standardName} · {offering.boardName} / {offering.mediumName} ·{' '}
+              {offering.admissionCycleName}
+            </MenuItem>
+          ))}
+        </TextField>
+        <LoadingButton
+          size="small"
+          variant={currentApplication ? 'outlined' : 'contained'}
+          loading={startState.isLoading}
+          disabled={!offeringId || applicationStartBlocked}
+          onClick={start}
+          startIcon={<Iconify icon="mdi:file-document-plus-outline" />}
+          sx={{ minWidth: 170, minHeight: 44 }}
+        >
+          Start application
+        </LoadingButton>
+      </Stack>
+
+      {inquiryId && inquiryState.isError && (
+        <Alert severity="info">
+          Inquiry readiness could not be checked in advance. The application will still be validated
+          safely when you start it.
+        </Alert>
+      )}
+    </Stack>
+  );
+
+  if (embedded) return <Box id="next-action">{content}</Box>;
+
+  return (
+    <Card id="next-action" variant="outlined">
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

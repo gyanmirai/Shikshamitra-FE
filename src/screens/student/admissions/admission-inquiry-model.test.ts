@@ -75,6 +75,24 @@ const offering = {
 } as AdmissionOfferingListItem;
 
 describe('admission inquiry model', () => {
+  it('rejects an incomplete guardian mobile number before duplicate checking', () => {
+    const errors = validateAdmissionInquiry(
+      {
+        ...values,
+        fields: { ...values.fields, GUARDIAN_MOBILE: '123' },
+      },
+      fields,
+      null,
+      offering
+    );
+
+    expect(errors).toMatchObject({
+      fields: {
+        GUARDIAN_MOBILE: 'Guardian mobile number must be a valid 10-digit Indian mobile number.',
+      },
+    });
+  });
+
   it('carries canonical and custom form values into the inquiry request', () => {
     const payload = buildAdmissionInquiryPayload(values, fields, offering);
 

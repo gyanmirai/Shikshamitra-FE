@@ -14,21 +14,28 @@ import { FormTemplateChooser } from './form-template-chooser';
 
 [
   'arrow-right',
+  'account-group-outline',
   'account-question-outline',
   'bus-school',
   'check',
   'check-circle-outline',
+  'chevron-right',
   'clipboard-account-outline',
   'clipboard-text-outline',
   'close',
   'comment-quote-outline',
   'file-document-edit-outline',
+  'file-document-outline',
+  'file-eye-outline',
   'file-outline',
   'file-search-outline',
   'file-sign',
   'folder-check-outline',
+  'format-list-bulleted',
+  'form-textbox',
   'hand-coin-outline',
   'home-city-outline',
+  'information-outline',
   'magnify',
   'medical-bag',
   'school-outline',
@@ -43,6 +50,8 @@ function renderChooser() {
     middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(api.middleware),
   });
   const props = {
+    selectedStarter: 'blank' as const,
+    selectedTemplateLabel: 'Blank form',
     onSelect: vi.fn(),
     onSelectSchoolForm: vi.fn().mockResolvedValue(true),
   };
@@ -61,9 +70,16 @@ describe('FormTemplateChooser', () => {
     const user = userEvent.setup();
     const props = renderChooser();
 
-    expect(screen.getByText('Blank form')).toBeInTheDocument();
-    expect(screen.getByText('Admission application')).toBeInTheDocument();
-    expect(screen.getByText('Student registration')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Start blank: Blank form' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(
+      screen.getByRole('button', { name: 'Use recommended: Admission application' })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Use template: Student registration' })
+    ).toBeInTheDocument();
 
     await user.click(
       screen.getByRole('button', { name: 'Use recommended: Admission application' })

@@ -5,7 +5,6 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import dayjs from 'dayjs';
-import { Iconify } from 'src/components/iconify';
 import { Box, Alert, Stack, Button, Typography } from '@mui/material';
 
 import { FormBuilderReview } from './form-builder-review';
@@ -19,25 +18,14 @@ type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   activeStep: number;
   editing?: AdmissionForm | null;
-  busy: boolean;
-  onClose: () => void;
   onEditDetails: () => void;
   onEditFields: () => void;
 };
-
-const HEADINGS = ['Start with the form details', 'Build your admission form', 'Review your form'];
-const DESCRIPTIONS = [
-  'Give your form a name and choose how applicants will complete it.',
-  'Add fields, arrange sections, and customize each field. Your changes stay with you as you move between steps.',
-  'Check the details and structure, then save your form as a draft.',
-];
 
 export function FormBuilderWizardContent({
   formik,
   activeStep,
   editing,
-  busy,
-  onClose,
   onEditDetails,
   onEditFields,
 }: Props) {
@@ -45,51 +33,31 @@ export function FormBuilderWizardContent({
   const contentRef = useFormWizardFocus(activeStep);
   const draftOwner = useAdmissionFormDraftOwner();
   const recovery = useAdmissionFormDraftRecovery(formik, draftOwner, editing?.id);
-  const cancel = () => {
-    if (!formik.dirty || window.confirm('You have unsaved changes. Do you want to discard them?'))
-      onClose();
-  };
   return (
-    <Stack sx={{ flex: 1, minHeight: 0, height: activeStep === 1 ? { lg: 1 } : undefined }}>
-      <Stack
-        ref={contentRef}
-        direction="row"
-        spacing={2}
-        alignItems="flex-start"
-        justifyContent="space-between"
-        sx={{
-          p: { xs: 1.5, sm: 2 },
-          borderTop: 1,
-          borderBottom: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
-          flexShrink: 0,
-        }}
-      >
-        <Box>
-          <Typography component="h2" variant="subtitle1" tabIndex={-1}>
-            {HEADINGS[activeStep]}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {DESCRIPTIONS[activeStep]}
-          </Typography>
-        </Box>
-        <Button
-          type="button"
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:close" />}
-          disabled={busy}
-          onClick={cancel}
-          sx={{ flexShrink: 0 }}
-        >
-          Cancel
-        </Button>
-      </Stack>
+    <Stack
+      ref={contentRef}
+      sx={{
+        flex: 1,
+        width: 1,
+        minWidth: 0,
+        minHeight: 0,
+        overflow: activeStep === 1 ? 'hidden' : undefined,
+        height: activeStep === 1 ? { lg: 1 } : undefined,
+      }}
+    >
       {recovery.candidate && (
         <Alert
           severity="warning"
-          sx={{ mx: { xs: 1.5, sm: 2 }, mt: 1.5, flexShrink: 0 }}
+          sx={{
+            mx: { xs: 1.5, sm: 2 },
+            mt: 1.5,
+            flexShrink: 0,
+            ...(activeStep === 1 && {
+              py: { lg: 0.5 },
+              '& .MuiAlert-message': { py: { lg: 0.5 } },
+              '& .MuiAlert-action': { py: { lg: 0 } },
+            }),
+          }}
           action={
             <Stack direction="row" spacing={0.5}>
               <Button color="inherit" size="small" onClick={recovery.discard}>
@@ -121,7 +89,8 @@ export function FormBuilderWizardContent({
             display: 'flex',
             flex: 1,
             minHeight: 0,
-            p: { xs: 1, sm: 2 },
+            p: { xs: 1, sm: 1.5 },
+            overflow: 'hidden',
             bgcolor: 'background.neutral',
           }}
         >

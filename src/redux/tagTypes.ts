@@ -549,6 +549,7 @@ export const studentOnboardingType = {
   onboardingPlacementOptions: 'StudentOnboardingPlacementOptions',
   onboardingIdentifierSeries: 'StudentOnboardingIdentifierSeries',
   onboardingPolicies: 'StudentOnboardingPolicies',
+  onboardingSettings: 'StudentOnboardingSettings',
   onboardingServiceHandoffs: 'StudentOnboardingServiceHandoffs',
   onboardingDocuments: 'StudentOnboardingDocuments',
   onboardingReconciliation: 'StudentOnboardingReconciliation',
