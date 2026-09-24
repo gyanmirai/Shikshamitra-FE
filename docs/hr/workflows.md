@@ -191,4 +191,4 @@ New template rows inherit the master calculation base and configured percentage.
 Salary structure generation labels the resolved value Full-month gross and supports Gross, Take-home, and Employer Cost / CTC inputs.
 Run Payroll and payslips distinguish Full-month gross, attendance-adjusted Gross Salary, Additional earnings, Total earnings, deductions, and net pay.
 Gross Salary is a read-only summary, separate from the regular earning lines that allocate it.
-The backend calculation contract and policy behavior are documented in [HR backend workflows](../../../Shikshamitra-BE/docs/modules/hr/workflows.md#built-in-gross-salary).
+The backend calculation contract and policy behavior are documented in [HR backend workflows](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/workflows.md#built-in-gross-salary).
