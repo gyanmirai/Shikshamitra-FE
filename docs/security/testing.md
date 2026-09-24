@@ -3,7 +3,7 @@ module: security
 domain: permissions
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-09-17
+updated_on: 2026-09-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -23,7 +23,9 @@ git diff --check
 ```
 
 Run ESLint on touched TypeScript files.
-The Security Regression PR and reusable deployment job runs the complete role test directory, shared exact-action/history/menu tests, lint, TypeScript, documentation validation, and production build.
+Run these checks locally before merging feature work.
+GitHub Actions runs the Security Regression reusable deployment job only on `main`.
+The job runs the complete role test directory, shared exact-action/history/menu tests, lint, TypeScript, documentation validation, and production build.
 The September 17 staging reference uses compact grouped controls, not individual backend action tiles.
 Tests preserve the staging Student bundles and Accounts Settings exceptions while verifying the unchanged server permission IDs.
 

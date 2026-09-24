@@ -1,9 +1,6 @@
 name: Security Regression
 
 on:
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
   workflow_call:
 
 permissions:
@@ -19,6 +16,7 @@ env:
 
 jobs:
   security-frontend:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:

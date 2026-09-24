@@ -1,7 +1,7 @@
 name: Dashboard Validation
 
 on:
-  workflow_dispatch:
+  workflow_call:
 
 env:
   HUSKY: 0
@@ -9,6 +9,7 @@ env:
 
 jobs:
   dashboard-fe:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
