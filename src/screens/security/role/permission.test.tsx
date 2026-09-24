@@ -3,7 +3,7 @@ import { it, vi, expect } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 
 import Permission from './permission';
 
@@ -56,11 +56,14 @@ it('restores staging groups and three switches, with no individual backend actio
   fireEvent.click(screen.getByRole('button', { name: 'Revoke All' }));
   expect(setGrants).toHaveBeenCalledExactlyOnceWith(names, false);
 });
-it('global View removal clears grouped actions inside collapsed groups', () => {
+it('row View removal clears grouped actions without bulk switches or expansion side effects', () => {
   const { names, setGrants } = renderPermissions();
   fireEvent.click(screen.getByRole('button', { name: 'Admissions' }));
   expect(screen.queryByText('All Applications')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('switch', { name: 'All View' }));
+  expect(screen.queryByRole('switch', { name: /^All / })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Expand Applications' }));
+  expect(setGrants).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('switch', { name: 'View' }));
   expect(setGrants).toHaveBeenCalledExactlyOnceWith(names, false);
 });
 it('keeps staging Add behavior and only changes the mapped group plus View', () => {
@@ -96,7 +99,7 @@ it('revokes all eligible direct statutory grants while preserving provider-ineli
   expect(setGrants).toHaveBeenCalledExactlyOnceWith(eligible, false);
 });
 
-it('limits the payroll Edit bulk control to rows that actually expose Edit', () => {
+it('limits statutory Edit to its mapped actions without changing salary template grants', () => {
   const root = 'HR.PayrollManagement.Settings.StatutorySchemes';
   const edits = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map((action) => `${root}.${action}`);
   const otherRoot = 'HR.PayrollManagement.Settings.SalaryTemplates';
@@ -109,8 +112,9 @@ it('limits the payroll Edit bulk control to rows that actually expose Edit', () 
   </ThemeProvider>);
   fireEvent.click(screen.getByRole('button', { name: 'HR/Staff' }));
   fireEvent.click(screen.getByRole('button', { name: 'Payroll Management' }));
-  const bulkEdit = screen.getByRole('switch', { name: 'All Edit' });
-  expect(bulkEdit).toBeChecked();
-  fireEvent.click(bulkEdit);
+  expect(screen.queryByRole('switch', { name: /^All / })).not.toBeInTheDocument();
+  const statutoryEdit = within(screen.getByTestId('permission-Statutory Schemes')).getByRole('switch', { name: 'Edit' });
+  expect(statutoryEdit).toBeChecked();
+  fireEvent.click(statutoryEdit);
   expect(setGrants).toHaveBeenCalledExactlyOnceWith(edits, false);
 });
