@@ -98,6 +98,7 @@ export type AffectedLectureRow = {
   existingSubstitutionId?: string | null;
   existingSubstitutionStatus?: string | number | null;
   canCreateSubstitution?: boolean;
+  createSubstitutionBlockReason?: string | null;
   period: string;
   time: string;
   startTime: string;

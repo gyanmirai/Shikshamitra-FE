@@ -135,6 +135,7 @@ export type ApiAffectedLecture = {
   existingSubstitutionId?: string | null;
   existingSubstitutionStatus?: string | number | null;
   canCreateSubstitution: boolean;
+  createSubstitutionBlockReason?: string | null;
 };
 
 export type ApiAffectedLectureResult = {
