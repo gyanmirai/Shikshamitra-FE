@@ -64,6 +64,8 @@ Confirm request and response behavior in `../../../Shikshamitra-BE/docs/modules/
 The salary-template RTK Query client is `src/redux/hr/salary-template-api.ts`.
 It owns the complete template list, active-template choices, active component catalog, atomic active create or update, calculation, version history, default selection, and archiving through the shared authenticated API service.
 The calculation contract includes Gross, Take-home, and Employer Cost quote bases, protection policy, effective month, optional employee context, target variance, and ESI preview details.
+The separate employee-independent `previewSalaryTemplate` mutation posts current rules to `/payroll/salary-templates/preview` without invalidating cached templates.
+Create/update send the returned preview token with sample amount and effective month; saved-template employee calculations retain their existing endpoint and authorization.
 The compensation-revision client saves recurring results directly through the employee-scoped compensation endpoint, reads immutable history and readiness, and never converts system statutory preview lines into editable salary rows.
 The statutory-scheme client automatically posts URL-backed month, search, coverage, readiness, enrollment, paging, and single-sort state to the paged ESI preview endpoint.
 Its preview summary remains unfiltered, employee rows use server-authored issue and coverage labels, and activation submits the reviewed preview fingerprint.

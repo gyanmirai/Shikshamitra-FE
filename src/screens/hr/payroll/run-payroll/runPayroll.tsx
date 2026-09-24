@@ -84,6 +84,8 @@ type PayrollRow = {
   absentDays: number;
   fullGrossSalary: number;
   grossSalary: number;
+  additionalEarnings: number;
+  totalEarnings: number;
   totalDeduction: number;
   netSalary: number;
   previousMonthNetPay: number | null;
@@ -373,6 +375,8 @@ const RunPayroll = () => {
           absentDays: Math.max(0, totalWorkingDays - payableDays),
           fullGrossSalary: Number(item.fullGrossSalary || 0),
           grossSalary: Number(item.grossSalary || 0),
+          additionalEarnings: Number(item.additionalEarnings || 0),
+          totalEarnings: Number(item.totalEarnings || 0),
           totalDeduction: Number(item.totalDeduction || 0),
           netSalary: Number(item.netPay || 0),
           previousMonthNetPay:
@@ -742,7 +746,7 @@ const RunPayroll = () => {
       },
       {
         id: 'fullGrossSalary',
-        label: 'Total salary',
+        label: 'Full-month gross',
         minWidth: 140,
         align: 'center',
         filterType: 'number',
@@ -750,8 +754,24 @@ const RunPayroll = () => {
       },
       {
         id: 'grossSalary',
-        label: 'Payable gross',
+        label: 'Gross Salary',
         minWidth: 130,
+        align: 'center',
+        filterType: 'number',
+        render: (v) => formatCurrency(v),
+      },
+      {
+        id: 'additionalEarnings',
+        label: 'Additional earnings',
+        minWidth: 140,
+        align: 'center',
+        filterType: 'number',
+        render: (v) => formatCurrency(v),
+      },
+      {
+        id: 'totalEarnings',
+        label: 'Total earnings',
+        minWidth: 140,
         align: 'center',
         filterType: 'number',
         render: (v) => formatCurrency(v),
@@ -1389,7 +1409,7 @@ const RunPayroll = () => {
                             fontSize: '0.68rem',
                           }}
                         >
-                          Total Gross Salary
+                          Full-month gross
                         </Typography>
                         <Typography variant="h5" sx={{ fontWeight: 800, color: 'primary.main' }}>
                           {formatCurrency(activeRow.fullGrossSalary)}
@@ -1434,6 +1454,24 @@ const RunPayroll = () => {
                       }}
                     >
                       {[
+                        {
+                          label: 'Gross Salary',
+                          value: formatCurrency(activeRow.grossSalary),
+                          icon: 'solar:calculator-bold-duotone',
+                          color: 'primary.main',
+                        },
+                        {
+                          label: 'Additional earnings',
+                          value: formatCurrency(activeRow.additionalEarnings),
+                          icon: 'solar:calculator-bold-duotone',
+                          color: 'success.main',
+                        },
+                        {
+                          label: 'Total earnings',
+                          value: formatCurrency(activeRow.totalEarnings),
+                          icon: 'solar:calculator-bold-duotone',
+                          color: 'primary.main',
+                        },
                         {
                           label: 'Payable Days',
                           value: `${activeRow.payableDays} / ${activeRow.totalWorkingDays} days`,

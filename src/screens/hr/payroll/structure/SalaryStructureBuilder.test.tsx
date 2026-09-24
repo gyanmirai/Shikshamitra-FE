@@ -18,6 +18,9 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('react-redux', () => ({ useSelector: () => [] }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
+// Icon assets are unrelated to salary form behavior and must not start network requests.
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 vi.mock('src/redux/PF/PFApi', () => ({
   useGetPFQuery: () => ({ data: { items: [] }, isError: false }),
 }));

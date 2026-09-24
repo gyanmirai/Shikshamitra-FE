@@ -41,7 +41,7 @@ const TABS = [
     label: 'Syllabus',
     icon: <Iconify icon="solar:notebook-bold-duotone" width={18} />,
     component: (props: StudentTabsComponentType) => (
-      <SubjectSyllabus {...props} />
+      <SubjectSyllabus subject={props.subject ?? null} />
     ),
   },
   {
@@ -49,7 +49,7 @@ const TABS = [
     label: 'Documents',
     icon: <Iconify icon="solar:document-bold-duotone" width={18} />,
     component: (props: StudentTabsComponentType) => (
-      <SubjectDocument {...props} />
+      <SubjectDocument subject={props.subject ?? null} isLoading={props.isLoading} />
     ),
   },
 ];

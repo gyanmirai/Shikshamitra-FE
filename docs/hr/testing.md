@@ -99,3 +99,12 @@ Each frontend HR change should satisfy these gates:
 | Docs                                                                                                                                                                                                                                                                                      | `npm run docs:hr:check` passes                                                                                    |
 | Payroll compensation-builder tests should cover the school default template, joining-month default, template switching, Gross, Take-home, and Employer Cost requests, protection policy, employee statutory context, PF applicability, controlled overrides, calculation summaries, ESI funding, target variance, direct save, activation readiness, immutable history, and month-scoped one-time components. |
 | Salary-template composer tests should cover complete active creation, Needs setup recovery, row-click edit mode, editable empty fixed and percentage values, calculated-automatically formulas, PF defaults, quote defaults, role-dependent formulas, duplicate special roles, ordering, removal, server validation, stale-save recovery, read-only archived state, and unsaved navigation. |
+
+## Salary template page regressions
+
+Run the focused editor, list, model, client-contract, and shared-stepper tests after changing the salary template pages.
+Cover direct create/edit/view routes, denied permissions, Configure validation, compact and expanded rows, additions, ordering, removal, and at least 15 components.
+Verify unsaved-navigation protection and that background refetches preserve both edits and their original concurrency context.
+Check preview invalidation, expiry, late responses, failed saves, and save/reopen for all compensation bases.
+Finish in the authenticated Codex browser at 390 by 844, 768 by 1024, and 1440 by 900 pixels.
+Confirm side-by-side large-screen collections, one content scrollbar, accessible error focus, fixed footer actions, 30 px labeled buttons, right alignment, and no document horizontal overflow.

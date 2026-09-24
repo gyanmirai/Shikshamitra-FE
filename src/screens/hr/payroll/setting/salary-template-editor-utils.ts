@@ -41,10 +41,12 @@ export const createTemplateRule = (
   componentId: component.componentId,
   lineKind: component.lineKind,
   semanticType: 'ORDINARY',
-  formulaType: 'FIXED_AMOUNT',
-  value: 0,
+  formulaType: component.calculationType === 'PERCENTAGE'
+    ? (component.calculationBase === 'GROSS' ? 'PERCENTAGE_OF_GROSS' : 'PERCENTAGE_OF_COMPONENT')
+    : 'FIXED_AMOUNT',
+  value: component.defaultValue ?? 0,
   basisCode: null,
-  basisComponentId: null,
+  basisComponentId: component.calculationBase === 'GROSS' ? null : component.basisComponentId ?? null,
   displayOrder,
 });
 
@@ -72,7 +74,9 @@ export const applySemanticType = (
     ...rule,
     semanticType,
     formulaType,
-    value: acceptsValue ? (semanticType === 'BASIC' ? 60 : 0) : null,
+    value: acceptsValue
+      ? (semanticType === 'BASIC' ? (rule.formulaType === 'PERCENTAGE_OF_GROSS' ? rule.value : 60) : 0)
+      : null,
     basisCode: null,
     basisComponentId: null,
   };
@@ -142,6 +146,13 @@ export const getSaveIssues = (rules: SalaryTemplateRule[]) => {
     }
     if (rule.formulaType === 'PERCENTAGE_OF_COMPONENT' && !rule.basisComponentId) {
       issues.push('Choose a basis component for every component percentage formula.');
+    }
+    if (
+      rule.lineKind === 'EARNING' && rule.formulaType === 'PERCENTAGE_OF_COMPONENT' &&
+      rules.some((candidate) => candidate.componentId === rule.basisComponentId &&
+        candidate.formulaType === 'REMAINDER_OF_GROSS')
+    ) {
+      issues.push('An earning cannot depend on the gross remainder because that creates a circular calculation.');
     }
   });
 

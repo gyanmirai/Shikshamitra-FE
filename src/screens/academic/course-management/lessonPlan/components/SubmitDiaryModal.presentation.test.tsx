@@ -46,7 +46,7 @@ const plan: LessonPlanRow = {
   existingChapterProgress: 0,
   source: 'Manual',
   isAiGenerated: false,
-  executionStatus: 'Planned',
+  executionStatus: 'OnTrack',
   status: 'Approved',
   reviewStatus: 'Approved',
 };
