@@ -1,5 +1,5 @@
-import type { FormikProps } from 'formik';
 import type { Dayjs } from 'dayjs';
+import type { FormikProps } from 'formik';
 import type { Standards } from 'src/types/school';
 
 import dayjs from 'dayjs';
@@ -24,12 +24,12 @@ import {
   AccordionDetails,
 } from '@mui/material';
 
-import { getDayLabel } from '../utils/dayMarks';
 import SlotTimesTable from '../../slotTimesTable';
 import ActiveDaysSlider from './ActiveDaysSlider';
 import SlotCounterControl from './SlotCounterControl';
+import { getActiveDaysLabel } from '../utils/dayMarks';
 
-interface ISlotConfig {
+export interface ISlotConfig {
   id: React.Key | null | undefined;
   expanded?: boolean;
   totalSlots: unknown;
@@ -279,13 +279,13 @@ const SlotConfigurationAccordion: React.FC<ISlotConfigurationAccordionProps> = (
                 // sx={chipSx('info')}
               />
 
-              {Array.isArray(config.weekRange) && config.weekRange.length === 2 && (
+              {Array.isArray(config.weekRange) && config.weekRange.length > 0 && (
                 <Chip
                   size="small"
                   variant="soft"
                   icon={<Iconify icon="mdi:calendar-week" width={14} />}
                   color="info"
-                  label={`${getDayLabel(config.weekRange[0])} – ${getDayLabel(config.weekRange[1])}`}
+                  label={getActiveDaysLabel(config.weekRange)}
                   // sx={chipSx('info')}
                 />
               )}

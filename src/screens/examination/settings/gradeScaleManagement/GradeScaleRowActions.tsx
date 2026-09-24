@@ -1,7 +1,4 @@
-import { Stack } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-
-import { GradeScaleArchiveAction } from './GradeScaleArchiveAction';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import type { IGrade } from './type';
 
@@ -33,30 +30,63 @@ export function GradeScaleRowActions({
   onRestore,
 }: Props) {
   const archived = scale.status === 3 || scale.status === 'Archived';
-  return (
-    <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
-      {!archived && (
-        <ThreeDotsActions
-          showThreeDots={false}
-          placement="right-top"
-          showViewIcon={canView}
-          showEditIcon={canAdd}
-          showDeleteIcon={canDelete}
-          disableDeleteIcon={(scale.usageCount || 0) > 0}
-          viewLabel={`View ${scale.name}`}
-          editLabel={`Edit ${scale.name}`}
-          deleteLabel={`Delete ${scale.name}`}
-          handleViewClick={onView}
-          handleEditClick={onEdit}
-          handleDeleteClick={onDelete}
-        />
-      )}
-      <GradeScaleArchiveAction
-        title={`${archived ? 'Restore' : 'Archive'} grade scale ${scale.name}`}
-        archived={archived}
-        disabled={archived ? !canAdd || isRestoreLoading : !canDelete || isArchiveLoading}
-        onClick={archived ? onRestore : onArchive}
-      />
-    </Stack>
-  );
+  const actions = archived
+    ? [
+        {
+          id: 'restore',
+          label: `Restore grade scale ${scale.name}`,
+          icon: 'solar:restart-bold',
+          color: 'success.main',
+          disabled: !canAdd || isRestoreLoading,
+          onClick: onRestore,
+        },
+      ]
+    : [
+        ...(canView
+          ? [
+              {
+                id: 'view',
+                label: `View ${scale.name}`,
+                icon: 'solar:eye-bold',
+                onClick: onView,
+              },
+            ]
+          : []),
+        ...(canAdd
+          ? [
+              {
+                id: 'edit',
+                label: `Edit ${scale.name}`,
+                icon: 'solar:pen-bold',
+                onClick: onEdit,
+              },
+            ]
+          : []),
+        ...(canDelete
+          ? [
+              {
+                id: 'delete',
+                label: `Delete ${scale.name}`,
+                icon: 'solar:trash-bin-trash-bold',
+                color: 'error.main',
+                disabled: (scale.usageCount || 0) > 0,
+                tooltip:
+                  (scale.usageCount || 0) > 0
+                    ? 'This grade scale is in use and cannot be deleted.'
+                    : undefined,
+                onClick: onDelete,
+              },
+            ]
+          : []),
+        {
+          id: 'archive',
+          label: `Archive grade scale ${scale.name}`,
+          icon: 'solar:archive-bold',
+          color: 'warning.main',
+          disabled: !canDelete || isArchiveLoading,
+          onClick: onArchive,
+        },
+      ];
+
+  return <AdaptiveThreeDotsActions actions={actions} placement="right-top" />;
 }

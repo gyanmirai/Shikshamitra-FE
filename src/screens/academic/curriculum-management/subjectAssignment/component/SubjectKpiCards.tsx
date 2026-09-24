@@ -1,11 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
-import { Grid, Skeleton } from '@mui/material';
-import {
-  TimetableSettingsSummaryCards,
-  type ITimetableSummaryCard,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
+import type { AcademicInsightMetric } from 'src/screens/academic/components/academic-insights';
+
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 
 export interface SubjectKpiData {
   totalSubjects: number;
@@ -22,6 +19,8 @@ export interface SubjectKpiData {
 interface SubjectKpiCardsProps {
   kpi?: SubjectKpiData;
   isLoading?: boolean;
+  open: boolean;
+  onClose: () => void;
   onFilterMissingTeacher?: () => void;
   onFilterDraft?: () => void;
   onFilterPublished?: () => void;
@@ -29,75 +28,88 @@ interface SubjectKpiCardsProps {
 
 export default function SubjectKpiCards({
   kpi,
-  isLoading,
+  isLoading = false,
+  open,
+  onClose,
   onFilterMissingTeacher,
   onFilterDraft,
   onFilterPublished,
 }: SubjectKpiCardsProps) {
-  const healthColor = useMemo<'primary' | 'success' | 'warning' | 'error' | 'info'>(() => {
-    if (!kpi) return 'success';
-    const score = kpi.overallHealthScore;
-    return score >= 90
-      ? 'success'
-      : score >= 70
-        ? 'info'
-        : score >= 40
-          ? 'warning'
-          : 'error';
-  }, [kpi]);
+  const total = kpi?.totalSubjects ?? 0;
+  const teacherCoverage =
+    total > 0 ? Math.round(((kpi?.subjectsWithTeacher ?? 0) / total) * 100) : 0;
+  const publishedCoverage =
+    total > 0 ? Math.round(((kpi?.publishedSubjects ?? 0) / total) * 100) : 0;
 
-  const cards = useMemo<ITimetableSummaryCard[]>(() => {
-    if (!kpi) return [];
-    return [
-      {
-        label: 'Total Subjects',
-        value: kpi.totalSubjects,
-        icon: 'solar:book-bookmark-bold-duotone',
-        color: 'primary',
-      },
-      {
-        label: 'Teacher Mapping',
-        value: `${kpi.subjectsWithTeacher}/${kpi.totalSubjects}`,
-        icon: 'solar:user-bold-duotone',
-        color: kpi.subjectsMissingTeacher > 0 ? 'warning' : 'success',
-        onClick: onFilterMissingTeacher,
-      },
-      {
-        label: 'Published',
-        value: kpi.publishedSubjects,
-        icon: 'solar:check-circle-bold-duotone',
-        color: 'success',
-        onClick: onFilterPublished,
-      },
-      {
-        label: 'Draft',
-        value: kpi.draftSubjects,
-        icon: 'solar:document-bold-duotone',
-        color: 'info',
-        onClick: onFilterDraft,
-      },
-      {
-        label: 'Setup Health',
-        value: `${kpi.overallHealthScore}%`,
-        icon: 'solar:graph-bold-duotone',
-        color: healthColor,
-      },
-    ];
-  }, [kpi, healthColor, onFilterMissingTeacher, onFilterDraft, onFilterPublished]);
+  const metrics: AcademicInsightMetric[] = [
+    {
+      id: 'total',
+      label: 'Total subjects',
+      value: total,
+      helper: `${kpi?.coreSubjects ?? 0} core · ${kpi?.electiveSubjects ?? 0} elective`,
+      icon: 'solar:book-bookmark-outline',
+    },
+    {
+      id: 'teacher-mapping',
+      label: 'Teacher mapping',
+      value: `${kpi?.subjectsWithTeacher ?? 0}/${total}`,
+      helper: `${kpi?.subjectsMissingTeacher ?? 0} still need a teacher`,
+      icon: 'solar:user-check-outline',
+      onClick: onFilterMissingTeacher,
+    },
+    {
+      id: 'published',
+      label: 'Published',
+      value: kpi?.publishedSubjects ?? 0,
+      helper: `${publishedCoverage}% of subjects`,
+      icon: 'solar:check-circle-outline',
+      onClick: onFilterPublished,
+    },
+    {
+      id: 'draft',
+      label: 'Draft',
+      value: kpi?.draftSubjects ?? 0,
+      helper: 'Awaiting publication',
+      icon: 'solar:document-text-outline',
+      onClick: onFilterDraft,
+    },
+    {
+      id: 'health',
+      label: 'Setup health',
+      value: `${kpi?.overallHealthScore ?? 0}%`,
+      helper: 'Overall configuration readiness',
+      icon: 'solar:pulse-outline',
+    },
+  ];
 
-  if (isLoading) {
-    return (
-      <Grid container spacing={1} sx={{ mb: 1 }}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Grid key={i} size={{ xs: 6, sm: 4, md: 2.4 }}>
-            <Skeleton variant="rounded" height={68} sx={{ borderRadius: 1.5 }} />
-          </Grid>
-        ))}
-      </Grid>
-    );
-  }
+  const attentionCount = (kpi?.subjectsMissingTeacher ?? 0) + (kpi?.draftSubjects ?? 0);
 
-  if (!kpi) return null;
-
-  return <TimetableSettingsSummaryCards cards={cards} />;
+  return (
+    <AcademicInsights
+      title="Subject allocation insights"
+      description="A focused view of subject readiness, ownership and publishing progress for the selected class."
+      metrics={metrics}
+      isLoading={isLoading}
+      open={open}
+      onClose={onClose}
+      hideTrigger
+      chart={{
+        title: 'Setup readiness',
+        description: 'Coverage across the three steps required for a healthy subject setup.',
+        categories: ['Teacher mapping', 'Published', 'Overall health'],
+        values: [teacherCoverage, publishedCoverage, kpi?.overallHealthScore ?? 0],
+        seriesName: 'Readiness',
+        valueSuffix: '%',
+        max: 100,
+      }}
+      focus={{
+        title:
+          attentionCount > 0 ? `${attentionCount} setup items need attention` : 'Setup is ready',
+        description:
+          attentionCount > 0
+            ? 'Complete missing teacher mappings and publish remaining drafts to improve setup health.'
+            : 'Every subject is mapped and published. Review periodically when staffing or curriculum changes.',
+      }}
+    />
+  );
 }

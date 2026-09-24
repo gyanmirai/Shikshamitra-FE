@@ -8,3 +8,10 @@ export const dayMarks = [
 ];
 
 export const getDayLabel = (v: number) => dayMarks.find((d) => d.value === v)?.label || '';
+
+export const getActiveDaysLabel = (days: number[] = []) =>
+  [...new Set(days)]
+    .sort((a, b) => a - b)
+    .map(getDayLabel)
+    .filter(Boolean)
+    .join(', ');

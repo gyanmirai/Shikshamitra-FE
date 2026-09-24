@@ -76,7 +76,7 @@ const RoomAllocationReview = ({
       description="Designated rooms for each subject and division"
       icon="fluent:conference-room-24-filled"
       onEdit={onEdit}
-      detailsPadding={3}
+      detailsPadding={2}
     >
       <Grid container spacing={1}>
         {activeReviewSubjects.map((entry, index, arr) => {
@@ -86,15 +86,15 @@ const RoomAllocationReview = ({
             <React.Fragment key={subjectId}>
               <Grid size={{ xs: 12 }}>
                 <Box display="flex" alignItems="center" gap={1} mb={2}>
-                  <Typography variant="subtitle1" sx={{ color: 'primary.dark' }}>
+                  <Typography variant="subtitle1" color="text.primary">
                     {subjectName}
                   </Typography>
                   {electiveGroupName && (
                     <Chip
                       label={electiveGroupName}
                       size="small"
-                      color="warning"
-                      variant="soft"
+                      color="default"
+                      variant="outlined"
                       sx={{ fontSize: '0.7rem', height: 20 }}
                     />
                   )}

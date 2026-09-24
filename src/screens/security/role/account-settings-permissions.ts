@@ -166,9 +166,15 @@ export const getNodePermissionActions = (
 
   const actions = isAccountSettingPermission(getActionPermissionBase(name))
     ? ACCOUNT_SETTING_ACTIONS
-    : PERMISSIONS;
-  return actions.filter(
-    (action) => getNodeActionPermissionNamesForAction(name, action, permissions).length > 0
+    : Array.from(
+        new Set(
+          getConfiguredPermissionNames(name, permissions).map(
+            (permissionName) => getPermissionAction(permissionName)
+          )
+        )
+      );
+  return actions.filter((action) =>
+    getNodeActionPermissionNamesForAction(name, action, permissions).length > 0
   );
 };
 

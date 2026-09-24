@@ -109,7 +109,7 @@ const ThreeDotsActions = ({
         </CustomTooltip>
       )}
       {directActions.map((action) => (
-        <Tooltip key={action.id} title={action.label}>
+        <Tooltip key={action.id} title={action.tooltip ?? action.label}>
           <span>
             <IconButton
               aria-label={action.label}
@@ -123,7 +123,7 @@ const ThreeDotsActions = ({
             >
               <Iconify
                 icon={action.icon}
-                sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
+                sx={{ height: '16px', width: '16px', color: action.color, cursor: 'pointer' }}
               />
             </IconButton>
           </span>

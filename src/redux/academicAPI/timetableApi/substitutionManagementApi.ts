@@ -64,6 +64,8 @@ export type ApiTeacherAvailabilityRow = {
   reason: string;
   isFullDay: boolean;
   affectedLectureCount: number;
+  coveredLectureCount?: number;
+  uncoveredLectureCount?: number;
   canCreateSubstitution?: boolean;
   notifyLeadership: boolean;
   attachmentName?: string | null;
@@ -133,6 +135,7 @@ export type ApiAffectedLecture = {
   existingSubstitutionId?: string | null;
   existingSubstitutionStatus?: string | number | null;
   canCreateSubstitution: boolean;
+  createSubstitutionBlockReason?: string | null;
 };
 
 export type ApiAffectedLectureResult = {

@@ -5,7 +5,6 @@ import Card from '@mui/material/Card';
 import { motion } from 'framer-motion';
 import Stack from '@mui/material/Stack';
 import { Tooltip } from '@mui/material';
-import Switch from '@mui/material/Switch';
 import Button from '@mui/material/Button';
 import { useMemo, useState } from 'react';
 import { varAlpha } from 'src/theme/styles';
@@ -16,18 +15,12 @@ import { fullSecurityNavData } from 'src/layouts/config-nav-dashboard';
 
 import PermissionNode from './permission-node';
 import { getVisibilityPermissionName } from './permission-grants';
-import { getAllChildrenData, type PermissionType, getPermissionChildren } from './utils';
+import { type PermissionType, getPermissionChildren } from './utils';
 import { canManageGrant, catalogueEntries, inheritedSources } from './permission-catalogue';
 import {
-  ACCOUNT_SETTING_ACTIONS,
-  getActionPermissionBase,
-  getNodePermissionActions,
-  isAccountSettingPermission,
-  isStatutorySchemePermission,
   getNodeActionPermissionNames,
   getAffectedNodePermissionNames,
   getNodeRevocationPermissionNames,
-  getNodeActionPermissionNamesForAction,
 } from './account-settings-permissions';
 
 import type { GrantProvider, PermissionCatalogue } from './permission-catalogue';
@@ -246,14 +239,6 @@ export default function Permission({
   const selectedPermissionModule = selectedModule.submodule?.find(
     (item: any) => item.title === expandedSubModule
   );
-  const matrixActions: PermissionType[] = getAllChildrenData(selectedPermissionModule).some((item: any) =>
-    isAccountSettingPermission(getActionPermissionBase(item.permissionName))
-  )
-    ? ACCOUNT_SETTING_ACTIONS
-    : getAllChildrenData(selectedPermissionModule).some((item: any) =>
-      isStatutorySchemePermission(getActionPermissionBase(item.permissionName))
-    ) ? ['View', 'Add', 'Edit', 'Delete'] : ['View', 'Add', 'Delete'];
-
   const renderPermissionMatrix = (
     <Card
       sx={{
@@ -286,81 +271,6 @@ export default function Permission({
             </Typography>
           </Box>
 
-          {/* Gamification HUD & Global Actions */}
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0, maxWidth: '100%' }}>
-            {expandedSubModule && (
-              <Stack direction="row" spacing={2} alignItems="center" useFlexGap sx={{ minWidth: 0, flexWrap: 'wrap' }}>
-                {matrixActions.map((type) => {
-                  const activeSubModule = selectedModule.submodule?.find(
-                    (s: any) => s.title === expandedSubModule
-                  );
-                  const itemsToShow =
-                    getPermissionChildren(activeSubModule).length > 0
-                      ? getAllChildrenData(activeSubModule)
-                      : [activeSubModule];
-
-                  // Check if all items have this permission enabled
-                  const availableItems = itemsToShow.filter((item: any) =>
-                    getNodePermissionActions(item.permissionName, permissionData).includes(type) &&
-                    getNodeActionPermissionNamesForAction(
-                      item.permissionName,
-                      type,
-                      permissionData
-                    ).length > 0
-                  );
-                  const isGlobalChecked =
-                    availableItems.length > 0 &&
-                    availableItems.every((item: any) => {
-                      const permissionNames = getNodeActionPermissionNamesForAction(
-                        item.permissionName,
-                        type,
-                        permissionData
-                      );
-                      return permissionNames.every(
-                        (permissionName) =>
-                          !!permissionData.find((i) => i.name === permissionName)?.isGranted
-                      );
-                    });
-
-                  return (
-                    <Stack key={type} direction="row" spacing={1} alignItems="center" sx={{ flexShrink: 0 }}>
-                      <Typography variant="subtitle2" sx={{ fontSize: '0.75rem' }}>
-                        {type === 'ChangeStatus' ? 'Change Status' : type}
-                      </Typography>
-                      <Switch
-                        size="small"
-                        disabled={disabled || availableItems.length === 0}
-                        slotProps={{ input: { 'aria-label': `All ${type}` } }}
-                        checked={isGlobalChecked}
-                        onChange={(e) => {
-                          const isChecked = e.target.checked;
-                          const affectedNames = new Set<string>();
-                          availableItems.forEach((item: any) => {
-                            getAffectedNodePermissionNames(
-                              item,
-                              type,
-                              isChecked,
-                              permissionData
-                            ).forEach((name) => affectedNames.add(name));
-                          });
-                          setPermissionData(
-                            permissionData.map((permission) =>
-                              affectedNames.has(permission.name)
-                                ? { ...permission, isGranted: isChecked }
-                                : permission
-                            )
-                          );
-                        }}
-                      />
-                    </Stack>
-                  );
-                })}
-              </Stack>
-            )}
-            {/* <Box sx={{ width: 250 }}>
-              <SecurityScore score={progress} />
-            </Box> */}
-          </Stack>
         </Box>
       )}
 

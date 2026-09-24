@@ -6,17 +6,14 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
-import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Alert, Button } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Alert, Button, Tooltip, Checkbox } from '@mui/material';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
@@ -25,16 +22,18 @@ import {
   useUpdateStudentElectiveAssignmentsMutation,
 } from 'src/redux/classManagementApi/studentElectiveAssignment/studentElectiveAssignment';
 
-import { workflowStatusConfig } from './statusConfig';
 import BulkAssignmentBar from './components/BulkAssignmentBar';
 import ElectiveContextBar from './components/ElectiveContextBar';
 import ReviewAndLockDialog from './components/ReviewAndLockDialog';
 import UnsavedChangesDialog from './components/UnsavedChangesDialog';
 import ValidationIssuesDrawer from './components/ValidationIssuesDrawer';
-import SubjectSelectionControl from './components/SubjectSelectionControl';
+import AssignmentSummaryDrawer from './components/AssignmentSummaryDrawer';
+import ElectiveAssignmentTable from './components/ElectiveAssignmentTable';
 import useElectiveAssignmentState from './hooks/useElectiveAssignmentState';
-import AssignmentProgressSummary from './components/AssignmentProgressSummary';
+import ElectiveAssignmentActions from './components/ElectiveAssignmentActions';
 import { buildElectiveAssignmentUpdates } from './utils/buildElectiveAssignmentUpdates';
+
+import type { StudentElectiveRow } from './types';
 
 const AssignElectiveSubject = () => {
   const router = useRouter();
@@ -46,12 +45,13 @@ const AssignElectiveSubject = () => {
 
   const [electiveGroupId, setElectiveGroupId] = useState<string>('');
 
-  const [students, setStudents] = useState<any[]>([]);
+  const [students, setStudents] = useState<StudentElectiveRow[]>([]);
 
   const resetDialog = useBoolean();
   const saveDialog = useBoolean();
   const lockDialog = useBoolean();
   const issuesDrawer = useBoolean();
+  const summaryDrawer = useBoolean();
   const reviewDrawer = useBoolean();
   const unsavedDialog = useBoolean();
 
@@ -163,10 +163,7 @@ const AssignElectiveSubject = () => {
     preferenceMatch,
     rowStatus,
     hasUnsavedChanges,
-    unsavedChangesCount,
     allStudentsAssigned,
-    hasSelections,
-    workflowStatus,
   } = useElectiveAssignmentState({
     students,
     serverRecords: assignmentData?.records,
@@ -276,7 +273,6 @@ const AssignElectiveSubject = () => {
     if (student) setSearchTerm(student.rollNo);
   };
 
-  const statusInfo = workflowStatusConfig[workflowStatus];
   const availableSubjects = students[0]?.selectableSubjects ?? [];
 
   // --------------------------------------------
@@ -286,71 +282,13 @@ const AssignElectiveSubject = () => {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
-        heading="Student Elective Assignment"
+        heading="Elective Assignment"
         description="Assign and manage student elective subjects for the selected class and elective group."
         links={[
           { name: 'Academics', href: '/academic/dashboard' },
           { name: 'Curriculum Management' },
-          { name: 'Student Elective Assignment' },
+          { name: 'Elective Assignment' },
         ]}
-        action={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            {!isLocked && electiveGroupId && (
-              <Label color={statusInfo.color} variant="soft">
-                {statusInfo.label}
-              </Label>
-            )}
-
-            {electiveGroupId && (
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                {!isLocked && (
-                  <>
-                    <Button
-                      variant="outlined"
-                      color="inherit"
-                      size="small"
-                      startIcon={<Iconify icon={GlobalIcons.resetIcon} />}
-                      disabled={!hasUnsavedChanges}
-                      onClick={resetDialog.onTrue}
-                    >
-                      Discard
-                    </Button>
-
-                    <LoadingButton
-                      variant="contained"
-                      size="small"
-                      startIcon={<Iconify icon={GlobalIcons.submit} />}
-                      disabled={!hasUnsavedChanges}
-                      onClick={saveDialog.onTrue}
-                      loading={isSaving}
-                    >
-                      Save Draft
-                    </LoadingButton>
-                  </>
-                )}
-
-                <Tooltip title={getLockTooltip()} arrow>
-                  <span>
-                    <Button
-                      variant="contained"
-                      size="small"
-                      color={isLocked ? 'inherit' : 'error'}
-                      startIcon={
-                        <Iconify
-                          icon={isLocked ? GlobalIcons.approvedIcon : GlobalIcons.lockIcon}
-                        />
-                      }
-                      disabled={!canLock}
-                      onClick={reviewDrawer.onTrue}
-                    >
-                      {isLocked ? 'Locked' : 'Review & Lock'}
-                    </Button>
-                  </span>
-                </Tooltip>
-              </Box>
-            )}
-          </Box>
-        }
       />
 
       {/* CONTEXT BAR */}
@@ -365,32 +303,25 @@ const AssignElectiveSubject = () => {
         electiveGroupId={electiveGroupId}
         onElectiveGroupChange={(v) => guardedContextChange(() => setElectiveGroupId(v))}
         isLoading={isLoading || isFetching}
-        students={students}
+        actions={
+          electiveGroupId ? (
+            <ElectiveAssignmentActions
+              isLocked={isLocked}
+              hasUnsavedChanges={hasUnsavedChanges}
+              isSaving={isSaving}
+              canLock={canLock}
+              lockTooltip={getLockTooltip()}
+              onViewInsights={summaryDrawer.onTrue}
+              onDiscard={resetDialog.onTrue}
+              onSaveDraft={saveDialog.onTrue}
+              onReviewLock={reviewDrawer.onTrue}
+            />
+          ) : undefined
+        }
       />
 
       {electiveGroupId && (
         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          {/* INSIGHTS */}
-          <AssignmentProgressSummary
-            total={summary.total}
-            assigned={summary.assigned}
-            unassigned={summary.unassigned}
-            issues={summary.issues}
-            preferenceMatchPct={summary.preferenceMatchPct}
-            activeFilter={statusFilter}
-            onFilterAssigned={() =>
-              setStatusFilter(statusFilter === 'assigned' ? 'all' : 'assigned')
-            }
-            onFilterUnassigned={() =>
-              setStatusFilter(statusFilter === 'unassigned' ? 'all' : 'unassigned')
-            }
-            onFilterPreferenceMismatch={() =>
-              setStatusFilter(statusFilter === 'preferenceMismatch' ? 'all' : 'preferenceMismatch')
-            }
-            onOpenIssues={issuesDrawer.onTrue}
-            sx={{ width: 1 }}
-          />
-
           {/* BULK ASSIGNMENT BAR */}
           {!isLocked && (
             <BulkAssignmentBar
@@ -409,165 +340,19 @@ const AssignElectiveSubject = () => {
           )}
 
           {/* TABLE */}
-          <CustomizableTable
-            tableId="elective-table"
-            data={filteredStudents}
+          <ElectiveAssignmentTable
+            students={filteredStudents}
             isLoading={isElectiveLoading || isElectiveFetching}
-            isSearch={false}
-            noDataText={<>No Students Found</>}
-            wrapperProps={{
-              sx: {
-                flex: 1,
-                minHeight: { xs: 420, md: 0 },
-              },
-            }}
-            tableContainerProps={{
-              sx: {
-                minHeight: { xs: 340, md: 0 },
-              },
-            }}
-            columns={[
-              {
-                id: 'rowSelect',
-                label: (
-                  <Checkbox
-                    size="small"
-                    disabled={isLocked || filteredStudents.length === 0}
-                    checked={
-                      filteredStudents.length > 0 &&
-                      filteredStudents.every((s) => selectedRowIds.has(s.studentId))
-                    }
-                    indeterminate={
-                      filteredStudents.some((s) => selectedRowIds.has(s.studentId)) &&
-                      !filteredStudents.every((s) => selectedRowIds.has(s.studentId))
-                    }
-                    onChange={(e) =>
-                      toggleAllRowsSelected(
-                        filteredStudents.map((s) => s.studentId),
-                        e.target.checked
-                      )
-                    }
-                  />
-                ),
-                minWidth: '48px',
-                isFilter: false,
-                isSort: false,
-                sticky: true,
-                stickyPosition: 'left',
-                render: (_, row) => (
-                  <Checkbox
-                    size="small"
-                    disabled={isLocked}
-                    checked={selectedRowIds.has(row.studentId)}
-                    onChange={() => toggleRowSelected(row.studentId)}
-                  />
-                ),
-              },
-              {
-                id: 'studentName',
-                label: 'Student Name',
-                minWidth: '200px',
-                align: 'left',
-                sticky: true,
-                stickyPosition: 'left',
-                isFilter: true,
-                filterType: 'string',
-                isSort: true,
-                render: (_, row) => (
-                  <Box component="span">
-                    {row.studentName}
-                    {row.grNo ? ` (${row.grNo})` : ''}
-                  </Box>
-                ),
-              },
-              {
-                id: 'rollNo',
-                label: 'Roll No.',
-                minWidth: '110px',
-                align: 'left',
-                isFilter: true,
-                filterType: 'number',
-                isSort: true,
-              },
-              {
-                id: 'preference',
-                label: 'Preference Match',
-                minWidth: '160px',
-                align: 'left',
-                isFilter: true,
-                filterType: 'enum',
-                enumOptions: [
-                  { label: 'Matched', value: 'matched' },
-                  { label: 'Mismatch', value: 'mismatch' },
-                  { label: 'No preference', value: 'noPreference' },
-                ],
-                isSort: true,
-                render: (_, row) => {
-                  const match = preferenceMatch(row as any);
-                  if (match === 'noPreference') {
-                    return (
-                      <Box component="span" sx={{ color: 'text.disabled', fontSize: 13 }}>
-                        No preference
-                      </Box>
-                    );
-                  }
-                  return (
-                    <Label color={match === 'matched' ? 'success' : 'warning'} variant="soft">
-                      {match === 'matched' ? 'Matched' : 'Mismatch'}
-                    </Label>
-                  );
-                },
-              },
-              {
-                id: 'electiveSubjects',
-                label: 'Elective Subject',
-                minWidth: '260px',
-                isFilter: false,
-                isSort: false,
-                align: 'left',
-                render: (_, row) => (
-                  <SubjectSelectionControl
-                    subjects={row.selectableSubjects}
-                    selectedSubjectId={studentSelections[row.studentId]}
-                    onToggle={(subjectId) => toggleSubject(row.studentId, subjectId)}
-                    disabled={isLocked}
-                    ariaLabelPrefix={row.studentName}
-                  />
-                ),
-              },
-              {
-                id: 'status',
-                label: 'Status',
-                minWidth: '120px',
-                sticky: true,
-                stickyPosition: 'right',
-                isFilter: true,
-                filterType: 'enum',
-                enumOptions: [
-                  { label: 'Assigned', value: 'assigned' },
-                  { label: 'Unassigned', value: 'unassigned' },
-                  { label: 'Changed', value: 'changed' },
-                  { label: 'Locked', value: 'locked' },
-                ],
-                isSort: true,
-                align: 'left',
-                render: (_, row) => {
-                  const status = isLocked ? 'locked' : rowStatus(row as any);
-                  const map: Record<string, { label: string; color: any }> = {
-                    assigned: { label: 'Assigned', color: 'success' },
-                    unassigned: { label: 'Unassigned', color: 'error' },
-                    changed: { label: 'Changed', color: 'info' },
-                    locked: { label: 'Locked', color: 'default' },
-                  };
-                  const s = map[status];
-                  return (
-                    <Label color={s.color} variant="soft">
-                      {s.label}
-                    </Label>
-                  );
-                },
-              },
-            ]}
+            isLocked={isLocked}
+            searchTerm={searchTerm}
+            selectedRowIds={selectedRowIds}
+            studentSelections={studentSelections}
+            onSearchChange={setSearchTerm}
+            onToggleRow={toggleRowSelected}
+            onToggleAllRows={toggleAllRowsSelected}
+            onToggleSubject={toggleSubject}
+            getPreferenceMatch={preferenceMatch}
+            getRowStatus={rowStatus}
           />
         </Box>
       )}
@@ -615,6 +400,20 @@ const AssignElectiveSubject = () => {
             Lock
           </LoadingButton>
         }
+      />
+
+      {/* QUICK SUMMARY DRAWER */}
+      <AssignmentSummaryDrawer
+        open={summaryDrawer.value}
+        onClose={summaryDrawer.onFalse}
+        total={summary.total}
+        assigned={summary.assigned}
+        unassigned={summary.unassigned}
+        issues={summary.issues}
+        preferenceMatchPct={summary.preferenceMatchPct}
+        activeFilter={statusFilter}
+        onFilter={setStatusFilter}
+        onOpenIssues={issuesDrawer.onTrue}
       />
 
       {/* VALIDATION ISSUES DRAWER */}

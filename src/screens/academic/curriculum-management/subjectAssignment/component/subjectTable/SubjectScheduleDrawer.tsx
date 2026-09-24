@@ -1,12 +1,13 @@
 'use client';
 
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Alert, Stack, Button, Drawer, Skeleton, IconButton, Typography } from '@mui/material';
+import { Box, Chip, Alert, Stack, Button, Drawer, Skeleton, Typography } from '@mui/material';
 import { useGetSubjectScheduleBreakdownQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { SubjectScheduleSummary } from './SubjectScheduleSummary';
+import { SubjectScheduleEmptyState } from './SubjectScheduleEmptyState';
 import { SubjectScheduleLectureList } from './SubjectScheduleLectureList';
+import { SubjectScheduleDrawerHeader } from './SubjectScheduleDrawerHeader';
 
 type Props = {
   assignmentId?: string;
@@ -24,10 +25,13 @@ function DrawerBody({ assignmentId, open }: Pick<Props, 'assignmentId' | 'open'>
 
   if (isLoading || (isFetching && !breakdown)) {
     return (
-      <Stack spacing={1.5}>
-        {[1, 2, 3].map((item) => (
-          <Skeleton key={item} variant="rounded" height={112} />
-        ))}
+      <Stack spacing={2}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 1 }}>
+          {[1, 2, 3].map((item) => (
+            <Skeleton key={item} variant="rounded" height={118} />
+          ))}
+        </Box>
+        <Skeleton variant="rounded" height={320} />
       </Stack>
     );
   }
@@ -51,17 +55,22 @@ function DrawerBody({ assignmentId, open }: Pick<Props, 'assignmentId' | 'open'>
     <Stack spacing={2}>
       <SubjectScheduleSummary data={breakdown} />
       {breakdown.lectures.length ? (
-        <SubjectScheduleLectureList lectures={breakdown.lectures} />
-      ) : (
-        <Stack alignItems="center" spacing={1} sx={{ py: 7, textAlign: 'center' }}>
-          <Iconify icon="mdi:calendar-remove-outline" width={48} color="text.disabled" />
-          <Typography variant="subtitle1" fontWeight={700}>
-            No lectures scheduled yet
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 340 }}>
-            This subject has an allocation target, but no matching timetable slots have been saved.
-          </Typography>
+        <Stack spacing={1.5} component="section" aria-labelledby="scheduled-lectures-title">
+          <Stack direction="row" alignItems="flex-start" justifyContent="space-between" gap={1}>
+            <Box>
+              <Typography id="scheduled-lectures-title" variant="subtitle2">
+                Scheduled lectures
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Timetable slots grouped by teaching day
+              </Typography>
+            </Box>
+            <Chip size="small" variant="soft" label={`${breakdown.lectures.length} total`} />
+          </Stack>
+          <SubjectScheduleLectureList lectures={breakdown.lectures} />
         </Stack>
+      ) : (
+        <SubjectScheduleEmptyState data={breakdown} />
       )}
     </Stack>
   );
@@ -74,42 +83,24 @@ export function SubjectScheduleDrawer({ assignmentId, subjectLabel, open, onClos
       open={open}
       onClose={onClose}
       PaperProps={{
-        sx: { width: { xs: '100%', sm: 560 }, display: 'flex', flexDirection: 'column' },
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-labelledby': 'subject-schedule-title',
+        sx: {
+          width: { xs: '100%', sm: 600 },
+          display: 'flex',
+          flexDirection: 'column',
+          bgcolor: 'background.default',
+        },
       }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          gap: 1.5,
-          p: 2,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-        }}
-      >
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" fontWeight={700}>
-            Weekly lecture breakdown
-          </Typography>
-          <Typography variant="body2" color="text.secondary" noWrap>
-            {subjectLabel}
-          </Typography>
+      <SubjectScheduleDrawerHeader subjectLabel={subjectLabel} onClose={onClose} />
+
+      <Scrollbar sx={{ flex: 1 }}>
+        <Box sx={{ px: { xs: 2, sm: 3 }, py: { xs: 2.5, sm: 3 } }}>
+          <DrawerBody assignmentId={assignmentId} open={open} />
         </Box>
-        <IconButton aria-label="Close lecture breakdown" onClick={onClose}>
-          <Iconify icon="mdi:close" />
-        </IconButton>
-      </Box>
-
-      <Scrollbar sx={{ flex: 1, '& .simplebar-content': { p: 2 } }}>
-        <DrawerBody assignmentId={assignmentId} open={open} />
       </Scrollbar>
-
-      <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider', textAlign: 'right' }}>
-        <Button variant="outlined" onClick={onClose}>
-          Close
-        </Button>
-      </Box>
     </Drawer>
   );
 }

@@ -16,6 +16,7 @@ import {
   usesPerformanceLevels,
   validateCriterionValues,
   initializeCriterionValues,
+  isMissingEvaluationResponse,
 } from './rubricEvaluationUtils';
 
 const rubric = {
@@ -106,5 +107,14 @@ describe('rubric evaluation utilities', () => {
     };
 
     expect(usesPerformanceLevels(legacyRubric)).toBe(true);
+  });
+
+  it('treats direct and parsing 404 responses as a missing optional evaluation', () => {
+    expect(isMissingEvaluationResponse({ status: 404 })).toBe(true);
+    expect(isMissingEvaluationResponse({ status: 'PARSING_ERROR', originalStatus: 404 })).toBe(
+      true
+    );
+    expect(isMissingEvaluationResponse({ status: 500 })).toBe(false);
+    expect(isMissingEvaluationResponse(undefined)).toBe(false);
   });
 });

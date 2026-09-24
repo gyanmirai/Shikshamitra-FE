@@ -7,6 +7,18 @@ export type LessonPlanTabQueryState = {
   teacherDiaries: boolean;
 };
 
+type QueryLoadingState = {
+  isLoading: boolean;
+  isFetching: boolean;
+};
+
+export type LessonPlanTabLoadingSources = {
+  timeline: QueryLoadingState;
+  lessonPlans: QueryLoadingState;
+  teacherDiaries: QueryLoadingState;
+  reviewQueue: QueryLoadingState;
+};
+
 export type LessonPlanQueryContext = {
   academicYearId?: string;
   academicMediumId?: string;
@@ -28,6 +40,26 @@ export const getLessonPlanTabQueryState = (
   lessonPlans: activeTab !== 'dailyTimeline',
   teacherDiaries: activeTab === 'teacherDiary',
 });
+
+export const getLessonPlanTabLoadingState = ({
+  timeline,
+  lessonPlans,
+  teacherDiaries,
+  reviewQueue,
+}: LessonPlanTabLoadingSources): Record<LessonPlanTabValue, boolean> => {
+  const timelineBusy = timeline.isLoading || timeline.isFetching;
+  const lessonPlansBusy = lessonPlans.isLoading || lessonPlans.isFetching;
+  const teacherDiariesBusy = teacherDiaries.isLoading || teacherDiaries.isFetching;
+  const reviewQueueBusy = reviewQueue.isLoading || reviewQueue.isFetching;
+
+  return {
+    dailyTimeline: timelineBusy || lessonPlansBusy,
+    lessonList: lessonPlansBusy,
+    teacherDiary: lessonPlansBusy || teacherDiariesBusy,
+    reviewQueue: lessonPlansBusy || reviewQueueBusy,
+    weeklyPlanner: lessonPlansBusy,
+  };
+};
 
 export const getLessonPlanListQuery = (
   activeTab: LessonPlanTabValue,

@@ -77,12 +77,9 @@ export interface UsePaymentTermFormReturn {
   demandLabel: string;
   isSubmitting: boolean;
   isLoadingDetail: boolean;
-  codeManuallyEdited: boolean;
-  setCodeManuallyEdited: (v: boolean) => void;
   handleSubmit: () => Promise<void>;
   addInstallment: () => void;
   removeInstallment: (index: number) => void;
-  duplicateInstallment: (index: number) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -117,6 +114,7 @@ const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
     detail.versions?.find((v) => v.id === detail.currentVersionId) ??
     detail.versions?.find((v) => v.status === 'Published') ??
     detail.versions?.[0];
+  const installments = (current?.installments ?? []).map(mapApiInstallmentToUi);
 
   return {
     id: detail.id,
@@ -127,7 +125,9 @@ const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
     status: detail.status,
     academicYearId: detail.academicYearId,
     totalInstallments: detail.totalInstallments,
-    installments: (current?.installments ?? []).map(mapApiInstallmentToUi),
+    installments,
+    invoiceCreationEnabled:
+      installments.length === 0 || installments.every((installment) => installment.demandEnabled),
     isDefaultTerm: detail.isDefault,
     holidayShiftingMethod: current?.holidayShiftingMethod ?? detail.holidayShiftingMethod,
     demandGenerationRule: current?.demandGenerationRule ?? detail.demandGenerationRule,
@@ -144,7 +144,8 @@ const mapDetailToForm = (detail: PaymentTermDetailResponse): IPaymentTerm => {
 const mapUiInstallmentToApi = (
   inst: IInstallment,
   index: number,
-  demandGenerationRule: DemandGenerationRule
+  demandGenerationRule: DemandGenerationRule,
+  invoiceCreationEnabled: boolean
 ): CreateInstallmentRequest => ({
   sequence: inst.sequence || index + 1,
   name: inst.installmentName,
@@ -152,11 +153,15 @@ const mapUiInstallmentToApi = (
   coverageEndDate: toDateTimeOffsetString(inst.endDate),
   demandDate:
     demandGenerationRule === 'SpecificDate'
-      ? toDateTimeOffsetString(inst.demandDate)
+      ? toDateTimeOffsetString(
+          invoiceCreationEnabled
+            ? inst.demandDate
+            : inst.demandDate || inst.dueDate || inst.startDate
+        )
       : undefined,
   dueDate: toDateTimeOffsetString(inst.dueDate),
   allocationPercentage: Number(inst.allocationPercentage) || 0,
-  demandEnabled: inst.demandEnabled ?? true,
+  demandEnabled: invoiceCreationEnabled,
   reminderEnabled: inst.reminderEnabled ?? true,
   reminderDate: inst.reminderDate ? toDateTimeOffsetString(inst.reminderDate) : undefined,
   allowPartialOverride: inst.allowPartialOverride ?? null,
@@ -173,8 +178,6 @@ export function usePaymentTermForm(
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
-
   // ── Data queries ──────────────────────────────────────────────────────────
   const { data: boardData } = useGetBoardsQuery('');
 
@@ -239,14 +242,9 @@ export function usePaymentTermForm(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editData?.id, getPaymentTermDetail]);
 
-  // ── Reset manual-edit flag when switching create ↔ edit ──────────────────
-  useEffect(() => {
-    setCodeManuallyEdited(Boolean(editData?.paymentTermCode));
-  }, [editData]);
-
   // ── Auto-generate code from name ──────────────────────────────────────────
   useEffect(() => {
-    if (!codeManuallyEdited && formik.values.paymentTermName) {
+    if (!editData?.id && formik.values.paymentTermName) {
       const slug = formik.values.paymentTermName
         .toUpperCase()
         .replace(/\s+/g, '-')
@@ -256,7 +254,7 @@ export function usePaymentTermForm(
     }
     // formik.setFieldValue is stable; no suppression needed
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formik.values.paymentTermName, codeManuallyEdited]);
+  }, [editData?.id, formik.values.paymentTermName]);
 
   // ── Build API payload ─────────────────────────────────────────────────────
   const buildDraftBody = useCallback(
@@ -264,13 +262,18 @@ export function usePaymentTermForm(
       name: values.paymentTermName,
       code: values.paymentTermCode,
       description: values.description || undefined,
-      isDefault: values.isDefaultTerm,
+      isDefault: values.status === 'Active' && values.isDefaultTerm,
       status: values.status === 'Active' ? 'Active' : 'Draft',
       holidayShiftingMethod: values.holidayShiftingMethod,
       demandGenerationRule: values.demandGenerationRule,
       demandOffsetDays: values.demandOffsetDays,
       installments: values.installments.map((item, index) =>
-        mapUiInstallmentToApi(item, index, values.demandGenerationRule)
+        mapUiInstallmentToApi(
+          item,
+          index,
+          values.demandGenerationRule,
+          values.invoiceCreationEnabled
+        )
       ),
     }),
     []
@@ -309,13 +312,18 @@ export function usePaymentTermForm(
         name: values.paymentTermName,
         code: values.paymentTermCode,
         description: values.description || undefined,
-        isDefault: values.isDefaultTerm,
+        isDefault: values.status === 'Active' && values.isDefaultTerm,
         status: values.status === 'Active' ? 'Active' : 'Draft',
         holidayShiftingMethod: values.holidayShiftingMethod,
         demandGenerationRule: values.demandGenerationRule,
         demandOffsetDays: values.demandOffsetDays,
         installments: values.installments.map((item, index) =>
-          mapUiInstallmentToApi(item, index, values.demandGenerationRule)
+          mapUiInstallmentToApi(
+            item,
+            index,
+            values.demandGenerationRule,
+            values.invoiceCreationEnabled
+          )
         ),
       });
       shikshaMitraToast.success({
@@ -356,7 +364,6 @@ export function usePaymentTermForm(
       formik.setTouched({
         boardId: true,
         paymentTermName: true,
-        paymentTermCode: true,
         status: true,
         demandGenerationRule: true,
         demandOffsetDays: true,
@@ -397,7 +404,7 @@ export function usePaymentTermForm(
       reminderDate: null,
       gracePeriod: null,
       allowPartialOverride: null,
-      demandEnabled: true,
+      demandEnabled: formik.values.invoiceCreationEnabled,
       reminderEnabled: false,
     };
     const next = [...formik.values.installments, newInst];
@@ -424,33 +431,6 @@ export function usePaymentTermForm(
         .filter((_, i) => i !== index)
         .map((inst, i) => ({ ...inst, sequence: i + 1 }));
       formik.setFieldValue('installments', updated);
-    },
-    [formik]
-  );
-
-  /**
-   * Memoization Justification:
-   * duplicateInstallment follows the same pattern as removeInstallment — passed
-   * as a prop to InstallmentCard components in a list, requiring reference
-   * stability to allow React.memo to be effective.
-   */
-  const duplicateInstallment = useCallback(
-    (index: number) => {
-      const src = formik.values.installments[index];
-      const seq = formik.values.installments.length + 1;
-      formik.setFieldValue('installments', [
-        ...formik.values.installments,
-        {
-          ...src,
-          id: undefined,
-          installmentName: `${src.installmentName} (Copy)`,
-          sequence: seq,
-          startDate: null,
-          endDate: null,
-          demandDate: null,
-          dueDate: null,
-        },
-      ]);
     },
     [formik]
   );
@@ -542,6 +522,7 @@ export function usePaymentTermForm(
       (v.demandOffsetDays !== null && v.demandOffsetDays >= 1);
     const specificDatesValid =
       v.demandGenerationRule !== 'SpecificDate' ||
+      !v.invoiceCreationEnabled ||
       v.installments.every(
         (item) =>
           Boolean(item.demandDate && item.dueDate) &&
@@ -612,11 +593,8 @@ export function usePaymentTermForm(
     demandLabel,
     isSubmitting,
     isLoadingDetail,
-    codeManuallyEdited,
-    setCodeManuallyEdited,
     handleSubmit,
     addInstallment,
     removeInstallment,
-    duplicateInstallment,
   };
 }

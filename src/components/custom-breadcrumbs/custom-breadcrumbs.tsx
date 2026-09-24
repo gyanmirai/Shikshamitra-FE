@@ -83,8 +83,9 @@ export function CustomBreadcrumbs({
             bgcolor: 'action.hover',
             border: '1px solid',
             borderColor: 'divider',
+           
             '&:hover': {
-              bgcolor: 'action.selected',
+              bgcolor: 'unset',
               color: 'text.primary',
             },
             transition: (theme) =>
@@ -120,7 +121,7 @@ export function CustomBreadcrumbs({
                 <IconButton
                   aria-label="Page description"
                   size="small"
-                  sx={{ minWidth: 44, minHeight: 44 }}
+                  // sx={{ minWidth: 44, minHeight: 44 }}
                 >
                   <Iconify icon="lucide:info" width={16} color="info.main" aria-hidden />
                 </IconButton>

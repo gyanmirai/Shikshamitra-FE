@@ -1,9 +1,11 @@
+import type { Theme, SxProps } from '@mui/material/styles';
+
 import dayjs from 'dayjs';
-import {
-  TimetableSettingsSummaryCards,
-  type ITimetableSummaryCard,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import { Chip } from '@mui/material';
+import {
+  type ITimetableSummaryCard,
+  TimetableSettingsSummaryCards,
+} from 'src/screens/academic/components/AcademicSummaryInsights';
 
 type LearningTaskStatus = {
   label: string;
@@ -64,6 +66,36 @@ export const getEvaluationProgress = (task: any) => {
   return pending > 0 ? `${base} · ${pending} pending` : base;
 };
 
+export const normalizeLearningTasks = (tasks: any[], selectedDivision: string) =>
+  tasks.map((task) => {
+    const currentDivision = (task.divisionSchedules || task.divisions || []).find(
+      (division: any) => !selectedDivision || division.divisionId === selectedDivision
+    );
+
+    return {
+      ...task,
+      homeworkType: task.homeworkType || task.homeworkTypeName,
+      classDivision: `${task.standardName || task.className || '-'} / ${currentDivision?.divisionName || '-'}`,
+      subjectChapter: [
+        task.subjectName || task.subject,
+        task.chapterName || task.chapterNames?.join(', '),
+      ]
+        .filter(Boolean)
+        .join(' / '),
+      currentDivisionId: currentDivision?.divisionId,
+      createdAt: task.createdAt,
+      publishDate: currentDivision?.publishDate || currentDivision?.publishAt,
+      dueDate: currentDivision?.dueDate || currentDivision?.dueAt,
+      status:
+        currentDivision?.status !== undefined
+          ? currentDivision.status
+          : currentDivision?.isPublished
+            ? 1
+            : (task.status ?? 0),
+      divisions: task.divisionSchedules || task.divisions || [],
+    };
+  });
+
 export const getLearningTaskSummary = (tasks: any[]) => {
   const statuses = tasks.map(getLearningTaskStatus);
   return {
@@ -84,11 +116,27 @@ export const LearningTaskStatusChip = ({ task }: { task: any }) => {
   return <Chip size="small" variant="soft" color={status.color} label={status.label} />;
 };
 
-export const LearningTaskSummaryCards = ({ tasks }: { tasks: any[] }) => {
+export const LearningTaskSummaryCards = ({
+  tasks,
+  buttonSx,
+}: {
+  tasks: any[];
+  buttonSx?: SxProps<Theme>;
+}) => {
   const summary = getLearningTaskSummary(tasks);
   const cards: ITimetableSummaryCard[] = [
-    { label: 'Total Tasks', value: summary.total, icon: 'mdi:clipboard-text-outline', color: 'primary' },
-    { label: 'Published', value: summary.published, icon: 'mdi:check-circle-outline', color: 'success' },
+    {
+      label: 'Total Tasks',
+      value: summary.total,
+      icon: 'mdi:clipboard-text-outline',
+      color: 'primary',
+    },
+    {
+      label: 'Published',
+      value: summary.published,
+      icon: 'mdi:check-circle-outline',
+      color: 'success',
+    },
     { label: 'Draft', value: summary.draft, icon: 'mdi:file-document-edit-outline', color: 'info' },
     { label: 'Due Today', value: summary.dueToday, icon: 'mdi:calendar-today', color: 'info' },
     { label: 'Overdue', value: summary.overdue, icon: 'mdi:alert-circle-outline', color: 'error' },
@@ -100,5 +148,5 @@ export const LearningTaskSummaryCards = ({ tasks }: { tasks: any[] }) => {
     },
   ];
 
-  return <TimetableSettingsSummaryCards cards={cards} />;
+  return <TimetableSettingsSummaryCards cards={cards} buttonSx={buttonSx} />;
 };

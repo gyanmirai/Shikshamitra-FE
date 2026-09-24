@@ -1,15 +1,12 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Stack, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Stack, Typography, IconButton } from '@mui/material';
-import {
-  AssignmentSubmissionType,
-  ASSIGNMENT_SUBMISSION_TYPE_LABELS,
-} from 'src/enums/assignment';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { AssignmentSubmissionType, ASSIGNMENT_SUBMISSION_TYPE_LABELS } from 'src/enums/assignment';
 
 import { getAssignmentActionVisibility } from './assignment-actions';
+import { getLearningTaskTableActions } from '../../homeworkCreation/component/learningTaskTableActions';
 import {
   getSubmissionProgress,
   getEvaluationProgress,
@@ -53,9 +50,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           ...hw,
           assignmentType: (hw as any).assignmentTypeName || (hw as any).assignmentType,
           classDivision: `${(hw as any).standardName || hw.className || '-'} / ${currentDivision?.divisionName || '-'}`,
-          subjectChapter: [hw.subjectName, (hw as any).chapterName]
-            .filter(Boolean)
-            .join(' / '),
+          subjectChapter: [hw.subjectName, (hw as any).chapterName].filter(Boolean).join(' / '),
           currentDivisionId: currentDivision?.divisionId,
           publishDate: currentDivision?.publishDate || currentDivision?.publishAt,
           dueDate: currentDivision?.dueDate || currentDivision?.dueAt,
@@ -189,66 +184,31 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
               const rowWithDivision = { ...row, divisionMeta: divisionData } as IAssignment & {
                 divisionMeta?: DivisionHomeworkMeta;
               };
+              const rowActions = getLearningTaskTableActions({
+                canView,
+                canEdit: actions.canEdit,
+                canPublish: actions.canPublish,
+                canClose: actions.canClose,
+                canViewSubmissions: actions.canViewSubmissions,
+                canDelete,
+                deleteDisabled: !actions.canDelete,
+                deleteTooltip: actions.canDelete
+                  ? 'Delete'
+                  : 'Only draft assignments can be deleted',
+                onView: () => onView(rowWithDivision),
+                onEdit: () => onEdit(assignment),
+                onPublish: () => onSwitchToggle(assignment),
+                onClose: () => onClose(assignment),
+                onViewSubmissions: () => onViewSubmission(assignment),
+                onDelete: () => onDelete(assignment),
+              });
 
               return (
-                <Stack direction="row" spacing={1}>
-                  {canView && (
-                    <CustomTooltip title="View Details" arrow>
-                      <IconButton size="small" onClick={() => onView(rowWithDivision)}>
-                        <Iconify icon="solar:eye-bold" width={18} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                  {actions.canEdit && (
-                    <CustomTooltip title="Edit" arrow>
-                      <IconButton size="small" onClick={() => onEdit(row as IAssignment)}>
-                        <Iconify icon="solar:pen-bold" width={18} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                  {actions.canPublish && (
-                    <CustomTooltip title="Publish Now" arrow>
-                      <IconButton size="small" onClick={() => onSwitchToggle(row as IAssignment)}>
-                        <Iconify icon="solar:upload-bold" width={18} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                  {actions.canClose && (
-                    <CustomTooltip title="Close Assignment" arrow>
-                      <IconButton size="small" onClick={() => onClose(row as IAssignment)}>
-                        <Iconify icon="solar:lock-bold" width={18} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                  {actions.canViewSubmissions && (
-                    <CustomTooltip title="View Submissions" arrow>
-                      <IconButton size="small" onClick={() => onViewSubmission(row as IAssignment)}>
-                        <Iconify icon="solar:inbox-in-bold" width={18} />
-                      </IconButton>
-                    </CustomTooltip>
-                  )}
-                  <CustomTooltip title="Send Reminder will be enabled after notification wiring" arrow>
-                    <span>
-                      <IconButton size="small" disabled>
-                        <Iconify icon="solar:bell-bold" width={18} />
-                      </IconButton>
-                    </span>
-                  </CustomTooltip>
-                  {canDelete && (
-                    <CustomTooltip title={actions.canDelete ? 'Delete' : 'Only draft assignments can be deleted'} arrow>
-                      <span>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          disabled={!actions.canDelete}
-                          onClick={() => onDelete(row as IAssignment)}
-                        >
-                          <Iconify icon="solar:trash-bin-trash-bold" width={18} />
-                        </IconButton>
-                      </span>
-                    </CustomTooltip>
-                  )}
-                </Stack>
+                <AdaptiveThreeDotsActions
+                  actions={rowActions}
+                  placement="right-top"
+                  moreLabel="More assignment actions"
+                />
               );
             },
           },

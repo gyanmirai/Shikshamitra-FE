@@ -5,7 +5,6 @@ import { SubjectColorIndicator } from 'src/components/subject-color/SubejctColor
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import {
   Box,
-  Chip,
   Tooltip,
   Accordion,
   IconButton,
@@ -112,30 +111,6 @@ const SubjectCard: React.FC<ISubjectCardProps> = ({
             <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary' }}>
               {subject.subjectName || 'Untitled Subject'}
             </Typography>
-
-            {!isExpanded && (
-              <Box sx={{ display: 'flex', gap: 1, ml: 1, flexWrap: 'wrap' }}>
-                {subject.subjectCode && (
-                  <Chip
-                    label={`Code: ${subject.subjectCode}`}
-                    size="small"
-                    variant="soft"
-                    color="primary"
-                    sx={{ height: 22, fontSize: '0.75rem' }}
-                  />
-                )}
-                {teacherObjs.map((teacher) => (
-                  <Chip
-                    key={teacher.id}
-                    label={teacher.label}
-                    size="small"
-                    variant="soft"
-                    color="info"
-                    sx={{ height: 22, fontSize: '0.75rem' }}
-                  />
-                ))}
-              </Box>
-            )}
           </Box>
 
           {!isPublished && onRemove && (

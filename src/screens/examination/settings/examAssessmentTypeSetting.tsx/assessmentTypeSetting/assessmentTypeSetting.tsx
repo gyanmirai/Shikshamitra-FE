@@ -8,9 +8,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import assessmentTypeTableData from 'src/json/academic/examination/assessmentTypeTableData.json';
 
 import AssessmentTypeForm from './assessmentTypeForm';
@@ -177,21 +177,30 @@ const AssessmentTypeSettings = () => {
             isSort: false,
             render(value, row) {
               return (
-                <ThreeDotsActions
-                  // actions={(prop) => actions({ ...prop, row })}
+                <AdaptiveThreeDotsActions
+                  actions={[
+                    {
+                      id: 'edit',
+                      label: 'Edit assessment type',
+                      icon: GlobalIcons.edit,
+                      onClick: () => {
+                        dialog.onTrue();
+                        setSelectedAssessmentType(row);
+                        setIsEdit(true);
+                      },
+                    },
+                    {
+                      id: 'delete',
+                      label: 'Delete assessment type',
+                      icon: GlobalIcons.delete,
+                      color: 'error.main',
+                      onClick: () => {
+                        confirmDeleteDialog.onTrue();
+                        setSelectedAssessmentType(row);
+                      },
+                    },
+                  ]}
                   placement="right-top"
-                  showThreeDots={false}
-                  showEditIcon
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    confirmDeleteDialog.onTrue();
-                    setSelectedAssessmentType(row);
-                  }}
-                  handleEditClick={() => {
-                    dialog.onTrue();
-                    setSelectedAssessmentType(row);
-                    setIsEdit(true);
-                  }}
                 />
               );
             },

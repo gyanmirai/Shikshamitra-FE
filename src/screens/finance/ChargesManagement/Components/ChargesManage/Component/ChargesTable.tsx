@@ -145,6 +145,7 @@ const ChargesTable = ({
     () =>
       chargesData?.items?.map((item: IChargeData) => ({
         ...item,
+        chargeId: item.chargeId || item.id || '',
         amount:
           item.amount !== undefined && item.amount !== null
             ? parseFloat(String(item.amount).replace(/,/g, ''))

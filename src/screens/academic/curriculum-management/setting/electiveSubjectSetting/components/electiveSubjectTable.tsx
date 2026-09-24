@@ -13,12 +13,15 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Avatar, IconButton, Typography } from '@mui/material';
+import { Box, Chip, Stack, Avatar, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetElectiveGroupsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 import {
   type ITimetableSummaryCard,
   TimetableSettingsSummaryCards,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
+} from 'src/screens/academic/components/AcademicSummaryInsights';
+
+import { getElectiveSubjectTableActions } from './electiveSubjectTableActions';
 
 import type { IElectiveSubject, IElectiveSubjectTableProps } from '../type';
 
@@ -31,6 +34,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
   onArchive,
   onRestore,
   onViewUsage,
+  insightsOpen,
+  onCloseInsights,
   canAdd = true,
   canView = true,
   canDelete = true,
@@ -138,7 +143,12 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
                 <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '13px' }} noWrap>
                   {value}
                 </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block' }}>
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  noWrap
+                  sx={{ display: 'block' }}
+                >
                   {row.description || `${row.subjects?.length || 0} subjects`}
                 </Typography>
               </Box>
@@ -176,7 +186,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
             >
               <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap alignItems="center">
                 {visibleSubjects.map((subject) => {
-                  const sColor = subject.color || subject.subjectColor || theme.palette.primary.main;
+                  const sColor =
+                    subject.color || subject.subjectColor || theme.palette.primary.main;
                   return (
                     <Chip
                       key={subject.id || subject.name}
@@ -283,8 +294,8 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
       {
         id: 'action',
         label: 'Actions',
-        minWidth: 140,
-        width: 140,
+        minWidth: 150,
+        width: 150,
         align: 'center',
         isSort: false,
         sticky: true,
@@ -293,65 +304,48 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         render(value, row) {
           const group = row as IElectiveSubject;
           const isArchived = getStatusLabel(group.status) === 'Archived';
+          const actions = getElectiveSubjectTableActions(group, isArchived, {
+            canAdd,
+            canView,
+            canDelete,
+            onViewUsage,
+            onEdit,
+            onArchive,
+            onRestore,
+            onDelete,
+          });
+
           return (
-            <Stack direction="row" spacing={0.5} justifyContent="center" alignItems="center">
-              {canView && (
-                <GroupActionButton
-                  title="View usage"
-                  icon="solar:eye-bold"
-                  onClick={() => onViewUsage(group)}
-                />
-              )}
-              {isArchived ? (
-                <GroupActionButton
-                  title="Restore group"
-                  icon="solar:restart-bold"
-                  color="success"
-                  onClick={() => onRestore(group)}
-                />
-              ) : (
-                <>
-                  {canAdd && (
-                    <GroupActionButton
-                      title="Edit group"
-                      icon="solar:pen-bold"
-                      onClick={() => onEdit(group)}
-                    />
-                  )}
-                  {canAdd && (
-                    <GroupActionButton
-                      title="Archive group"
-                      icon="solar:archive-bold"
-                      color="warning"
-                      onClick={() => onArchive(group)}
-                    />
-                  )}
-                  {canDelete && (
-                    <GroupActionButton
-                      title={
-                        group.canDelete
-                          ? 'Delete group'
-                          : 'This elective group is already used in class allocation. View usage before deleting.'
-                      }
-                      icon="solar:trash-bin-trash-bold"
-                      color="error"
-                      disabled={!group.canDelete}
-                      onClick={() => onDelete(group)}
-                    />
-                  )}
-                </>
-              )}
-            </Stack>
+            <AdaptiveThreeDotsActions
+              actions={actions}
+              placement="right-top"
+              moreLabel="More elective group actions"
+            />
           );
         },
       },
     ],
-    [canAdd, canDelete, canView, onArchive, onDelete, onEdit, onRestore, onViewUsage, theme.palette.primary.main]
+    [
+      canAdd,
+      canDelete,
+      canView,
+      onArchive,
+      onDelete,
+      onEdit,
+      onRestore,
+      onViewUsage,
+      theme.palette.primary.main,
+    ]
   );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-      <TimetableSettingsSummaryCards cards={summaryCards} />
+      <TimetableSettingsSummaryCards
+        cards={summaryCards}
+        open={insightsOpen}
+        onClose={onCloseInsights}
+        hideTrigger
+      />
 
       <CustomizableTable
         isLoading={isLoading || isFetching}
@@ -394,38 +388,3 @@ const getStatusLabel = (status?: IElectiveSubject['status']) => {
   if (status === 1 || status === 'Inactive') return 'Inactive';
   return 'Active';
 };
-
-const GroupActionButton = ({
-  title,
-  icon,
-  color = 'default',
-  disabled = false,
-  onClick,
-}: {
-  title: string;
-  icon: string;
-  color?: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
-  disabled?: boolean;
-  onClick: () => void;
-}) => (
-  <CustomTooltip title={title} arrow placement="top">
-    <span>
-      <IconButton
-        size="small"
-        color={color}
-        disabled={disabled}
-        aria-label={title}
-        onClick={onClick}
-        sx={{
-          width: 28,
-          height: 28,
-          '&:hover': {
-            bgcolor: 'action.hover',
-          },
-        }}
-      >
-        <Iconify icon={icon} width={17} height={17} />
-      </IconButton>
-    </span>
-  </CustomTooltip>
-);

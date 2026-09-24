@@ -14,11 +14,11 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { useGetClassQuery } from 'src/redux/class/classApi';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { Box, Card, Stack, Button, MenuItem, MenuList, Typography } from '@mui/material';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
@@ -35,8 +35,8 @@ import CreateQuestionDialog from '../../../examination/question-bank/components/
 import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 import ChapterQuestionsDialog from '../../../examination/question-bank/components/ChapterQuestionsDialog';
 import {
-  buildSyllabusSubjectOptions,
   resolveSyllabusSubject,
+  buildSyllabusSubjectOptions,
   type SyllabusAssignmentItem,
 } from './subjectOptions';
 
@@ -187,14 +187,7 @@ const Subjects = () => {
     }
   };
 
-  const handleBulkClose = (_e: unknown, isSubmit?: boolean) => {
-    if (isSubmit || (isChanges && window.confirm('Are u sure to leave this page ?'))) {
-      bulkChapterDialog.onFalse();
-      dispatch(setIsChanges(false));
-    } else if (!isChanges) {
-      bulkChapterDialog.onFalse();
-    }
-  };
+  const handleBulkClose = () => bulkChapterDialog.onFalse();
 
   const filteredChapters = (subjectId ? chapterResponse || [] : []) as IChapter[];
 
@@ -219,17 +212,15 @@ const Subjects = () => {
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Custom breadcrumbs component for navigation and page header */}
-      {addChapterDialog.value || bulkChapterDialog.value ? (
+      {addChapterDialog.value ? (
         <CustomBreadcrumbs
           sx={{ mb: 1, px: 1 }}
           // heading={selectedChapter ? 'Update Chapter' : 'Add Chapter'}
           heading="Syllabus"
           description={
-            bulkChapterDialog.value
-              ? 'Select and assign multiple chapters at once. Fill in the required details for each chapter before submitting.'
-              : selectedChapter
-                ? 'Edit chapter details including name, sequence, and learning materials. Review and update chapter content to maintain curriculum accuracy and effectiveness.'
-                : 'Add a new chapter to the selected subject and class. Specify chapter details, sequence, and attach relevant learning materials to build the curriculum structure.'
+            selectedChapter
+              ? 'Edit chapter details including name, sequence, and learning materials. Review and update chapter content to maintain curriculum accuracy and effectiveness.'
+              : 'Add a new chapter to the selected subject and class. Specify chapter details, sequence, and attach relevant learning materials to build the curriculum structure.'
           }
           links={[
             // Links for form view (adding/editing chapter)
@@ -239,17 +230,10 @@ const Subjects = () => {
             // { name: selectedChapter ? 'Update Chapter' : 'Add Chapter' },
           ]}
           isBack
-          onBack={() => {
-            if (bulkChapterDialog.value) {
-              handleBulkClose(null, false);
-            } else {
-              handleClose(null, false);
-            }
-          }}
+          onBack={() => handleClose(null, false)}
         />
       ) : (
         <CustomBreadcrumbs
-          sx={{ mb: 1 }}
           heading="Syllabus"
           description="Select a class and subject to manage chapters, including the chapter name, number, and associated learning materials."
           links={[
@@ -260,24 +244,12 @@ const Subjects = () => {
         />
       )}
       {/* Conditional rendering based on form state */}
-      {bulkChapterDialog.value ? (
-        // Bulk form view for assigning multiple chapters
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
-          <BulkChapterForm
-            onClose={handleBulkClose}
-            className={classes}
-            subject={subject}
-            classId={classId}
-            subjectId={subjectId}
-            existingChapters={chapterResponse || []}
-          />
-        </Card>
-      ) : addChapterDialog.value ? (
+      {addChapterDialog.value ? (
         // Form view for adding/editing chapters
         <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
           <AddNewChapter
             onClose={handleClose}
-            onSubmit={() => { }}
+            onSubmit={() => {}}
             initialValues={selectedChapter}
             isEdit={isEditMode}
             className={classes}
@@ -332,9 +304,11 @@ const Subjects = () => {
                   formControlProps={{ sx: { minWidth: '200px', width: '100%' } }}
                 />
                 <CustomSelect
-                  options={buildSyllabusSubjectOptions(
-                    (subjectOptionsData?.data?.items || []) as SyllabusAssignmentItem[]
-                  ) as SubjectOption[]}
+                  options={
+                    buildSyllabusSubjectOptions(
+                      (subjectOptionsData?.data?.items || []) as SyllabusAssignmentItem[]
+                    ) as SubjectOption[]
+                  }
                   value={subjectSelectValue}
                   disabled={!classes}
                   onChange={(val) => {
@@ -441,6 +415,16 @@ const Subjects = () => {
         </>
       )}
 
+      <BulkChapterForm
+        open={bulkChapterDialog.value}
+        onClose={handleBulkClose}
+        className={classes}
+        subject={subject}
+        classId={classId}
+        subjectId={subjectId}
+        existingChapters={chapterResponse || []}
+      />
+
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={() => {
@@ -472,7 +456,7 @@ const Subjects = () => {
               deleteDialog.onFalse();
               setSelectedChapter(null);
             }}
-          // startIcon={<Iconify icon={GlobalIcons.delete} />}
+            // startIcon={<Iconify icon={GlobalIcons.delete} />}
           >
             Yes
           </LoadingButton>

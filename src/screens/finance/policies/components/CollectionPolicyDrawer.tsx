@@ -199,7 +199,7 @@ export default function CollectionPolicyDrawer({
                 addSlab={handleAddSlab}
                 removeSlab={handleRemoveSlab}
               />
-              <CollectionWaiverSection formik={formik} feeHeads={feeHeads} />
+              <CollectionWaiverSection formik={formik} />
               <CollectionOnlineSection formik={formik} />
             </Box>
           </Scrollbar>

@@ -6,9 +6,10 @@ import type {
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Chip, Stack, Button, Typography } from '@mui/material';
+import { Box, Stack, Button, Typography } from '@mui/material';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -60,6 +61,22 @@ export function WorkflowStageList({
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
+  const stageIds = new Set(stages.map((stage) => stage.id));
+  const hasEntryStage = stages.filter((stage) => stage.isEntryStage).length === 1;
+  const hasTerminalStage = stages.some((stage) => stage.isTerminalStage);
+  const hasCompleteRoutes = stages.every(
+    (stage) =>
+      stage.isTerminalStage || transitions.some((transition) => transition.fromStageId === stage.id)
+  );
+  const hasValidDestinations = transitions.every(
+    (transition) => stageIds.has(transition.fromStageId) && stageIds.has(transition.toStageId)
+  );
+  const journeyReady =
+    stages.length > 0 &&
+    hasEntryStage &&
+    hasTerminalStage &&
+    hasCompleteRoutes &&
+    hasValidDestinations;
 
   return (
     <Stack
@@ -68,7 +85,8 @@ export function WorkflowStageList({
       sx={{
         flex: 1,
         minHeight: 0,
-        overflowY: 'auto',
+        minWidth: 0,
+        overflowY: { xs: 'visible', md: 'auto' },
       }}
     >
       <Stack
@@ -89,12 +107,10 @@ export function WorkflowStageList({
       >
         <Box>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Typography id="workflow-stages-heading" variant="subtitle1" fontWeight={700}>
-              Admission journey
+            <Typography id="workflow-stages-heading" variant="h6" fontWeight={700}>
+              Journey
             </Typography>
-            {stages.length > 0 && (
-              <Chip size="small" variant="outlined" label={`${stages.length} stages`} />
-            )}
+            {stages.length > 0 && <Label variant="outlined">{stages.length} stages</Label>}
           </Stack>
           <Typography variant="caption" color="text.secondary">
             Arrange each stage and confirm where every applicant outcome goes next.
@@ -103,11 +119,17 @@ export function WorkflowStageList({
         {!readOnly && stages.length > 0 && (
           <Button
             size="small"
-            variant="outlined"
+            variant="contained"
             startIcon={<Iconify icon="mdi:plus" />}
             onClick={onAdd}
             disabled={loadingStageTypes}
-            sx={{ minHeight: 44, flexShrink: 0, alignSelf: { xs: 'flex-start', sm: 'center' } }}
+            sx={{
+              flexShrink: 0,
+              alignSelf: { xs: 'stretch', sm: 'center' },
+              bgcolor: 'text.primary',
+              color: 'background.paper',
+              '&:hover': { bgcolor: 'text.secondary' },
+            }}
           >
             Add stage
           </Button>
@@ -127,7 +149,13 @@ export function WorkflowStageList({
                   startIcon={<Iconify icon="mdi:plus" />}
                   onClick={onAdd}
                   disabled={loadingStageTypes}
-                  sx={{ mt: 2, minHeight: 44 }}
+                  sx={{
+                    mt: 2,
+                    minHeight: { xs: 44, md: 36 },
+                    bgcolor: 'text.primary',
+                    color: 'background.paper',
+                    '&:hover': { bgcolor: 'text.secondary' },
+                  }}
                 >
                   Add first stage
                 </Button>
@@ -139,13 +167,27 @@ export function WorkflowStageList({
         </Box>
       )}
       {stages.length > 0 && (
-        <Box sx={{ p: 1.5 }}>
+        <Box sx={{ minWidth: 0, p: { xs: 1, sm: 2 }, pb: { xs: 1, sm: 1.5 } }}>
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
             <SortableContext
               items={stages.map((stage) => stage.id)}
               strategy={verticalListSortingStrategy}
             >
-              <Stack spacing={1.25}>
+              <Stack
+                spacing={1.25}
+                sx={{
+                  position: 'relative',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 34,
+                    bottom: 34,
+                    left: { xs: 26, sm: 32 },
+                    width: '1px',
+                    bgcolor: 'divider',
+                  },
+                }}
+              >
                 {stages.map((stage, index) => (
                   <WorkflowStageCard
                     key={stage.id}
@@ -167,6 +209,45 @@ export function WorkflowStageList({
             </SortableContext>
           </DndContext>
         </Box>
+      )}
+      {stages.length > 0 && (
+        <Stack
+          role="status"
+          aria-label="Journey validation summary"
+          direction="row"
+          spacing={1}
+          useFlexGap
+          flexWrap="wrap"
+          alignItems="center"
+          sx={{
+            mt: 'auto',
+            position: { xs: 'static', md: 'sticky' },
+            bottom: 0,
+            zIndex: 2,
+            px: { xs: 1.5, sm: 3 },
+            py: 1.25,
+            bgcolor: 'background.paper',
+            borderTop: 1,
+            borderColor: 'divider',
+            boxShadow: { xs: 'none', md: '0 -6px 16px rgba(15, 23, 42, 0.04)' },
+          }}
+        >
+          <Iconify
+            icon={journeyReady ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
+            color={journeyReady ? 'success.main' : 'warning.main'}
+            width={20}
+          />
+          <Typography
+            variant="body2"
+            fontWeight={600}
+            color={journeyReady ? 'success.main' : 'warning.main'}
+          >
+            {journeyReady ? 'Journey valid' : 'Journey needs attention'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            · {stages.length} stages · {transitions.length} routes
+          </Typography>
+        </Stack>
       )}
     </Stack>
   );

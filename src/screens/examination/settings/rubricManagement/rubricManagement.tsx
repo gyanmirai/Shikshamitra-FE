@@ -4,9 +4,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Box, Switch, Button } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import rubricTableData from 'src/json/academic/examination/rubricTableData.json';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import RubricCreationForm from './rubricCreationForm';
 
@@ -95,20 +95,29 @@ const RubricManagement = () => {
 
             render(value, row) {
               return (
-                <ThreeDotsActions
-                  // actions={(prop) => actions({ ...prop, row })}
+                <AdaptiveThreeDotsActions
+                  actions={[
+                    {
+                      id: 'view',
+                      label: 'View rubric',
+                      icon: 'solar:eye-bold',
+                      onClick: () => undefined,
+                    },
+                    {
+                      id: 'edit',
+                      label: 'Edit rubric',
+                      icon: 'solar:pen-bold',
+                      onClick: dialog.onTrue,
+                    },
+                    {
+                      id: 'delete',
+                      label: 'Delete rubric',
+                      icon: 'solar:trash-bin-trash-bold',
+                      color: 'error.main',
+                      onClick: deleteDialog.onTrue,
+                    },
+                  ]}
                   placement="right-top"
-                  showThreeDots={false}
-                  showViewIcon
-                  showEditIcon
-                  showDeleteIcon
-                  handleDeleteClick={() => {
-                    deleteDialog.onTrue();
-                  }}
-                  handleEditClick={() => {
-                    dialog.onTrue();
-                  }}
-                  handleViewClick={() => {}}
                 />
               );
             },

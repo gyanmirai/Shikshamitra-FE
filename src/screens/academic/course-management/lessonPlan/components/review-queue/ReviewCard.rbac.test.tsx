@@ -36,5 +36,10 @@ describe('ReviewCard reviewer actions', () => {
 
     expect(screen.getByRole('button', { name: 'View' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Revise' })).not.toBeInTheDocument();
+    expect(screen.getByText('Lesson Plan')).toBeInTheDocument();
+    expect(screen.getByText('Class 12-A')).toBeInTheDocument();
+    expect(screen.getByText('Core Mathematics')).toBeInTheDocument();
+    expect(screen.getByText('Intro to Nums CORE')).toBeInTheDocument();
+    expect(screen.getByText('Topic on Tuesday')).toBeInTheDocument();
   });
 });

@@ -17,6 +17,7 @@ import {
   TextField,
   Typography,
   IconButton,
+  ButtonBase,
   InputAdornment,
 } from '@mui/material';
 
@@ -187,26 +188,27 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                         placement="right"
                         disableHoverListener={item.subjectName.length < 24}
                       >
-                        <Box
+                        <ButtonBase
+                          aria-label={`Select ${item.subjectName}`}
+                          aria-pressed={isSelected}
                           onClick={() => onSelectSubject(item)}
                           sx={{
+                            width: '100%',
                             display: 'flex',
                             alignItems: 'center',
+                            justifyContent: 'flex-start',
                             gap: 1,
                             p: 1,
                             cursor: 'pointer',
+                            textAlign: 'left',
                             borderRadius: 1.5,
                             transition: 'all 0.15s ease-in-out',
-                            bgcolor: isSelected
-                              ? varAlpha(theme.palette.primary.mainChannel, 0.08)
-                              : 'transparent',
+                            bgcolor: 'transparent',
                             borderLeft: isSelected
                               ? `3px solid ${theme.palette.primary.main}`
                               : '3px solid transparent',
                             '&:hover': {
-                              bgcolor: isSelected
-                                ? varAlpha(theme.palette.primary.mainChannel, 0.12)
-                                : 'action.hover',
+                              bgcolor: 'action.hover',
                             },
                           }}
                         >
@@ -245,7 +247,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                               sx={{ color: 'primary.main', flexShrink: 0 }}
                             />
                           )}
-                        </Box>
+                        </ButtonBase>
                       </CustomTooltip>
                     );
                   })}
@@ -288,11 +290,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                         key={group.electiveGroupId}
                         sx={{
                           borderRadius: 1.5,
-                          border: `1px solid ${
-                            hasSelectedChild
-                              ? varAlpha(theme.palette.secondary.mainChannel, 0.3)
-                              : varAlpha(theme.palette.dividerChannel, 0.8)
-                          }`,
+                          border: `1px solid ${varAlpha(theme.palette.dividerChannel, 0.8)}`,
                           bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.02),
                           overflow: 'hidden',
                         }}
@@ -308,9 +306,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                             py: 0.75,
                             cursor: 'pointer',
                             userSelect: 'none',
-                            bgcolor: hasSelectedChild
-                              ? varAlpha(theme.palette.secondary.mainChannel, 0.06)
-                              : 'transparent',
+                            bgcolor: 'transparent',
                             transition: 'background-color 0.15s ease',
                             '&:hover': {
                               bgcolor: 'action.hover',
@@ -373,26 +369,27 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                                   placement="right"
                                   disableHoverListener={item.subjectName.length < 22}
                                 >
-                                  <Box
+                                  <ButtonBase
+                                    aria-label={`Select ${item.subjectName}`}
+                                    aria-pressed={isSelected}
                                     onClick={() => onSelectSubject(item)}
                                     sx={{
+                                      width: '100%',
                                       display: 'flex',
                                       alignItems: 'center',
+                                      justifyContent: 'flex-start',
                                       gap: 1,
                                       p: 0.75,
                                       cursor: 'pointer',
+                                      textAlign: 'left',
                                       borderRadius: 1.25,
                                       transition: 'all 0.15s ease',
-                                      bgcolor: isSelected
-                                        ? varAlpha(theme.palette.primary.mainChannel, 0.08)
-                                        : 'transparent',
+                                      bgcolor: 'transparent',
                                       borderLeft: isSelected
                                         ? `3px solid ${theme.palette.primary.main}`
                                         : '3px solid transparent',
                                       '&:hover': {
-                                        bgcolor: isSelected
-                                          ? varAlpha(theme.palette.primary.mainChannel, 0.12)
-                                          : 'action.hover',
+                                        bgcolor: 'action.hover',
                                       },
                                     }}
                                   >
@@ -431,7 +428,7 @@ const SubjectNavigator: React.FC<SubjectNavigatorProps> = ({
                                         sx={{ color: 'primary.main', flexShrink: 0 }}
                                       />
                                     )}
-                                  </Box>
+                                  </ButtonBase>
                                 </CustomTooltip>
                               );
                             })}

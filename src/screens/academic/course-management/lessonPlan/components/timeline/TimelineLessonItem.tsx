@@ -5,8 +5,8 @@ import type { Dayjs } from 'dayjs';
 import React from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import {
   Box,
   Chip,
@@ -19,11 +19,16 @@ import {
 } from '@mui/material';
 
 import { LessonReviewComment } from '../LessonReviewComment';
+import { InlineLessonPlanForm } from './InlineLessonPlanForm';
+import { canEditLessonPlan } from '../../lessonPlanEditability';
 import {
   getLessonStatusConfig,
   isSlotCurrentlyActive,
   calculateSlotDuration,
 } from '../lessonTimelineConfig';
+
+import type { LessonPlanRow } from '../../lessonPlanData';
+import type { LessonFormState } from '../AddLessonPlanModal';
 
 type Props = {
   slot: any;
@@ -33,7 +38,13 @@ type Props = {
   onViewDetails: (plan: any) => void;
   onSubmitDiary: (plan: any) => void;
   onSubmitPlan: (planId: string) => void;
+  onCreateLesson?: (form: LessonFormState, submitAfterSave: boolean) => void | Promise<void>;
   onCreateHomework?: (plan: any) => void;
+  academicYearId?: string;
+  academicYearName?: string;
+  teacherId?: string;
+  teacherName?: string;
+  lessonPlans?: LessonPlanRow[];
   canView?: boolean;
   canManage?: boolean;
 };
@@ -46,11 +57,17 @@ export const TimelineLessonItem: React.FC<Props> = ({
   onViewDetails,
   onSubmitDiary,
   onSubmitPlan,
+  onCreateLesson,
   onCreateHomework,
+  academicYearId,
+  academicYearName,
+  teacherId,
+  teacherName,
+  lessonPlans = [],
   canView = true,
   canManage = true,
 }) => {
-  const theme = useTheme();
+  const inlineCreate = useBoolean();
   const hasPlan = Boolean(slot.lessonPlan);
   const plan = slot.lessonPlan;
 
@@ -73,6 +90,7 @@ export const TimelineLessonItem: React.FC<Props> = ({
           (slot.startTime && slot.endTime ? `${slot.startTime} - ${slot.endTime}` : ''),
       }
     : null;
+  const canEditPlan = normalizedPlan ? canEditLessonPlan(normalizedPlan) : false;
 
   const completionPercentage = Number(
     plan?.plannedCompletionPercentage ?? plan?.actualCompletionPercentage ?? 0
@@ -116,16 +134,20 @@ export const TimelineLessonItem: React.FC<Props> = ({
         p: { xs: 1.25, sm: 1.75 },
         mb: 1.25,
         borderRadius: 1.5,
-        transition: 'all 0.15s ease',
+        transition: (theme) =>
+          theme.transitions.create(['border-color', 'box-shadow'], { duration: 150 }),
         position: 'relative',
-        bgcolor: !hasPlan
-          ? 'background.neutral'
-          : isNow
-            ? (t) => varAlpha(t.vars.palette.info.mainChannel, 0.04)
-            : 'background.paper',
-        border: (t) =>
-          isNow ? `1px solid ${t.palette.info.main}` : `1px solid ${t.palette.divider}`,
-        boxShadow: isNow ? 'var(--shadows-2)' : 'none',
+        bgcolor:
+          !hasPlan && !inlineCreate.value
+            ? 'background.neutral'
+            : isNow
+              ? (t) => varAlpha(t.vars.palette.info.mainChannel, 0.04)
+              : 'background.paper',
+        border: (t) => {
+          if (inlineCreate.value) return `1px solid ${t.palette.primary.main}`;
+          return isNow ? `1px solid ${t.palette.info.main}` : `1px solid ${t.palette.divider}`;
+        },
+        boxShadow: isNow || inlineCreate.value ? 'var(--shadows-2)' : 'none',
         '&:hover': {
           borderColor: isNow ? 'info.main' : 'primary.main',
           boxShadow: 'var(--shadows-2)',
@@ -396,17 +418,18 @@ export const TimelineLessonItem: React.FC<Props> = ({
                   >
                     View
                   </Button>
-                  <Button
-                    data-view-action="true"
-                    variant="outlined"
-                    size="small"
-                    color="inherit"
-                    startIcon={<Iconify icon="solar:pen-bold" width={15} />}
-                    onClick={() => onEditLesson(normalizedPlan)}
-                    sx={actionButtonSx}
-                  >
-                    Edit
-                  </Button>
+                  {canEditPlan && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      color="inherit"
+                      startIcon={<Iconify icon="solar:pen-bold" width={15} />}
+                      onClick={() => onEditLesson(normalizedPlan)}
+                      sx={actionButtonSx}
+                    >
+                      Edit
+                    </Button>
+                  )}
                 </>
               )}
 
@@ -434,17 +457,6 @@ export const TimelineLessonItem: React.FC<Props> = ({
                     sx={actionButtonSx}
                   >
                     View
-                  </Button>
-                  <Button
-                    data-view-action="true"
-                    variant="outlined"
-                    size="small"
-                    color="inherit"
-                    startIcon={<Iconify icon="solar:pen-bold" width={15} />}
-                    onClick={() => onEditLesson(normalizedPlan)}
-                    sx={actionButtonSx}
-                  >
-                    Edit
                   </Button>
                   {onCreateHomework && (
                     <Button
@@ -517,11 +529,22 @@ export const TimelineLessonItem: React.FC<Props> = ({
                     variant="outlined"
                     size="small"
                     color="inherit"
-                    startIcon={<Iconify icon="solar:refresh-bold" width={15} />}
-                    onClick={() => onEditLesson(normalizedPlan)}
+                    startIcon={<Iconify icon="mdi:plus" width={15} />}
+                    onClick={() =>
+                      onAddLesson(selectedDate, {
+                        timetableSlotId: slot.timetableSlotId,
+                        period: slot.periodName,
+                        className: slot.standardName,
+                        divisionName: slot.divisionName,
+                        subjectName: slot.subjectName,
+                        standardId: slot.standardId,
+                        divisionId: slot.divisionId,
+                        subjectId: slot.subjectId,
+                      })
+                    }
                     sx={actionButtonSx}
                   >
-                    Edit
+                    Create New Plan
                   </Button>
                 </>
               )}
@@ -578,28 +601,36 @@ export const TimelineLessonItem: React.FC<Props> = ({
                   >
                     View
                   </Button>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    color="inherit"
-                    startIcon={<Iconify icon="solar:pen-bold" width={15} />}
-                    onClick={() => onEditLesson(normalizedPlan)}
-                    sx={actionButtonSx}
-                  >
-                    Edit
-                  </Button>
+                  {canEditPlan && (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      color="inherit"
+                      startIcon={<Iconify icon="solar:pen-bold" width={15} />}
+                      onClick={() => onEditLesson(normalizedPlan)}
+                      sx={actionButtonSx}
+                    >
+                      Edit
+                    </Button>
+                  )}
                 </>
               )}
             </>
           ) : (
             /* Unplanned Slot State (NO "No Plan" badge, just clean Create Plan button) */
-            canManage && (
+            canManage &&
+            !inlineCreate.value && (
               <Button
                 size="small"
                 startIcon={<Iconify icon="mdi:plus" width={15} />}
                 disabled={slot.isPlanCreationBlocked}
                 variant="contained"
-                onClick={() =>
+                aria-expanded={false}
+                onClick={() => {
+                  if (onCreateLesson) {
+                    inlineCreate.onTrue();
+                    return;
+                  }
                   onAddLesson(selectedDate, {
                     timetableSlotId: slot.timetableSlotId,
                     period: slot.periodName,
@@ -609,8 +640,9 @@ export const TimelineLessonItem: React.FC<Props> = ({
                     standardId: slot.standardId,
                     divisionId: slot.divisionId,
                     subjectId: slot.subjectId,
-                  })
-                }
+                  });
+                }}
+                sx={{ minHeight: 44 }}
               >
                 {slot.isPlanCreationBlocked ? 'On Leave' : 'Create Plan'}
               </Button>
@@ -618,6 +650,29 @@ export const TimelineLessonItem: React.FC<Props> = ({
           )}
         </Stack>
       </Box>
+
+      {!hasPlan && inlineCreate.value && onCreateLesson && (
+        <InlineLessonPlanForm
+          context={{
+            academicYearId,
+            academicYearName,
+            teacherId,
+            teacherName,
+            timetableSlotId: slot.timetableSlotId,
+            periodName: slot.periodName,
+            standardId: slot.standardId,
+            standardName: slot.standardName,
+            divisionId: slot.divisionId,
+            divisionName: slot.divisionName,
+            subjectId: slot.subjectId,
+            subjectName: slot.subjectName,
+          }}
+          selectedDate={selectedDate}
+          lessonPlans={lessonPlans}
+          onCancel={inlineCreate.onFalse}
+          onSave={onCreateLesson}
+        />
+      )}
     </Paper>
   );
 };

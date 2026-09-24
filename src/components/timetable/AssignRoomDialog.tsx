@@ -3,18 +3,19 @@ import { GlobalIcons } from 'src/utils/icons';
 import React, { useState, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetDivisionByIdQuery } from 'src/redux/division/divisionApi';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
+import { GroupedRoomSelector } from 'src/components/room-selection/GroupedRoomSelector';
+import { sortRoomOptions, createRoomOption } from 'src/components/room-selection/roomOptions';
 import { useGetRoomAvailabilityQuery } from 'src/redux/academicAPI/timetableApi/roomAvailabilityApi';
 import {
   Box,
   Alert,
   Button,
-  Checkbox,
   Divider,
-  TextField,
+  Checkbox,
   IconButton,
   Typography,
-  Autocomplete,
   DialogContent,
   DialogActions,
   FormControlLabel,
@@ -23,8 +24,10 @@ import {
 import { Iconify } from '../iconify';
 import CustomDialog from '../customDialog';
 import CustomTooltip from '../custom-tooltip';
+import { addDivisionRoomDefault, createSavedRoomSelections } from './roomAssignmentDefaults';
 
 import type { TimeSlot, DayOfWeek, SlotSubject } from './types';
+import type { RoomOption } from '../room-selection/roomOptions';
 import type { TimetableValidationIssue } from './timetableValidationIssues';
 
 // ---------------------------------------------------------------------------
@@ -105,9 +108,21 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
   onSave,
 }) => {
   const dispatch = useDispatch();
-  const { data: rooms } = useQueryAndMutation({
+  const {
+    data: rooms,
+    isLoading: roomsLoading,
+    isFetching: roomsFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoomsQuery,
+  });
+  const {
+    data: division,
+    isLoading: divisionLoading,
+    isFetching: divisionFetching,
+  } = useGetDivisionByIdQuery(divisionId, {
+    skip: !open || !divisionId,
+    refetchOnMountOrArgChange: true,
   });
 
   const currentSlot = open ? slots[open.day]?.[open.slotIndex] : null;
@@ -156,7 +171,11 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
     };
   }, [open, currentSlot, queryDate, standardId, divisionId]);
 
-  const { data: availableRoomsData } = useQueryAndMutation({
+  const {
+    data: availableRoomsData,
+    isLoading: availabilityLoading,
+    isFetching: availabilityFetching,
+  } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetRoomAvailabilityQuery,
     params: queryParams,
@@ -172,54 +191,57 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
   const [applyToAllSlots, setApplyToAllSlots] = useState<Record<string, boolean>>({});
   const [applyToAllSubjectSlots, setApplyToAllSubjectSlots] = useState<Record<string, boolean>>({});
 
-  // Reset selections when a new assignment is opened
-  const prevRef = React.useRef<RoomAssignment | null>(null);
-  if (open !== prevRef.current) {
-    prevRef.current = open;
-    if (open) {
-      const initial: Record<string, string> = {};
-      splitPipeSubjects(open.subjects).forEach((sub) => {
-        if (sub.roomId) initial[sub.subjectId] = sub.roomId;
-      });
-      setSelectedIds(initial);
-      setErrors({});
-      setConflictIssues([]);
-      setApplyToAllSlots({});
-      setApplyToAllSubjectSlots({});
-      dispatch(setIsChanges(false));
-    }
-  }
+  React.useEffect(() => {
+    if (!open) return;
+
+    setSelectedIds(createSavedRoomSelections(splitPipeSubjects(open.subjects)));
+    setErrors({});
+    setConflictIssues([]);
+    setApplyToAllSlots({});
+    setApplyToAllSubjectSlots({});
+    dispatch(setIsChanges(false));
+  }, [dispatch, open]);
 
   const handleCloseDialog = useCallback(() => {
     dispatch(setIsChanges(false));
     onClose();
   }, [dispatch, onClose]);
 
-  const roomList: any[] = React.useMemo(() => {
+  const roomList: RoomOption[] = React.useMemo(() => {
     if (availableRoomsData && availableRoomsData.length > 0) {
-      return availableRoomsData.map((r: any) => ({
-        id: r.roomId,
-        roomName: r.roomName,
-        buildingName: r.buildingName,
-        floorName: r.floorName,
-        status: r.status,
-      }));
+      return sortRoomOptions(availableRoomsData.map((room: any) => createRoomOption(room)));
     }
-    return (rooms?.items ?? []).map((r: any) => ({
-      id: r.id,
-      roomName: r.roomName,
-      buildingName: r.buildingName,
-      floorName: r.floorName,
-      status: 'available',
-    }));
+    return sortRoomOptions(
+      (rooms?.items ?? []).map((room: any) => createRoomOption({ ...room, status: 'available' }))
+    );
   }, [availableRoomsData, rooms]);
+
+  const isRoomsLoading =
+    roomsLoading ||
+    roomsFetching ||
+    availabilityLoading ||
+    availabilityFetching ||
+    divisionLoading ||
+    divisionFetching;
+
+  React.useEffect(() => {
+    if (!open || !division?.roomId || !roomList.some((room) => room.id === division.roomId)) {
+      return;
+    }
+
+    const subjects = splitPipeSubjects(open.subjects);
+    setSelectedIds((current) => addDivisionRoomDefault(current, subjects, division.roomId));
+  }, [division?.roomId, open, roomList]);
 
   const splitSubjects = open ? splitPipeSubjects(open.subjects) : [];
 
-  const handleChange = useCallback((subjectId: string, value: any) => {
-    dispatch(setIsChanges(true));
-    setSelectedIds((prev) => ({ ...prev, [subjectId]: value?.id ?? '' }));
-  }, [dispatch]);
+  const handleChange = useCallback(
+    (subjectId: string, value: RoomOption | null) => {
+      dispatch(setIsChanges(true));
+      setSelectedIds((prev) => ({ ...prev, [subjectId]: value?.id ?? '' }));
+    },
+    [dispatch]
+  );
 
   const handleSave = async () => {
     if (!open) return;
@@ -274,7 +296,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
       return {
         ...sub,
         roomId: selectedId || undefined,
-        roomName: selectedItem?.roomName || selectedItem?.name || undefined,
+        roomName: selectedItem?.roomName || undefined,
       };
     });
 
@@ -298,7 +320,8 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
           if (matched) {
             fieldErrors[sub.subjectId] = matched.description || matched.title;
           } else {
-            fieldErrors[sub.subjectId] = issues[0]?.description || issues[0]?.title || 'Room conflict detected';
+            fieldErrors[sub.subjectId] =
+              issues[0]?.description || issues[0]?.title || 'Room conflict detected';
           }
         });
         setErrors(fieldErrors);
@@ -318,7 +341,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
       handleClose={handleCloseDialog}
       maxWidth="xs"
       fullWidth
-      hasForm={true}
+      hasForm
       title={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h6" fontWeight={700}>
@@ -368,9 +391,9 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
                 <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
                   For {sub.name} :
                 </Typography>
-                <Autocomplete
-                  fullWidth
-                  size="small"
+                <GroupedRoomSelector
+                  label="Select Room *"
+                  loading={isRoomsLoading}
                   options={roomList.filter((room) => {
                     const otherSelectedRoomIds = Object.entries(selectedIds)
                       .filter(([subjectId]) => subjectId !== sub.subjectId)
@@ -381,29 +404,17 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
                     }
                     return room.status === 'available' || selectedIds[sub.subjectId] === room.id;
                   })}
-                  getOptionLabel={(option: any) =>
-                    `${option.buildingName} - ${option.floorName} - ${option?.roomName}` || ''
-                  }
                   value={roomList.find((r) => r.id === selectedIds[sub.subjectId]) ?? null}
-                  isOptionEqualToValue={(option, value) => option?.id === value?.id}
-                  onChange={(_, value) => {
-                    handleChange(sub.subjectId, value);
+                  error={!!errors[sub.subjectId]}
+                  helperText={errors[sub.subjectId]}
+                  onChange={(value) => {
+                    handleChange(sub.subjectId, value as RoomOption | null);
                     setErrors((prev) => {
                       const e = { ...prev };
                       delete e[sub.subjectId];
                       return e;
                     });
                   }}
-                  renderInput={(params) => (
-                    <CustomTooltip title="Building-Floor-Room" arrow placement="top-start">
-                      <TextField
-                        {...params}
-                        label="Select Room *"
-                        error={!!errors[sub.subjectId]}
-                        helperText={errors[sub.subjectId]}
-                      />
-                    </CustomTooltip>
-                  )}
                 />
                 <Box sx={{ display: 'flex', flexDirection: 'column', mt: 1.5, gap: 0.5 }}>
                   <FormControlLabel

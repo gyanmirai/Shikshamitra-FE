@@ -3,12 +3,19 @@ import type {
   AdmissionApplicationStatus,
 } from 'src/redux/student/admissions/admission-applications-api';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { LoadingButton } from 'src/components/loading-button';
-import { Alert, Stack, Button, Typography } from '@mui/material';
+import { Box, Stack, Button, Divider, Typography } from '@mui/material';
 
-import { isFormStage, getStageGuidance, getStageActionLabel } from './application-progress-model';
+import {
+  isFormStage,
+  getStageGuidance,
+  getStageStatusColor,
+  getStageStatusLabel,
+  getStageActionLabel,
+} from './application-progress-model';
 
 type Props = {
   stage: AdmissionApplicationStage;
@@ -19,14 +26,12 @@ type Props = {
   canComplete: boolean;
   canRetryFormHandoff: boolean;
   canSkip: boolean;
-  canOverride: boolean;
-  hasAlternativeRoutes: boolean;
   advancing: boolean;
   retryingFormHandoff: boolean;
   onAdvance: () => void;
   onRetryFormHandoff: () => void;
   onSkip: () => void;
-  onOverride: () => void;
+  onReviewForm: () => void;
 };
 
 export function ApplicationCurrentTask({
@@ -38,104 +43,125 @@ export function ApplicationCurrentTask({
   canComplete,
   canRetryFormHandoff,
   canSkip,
-  canOverride,
-  hasAlternativeRoutes,
   advancing,
   retryingFormHandoff,
   onAdvance,
   onRetryFormHandoff,
   onSkip,
-  onOverride,
+  onReviewForm,
 }: Props) {
-  const showActions =
-    canComplete || canRetryFormHandoff || canSkip || canOverride || awaitingDecision;
+  const showActions = canComplete || canRetryFormHandoff || canSkip || awaitingDecision;
 
   return (
-    <Alert
-      severity={awaitingDecision ? 'warning' : 'info'}
-      icon={<Iconify icon={awaitingDecision ? 'mdi:gavel' : 'mdi:arrow-right-circle'} />}
-      sx={{ mt: 2, alignItems: 'flex-start' }}
-    >
-      <Typography variant="overline" color="text.secondary">
-        Current task
-      </Typography>
-      <Typography variant="subtitle1" fontWeight={700}>
-        {stage.name}
-      </Typography>
-      <Typography variant="body2">
-        {getStageGuidance(stage, applicationStatus, nextRequiredAction)}
-      </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-        Entered {fDateTime(stage.enteredAt) || 'time not recorded'}
-      </Typography>
+    <Box component="section" aria-labelledby="current-application-step-heading">
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ md: 'flex-start' }}
+        spacing={1.5}
+      >
+        <Box sx={{ minWidth: 0 }}>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+            <Typography
+              id="current-application-step-heading"
+              variant="h4"
+              sx={{ overflowWrap: 'anywhere' }}
+            >
+              {stage.name}
+            </Typography>
+            <Label color={getStageStatusColor(stage.status)}>
+              {getStageStatusLabel(stage.status)}
+            </Label>
+          </Stack>
+          <Typography variant="body1" color="text.secondary" sx={{ mt: 0.75 }}>
+            {getStageGuidance(stage, applicationStatus, nextRequiredAction)}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Entered {fDateTime(stage.enteredAt) || 'time not recorded'}
+          </Typography>
+        </Box>
+        <Button
+          size="small"
+          variant="contained"
+          color="inherit"
+          startIcon={<Iconify icon="mdi:file-document-outline" />}
+          onClick={onReviewForm}
+          sx={{
+            display: { xs: 'none', md: 'inline-flex' },
+            minHeight: 44,
+            flexShrink: 0,
+            bgcolor: 'common.black',
+            color: 'common.white',
+            '&:hover': { bgcolor: 'grey.800' },
+          }}
+        >
+          Review application form
+        </Button>
+      </Stack>
+
       {active && showActions && (
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 1.5 }}>
-          {canComplete && (
-            <LoadingButton
-              size="small"
-              variant="contained"
-              loading={advancing}
-              startIcon={<Iconify icon="mdi:check-circle-outline" />}
-              sx={{ minHeight: 44 }}
-              onClick={onAdvance}
-            >
-              {getStageActionLabel(stage)}
-            </LoadingButton>
-          )}
-          {canRetryFormHandoff && (
-            <LoadingButton
-              size="small"
-              variant="contained"
-              loading={retryingFormHandoff}
-              startIcon={<Iconify icon="mdi:arrow-right-circle-outline" />}
-              sx={{ minHeight: 44 }}
-              onClick={onRetryFormHandoff}
-            >
-              Continue admission
-            </LoadingButton>
-          )}
-          {awaitingDecision && (
-            <Button
-              size="small"
-              variant="contained"
-              href="#admission-decision"
-              startIcon={<Iconify icon="mdi:clipboard-check-outline" />}
-              sx={{ minHeight: 44 }}
-            >
-              Review admission decision
-            </Button>
-          )}
-          {canSkip && stage.allowManualSkip && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="warning"
-              startIcon={<Iconify icon="mdi:skip-next-outline" />}
-              sx={{ minHeight: 44 }}
-              onClick={onSkip}
-            >
-              Skip this step
-            </Button>
-          )}
-          {canOverride && hasAlternativeRoutes && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="warning"
-              startIcon={<Iconify icon="mdi:shield-alert-outline" />}
-              sx={{ minHeight: 44 }}
-              onClick={onOverride}
-            >
-              Override route
-            </Button>
-          )}
-        </Stack>
+        <>
+          <Divider sx={{ my: 2 }} />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
+            {canComplete && (
+              <LoadingButton
+                size="small"
+                variant="outlined"
+                color="inherit"
+                loading={advancing}
+                startIcon={<Iconify icon="mdi:check-circle-outline" />}
+                sx={{ minHeight: 44 }}
+                onClick={onAdvance}
+              >
+                {getStageActionLabel(stage)}
+              </LoadingButton>
+            )}
+            {canRetryFormHandoff && (
+              <LoadingButton
+                size="small"
+                variant="outlined"
+                color="inherit"
+                loading={retryingFormHandoff}
+                startIcon={<Iconify icon="mdi:arrow-right-circle-outline" />}
+                sx={{ minHeight: 44 }}
+                onClick={onRetryFormHandoff}
+              >
+                Continue admission
+              </LoadingButton>
+            )}
+            {awaitingDecision && (
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                href="#admission-decision"
+                startIcon={<Iconify icon="mdi:clipboard-check-outline" />}
+                sx={{ minHeight: 44 }}
+              >
+                Review admission decision
+              </Button>
+            )}
+            {canSkip && stage.allowManualSkip && (
+              <Button
+                size="small"
+                variant="outlined"
+                color="warning"
+                startIcon={<Iconify icon="mdi:skip-next-outline" />}
+                sx={{ minHeight: 44 }}
+                onClick={onSkip}
+              >
+                Skip this step
+              </Button>
+            )}
+          </Stack>
+        </>
       )}
+
       {isFormStage(stage) && !canRetryFormHandoff && (
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
           The form automatically advances this journey after a successful submission.
         </Typography>
       )}
-    </Alert>
+    </Box>
   );
 }

@@ -11,11 +11,16 @@ import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { usePatchConcessionTypeStatusMutation } from 'src/redux/finance/concessionType';
-import { Box, Chip, Stack, Switch, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import { Box, Chip, Stack, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 
 import type { IConcessionTypeForm, IConcessionTableProps } from '../type';
 
 const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
+  archived,
+  canView,
+  canEdit,
+  canChangeStatus,
+  canDelete,
   data,
   isLoading,
   addConcessionType,
@@ -101,20 +106,12 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         render(value, row) {
           const concession = row as IConcessionTypeForm;
           return (
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
-                size="small"
-                label={concession.isActive ? 'Active' : 'Inactive'}
-                color={concession.isActive ? 'success' : 'default'}
-                variant="soft"
-              />
-              <Switch
-                size="small"
-                checked={concession.isActive || false}
-                onClick={(event) => event.stopPropagation()}
-                onChange={() => handleOpenStatusConfirm(concession)}
-              />
-            </Stack>
+            <Chip
+              size="small"
+              label={concession.isActive ? 'Active' : 'Archived'}
+              color={concession.isActive ? 'success' : 'default'}
+              variant="soft"
+            />
           );
         },
       },
@@ -131,29 +128,44 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
           const concessionType = row as IConcessionTypeForm;
           return (
             <ThreeDotsActions
-              showViewIcon
+              showViewIcon={canView}
               viewLabel={`View ${concessionType.name}`}
               handleViewClick={() => onView?.(concessionType)}
-              showEditIcon
+              showEditIcon={canEdit && !archived}
               editLabel={`Edit ${concessionType.name}`}
-              showDeleteIcon
+              showDeleteIcon={canDelete && !archived}
               disableDeleteIcon={!canDeleteConcessionType(concessionType)}
               deleteLabel={`Delete ${concessionType.name}`}
               handleEditClick={() => onEdit?.(concessionType)}
               handleDeleteClick={() => onDelete?.(concessionType)}
-              showThreeDots
+              showThreeDots={canView || canChangeStatus}
               moreLabel={`More actions for ${concessionType.name}`}
               actions={({ popover }) => (
                 <MenuList>
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      onVersionHistory?.(concessionType);
-                    }}
-                  >
-                    <Iconify icon="mdi:timeline-clock-outline" />
-                    Version History
-                  </MenuItem>
+                  {canView ? (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        onVersionHistory?.(concessionType);
+                      }}
+                    >
+                      <Iconify icon="mdi:timeline-clock-outline" />
+                      Version History
+                    </MenuItem>
+                  ) : null}
+                  {canChangeStatus ? (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        handleOpenStatusConfirm(concessionType);
+                      }}
+                    >
+                      <Iconify
+                        icon={archived ? 'mdi:archive-arrow-up-outline' : 'mdi:archive-outline'}
+                      />
+                      {archived ? 'Restore' : 'Archive'}
+                    </MenuItem>
+                  ) : null}
                 </MenuList>
               )}
             />
@@ -162,7 +174,17 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [
+      archived,
+      canChangeStatus,
+      canDelete,
+      canEdit,
+      canView,
+      onDelete,
+      onEdit,
+      onVersionHistory,
+      onView,
+    ]
   );
 
   return (
@@ -172,24 +194,26 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         isLoading={isLoading}
         noDataText={
           <>
-            No Concession data found
-            <Box
-              onClick={() => {
-                addConcessionType.onTrue();
-                setEditData(null);
-              }}
-              color="primary.main"
-              fontWeight={600}
-              sx={{
-                '&:hover': {
-                  cursor: 'pointer',
-                  color: 'primary.main',
-                  textDecoration: 'underline',
-                },
-              }}
-            >
-              Add Concession
-            </Box>
+            {archived ? 'No archived concession types.' : 'No concession types found.'}
+            {!archived ? (
+              <Box
+                onClick={() => {
+                  addConcessionType.onTrue();
+                  setEditData(null);
+                }}
+                color="primary.main"
+                fontWeight={600}
+                sx={{
+                  '&:hover': {
+                    cursor: 'pointer',
+                    color: 'primary.main',
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                Add Concession
+              </Box>
+            ) : null}
           </>
         }
         columns={columns}
@@ -207,11 +231,11 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
           setStatusData(null);
           setDeactivationReason('');
         }}
-        title={nextStatus ? 'Activate Concession Type' : 'Deactivate Concession Type'}
+        title={nextStatus ? 'Restore Concession Type' : 'Archive Concession Type'}
         content={
           <Stack spacing={2}>
             <Typography variant="body2">
-              {nextStatus ? 'Activate' : 'Deactivate'}{' '}
+              {nextStatus ? 'Restore' : 'Archive'}{' '}
               <Box component="span" fontWeight="bold" color="text.primary">
                 {statusData?.name}
               </Box>
@@ -223,7 +247,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
                 multiline
                 minRows={2}
                 size="small"
-                label="Deactivation reason"
+                label="Archive reason"
                 value={deactivationReason}
                 onChange={(event) => setDeactivationReason(event.target.value)}
               />
@@ -239,7 +263,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
             onClick={async () => {
               if (!statusData) return;
               if (!nextStatus && !deactivationReason.trim()) {
-                shikshaMitraToast.error({ message: 'Deactivation reason is required' });
+                shikshaMitraToast.error({ message: 'Archive reason is required' });
                 return;
               }
               try {
@@ -252,7 +276,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
-                  message: `Concession Type ${nextStatus ? 'activated' : 'deactivated'} successfully`,
+                  message: `Concession Type ${nextStatus ? 'restored' : 'archived'} successfully`,
                 });
                 statusConfirm.onFalse();
                 setStatusData(null);
@@ -267,7 +291,7 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
               }
             }}
           >
-            {nextStatus ? 'Activate' : 'Deactivate'}
+            {nextStatus ? 'Restore' : 'Archive'}
           </LoadingButton>
         }
       />

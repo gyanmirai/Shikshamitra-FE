@@ -7,7 +7,7 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
-import { GlobalIcons } from 'src/utils/icons';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -15,8 +15,8 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetElectiveGroupUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 import { Box, Alert, Button, TextField, Typography } from '@mui/material';
+import { useGetElectiveGroupUsageQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Setting/Elective-GroupApi';
 
 import ElectiveSubjectTable from './components/electiveSubjectTable';
 import SettingElectiveSubjectForm from './components/electiveSubjectForm';
@@ -24,6 +24,7 @@ import ElectiveGroupUsageDrawer from './components/ElectiveGroupUsageDrawer';
 import { useElectiveSubjectSetting } from './hooks/useElectiveSubjectSetting';
 
 const ElectiveSubjectSetting = () => {
+  const insightsDrawer = useBoolean();
   const { permissions } = useSelector((state: RootState) => state.auth);
 
   // Permission checks
@@ -79,19 +80,34 @@ const ElectiveSubjectSetting = () => {
           { name: 'Elective Group Creation' },
         ]}
         action={
-          canAdd && (
-            <Button
-              sx={{ width: '160px' }}
-              startIcon={<Add />}
-              onClick={() => {
-                setSelected(null);
-                addElectiveGroupDialog.onTrue();
-              }}
-              variant="contained"
-              size="small"
-            >
-              Elective Group
-            </Button>
+          (canView || canAdd) && (
+            <Box display="flex" gap={1} flexWrap="wrap" justifyContent="flex-end">
+              {canView && (
+                <Button
+                  size="small"
+                  variant="outlined"
+                  color="inherit"
+                  startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+                  onClick={insightsDrawer.onTrue}
+                >
+                  View full insights
+                </Button>
+              )}
+              {canAdd && (
+                <Button
+                  sx={{ width: '160px' }}
+                  startIcon={<Add />}
+                  onClick={() => {
+                    setSelected(null);
+                    addElectiveGroupDialog.onTrue();
+                  }}
+                  variant="contained"
+                  size="small"
+                >
+                  Elective Group
+                </Button>
+              )}
+            </Box>
           )
         }
       />
@@ -100,6 +116,8 @@ const ElectiveSubjectSetting = () => {
         canAdd={canAdd}
         canView={canView}
         canDelete={canDelete}
+        insightsOpen={insightsDrawer.value}
+        onCloseInsights={insightsDrawer.onFalse}
         onDelete={(data) => {
           setSelected(data);
           deleteDialog.onTrue();

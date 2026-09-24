@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 
-import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
@@ -41,10 +40,9 @@ export function ExamReviewAccordion({
       sx={{
         position: 'relative',
         borderRadius: 2,
-        boxShadow: (theme) =>
-          theme.customShadows?.card ||
-          '0 0 2px 0 rgba(145, 158, 171, 0.2), 0 12px 24px -4px rgba(145, 158, 171, 0.12)',
-        border: (theme) => `1px solid ${varAlpha(theme.palette.grey['500Channel'], 0.12)}`,
+        boxShadow: 'none',
+        border: '1px solid',
+        borderColor: 'divider',
         overflow: 'hidden',
         mb: 2,
         '&:before': { display: 'none' },
@@ -56,28 +54,26 @@ export function ExamReviewAccordion({
           px: 2,
           py: 1,
           pr: hasHeaderActions ? { xs: 18, sm: 24 } : 2,
-          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.04),
-          borderBottom: (theme) => `1px dashed ${varAlpha(theme.palette.grey['500Channel'], 0.2)}`,
+          bgcolor: 'background.paper',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
           '& .MuiAccordionSummary-content': { my: 0.5, alignItems: 'center' },
         }}
       >
         <Box display="flex" alignItems="center" gap={1} minWidth={0}>
           <Box
             sx={{
-              width: 48,
-              height: 48,
-              borderRadius: '50%',
-              bgcolor: 'common.white',
+              width: 36,
+              height: 36,
+              borderRadius: 1.25,
+              bgcolor: 'action.hover',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: (theme) =>
-                `0 4px 8px ${varAlpha(theme.palette.primary.mainChannel, 0.16)}`,
-              border: (theme) => `1px solid ${varAlpha(theme.palette.primary.mainChannel, 0.1)}`,
               flexShrink: 0,
             }}
           >
-            <Iconify icon={icon} width={24} color="primary.main" />
+            <Iconify icon={icon} width={20} color="text.secondary" />
           </Box>
 
           <Box minWidth={0}>

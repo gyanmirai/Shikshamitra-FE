@@ -447,19 +447,6 @@ export const evidenceTypeOptions = [
   { value: 'Other', label: 'Other' },
 ];
 
-export const lessonPlanTemplates = [
-  { value: 'Lecture', label: 'Lecture-based' },
-  { value: 'ActivityBased', label: 'Activity-based' },
-  { value: 'LabPractical', label: 'Lab Practical' },
-  { value: 'Revision', label: 'Revision Class' },
-  { value: 'TestPreparation', label: 'Test Preparation' },
-  { value: 'ProjectWork', label: 'Project Work' },
-  { value: 'RemedialClass', label: 'Remedial Class' },
-  { value: 'OralPractice', label: 'Oral Practice' },
-  { value: 'Storytelling', label: 'Storytelling' },
-  { value: 'WorksheetPractice', label: 'Worksheet Practice' },
-];
-
 export const quickFilterOptions = [
   { value: 'today', label: 'Today' },
   { value: 'this_week', label: 'This Week' },

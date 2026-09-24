@@ -19,7 +19,7 @@ export const useSubjectCreation = () => {
   const deleteSubjectDialog = useBoolean();
   const [open, setOpen] = useState(false);
   const addSubjectDialog = useBoolean(false);
-  const drawerOpen = useBoolean(false);
+  const bulkImportDialog = useBoolean(false);
   const usageDrawer = useBoolean(false);
   const archiveDialog = useBoolean(false);
 
@@ -68,7 +68,7 @@ export const useSubjectCreation = () => {
     open,
     setOpen,
     addSubjectDialog,
-    drawerOpen,
+    bulkImportDialog,
     usageDrawer,
     archiveDialog,
     isDeleteLoading,

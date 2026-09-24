@@ -3,9 +3,11 @@
 import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
+import { useState } from 'react';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Add, Delete, ContentCopy } from '@mui/icons-material';
+import { Add, Delete, AutoAwesome } from '@mui/icons-material';
 import { toDateOnly, parseDateOnly } from 'src/utils/date-only';
+import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import {
   Box,
   Card,
@@ -14,13 +16,16 @@ import {
   Alert,
   Stack,
   Button,
+  Switch,
   Tooltip,
   TextField,
   IconButton,
   Typography,
+  FormControlLabel,
 } from '@mui/material';
 
 import { SectionCard } from '../ui/SectionCard';
+import { InstallmentTemplateDialog } from '../InstallmentTemplateDialog';
 
 import type { IPaymentTerm } from '../../type';
 import type { IBoard } from '../../hooks/usePaymentTermForm';
@@ -32,20 +37,14 @@ interface InstallmentSectionProps {
   formik: FormikProps<IPaymentTerm>;
   onAdd: () => void;
   onRemove: (index: number) => void;
-  onDuplicate: (index: number) => void;
   board?: IBoard;
 }
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function InstallmentSection({
-  formik,
-  onAdd,
-  onRemove,
-  onDuplicate,
-  board,
-}: InstallmentSectionProps) {
+export function InstallmentSection({ formik, onAdd, onRemove, board }: InstallmentSectionProps) {
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const allocationTotal = formik.values.installments.reduce(
     (sum, i) => sum + (Number(i.allocationPercentage) || 0),
     0
@@ -72,18 +71,30 @@ export function InstallmentSection({
   return (
     <SectionCard
       title="Installment Schedule"
-      subtitle="Define each installment period, due date, and percentage allocation (must total 100%)."
-      info="Every installment start, end, and due date must fall inside the selected board period. Periods cannot overlap and allocations must total 100%."
+      subtitle="Define each installment's start and end dates, due date, and percentage allocation (must total 100%)."
+      info="Every installment start date, end date, and due date must fall inside the selected board period. Installments cannot overlap and allocations must total 100%."
       action={
-        <Button
-          size="small"
-          variant="contained"
-          startIcon={<Add />}
-          onClick={onAdd}
-          sx={{ flexShrink: 0 }}
-        >
-          Add Installment
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant="outlined"
+            startIcon={<AutoAwesome />}
+            onClick={() => setTemplateDialogOpen(true)}
+            disabled={!formik.values.boardId}
+            sx={{ flexShrink: 0 }}
+          >
+            Apply Template
+          </Button>
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<Add />}
+            onClick={onAdd}
+            sx={{ flexShrink: 0 }}
+          >
+            Add Installment
+          </Button>
+        </Stack>
       }
     >
       {board?.startDate && board?.endDate && (
@@ -92,6 +103,39 @@ export function InstallmentSection({
           {dayjs(board.endDate).format('DD/MM/YYYY')} for {board.name}.
         </Alert>
       )}
+
+      <Card variant="outlined" sx={{ p: 1.5, mb: 2, borderRadius: 1.5 }}>
+        <FormControlLabel
+          sx={{ m: 0, alignItems: 'flex-start' }}
+          control={
+            <Switch
+              size="small"
+              checked={formik.values.invoiceCreationEnabled}
+              onChange={(event) => {
+                const enabled = event.target.checked;
+                formik.setValues({
+                  ...formik.values,
+                  invoiceCreationEnabled: enabled,
+                  installments: formik.values.installments.map((installment) => ({
+                    ...installment,
+                    demandEnabled: enabled,
+                  })),
+                });
+              }}
+            />
+          }
+          label={
+            <Box>
+              <Typography variant="body2" fontWeight={600}>
+                Create invoices for all installments
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                One setting controls invoice creation for the complete payment schedule.
+              </Typography>
+            </Box>
+          }
+        />
+      </Card>
 
       {/* Array-level error */}
       {formik.touched.installments && typeof formik.errors.installments === 'string' && (
@@ -157,43 +201,19 @@ export function InstallmentSection({
                 borderRadius: 1.5,
               }}
             >
-              {/* Card header */}
-              <Box
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  mb: 2,
-                }}
-              >
-                <Stack direction="row" spacing={1} alignItems="center">
+              <Grid container spacing={2}>
+                {/* Sequence */}
+                <Grid size={{ xs: 2, sm: 1 }} sx={{ pt: 1 }}>
                   <Chip
-                    label={`#${index + 1}`}
+                    label={index + 1}
                     size="small"
                     color="primary"
                     sx={{ height: 22, fontSize: '0.68rem', fontWeight: 700, borderRadius: 1 }}
                   />
-                  <Typography variant="body2" fontWeight={600} color="text.primary">
-                    {inst.installmentName || 'Unnamed Installment'}
-                  </Typography>
-                </Stack>
-                <Stack direction="row" spacing={0.5}>
-                  <Tooltip title="Duplicate" arrow>
-                    <IconButton size="small" onClick={() => onDuplicate(index)}>
-                      <ContentCopy sx={{ fontSize: 15 }} />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete installment" arrow>
-                    <IconButton size="small" color="error" onClick={() => onRemove(index)}>
-                      <Delete sx={{ fontSize: 15 }} />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
-              </Box>
+                </Grid>
 
-              <Grid container spacing={2}>
                 {/* Installment Name */}
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 10, sm: 4 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -207,77 +227,74 @@ export function InstallmentSection({
                   />
                 </Grid>
 
-                {/* Start Date */}
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <DatePicker
-                    label="Start Date *"
-                    format="DD/MM/YYYY"
-                    value={parseDateOnly(inst.startDate)}
+                {/* Installment start and end dates */}
+                <Grid size={{ xs: 10, sm: 6 }}>
+                  <CustomDateRangePicker
+                    label="Installment Start–End Date *"
+                    title="Select Installment Start–End Date"
+                    value={[parseDateOnly(inst.startDate), parseDateOnly(inst.endDate)]}
+                    dateFormat="DD/MM/YYYY"
                     minDate={parseDateOnly(board?.startDate) ?? undefined}
                     maxDate={parseDateOnly(board?.endDate) ?? undefined}
-                    onChange={(date) =>
-                      formik.setFieldValue(`${prefix}.startDate`, toDateOnly(date) || null)
-                    }
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: Boolean(errObj?.startDate),
-                        helperText: errObj?.startDate,
-                      },
+                    onChange={([startDate, endDate]) => {
+                      formik.setValues({
+                        ...formik.values,
+                        installments: formik.values.installments.map((item, itemIndex) =>
+                          itemIndex === index
+                            ? {
+                                ...item,
+                                startDate: toDateOnly(startDate) || null,
+                                endDate: toDateOnly(endDate) || null,
+                              }
+                            : item
+                        ),
+                      });
                     }}
+                    error={Boolean(errObj?.startDate || errObj?.endDate)}
+                    helperText={errObj?.startDate || errObj?.endDate}
                   />
                 </Grid>
 
-                {/* End Date */}
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <DatePicker
-                    label="End Date *"
-                    format="DD/MM/YYYY"
-                    value={parseDateOnly(inst.endDate)}
-                    minDate={parseDateOnly(board?.startDate) ?? undefined}
-                    maxDate={parseDateOnly(board?.endDate) ?? undefined}
-                    onChange={(date) =>
-                      formik.setFieldValue(`${prefix}.endDate`, toDateOnly(date) || null)
-                    }
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: Boolean(errObj?.endDate),
-                        helperText: errObj?.endDate,
-                      },
-                    }}
-                  />
+                {/* Delete */}
+                <Grid size={{ xs: 2, sm: 1 }} sx={{ pt: 0.5, textAlign: 'right' }}>
+                  <Tooltip title="Delete installment" arrow>
+                    <IconButton size="small" color="error" onClick={() => onRemove(index)}>
+                      <Delete sx={{ fontSize: 15 }} />
+                    </IconButton>
+                  </Tooltip>
                 </Grid>
 
-                {/* Bill generation date: entered only for the specific-date rule. */}
-                <Grid size={{ xs: 12, sm: 4 }}>
-                  <DatePicker
-                    label={usesSpecificDate ? 'Bill Generation Date *' : 'Bill Generation Date'}
-                    format="DD/MM/YYYY"
-                    value={getBillGenerationDate(inst)}
-                    onChange={(date) =>
-                      formik.setFieldValue(`${prefix}.demandDate`, toDateOnly(date) || null)
-                    }
-                    disabled={!usesSpecificDate}
-                    slotProps={{
-                      textField: {
-                        fullWidth: true,
-                        size: 'small',
-                        error: Boolean(errObj?.demandDate),
-                        helperText:
-                          errObj?.demandDate ||
-                          (!usesSpecificDate ? 'Calculated from the billing schedule' : undefined),
-                      },
-                    }}
-                  />
-                </Grid>
+                {/* Invoice date: entered only for the specific-date rule. */}
+                {formik.values.invoiceCreationEnabled && (
+                  <Grid size={{ xs: 12, sm: 4 }}>
+                    <DatePicker
+                      label={usesSpecificDate ? 'Invoice Date *' : 'Invoice Date'}
+                      format="DD/MM/YYYY"
+                      value={getBillGenerationDate(inst)}
+                      onChange={(date) =>
+                        formik.setFieldValue(`${prefix}.demandDate`, toDateOnly(date) || null)
+                      }
+                      disabled={!usesSpecificDate}
+                      slotProps={{
+                        textField: {
+                          fullWidth: true,
+                          size: 'small',
+                          error: Boolean(errObj?.demandDate),
+                          helperText:
+                            errObj?.demandDate ||
+                            (!usesSpecificDate
+                              ? 'Calculated from the invoice date rule'
+                              : undefined),
+                        },
+                      }}
+                    />
+                  </Grid>
+                )}
 
                 {/* Due Date */}
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 12, sm: formik.values.invoiceCreationEnabled ? 4 : 6 }}>
                   <DatePicker
-                    label="Due Date *"
+                    label="Payment Due Date *"
                     format="DD/MM/YYYY"
                     value={parseDateOnly(inst.dueDate)}
                     minDate={parseDateOnly(board?.startDate) ?? undefined}
@@ -297,7 +314,7 @@ export function InstallmentSection({
                 </Grid>
 
                 {/* Allocation % */}
-                <Grid size={{ xs: 12, sm: 4 }}>
+                <Grid size={{ xs: 12, sm: formik.values.invoiceCreationEnabled ? 4 : 6 }}>
                   <TextField
                     fullWidth
                     size="small"
@@ -318,21 +335,24 @@ export function InstallmentSection({
         })}
       </Stack>
 
-      {/* Add another button */}
-      {formik.values.installments.length > 0 && (
-        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-          <Button
-            size="small"
-            startIcon={<Add />}
-            onClick={onAdd}
-            color="primary"
-            sx={{ borderStyle: 'dashed' }}
-            variant="outlined"
-          >
-            Add Another Installment
-          </Button>
-        </Box>
-      )}
+      <InstallmentTemplateDialog
+        open={templateDialogOpen}
+        boardId={formik.values.boardId}
+        existingInstallmentCount={formik.values.installments.length}
+        demandGenerationRule={formik.values.demandGenerationRule}
+        demandOffsetDays={formik.values.demandOffsetDays}
+        onClose={() => setTemplateDialogOpen(false)}
+        onApply={(installments) => {
+          formik.setFieldValue(
+            'installments',
+            installments.map((installment) => ({
+              ...installment,
+              demandEnabled: formik.values.invoiceCreationEnabled,
+            }))
+          );
+          formik.setFieldTouched('installments', true, false);
+        }}
+      />
     </SectionCard>
   );
 }

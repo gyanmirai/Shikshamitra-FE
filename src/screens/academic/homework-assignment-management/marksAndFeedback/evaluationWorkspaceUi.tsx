@@ -9,7 +9,7 @@ import { Stack, Button, IconButton } from '@mui/material';
 import {
   type ITimetableSummaryCard,
   TimetableSettingsSummaryCards,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
+} from 'src/screens/academic/components/AcademicSummaryInsights';
 
 type Summary = {
   totalStudents?: number;

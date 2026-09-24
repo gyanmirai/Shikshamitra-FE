@@ -69,5 +69,7 @@ export interface Division {
   lastModifierId: string;
   name: string;
   strength: number;
+  roomId?: string | null;
+  roomNumber?: string | null;
   standardId: string;
 }

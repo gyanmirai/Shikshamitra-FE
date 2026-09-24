@@ -5,8 +5,8 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { useMemo } from 'react';
 import { Box, Chip } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { TIMETABLE_STATUS_LABEL } from 'src/utils/timetable-capacity';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { TimetableStatusChip } from 'src/components/timetable-status-chip/TimetableStatusChip';
 
 import type { ISubjectFormValues } from '../type';
@@ -140,7 +140,7 @@ export function useWeeklyLectureColumns({
         sticky: true,
         stickyPosition: 'right',
         render: (_value, row) => {
-          const status = (row as ISubjectFormValues).status;
+          const {status} = (row as ISubjectFormValues);
           return status != null ? <TimetableStatusChip status={status} /> : '—';
         },
       },
@@ -154,12 +154,19 @@ export function useWeeklyLectureColumns({
         isSort: false,
         isFilter: false,
         render: (_value, row) => (
-          <ThreeDotsActions
-            // showViewIcon
-            // handleViewClick={() => onView(row as ISubjectFormValues)}
-            showEditIcon={canAdd}
-            showThreeDots={false}
-            handleEditClick={() => onEdit(row as ISubjectFormValues)}
+          <AdaptiveThreeDotsActions
+            actions={
+              canAdd
+                ? [
+                    {
+                      id: 'edit',
+                      label: 'Edit weekly lectures',
+                      icon: 'solar:pen-bold',
+                      onClick: () => onEdit(row as ISubjectFormValues),
+                    },
+                  ]
+                : []
+            }
             placement="right-top"
           />
         ),

@@ -11,6 +11,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
+import { ADMISSION_WORKFLOW_TEMPLATES } from '../workflow-template';
 import { WorkflowStandardTemplateDialog } from './components/workflow-standard-template-dialog';
 
 [
@@ -22,6 +23,10 @@ import { WorkflowStandardTemplateDialog } from './components/workflow-standard-t
   'lightning-bolt-outline',
   'clipboard-text-outline',
   'email-seal-outline',
+  'radiobox-blank',
+  'check-circle',
+  'eye-outline',
+  'alert-outline',
 ].forEach((name) => {
   addIcon(`mdi:${name}`, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 });
@@ -71,10 +76,12 @@ describe('WorkflowStandardTemplateDialog', () => {
     const user = userEvent.setup();
     const props = renderDialog([form(0)]);
 
-    expect(screen.getByText(/1 draft form is listed in the selector/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply template' })).toBeDisabled();
+    expect(
+      screen.getByText(/1 draft form is available, but must be published/i)
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Replace journey' })).toBeDisabled();
 
-    await user.click(screen.getByLabelText('Application form *'));
+    await user.click(screen.getByLabelText('Published application form *'));
     const option = await screen.findByRole('option', {
       name: /New registration · Version 1 · Draft/i,
     });
@@ -89,13 +96,16 @@ describe('WorkflowStandardTemplateDialog', () => {
     const user = userEvent.setup();
     const props = renderDialog([form(0), form(1)]);
 
-    const selector = screen.getByLabelText('Application form *');
+    const selector = screen.getByLabelText('Published application form *');
     expect(selector).toHaveTextContent('Published registration · Version 1 · Published');
 
     expect(screen.getByRole('radio', { name: /Standard admission/ })).toBeChecked();
-    expect(screen.getAllByText('5 stages')).not.toHaveLength(0);
+    expect(screen.getByText('Recommended')).toBeInTheDocument();
+    expect(screen.getByText('Preview', { selector: 'button' })).toBeInTheDocument();
+    const standard = ADMISSION_WORKFLOW_TEMPLATES.find((template) => template.id === 'standard')!;
+    expect(screen.getAllByText(`${standard.stages.length} stages`)).not.toHaveLength(0);
 
-    await user.click(screen.getByRole('button', { name: 'Apply template' }));
+    await user.click(screen.getByRole('button', { name: 'Replace journey' }));
 
     await waitFor(() => expect(props.onApply).toHaveBeenCalledWith('standard', 'published-form'));
     expect(props.onClose).toHaveBeenCalledOnce();
@@ -108,10 +118,13 @@ describe('WorkflowStandardTemplateDialog', () => {
     await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
 
     expect(screen.getByLabelText('Assessment-based admission stages')).toBeInTheDocument();
-    expect(screen.getAllByText('7 stages')).not.toHaveLength(0);
+    const assessment = ADMISSION_WORKFLOW_TEMPLATES.find(
+      (template) => template.id === 'assessment'
+    )!;
+    expect(screen.getAllByText(`${assessment.stages.length} stages`)).not.toHaveLength(0);
     expect(screen.getByText('Entrance assessment completed')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Apply template' }));
+    await user.click(screen.getByRole('button', { name: 'Replace journey' }));
     await waitFor(() => expect(props.onApply).toHaveBeenCalledWith('assessment', 'published-form'));
   });
 
@@ -120,7 +133,7 @@ describe('WorkflowStandardTemplateDialog', () => {
     const props = renderDialog([], { loadError: true });
 
     expect(screen.getByText(/Application forms could not be loaded/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Apply template' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Replace journey' })).toBeDisabled();
 
     await user.click(screen.getByRole('button', { name: 'Retry' }));
     expect(props.onRetry).toHaveBeenCalledOnce();

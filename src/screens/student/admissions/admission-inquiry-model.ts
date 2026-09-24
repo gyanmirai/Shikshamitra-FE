@@ -12,6 +12,8 @@ import type {
 
 import * as Yup from 'yup';
 
+import { getDynamicAdmissionValidationErrors } from './admission-form-validation';
+
 export type AdmissionInquiryFormValues = {
   boardId: string;
   mediumId: string;
@@ -330,11 +332,27 @@ export function validateAdmissionInquiry(
   policy?: AdmissionInquiryPolicy | null,
   offering?: AdmissionOfferingListItem
 ) {
-  const fieldErrors = Object.fromEntries(
-    fields
-      .filter((field) => field.required && !values.fields[field.code]?.trim())
-      .map((field) => [field.code, `${field.label} is required`])
+  const fieldErrors = getDynamicAdmissionValidationErrors(
+    { sections: [{ fields }] },
+    values.fields
   );
+  fields.forEach((field) => {
+    if (field.required && !values.fields[field.code]?.trim() && fieldErrors[field.code]) {
+      fieldErrors[field.code] = `${field.label} is required`;
+    }
+  });
+  const guardianPhoneField = fields.find(
+    (field) =>
+      equalsIgnoreCase(field.bindingKey, 'Guardian.Mobile') ||
+      legacyIdentityFieldCodes['Guardian.Mobile'].some((code) =>
+        equalsIgnoreCase(field.code, code)
+      )
+  );
+  const guardianPhone = boundValue(values, fields, 'Guardian.Mobile', 'guardianPhone');
+  if (guardianPhoneField && guardianPhone && !/^[6-9]\d{9}$/.test(guardianPhone)) {
+    fieldErrors[guardianPhoneField.code] =
+      'Guardian mobile number must be a valid 10-digit Indian mobile number.';
+  }
   return {
     ...(!values.boardId ? { boardId: 'Board is required' } : {}),
     ...(!values.mediumId ? { mediumId: 'Medium is required' } : {}),

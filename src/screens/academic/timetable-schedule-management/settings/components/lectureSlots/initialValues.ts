@@ -9,7 +9,15 @@ export const getInitialValues = (classes: string, editData?: any) => {
         ? editData.slotConfigurations.map((config: any, configIndex: number) => ({
             id: config.id || configIndex,
             totalSlots: config.totalSlots || '',
-            weekRange: config.weekRange || [0, 5],
+            weekRange:
+              config.activeDays?.length > 0
+                ? config.activeDays
+                : config.weekRange?.length >= 2
+                  ? Array.from(
+                      { length: config.weekRange[1] - config.weekRange[0] + 1 },
+                      (_unused, dayOffset) => config.weekRange[0] + dayOffset
+                    )
+                  : [0, 1, 2, 3, 4, 5],
             timeSlots: config.timeSlots
               ? config.timeSlots.map((slot: any, index: number) => ({
                   id: slot.id || index,
@@ -30,7 +38,7 @@ export const getInitialValues = (classes: string, editData?: any) => {
             {
               id: '1',
               totalSlots: editData.totalSlots || '',
-              weekRange: [0, 5],
+              weekRange: [0, 1, 2, 3, 4, 5],
               timeSlots: editData.timeSlots
                 ? editData.timeSlots.map((slot: any, index: number) => ({
                     id: `1-${index}`,

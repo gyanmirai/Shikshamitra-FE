@@ -12,7 +12,6 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useSelector, useDispatch } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
-import { CustomTabs } from 'src/components/custom-tabs';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -25,25 +24,21 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetMyEmployeesUnderManagerQuery } from 'src/redux/hr/employeeApi';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academic-date-picker';
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import { useUpdateHomeworkStatusMutation } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/homework-api';
 import {
   Box,
-  Tab,
   Stack,
   Alert,
   Paper,
   Button,
   Divider,
-  Tooltip,
   TextField,
-  Accordion,
   Typography,
   IconButton,
   LinearProgress,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
 import {
   useGetLessonPlansQuery,
@@ -68,14 +63,17 @@ import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import { reconcileTimelineSlots } from './reconcileTimelineSlots';
 import { canRoleReviewLessonPlans } from './lessonPlanReviewAccess';
+import { getLessonPlanTableActions } from './lessonPlanTableActions';
 import { useReviewQueueQuery } from './hooks/use-review-queue-query';
-import { ReviewQueueTabLabel } from './components/ReviewQueueTabLabel';
 import AiLessonBuilderDrawer from './components/AiLessonBuilderDrawer';
 import { usePendingReviewCount } from './hooks/use-pending-review-count';
 import LessonDiaryDetailsDrawer from './components/LessonDiaryDetailsDrawer';
+import { LessonPlanNavigationTabs } from './components/LessonPlanNavigationTabs';
+import { canEditLessonPlan, getLessonPlanEditLockMessage } from './lessonPlanEditability';
 import {
   getLessonPlanListQuery,
   getLessonPlanTabQueryState,
+  getLessonPlanTabLoadingState,
   shouldSkipLessonPlanListQuery,
 } from './lessonPlanTabQueries';
 import {
@@ -91,6 +89,7 @@ import {
 
 import type { DiaryFormState } from './components/SubmitDiaryModal';
 import type { LessonFormState } from './components/AddLessonPlanModal';
+import type { LessonPlanTabValue as TabValue } from './components/LessonPlanNavigationTabs';
 import type {
   PlanStatus,
   DiaryStatus,
@@ -245,16 +244,6 @@ const allSubjectOptions = [{ value: 'all', label: 'All Subjects' }, ...subjectOp
 const allChapterOptions = [{ value: 'all', label: 'All Chapters' }, ...chapterOptions];
 const allTeacherOptions = [{ value: 'all', label: 'All Teachers' }, ...teacherOptions];
 
-const TABS = [
-  { value: 'dailyTimeline', label: 'Daily Timeline', icon: 'mdi:clock-outline' },
-  // { value: 'weeklyPlanner', label: 'Weekly Planner', icon: 'mdi:calendar-week-outline' },
-  { value: 'lessonList', label: 'Lesson Plans', icon: 'mdi:book-open-outline' },
-  { value: 'teacherDiary', label: 'Teacher Diary', icon: 'mdi:notebook-edit-outline' },
-  { value: 'reviewQueue', label: 'Review Queue', icon: 'mdi:clipboard-check-outline' },
-] as const;
-
-type TabValue = (typeof TABS)[number]['value'] | 'weeklyPlanner';
-
 const PlanStatusHeaderTooltip = (
   <Box sx={{ p: 1, minWidth: 250 }}>
     <Box
@@ -293,7 +282,7 @@ const PlanStatusHeaderTooltip = (
         Approved :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-        Ready for class execution
+        Locked and ready for class execution
       </Typography>
 
       <Typography
@@ -303,7 +292,7 @@ const PlanStatusHeaderTooltip = (
         Rejected :
       </Typography>
       <Typography variant="caption" sx={{ color: 'text.primary', fontSize: '0.75rem' }}>
-        Returned with feedback
+        Locked; create a new plan
       </Typography>
 
       <Typography
@@ -386,8 +375,8 @@ const DiaryStatusHeaderTooltip = (
 const PLAN_STATUS_DESCRIPTIONS: Record<string, string> = {
   Draft: 'Draft: Saved internally and editable before submission',
   Submitted: 'Submitted: Submitted and awaiting coordinator/HOD approval',
-  Approved: 'Approved: Plan approved and ready for class execution',
-  Rejected: 'Rejected: Returned with feedback for revisions',
+  Approved: 'Approved: Locked and ready for class execution',
+  Rejected: 'Rejected: Locked; create a new lesson plan instead',
   Cancelled: 'Cancelled: Lesson plan is withdrawn or cancelled',
   Pending: 'Pending: Awaiting submission or approval action',
 };
@@ -499,8 +488,6 @@ const LessonPlanScreen = () => {
     }
   );
 
-  const isTimelineBusy = isTimelineLoading || isTimelineFetching;
-
   const isTimelineOwner = useMemo(
     () => !timelineData?.teacherId || timelineData.teacherId === currentTeacherId,
     [timelineData, currentTeacherId]
@@ -544,6 +531,16 @@ const LessonPlanScreen = () => {
       skip: !currentYear?.id || !currentMedium?.id || !activeTabQueries.teacherDiaries,
     }
   );
+
+  const tabLoadingState = getLessonPlanTabLoadingState({
+    timeline: { isLoading: isTimelineLoading, isFetching: isTimelineFetching },
+    lessonPlans: { isLoading: isPlansLoading, isFetching: isPlansFetching },
+    teacherDiaries: { isLoading: isDiariesLoading, isFetching: isDiariesFetching },
+    reviewQueue: {
+      isLoading: reviewQueueQuery.isLoading,
+      isFetching: reviewQueueQuery.isFetching,
+    },
+  });
 
   const { data: homeworkTypeData, isLoading: isHomeworkTypesLoading } = useQueryAndMutation({
     type: 'query',
@@ -706,7 +703,7 @@ const LessonPlanScreen = () => {
     [lessonPlans, selectedDate, timelineData]
   );
 
-  const isReconciledTimelineBusy = isTimelineBusy || isPlansLoading || isPlansFetching;
+  const isReconciledTimelineBusy = tabLoadingState.dailyTimeline;
 
   const diaryEntries = useMemo<TeacherDiaryRow[]>(() => {
     if (!teacherDiaryList) return [];
@@ -1032,10 +1029,16 @@ const LessonPlanScreen = () => {
     setLessonModalOpen(true);
   }, []);
 
+  /**
+   * Memoization Justification:
+   * - This handler is passed to timeline and planner children.
+   * - Its dependencies are stable module functions and React state setters.
+   */
   const openEditLesson = useCallback((plan: LessonPlanRow) => {
-    if (plan.planStatus === 'Approved') {
+    if (!canEditLessonPlan(plan)) {
       setDetailPlan(plan);
       setDetailDrawerOpen(true);
+      shikshaMitraToast.info({ message: getLessonPlanEditLockMessage(plan) });
       return;
     }
     setEditPlan(plan);
@@ -1631,35 +1634,22 @@ const LessonPlanScreen = () => {
               : diary
                 ? 'Edit diary notes'
                 : 'Add diary notes';
+          const actions = getLessonPlanTableActions(plan, {
+            canManageDiary: canAdd && isOwner,
+            canView,
+            hasDiary: Boolean(diary),
+            diaryDisabled: isDiaryDisabled,
+            diaryTooltip: diaryTooltipTitle,
+            onOpenDiary: openDiary,
+            onViewDetails: openDetails,
+          });
 
           return (
-            <Stack direction="row" spacing={1} alignItems="center">
-              {canAdd && isOwner && (
-                <Tooltip title={diaryTooltipTitle}>
-                  <span>
-                    <IconButton
-                      size="small"
-                      disabled={isDiaryDisabled}
-                      onClick={() => openDiary(plan)}
-                      sx={{ color: isDiaryDisabled ? 'action.disabled' : 'primary.main' }}
-                    >
-                      <Iconify icon="mdi:notebook-edit-outline" width={18} />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              )}
-              {canView && (
-                <Tooltip title="View Details">
-                  <IconButton
-                    size="small"
-                    onClick={() => openDetails(plan)}
-                    sx={{ color: 'text.secondary' }}
-                  >
-                    <Iconify icon="carbon:view-filled" width={18} />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Stack>
+            <AdaptiveThreeDotsActions
+              actions={actions}
+              placement="right-top"
+              moreLabel="More lesson plan actions"
+            />
           );
         },
       },
@@ -1784,35 +1774,22 @@ const LessonPlanScreen = () => {
               : diary
                 ? 'Edit diary notes'
                 : 'Add diary notes';
+          const actions = getLessonPlanTableActions(plan, {
+            canManageDiary: canAdd && isOwner,
+            canView,
+            hasDiary: Boolean(diary),
+            diaryDisabled: isDiaryDisabled,
+            diaryTooltip: diaryTooltipTitle,
+            onOpenDiary: openDiary,
+            onViewDetails: openDetails,
+          });
 
           return (
-            <Stack direction="row" spacing={1} alignItems="center">
-              {canAdd && isOwner && (
-                <Tooltip title={diaryTooltipTitle}>
-                  <span>
-                    <IconButton
-                      size="small"
-                      disabled={isDiaryDisabled}
-                      onClick={() => openDiary(plan)}
-                      sx={{ color: isDiaryDisabled ? 'action.disabled' : 'primary.main' }}
-                    >
-                      <Iconify icon="mdi:notebook-edit-outline" width={18} />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-              )}
-              {canView && (
-                <Tooltip title="View Details">
-                  <IconButton
-                    size="small"
-                    onClick={() => openDetails(plan)}
-                    sx={{ color: 'text.secondary' }}
-                  >
-                    <Iconify icon="carbon:view-filled" width={18} />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Stack>
+            <AdaptiveThreeDotsActions
+              actions={actions}
+              placement="right-top"
+              moreLabel="More lesson plan actions"
+            />
           );
         },
       },
@@ -1857,11 +1834,6 @@ const LessonPlanScreen = () => {
     };
   });
 
-  const visibleTabs = useMemo(
-    () => TABS.filter((tab) => tab.value !== 'reviewQueue' || canReviewSubmissions),
-    [canReviewSubmissions]
-  );
-
   return (
     <Box
       sx={{
@@ -1884,87 +1856,51 @@ const LessonPlanScreen = () => {
           ]}
         />
 
-        {/* Teaching KPI Cards Accordion */}
-        <Accordion
-          defaultExpanded={false}
-          disableGutters
+        {/* Tab Navigation & Filters */}
+        <Paper
           variant="outlined"
           sx={{
             mb: 1,
-            borderRadius: '12px',
-            '&:before': { display: 'none' },
+            p: 0.75,
+            display: 'flex',
+            alignItems: { xs: 'stretch', sm: 'center' },
+            justifyContent: 'space-between',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 1,
+            borderRadius: 2,
+            boxShadow: 'none',
           }}
         >
-          <AccordionSummary
-            expandIcon={<Iconify icon="solar:alt-arrow-down-bold-duotone" width={18} />}
-            sx={{
-              minHeight: 44,
-              px: 2,
-              '& .MuiAccordionSummary-content': { my: 1 },
-            }}
-          >
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Iconify icon="solar:chart-bold-duotone" width={18} sx={{ color: 'primary.main' }} />
-              <Typography variant="subtitle2" fontWeight={700}>
-                Teaching Metrics & KPI Overview
-              </Typography>
-            </Stack>
-          </AccordionSummary>
-          <AccordionDetails sx={{ p: 1.5, pt: 0 }}>
-            <TeachingKpiCards
-              lessonPlans={lessonPlans}
-              diaryEntries={diaryEntries}
-              onCardClick={(key) => {
-                if (key === 'pending_approvals') {
-                  if (canReviewSubmissions) {
-                    setActiveTab('reviewQueue');
-                  } else {
-                    setQuickFilter('pending_approval');
-                    setActiveTab('lessonList');
-                  }
-                } else if (key === 'missed_lessons') {
-                  setQuickFilter('missed_lessons');
-                  setActiveTab('lessonList');
-                } else if (key === 'syllabus_delay') {
-                  setQuickFilter('delayed_progress');
-                  setActiveTab('lessonList');
-                }
-              }}
-            />
-          </AccordionDetails>
-        </Accordion>
-
-        {/* Tab Navigation & Filters */}
-        <Paper
-          sx={{
-            mb: 1,
-            '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-          }}
-        >
-          <CustomTabs
+          <LessonPlanNavigationTabs
             value={activeTab}
-            onChange={(_, value) => {
+            canReviewSubmissions={canReviewSubmissions}
+            pendingReviewCount={pendingReviewCount}
+            onChange={(value) => {
               dispatch(setIsChanges(false));
-              setActiveTab(value as TabValue);
+              setActiveTab(value);
             }}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
-            role="tablist"
-          >
-            {visibleTabs.map((tab) => (
-              <Tab
-                key={tab.value}
-                value={tab.value}
-                label={
-                  tab.value === 'reviewQueue' ? (
-                    <ReviewQueueTabLabel pendingCount={pendingReviewCount} />
-                  ) : (
-                    tab.label
-                  )
+          />
+
+          <TeachingKpiCards
+            lessonPlans={lessonPlans}
+            diaryEntries={diaryEntries}
+            onCardClick={(key) => {
+              if (key === 'pending_approvals') {
+                if (canReviewSubmissions) {
+                  setActiveTab('reviewQueue');
+                } else {
+                  setQuickFilter('pending_approval');
+                  setActiveTab('lessonList');
                 }
-                icon={<Iconify icon={tab.icon} width={20} />}
-              />
-            ))}
-          </CustomTabs>
+              } else if (key === 'missed_lessons') {
+                setQuickFilter('missed_lessons');
+                setActiveTab('lessonList');
+              } else if (key === 'syllabus_delay') {
+                setQuickFilter('delayed_progress');
+                setActiveTab('lessonList');
+              }
+            }}
+          />
         </Paper>
       </Box>
 
@@ -2035,7 +1971,13 @@ const LessonPlanScreen = () => {
               }}
               onSubmitDiary={openDiary}
               onSubmitPlan={submitPlan}
+              onCreateLesson={handleSaveLesson}
               onCreateHomework={openHomeworkFromPlan}
+              academicYearId={currentYear?.id}
+              academicYearName={currentYear?.name || ''}
+              teacherId={timelineData?.teacherId || currentTeacherOption?.value || ''}
+              teacherName={currentTeacherOption?.label || ''}
+              lessonPlans={lessonPlans}
               canView={canView}
               canManage={canAdd}
             />
@@ -2047,7 +1989,7 @@ const LessonPlanScreen = () => {
               tableTitle={`Lesson Plans (${filteredPlans.length})`}
               data={filteredPlans}
               columns={visibleLessonColumns}
-              isLoading={isPlansLoading || (!lessonModalOpen && isPlansFetching)}
+              isLoading={tabLoadingState.lessonList}
               noDataText="No lesson plans match the current filters. Try adjusting or clearing filters, or add a new lesson plan."
             />
           )}
@@ -2078,16 +2020,7 @@ const LessonPlanScreen = () => {
               tableTitle="Teacher Diary"
               data={lessonPlans.filter((p) => p.plannedDate <= todayIso)}
               columns={visibleDiaryColumns}
-              isLoading={
-                isPlansLoading ||
-                isDiariesLoading ||
-                // Only show isFetching loading when the diary/lesson modal is fully closed.
-                // When a modal is open and a partial mutation succeeds (e.g. create succeeds
-                // but submit fails), RTK Query tag invalidation can trigger isFetching even
-                // though the overall operation errored. Gate the background loading so the
-                // table does not flash a spinner while the user is still in the modal.
-                (!diaryModalOpen && !lessonModalOpen && (isPlansFetching || isDiariesFetching))
-              }
+              isLoading={tabLoadingState.teacherDiary}
               noDataText="No past or today lessons available for diary."
             />
           )}
@@ -2107,7 +2040,7 @@ const LessonPlanScreen = () => {
               isApproving={isApproving}
               isRejecting={isRejecting}
               isRequesting={isRequestingPlanChanges}
-              isLoading={reviewQueueQuery.isLoading || isPlansLoading}
+              isLoading={tabLoadingState.reviewQueue}
               isRefreshing={reviewQueueQuery.isFetching || isPlansFetching}
               onRefresh={() => {
                 reviewQueueQuery.refetch();

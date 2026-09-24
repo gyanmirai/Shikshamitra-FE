@@ -36,7 +36,7 @@ interface NormalisedSlotData {
   slotConfigurations: Array<{
     id: string;
     totalSlots: string;
-    weekRange: [number, number];
+    activeDays: number[];
     timeSlots: Array<{
       id: string;
       startTime: any;
@@ -65,11 +65,17 @@ const mapApiToViewModel = (apiData: any, standardName?: string): NormalisedSlotD
   schoolHours: apiData?.schoolHours || '—',
   previousClassSlots: apiData?.previousStandardId || 'None',
   slotConfigurations: (apiData?.slotConfigurations ?? []).map((config: any, ci: number) => {
-    // API may return weekRange array or separate fromDay / toDay fields
-    const weekRange: [number, number] =
+    const legacyRange =
       Array.isArray(config.weekRange) && config.weekRange.length >= 2
         ? [Number(config.weekRange[0]), Number(config.weekRange[1])]
         : [Number(config.fromDay ?? 0), Number(config.toDay ?? 5)];
+    const activeDays =
+      Array.isArray(config.activeDays) && config.activeDays.length > 0
+        ? config.activeDays.map(Number)
+        : Array.from(
+            { length: legacyRange[1] - legacyRange[0] + 1 },
+            (_unused, offset) => legacyRange[0] + offset
+          );
 
     const timeSlots = (config.timeSlots ?? []).map((slot: any, si: number) => ({
       id: slot.id ?? `${ci}-${si}`,
@@ -83,7 +89,7 @@ const mapApiToViewModel = (apiData: any, standardName?: string): NormalisedSlotD
     return {
       id: config.id ?? String(ci),
       totalSlots: String(config.totalSlots ?? timeSlots.length),
-      weekRange,
+      activeDays,
       timeSlots,
     };
   }),
@@ -298,10 +304,10 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                         Configuration {index + 1}
                       </Typography>
                       {/* Day range pill */}
-                      {config.weekRange?.length >= 2 && (
+                      {config.activeDays.length > 0 && (
                         <Chip
                           icon={<Iconify icon="mdi:calendar-range" width={12} />}
-                          label={`${getDayLabel(config.weekRange[0])} – ${getDayLabel(config.weekRange[1])}`}
+                          label={config.activeDays.map(getDayLabel).join(', ')}
                           size="small"
                           variant="outlined"
                           color="default"
@@ -371,28 +377,24 @@ const ViewCreateSlots: React.FC<ViewCreateSlotsProps> = ({ data }) => {
                       >
                         Active Days
                       </Typography>
-                      {config.weekRange?.length >= 2 &&
-                        Array.from(
-                          { length: config.weekRange[1] - config.weekRange[0] + 1 },
-                          (_, i) => config.weekRange[0] + i
-                        ).map((day) => (
-                          <Chip
-                            key={day}
-                            label={getDayLabel(day)}
-                            size="small"
-                            color="primary"
-                            sx={{
-                              height: 24,
-                              fontSize: '0.68rem',
-                              fontWeight: 600,
-                              bgcolor: alpha(theme.palette.primary.main, 0.18),
-                              color: theme.palette.primary.main,
-                              border: '1px solid',
-                              borderColor: alpha(theme.palette.primary.main, 0.4),
-                              '& .MuiChip-label': { px: 1 },
-                            }}
-                          />
-                        ))}
+                      {config.activeDays.map((day) => (
+                        <Chip
+                          key={day}
+                          label={getDayLabel(day)}
+                          size="small"
+                          color="primary"
+                          sx={{
+                            height: 24,
+                            fontSize: '0.68rem',
+                            fontWeight: 600,
+                            bgcolor: alpha(theme.palette.primary.main, 0.18),
+                            color: theme.palette.primary.main,
+                            border: '1px solid',
+                            borderColor: alpha(theme.palette.primary.main, 0.4),
+                            '& .MuiChip-label': { px: 1 },
+                          }}
+                        />
+                      ))}
                     </Stack>
 
                     {/* ── Timeline slot list ─────────────────────────── */}

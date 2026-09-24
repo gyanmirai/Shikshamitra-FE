@@ -7,7 +7,9 @@ type AffectedLecturePickerProps = {
   lectures: AffectedLectureRow[];
   selectedLectureId: string;
   hasTeacher: boolean;
+  hasAcademicMedium: boolean;
   hasValidRange: boolean;
+  invalidRangeMessage?: string;
   loading: boolean;
   loadError: boolean;
   onSelect: (lecture: AffectedLectureRow) => void;
@@ -17,7 +19,9 @@ export function AffectedLecturePicker({
   lectures,
   selectedLectureId,
   hasTeacher,
+  hasAcademicMedium,
   hasValidRange,
+  invalidRangeMessage = 'End time must be later than start time.',
   loading,
   loadError,
   onSelect,
@@ -26,8 +30,12 @@ export function AffectedLecturePicker({
     return <Alert severity="info">Select the unavailable teacher to load affected lectures.</Alert>;
   }
 
+  if (!hasAcademicMedium) {
+    return <Alert severity="info">Select an academic medium to load affected lectures.</Alert>;
+  }
+
   if (!hasValidRange) {
-    return <Alert severity="error">End time must be later than start time.</Alert>;
+    return <Alert severity="error">{invalidRangeMessage}</Alert>;
   }
 
   if (loading) {
@@ -58,6 +66,11 @@ export function AffectedLecturePicker({
 
   return (
     <Grid container spacing={1}>
+      <Grid size={{ xs: 12 }}>
+        <Typography variant="caption" color="text.secondary">
+          Lectures from the published timetable for the selected academic medium.
+        </Typography>
+      </Grid>
       {lectures.map((lecture) => {
         const lectureId = lecture.slotSubjectId || lecture.id;
         const isSelected = lectureId === selectedLectureId || lecture.period === selectedLectureId;
@@ -100,12 +113,17 @@ export function AffectedLecturePicker({
                 <Button
                   size="small"
                   variant={isSelected ? 'contained' : 'outlined'}
-                  startIcon={isSelected ? <CheckCircle /> : <Add />}
+                  startIcon={isSelected || !canSelect ? <CheckCircle /> : <Add />}
                   disabled={!canSelect}
                   onClick={() => onSelect(lecture)}
                   sx={{ minHeight: 44, flexShrink: 0 }}
                 >
-                  {!canSelect ? 'Already covered' : isSelected ? 'Selected' : 'Use lecture'}
+                  {!canSelect
+                    ? lecture.createSubstitutionBlockReason ||
+                      (lecture.existingSubstitutionId ? 'Already assigned' : 'Unavailable')
+                    : isSelected
+                      ? 'Selected'
+                      : 'Select lecture'}
                 </Button>
               </Stack>
             </Box>

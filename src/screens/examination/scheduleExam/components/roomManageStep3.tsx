@@ -5,17 +5,17 @@ import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
 import { getIn } from 'formik';
-import { alpha } from '@mui/system';
 import { useSelector } from 'react-redux';
-import { useTheme } from '@mui/material/styles';
-import { useState, useMemo, useCallback } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
+import { GroupedRoomSelector } from 'src/components/room-selection/GroupedRoomSelector';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
+import { sortRoomOptions, createRoomOption } from 'src/components/room-selection/roomOptions';
 import {
   Box,
   Grid,
@@ -26,9 +26,7 @@ import {
   Button,
   Switch,
   MenuItem,
-  TextField,
   Typography,
-  Autocomplete,
 } from '@mui/material';
 
 import type { IExamFormValues } from '../type';
@@ -49,11 +47,8 @@ const cardItemVariants: Variants = {
   exit: { opacity: 0, y: -10, transition: { duration: 0.18 } },
 };
 
-
-
 const RoomDetails = (props: FormikProps<IExamFormValues>) => {
   const formik = props;
-  const theme = useTheme();
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -61,26 +56,17 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
       <Paper
         role="button"
         tabIndex={0}
-        component={motion.div}
-        whileHover={{ scale: 1.012, transition: { duration: 0.18, ease: 'easeOut' } }}
-        whileTap={{ scale: 0.985, transition: { duration: 0.12 } }}
         elevation={0}
         sx={{
           p: 2,
           borderRadius: 2,
-          border: `1px solid ${theme.palette.divider}`,
+          border: '1px solid',
+          borderColor: 'divider',
           display: 'flex',
           alignItems: 'center',
           gap: 1,
           cursor: 'pointer',
-          transformOrigin: 'left center',
-          transition: 'background-color 0.3s ease, border-color 0.3s ease',
-          backgroundColor: formik.values.isRoomAssign
-            ? alpha(theme.palette.primary.main, 0.04)
-            : 'background.paper',
-          borderColor: formik.values.isRoomAssign
-            ? alpha(theme.palette.primary.main, 0.4)
-            : theme.palette.divider,
+          backgroundColor: 'background.paper',
         }}
         onClick={() => {
           formik.setFieldValue('isRoomAssign', !formik.values.isRoomAssign);
@@ -191,8 +177,6 @@ export default RoomDetails;
 const RoomAssignmentCard = ({ subject, formik }: any) => {
   const { subjectId, subjectName, examDate, startTime, endTime, electiveGroupName } = subject;
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  const theme = useTheme();
-
   const [bulkAnchorEl, setBulkAnchorEl] = useState<null | HTMLElement>(null);
 
   const allClass = useMemo(
@@ -225,22 +209,11 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
 
   const isRoomsLoading = roomsLoading || roomsFetching;
 
-  // Flatten and sort: group by building → floor → room for display
+  // This derived list is shared with Timetable so both room pickers retain identical grouping.
   const roomOptions = useMemo(
-    () =>
-      (roomsApiData?.items ?? []).map((room: any) => ({
-        id: room.id,
-        roomName: room.roomName ?? '',
-        buildingName: room.buildingName ?? '',
-        floorName: room.floorName ?? '',
-        capacity: room.capacity ?? 0,
-        label: `${room.buildingName ?? ''} › ${room.floorName ?? ''} › ${room.roomName ?? ''}`,
-        group: `${room.buildingName ?? 'Unknown Building'} › ${room.floorName ?? 'Unknown Floor'}`,
-      })),
+    () => sortRoomOptions((roomsApiData?.items ?? []).map((room: any) => createRoomOption(room))),
     [roomsApiData]
   );
-
-
 
   // Handle "Apply to All Divisions" action
   const handleApplyToAllDivisions = useCallback(
@@ -349,15 +322,7 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
           borderRadius: 2,
           border: '1px solid',
           borderColor: 'divider',
-          transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-          '&:hover': {
-            boxShadow: (theme: any) =>
-              theme.customShadows?.z8 || '0 8px 16px 0 rgba(0,0,0,0.08)',
-            borderColor: 'primary.light',
-            '& .MuiCardHeader-root': {
-              transform: 'translateY(-2px)',
-            },
-          },
+          boxShadow: 'none',
         },
       }}
     >
@@ -401,86 +366,20 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                   Boolean(formikTouched || formik.submitCount > 0) &&
                   selectedRoomIds.length === 0;
 
-                const errorMessage = isRequiredMissing ? (formikError || 'Room is required') : '';
+                const errorMessage = isRequiredMissing ? formikError || 'Room is required' : '';
                 const hasError = Boolean(isRequiredMissing);
 
                 return (
-                  <Autocomplete
+                  <GroupedRoomSelector
                     multiple
-                    size="small"
+                    label={`Select Room(s)${formik.values.isRoomAssign ? ' *' : ''}`}
                     loading={isRoomsLoading}
                     options={roomOptions}
-                    groupBy={(option: any) => option.group}
-                    getOptionLabel={(option: any) => option.label}
-                    isOptionEqualToValue={(option: any, val: any) => option.id === val.id}
-                    renderGroup={(params) => (
-                      <Box component="li" key={params.key} sx={{ mb: 0.5 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            display: 'block',
-                            px: 1.25,
-                            py: 0.5,
-                            fontSize: '11px',
-                            color: 'text.secondary',
-                            bgcolor: 'background.neutral',
-                            fontWeight: 600,
-                            textTransform: 'uppercase',
-                          }}
-                        >
-                          {params.group}
-                        </Typography>
-                        <Box
-                          component="ul"
-                          sx={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: 0.75,
-                            px: 1.25,
-                            py: 0.75,
-                            m: 0,
-                            listStyle: 'none',
-                          }}
-                        >
-                          {params.children}
-                        </Box>
-                      </Box>
-                    )}
-                    renderOption={(props, option: any, { selected }) => {
-                      const { key, ...restProps } = props as any;
-                      return (
-                        <Box
-                          component="li"
-                          key={key}
-                          {...restProps}
-                          sx={{
-                            px: 1,
-                            py: 0.35,
-                            fontSize: '12px',
-                            borderRadius: 0.75,
-                            border: `1px solid ${selected ? theme.palette.primary.main : theme.palette.divider}`,
-                            bgcolor: selected ? 'primary.lighter' : 'background.paper',
-                            color: selected ? 'primary.main' : 'text.primary',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              bgcolor: selected ? 'primary.lighter' : 'action.hover',
-                              borderColor: 'primary.main',
-                            },
-                            // Overriding MUI's default li styles
-                            width: 'auto !important',
-                            minWidth: 'auto',
-                            m: '0 !important',
-                            display: 'inline-flex',
-                            fontWeight: selected ? 600 : 500,
-                          }}
-                        >
-                          {option.roomName}
-                        </Box>
-                      );
-                    }}
                     value={selectedRooms}
-                    onChange={(_e, newVal: any[]) => {
+                    error={hasError}
+                    helperText={errorMessage || ''}
+                    onChange={(newValue) => {
+                      const newVal = Array.isArray(newValue) ? newValue : [];
                       const ids = newVal.map((r) => r.id);
                       const totalCapacity = newVal.reduce((sum, r) => sum + (r.capacity || 0), 0);
                       formik.setFieldValue(fieldPath, ids);
@@ -493,40 +392,6 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
                         formik.setFieldError(fieldPath, undefined);
                       }
                     }}
-                    renderTags={(tagValues, getTagProps) =>
-                      tagValues.map((option: any, index) => {
-                        const { key, ...tagProps } = getTagProps({ index });
-                        return (
-                          <Chip
-                            key={key}
-                            {...tagProps}
-                            label={option.label}
-                            size="small"
-                            variant="soft"
-                            color="default"
-                            sx={{ ml: 0.5 }}
-                          />
-                        );
-                      })
-                    }
-                    sx={{ minWidth: { xs: 240, md: 420 } }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label={`Select Room(s)${formik.values.isRoomAssign ? ' *' : ''}`}
-                        size="small"
-                        error={hasError}
-                        helperText={errorMessage || ''}
-                        slotProps={{
-                          formHelperText: {
-                            sx: {
-                              fontWeight: 600,
-                              color: hasError ? 'error.main' : 'text.secondary',
-                            },
-                          },
-                        }}
-                      />
-                    )}
                   />
                 );
               },

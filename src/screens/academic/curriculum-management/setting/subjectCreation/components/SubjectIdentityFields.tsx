@@ -2,14 +2,11 @@ import type { FormikProps } from 'formik';
 
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, MenuItem, TextField } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Grid, MenuItem, TextField, Typography } from '@mui/material';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 
-import {
-  SUBJECT_ICONS as subjectIcons,
-  SUBJECT_CATEGORIES as subjectCategories,
-} from '../type';
+import { SUBJECT_ICONS as subjectIcons, SUBJECT_CATEGORIES as subjectCategories } from '../type';
 
 import type { SubjectFormValues } from '../initialValues';
 
@@ -20,12 +17,6 @@ interface SubjectIdentityFieldsProps {
 export function SubjectIdentityFields({ formik }: SubjectIdentityFieldsProps) {
   return (
     <>
-      <Grid size={{ xs: 12 }}>
-        <Typography variant="subtitle2" fontWeight={700}>
-          Basic Details
-        </Typography>
-      </Grid>
-
       <Grid size={{ xs: 12 }}>
         <ShakingTextField error={Boolean(formik.touched.subjectName && formik.errors.subjectName)}>
           <LanguageInputField

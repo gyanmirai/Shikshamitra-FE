@@ -19,7 +19,9 @@ import { SplashScreen } from '../loading-screen';
 const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
   // Get authentication state from Redux store
 
-  const { loading } = useSelector((state: any) => state.auth);
+  const { loading, isAuthenticated, permissionsInitialized } = useSelector(
+    (state: any) => state.auth
+  );
 
   const session: any = useSession();
   const { data: sessionData, status } = session;
@@ -28,16 +30,21 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
 
   useEffect(() => {
-    if (status !== 'loading' && !sessionData?.profile) {
+    const hasUsableSession =
+      sessionData?.profile && sessionData?.accessToken && !sessionData?.error;
+
+    if (status !== 'loading' && !hasUsableSession) {
       router.push('/login');
     }
   }, [status, sessionData, router]);
 
-  if (status === 'loading' || loading) {
+  const hasUsableSession = sessionData?.profile && sessionData?.accessToken && !sessionData?.error;
+
+  if (status === 'loading' || (hasUsableSession && (loading || !permissionsInitialized))) {
     return <SplashScreen />;
   }
 
-  if (sessionData?.profile) {
+  if (hasUsableSession && isAuthenticated) {
     return children;
   }
 

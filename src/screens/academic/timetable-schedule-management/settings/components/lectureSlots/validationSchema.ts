@@ -40,25 +40,19 @@ export const getValidationSchema = () =>
               return !Number.isNaN(num) && num >= 1 && num <= 20;
             }),
 
-          // Week Range Validation
+          // Active Days Validation
           weekRange: Yup.array()
             .of(Yup.number())
-            .length(2, 'Week range must have 2 values')
-            .required('Week range is required')
-            .test('valid-range', 'Start day must be before or equal to end day', (value) => {
-              if (!value || value.length !== 2) return false;
-              const [start, end] = value as [number, number];
-              return start <= end;
-            })
+            .min(1, 'Select at least one active day')
+            .max(6, 'A maximum of 6 active days can be selected')
+            .required('Active days are required')
             .test('within-bounds', 'Days must be between Monday (0) and Saturday (5)', (value) => {
-              if (!value || value.length !== 2) return false;
-              const [start, end] = value as [number, number];
-              return start >= 0 && start <= 5 && end >= 0 && end <= 5;
+              if (!value) return false;
+              return value.every((day) => day !== undefined && day >= 0 && day <= 5);
             })
-            .test('at-least-one-day', 'At least one day must be selected', (value) => {
-              if (!value || value.length !== 2) return false;
-              const [start, end] = value as [number, number];
-              return end >= start; // Ensures at least one day
+            .test('unique-days', 'Each active day can only be selected once', (value) => {
+              if (!value) return false;
+              return new Set(value).size === value.length;
             }),
 
           expanded: Yup.boolean(),
@@ -277,34 +271,30 @@ export const getValidationSchema = () =>
         })
       )
       .min(1, 'At least one slot configuration is required')
-      // Cross-Configuration Validation: No Overlapping Week Ranges
+      // Cross-Configuration Validation: No Overlapping Active Days
       .test(
         'no-overlapping-weeks',
-        'Week ranges across configurations should not overlap',
+        'Active days across configurations should not overlap',
         // eslint-disable-next-line func-names
         function (configs) {
           if (!configs || configs.length <= 1) return true;
 
           for (let i = 0; i < configs.length; i += 1) {
             for (let j = i + 1; j < configs.length; j += 1) {
-              const range1 = configs[i].weekRange as [number, number] | undefined;
-              const range2 = configs[j].weekRange as [number, number] | undefined;
+              const days1 = configs[i].weekRange as number[] | undefined;
+              const days2 = configs[j].weekRange as number[] | undefined;
 
-              if (!range1 || !range2 || range1.length !== 2 || range2.length !== 2) {
+              if (!days1?.length || !days2?.length) {
                 // eslint-disable-next-line no-continue
                 continue;
               }
 
-              // Check if ranges overlap
-              const [r1Start, r1End] = range1;
-              const [r2Start, r2End] = range2;
-              const overlap =
-                (r1Start <= r2End && r1End >= r2Start) || (r2Start <= r1End && r2End >= r1Start);
+              const overlap = days1.some((day) => days2.includes(day));
 
               if (overlap) {
                 return this.createError({
                   path: `slotConfigurations[${j}].weekRange`,
-                  message: `Week range overlaps with configuration ${i + 1}`,
+                  message: `Active days overlap with configuration ${i + 1}`,
                 });
               }
             }

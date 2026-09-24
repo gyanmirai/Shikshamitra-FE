@@ -58,6 +58,7 @@ interface CustomStepperWithFormikProps {
   steps: string[];
   formikInstance?: any;
   validateOnChange?: boolean;
+  saveButtonLabel?: React.ReactNode;
   nextButtonLabel?: React.ReactNode;
   finalButtonLabel?: React.ReactNode;
   handleNext: (
@@ -187,7 +188,8 @@ const ModernStepIcon = (props: StepIconProps) => {
           borderColor: completed || active ? 'primary.main' : 'grey.400',
           color: (theme) => (completed || active ? '#fff' : theme.palette.text.secondary),
           transform: active ? 'scale(1.1)' : 'scale(1)',
-          transition: 'background-color 300ms ease-out, border-color 300ms ease-out, transform 300ms ease-out',
+          transition:
+            'background-color 300ms ease-out, border-color 300ms ease-out, transform 300ms ease-out',
           '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
         }}
       >
@@ -264,15 +266,16 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   onCancel,
   validationSchema,
   renderItem,
-  onStepClick = () => { },
+  onStepClick = () => {},
   completedSteps,
   isStepClickable,
   errors = [],
   validateOnChange = false,
-  onSave = () => { },
+  onSave = () => {},
   isDisabledLabel = false,
   showSaveButton = true,
   disableSubmit = false,
+  saveButtonLabel = 'Save',
   nextButtonLabel = 'Save & Next',
   finalButtonLabel = 'Submit',
   saveButtonProps = {},
@@ -582,7 +585,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           {activeStep === 0 && onCancel ? 'Cancel' : 'Back'}
         </Button>
         <Box display="flex" gap={1}>
-          {showSaveButton && <Button {...mergedSaveButtonProps}>Save</Button>}
+          {showSaveButton && <Button {...mergedSaveButtonProps}>{saveButtonLabel}</Button>}
           <Button {...mergedSaveAndNextButtonProps}>
             {activeStep === steps.length - 1 ? finalButtonLabel : nextButtonLabel}
           </Button>

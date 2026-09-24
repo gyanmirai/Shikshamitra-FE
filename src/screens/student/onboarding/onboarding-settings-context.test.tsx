@@ -1,12 +1,13 @@
 import type { ReactNode } from 'react';
 
-import { it, expect, describe } from 'vitest';
+import { it, vi, expect, describe } from 'vitest';
 import { act, renderHook } from '@testing-library/react';
 
 import { useOnboardingSettings, OnboardingSettingsProvider } from './onboarding-settings-context';
 import {
   defaultOnboardingSettings,
   defaultRollNumberConfiguration,
+  defaultOnboardingConfigurationScope,
   type OnboardingConfigurationScope,
 } from './onboarding-settings-model';
 
@@ -24,6 +25,46 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 );
 
 describe('OnboardingSettingsProvider configuration scopes', () => {
+
+  it('commits a scoped change only after backend persistence and deletes only that override', async () => {
+    const onPersist = vi.fn().mockResolvedValue(undefined);
+    const onRemoveOverride = vi.fn().mockResolvedValue(undefined);
+    const persistentWrapper = ({ children }: { children: ReactNode }) => (
+      <OnboardingSettingsProvider
+        initialOverrides={{
+          [defaultOnboardingConfigurationScope.key]: defaultOnboardingSettings,
+        }}
+        onPersist={onPersist}
+        onRemoveOverride={onRemoveOverride}
+      >
+        {children}
+      </OnboardingSettingsProvider>
+    );
+    const { result } = renderHook(() => useOnboardingSettings(), { wrapper: persistentWrapper });
+
+    await act(async () => {
+      await result.current.applyReadinessAccess({
+        ...result.current.settings.readinessAccess,
+        requireDocuments: false,
+      });
+    });
+
+    expect(onPersist).toHaveBeenCalledWith(
+      defaultOnboardingConfigurationScope,
+      expect.objectContaining({
+        readinessAccess: expect.objectContaining({ requireDocuments: false }),
+      })
+    );
+    expect(result.current.settings.readinessAccess.requireDocuments).toBe(false);
+
+    await act(async () => {
+      await result.current.resetToInherited();
+    });
+
+    expect(onRemoveOverride).toHaveBeenCalledWith(defaultOnboardingConfigurationScope);
+    expect(result.current.settings.readinessAccess.requireDocuments).toBe(true);
+  });
+
   it('inherits defaults and preserves independent school and academic overrides', () => {
     const { result } = renderHook(() => useOnboardingSettings(), { wrapper });
 
@@ -46,7 +87,7 @@ describe('OnboardingSettingsProvider configuration scopes', () => {
 
     expect(result.current.scope.key).toBe(academicScope.key);
     expect(result.current.isInherited).toBe(true);
-    expect(result.current.settings.readinessAccess.requireDocuments).toBe(true);
+    expect(result.current.settings.readinessAccess.requireDocuments).toBe(false);
 
     act(() => result.current.setRollAssignmentMode('manual'));
 

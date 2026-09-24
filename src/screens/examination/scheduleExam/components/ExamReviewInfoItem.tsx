@@ -2,7 +2,6 @@ import type { ReactNode, ReactElement } from 'react';
 import type { Theme, SxProps } from '@mui/material/styles';
 
 import { cloneElement } from 'react';
-import { varAlpha } from 'src/theme/styles';
 import { Box, Typography } from '@mui/material';
 
 interface ExamReviewInfoItemProps {
@@ -16,18 +15,18 @@ export function ExamReviewInfoItem({ icon, label, value }: ExamReviewInfoItemPro
     <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
       <Box
         sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 1.5,
-          bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
-          color: 'primary.main',
+          width: 32,
+          height: 32,
+          borderRadius: 1,
+          bgcolor: 'action.hover',
+          color: 'text.secondary',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
         }}
       >
-        {cloneElement(icon, { sx: { fontSize: 20 } })}
+        {cloneElement(icon, { sx: { fontSize: 18 } })}
       </Box>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography

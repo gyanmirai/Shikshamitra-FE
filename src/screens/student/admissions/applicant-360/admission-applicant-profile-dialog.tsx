@@ -10,7 +10,15 @@ import CustomSelect from 'src/components/custom-select';
 import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 import { LoadingButton } from 'src/components/loading-button';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Stack, Button, TextField, DialogActions } from '@mui/material';
+import {
+  Stack,
+  Button,
+  Divider,
+  TextField,
+  Typography,
+  InputAdornment,
+  DialogActions,
+} from '@mui/material';
 
 import { ADMISSION_DATE_FORMAT } from '../admission-date-formats';
 
@@ -18,6 +26,7 @@ type Props = {
   open: boolean;
   busy: boolean;
   applicant: AdmissionApplicantProfile;
+  guardian?: { mobile: string; email?: string | null };
   onClose: () => void;
   onSubmit: (values: {
     firstName: string;
@@ -25,6 +34,8 @@ type Props = {
     lastName?: string | null;
     dateOfBirth: string;
     gender: 'Male' | 'Female';
+    guardianMobile: string;
+    guardianEmail?: string | null;
   }) => Promise<boolean>;
 };
 
@@ -32,6 +43,7 @@ export function AdmissionApplicantProfileDialog({
   open,
   busy,
   applicant,
+  guardian,
   onClose,
   onSubmit,
 }: Props) {
@@ -43,6 +55,8 @@ export function AdmissionApplicantProfileDialog({
       lastName: applicant.lastName ?? '',
       dateOfBirth: applicant.dateOfBirth ?? '',
       gender: applicant.gender ?? '',
+      guardianMobile: guardian?.mobile ?? '',
+      guardianEmail: guardian?.email ?? '',
     },
     validationSchema: Yup.object({
       firstName: Yup.string().trim().required('First name is required').max(100),
@@ -50,6 +64,10 @@ export function AdmissionApplicantProfileDialog({
       lastName: Yup.string().trim().max(100),
       dateOfBirth: Yup.string().required('Date of birth is required'),
       gender: Yup.string().oneOf(['Male', 'Female']).required('Gender is required'),
+      guardianMobile: Yup.string()
+        .matches(/^[6-9]\d{9}$/, 'Enter a valid 10-digit Indian mobile number')
+        .required('Guardian mobile is required'),
+      guardianEmail: Yup.string().email('Enter a valid guardian email'),
     }),
     onSubmit: async (values) => {
       const success = await onSubmit({
@@ -58,6 +76,8 @@ export function AdmissionApplicantProfileDialog({
         lastName: values.lastName.trim() || null,
         dateOfBirth: values.dateOfBirth,
         gender: values.gender as 'Male' | 'Female',
+        guardianMobile: values.guardianMobile,
+        guardianEmail: values.guardianEmail.trim() || null,
       });
       if (success) onClose();
     },
@@ -121,6 +141,39 @@ export function AdmissionApplicantProfileDialog({
             helperText={formik.touched.gender ? formik.errors.gender : undefined}
             onBlur={() => formik.setFieldTouched('gender', true)}
             onChange={(value) => formik.setFieldValue('gender', String(value ?? ''))}
+          />
+          <Divider />
+          <Typography variant="subtitle2">Primary guardian contact</Typography>
+          <TextField
+            fullWidth
+            required
+            size="small"
+            type="tel"
+            name="guardianMobile"
+            label="Guardian mobile number"
+            value={formik.values.guardianMobile}
+            onBlur={formik.handleBlur}
+            onChange={(event) =>
+              formik.setFieldValue(
+                'guardianMobile',
+                event.target.value.replace(/\D/g, '').slice(0, 10)
+              )
+            }
+            error={Boolean(formik.touched.guardianMobile && formik.errors.guardianMobile)}
+            helperText={formik.touched.guardianMobile && formik.errors.guardianMobile}
+            slotProps={{
+              htmlInput: { inputMode: 'numeric', maxLength: 10 },
+              input: { startAdornment: <InputAdornment position="start">+91</InputAdornment> },
+            }}
+          />
+          <TextField
+            fullWidth
+            size="small"
+            type="email"
+            label="Guardian email"
+            {...formik.getFieldProps('guardianEmail')}
+            error={Boolean(formik.touched.guardianEmail && formik.errors.guardianEmail)}
+            helperText={formik.touched.guardianEmail && formik.errors.guardianEmail}
           />
         </Stack>
       </DialogScrollContent>

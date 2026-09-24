@@ -14,7 +14,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { useMemo, useState, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Stack, Alert, Tooltip, Typography, IconButton } from '@mui/material';
+import { Box, Chip, Stack, Alert, Typography, IconButton } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetAcademicAuditEventsQuery } from 'src/redux/academicAPI/AuditApi/academic-audit-api';
 
 import { AUDIT_ALL_SENTINEL } from './academicAudit.constants';
@@ -187,11 +188,16 @@ const AcademicAuditTrail = () => {
         stickyPosition: 'right',
         excludeFromExport: true,
         render: (_value, row) => (
-          <Tooltip title="View details">
-            <IconButton size="small" onClick={() => setSelectedEvent(row as AcademicAuditEvent)}>
-              <Iconify icon="mdi:eye-outline" width={18} />
-            </IconButton>
-          </Tooltip>
+          <AdaptiveThreeDotsActions
+            actions={[
+              {
+                id: 'view',
+                label: 'View details',
+                icon: 'mdi:eye-outline',
+                onClick: () => setSelectedEvent(row as AcademicAuditEvent),
+              },
+            ]}
+          />
         ),
       },
     ],

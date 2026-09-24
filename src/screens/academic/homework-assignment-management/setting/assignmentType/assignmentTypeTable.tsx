@@ -2,11 +2,8 @@
 
 import React from 'react';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Stack, IconButton } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   AssignmentSubmissionType,
   AssignmentEvaluationMethod,
@@ -161,41 +158,54 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
         render: (_value, row) => {
           const assignmentType = row as IAssignmentType;
           const isArchived = assignmentType.status === 2;
-          return (
-            <Stack direction="row" spacing={1} justifyContent="center">
-              {isArchived ? (
-                <TypeActionButton
-                  title="Restore assignment type"
-                  icon="solar:restart-bold"
-                  color="success"
-                  onClick={() => onRestore(assignmentType)}
-                />
-              ) : (
-                <>
-                  <ThreeDotsActions
-                    showThreeDots={false}
-                    placement="right-top"
-                    showDeleteIcon={canDelete}
-                    showEditIcon={canAdd}
-                    disableDeleteIcon={(assignmentType.usageCount || 0) > 0}
-                    handleDeleteClick={() => {
-                      onDelete(assignmentType);
-                    }}
-                    handleEditClick={() => {
-                      onEdit(assignmentType);
-                    }}
-                  />
-                  <TypeActionButton
-                    title="Archive assignment type"
-                    icon="solar:archive-bold"
-                    color="warning"
-                    disabled={!canDelete}
-                    onClick={() => onArchive(assignmentType)}
-                  />
-                </>
-              )}
-            </Stack>
-          );
+          const actions = isArchived
+            ? [
+                {
+                  id: 'restore',
+                  label: 'Restore assignment type',
+                  icon: 'solar:restart-bold',
+                  color: 'success.main',
+                  onClick: () => onRestore(assignmentType),
+                },
+              ]
+            : [
+                ...(canAdd
+                  ? [
+                      {
+                        id: 'edit',
+                        label: 'Edit assignment type',
+                        icon: 'solar:pen-bold',
+                        onClick: () => onEdit(assignmentType),
+                      },
+                    ]
+                  : []),
+                ...(canDelete
+                  ? [
+                      {
+                        id: 'delete',
+                        label: 'Delete assignment type',
+                        icon: 'solar:trash-bin-trash-bold',
+                        color: 'error.main',
+                        disabled: (assignmentType.usageCount || 0) > 0,
+                        tooltip:
+                          (assignmentType.usageCount || 0) > 0
+                            ? 'This assignment type is in use and cannot be deleted.'
+                            : undefined,
+                        onClick: () => onDelete(assignmentType),
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'archive',
+                  label: 'Archive assignment type',
+                  icon: 'solar:archive-bold',
+                  color: 'warning.main',
+                  disabled: !canDelete,
+                  onClick: () => onArchive(assignmentType),
+                },
+              ];
+
+          return <AdaptiveThreeDotsActions actions={actions} placement="right-top" />;
         },
       },
     ]}
@@ -204,35 +214,3 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
 );
 
 export default AssignmentTypeTable;
-
-const TypeActionButton = ({
-  title,
-  icon,
-  color,
-  disabled = false,
-  onClick,
-}: {
-  title: string;
-  icon: string;
-  color: 'success' | 'warning';
-  disabled?: boolean;
-  onClick: () => void;
-}) => (
-  <CustomTooltip title={title} arrow placement="top">
-    <span>
-      <IconButton
-        size="small"
-        color={color}
-        disabled={disabled}
-        aria-label={title}
-        onClick={(event) => {
-          event.stopPropagation();
-          onClick();
-        }}
-        sx={{ width: 18, height: 18, p: 0 }}
-      >
-        <Iconify icon={icon} width={16} height={16} />
-      </IconButton>
-    </span>
-  </CustomTooltip>
-);

@@ -76,6 +76,8 @@ describe('useRefundPolicyForm submission validation', () => {
     expect(values.roundingMethod).toBe('None');
     expect(values.deductionType).toBe('None');
     expect(values.processingTargetDays).toBeNull();
+    expect(values).not.toHaveProperty('eligiblePaymentState');
+    expect(values).not.toHaveProperty('requestDeadlineDays');
     expect(values.allowedPayoutMethods).toEqual([
       'Cash',
       'Cheque',
@@ -115,7 +117,6 @@ describe('useRefundPolicyForm submission validation', () => {
           policyName: 'Standard Refund Policy',
           status: 'Active',
           amountMode: 'RemainingPaidAmount',
-          eligiblePaymentState: 'PartialAndFullPayment',
           feeHeadScope: 'AllFeeHeads',
           allowedPayoutMethods: ['Cash'],
         } as never,

@@ -47,30 +47,44 @@ const defaultProps = {
 };
 
 describe('ReviewAndLockDialog', () => {
-  it('shows a scannable ready-state summary and confirms the lock action', async () => {
+  it('shows a neutral summary without informational banners and confirms the lock action', async () => {
     const user = userEvent.setup();
     const onConfirmLock = vi.fn();
 
     renderWithProviders(<ReviewAndLockDialog {...defaultProps} onConfirmLock={onConfirmLock} />);
 
-    expect(screen.getByText('Ready to lock')).toBeVisible();
+    expect(screen.getByText('Review and Lock')).toBeVisible();
+    expect(
+      screen.queryByText('Confirm the final elective allocation before locking')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Ready to lock')).not.toBeInTheDocument();
+    expect(screen.queryByText('Editing is restricted after locking')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(screen.getByText('Assignment summary')).toBeVisible();
     expect(screen.getByText('Students by elective subject')).toBeVisible();
     expect(screen.getByText('Computer Science')).toBeVisible();
     expect(screen.getByText('PT')).toBeVisible();
+    expect(screen.getByRole('article', { name: 'Total students: 3' })).toBeVisible();
+    expect(screen.getByRole('article', { name: 'Computer Science: 1 student' })).toBeVisible();
 
     await user.click(screen.getByRole('button', { name: 'Lock Assignments' }));
 
     expect(onConfirmLock).toHaveBeenCalledOnce();
   });
 
-  it('explains incomplete assignments and prevents locking', () => {
+  it('shows incomplete counts and prevents locking without adding a status banner', () => {
     renderWithProviders(
       <ReviewAndLockDialog {...defaultProps} assigned={2} unassigned={1} canLock={false} />
     );
 
-    expect(screen.getByText('Assignment is incomplete')).toBeVisible();
-    expect(screen.getByText(/1 student still needs an elective subject/i)).toBeVisible();
+    expect(screen.getByRole('article', { name: 'Unassigned: 1' })).toBeVisible();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Lock Assignments' })).toBeDisabled();
+  });
+
+  it('prevents locking while assignment changes are unsaved', () => {
+    renderWithProviders(<ReviewAndLockDialog {...defaultProps} canLock hasUnsavedChanges />);
+
     expect(screen.getByRole('button', { name: 'Lock Assignments' })).toBeDisabled();
   });
 });

@@ -117,9 +117,9 @@ export default function OnboardingSettingsPage() {
           <Box>
             <Typography variant="subtitle2">Persistence boundary</Typography>
             <Typography variant="body2" color="text.secondary">
-              Saved defaults inside Readiness & Access and Numbering & Placement use the backend.
-              Advanced academic rules remain frontend-session previews when no backend contract
-              exists.
+              Readiness profiles, GR and Roll rules, and Division-change settings are saved for the
+              selected school or academic-year scope. Operational activation, seat, identifier,
+              and service-handoff controls continue to use their dedicated backend contracts.
             </Typography>
           </Box>
         </Stack>

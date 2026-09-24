@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
 import * as Yup from 'yup';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -65,13 +64,9 @@ const getInitialValues = (
     lateFeeIncomeHeadId: data?.lateFeeIncomeHeadId ?? null,
 
     enableWaiver: data?.enableWaiver ?? false,
-    waiverApplyOnFeeHeads: data?.waiverApplyOnFeeHeads || [],
-    maximumWaiverAmount: data?.maximumWaiverAmount ?? null,
-    maximumWaiverPercentage: data?.maximumWaiverPercentage ?? null,
-    waiverExpiry: data?.waiverExpiry || null,
+    enableChargeWaiver: data?.enableChargeWaiver ?? false,
     requiresApproval: data?.requiresApproval ?? true,
     approvalRoleIds: data?.approvalRoleIds || [],
-    approvalThresholdAmount: data?.approvalThresholdAmount ?? null,
     allowOnlineCollection: data?.allowOnlineCollection ?? true,
   };
 };
@@ -209,22 +204,7 @@ const validationSchema = Yup.object().shape({
     .min(1, 'Must be at least 1 day'),
 
   enableWaiver: Yup.boolean(),
-  waiverApplyOnFeeHeads: Yup.array()
-    .of(Yup.string())
-    .when('enableWaiver', {
-      is: true,
-      then: (s) => s.min(1, 'Select at least one Fee Head'),
-    }),
-  maximumWaiverAmount: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .min(0, 'Must be 0 or greater'),
-  maximumWaiverPercentage: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .min(0, 'Must be 0 or greater')
-    .max(100, 'Cannot exceed 100%'),
-  waiverExpiry: Yup.mixed().nullable(),
+  enableChargeWaiver: Yup.boolean(),
   allowOnlineCollection: Yup.boolean(),
   considerAsIncome: Yup.boolean(),
   lateFeeIncomeHeadId: Yup.string()
@@ -236,14 +216,11 @@ const validationSchema = Yup.object().shape({
   requiresApproval: Yup.boolean(),
   approvalRoleIds: Yup.array()
     .of(Yup.string())
-    .when(['enableWaiver', 'requiresApproval'], {
-      is: (enableWaiver: boolean, requiresApproval: boolean) => enableWaiver && requiresApproval,
+    .when(['enableWaiver', 'enableChargeWaiver', 'requiresApproval'], {
+      is: (enableWaiver: boolean, enableChargeWaiver: boolean, requiresApproval: boolean) =>
+        (enableWaiver || enableChargeWaiver) && requiresApproval,
       then: (s) => s.min(1, 'Select at least one approving role'),
     }),
-  approvalThresholdAmount: Yup.number()
-    .nullable()
-    .transform(emptyStringToNull)
-    .min(0, 'Must be 0 or greater'),
 });
 
 interface UseCollectionPolicyFormProps {
@@ -352,9 +329,10 @@ export function useCollectionPolicyForm({
       !v.enableLateFee ||
       !computeSlabIssues(v.escalationRules).hasIssues;
 
-    const waiverHeadsValid = !v.enableWaiver || v.waiverApplyOnFeeHeads.length >= 1;
     const waiverApprovalValid =
-      !v.enableWaiver || !v.requiresApproval || v.approvalRoleIds.length >= 1;
+      (!v.enableWaiver && !v.enableChargeWaiver) ||
+      !v.requiresApproval ||
+      v.approvalRoleIds.length >= 1;
     const incomeHeadValid =
       !v.enableLateFee || !v.considerAsIncome || Boolean(v.lateFeeIncomeHeadId);
     const isDefaultConflict = false;
@@ -374,7 +352,6 @@ export function useCollectionPolicyForm({
       graceTypeValid &&
       headsValid &&
       lateFeeValid &&
-      waiverHeadsValid &&
       waiverApprovalValid &&
       incomeHeadValid &&
       slabValid;
@@ -385,7 +362,6 @@ export function useCollectionPolicyForm({
       graceTypeValid,
       headsValid,
       lateFeeValid,
-      waiverHeadsValid,
       waiverApprovalValid,
       incomeHeadValid,
       slabValid,
@@ -422,9 +398,6 @@ export function useCollectionPolicyForm({
         status: overrideStatus,
         isDefault: overrideStatus === 'Active' ? formik.values.isDefault : false,
         policyCode: formik.values.policyCode || `CP-${Date.now()}`,
-        waiverExpiry: formik.values.waiverExpiry
-          ? dayjs(formik.values.waiverExpiry).toISOString()
-          : null,
       };
 
       if (editData?.id) {

@@ -3,22 +3,22 @@
 import type { RootState } from 'src/redux/store';
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { Box } from '@mui/material';
+import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { studentPaths } from 'src/constants/student-menu';
 import { shikshaMitraToast } from 'src/components/toast';
+import { studentPaths } from 'src/constants/student-menu';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useGetAdmissionFormsQuery } from 'src/redux/student/admissions/admission-forms-api';
 import {
   useGetAdmissionWorkflowQuery,
   useGetAdmissionWorkflowUsageQuery,
-  useGetAdmissionWorkflowVersionsQuery,
-  useGetAdmissionWorkflowStageTypesQuery,
-  useApproveAdmissionWorkflowMutation,
   useRejectAdmissionWorkflowMutation,
+  useApproveAdmissionWorkflowMutation,
+  useGetAdmissionWorkflowVersionsQuery,
   useGetAdmissionWorkflowApproversQuery,
+  useGetAdmissionWorkflowStageTypesQuery,
   useSubmitAdmissionWorkflowForApprovalMutation,
   useGetAdmissionWorkflowGovernanceHistoryQuery,
   useGetAdmissionWorkflowGovernanceSettingsQuery,
@@ -26,22 +26,25 @@ import {
   usePublishAdmissionWorkflowWithGovernanceMutation,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import type { WorkflowGovernanceActionMode } from './workflow-builder/components/workflow-governance-action-dialog';
-
 import { duplicateStage } from './workflow-builder-utils';
 import { getAdmissionWorkflowAccess } from './workflow-access';
 import { getWorkflowTemplateDefinition } from './workflow-template';
 import { WorkflowSidePanel } from './workflow-builder/components/workflow-side-panel';
 import { compareWorkflowVersions } from './workflow-builder/workflow-version-comparison';
-import { canDecideAdmissionWorkflow } from './workflow-builder/workflow-governance-permissions';
 import { useWorkflowBuilderDraft } from './workflow-builder/hooks/use-workflow-builder-draft';
 import { WorkflowBuilderCanvas } from './workflow-builder/components/workflow-builder-canvas';
-import { WorkflowBuilderHeader } from './workflow-builder/components/workflow-builder-header';
+import { canDecideAdmissionWorkflow } from './workflow-builder/workflow-governance-permissions';
 import { WorkflowBuilderEditors } from './workflow-builder/components/workflow-builder-editors';
 import { useWorkflowBuilderCommands } from './workflow-builder/hooks/use-workflow-builder-commands';
 import { WorkflowBuilderPageState } from './workflow-builder/components/workflow-builder-page-state';
 import { WorkflowStandardTemplateDialog } from './workflow-builder/components/workflow-standard-template-dialog';
 import { WorkflowGovernanceActionDialog } from './workflow-builder/components/workflow-governance-action-dialog';
+import {
+  WorkflowBuilderHeader,
+  WorkflowBuilderMobileActions,
+} from './workflow-builder/components/workflow-builder-header';
+
+import type { WorkflowGovernanceActionMode } from './workflow-builder/components/workflow-governance-action-dialog';
 
 type Props = { workflowId: string };
 
@@ -54,6 +57,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const [governanceAction, setGovernanceAction] = useState<WorkflowGovernanceActionMode | null>(
     null
   );
+  const [pendingRouteSourceId, setPendingRouteSourceId] = useState<string | null>(null);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const currentUserId = useSelector(
     (state: RootState) => state.auth.user?.sub as string | undefined
@@ -134,6 +138,30 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         transitions: draft.transitions,
       })
     : null;
+  const requestPublish = async () => {
+    const validation = await commands.validateSavedWorkflow();
+    if (!validation?.isValid) {
+      if (validation) {
+        shikshaMitraToast.warning({
+          message: `Fix ${validation.issues.length} workflow validation issue${validation.issues.length === 1 ? '' : 's'} before publishing.`,
+        });
+      }
+      return;
+    }
+
+    try {
+      const refreshedWorkflow = await workflowQuery.refetch().unwrap();
+      draft.setLoadedStamp(refreshedWorkflow.concurrencyStamp);
+    } catch {
+      shikshaMitraToast.error({
+        message: 'The workflow was validated, but its latest version could not be loaded.',
+      });
+      return;
+    }
+
+    draft.setSidePanel(null);
+    setGovernanceAction('publish');
+  };
   const getViewHref = (view: 'configure' | 'map') => {
     const next = new URLSearchParams(searchParams.toString());
     if (view === 'map') next.set('view', 'map');
@@ -143,9 +171,20 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   };
 
   return (
-    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+    <Box
+      sx={{
+        minWidth: 0,
+        minHeight: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        height: { xs: 'auto', md: 1 },
+      }}
+    >
       <WorkflowBuilderHeader
         workflow={workflow}
+        view={builderView}
+        viewHrefs={{ configure: getViewHref('configure'), map: getViewHref('map') }}
         dirty={draft.dirty}
         readOnly={readOnly}
         readOnlyReason={statusReadOnly ? 'status' : !canEdit ? 'permission' : undefined}
@@ -159,9 +198,10 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         saving={commands.updateState.isLoading}
         validating={commands.validateState.isLoading}
         publishing={commands.publishState.isLoading || governanceBusy}
+        onBack={() => router.push(studentPaths.enrollment.settings.workflows)}
         onSave={commands.saveDraft}
         onValidate={commands.validateSavedWorkflow}
-        onPublish={() => setGovernanceAction('publish')}
+        onPublish={requestPublish}
         onSubmit={() => setGovernanceAction('submit')}
         onApprove={() => setGovernanceAction('approve')}
         onReject={() => setGovernanceAction('reject')}
@@ -198,7 +238,23 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
             draft.stages.find(
               (item) => item.id !== stage.id && item.displayOrder > stage.displayOrder
             ) ?? draft.stages.find((item) => item.id !== stage.id);
-          if (!destination) return;
+          if (!destination) {
+            const canAddDestination = (stageTypesQuery.data ?? []).some(
+              (item) => item.type !== 0 && item.isRuntimeReady && item.isSelectable !== false
+            );
+            if (!canAddDestination) {
+              shikshaMitraToast.warning({
+                message: 'No selectable stage type is available for a route destination.',
+              });
+              return;
+            }
+            setPendingRouteSourceId(stage.id);
+            draft.addStage(stageTypesQuery.data ?? []);
+            shikshaMitraToast.info({
+              message: 'Add the destination stage. The route editor will open after you save it.',
+            });
+            return;
+          }
           draft.setEditingTransition({
             id: '',
             fromStageId: stage.id,
@@ -217,7 +273,24 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
           draft.setTransitions((current) => current.filter((item) => item.id !== id));
           draft.markDirty();
         }}
-        viewHrefs={{ configure: getViewHref('configure'), map: getViewHref('map') }}
+      />
+      <WorkflowBuilderMobileActions
+        dirty={draft.dirty}
+        readOnly={readOnly}
+        canPublish={canPublishCurrent}
+        canSubmit={canSubmit}
+        canApprove={canApprove}
+        canReject={canApprove}
+        canRollback={canRollback}
+        saving={commands.updateState.isLoading}
+        validating={commands.validateState.isLoading}
+        publishing={commands.publishState.isLoading || governanceBusy}
+        onSave={commands.saveDraft}
+        onPublish={requestPublish}
+        onSubmit={() => setGovernanceAction('submit')}
+        onApprove={() => setGovernanceAction('approve')}
+        onReject={() => setGovernanceAction('reject')}
+        onRollback={() => setGovernanceAction('rollback')}
       />
       <WorkflowStandardTemplateDialog
         open={standardTemplateDialog.value}
@@ -244,11 +317,11 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         onClose={() => setGovernanceAction(null)}
         onConfirm={async ({ reason, approverUserId, effectiveAt }) => {
           try {
-            let concurrencyStamp = workflow.concurrencyStamp;
+            let concurrencyStamp = draft.loadedStamp || workflow.concurrencyStamp;
             if ((governanceAction === 'submit' || governanceAction === 'publish') && draft.dirty) {
               const saved = await commands.saveDraft();
               if (!saved) return;
-              concurrencyStamp = saved.concurrencyStamp;
+              ({ concurrencyStamp } = saved);
             }
             if (governanceAction === 'submit' && approverUserId) {
               await submitForApproval({
@@ -305,13 +378,29 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         onCloseStage={() => {
           draft.setStageDrawerOpen(false);
           draft.setEditingStage(null);
+          setPendingRouteSourceId(null);
         }}
         onCloseTransition={() => {
           draft.setTransitionDrawerOpen(false);
           draft.setEditingTransition(null);
         }}
         onCloseDelete={() => draft.setStageToDelete(null)}
-        onSaveStage={draft.saveStage}
+        onSaveStage={(stage) => {
+          const routeSourceId = pendingRouteSourceId;
+          const isNewStage = !draft.stages.some((item) => item.id === stage.id);
+          draft.saveStage(stage);
+          if (!routeSourceId || !isNewStage) return;
+          const outgoing = draft.transitions.filter((item) => item.fromStageId === routeSourceId);
+          draft.setEditingTransition({
+            id: '',
+            fromStageId: routeSourceId,
+            toStageId: stage.id,
+            priority: Math.max(-1, ...outgoing.map((item) => item.priority)) + 1,
+            isDefault: !outgoing.some((item) => item.isDefault),
+          });
+          draft.setTransitionDrawerOpen(true);
+          setPendingRouteSourceId(null);
+        }}
         onSaveTransition={draft.saveTransition}
         onDeleteStage={draft.deleteStage}
       />

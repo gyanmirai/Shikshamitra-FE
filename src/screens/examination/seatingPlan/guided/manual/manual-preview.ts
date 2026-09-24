@@ -1,6 +1,45 @@
 import type { GuidedAllocationPreviewDto } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
 
+import { seatId } from '../../hooks/useSeatingDraft';
+
 import type { SeatingStudent, SeatingAssignment, SeatingRoomLayout } from '../../types';
+
+export function restoreManualPreviewAssignments(
+  savedAssignments: SeatingAssignment[],
+  preview: GuidedAllocationPreviewDto | undefined,
+  selectedRoomIds: string[]
+): SeatingAssignment[] {
+  if (!preview) return savedAssignments;
+
+  const protectedAssignments = savedAssignments.filter(
+    (assignment) => assignment.isExternalExamOccupied
+  );
+  const protectedStudentIds = new Set(
+    protectedAssignments.map((assignment) => assignment.studentId)
+  );
+  const protectedSeatIds = new Set(protectedAssignments.map((assignment) => assignment.seatId));
+  const selectedRooms = new Set(selectedRoomIds);
+
+  const inProgressAssignments = preview.assignments
+    .filter((assignment) => selectedRooms.has(assignment.roomId))
+    .map(
+      (assignment): SeatingAssignment => ({
+        studentId: assignment.studentId,
+        roomId: assignment.roomId,
+        seatId: seatId(assignment.roomId, assignment.seatNumber),
+        seatNumber: assignment.seatNumber,
+        benchId: assignment.benchId,
+        assignedBy: 'manual',
+      })
+    )
+    .filter(
+      (assignment) =>
+        !protectedStudentIds.has(assignment.studentId) &&
+        !protectedSeatIds.has(assignment.seatId)
+    );
+
+  return [...protectedAssignments, ...inProgressAssignments];
+}
 
 export function buildGuidedManualPreview(
   students: SeatingStudent[],

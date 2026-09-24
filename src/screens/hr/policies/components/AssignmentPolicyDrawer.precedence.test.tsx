@@ -320,8 +320,8 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
 
     expect(screen.getByTestId('selected-target')).toBeEmptyDOMElement();
 
-    await screen.findByRole('option', { name: 'Bina Teacher' });
-    await user.keyboard('{ArrowDown}{Enter}');
+    const binaOption = await screen.findByRole('option', { name: 'Bina Teacher' });
+    await user.click(binaOption);
 
     await waitFor(() => {
       expect(screen.getByTestId('selected-target')).toHaveTextContent('employee-2');

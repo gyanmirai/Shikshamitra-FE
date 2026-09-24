@@ -6,27 +6,22 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useGetAdmissionApplicant360Query } from 'src/redux/student/admissions/admission-applicants-api';
 
-import AdmissionApplicantNotes from './admission-applicant-notes';
-import { AdmissionApplicantStartCard } from './applicant-360/admission-applicant-start-card';
 import { AdmissionApplicantProfileCard } from './applicant-360/admission-applicant-profile-card';
 import { AdmissionApplicantApplicationsCard } from './applicant-360/admission-applicant-applications-card';
 
 function Applicant360Loading() {
   return (
-    <Stack spacing={2} aria-label="Loading applicant workspace">
-      <Skeleton variant="rounded" height={176} />
+    <Stack spacing={1.5} aria-label="Loading applicant workspace" role="status">
+      <Skeleton variant="rounded" height={96} />
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 2fr) minmax(320px, 1fr)' },
-          gap: 2,
+          gridTemplateColumns: { xs: '1fr', lg: '280px minmax(0, 1fr)' },
+          gap: 1.5,
         }}
       >
-        <Stack spacing={2}>
-          <Skeleton variant="rounded" height={180} />
-          <Skeleton variant="rounded" height={280} />
-        </Stack>
-        <Skeleton variant="rounded" height={280} />
+        <Skeleton variant="rounded" height={440} />
+        <Skeleton variant="rounded" height={440} />
       </Box>
     </Stack>
   );
@@ -48,7 +43,7 @@ export default function AdmissionApplicant360Screen() {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 0 }}>
       <Box
         sx={(theme) => ({
           position: 'sticky',
@@ -97,25 +92,9 @@ export default function AdmissionApplicant360Screen() {
       )}
 
       {data && (
-        <Stack spacing={2}>
+        <Stack spacing={1.5} sx={{ minWidth: 0 }}>
           <AdmissionApplicantProfileCard data={data} />
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: 'minmax(0, 1fr)',
-                lg: 'minmax(0, 2fr) minmax(320px, 1fr)',
-              },
-              gap: 2,
-              alignItems: 'start',
-            }}
-          >
-            <Stack spacing={2} sx={{ minWidth: 0 }}>
-              <AdmissionApplicantStartCard applicantId={id} applications={data.applications} />
-              <AdmissionApplicantApplicationsCard applications={data.applications} />
-            </Stack>
-            <AdmissionApplicantNotes applicantId={id} notes={data.notes} />
-          </Box>
+          <AdmissionApplicantApplicationsCard applicantId={id} data={data} />
         </Stack>
       )}
     </Box>

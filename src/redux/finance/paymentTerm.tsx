@@ -182,6 +182,29 @@ export interface ClonePaymentTermsResult {
   dateRangesRequiringReview: string[];
 }
 
+export type PaymentTermTemplateKind = 'Annual' | 'HalfYearly' | 'Quarterly' | 'Monthly' | 'Custom';
+
+export type PaymentTermTemplateDueDateRule =
+  'CoverageStart' | 'CoverageEnd' | 'DaysAfterCoverageStart';
+
+export interface PreviewPaymentTermTemplateRequest {
+  boardId: string;
+  templateKind: PaymentTermTemplateKind;
+  customInstallmentCount?: number;
+  dueDateRule: PaymentTermTemplateDueDateRule;
+  dueDaysAfterCoverageStart?: number;
+  demandGenerationRule: CreatePaymentTermRequest['demandGenerationRule'];
+  demandOffsetDays?: number | null;
+}
+
+export interface PaymentTermTemplatePreviewResponse {
+  templateKind: PaymentTermTemplateKind;
+  boardStartDate: string;
+  boardEndDate: string;
+  installmentCount: number;
+  installments: CreateInstallmentRequest[];
+}
+
 export interface ArchivePaymentTermRequest {
   reason: string;
 }
@@ -472,6 +495,18 @@ export const PaymentTermApi = api.injectEndpoints({
       invalidatesTags: [paymentTermType.paymentTerm],
     }),
 
+    // ── Installment Template Preview ───────────────────────────────────────
+    previewPaymentTermTemplate: builder.mutation<
+      PaymentTermTemplatePreviewResponse,
+      PreviewPaymentTermTemplateRequest
+    >({
+      query: (body) => ({
+        url: '/finance/payment-terms/templates/preview',
+        method: 'POST',
+        body,
+      }),
+    }),
+
     // ── Impact Preview ──────────────────────────────────────────────────────
     getImpactPreview: builder.query<ImpactPreviewResponse, string>({
       query: (paymentTermId) => ({
@@ -507,6 +542,7 @@ export const {
   useArchivePaymentTermMutation,
   useRestorePaymentTermMutation,
   useClonePaymentTermsMutation,
+  usePreviewPaymentTermTemplateMutation,
   useGetImpactPreviewQuery,
   useGetFeeStructureSchedulePreviewQuery,
 } = PaymentTermApi;

@@ -47,6 +47,25 @@ export type GetSubjectAssignmentsArgs = {
   teacherSearch?: string;
 };
 
+export type CopySubjectAssignmentsRequest = {
+  sourceClassId: string;
+  targetClassId: string;
+  subjectIds: string[] | null;
+  includeTeachers: boolean;
+  includeDocuments: boolean;
+  conflictStrategy: 'SKIP' | 'OVERWRITE';
+  targetStatus: number;
+};
+
+export type CopySubjectAssignmentsResponse = {
+  data: {
+    copiedCount: number;
+    skippedCount: number;
+    overwrittenCount: number;
+    message: string;
+  };
+};
+
 export const subjectAssignmentsApi = academicApi.injectEndpoints({
   endpoints: (builder) => ({
     // Get all subject assignments - academicMediumId passed in query params
@@ -230,7 +249,10 @@ export const subjectAssignmentsApi = academicApi.injectEndpoints({
     }),
 
     // Copy subject assignments to target classes
-    copySubjectAssignments: builder.mutation({
+    copySubjectAssignments: builder.mutation<
+      CopySubjectAssignmentsResponse,
+      CopySubjectAssignmentsRequest
+    >({
       query: (body) => ({
         url: `/academics/curriculum/subject-assignments/copy`,
         method: 'POST',

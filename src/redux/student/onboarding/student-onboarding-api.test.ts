@@ -356,6 +356,74 @@ describe('student onboarding API', () => {
     expect(deactivateStamp).toBe('series-stamp-1');
   });
 
+  it('round-trips scoped advanced settings with schema and concurrency metadata', async () => {
+    const savedRecord = {
+      id: 'settings-1',
+      concurrencyStamp: 'settings-stamp-1',
+      academicYearId: 'year-1',
+      schemaVersion: 1,
+      configurationJson: '{"readinessAccess":{"requireDocuments":true}}',
+    };
+    let getYear = '';
+    let saveBody: Record<string, unknown> = {};
+    let deleteStamp = '';
+
+    mswServer.use(
+      http.get('*/api/student/onboarding/settings/configurations', ({ request }) => {
+        getYear = new URL(request.url).searchParams.get('academicYearId') ?? '';
+        return HttpResponse.json({ data: [savedRecord] });
+      }),
+      http.put('*/api/student/onboarding/settings/configurations', async ({ request }) => {
+        saveBody = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({
+          data: { ...savedRecord, ...saveBody, concurrencyStamp: 'settings-stamp-2' },
+        });
+      }),
+      http.delete(
+        '*/api/student/onboarding/settings/configurations/settings-1',
+        ({ request }) => {
+          deleteStamp = new URL(request.url).searchParams.get('concurrencyStamp') ?? '';
+          return HttpResponse.json({ success: true });
+        }
+      )
+    );
+
+    const { endpoints } = studentOnboardingApi;
+    const query = store.dispatch(
+      endpoints.getStudentOnboardingSettings.initiate({ academicYearId: 'year-1' })
+    );
+    expect(await query.unwrap()).toEqual([savedRecord]);
+
+    await store
+      .dispatch(
+        endpoints.saveStudentOnboardingSettings.initiate({
+          academicYearId: 'year-1',
+          schemaVersion: 1,
+          configurationJson: savedRecord.configurationJson,
+          concurrencyStamp: 'settings-stamp-1',
+        })
+      )
+      .unwrap();
+    await store
+      .dispatch(
+        endpoints.deleteStudentOnboardingSettings.initiate({
+          id: 'settings-1',
+          concurrencyStamp: 'settings-stamp-2',
+        })
+      )
+      .unwrap();
+
+    expect(getYear).toBe('year-1');
+    expect(saveBody).toEqual({
+      academicYearId: 'year-1',
+      schemaVersion: 1,
+      configurationJson: savedRecord.configurationJson,
+      concurrencyStamp: 'settings-stamp-1',
+    });
+    expect(deleteStamp).toBe('settings-stamp-2');
+    query.unsubscribe();
+  });
+
   it('uploads onboarding documents as multipart form data with the case concurrency stamp', async () => {
     let uploaded: Record<string, FormDataEntryValue | null> = {};
 

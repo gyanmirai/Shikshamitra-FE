@@ -6,7 +6,6 @@ import type { AcademicReportExportJobResponse } from 'src/redux/academicAPI/Acad
 import dayjs from 'dayjs';
 import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -16,7 +15,8 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Chip, Button, Tooltip, IconButton } from '@mui/material';
+import { Box, Chip, Button } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { CurriculumReportApiTypeMap } from 'src/enums/curriuculum-reports';
 import {
   useGetAcademicReportExportsQuery,
@@ -25,6 +25,7 @@ import {
 
 import CurriculumReports from './CurriculumReports';
 import { startAcademicReportDownload } from './ai-report-utils';
+import { getCurriculumReportActions } from './curriculumReportActions';
 import ShikshaMitraAiReportDrawer from './ShikshaMitraAiReportDrawer';
 import CurriculumReportPreviewDrawer from './CurriculumReportPreviewDrawer';
 
@@ -70,8 +71,7 @@ const CurriculumReportList = () => {
           startAcademicReportDownload(jobId);
         } catch (error: unknown) {
           shikshaMitraToast.error({
-            message:
-              error instanceof Error ? error.message : 'Download failed. Please try again.',
+            message: error instanceof Error ? error.message : 'Download failed. Please try again.',
           });
         } finally {
           setDownloadingJobId(null);
@@ -266,52 +266,20 @@ const CurriculumReportList = () => {
               isSort: false,
               sticky: true,
               stickyPosition: 'right',
-              render(value, row) {
+              render(_value, row) {
                 if (!canAdd) return null;
-                const isThisDownloading = downloadingJobId === value;
-                const canDownload =
-                  row.status === 'Completed' ||
-                  row.status === 'Queued' ||
-                  row.status === 'Processing';
+                const actions = getCurriculumReportActions(row as AcademicReportExportJobResponse, {
+                  downloadingJobId,
+                  onView: handleView,
+                  onDownload: handleDownload,
+                });
+
                 return (
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {!row.isDynamic && (
-                      <Tooltip title="View">
-                        <span>
-                          <IconButton size="small" onClick={() => handleView(row)} sx={{ mr: 0.5 }}>
-                            <Iconify icon={GlobalIcons.eye} />
-                          </IconButton>
-                        </span>
-                      </Tooltip>
-                    )}
-                    <Tooltip
-                      title={
-                        row.status === 'Failed'
-                          ? (row.errorMessage ?? 'Export failed')
-                          : isThisDownloading
-                            ? 'Downloading...'
-                            : 'Download'
-                      }
-                    >
-                      <span>
-                        <IconButton
-                          size="small"
-                          disabled={!canDownload || !!downloadingJobId}
-                          onClick={() => handleDownload(value, row.status)}
-                        >
-                          <Iconify
-                            icon={
-                              isThisDownloading
-                                ? 'eos-icons:loading'
-                                : row.status === 'Failed'
-                                  ? 'mdi:alert-circle-outline'
-                                  : GlobalIcons.report
-                            }
-                          />
-                        </IconButton>
-                      </span>
-                    </Tooltip>
-                  </Box>
+                  <AdaptiveThreeDotsActions
+                    actions={actions}
+                    placement="right-top"
+                    moreLabel="More report actions"
+                  />
                 );
               },
             },

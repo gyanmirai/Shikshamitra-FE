@@ -1,4 +1,7 @@
-export type PermissionType = 'View' | 'Add' | 'Edit' | 'ChangeStatus' | 'Delete';
+// Permission actions are server-defined. Keep the common actions explicit in
+// callers, but allow newly introduced backend actions to render and persist
+// without silently hiding them from the permission matrix.
+export type PermissionType = string;
 export const PERMISSIONS: PermissionType[] = ['View', 'Add', 'Delete'];
 
 export const getPermissionChildren = (node: any): any[] =>

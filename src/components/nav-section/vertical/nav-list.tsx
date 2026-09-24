@@ -9,6 +9,7 @@ import { hasNavigationPermission } from 'src/utils/permissions';
 import { NavItem } from './nav-item';
 import { navSectionClasses } from '../classes';
 import { NavUl, NavLi, NavCollapse } from '../styles';
+import { isNavigationPathActive } from '../path-utils';
 
 import type { NavListProps, NavSubListProps } from '../types';
 
@@ -32,7 +33,7 @@ export function NavList({
   const [currentModule] = removeTrailingSlash.split('/').filter((i) => i);
   // const active = useActiveLink(data.path, !!data.children);
   const active = isSubLayout
-    ? removeTrailingSlash === data.path
+    ? isNavigationPathActive(removeTrailingSlash, data.path, true)
     : removeTrailingSlash === data.path ||
       (data.path !== '/dashboard' && currentModule === data._action);
 
@@ -41,9 +42,11 @@ export function NavList({
   const recur = useCallback(
     (menuData: NavListProps['data'][]): NavListProps['data'] | undefined =>
       menuData?.find(
-        (i) => i.path === removeTrailingSlash || (i?.children?.length && recur(i?.children))
+        (i) =>
+          isNavigationPathActive(removeTrailingSlash, i.path, isSubLayout) ||
+          (i?.children?.length && recur(i.children))
       ),
-    [removeTrailingSlash]
+    [isSubLayout, removeTrailingSlash]
   );
 
   useEffect(() => {

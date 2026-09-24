@@ -12,12 +12,10 @@ import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
 import Divider from '@mui/material/Divider';
-import Tooltip from '@mui/material/Tooltip';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
-import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { alpha, useTheme } from '@mui/material/styles';
 import DialogActions from '@mui/material/DialogActions';
@@ -27,11 +25,12 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
+import { getReviewQueueTableActions } from './reviewQueueTableActions';
 import { ReviewCard, type ReviewItem } from './review-queue/ReviewCard';
 import { useReviewSubmissionLock } from '../hooks/use-review-submission-lock';
 import { ReviewStatusTabs, type ReviewStatusFilter } from './ReviewStatusTabs';
@@ -196,7 +195,6 @@ export const ReviewQueueTab = ({
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
 
   // Filter States
-  const [teacherSearch, setTeacherSearch] = useState('');
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedReviewer, setSelectedReviewer] = useState('');
@@ -347,11 +345,6 @@ export const ReviewQueueTab = ({
       reviewRows.filter((row) => {
         if (statusFilter !== 'all' && row.status !== statusFilter) return false;
 
-        const searchTxt = teacherSearch.trim().toLowerCase();
-        if (searchTxt && !row.teacherName.toLowerCase().includes(searchTxt)) {
-          return false;
-        }
-
         if (selectedClass && row.classDivision !== selectedClass) return false;
         if (selectedSubject && row.subjectName !== selectedSubject) return false;
         if (selectedReviewer && row.reviewedByName !== selectedReviewer) return false;
@@ -372,7 +365,6 @@ export const ReviewQueueTab = ({
     [
       reviewRows,
       statusFilter,
-      teacherSearch,
       selectedClass,
       selectedSubject,
       selectedReviewer,
@@ -385,7 +377,6 @@ export const ReviewQueueTab = ({
 
   const isFiltered =
     dateFilterMode !== 'all' ||
-    Boolean(teacherSearch) ||
     Boolean(selectedClass) ||
     Boolean(selectedSubject) ||
     Boolean(selectedReviewer) ||
@@ -396,7 +387,6 @@ export const ReviewQueueTab = ({
     setFilterDate(dayjs());
     setRangeStart(getWeekStart(dayjs()));
     setRangeEnd(getWeekEnd(dayjs()));
-    setTeacherSearch('');
     setSelectedClass('');
     setSelectedSubject('');
     setSelectedReviewer('');
@@ -408,7 +398,17 @@ export const ReviewQueueTab = ({
     (!currentTeacherId || !row.teacherId || row.teacherId !== currentTeacherId);
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%' }}>
+    <Box
+      data-testid="review-queue-tab"
+      sx={{
+        display: 'flex',
+        flex: 1,
+        minHeight: 0,
+        flexDirection: 'column',
+        gap: 1,
+        width: '100%',
+      }}
+    >
       {/* Header Controls: 2 Separate Cards with Gap (Status Tabs + Filter Toolbar) */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
         {/* Status Navigation Card */}
@@ -437,8 +437,6 @@ export const ReviewQueueTab = ({
           }}
         >
           <FilterToolbar
-            teacherSearch={teacherSearch}
-            onTeacherSearchChange={setTeacherSearch}
             selectedClass={selectedClass}
             onClassChange={setSelectedClass}
             classOptions={classOptions}
@@ -525,7 +523,9 @@ export const ReviewQueueTab = ({
           sx={{
             display: 'grid',
             gap: 2,
-            flex: '1 0 auto',
+            alignItems: 'start',
+            alignContent: 'start',
+            gridAutoRows: 'max-content',
             gridTemplateColumns: {
               xs: '1fr',
               sm: 'repeat(2, 1fr)',
@@ -691,72 +691,21 @@ export const ReviewQueueTab = ({
                 const item = row as ReviewItem;
                 const sourcePlan = lessonPlans.find((plan) => plan.id === item.id);
                 const canRev = canReviewRow(item);
+                const actions = getReviewQueueTableActions({
+                  canReview: item.status === 'pending' && canRev,
+                  onViewDetails:
+                    sourcePlan && onViewDetails ? () => onViewDetails(sourcePlan) : undefined,
+                  onApprove: () => openReview({ type: 'plan', id: item.id }, 'approve'),
+                  onRequestChanges: () => openReview({ type: 'plan', id: item.id }, 'changes'),
+                  onReject: () => openReview({ type: 'plan', id: item.id }, 'reject'),
+                });
 
                 return (
-                  <Stack direction="row" spacing={0.5} alignItems="center">
-                    {sourcePlan && onViewDetails && (
-                      <Tooltip title="View Details" arrow>
-                        <IconButton
-                          size="small"
-                          color="primary"
-                          onClick={() => onViewDetails(sourcePlan)}
-                        >
-                          <Iconify icon={GlobalIcons.eye} width={18} />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-
-                    {item.status === 'pending' && canRev && (
-                      <ThreeDotsActions
-                        actions={({ popover }) => (
-                          <Box sx={{ py: 0.5 }}>
-                            <Button
-                              fullWidth
-                              size="small"
-                              color="success"
-                              variant="text"
-                              startIcon={<Iconify icon="solar:check-circle-bold" />}
-                              onClick={() => {
-                                popover.onClose();
-                                openReview({ type: 'plan', id: item.id }, 'approve');
-                              }}
-                              sx={{ justifyContent: 'flex-start', px: 2 }}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              fullWidth
-                              size="small"
-                              color="warning"
-                              variant="text"
-                              startIcon={<Iconify icon="solar:alt-arrow-right-bold" />}
-                              onClick={() => {
-                                popover.onClose();
-                                openReview({ type: 'plan', id: item.id }, 'changes');
-                              }}
-                              sx={{ justifyContent: 'flex-start', px: 2 }}
-                            >
-                              Request Changes
-                            </Button>
-                            <Button
-                              fullWidth
-                              size="small"
-                              color="error"
-                              variant="text"
-                              startIcon={<Iconify icon="solar:close-circle-bold" />}
-                              onClick={() => {
-                                popover.onClose();
-                                openReview({ type: 'plan', id: item.id }, 'reject');
-                              }}
-                              sx={{ justifyContent: 'flex-start', px: 2 }}
-                            >
-                              Reject
-                            </Button>
-                          </Box>
-                        )}
-                      />
-                    )}
-                  </Stack>
+                  <AdaptiveThreeDotsActions
+                    actions={actions}
+                    placement="right-top"
+                    moreLabel="More review actions"
+                  />
                 );
               },
             },

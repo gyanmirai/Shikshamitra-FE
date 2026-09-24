@@ -18,7 +18,7 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
+import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
 import {
   useGetAssignmentTypesQuery,
   useDeleteAssignmentTypeMutation,

@@ -12,11 +12,11 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
 import { fPercent } from 'src/utils/format-number';
 import { useMemo, useState, useEffect } from 'react';
+import { alpha } from '@mui/material/styles';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { fDate, fDateTime } from 'src/utils/format-time';
 import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
-import { alpha } from '@mui/material/styles';
 import {
   useGetPaymentTermByIdQuery,
   useGetPaymentTermVersionHistoryQuery,
@@ -115,18 +115,18 @@ function InstallmentCard({ installment }: { installment: PaymentTermInstallmentR
           }}
         >
           <DetailItem
-            label="Coverage period"
+            label="Installment start–end date"
             value={`${formatDate(installment.coverageStartDate)} – ${formatDate(
               installment.coverageEndDate
             )}`}
           />
-          <DetailItem label="Demand date" value={formatDate(installment.demandDate)} />
+          <DetailItem label="Invoice date" value={formatDate(installment.demandDate)} />
           <DetailItem label="Due date" value={formatDate(installment.dueDate)} />
         </Box>
 
         <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap">
           <Label color={installment.demandEnabled ? 'success' : 'default'} variant="outlined">
-            {installment.demandEnabled ? 'Demand enabled' : 'Demand disabled'}
+            {installment.demandEnabled ? 'Invoice creation enabled' : 'Invoice creation disabled'}
           </Label>
           {installment.reminderEnabled ? (
             <Label color="info" variant="outlined">
@@ -134,13 +134,13 @@ function InstallmentCard({ installment }: { installment: PaymentTermInstallmentR
             </Label>
           ) : null}
           {installment.allowPartialOverride !== null &&
-            installment.allowPartialOverride !== undefined ? (
+          installment.allowPartialOverride !== undefined ? (
             <Label color="default" variant="outlined">
               Partial payment {installment.allowPartialOverride ? 'allowed' : 'not allowed'}
             </Label>
           ) : null}
           {installment.gracePeriodDaysOverride !== null &&
-            installment.gracePeriodDaysOverride !== undefined ? (
+          installment.gracePeriodDaysOverride !== undefined ? (
             <Label color="default" variant="outlined">
               {installment.gracePeriodDaysOverride}-day grace period
             </Label>
@@ -347,18 +347,19 @@ function VersionSnapshot({
         >
           <DetailItem
             label="Effective period"
-            value={`${formatDate(version.effectiveFrom)} – ${version.effectiveTo ? formatDate(version.effectiveTo) : 'No end date'
-              }`}
+            value={`${formatDate(version.effectiveFrom)} – ${
+              version.effectiveTo ? formatDate(version.effectiveTo) : 'No end date'
+            }`}
           />
           <DetailItem label="Published on" value={formatDateTime(version.publishedAt)} />
           <DetailItem
-            label="Demand rule"
+            label="Invoice date rule"
             value={
               <Stack direction="row" spacing={0.75} useFlexGap flexWrap="wrap" alignItems="center">
                 <span>{getDemandGenerationRuleLabel(version.demandGenerationRule)}</span>
                 {version.demandGenerationRule === 'XDaysBeforeDue' &&
-                  version.demandOffsetDays !== null &&
-                  version.demandOffsetDays !== undefined ? (
+                version.demandOffsetDays !== null &&
+                version.demandOffsetDays !== undefined ? (
                   <Label color="info" variant="soft">
                     {version.demandOffsetDays} {version.demandOffsetDays === 1 ? 'day' : 'days'}
                   </Label>
@@ -547,7 +548,7 @@ export default function PaymentTermDetailsDrawer({
                       value={getHolidayShiftingMethodLabel(data.holidayShiftingMethod)}
                     />
                     <DetailItem
-                      label="Demand rule"
+                      label="Invoice date rule"
                       value={
                         <Stack
                           direction="row"
@@ -558,8 +559,8 @@ export default function PaymentTermDetailsDrawer({
                         >
                           <span>{getDemandGenerationRuleLabel(data.demandGenerationRule)}</span>
                           {data.demandGenerationRule === 'XDaysBeforeDue' &&
-                            data.demandOffsetDays !== null &&
-                            data.demandOffsetDays !== undefined ? (
+                          data.demandOffsetDays !== null &&
+                          data.demandOffsetDays !== undefined ? (
                             <Label color="info" variant="soft">
                               {data.demandOffsetDays} {data.demandOffsetDays === 1 ? 'day' : 'days'}
                             </Label>

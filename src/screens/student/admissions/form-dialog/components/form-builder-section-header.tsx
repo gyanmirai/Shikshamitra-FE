@@ -3,11 +3,11 @@ import type { AdmissionFormSection } from 'src/redux/student/admissions/admissio
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
 import { Iconify } from 'src/components/iconify';
 import ButtonBase from '@mui/material/ButtonBase';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import { FormBuilderDeleteUnit } from './form-builder-delete-unit';
 
@@ -50,7 +50,7 @@ export function FormBuilderSectionHeader({
       }}
     >
       {reorderEnabled && (
-        <Tooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
+        <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
           <IconButton
             ref={sortable.setActivatorNodeRef}
             {...sortable.attributes}
@@ -60,7 +60,7 @@ export function FormBuilderSectionHeader({
           >
             <Iconify icon="mdi:drag-vertical" width={20} />
           </IconButton>
-        </Tooltip>
+        </CustomTooltip>
       )}
       <ButtonBase
         onClick={onSelect}
@@ -73,21 +73,21 @@ export function FormBuilderSectionHeader({
           textAlign: 'left',
           justifyContent: 'flex-start',
           borderRadius: 1,
-          '&:focus-visible': { outline: 2, outlineColor: 'primary.main' },
+          '&:focus-visible': { outline: 2, outlineColor: 'text.primary' },
         }}
       >
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
             {name}
           </Typography>
-          <Typography variant="caption" color={selected ? 'primary.main' : 'text.secondary'}>
+          <Typography variant="caption" color="text.secondary">
             {section.fields.length} {section.fields.length === 1 ? 'field' : 'fields'}
             {selected ? ' · Adding fields here' : ' · Select to add fields'}
             {section.visibilityRuleJson ? ' · Conditional' : ''}
           </Typography>
         </Box>
       </ButtonBase>
-      <Tooltip title={settingsOpen ? 'Close section settings' : 'Edit section'}>
+      <CustomTooltip title={settingsOpen ? 'Close section settings' : 'Edit section'}>
         <IconButton
           aria-label={`Edit ${name} section`}
           aria-expanded={settingsOpen}
@@ -97,7 +97,7 @@ export function FormBuilderSectionHeader({
         >
           <Iconify icon={settingsOpen ? 'mdi:chevron-up' : 'mdi:pencil-outline'} width={18} />
         </IconButton>
-      </Tooltip>
+      </CustomTooltip>
       <FormBuilderDeleteUnit name={name} unit="section" canDelete={canDelete} onDelete={onDelete} />
     </Stack>
   );

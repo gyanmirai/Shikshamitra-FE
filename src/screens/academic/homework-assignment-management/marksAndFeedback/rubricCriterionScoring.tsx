@@ -2,19 +2,13 @@ import { Card, Stack, TextField, Typography } from '@mui/material';
 
 import RubricPerformanceCards from './rubricPerformanceCards';
 import { usesPerformanceLevels } from './rubricEvaluationUtils';
-import RubricPerformanceMatrix from './rubricPerformanceMatrix';
 
 import type { RubricCriterionScoringProps } from './rubricEvaluationTypes';
 
 const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
   const { rubric, values, onMarksChange, onCommentsChange, readOnly } = props;
   if (usesPerformanceLevels(rubric)) {
-    return (
-      <>
-        <RubricPerformanceMatrix {...props} />
-        <RubricPerformanceCards {...props} />
-      </>
-    );
+    return <RubricPerformanceCards {...props} />;
   }
 
   return (

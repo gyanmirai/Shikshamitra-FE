@@ -1,9 +1,10 @@
 'use client';
 
-import { Iconify } from 'src/components/iconify';
-import { Box, Card, Grid, Stack, Typography } from '@mui/material';
+import type { AcademicInsightMetric } from 'src/screens/academic/components/academic-insights';
 
-type InsightCard = {
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
+
+export type InsightCard = {
   label: string;
   value: string;
   helper: string;
@@ -15,44 +16,44 @@ type Student360InsightCardsProps = {
   cards: InsightCard[];
 };
 
+const readNumericValue = (value: string) => {
+  const parsed = Number.parseFloat(value.replace(/[^\d.-]/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 export function Student360InsightCards({ cards }: Student360InsightCardsProps) {
+  const values = cards.map((card) => readNumericValue(card.value));
+  const lowestIndex = values.length > 0 ? values.indexOf(Math.min(...values)) : -1;
+  const lowestCard = lowestIndex >= 0 ? cards[lowestIndex] : undefined;
+
+  const metrics: AcademicInsightMetric[] = cards.map((card) => ({
+    id: card.label.toLowerCase().replace(/\s+/g, '-'),
+    label: card.label,
+    value: card.value,
+    helper: card.helper,
+    icon: card.icon,
+  }));
+
   return (
-    <Grid container spacing={1}>
-      {cards.map((card) => (
-        <Grid key={card.label} size={{ xs: 12, sm: 6, md: 3 }}>
-          <Card variant="outlined" sx={{ p: 2, borderRadius: 2, height: '100%' }}>
-            <Stack direction="row" spacing={1.25} alignItems="flex-start">
-              <Box
-                sx={{
-                  width: 38,
-                  height: 38,
-                  borderRadius: 1,
-                  display: 'grid',
-                  placeItems: 'center',
-                  bgcolor: (theme) => `${theme.palette[card.color].main}14`,
-                  color: `${card.color}.main`,
-                  flexShrink: 0,
-                }}
-              >
-                <Iconify icon={card.icon} width={20} />
-              </Box>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="caption" color="text.secondary">
-                  {card.label}
-                </Typography>
-                <Typography variant="h5" sx={{ lineHeight: 1.2 }}>
-                  {card.value}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {card.helper}
-                </Typography>
-              </Box>
-            </Stack>
-          </Card>
-        </Grid>
-      ))}
-    </Grid>
+    <AcademicInsights
+      title="Student progress insights"
+      description="A concise view of this student’s academic health, participation and learning progress."
+      metrics={metrics}
+      chart={{
+        title: 'Progress profile',
+        description: 'Comparable academic indicators shown on a 0–100 scale.',
+        categories: cards.map((card) => card.label),
+        values,
+        seriesName: 'Progress',
+        valueSuffix: '%',
+        max: 100,
+      }}
+      focus={{
+        title: lowestCard ? `${lowestCard.label} is the current focus area` : 'Select a student',
+        description: lowestCard
+          ? `${lowestCard.helper}. Review the detailed panels below to understand the contributing records.`
+          : 'Choose a student to load progress insights.',
+      }}
+    />
   );
 }
-
-export type { InsightCard };

@@ -1,21 +1,57 @@
 import type { ReactNode } from 'react';
 
-import { isValidElement } from 'react';
-import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 
 import { EmptyContent } from '../../empty-content';
 
 interface Props {
   noDataText: ReactNode;
   tableWidth: number;
+  searchTerm?: string;
+  hasActiveFilters?: boolean;
+  onClearCriteria?: () => void;
 }
 
-export default function TableEmptyState({ noDataText, tableWidth }: Props) {
+export default function TableEmptyState({
+  noDataText,
+  tableWidth,
+  searchTerm = '',
+  hasActiveFilters = false,
+  onClearCriteria,
+}: Props) {
   const stickyWidth = tableWidth || '100%';
+  const normalizedSearchTerm = searchTerm.trim();
+  const hasSearch = normalizedSearchTerm.length > 0;
+  const isFilteredEmptyState = hasSearch || hasActiveFilters;
+  const clearLabel =
+    hasSearch && hasActiveFilters
+      ? 'Clear search and filters'
+      : hasSearch
+        ? 'Clear search'
+        : 'Clear filters';
 
-  // if (isValidElement(noDataText)) {
-  //   return <Box sx={{ width: stickyWidth, position: 'sticky', left: 0 }}>{noDataText}</Box>;
-  // }
+  if (isFilteredEmptyState) {
+    return (
+      <EmptyContent
+        title={hasSearch ? `No results found for “${normalizedSearchTerm}”` : 'No results found'}
+        description="Try different criteria or clear the active search and filters."
+        action={
+          onClearCriteria ? (
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              onClick={onClearCriteria}
+              sx={{ mt: 2 }}
+            >
+              {clearLabel}
+            </Button>
+          ) : null
+        }
+        sx={{ width: stickyWidth, position: 'sticky', left: 0, p: 0 }}
+      />
+    );
+  }
 
   return (
     <EmptyContent

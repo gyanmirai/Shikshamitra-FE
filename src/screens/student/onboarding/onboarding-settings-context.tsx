@@ -26,14 +26,16 @@ type OnboardingSettingsContextValue = {
   scope: OnboardingConfigurationScope;
   isInherited: boolean;
   setScope: (scope: OnboardingConfigurationScope) => void;
-  resetToInherited: () => void;
-  applyReadinessAccess: (rules: ReadinessAccessRules) => void;
-  applyOnboardingProfile: (profile: OnboardingProfile) => void;
-  saveGrNumberConfiguration: (configuration: GrNumberConfiguration) => void;
-  setGrAssignmentMode: (mode: AssignmentModePolicy) => void;
-  saveRollNumberConfiguration: (configuration: RollNumberConfiguration) => void;
-  setRollAssignmentMode: (mode: AssignmentModePolicy) => void;
-  saveDivisionChangeConfiguration: (configuration: DivisionChangeConfiguration) => void;
+  resetToInherited: () => Promise<void> | void;
+  applyReadinessAccess: (rules: ReadinessAccessRules) => Promise<void> | void;
+  applyOnboardingProfile: (profile: OnboardingProfile) => Promise<void> | void;
+  saveGrNumberConfiguration: (configuration: GrNumberConfiguration) => Promise<void> | void;
+  setGrAssignmentMode: (mode: AssignmentModePolicy) => Promise<void> | void;
+  saveRollNumberConfiguration: (configuration: RollNumberConfiguration) => Promise<void> | void;
+  setRollAssignmentMode: (mode: AssignmentModePolicy) => Promise<void> | void;
+  saveDivisionChangeConfiguration: (configuration: DivisionChangeConfiguration) =>
+    | Promise<void>
+    | void;
 };
 
 const OnboardingSettingsContext = createContext<OnboardingSettingsContextValue | null>(null);
@@ -103,15 +105,31 @@ const cloneInitialSettings = (
 export function OnboardingSettingsProvider({
   children,
   initialSettings = defaultOnboardingSettings,
+  initialOverrides = {},
+  onPersist,
+  onRemoveOverride,
 }: {
   children: ReactNode;
   initialSettings?: OnboardingSettingsConfiguration;
+  initialOverrides?: Record<string, OnboardingSettingsConfiguration>;
+  onPersist?: (
+    scope: OnboardingConfigurationScope,
+    settings: OnboardingSettingsConfiguration
+  ) => Promise<void>;
+  onRemoveOverride?: (scope: OnboardingConfigurationScope) => Promise<void>;
 }) {
   const [inheritedSettings] = useState(() => cloneInitialSettings(initialSettings));
   const [scope, setActiveScope] = useState(defaultOnboardingConfigurationScope);
-  const [overrides, setOverrides] = useState<Record<string, OnboardingSettingsConfiguration>>({});
+  const [overrides, setOverrides] = useState<Record<string, OnboardingSettingsConfiguration>>(() =>
+    Object.fromEntries(
+      Object.entries(initialOverrides).map(([key, settings]) => [key, cloneInitialSettings(settings)])
+    )
+  );
   const [revisions, setRevisions] = useState<Record<string, number>>({});
-  const settings = overrides[scope.key] ?? inheritedSettings;
+  const schoolSettings =
+    overrides[defaultOnboardingConfigurationScope.key] ?? inheritedSettings;
+  const settings =
+    overrides[scope.key] ?? (scope.level === 'academic-year' ? schoolSettings : inheritedSettings);
   const revision = revisions[scope.key] ?? 0;
   const isInherited = !overrides[scope.key];
 
@@ -127,46 +145,60 @@ export function OnboardingSettingsProvider({
 
   const updateSettings = useCallback(
     (updater: (current: OnboardingSettingsConfiguration) => OnboardingSettingsConfiguration) => {
-      setOverrides((current) => {
-        const currentSettings = current[scope.key] ?? inheritedSettings;
-        return {
+      const currentSettings =
+        overrides[scope.key] ??
+        (scope.level === 'academic-year' ? schoolSettings : inheritedSettings);
+      const nextSettings = cloneInitialSettings(updater(currentSettings));
+      const commit = () => {
+        setOverrides((current) => ({ ...current, [scope.key]: nextSettings }));
+        setRevisions((current) => ({
           ...current,
-          [scope.key]: cloneInitialSettings(updater(currentSettings)),
-        };
-      });
-      setRevisions((current) => ({
-        ...current,
-        [scope.key]: (current[scope.key] ?? 0) + 1,
-      }));
+          [scope.key]: (current[scope.key] ?? 0) + 1,
+        }));
+      };
+
+      if (!onPersist) {
+        commit();
+        return undefined;
+      }
+
+      return onPersist(scope, nextSettings).then(commit);
     },
-    [inheritedSettings, scope.key]
+    [inheritedSettings, onPersist, overrides, schoolSettings, scope]
   );
 
   const resetToInherited = useCallback(() => {
-    setOverrides((current) => {
-      if (!current[scope.key]) return current;
-      const next = { ...current };
-      delete next[scope.key];
-      return next;
-    });
-    setRevisions((current) => {
-      if (!current[scope.key]) return current;
-      const next = { ...current };
-      delete next[scope.key];
-      return next;
-    });
-  }, [scope.key]);
+    if (!overrides[scope.key]) return undefined;
+    const commit = () => {
+      setOverrides((current) => {
+        const next = { ...current };
+        delete next[scope.key];
+        return next;
+      });
+      setRevisions((current) => {
+        const next = { ...current };
+        delete next[scope.key];
+        return next;
+      });
+    };
+
+    if (!onRemoveOverride) {
+      commit();
+      return undefined;
+    }
+
+    return onRemoveOverride(scope).then(commit);
+  }, [onRemoveOverride, overrides, scope]);
   const applyReadinessAccess = useCallback(
-    (rules: ReadinessAccessRules) => {
+    (rules: ReadinessAccessRules) =>
       updateSettings((current) => ({
         ...current,
         readinessAccess: { ...rules },
-      }));
-    },
+      })),
     [updateSettings]
   );
   const applyOnboardingProfile = useCallback(
-    (updatedProfile: OnboardingProfile) => {
+    (updatedProfile: OnboardingProfile) =>
       updateSettings((current) => ({
         ...current,
         onboardingProfiles: (() => {
@@ -193,12 +225,11 @@ export function OnboardingSettingsProvider({
               )
             : [...current.onboardingProfiles, nextProfile];
         })(),
-      }));
-    },
+      })),
     [updateSettings]
   );
   const saveGrNumberConfiguration = useCallback(
-    (configuration: GrNumberConfiguration) => {
+    (configuration: GrNumberConfiguration) =>
       updateSettings((current) => ({
         ...current,
         grNumber: {
@@ -211,21 +242,19 @@ export function OnboardingSettingsProvider({
               )
             : [...current.grNumber.configurations, configuration],
         },
-      }));
-    },
+      })),
     [updateSettings]
   );
   const setGrAssignmentMode = useCallback(
-    (assignmentMode: AssignmentModePolicy) => {
+    (assignmentMode: AssignmentModePolicy) =>
       updateSettings((current) => ({
         ...current,
         grNumber: { ...current.grNumber, assignmentMode },
-      }));
-    },
+      })),
     [updateSettings]
   );
   const saveRollNumberConfiguration = useCallback(
-    (configuration: RollNumberConfiguration) => {
+    (configuration: RollNumberConfiguration) =>
       updateSettings((current) => ({
         ...current,
         rollNumber: {
@@ -238,21 +267,19 @@ export function OnboardingSettingsProvider({
               )
             : [...current.rollNumber.configurations, configuration],
         },
-      }));
-    },
+      })),
     [updateSettings]
   );
   const setRollAssignmentMode = useCallback(
-    (assignmentMode: AssignmentModePolicy) => {
+    (assignmentMode: AssignmentModePolicy) =>
       updateSettings((current) => ({
         ...current,
         rollNumber: { ...current.rollNumber, assignmentMode },
-      }));
-    },
+      })),
     [updateSettings]
   );
   const saveDivisionChangeConfiguration = useCallback(
-    (configuration: DivisionChangeConfiguration) => {
+    (configuration: DivisionChangeConfiguration) =>
       updateSettings((current) => ({
         ...current,
         divisionChange: {
@@ -264,8 +291,7 @@ export function OnboardingSettingsProvider({
               )
             : [...current.divisionChange.configurations, configuration],
         },
-      }));
-    },
+      })),
     [updateSettings]
   );
   const value = useMemo<OnboardingSettingsContextValue>(

@@ -23,9 +23,7 @@ export function FormBuilderDetailFields({
             slotProps={{ inputLabel: { shrink: true } }}
             {...formik.getFieldProps('name')}
             error={Boolean(formik.touched.name && formik.errors.name)}
-            helperText={
-              (formik.touched.name && formik.errors.name) || 'A name your team will recognize.'
-            }
+            helperText={formik.touched.name && formik.errors.name}
           />
         </ShakingTextField>
       </Grid>
@@ -40,9 +38,7 @@ export function FormBuilderDetailFields({
             {...formik.getFieldProps('code')}
             onChange={(event) => formik.setFieldValue('code', event.target.value.toUpperCase())}
             error={Boolean(formik.touched.code && formik.errors.code)}
-            helperText={
-              (formik.touched.code && formik.errors.code) || 'Unique code, such as ADMISSION_2026.'
-            }
+            helperText={formik.touched.code && formik.errors.code}
           />
         </ShakingTextField>
       </Grid>
@@ -54,7 +50,6 @@ export function FormBuilderDetailFields({
           label="Form layout *"
           value={formik.values.layoutType}
           onChange={(event) => formik.setFieldValue('layoutType', Number(event.target.value))}
-          helperText="How applicants move through the form you build."
         >
           <MenuItem value={0}>Single page</MenuItem>
           <MenuItem value={1}>Step by step</MenuItem>
@@ -65,10 +60,9 @@ export function FormBuilderDetailFields({
           select
           fullWidth
           size="small"
-          label="Fields per row on desktop *"
+          label="Fields per row *"
           value={formik.values.fieldsPerRow}
           onChange={(event) => formik.setFieldValue('fieldsPerRow', Number(event.target.value))}
-          helperText="On phones, fields are shown in one column."
         >
           {[1, 2, 3, 4].map((columns) => (
             <MenuItem key={columns} value={columns}>
@@ -83,7 +77,7 @@ export function FormBuilderDetailFields({
           size="small"
           label="Description (optional)"
           multiline
-          minRows={3}
+          minRows={2}
           placeholder="Help your team know when to use this form."
           slotProps={{ inputLabel: { shrink: true } }}
           {...formik.getFieldProps('description')}
@@ -107,12 +101,7 @@ export function FormBuilderDetailFields({
             }
           }}
           renderInput={(params) => (
-            <TextField
-              {...params}
-              size="small"
-              label="Applicant languages *"
-              helperText="Choose every language applicants can use."
-            />
+            <TextField {...params} size="small" label="Applicant languages *" />
           )}
         />
       </Grid>
@@ -124,7 +113,6 @@ export function FormBuilderDetailFields({
           label="Default language *"
           value={formik.values.defaultLanguage}
           onChange={(event) => formik.setFieldValue('defaultLanguage', event.target.value)}
-          helperText="Used when an applicant has not selected a language."
         >
           {ADMISSION_FORM_LANGUAGES.filter((option) =>
             formik.values.supportedLanguages.includes(option.value)

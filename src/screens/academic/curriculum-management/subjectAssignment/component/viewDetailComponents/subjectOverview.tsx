@@ -5,13 +5,13 @@ import { varAlpha } from 'src/theme/styles';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import { SubjectType } from 'src/enums/subject-type';
 import { Box, Grid, Paper, Stack, Avatar, Skeleton, Typography } from '@mui/material';
 
 import TeacherHoverProfile from './TeacherHoverProfile';
+import { SubjectInformationCard } from './SubjectInformationCard';
 import {
-  getUnifiedTeachers,
   toTeacherOption,
+  getUnifiedTeachers,
 } from '../subjectAssignmentForm/teacherOptions';
 
 import type { ISubjectDetail } from '../type';
@@ -213,10 +213,11 @@ const SectionBlock: React.FC<SectionBlockProps> = ({ icon, title, content, empty
 
 interface SubjectOverviewProps {
   subject: ISubjectDetail | null;
+  status?: number | string;
   isLoading?: boolean;
 }
 
-const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading }) => {
+const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, status, isLoading }) => {
   const theme = useTheme();
   const teacherDetails = getUnifiedTeachers(subject ?? {});
   const teachers = teacherDetails.map(toTeacherOption);
@@ -232,86 +233,7 @@ const SubjectOverview: React.FC<SubjectOverviewProps> = ({ subject, isLoading })
           {/* ── LEFT COLUMN: Subject Information & Learning Details ── */}
           <Grid size={{ xs: 12, md: 7.5, lg: 8 }}>
             <Stack spacing={2}>
-              {/* Compact Information Bar */}
-              <Paper
-                variant="outlined"
-                sx={{
-                  p: 2,
-                  borderRadius: 1.5,
-                  bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.02),
-                  border: `1px solid ${varAlpha(theme.palette.dividerChannel, 0.8)}`,
-                }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ fontWeight: 700, mb: 1.5, color: 'text.primary' }}
-                >
-                  Subject Information
-                </Typography>
-
-                <Grid container spacing={2}>
-                  <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      sx={{ display: 'block', mb: 0.25 }}
-                    >
-                      Subject Code
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ fontWeight: 600, fontFamily: 'monospace', color: 'text.primary' }}
-                    >
-                      {subject?.subjectCode || '—'}
-                    </Typography>
-                  </Grid>
-
-                  <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      sx={{ display: 'block', mb: 0.25 }}
-                    >
-                      Type
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                      {subject?.subjectNo !== undefined && SubjectType[subject.subjectNo]
-                        ? SubjectType[subject.subjectNo]
-                        : 'Standard'}
-                    </Typography>
-                  </Grid>
-
-                  <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      sx={{ display: 'block', mb: 0.25 }}
-                    >
-                      Subject Name
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      noWrap
-                      sx={{ fontWeight: 600, color: 'text.primary' }}
-                    >
-                      {subject?.subjectName || subject?.subject?.name || '—'}
-                    </Typography>
-                  </Grid>
-
-                  <Grid size={{ xs: 6, sm: 3 }}>
-                    <Typography
-                      variant="caption"
-                      color="text.disabled"
-                      sx={{ display: 'block', mb: 0.25 }}
-                    >
-                      Medium
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-                      {subject?.subject?.educationMediumId ? 'Configured' : 'General'}
-                    </Typography>
-                  </Grid>
-                </Grid>
-              </Paper>
+              <SubjectInformationCard subject={subject} status={status} />
 
               {/* Learning Goals */}
               <SectionBlock

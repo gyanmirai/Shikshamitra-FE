@@ -7,6 +7,7 @@ import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -31,10 +32,13 @@ import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   Box,
+  Card,
   Chip,
   Stack,
   Button,
   Switch,
+  MenuItem,
+  MenuList,
   TextField,
   Typography,
   DialogActions,
@@ -49,7 +53,10 @@ import {
   usePatchChargeCategoryStatusMutation,
 } from 'src/redux/finance/chargeCategory';
 
+const ARCHIVE_REASON_MAX_LENGTH = 500;
+
 const FinanceChargeCategory = () => {
+  const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
   const addDialog = useBoolean();
   const editDialog = useBoolean();
   const confirm = useBoolean();
@@ -62,11 +69,9 @@ const FinanceChargeCategory = () => {
   const categoryPermissions = financePermissions.fees.settings.chargeCategoryActions;
   const canAdd = hasGrantedPermission(auth.permissions, categoryPermissions.add);
   const canEdit = hasGrantedPermission(auth.permissions, categoryPermissions.edit);
-  const canChangeStatus = hasGrantedPermission(
-    auth.permissions,
-    categoryPermissions.changeStatus
-  );
+  const canChangeStatus = hasGrantedPermission(auth.permissions, categoryPermissions.changeStatus);
   const canDelete = hasGrantedPermission(auth.permissions, categoryPermissions.delete);
+  const academicYearId = currentYear?.id ?? '';
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
 
@@ -83,12 +88,22 @@ const FinanceChargeCategory = () => {
     type: 'query',
     currentQueryAndMutation: useGetChargeCategoriesQuery,
     params: {
-      academicYearId: currentYear?.id,
+      academicYearId,
       page: queryParams.page,
       pageSize: queryParams.pageSize,
       search: queryParams.search || undefined,
+      isActive: archiveView === 'current',
     },
   });
+  const { data: archivedSummary } = useGetChargeCategoriesQuery(
+    {
+      academicYearId,
+      page: 1,
+      pageSize: 1,
+      isActive: false,
+    },
+    { skip: !academicYearId }
+  );
 
   // Delete mutation
   const [deleteChargeCategory, { isLoading: isDeleting }] = useQueryAndMutation({
@@ -130,6 +145,7 @@ const FinanceChargeCategory = () => {
               page: queryParams.page,
               pageSize: queryParams.pageSize,
               search: queryParams.search || undefined,
+              isActive: archiveView === 'current',
             },
             (draft: any) => {
               const index = draft.items?.findIndex((b: any) => b.id === (selectedEntry as any)?.id);
@@ -234,21 +250,12 @@ const FinanceChargeCategory = () => {
         sticky: true,
         render(value: boolean, row: any) {
           return (
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Chip
-                size="small"
-                label={row.isActive ? 'Active' : 'Inactive'}
-                color={row.isActive ? 'success' : 'default'}
-                variant="soft"
-              />
-              <Switch
-                size="small"
-                checked={row.isActive || false}
-                disabled={!canChangeStatus}
-                onClick={(event) => event.stopPropagation()}
-                onChange={() => handleOpenStatusConfirm(row)}
-              />
-            </Stack>
+            <Chip
+              size="small"
+              label={row.isActive ? 'Active' : 'Archived'}
+              color={row.isActive ? 'success' : 'default'}
+              variant="soft"
+            />
           );
         },
       },
@@ -263,9 +270,9 @@ const FinanceChargeCategory = () => {
         render(value, row: any) {
           return (
             <ThreeDotsActions
-              showEditIcon={canEdit}
-              showDeleteIcon={canDelete && !row.isUsedInDownstream}
-              showThreeDots={false}
+              showEditIcon={canEdit && archiveView === 'current'}
+              showDeleteIcon={canDelete && archiveView === 'current' && !row.isUsedInDownstream}
+              showThreeDots={canChangeStatus}
               placement="right-top"
               handleDeleteClick={() => {
                 handleDeleteAction(row);
@@ -273,13 +280,33 @@ const FinanceChargeCategory = () => {
               handleEditClick={() => {
                 handleEdit(row);
               }}
+              actions={({ popover }) => (
+                <MenuList>
+                  <MenuItem
+                    disabled={isStatusLoading}
+                    onClick={() => {
+                      popover.onClose();
+                      handleOpenStatusConfirm(row);
+                    }}
+                  >
+                    <Iconify
+                      icon={
+                        archiveView === 'archived'
+                          ? 'mdi:archive-arrow-up-outline'
+                          : 'mdi:archive-outline'
+                      }
+                    />
+                    {archiveView === 'archived' ? 'Restore' : 'Archive'}
+                  </MenuItem>
+                </MenuList>
+              )}
             />
           );
         },
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canChangeStatus, canDelete, canEdit]
+    [archiveView, canChangeStatus, canDelete, canEdit, isStatusLoading]
   );
 
   return (
@@ -293,22 +320,58 @@ const FinanceChargeCategory = () => {
           { name: 'Settings' },
           { name: 'Charge Category' },
         ]}
-        action={canAdd ? (
-          <Button
-            variant="contained"
-            size="small"
-            startIcon={<Add />}
-            onClick={handleAdd}
-            sx={{ px: '32px' }}
-          >
-            Charge Category
-          </Button>
-        ) : undefined}
+        action={
+          canAdd && archiveView === 'current' ? (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Add />}
+              onClick={handleAdd}
+              sx={{ px: '32px' }}
+            >
+              Charge Category
+            </Button>
+          ) : undefined
+        }
       />
+
+      <Card sx={{ p: 1, mb: 1.5 }}>
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant={archiveView === 'current' ? 'contained' : 'outlined'}
+            onClick={() => {
+              setQueryParams((current) => ({ ...current, page: 1 }));
+              setArchiveView('current');
+            }}
+          >
+            Current
+          </Button>
+          <Button
+            size="small"
+            variant={archiveView === 'archived' ? 'contained' : 'outlined'}
+            onClick={() => {
+              setQueryParams((current) => ({ ...current, page: 1 }));
+              setArchiveView('archived');
+            }}
+            endIcon={
+              <Label color="default" variant="soft">
+                {archivedSummary?.totalCount ?? 0}
+              </Label>
+            }
+          >
+            Archived
+          </Button>
+        </Stack>
+      </Card>
 
       <CustomizableTable
         tableId="charge-category-table"
-        noDataText={<>No Charge Category Data Found</>}
+        noDataText={
+          archiveView === 'archived'
+            ? 'No archived charge categories.'
+            : 'No charge categories found.'
+        }
         isLoading={isLoading || isFetching}
         columns={columns}
         data={data?.items || []}
@@ -386,11 +449,11 @@ const FinanceChargeCategory = () => {
           setStatusData(null);
           setDeactivationReason('');
         }}
-        title={nextStatus ? 'Activate Charge Category' : 'Deactivate Charge Category'}
+        title={nextStatus ? 'Restore Charge Category' : 'Archive Charge Category'}
         content={
           <Stack spacing={2}>
             <Typography variant="body2">
-              {nextStatus ? 'Activate' : 'Deactivate'}{' '}
+              {nextStatus ? 'Restore' : 'Archive'}{' '}
               <Box component="span" fontWeight="bold" color="text.primary">
                 {statusData?.name}
               </Box>
@@ -402,9 +465,17 @@ const FinanceChargeCategory = () => {
                 multiline
                 minRows={2}
                 size="small"
-                label="Deactivation reason"
+                label="Archive reason"
+                required
+                error={deactivationReason.length > 0 && !deactivationReason.trim()}
+                helperText={
+                  deactivationReason.length > 0 && !deactivationReason.trim()
+                    ? 'Archive reason is required.'
+                    : `${deactivationReason.trim().length}/${ARCHIVE_REASON_MAX_LENGTH} characters`
+                }
                 value={deactivationReason}
                 onChange={(event) => setDeactivationReason(event.target.value)}
+                inputProps={{ maxLength: ARCHIVE_REASON_MAX_LENGTH }}
               />
             )}
           </Stack>
@@ -412,7 +483,7 @@ const FinanceChargeCategory = () => {
         action={
           <LoadingButton
             loading={isStatusLoading}
-            disabled={!nextStatus && deactivationReason.trim().length < 10}
+            disabled={!nextStatus && !deactivationReason.trim()}
             variant="contained"
             color={nextStatus ? 'primary' : 'warning'}
             size="small"
@@ -423,11 +494,11 @@ const FinanceChargeCategory = () => {
                   id: statusData.id,
                   body: {
                     isActive: nextStatus,
-                    reason: nextStatus ? null : deactivationReason || null,
+                    reason: nextStatus ? null : deactivationReason.trim() || null,
                   },
                 }).unwrap();
                 shikshaMitraToast.success({
-                  message: `Charge Category ${nextStatus ? 'activated' : 'deactivated'} successfully`,
+                  message: `Charge Category ${nextStatus ? 'restored' : 'archived'} successfully`,
                 });
                 statusConfirm.onFalse();
                 setStatusData(null);
@@ -437,7 +508,7 @@ const FinanceChargeCategory = () => {
               }
             }}
           >
-            {nextStatus ? 'Activate' : 'Deactivate'}
+            {nextStatus ? 'Restore' : 'Archive'}
           </LoadingButton>
         }
       />
@@ -646,9 +717,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
 
             {/* Income category determines the income account used when the charge is collected. */}
             <ShakingTextField
-              error={
-                !!(formik.touched.incomeCategoryId && formik.errors.incomeCategoryId) || false
-              }
+              error={!!(formik.touched.incomeCategoryId && formik.errors.incomeCategoryId) || false}
             >
               <CustomSelect
                 name="incomeCategoryId"
@@ -660,9 +729,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
                 isLoading={incomeCategoryLoading}
                 disabled={Boolean(editData?.isUsedInDownstream)}
                 onChange={(value) => formik.setFieldValue('incomeCategoryId', value)}
-                error={
-                  formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)
-                }
+                error={formik.touched.incomeCategoryId && Boolean(formik.errors.incomeCategoryId)}
                 helperText={
                   formik.touched.incomeCategoryId && formik.errors.incomeCategoryId
                     ? (formik.errors.incomeCategoryId as string)

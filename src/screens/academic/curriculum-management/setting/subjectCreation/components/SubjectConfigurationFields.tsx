@@ -2,8 +2,8 @@ import type { FormikProps } from 'formik';
 
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Grid, Alert, Typography } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
-import { Box, Grid, Alert, TextField, Typography } from '@mui/material';
 import ColorPickerCircle from 'src/components/static-color/colorPickerCircle';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 
@@ -14,10 +14,7 @@ interface SubjectConfigurationFieldsProps {
   isUsed: boolean;
 }
 
-export function SubjectConfigurationFields({
-  formik,
-  isUsed,
-}: SubjectConfigurationFieldsProps) {
+export function SubjectConfigurationFields({ formik, isUsed }: SubjectConfigurationFieldsProps) {
   return (
     <>
       <Grid size={{ xs: 12 }}>
@@ -75,7 +72,7 @@ export function SubjectConfigurationFields({
         />
       </Grid>
 
-      <Grid size={{ xs: 12 }}>
+      {/* <Grid size={{ xs: 12 }}>
         <Typography variant="subtitle2" fontWeight={700}>
           Settings
         </Typography>
@@ -94,7 +91,7 @@ export function SubjectConfigurationFields({
           helperText={formik.touched.sortOrder && formik.errors.sortOrder}
           inputProps={{ min: 1, max: 999999 }}
         />
-      </Grid>
+      </Grid> */}
 
       {isUsed && (
         <Grid size={{ xs: 12 }}>

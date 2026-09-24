@@ -4,18 +4,21 @@ import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
 import { Add } from '@mui/icons-material';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import React, { useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { financePermissions } from 'src/constants/finance-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import {
   concessionTypeApi,
   useGetConcessionTypesQuery,
@@ -30,6 +33,7 @@ import ConcessionTypeVersionHistoryDrawer from './Components/ConcessionTypeVersi
 import type { IConcessionTypeForm } from './type';
 
 const ConcessionType = () => {
+  const [archiveView, setArchiveView] = useState<'current' | 'archived'>('current');
   // State to track the currently selected concession type
   const [selectedConcessionType, setSelectedConcessionType] = useState<IConcessionTypeForm | null>(
     null
@@ -43,6 +47,14 @@ const ConcessionType = () => {
   );
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const actionPermissions = financePermissions.fees.settings.concessionTypeActions;
+  const canView = hasGrantedPermission(permissions, actionPermissions.view);
+  const canAdd = hasGrantedPermission(permissions, actionPermissions.add);
+  const canEdit = hasGrantedPermission(permissions, actionPermissions.edit);
+  const canChangeStatus = hasGrantedPermission(permissions, actionPermissions.changeStatus);
+  const canDelete = hasGrantedPermission(permissions, actionPermissions.delete);
+  const academicYearId = currentYear?.id ?? '';
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
 
@@ -55,12 +67,23 @@ const ConcessionType = () => {
   }, []);
 
   const apiParams = {
-    academicYearId: currentYear?.id,
+    academicYearId,
     skipCount: (queryParams.page - 1) * queryParams.pageSize,
     maxResultCount: queryParams.pageSize,
     searchTerm: queryParams.search || undefined,
-    includeInactive: true,
+    includeInactive: archiveView === 'archived',
+    isActive: archiveView === 'current',
   };
+  const { data: archivedSummary } = useGetConcessionTypesQuery(
+    {
+      academicYearId,
+      skipCount: 0,
+      maxResultCount: 1,
+      includeInactive: true,
+      isActive: false,
+    },
+    { skip: !academicYearId }
+  );
 
   // Fetch concession type data
   const {
@@ -116,17 +139,48 @@ const ConcessionType = () => {
           { name: 'Concession Type' },
         ]}
         action={
-          <Button
-            onClick={() => addConcessionTypeDialog.onTrue()}
-            size="small"
-            startIcon={<Add />}
-            variant="contained"
-            sx={{ px: '32px' }}
-          >
-            Concession Type
-          </Button>
+          canAdd && archiveView === 'current' ? (
+            <Button
+              onClick={() => addConcessionTypeDialog.onTrue()}
+              size="small"
+              startIcon={<Add />}
+              variant="contained"
+              sx={{ px: '32px' }}
+            >
+              Concession Type
+            </Button>
+          ) : undefined
         }
       />
+      <Card sx={{ p: 1, mb: 1.5 }}>
+        <Stack direction="row" spacing={1}>
+          <Button
+            size="small"
+            variant={archiveView === 'current' ? 'contained' : 'outlined'}
+            onClick={() => {
+              setQueryParams((current) => ({ ...current, page: 1 }));
+              setArchiveView('current');
+            }}
+          >
+            Current
+          </Button>
+          <Button
+            size="small"
+            variant={archiveView === 'archived' ? 'contained' : 'outlined'}
+            onClick={() => {
+              setQueryParams((current) => ({ ...current, page: 1 }));
+              setArchiveView('archived');
+            }}
+            endIcon={
+              <Label color="default" variant="soft">
+                {archivedSummary?.data?.totalCount ?? 0}
+              </Label>
+            }
+          >
+            Archived
+          </Button>
+        </Stack>
+      </Card>
       <>
         {/* Form card for creating/editing concession types */}
 
@@ -165,6 +219,12 @@ const ConcessionType = () => {
         </CustomDialog>
 
         <ConcessionTypeTable
+          key={archiveView}
+          archived={archiveView === 'archived'}
+          canView={canView}
+          canEdit={canEdit}
+          canChangeStatus={canChangeStatus}
+          canDelete={canDelete}
           data={concessionTypes?.data?.items ?? []}
           isLoading={Boolean(currentYear?.id) && (isLoading || isFetching)}
           addConcessionType={addConcessionTypeDialog}

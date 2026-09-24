@@ -6,16 +6,17 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useDebounceEffect } from 'src/hooks/use-debounce';
-import { useSearchParams, useRouter, usePathname } from 'src/routes/hooks';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
 import {
   useGetSubjectKpiQuery,
   useGetSubjectAssignmentsQuery,
+  useCopySubjectAssignmentsMutation,
   useArchiveSubjectAssignmentMutation,
   useRestoreSubjectAssignmentMutation,
-  useCopySubjectAssignmentsMutation,
 } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { useClassSelection } from './useClassSelection';
@@ -134,18 +135,16 @@ export function useSubjectAssignment() {
     async (payload: CopySubjectPayload) => {
       try {
         const response = await copySubjects(payload).unwrap();
-        shikshaMitraToast.success(
-          response?.data?.message || response?.message || 'Subject allocations copied successfully.'
-        );
+        shikshaMitraToast.success({
+          message: response.data.message || 'Subject allocations copied successfully.',
+        });
         copySubjectsDialog.onFalse();
         refetch();
-      } catch (error: any) {
-        shikshaMitraToast.error(
-          error?.data?.detail ||
-          error?.data?.message ||
-          error?.message ||
-          'Failed to copy subject allocations.'
-        );
+      } catch (error: unknown) {
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Failed to copy subject allocations.',
+        });
+        throw error;
       }
     },
     [copySubjects, copySubjectsDialog, refetch]

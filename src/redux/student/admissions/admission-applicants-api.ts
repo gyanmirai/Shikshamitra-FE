@@ -18,6 +18,8 @@ export type UpdateAdmissionApplicantProfile = {
   lastName?: string | null;
   dateOfBirth: string;
   gender: 'Male' | 'Female';
+  guardianMobile?: string | null;
+  guardianEmail?: string | null;
 };
 export type AdmissionApplicant360 = {
   applicant: AdmissionApplicantProfile;

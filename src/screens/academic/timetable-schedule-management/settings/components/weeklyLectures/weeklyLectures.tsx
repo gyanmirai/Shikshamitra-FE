@@ -15,7 +15,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { TIMETABLE_STATUS_LABEL, normalizeTimetableStatus } from 'src/utils/timetable-capacity';
 import { useGetWeeklyLectureSlotsQuery } from 'src/redux/academicAPI/timetableApi/weeklyLecturesApi';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
+import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
 
 import CreateNoOfLecture from './createWeeklyLectures';
 import { useWeeklyLectureColumns } from './hooks/useWeeklyLectureColumns';
@@ -138,20 +138,8 @@ const WeeklyLectures = () => {
           { name: 'Settings' },
           { name: 'Weekly Lectures Slots' },
         ]}
-      // action={
-      //   <Button
-      //     startIcon={<Iconify icon="mdi:plus" />}
-      //     variant="contained"
-      //     size="small"
-      //     onClick={openCreate}
-      //     sx={{ px: '32px' }}
-      //   >
-      //     Weekly Lectures
-      //   </Button>
-      // }
+        action={<TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />}
       />
-
-      <TimetableSettingsSummaryCards cards={summaryCards} />
 
       <CustomizableTable
         tableId="weekly-lectures-setting-table"

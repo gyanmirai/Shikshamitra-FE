@@ -11,7 +11,7 @@ export const usesPerformanceLevels = (rubric: AssessmentRubricDto) =>
 
 export const initializeCriterionValues = (
   rubric: AssessmentRubricDto | undefined,
-  evaluation: RubricEvaluationDto | undefined
+  evaluation: RubricEvaluationDto | null | undefined
 ): CriterionEvaluationValues => {
   if (!rubric) return {};
 
@@ -62,3 +62,10 @@ export const calculateTotalMarks = (values: CriterionEvaluationValues) =>
     const marks = Number(value.marks);
     return total + (Number.isFinite(marks) ? marks : 0);
   }, 0);
+
+export const isMissingEvaluationResponse = (error: unknown) => {
+  if (!error || typeof error !== 'object') return false;
+
+  const responseError = error as { status?: unknown; originalStatus?: unknown };
+  return responseError.status === 404 || responseError.originalStatus === 404;
+};

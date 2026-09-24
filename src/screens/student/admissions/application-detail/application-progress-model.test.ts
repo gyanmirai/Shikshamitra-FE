@@ -4,6 +4,8 @@ import { it, expect, describe } from 'vitest';
 
 import {
   getStageGuidance,
+  getStageStatusColor,
+  getStageStatusLabel,
   getWorkflowProgress,
   getStageActionLabel,
   isAdmissionDecisionStage,
@@ -27,6 +29,15 @@ const stage = (overrides: Partial<AdmissionApplicationStage>): AdmissionApplicat
 });
 
 describe('application progress model', () => {
+  it('uses semantic shared-label states without treating skipped stages as completed', () => {
+    expect(getStageStatusLabel(0)).toBe('Not started');
+    expect(getStageStatusLabel(1)).toBe('Current step');
+    expect(getStageStatusLabel(2)).toBe('Completed');
+    expect(getStageStatusColor(2)).toBe('success');
+    expect(getStageStatusColor(3)).toBe('warning');
+    expect(getStageStatusColor(1)).toBe('default');
+  });
+
   it('counts completed and skipped steps as resolved progress', () => {
     const result = getWorkflowProgress([
       stage({ id: 'one', status: 2 }),

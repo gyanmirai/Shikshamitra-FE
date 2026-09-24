@@ -551,13 +551,13 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
   const formik = useFormik<GrNumberFormValues>({
     initialValues: createGrNumberFormValues(),
     validationSchema: grSchema,
-    onSubmit: (values, helpers) => {
+    onSubmit: async (values, helpers) => {
       const applicability = normalizeSingleAcademicApplicability(values, filters.boards);
       const configuration: GrNumberConfiguration = {
         ...values,
         ...applicability,
         applicableProfileIds: settings.onboardingProfiles.map((profile) => profile.id),
-        id: editingConfigurationId ?? `gr-session-${Date.now()}`,
+        id: editingConfigurationId ?? `gr-${Date.now()}`,
       };
 
       if (hasGrSeriesOverlap(configuration, configurations)) {
@@ -567,7 +567,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
         return;
       }
 
-      saveGrNumberConfiguration(configuration);
+      await saveGrNumberConfiguration(configuration);
       helpers.resetForm();
       setEditingConfigurationId(null);
       setEditorOpen(false);
@@ -693,7 +693,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
               ? formatGrNumber(currentPreviewConfiguration, 0, formatContext)
               : 'Not configured'
           }`,
-          'Current session',
+          'Saved scope',
         ]}
         buttonLabel="Add configuration"
         onClick={openNewConfiguration}
@@ -706,7 +706,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
           data={configurations}
           isFilter={false}
           wrapperProps={{ sx: { minHeight: { xs: 360, md: 320 }, height: '100%' } }}
-          noDataText={<>No identifier series configurations are available in this session.</>}
+          noDataText={<>No identifier series configurations are available for this scope.</>}
         />
       </Box>
       <SettingsDrawer
@@ -715,7 +715,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
         description="Control where the series applies, how it increments, and whether staff can override it."
         icon="mdi:identifier"
         statusLabel={editingConfigurationId ? 'Editing series' : 'New series'}
-        footerNote="Applies to Student Setup in this frontend session. Backend persistence is not connected."
+        footerNote="Saved for the selected scope and reused by Student Setup after reload."
         onClose={() => {
           formik.resetForm();
           setEditingConfigurationId(null);
@@ -725,8 +725,8 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
       >
         <Stack spacing={2} component="form" onSubmit={formik.handleSubmit}>
           <Alert severity="info">
-            Applying this configuration updates automatic GR assignment in Student Setup for this
-            frontend session. A full reload restores defaults until the API is connected.
+            This configuration is saved for policy resolution and preview. Durable GR allocation
+            continues to use the backend identifier series under Saved GR &amp; seat settings.
           </Alert>
           {formik.status ? <Alert severity="error">{String(formik.status)}</Alert> : null}
 
@@ -1032,7 +1032,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
   const formik = useFormik<RollNumberFormValues>({
     initialValues: createRollNumberFormValues(),
     validationSchema: rollSchema,
-    onSubmit: (values, helpers) => {
+    onSubmit: async (values, helpers) => {
       const applicability = normalizeSingleAcademicApplicability(values, filters.boards);
       const academicOptions = buildOnboardingAcademicStructureOptions(filters.boards);
       const selectedStandards = academicOptions.standards.filter((item) =>
@@ -1059,7 +1059,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
         ...configurationValues,
         ...applicability,
         orderingRules,
-        id: editingConfigurationId ?? `roll-session-${Date.now()}`,
+        id: editingConfigurationId ?? `roll-${Date.now()}`,
         classId:
           applicability.classMode === 'selected' && applicability.standardIds.length === 1
             ? applicability.standardIds[0]
@@ -1077,7 +1077,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
         return;
       }
 
-      saveRollNumberConfiguration(configuration);
+      await saveRollNumberConfiguration(configuration);
       helpers.resetForm();
       setEditingConfigurationId(null);
       setEditorOpen(false);
@@ -1211,7 +1211,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
         summaries={[
           `${configurations.length} configured rules`,
           `${configurations.filter((configuration) => configuration.classMode === 'selected').length} specific academic paths`,
-          'Current session',
+          'Saved scope',
         ]}
         buttonLabel="Add configuration"
         onClick={openNewConfiguration}
@@ -1224,7 +1224,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
           data={configurations}
           isFilter={false}
           wrapperProps={{ sx: { minHeight: { xs: 360, md: 320 }, height: '100%' } }}
-          noDataText={<>No Roll Number configurations are available in this session.</>}
+          noDataText={<>No Roll Number configurations are available for this scope.</>}
         />
       </Box>
       <SettingsDrawer
@@ -1233,7 +1233,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
         description="Control numbering scope, timing, mid-year insertion, ordering, locks, and approvals."
         icon="mdi:format-list-numbered"
         statusLabel={editingConfigurationId ? 'Editing rule' : 'New rule'}
-        footerNote="Applies to Student Setup in this frontend session. Backend persistence is not connected."
+        footerNote="Saved for the selected scope and reused by Student Setup after reload."
         onClose={() => {
           formik.resetForm();
           setEditingConfigurationId(null);
@@ -1243,8 +1243,8 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
       >
         <Stack spacing={2} component="form" onSubmit={formik.handleSubmit}>
           <Alert severity="info">
-            Applying this rule updates automatic roll-number assignment in Student Setup for this
-            frontend session. A full reload restores defaults until the API is connected.
+            This rule is saved for assignment guidance and preview. The onboarding case command
+            remains responsible for durable Roll number allocation and uniqueness.
           </Alert>
           {formik.status ? <Alert severity="error">{String(formik.status)}</Alert> : null}
           <SettingsSectionCard
@@ -1694,7 +1694,7 @@ export function DivisionChangesSettingsPanel() {
     setValidationError('');
     setEditorOpen(false);
   };
-  const applyDraft = () => {
+  const applyDraft = async () => {
     if (!draft.name.trim()) {
       setValidationError('Enter a rule name.');
       return;
@@ -1712,7 +1712,7 @@ export function DivisionChangesSettingsPanel() {
     const configuration: DivisionChangeConfiguration = {
       ...draft,
       ...applicability,
-      id: editingConfigurationId ?? `division-session-${Date.now()}`,
+      id: editingConfigurationId ?? `division-${Date.now()}`,
       name: draft.name.trim(),
       classId:
         applicability.classMode === 'selected' && applicability.standardIds.length === 1
@@ -1729,7 +1729,7 @@ export function DivisionChangesSettingsPanel() {
       );
       return;
     }
-    saveDivisionChangeConfiguration(configuration);
+    await saveDivisionChangeConfiguration(configuration);
     setEditorOpen(false);
   };
   const tableData = configurations.map((configuration) => ({
@@ -1819,7 +1819,7 @@ export function DivisionChangesSettingsPanel() {
         summaries={[
           `${activeConfigurations.length} active rules`,
           `${configurations.filter((item) => getAcademicApplicabilityScore(item) > 0).length} specific academic paths`,
-          'Current session',
+          'Saved scope',
         ]}
         buttonLabel="Add override"
         buttonIcon="mdi:plus"
@@ -1842,7 +1842,7 @@ export function DivisionChangesSettingsPanel() {
         description="Configure placement strategy, capacity protection, approvals, and record impact."
         icon="mdi:account-switch-outline"
         statusLabel={editingConfigurationId ? 'Editing rule' : 'New override'}
-        footerNote="Applies to Division assignment in Student Setup for this frontend session."
+        footerNote="Saved for the selected scope and reused by Student Setup after reload."
         onClose={closeEditor}
         onReset={() => {
           setDraft(baseline);
@@ -1855,7 +1855,8 @@ export function DivisionChangesSettingsPanel() {
       >
         <Stack spacing={2}>
           <Alert severity="info">
-            Student records remain unchanged until the backend Division workflow is connected.
+            This rule guides placement decisions. Student records change only when an authorized
+            user runs the backend placement command for an onboarding case.
           </Alert>
           {validationError ? <Alert severity="error">{validationError}</Alert> : null}
           <SettingsSectionCard
@@ -2165,7 +2166,7 @@ function EffectivePolicyPreview({ open, onClose }: { open: boolean; onClose: () 
     >
       <Stack spacing={2}>
         <Alert severity="info">
-          This preview reflects policies applied to Student Setup in the current frontend session.
+          This preview reflects the saved policies applied to Student Setup for the selected scope.
         </Alert>
         <SettingsSectionCard
           icon="mdi:clipboard-text-search-outline"
@@ -2257,7 +2258,7 @@ function EffectivePolicyPreview({ open, onClose }: { open: boolean; onClose: () 
           </Paper>
           <Typography variant="caption" color="text.secondary">
             Final capacity, uniqueness, scheduling, permission, and notification decisions remain
-            backend-owned when persistence is connected.
+            backend-owned by the onboarding case commands.
           </Typography>
         </SettingsSectionCard>
       </Stack>

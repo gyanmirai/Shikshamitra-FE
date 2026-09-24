@@ -6,10 +6,10 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Button, Checkbox, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import studentGradeData from 'src/json/academic/examination/studentGradeData.json';
-import { Box, Button, MenuList, MenuItem, Checkbox, Typography } from '@mui/material';
 
 import { AssignGrade } from './assignGradeForm';
 
@@ -159,31 +159,31 @@ const StudentSubmissions = () => {
               isSort: false,
               render(value, row) {
                 return (
-                  <ThreeDotsActions
-                    actions={() => (
-                      <MenuList>
-                        {row.status === 'Pending' && (
-                          <MenuItem
-                            onClick={() => {
-                              viewSubmissionDialog.onTrue();
-                              setSelectedStudent(row);
-                            }}
-                          >
-                            {' '}
-                            <Iconify icon="mdi:eye" sx={{ height: '16px', width: '16px' }} />
-                            View Submission
-                          </MenuItem>
-                        )}
-
-                        {row.status === 'Submitted' && (
-                          <MenuItem onClick={() => {}}>
-                            {' '}
-                            <Iconify icon="mdi:pen" sx={{ height: '16px', width: '16px' }} />
-                            Edit
-                          </MenuItem>
-                        )}
-                      </MenuList>
-                    )}
+                  <AdaptiveThreeDotsActions
+                    actions={
+                      row.status === 'Pending'
+                        ? [
+                            {
+                              id: 'view',
+                              label: 'View submission',
+                              icon: 'mdi:eye',
+                              onClick: () => {
+                                viewSubmissionDialog.onTrue();
+                                setSelectedStudent(row);
+                              },
+                            },
+                          ]
+                        : row.status === 'Submitted'
+                          ? [
+                              {
+                                id: 'edit',
+                                label: 'Edit submission',
+                                icon: 'mdi:pen',
+                                onClick: () => undefined,
+                              },
+                            ]
+                          : []
+                    }
                   />
                 );
               },

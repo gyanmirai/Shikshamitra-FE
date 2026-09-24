@@ -72,7 +72,7 @@ export function FormBuilderSection({
       sx={{
         borderRadius: 1.5,
         overflow: 'visible',
-        borderColor: selected ? 'primary.main' : 'divider',
+        borderColor: selected ? 'text.primary' : 'divider',
       }}
     >
       <FormBuilderSectionHeader

@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { alpha } from '@mui/material/styles';
-import { Box, Grid, Typography } from '@mui/material';
+import { Box, Grid, Skeleton, Typography } from '@mui/material';
 import {
   getActiveDaysCount,
   getTeachingSlotsPerDay,
@@ -11,6 +11,7 @@ import {
 } from 'src/utils/timetable-capacity';
 
 interface CapacitySummaryProps {
+  isLoading?: boolean;
   slotConfigurations: Array<{ weekRange?: number[]; timeSlots?: { slotType?: string }[] }>;
 }
 
@@ -18,13 +19,17 @@ interface CapacitySummaryProps {
  * Live "available vs required" capacity readout shown while editing Lecture Slots.
  * Mirrors the shared status logic so the number here always matches the list/table.
  */
-export default function CapacitySummary({ slotConfigurations }: CapacitySummaryProps) {
+export default function CapacitySummary({
+  isLoading = false,
+  slotConfigurations,
+}: CapacitySummaryProps) {
   const stats = useMemo(() => {
     const groups = (slotConfigurations || [])
-      .filter((c) => Array.isArray(c.weekRange) && c.weekRange.length === 2)
+      .filter((c) => Array.isArray(c.weekRange) && c.weekRange.length > 0)
       .map((c) => ({
         weekRangeStart: c.weekRange![0],
-        weekRangeEnd: c.weekRange![1],
+        weekRangeEnd: c.weekRange![c.weekRange!.length - 1],
+        activeDays: c.weekRange,
         timeSlots: c.timeSlots || [],
       }));
 
@@ -54,6 +59,7 @@ export default function CapacitySummary({ slotConfigurations }: CapacitySummaryP
 
   return (
     <Box
+      aria-busy={isLoading}
       sx={{
         p: 1.5,
         borderRadius: 2,
@@ -64,14 +70,22 @@ export default function CapacitySummary({ slotConfigurations }: CapacitySummaryP
     >
       <Grid container spacing={1}>
         {items.map((item) => (
-          <Grid key={item.label} size={{ xs: 6, sm: 12 / items.length }} sx={{ textAlign: 'center' }}>
-            <Typography
-              variant="h6"
-              fontWeight={700}
-              color={item.highlight ? 'primary.main' : 'text.primary'}
-            >
-              {item.value}
-            </Typography>
+          <Grid
+            key={item.label}
+            size={{ xs: 6, sm: 12 / items.length }}
+            sx={{ textAlign: 'center' }}
+          >
+            {isLoading ? (
+              <Skeleton width={28} height={32} sx={{ mx: 'auto' }} />
+            ) : (
+              <Typography
+                variant="h6"
+                fontWeight={700}
+                color={item.highlight ? 'primary.main' : 'text.primary'}
+              >
+                {item.value}
+              </Typography>
+            )}
             <Typography variant="caption" color="text.secondary">
               {item.label}
             </Typography>

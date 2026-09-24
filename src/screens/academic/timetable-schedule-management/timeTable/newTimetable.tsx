@@ -8,12 +8,12 @@ import type { TimeSlot, DayOfWeek } from 'src/components/timetable/types';
 import type { TimetableValidationIssue } from 'src/components/timetable/timetableValidationIssues';
 
 import dayjs from 'dayjs';
-import { alpha } from '@mui/material/styles';
-import { varAlpha } from 'src/theme/styles';
 import { useFormik } from 'formik';
-import { LoadingButton } from '@mui/lab';
 import { cloneDeep } from 'lodash';
+import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
+import { varAlpha } from 'src/theme/styles';
+import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
 import { GlobalIcons } from 'src/utils/icons';
@@ -29,34 +29,26 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import TimetableBoard from 'src/components/timetable/TimetableBoard';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { extractTimetableApiIssues } from 'src/components/timetable/timetableValidationIssues';
-import {
-  TimetableStatusType,
-  TimetableStatusColors,
-  TimetableStatusOptions,
-} from 'src/enums/timatable-type';
+import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
 import {
   Box,
   Card,
   Chip,
+  Grid,
   Alert,
   Paper,
+  Stack,
   Button,
   Divider,
   Skeleton,
   Typography,
-  LinearProgress,
-  Grid,
-  Stack,
+  IconButton,
   DialogContent,
   DialogActions,
-  Tooltip,
-  Tabs,
-  Tab,
-  IconButton,
+  LinearProgress,
 } from '@mui/material';
 import {
   useCreateTimetableMutation,
@@ -65,9 +57,13 @@ import {
   useGetTimetableManagementByStandardQuery,
 } from 'src/redux/academicAPI/timetableApi/timetableManagementApi';
 
-import type { TimetableSlot, TSubjectGroup } from './type';
-
 import { TimetablePreviewDialog } from './component/TimetablePreviewDialog';
+import {
+  ReadinessChecklistDialog,
+  type ReadinessChecklistDivision,
+} from './component/ReadinessChecklistDialog';
+
+import type { TimetableSlot, TSubjectGroup } from './type';
 
 export const subjectGroupsData: TSubjectGroup[] = [
   {
@@ -442,7 +438,6 @@ const DISPLAY_STATUS_FILTER_OPTIONS = Object.keys(DISPLAY_STATUS_COLORS).map((st
   label: status,
 }));
 
-
 const TimeTableGrid = () => {
   const router = useRouter();
   // Dialog state for creating time slots modal
@@ -467,7 +462,8 @@ const TimeTableGrid = () => {
   const [division, setDivision] = useState<string>('');
   const [selectedDivisionId, setSelectedDivisionId] = useState<string>('');
   const [selectedStatus, setSelectedStatus] = useState<number | null>(null);
-  const [readinessCheckDivision, setReadinessCheckDivision] = useState<any | null>(null);
+  const [readinessCheckDivision, setReadinessCheckDivision] =
+    useState<ReadinessChecklistDivision | null>(null);
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -632,7 +628,15 @@ const TimeTableGrid = () => {
                   <Iconify icon="lucide:settings" sx={{ height: '14px', width: '14px' }} />
                 }
                 onClick={() => {
-                  setReadinessCheckDivision(row);
+                  setReadinessCheckDivision({
+                    divisionName: String(row.divisionName ?? ''),
+                    readinessScore: Number(row.readinessScore ?? 0),
+                    missingItems: Array.isArray(row.missingItems)
+                      ? row.missingItems.filter(
+                          (item: unknown): item is string => typeof item === 'string'
+                        )
+                      : [],
+                  });
                 }}
               >
                 Setup Required
@@ -857,72 +861,12 @@ const TimeTableGrid = () => {
       </CustomDialog>
 
       {ConfirmDialog}
-      <CustomDialog
+      <ReadinessChecklistDialog
         open={Boolean(readinessCheckDivision)}
-        handleClose={() => setReadinessCheckDivision(null)}
-        maxWidth="xs"
-        hasForm={false}
-        title={
-          <Box display="flex" alignItems="center" gap={1}>
-            <Iconify icon="lucide:alert-triangle" color="warning.main" width={22} />
-            Readiness Checklist
-            <CustomTooltip
-              arrow
-              placement="bottom-start"
-              title="View the prerequisite checklist (subject assignments, teacher mappings, period structure) required before publishing a timetable for this division."
-            >
-              <IconButton size="small" color="info" sx={{ p: 0.5 }}>
-                <Iconify icon="lucide:info" width={18} />
-              </IconButton>
-            </CustomTooltip>
-          </Box>
-        }
-      >
-        <DialogContent sx={{ p: 2 }}>
-          {readinessCheckDivision && (
-            <Box>
-              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 700 }}>
-                Class {classes} · Division {readinessCheckDivision.divisionName} (Readiness:{' '}
-                {readinessCheckDivision.readinessScore}%)
-              </Typography>
-              <LinearProgress
-                variant="determinate"
-                value={readinessCheckDivision.readinessScore}
-                sx={{ mb: 2.5, height: 8, borderRadius: 4 }}
-                color={readinessCheckDivision.readinessScore === 100 ? 'success' : 'warning'}
-              />
-              <Typography
-                variant="subtitle2"
-                color="text.secondary"
-                sx={{ mb: 1.5, fontWeight: 600 }}
-              >
-                Pending Setup Items:
-              </Typography>
-              <Stack spacing={1}>
-                {readinessCheckDivision.missingItems.map((item: string, idx: number) => (
-                  <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Iconify icon="lucide:x-circle" color="error.main" sx={{ flexShrink: 0 }} />
-                    <Typography variant="body2" color="text.secondary">
-                      {item}
-                    </Typography>
-                  </Box>
-                ))}
-              </Stack>
-            </Box>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            onClick={() => setReadinessCheckDivision(null)}
-            variant="contained"
-            color="primary"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.approvedIcon} />}
-          >
-            Okay
-          </Button>
-        </DialogActions>
-      </CustomDialog>
+        className={classes}
+        division={readinessCheckDivision}
+        onClose={() => setReadinessCheckDivision(null)}
+      />
       {!open && (
         <>
           <Card sx={{ boxShadow: 'var(--shadows-4)', p: 1, mb: 1 }}>
@@ -948,9 +892,9 @@ const TimeTableGrid = () => {
                   setSelectedStandardId(found?.id || '');
                 }}
               />
+              <TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />
             </Box>
           </Card>
-          <TimetableSettingsSummaryCards cards={summaryCards} />
           <CustomizableTable
             tableId="timetable-table"
             noDataText={
@@ -1311,7 +1255,9 @@ const TimeTableForm = ({
           id: resolvedId,
           subjectId: resolvedId,
           name: subject?.electiveGroupId
-            ? (subject?.subjects?.length === 1 ? subject?.subjects?.[0]?.subjectName : subject?.electiveGroupName)
+            ? subject?.subjects?.length === 1
+              ? subject?.subjects?.[0]?.subjectName
+              : subject?.electiveGroupName
             : subject?.subjects?.[0]?.subjectName,
           color: subject?.color,
           defaultDuration: 60,
@@ -1380,11 +1326,17 @@ const TimeTableForm = ({
     };
   }, [formik.values.slots]);
 
+  const { slots: timetableSlots } = formik.values;
+
+  /**
+   * Memoization Justification:
+   * Conflict detection traverses every subject, teacher and room in the weekly grid.
+   * Recompute only when the editable slot collection changes.
+   */
   const conflicts = useMemo(() => {
     const warnings: string[] = [];
-    const slots = formik.values.slots;
-    (Object.keys(slots) as DayOfWeek[]).forEach((day) => {
-      (slots[day] || []).forEach((slot) => {
+    (Object.keys(timetableSlots) as DayOfWeek[]).forEach((day) => {
+      (timetableSlots[day] || []).forEach((slot) => {
         if (!slot.subjects || slot.subjects.length < 2) return;
 
         const teacherIds = slot.subjects.map((s) => s.teacherId).filter(Boolean);
@@ -1413,7 +1365,7 @@ const TimeTableForm = ({
       });
     });
     return [...new Set(warnings)];
-  }, [formik.values.slots]);
+  }, [timetableSlots]);
 
   const editorDisplayStatus = useMemo(() => {
     if (conflicts.length > 0) return 'Conflict Found';
@@ -1704,7 +1656,7 @@ const TimeTableForm = ({
               size="small"
               color={
                 assignmentProgress.teacherAssigned === assignmentProgress.totalFilledSubjects &&
-                  assignmentProgress.totalFilledSubjects > 0
+                assignmentProgress.totalFilledSubjects > 0
                   ? 'success'
                   : 'default'
               }
@@ -1722,7 +1674,7 @@ const TimeTableForm = ({
               size="small"
               color={
                 assignmentProgress.roomAssigned === assignmentProgress.totalFilledSubjects &&
-                  assignmentProgress.totalFilledSubjects > 0
+                assignmentProgress.totalFilledSubjects > 0
                   ? 'success'
                   : 'default'
               }
@@ -1901,7 +1853,9 @@ const TimeTableForm = ({
                 color: validationResult?.passed ? 'success.main' : 'error.main',
                 bgcolor: (theme) =>
                   alpha(
-                    validationResult?.passed ? theme.palette.success.main : theme.palette.error.main,
+                    validationResult?.passed
+                      ? theme.palette.success.main
+                      : theme.palette.error.main,
                     0.1
                   ),
               }}

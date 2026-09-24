@@ -10,10 +10,10 @@ import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import RoomCreationForm from './addRoomForm';
 
@@ -181,15 +181,23 @@ const RoomDetails = ({ addRoomDialog }: any) => {
             sticky: true,
             render(value, row) {
               return (
-                <ThreeDotsActions
-                  // actions={(prop) => actions({ ...prop, row })}
-                  showEditIcon={canAdd}
-                  showThreeDots={false}
-                  handleEditClick={() => {
-                    setIsEdit(true);
-                    setSelectedEntry(row);
-                    addRoomDialog.onTrue();
-                  }}
+                <AdaptiveThreeDotsActions
+                  actions={
+                    canAdd
+                      ? [
+                          {
+                            id: 'edit',
+                            label: 'Edit room',
+                            icon: 'solar:pen-bold',
+                            onClick: () => {
+                              setIsEdit(true);
+                              setSelectedEntry(row);
+                              addRoomDialog.onTrue();
+                            },
+                          },
+                        ]
+                      : []
+                  }
                   placement="right-top"
                 />
               );

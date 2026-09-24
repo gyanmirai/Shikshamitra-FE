@@ -6,7 +6,6 @@ import dayjs from 'dayjs';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Box, Typography } from '@mui/material';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,6 +19,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
@@ -33,6 +33,7 @@ import {
 import HomeworkForm from './homeworkForm';
 import HomeworkTable from './homeworkTable';
 import ViewHomeworkDetails from './viewHomeworkDetails';
+import { normalizeLearningTasks, LearningTaskSummaryCards } from './learningTaskUi';
 import { StudentSubmissions } from '../studentSubmission/homeworkStudentSubmission';
 
 import type { IHomework } from '../type';
@@ -223,6 +224,17 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
+  /**
+   * Memoization Justification:
+   * - The normalized tasks feed both the insights summary and the data table.
+   * - It prevents rebuilding the task rows when unrelated dialog state changes.
+   * - The API result and selected division are the only inputs that affect this transformation.
+   */
+  const normalizedLearningTasks = useMemo(
+    () => normalizeLearningTasks(isValidDate ? homeworkData?.items || [] : [], division),
+    [division, homeworkData?.items, isValidDate]
+  );
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Box
@@ -235,6 +247,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           p: 1,
           gap: 1,
           mb: 1,
+          alignItems: 'center',
         }}
       >
         {' '}
@@ -314,6 +327,15 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
           format="DD-MM-YYYY"
           sx={{ maxWidth: '250px' }}
         />
+        <LearningTaskSummaryCards
+          tasks={normalizedLearningTasks}
+          buttonSx={{
+            mb: 0,
+            ml: 'auto',
+            flexShrink: 0,
+            '& .MuiButton-root': { whiteSpace: 'nowrap' },
+          }}
+        />
       </Box>
 
       <CustomDialog
@@ -355,7 +377,7 @@ const HomeworkCreation = ({ addHomeworkDialog }: any) => {
       </CustomDialog>
 
       <HomeworkTable
-        homeworkData={isValidDate ? homeworkData?.items || [] : []}
+        homeworkData={normalizedLearningTasks}
         isLoading={isHomeworkDataLoading || isHomeworkDataFetching}
         selectedDivision={division}
         setOpen={setOpen}

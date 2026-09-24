@@ -357,12 +357,10 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
       ? (selectedCollectionPolicy.lateFeeApplyOnFeeHeads ?? [])
       : []
   );
-  const waiverPolicyHeadIds = new Set<string>(
-    selectedCollectionPolicy?.enableWaiver
-      ? (selectedCollectionPolicy.waiverApplyOnFeeHeads ?? [])
-      : []
-  );
-  const applicablePolicyHeadIds = new Set([...lateFeePolicyHeadIds, ...waiverPolicyHeadIds]);
+  const waiverPolicyHeadIds = selectedCollectionPolicy?.enableWaiver
+    ? lateFeePolicyHeadIds
+    : new Set<string>();
+  const applicablePolicyHeadIds = lateFeePolicyHeadIds;
   const lateFeeCovered = feeHeads.filter((x) => lateFeePolicyHeadIds.has(x.feeHeadId));
   const waiverCovered = feeHeads.filter((x) => waiverPolicyHeadIds.has(x.feeHeadId));
   const headsWithoutLateFee = feeHeads.filter((x) => !lateFeePolicyHeadIds.has(x.feeHeadId));
@@ -467,7 +465,7 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
                     ? 'warning'
                     : 'info'
                 }
-                label={`Waiver: ${waiverCovered.length}/${feeHeads.length} heads`}
+                label={`Late-fee waiver: ${waiverCovered.length}/${feeHeads.length} heads`}
               />
             </Stack>
 
@@ -486,8 +484,8 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
 
             {selectedCollectionPolicy?.enableWaiver && waiverCovered.length === 0 && (
               <Alert severity="warning" sx={{ mb: 1 }}>
-                None of this structure&apos;s Fee Heads are in the policy&apos;s waiver scope. The
-                policy can still be attached, but waivers will not be available here.
+                None of this structure&apos;s Fee Heads are in the late-fee scope. The policy can
+                still be attached, but late-fee waivers will not be available here.
               </Alert>
             )}
 
@@ -500,7 +498,7 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
 
             {selectedCollectionPolicy?.enableWaiver && headsWithoutWaiver.length > 0 && (
               <Alert severity="warning" sx={{ mb: 1 }}>
-                Waiver will not apply to:{' '}
+                Late-fee waiver inherits the late-fee scope and will not apply to:{' '}
                 {headsWithoutWaiver.map((x) => x.feeHeadName || x.feeHeadId).join(', ')}.
               </Alert>
             )}

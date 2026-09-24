@@ -769,7 +769,7 @@ export function ReadinessAccessSettingsScreen() {
     if (!source) return;
     const override: OnboardingProfile = {
       ...source,
-      id: `${source.id}-session-${Date.now()}`,
+      id: `${source.id}-${Date.now()}`,
       name: `${source.name} academic override`,
       applicability: createReadinessOverrideApplicability(source.applicability),
       rules: {
@@ -1019,9 +1019,10 @@ export function ReadinessAccessSettingsScreen() {
         }
       />
 
-      <Alert severity="warning" variant="outlined" sx={{ flexShrink: 0 }}>
-        Rules applied here update Student Setup for the current frontend session. A reload restores
-        defaults until every advanced rule has a matching backend contract.
+      <Alert severity="info" variant="outlined" sx={{ flexShrink: 0 }}>
+        Readiness rules are saved for the selected scope and reused by Student Setup after reload.
+        Activation requirements and service handoffs remain controlled by the saved operational
+        defaults.
       </Alert>
 
       <Box
@@ -1081,7 +1082,7 @@ export function ReadinessAccessSettingsScreen() {
                 ? 'Unsaved changes'
                 : 'Applied rules'
         }
-        footerNote="Applies to Student Setup in this frontend session."
+        footerNote="Saved rules apply to Student Setup for the selected scope."
         onClose={closeDrawer}
         onReset={() => {
           setProfileNameDraft(selectedProfile?.name ?? '');
@@ -1090,9 +1091,9 @@ export function ReadinessAccessSettingsScreen() {
           setApplicabilityDraft(savedApplicability);
         }}
         resetDisabled={!isDirty}
-        onSubmit={() => {
+        onSubmit={async () => {
           if (!selectedProfile || profileValidationError) return;
-          applyOnboardingProfile({
+          await applyOnboardingProfile({
             ...selectedProfile,
             name: profileNameDraft.trim(),
             admissionRoutes: [admissionRouteDraft],

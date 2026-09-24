@@ -34,6 +34,7 @@ const installmentSchema = Yup.object().shape({
     .moreThan(0, 'Allocation percentage must be greater than 0')
     .max(100, 'Allocation percentage cannot exceed 100')
     .required('Allocation percentage is required'),
+  demandEnabled: Yup.boolean().required(),
   gracePeriod: Yup.number().min(0, 'Grace days cannot be negative').nullable(),
 });
 
@@ -64,6 +65,16 @@ export const paymentTermValidationSchema = (
     status: Yup.mixed<PaymentTermStatus>()
       .oneOf(['Draft', 'Active'] as const, 'Status must be Draft or Active')
       .required('Status is required'),
+
+    isDefaultTerm: Yup.boolean().test(
+      'default-requires-active',
+      'Only an Active payment term can be the default',
+      function validateDefaultStatus(isDefault) {
+        return !isDefault || this.parent.status === 'Active';
+      }
+    ),
+
+    invoiceCreationEnabled: Yup.boolean().required(),
 
     installments: Yup.array()
       .of(installmentSchema)
@@ -126,9 +137,14 @@ export const paymentTermValidationSchema = (
       )
       .test(
         'specific-demand-dates',
-        'A bill generation date on or before the due date is required for every installment',
+        'An invoice date on or before the due date is required when invoice creation is enabled',
         function (items) {
-          if (this.parent.demandGenerationRule !== 'SpecificDate') return true;
+          if (
+            this.parent.demandGenerationRule !== 'SpecificDate' ||
+            !this.parent.invoiceCreationEnabled
+          ) {
+            return true;
+          }
           return items?.every((item) => {
             if (!item?.demandDate || !item?.dueDate) return false;
             return !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day');
@@ -139,7 +155,7 @@ export const paymentTermValidationSchema = (
     demandGenerationRule: Yup.mixed<DemandGenerationRule>()
       .oneOf(
         ['OnInstallmentStartDate', 'XDaysBeforeDue', 'OnDueDate', 'SpecificDate'] as const,
-        'Invalid demand rule'
+        'Invalid invoice date rule'
       )
       .required('Demand generation rule is required'),
 

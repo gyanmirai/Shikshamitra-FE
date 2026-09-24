@@ -2,7 +2,6 @@
 
 import type { RootState } from 'src/redux/store';
 
-import dayjs from 'dayjs';
 import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
@@ -15,23 +14,18 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
-import FileUploader from 'src/components/custom-upload';
 import { fileData } from 'src/components/file-thumbnail';
 import { shikshaMitraToast } from 'src/components/toast';
 import { SingleFilePreview } from 'src/components/upload';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { LanguageInputField } from 'src/screens/academic/components/language-typing';
-import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
 import DocumentPreviewDialog from 'src/components/preview-document/DocumentPreviewDialog';
 import {
   Box,
   Grid,
-  Chip,
   Paper,
   Stack,
   Button,
@@ -42,7 +36,6 @@ import {
   IconButton,
   Typography,
   DialogActions,
-  InputAdornment,
 } from '@mui/material';
 import {
   useAddChapterWithAttachmentsMutation,
@@ -52,10 +45,11 @@ import {
 import { getChapterInitialValues } from './initialValues';
 import { getChapterNumberApiError } from './chapterNumber';
 import { getChapterValidationSchema } from './validationSchema';
-import { ChapterNumberField } from './components/ChapterNumberField';
 import { buildChapterMultipartPayload } from './chapterMultipartPayload';
 import { bloomOptions, difficultyOptions } from './syllabusPlanningData';
-import { AdditionalFieldsActionButton } from './components/AdditionalFieldsActionButton';
+import { ChapterContextHeader } from './components/ChapterContextHeader';
+import { ChapterDetailsSection } from './components/ChapterDetailsSection';
+import { ChapterAttachmentsSection } from './components/ChapterAttachmentsSection';
 
 import type { IChapterFormValues, IAddNewChapterProps } from './type';
 
@@ -286,333 +280,20 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
         <Box display="flex" flexDirection="column" gap={1} height="100%">
           <Scrollbar sx={{ p: 2, height: '100%' }}>
-            {/* ── Context Header ───────────────────────────────────── */}
-            <Paper
-              elevation={0}
-              sx={{
-                p: 2,
-                mb: 3,
-                borderRadius: 2,
-                bgcolor: (t) => `rgba(${t.vars.palette.primary.mainChannel} / 0.06)`,
-                border: (t) => `1px solid rgba(${t.vars.palette.primary.mainChannel} / 0.18)`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1,
-                flexWrap: 'wrap',
-              }}
-            >
-              <Iconify
-                icon="mdi:book-education-outline"
-                width={22}
-                sx={{ color: 'primary.main', flexShrink: 0 }}
-              />
-              <Stack direction="row" alignItems="center" gap={1}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight={700}
-                  sx={{ textTransform: 'uppercase', letterSpacing: 0.8 }}
-                >
-                  Class
-                </Typography>
-                <Chip label={className} size="small" color="primary" variant="soft" />
-              </Stack>
-              <Divider orientation="vertical" flexItem />
-              <Stack direction="row" alignItems="center" gap={1}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight={700}
-                  sx={{ textTransform: 'uppercase', letterSpacing: 0.8 }}
-                >
-                  Subject
-                </Typography>
-                <Chip label={subject} size="small" color="secondary" variant="soft" />
-              </Stack>
-              <Box sx={{ ml: 'auto' }}>
-                <Chip
-                  size="small"
-                  variant="soft"
-                  color={initialValues ? 'warning' : 'success'}
-                  label={initialValues ? 'Editing Chapter' : 'New Chapter'}
-                />
-              </Box>
-            </Paper>
+            <ChapterContextHeader
+              className={className}
+              subject={subject}
+              isEditing={Boolean(initialValues)}
+            />
 
-            {/* ── Section 1 : Chapter Info ─────────────────────────── */}
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 2.5,
-                mb: 3,
-                borderRadius: 2,
-                transition: 'box-shadow 0.2s ease',
-                '&:hover': { boxShadow: 4 },
-              }}
-            >
-              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                <Iconify icon="mdi:information-outline" width={18} sx={{ color: 'primary.main' }} />
-                <Typography variant="subtitle2" fontWeight={700}>
-                  Chapter Info
-                </Typography>
-              </Stack>
-              <Divider sx={{ mb: 2 }} />
-
-              <Grid container spacing={1}>
-                {/* Chapter Number */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <ChapterNumberField
-                    value={formik.values.chapterNo}
-                    error={formik.touched.chapterNo ? formik.errors.chapterNo : undefined}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                  />
-                </Grid>
-
-                {/* Chapter Name */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField
-                    error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
-                  >
-                    <LanguageInputField
-                      fullWidth
-                      label="Chapter Name *"
-                      name="chapterName"
-                      placeholder="e.g. Introduction to Algebra"
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <Iconify
-                              icon="mdi:book-open-variant"
-                              width={15}
-                              sx={{ color: 'text.disabled' }}
-                            />
-                          </InputAdornment>
-                        ),
-                      }}
-                      value={formik.values.chapterName}
-                      onChange={(e) => {
-                        // const value = e.target.value.replace(/[^a-zA-Z\s]/g, '');
-                        formik.setFieldValue('chapterName', e.target.value);
-                      }}
-                      size="small"
-                      error={!!(formik.touched.chapterName && formik.errors.chapterName) || false}
-                      helperText={formik.touched.chapterName && formik.errors.chapterName}
-                    />
-                  </ShakingTextField>
-                </Grid>
-
-                {/* Chapter Start Date */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  {(() => {
-                    const startDateError =
-                      formik.touched.startDate || !!formik.values.startDate
-                        ? formik.errors.startDate
-                        : undefined;
-                    return (
-                      <ShakingTextField error={!!startDateError}>
-                        <DatePicker
-                          label="Expected Start Date for all Division *"
-                          format="DD/MM/YYYY"
-                          value={formik.values.startDate}
-                          standardId={classId}
-                          disablePast={!initialValues}
-                          onChange={(newValue) => {
-                            formik.setFieldValue('startDate', newValue);
-                          }}
-                          minDate={dayjs(currentYear?.startDate)}
-                          maxDate={dayjs(currentYear?.endDate)}
-                          sx={{ minWidth: 180, width: '100%' }}
-                          helperText={
-                            startDateError ||
-                            (currentYear?.startDate && currentYear?.endDate
-                              ? `Must be within ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} – ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`
-                              : undefined)
-                          }
-                          slotProps={{
-                            textField: {
-                              fullWidth: true,
-                              size: 'small',
-                              placeholder: 'DD/MM/YYYY',
-                              error: !!startDateError,
-                              FormHelperTextProps: {
-                                sx: {
-                                  position: 'relative',
-                                  bgcolor: 'transparent',
-                                  border: 'none',
-                                  boxShadow: 'none',
-                                  px: 0,
-                                  py: 0,
-                                  mt: 0.5,
-                                  fontSize: '0.75rem',
-                                  fontWeight: 400,
-                                  color: startDateError ? 'error.main' : 'text.secondary',
-                                },
-                              },
-                            },
-                          }}
-                        />
-                      </ShakingTextField>
-                    );
-                  })()}
-                </Grid>
-
-                {/* Chapter End Date */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  {(() => {
-                    const endDateError =
-                      formik.touched.endDate || !!formik.values.endDate
-                        ? formik.errors.endDate
-                        : undefined;
-                    return (
-                      <ShakingTextField error={!!endDateError}>
-                        <DatePicker
-                          label="Expected End Date for all Division *"
-                          format="DD/MM/YYYY"
-                          disablePast={!initialValues}
-                          standardId={classId}
-                          minDate={dayjs(currentYear?.startDate)}
-                          maxDate={dayjs(currentYear?.endDate)}
-                          value={formik.values.endDate}
-                          onChange={(newValue) => {
-                            formik.setFieldValue('endDate', newValue);
-                          }}
-                          sx={{ minWidth: 180, width: '100%' }}
-                          helperText={
-                            endDateError ||
-                            (currentYear?.startDate && currentYear?.endDate
-                              ? `Must be within ${dayjs(currentYear.startDate).format('DD/MM/YYYY')} – ${dayjs(currentYear.endDate).format('DD/MM/YYYY')}`
-                              : undefined)
-                          }
-                          slotProps={{
-                            textField: {
-                              fullWidth: true,
-                              size: 'small',
-                              placeholder: 'DD/MM/YYYY',
-                              error: !!endDateError,
-                              FormHelperTextProps: {
-                                sx: {
-                                  position: 'relative',
-                                  bgcolor: 'transparent',
-                                  border: 'none',
-                                  boxShadow: 'none',
-                                  px: 0,
-                                  py: 0,
-                                  mt: 0.5,
-                                  fontSize: '0.75rem',
-                                  fontWeight: 400,
-                                  color: endDateError ? 'error.main' : 'text.secondary',
-                                },
-                              },
-                            },
-                          }}
-                        />
-                      </ShakingTextField>
-                    );
-                  })()}
-                </Grid>
-              </Grid>
-            </Paper>
-
-            {/* ── Section 2 : Additional Fields Trigger Card ──────────── */}
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 2.5,
-                mb: 3,
-                borderRadius: 2,
-                transition: 'all 0.25s ease',
-                borderColor: additionalFieldsCount > 0 ? 'success.main' : 'divider',
-                borderWidth: additionalFieldsCount > 0 ? 1.5 : 1,
-                boxShadow:
-                  additionalFieldsCount > 0
-                    ? (t) => `0 0 0 3px ${varAlpha(t.vars.palette.success.mainChannel, 0.12)}`
-                    : 'none',
-                '&:hover': {
-                  borderColor: additionalFieldsCount > 0 ? 'success.dark' : 'text.primary',
-                },
-              }}
-            >
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                alignItems={{ xs: 'flex-start', sm: 'center' }}
-                justifyContent="space-between"
-                gap={2}
-              >
-                <Stack direction="row" alignItems="center" gap={1.5}>
-                  <Box
-                    sx={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 1.75,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      bgcolor: 'action.hover',
-                      color: 'text.secondary',
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Iconify icon="solar:info-square-bold-duotone" width={24} />
-                  </Box>
-                  <Box>
-                    <Stack direction="row" alignItems="center" gap={0.5} flexWrap="wrap">
-                      <Typography variant="subtitle1" fontWeight={700}>
-                        Content (Additional Fields)
-                      </Typography>
-                      <CustomTooltip
-                        arrow
-                        placement="bottom-start"
-                        title={
-                          <Box sx={{ p: 1, maxWidth: 320 }}>
-                            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
-                              About Additional Content Fields
-                            </Typography>
-                            <Typography variant="caption" display="block" sx={{ mb: 0.75 }}>
-                              • <strong>Planning &amp; Scheduling:</strong> Define unit, term, topic
-                              name, teaching days, and period allocations.
-                            </Typography>
-                            <Typography variant="caption" display="block" sx={{ mb: 0.75 }}>
-                              • <strong>Pedagogy &amp; Objectives:</strong> Set difficulty,
-                              Bloom&apos;s taxonomy level, learning outcomes, and prerequisites.
-                            </Typography>
-                            <Typography variant="caption" display="block" sx={{ mb: 0.75 }}>
-                              • <strong>Materials &amp; Assessment:</strong> Attach study links,
-                              worksheets, audio/video media, and exam weightage metrics.
-                            </Typography>
-                            <Typography variant="caption" display="block">
-                              • <strong>Summaries &amp; Workflow:</strong> Provide
-                              teacher/student/parent notes and track review statuses.
-                            </Typography>
-                          </Box>
-                        }
-                      >
-                        <IconButton size="small" color="info" sx={{ p: 0.5, ml: 0.25 }}>
-                          <Iconify icon="lucide:info" width={18} />
-                        </IconButton>
-                      </CustomTooltip>
-                      {additionalFieldsCount > 0 && (
-                        <Chip
-                          label={`${additionalFieldsCount} Configured`}
-                          size="small"
-                          color="default"
-                          variant="soft"
-                          sx={{ height: 22, fontSize: '0.72rem', fontWeight: 600 }}
-                        />
-                      )}
-                    </Stack>
-                    <Typography variant="caption" color="text.secondary">
-                      Unit, Term, Pedagogy, Outcomes, Notes, Resources & Assessment Metrics
-                    </Typography>
-                  </Box>
-                </Stack>
-
-                <AdditionalFieldsActionButton
-                  configuredCount={additionalFieldsCount}
-                  onClick={additionalFieldsDrawer.onTrue}
-                />
-              </Stack>
-            </Paper>
+            <ChapterDetailsSection
+              formik={formik}
+              isEditing={Boolean(initialValues)}
+              academicYearStart={currentYear?.startDate}
+              academicYearEnd={currentYear?.endDate}
+              additionalFieldsCount={additionalFieldsCount}
+              onOpenAdditionalFields={additionalFieldsDrawer.onTrue}
+            />
 
             {/* ── Section-Wise Right Drawer ─────────────────────────── */}
             <Drawer
@@ -1343,50 +1024,27 @@ export const AddNewChapter: React.FC<IAddNewChapterProps> = ({
             </Drawer>
 
             {/* ── Section 3 : Attachments ──────────────────────────── */}
-            <Paper
-              variant="outlined"
-              sx={{
-                p: 2.5,
-                borderRadius: 2,
-                transition: 'box-shadow 0.2s ease',
-                '&:hover': { boxShadow: 4 },
+            <ChapterAttachmentsSection
+              documents={(formik.values.documents ?? []).map((doc: any) => {
+                if (typeof doc === 'string') {
+                  return {
+                    url: doc,
+                    filePath: doc,
+                    name: getFileNameFromUrl(doc),
+                    size: undefined,
+                  };
+                }
+                return doc;
+              })}
+              onChange={handleDropzoneChange}
+              onPreview={(file) => {
+                const url =
+                  file instanceof File
+                    ? URL.createObjectURL(file)
+                    : file.url || file.filePath || '';
+                setPreviewDoc(url);
               }}
-            >
-              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
-                <Iconify icon="mdi:paperclip" width={18} sx={{ color: 'primary.main' }} />
-                <Typography variant="subtitle2" fontWeight={700}>
-                  Attachments
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  — PDFs, images, slides
-                </Typography>
-              </Stack>
-              <Divider sx={{ mb: 2 }} />
-
-              <FileUploader
-                multiple
-                showVisibleDocumentCount={6}
-                onChange={handleDropzoneChange}
-                onPreview={(file: any) => {
-                  const url =
-                    file instanceof File
-                      ? URL.createObjectURL(file)
-                      : file?.url || file?.filePath || (typeof file === 'string' ? file : '');
-                  setPreviewDoc(url);
-                }}
-                value={formik.values.documents?.map((doc: any) => {
-                  if (typeof doc === 'string') {
-                    return {
-                      url: doc,
-                      name: getFileNameFromUrl(doc),
-                      size: undefined,
-                    };
-                  }
-                  return doc;
-                })}
-                primaryText="Drag & drop files here, or click to browse"
-              />
-            </Paper>
+            />
           </Scrollbar>
 
           {/* ── Sticky Footer ────────────────────────────────────── */}

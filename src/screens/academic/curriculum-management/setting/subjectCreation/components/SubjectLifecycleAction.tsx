@@ -49,7 +49,7 @@ export function SubjectLifecycleAction({
       <Button
         size="small"
         variant="outlined"
-        color="warning"
+        color="inherit"
         startIcon={<Iconify icon="solar:archive-bold" width={15} />}
         onClick={() => {
           onClose();
