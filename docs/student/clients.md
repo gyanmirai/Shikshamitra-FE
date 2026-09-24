@@ -37,7 +37,7 @@ The backend owns lifecycle, dependency, permission, institution-timezone, and co
 
 `student-onboarding-types.ts` mirrors the backend numeric lifecycle enums and DTOs. Do not reuse the generic Student Records lookup as the onboarding source of truth: admission finalization returns `onboardingCaseId`, while the onboarding case owns preparation until activation creates the operational enrollment.
 
-`onboarding-operational-settings.tsx` provides the shared persisted editors used inside Readiness & Access and Numbering & Placement. The former saves school-default readiness and access requirements; the latter saves seat-reservation duration and GR identifier series. Advanced fields absent from the backend DTO must not be described as durable.
+`onboarding-operational-settings.tsx` provides the shared operational-policy editors used inside Readiness & Access and Numbering & Placement. The former saves academic-year readiness and access requirements; the latter saves seat-reservation duration and GR identifier series. `persisted-onboarding-settings-provider.tsx` loads and saves the versioned advanced configuration through `/api/student/onboarding/settings/configurations`, preserving separate school and academic-year scopes with concurrency stamps. These saved guidance rules do not replace the backend commands that enforce activation, capacity, identifier uniqueness, or service handoffs.
 
 ## Endpoint ownership
 

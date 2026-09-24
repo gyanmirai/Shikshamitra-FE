@@ -9,6 +9,8 @@ import {
 type Application = AdmissionApplicant360['applications'][number];
 type Activity = AdmissionApplicant360['activities'][number];
 
+const TERMINAL_APPLICATION_STATUSES = new Set([2, 3, 9, 10, 11]);
+
 export const getApplicantName = (data: AdmissionApplicant360) =>
   [data.applicant.firstName, data.applicant.middleName, data.applicant.lastName]
     .filter(Boolean)
@@ -25,13 +27,19 @@ export const getApplicantMissingDetails = (data: AdmissionApplicant360) => [
   ...(!data.applicant.gender ? ['gender'] : []),
 ];
 
+export const isActiveAdmissionApplication = (application: Application) =>
+  !TERMINAL_APPLICATION_STATUSES.has(application.status);
+
+export const getPrimaryApplication = (applications: Application[]) =>
+  applications.find(isActiveAdmissionApplication) ?? applications[0];
+
 export const getCurrentStage = (application?: Application) =>
   application?.stages.find((stage) => stage.status === 1) ??
   application?.stages.find((stage) => stage.status !== 2) ??
   application?.stages.at(-1);
 
 export const getApplicantJourneyState = (applications: Application[]) => {
-  const application = applications[0];
+  const application = getPrimaryApplication(applications);
   if (!application)
     return {
       label: 'Inquiry converted',

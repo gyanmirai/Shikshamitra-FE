@@ -159,7 +159,7 @@ describe('ReadinessAccessSettingsScreen UI', () => {
     expect(screen.getByTestId('breadcrumb-heading')).toHaveTextContent('Readiness & Access');
     expect(screen.queryByTestId('configuration-scope')).not.toBeInTheDocument();
     expect(
-      screen.getByText(/Rules applied here update Student Setup for the current frontend session/i)
+      screen.getByText(/Readiness rules are saved for the selected scope/i)
     ).toBeInTheDocument();
 
     expect(screen.getByRole('heading', { name: 'Readiness & access rules' })).toBeInTheDocument();
@@ -532,7 +532,7 @@ describe('Numbering settings drawer UI', () => {
       screen.getByRole('heading', { name: 'Preservation and governance' })
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/Applies to Student Setup in this frontend session/i)
+      screen.getByText(/Saved for the selected scope and reused by Student Setup after reload/i)
     ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Apply configuration' }));

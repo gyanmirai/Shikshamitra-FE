@@ -2,6 +2,8 @@ import NextAuth from 'next-auth';
 import { jwtDecode } from 'jwt-decode';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
+import { refreshAccessToken } from './auth-token';
+
 async function signInFn({
   email,
   password,
@@ -102,36 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return token;
       }
 
-      try {
-        const body = new URLSearchParams({
-          grant_type: 'refresh_token',
-          refresh_token: token.refreshToken,
-          client_id: process.env.NEXT_PUBLIC_CLIENT_ID!,
-          client_secret: process.env.NEXT_PUBLIC_CLIENT_SECRET!,
-          // scope: process.env.NEXT_PUBLIC_SCOPE!,
-        });
-
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/connect/token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            __tenant: token.user?.organizationName,
-          },
-          body,
-        });
-
-        const refreshed = await response.json();
-
-        return {
-          ...token,
-          accessToken: refreshed.access_token,
-          refreshToken: refreshed.refresh_token ?? token.refreshToken,
-          expiresAt: Date.now() + refreshed.expires_in * 1000,
-        };
-      } catch (error) {
-        console.error('Refresh token failed', error);
-        return { ...token, error: 'RefreshAccessTokenError' };
-      }
+      return refreshAccessToken(token);
     },
 
     async session({ session, token }: any) {
@@ -143,10 +116,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.accessToken = token.accessToken as string;
       session.refreshToken = token.refreshToken as string;
       session.tokenType = token.tokenType as string;
+      session.error = token.error;
 
-      try {
-        session.profile = jwtDecode(token.accessToken as string);
-      } catch {
+      if (token.accessToken) {
+        try {
+          session.profile = jwtDecode(token.accessToken as string);
+        } catch {
+          session.profile = null;
+        }
+      } else {
         session.profile = null;
       }
 

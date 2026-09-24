@@ -42,9 +42,8 @@ export function FormBuilderOutline({
   return (
     <Stack sx={{ height: 1, minHeight: 0, bgcolor: 'background.paper' }}>
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="subtitle1">Form outline</Typography>
-        <Typography variant="caption" color="text.secondary">
-          Choose one section to edit at a time.
+        <Typography component="h3" variant="h6">
+          Outline
         </Typography>
       </Box>
 
@@ -101,7 +100,7 @@ export function FormBuilderOutline({
                         '&:hover': { bgcolor: 'action.hover' },
                         '&:focus-visible': {
                           outline: 2,
-                          outlineColor: 'primary.main',
+                          outlineColor: 'text.primary',
                           outlineOffset: 1,
                         },
                       }}
@@ -111,7 +110,7 @@ export function FormBuilderOutline({
                         width={18}
                         sx={{
                           flexShrink: 0,
-                          color: selected ? 'primary.main' : 'text.secondary',
+                          color: 'text.secondary',
                         }}
                       />
                       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -146,7 +145,7 @@ export function FormBuilderOutline({
           onClick={onAddSection}
           sx={{ minHeight: 44 }}
         >
-          Add ready-made section
+          Section library
         </Button>
         <Button
           fullWidth

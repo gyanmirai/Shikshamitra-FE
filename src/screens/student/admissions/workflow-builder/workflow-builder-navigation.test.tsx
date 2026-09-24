@@ -20,11 +20,6 @@ const handlers = {
   onDeleteTransition: vi.fn(),
 };
 
-const viewHrefs = {
-  configure: '/student/admissions/settings/workflows/workflow-1?panel=usage',
-  map: '/student/admissions/settings/workflows/workflow-1?panel=usage&view=map',
-};
-
 const store = configureStore({ reducer: { confirmPopup } });
 
 function Canvas({ view }: { view: 'configure' | 'map' }) {
@@ -38,7 +33,6 @@ function Canvas({ view }: { view: 'configure' | 'map' }) {
           readOnly={false}
           loadingStageTypes={false}
           issueCountByStage={{}}
-          viewHrefs={viewHrefs}
           {...handlers}
         />
       </ThemeProvider>
@@ -47,25 +41,18 @@ function Canvas({ view }: { view: 'configure' | 'map' }) {
 }
 
 describe('WorkflowBuilderCanvas navigation', () => {
-  it('renders durable views as links with an associated tab panel', () => {
+  it('renders the selected view in its associated tab panel', () => {
     const { rerender } = render(<Canvas view="configure" />);
 
-    const configure = screen.getByRole('tab', { name: 'Configure' });
-    const map = screen.getByRole('tab', { name: 'Journey map' });
-    expect(configure.tagName).toBe('A');
-    expect(configure).toHaveAttribute('href', viewHrefs.configure);
-    expect(map).toHaveAttribute('href', viewHrefs.map);
     expect(screen.getByRole('tabpanel')).toHaveAttribute(
       'aria-labelledby',
       'workflow-builder-configure-tab'
     );
     expect(
-      within(screen.getByRole('region', { name: 'Stages' })).getByRole('button', {
+      within(screen.getByRole('region', { name: 'Journey' })).getByRole('button', {
         name: 'Add first stage',
       })
     ).toBeEnabled();
-    expect(screen.queryByRole('region', { name: 'Transitions' })).not.toBeInTheDocument();
-    expect(screen.getByText(/choose what happens next from each stage/i)).toBeInTheDocument();
 
     rerender(<Canvas view="map" />);
 

@@ -15,6 +15,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -112,8 +113,9 @@ export function AdmissionCycleDialog({
         setConfirmDiscard(false);
         onClose();
       } catch (error) {
-        const message = (error as { data?: { detail?: string } })?.data?.detail;
-        shikshaMitraToast.error({ message: message || 'Failed to save admission cycle' });
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Failed to save admission cycle',
+        });
       }
     },
   });

@@ -6,14 +6,19 @@ import Tabs from '@mui/material/Tabs';
 import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
+import Drawer from '@mui/material/Drawer';
 import { useMemo, useState } from 'react';
 import Button from '@mui/material/Button';
 import Divider from '@mui/material/Divider';
+import { Label } from 'src/components/label';
 import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import ButtonBase from '@mui/material/ButtonBase';
+import { Scrollbar } from 'src/components/scrollbar';
 import DialogActions from '@mui/material/DialogActions';
+import { useResponsive } from 'src/hooks/use-responsive';
 import { useDebounceEffect } from 'src/hooks/use-debounce';
 import CircularProgress from '@mui/material/CircularProgress';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -44,6 +49,8 @@ function TemplateListItem({
   description,
   icon,
   meta,
+  badge,
+  recommended = false,
   onClick,
 }: {
   selected: boolean;
@@ -51,6 +58,8 @@ function TemplateListItem({
   description: string;
   icon: string;
   meta: string;
+  badge?: string;
+  recommended?: boolean;
   onClick: () => void;
 }) {
   return (
@@ -65,13 +74,13 @@ function TemplateListItem({
         textAlign: 'left',
         alignItems: 'flex-start',
         border: 1,
-        borderColor: selected ? 'primary.main' : 'divider',
+        borderColor: selected ? 'text.primary' : 'divider',
         borderRadius: 1.5,
-        bgcolor: selected ? 'action.selected' : 'background.paper',
+        bgcolor: 'background.paper',
         '&:hover': { bgcolor: 'action.hover' },
         '&:focus-visible': {
           outline: 2,
-          outlineColor: 'primary.main',
+          outlineColor: 'text.primary',
           outlineOffset: 2,
         },
       }}
@@ -85,19 +94,46 @@ function TemplateListItem({
           flexShrink: 0,
           borderRadius: 1,
           bgcolor: 'action.hover',
-          color: selected ? 'primary.main' : 'text.secondary',
+          color: 'text.secondary',
         }}
       >
         <Iconify icon={icon} width={22} />
       </Box>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle2">{title}</Typography>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
+          <Typography variant="subtitle2">{title}</Typography>
+          {badge && recommended && (
+            <Label color="success" variant="soft">
+              {badge}
+            </Label>
+          )}
+          {badge && !recommended && (
+            <Chip size="small" label={badge} color="default" variant="soft" />
+          )}
+        </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
           {description}
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ mt: 0.75, display: 'block' }}>
           {meta}
         </Typography>
+      </Box>
+      <Box
+        aria-hidden
+        sx={{
+          width: 24,
+          height: 24,
+          display: 'grid',
+          flexShrink: 0,
+          placeItems: 'center',
+          border: 1,
+          borderRadius: '50%',
+          borderColor: selected ? 'success.main' : 'text.disabled',
+          bgcolor: selected ? 'success.main' : 'transparent',
+          color: selected ? 'common.white' : 'transparent',
+        }}
+      >
+        <Iconify icon="mdi:check" width={16} />
       </Box>
     </ButtonBase>
   );
@@ -110,6 +146,7 @@ export function FormTemplateLibraryDialog({
   onUseSystemTemplate,
   onUseSchoolForm,
 }: Props) {
+  const compact = useResponsive('down', 'sm');
   const [source, setSource] = useState<'system' | 'school'>('system');
   const [category, setCategory] = useState<AdmissionFormTemplateCategory | 'All'>('All');
   const [searchInput, setSearchInput] = useState('');
@@ -118,6 +155,7 @@ export function FormTemplateLibraryDialog({
     source: 'system',
     id: 'admission-application',
   });
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   useDebounceEffect(() => setSchoolSearch(searchInput.trim()), 350, [searchInput]);
 
@@ -174,23 +212,146 @@ export function FormTemplateLibraryDialog({
     else if (selectedSchool) onUseSchoolForm(selectedSchool);
   };
 
+  const previewContent = selectedTitle ? (
+    <Stack spacing={2}>
+      <Box>
+        <Typography variant="overline" color="text.secondary">
+          Preview
+        </Typography>
+        <Typography variant="h6">{selectedTitle}</Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          {selectedDescription || 'A saved form from your school.'}
+        </Typography>
+      </Box>
+      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+        <Chip
+          size="small"
+          variant="outlined"
+          icon={<Iconify icon="mdi:format-list-bulleted" width={17} />}
+          label={`${selectedSections.length || selectedSchool?.sectionCount || 0} sections`}
+        />
+        <Chip
+          size="small"
+          variant="outlined"
+          icon={<Iconify icon="mdi:form-textbox" width={17} />}
+          label={`${selectedFieldCount} fields`}
+        />
+        {selectedSystem && (
+          <Chip
+            size="small"
+            variant="outlined"
+            label={`About ${selectedSystem.estimatedMinutes} min`}
+          />
+        )}
+      </Stack>
+      {selectedSystem?.bestFor && (
+        <Box>
+          <Typography variant="subtitle2">Best for</Typography>
+          <Typography variant="body2" color="text.secondary">
+            {selectedSystem.bestFor}
+          </Typography>
+        </Box>
+      )}
+      <Divider />
+      <Box>
+        <Typography variant="subtitle2" sx={{ mb: 1 }}>
+          Included sections ({selectedSections.length})
+        </Typography>
+        {selectedSections.length ? (
+          <Stack spacing={0.75}>
+            {selectedSections.map((section, index) => (
+              <Stack
+                key={`${section.code}-${index}`}
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ py: 0.5 }}
+              >
+                <Box
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    display: 'grid',
+                    placeItems: 'center',
+                    borderRadius: 1,
+                    bgcolor: 'action.hover',
+                  }}
+                >
+                  <Iconify icon="mdi:format-list-bulleted" width={18} />
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="body2">{section.name}</Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {section.fields.length} {section.fields.length === 1 ? 'field' : 'fields'}
+                  </Typography>
+                </Box>
+              </Stack>
+            ))}
+          </Stack>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            Select this form to load its complete structure before creating your copy.
+          </Typography>
+        )}
+      </Box>
+      {selectedSchool && (
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="flex-start"
+          sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'action.hover' }}
+        >
+          <Iconify icon="mdi:information-outline" width={20} />
+          <Typography variant="body2" color="text.secondary">
+            A new editable copy will be created. The saved school form remains unchanged.
+          </Typography>
+        </Stack>
+      )}
+    </Stack>
+  ) : (
+    <Stack spacing={1} alignItems="center" sx={{ py: 6, textAlign: 'center' }}>
+      <Iconify icon="mdi:file-search-outline" width={36} sx={{ color: 'text.disabled' }} />
+      <Typography variant="subtitle2">Select a form to preview</Typography>
+      <Typography variant="body2" color="text.secondary">
+        Review its purpose and structure before creating your draft.
+      </Typography>
+    </Stack>
+  );
+
   return (
     <CustomDialog
       open={open}
       handleClose={onClose}
       title="Choose a form template"
       maxWidth="lg"
+      fullScreen={compact}
       hasForm={false}
       guardUnsavedChanges={false}
       disableClose={applying}
-      paperProps={{ sx: { height: { xs: '100dvh', sm: 'min(820px, 92dvh)' } } }}
+      paperProps={{
+        sx: {
+          height: { xs: '100dvh', sm: 'min(820px, 92dvh)' },
+          borderRadius: { xs: 0, sm: 2 },
+          backgroundImage: 'none',
+          bgcolor: 'background.paper',
+        },
+      }}
     >
       <DialogScrollContent
         sx={{ p: 0, minHeight: 0 }}
         scrollBarProps={{ fillContent: true, sx: { flex: 1, minHeight: 0 } }}
       >
         <Stack sx={{ minHeight: 1 }}>
-          <Box sx={{ px: { xs: 2, sm: 3 }, pt: 2 }}>
+          <Box
+            sx={{
+              px: { xs: 2, sm: 3 },
+              pt: 2,
+              position: 'sticky',
+              top: 0,
+              zIndex: 2,
+              bgcolor: 'background.paper',
+            }}
+          >
             <Typography variant="body2" color="text.secondary">
               Start with a proven structure or reuse a form already saved by your school. You can
               edit every section and field before saving.
@@ -201,13 +362,37 @@ export function FormTemplateLibraryDialog({
               aria-label="Template source"
               sx={{ mt: 1.5 }}
             >
-              <Tab value="system" label="Ready-made templates" />
-              <Tab value="school" label="Your school forms" />
+              <Tab
+                value="system"
+                label="Ready-made templates"
+                icon={<Iconify icon="mdi:account-group-outline" width={18} />}
+                iconPosition="start"
+                sx={{ minHeight: 44 }}
+              />
+              <Tab
+                value="school"
+                label="Your school forms"
+                icon={<Iconify icon="mdi:file-document-outline" width={18} />}
+                iconPosition="start"
+                sx={{ minHeight: 44 }}
+              />
             </Tabs>
+            <Divider />
           </Box>
-          <Divider />
 
-          <Stack spacing={1.5} sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+          <Stack
+            spacing={1.5}
+            sx={{
+              px: { xs: 2, sm: 3 },
+              py: 2,
+              position: 'sticky',
+              top: { xs: 105, sm: 101 },
+              zIndex: 2,
+              bgcolor: 'background.paper',
+              borderBottom: 1,
+              borderColor: 'divider',
+            }}
+          >
             <TextField
               fullWidth
               size="small"
@@ -236,8 +421,12 @@ export function FormTemplateLibraryDialog({
                     label={item}
                     clickable
                     variant={category === item ? 'filled' : 'outlined'}
-                    color={category === item ? 'primary' : 'default'}
                     onClick={() => setCategory(item)}
+                    sx={
+                      category === item
+                        ? { bgcolor: 'common.black', color: 'common.white' }
+                        : undefined
+                    }
                   />
                 ))}
               </Stack>
@@ -253,7 +442,6 @@ export function FormTemplateLibraryDialog({
               },
               gap: 0,
               minHeight: 430,
-              borderTop: 1,
               borderColor: 'divider',
             }}
           >
@@ -266,6 +454,8 @@ export function FormTemplateLibraryDialog({
                     title={template.title}
                     description={template.description}
                     icon={template.icon}
+                    badge={template.id === 'admission-application' ? 'Recommended' : undefined}
+                    recommended={template.id === 'admission-application'}
                     meta={`${template.sectionCount} sections · ${template.fieldCount} fields · About ${template.estimatedMinutes} min`}
                     onClick={() => setSelection({ source: 'system', id: template.id })}
                   />
@@ -303,6 +493,7 @@ export function FormTemplateLibraryDialog({
                       form.description || 'Reuse this saved school form as a new editable draft.'
                     }
                     icon="mdi:school-outline"
+                    badge="School form"
                     meta={`${form.sectionCount} ${form.sectionCount === 1 ? 'section' : 'sections'} · Version ${form.version}`}
                     onClick={() => setSelection({ source: 'school', id: form.id })}
                   />
@@ -332,6 +523,7 @@ export function FormTemplateLibraryDialog({
               component="aside"
               aria-label="Template preview"
               sx={{
+                display: { xs: 'none', md: 'block' },
                 minWidth: 0,
                 p: { xs: 2, sm: 3 },
                 borderLeft: { md: 1 },
@@ -340,113 +532,91 @@ export function FormTemplateLibraryDialog({
                 bgcolor: 'background.neutral',
               }}
             >
-              {selectedTitle ? (
-                <Stack spacing={2}>
-                  <Box>
-                    <Typography variant="overline" color="text.secondary">
-                      Preview
-                    </Typography>
-                    <Typography variant="h6">{selectedTitle}</Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                      {selectedDescription || 'A saved form from your school.'}
-                    </Typography>
-                  </Box>
-                  <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-                    <Chip
-                      size="small"
-                      label={`${selectedSections.length || selectedSchool?.sectionCount || 0} sections`}
-                    />
-                    <Chip size="small" label={`${selectedFieldCount} fields`} />
-                    {selectedSystem && (
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={`About ${selectedSystem.estimatedMinutes} min`}
-                      />
-                    )}
-                  </Stack>
-                  {selectedSystem?.bestFor && (
-                    <Box>
-                      <Typography variant="subtitle2">Best for</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {selectedSystem.bestFor}
-                      </Typography>
-                    </Box>
-                  )}
-                  <Box>
-                    <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                      Included sections
-                    </Typography>
-                    {selectedSections.length ? (
-                      <Stack spacing={0.75}>
-                        {selectedSections.map((section, index) => (
-                          <Stack
-                            key={`${section.code}-${index}`}
-                            direction="row"
-                            spacing={1}
-                            alignItems="center"
-                          >
-                            <Iconify
-                              icon="mdi:check-circle-outline"
-                              width={18}
-                              sx={{ color: 'success.main', flexShrink: 0 }}
-                            />
-                            <Typography variant="body2">
-                              {section.name} · {section.fields.length}{' '}
-                              {section.fields.length === 1 ? 'field' : 'fields'}
-                            </Typography>
-                          </Stack>
-                        ))}
-                      </Stack>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        Select this form to load its complete structure before creating your copy.
-                      </Typography>
-                    )}
-                  </Box>
-                  {selectedSchool && (
-                    <Alert severity="info">
-                      The original school form and its published versions will not be changed.
-                    </Alert>
-                  )}
-                </Stack>
-              ) : (
-                <Stack spacing={1} alignItems="center" sx={{ py: 6, textAlign: 'center' }}>
-                  <Iconify
-                    icon="mdi:file-search-outline"
-                    width={36}
-                    sx={{ color: 'text.disabled' }}
-                  />
-                  <Typography variant="subtitle2">Select a form to preview</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Review its purpose and structure before creating your draft.
-                  </Typography>
-                </Stack>
-              )}
+              {previewContent}
             </Box>
           </Box>
         </Stack>
       </DialogScrollContent>
+      <Box
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          px: 2,
+          py: 1.25,
+          borderTop: 1,
+          borderColor: 'divider',
+        }}
+      >
+        <Button
+          fullWidth
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon="mdi:file-eye-outline" />}
+          endIcon={<Iconify icon="mdi:chevron-right" />}
+          disabled={!selectedTitle}
+          onClick={() => setPreviewOpen(true)}
+          sx={{ minHeight: 44, justifyContent: 'space-between' }}
+        >
+          Preview details
+        </Button>
+      </Box>
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button
+          size="small"
           variant="outlined"
           startIcon={<Iconify icon="mdi:close" />}
           onClick={onClose}
           disabled={applying}
+          sx={{ minHeight: 44 }}
         >
           Cancel
         </Button>
         <Button
+          size="small"
           variant="contained"
           startIcon={
             applying ? <CircularProgress size={18} color="inherit" /> : <Iconify icon="mdi:check" />
           }
           disabled={!selectedTitle || applying}
           onClick={useSelected}
+          sx={{
+            minHeight: 44,
+            bgcolor: 'common.black',
+            color: 'common.white',
+            '&:hover': { bgcolor: 'grey.800' },
+          }}
         >
           {selection.source === 'school' ? 'Use school form' : 'Use template'}
         </Button>
       </DialogActions>
+      <Drawer
+        anchor="right"
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}
+        slotProps={{ paper: { sx: { width: { xs: 1, sm: 420 } } } }}
+      >
+        <Stack sx={{ height: 1, minHeight: 0 }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ px: 2, py: 1.5, borderBottom: 1, borderColor: 'divider' }}
+          >
+            <Typography variant="h6">Template details</Typography>
+            <IconButton
+              size="small"
+              aria-label="Close template details"
+              onClick={() => setPreviewOpen(false)}
+              sx={{ width: 44, height: 44 }}
+            >
+              <Iconify icon="mdi:close" />
+            </IconButton>
+          </Stack>
+          <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
+            <Box sx={{ p: 2 }}>{previewContent}</Box>
+          </Scrollbar>
+        </Stack>
+      </Drawer>
     </CustomDialog>
   );
 }

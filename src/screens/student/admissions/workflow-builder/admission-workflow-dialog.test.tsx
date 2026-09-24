@@ -50,6 +50,15 @@ describe('workflow creation dialog', () => {
     );
     expect(screen.getByRole('radio', { name: /Standard admission/ })).toBeChecked();
     expect(
+      screen.queryByText('Use a name staff will recognize in offerings and reports.')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Generated from the workflow name. You can edit it.')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Visible to staff when choosing and reviewing workflows.')
+    ).not.toBeInTheDocument();
+    expect(
       screen.queryByText(
         'Create the draft, choose a starting point, then review every stage before publishing.'
       )

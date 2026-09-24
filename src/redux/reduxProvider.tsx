@@ -1,11 +1,12 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
 import { memo, useRef, useEffect } from 'react';
+import { signOut, useSession } from 'next-auth/react';
 import { PersistGate } from 'redux-persist/integration/react';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 
 import store, { persistor } from './store';
+import { clearCachedAuthSession } from './session-cache';
 import { loadUser, clearUser, getEmployee } from './auth/authSlice';
 import { setCurrentYear, setCurrentBoard, setCurrentMedium } from './globalState/globalSlice';
 
@@ -66,25 +67,19 @@ const LoadUser = memo(() => {
   const { data: sessionData, status } = session;
 
   const loadedUserId = useRef<string | null>(null);
+  const invalidatedAccessToken = useRef<string | null>(null);
 
   useEffect(() => {
     const sessionUserId = sessionData?.profile?.sub || null;
+    const accessToken = sessionData?.accessToken;
+    const hasUsableSession =
+      status === 'authenticated' &&
+      Boolean(sessionUserId) &&
+      typeof accessToken === 'string' &&
+      Boolean(accessToken) &&
+      !sessionData?.error;
 
-    if (sessionUserId && loadedUserId.current !== sessionUserId) {
-      const loadEmployeeProfile = shouldLoadEmployeeProfile(sessionData);
-
-      if (loadedUserId.current || !loadEmployeeProfile) {
-        dispatch(clearUser());
-      }
-      dispatch(loadUser(sessionData) as any);
-      if (loadEmployeeProfile) {
-        dispatch(getEmployee(sessionData) as any);
-      }
-      loadedUserId.current = sessionUserId;
-      return;
-    }
-
-    if (status === 'unauthenticated') {
+    const clearApplicationSession = () => {
       dispatch(clearUser());
       if (currentYear?.id) {
         dispatch(setCurrentYear({}));
@@ -92,6 +87,55 @@ const LoadUser = memo(() => {
         dispatch(setCurrentMedium({}));
       }
       loadedUserId.current = null;
+    };
+
+    const signOutInvalidSession = () => {
+      const invalidSessionKey = accessToken || 'missing-access-token';
+      if (invalidatedAccessToken.current === invalidSessionKey) return;
+
+      invalidatedAccessToken.current = invalidSessionKey;
+      clearCachedAuthSession();
+      signOut({ callbackUrl: '/login' });
+    };
+
+    if (hasUsableSession && sessionUserId && loadedUserId.current !== sessionUserId) {
+      const loadEmployeeProfile = shouldLoadEmployeeProfile(sessionData);
+
+      if (loadedUserId.current || !loadEmployeeProfile) {
+        dispatch(clearUser());
+      }
+      loadedUserId.current = sessionUserId;
+
+      const loadUserRequest = dispatch(loadUser(sessionData) as any) as any;
+      loadUserRequest
+        .unwrap()
+        .then(() => {
+          invalidatedAccessToken.current = null;
+          if (loadEmployeeProfile) {
+            const employeeRequest = dispatch(getEmployee(sessionData) as any) as any;
+            employeeRequest.unwrap().catch((failure: any) => {
+              if (failure?.status === 401) {
+                clearApplicationSession();
+                signOutInvalidSession();
+              }
+            });
+          }
+        })
+        .catch(() => {
+          clearApplicationSession();
+          signOutInvalidSession();
+        });
+      return;
+    }
+
+    if (status === 'unauthenticated' || (status === 'authenticated' && !hasUsableSession)) {
+      clearApplicationSession();
+
+      if (status === 'authenticated') {
+        signOutInvalidSession();
+      } else {
+        invalidatedAccessToken.current = null;
+      }
     }
   }, [dispatch, sessionData, status, currentYear?.id]);
 

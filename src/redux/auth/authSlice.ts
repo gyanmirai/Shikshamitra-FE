@@ -49,31 +49,43 @@ const buildModuleVisibility = (permissions: { name: string; isGranted: boolean }
 
 export const loadUser = createAsyncThunk(
   'auth/loadUser',
-  async (userSession: any, { dispatch, rejectWithValue }) => {
+  async (userSession: any, { rejectWithValue }) => {
     try {
-      if (userSession?.profile?.sub) {
-        const fetchPermssion = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/permission-management/permissions?providerName=U&providerKey=${userSession.profile.sub}`,
-          {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${userSession.accessToken}`,
-            },
-          }
-        );
-        const jsonData = await fetchPermssion?.json();
+      const userId = userSession?.profile?.sub;
+      const accessToken = userSession?.accessToken;
 
-        const permissionData = extractGrantedPermissions(jsonData?.groups || []);
-        return {
-          user: userSession.profile,
-          mainModuleVisibility: buildModuleVisibility(permissionData),
-          permissionData,
-        };
+      if (!userId || !accessToken || userSession?.error) {
+        return rejectWithValue({ status: 401, message: 'The authentication session is invalid.' });
       }
-      return { user: null, mainModuleVisibility: [], permissionData: [] };
+
+      const permissionResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/permission-management/permissions?providerName=U&providerKey=${encodeURIComponent(userId)}`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!permissionResponse.ok) {
+        return rejectWithValue({
+          status: permissionResponse.status,
+          message: 'Unable to initialize user permissions.',
+        });
+      }
+
+      const jsonData = await permissionResponse.json();
+      const permissionData = extractGrantedPermissions(jsonData?.groups || []);
+
+      return {
+        user: userSession.profile,
+        mainModuleVisibility: buildModuleVisibility(permissionData),
+        permissionData,
+      };
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue({ status: 'FETCH_ERROR', message: String(error) });
     }
   }
 );
@@ -82,6 +94,10 @@ export const getEmployee = createAsyncThunk(
   'auth/getEmployee',
   async (userData: any, { rejectWithValue }) => {
     try {
+      if (!userData?.accessToken || userData?.error) {
+        return rejectWithValue({ status: 401, message: 'The authentication session is invalid.' });
+      }
+
       const employeeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/employees/me`, {
         method: 'GET',
         headers: {
@@ -89,6 +105,9 @@ export const getEmployee = createAsyncThunk(
           Authorization: `Bearer ${userData?.accessToken}`,
         },
       });
+      if (employeeRes.status === 401) {
+        return rejectWithValue({ status: 401, message: 'The authentication session has expired.' });
+      }
       if (!employeeRes.ok) {
         return null;
       }
@@ -149,7 +168,11 @@ const authSlice = createSlice({
         state.permissionsInitialized = true;
       })
       .addCase(loadUser.rejected, (state) => {
-        // state.error = action.payload;
+        state.user = null;
+        state.isAuthenticated = false;
+        state.employee = null;
+        state.permissions = [];
+        state.mainModuleVisibility = [];
         state.loading = false;
         state.permissionsInitialized = true;
       })

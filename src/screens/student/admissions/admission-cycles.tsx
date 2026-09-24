@@ -23,14 +23,14 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { studentPaths } from 'src/constants/student-menu';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
+import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Stack, Button, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import { Box, Paper, Stack, Button, MenuItem, MenuList, TextField, Typography } from '@mui/material';
 import {
   useGetAdmissionCyclesQuery,
   useCloseAdmissionCycleMutation,
@@ -48,8 +48,10 @@ import {
 
 import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
+import { useAdmissionCycleFilters } from './use-admission-cycle-filters';
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
 import { AdmissionCycleDetailsDialog } from './admission-cycle-details-dialog';
+import { AdmissionCycleCapacityDialog } from './admission-cycle-capacity-dialog';
 import { AdmissionCycleConfigurationDialog } from './admission-cycle-configuration-dialog';
 import {
   canEditCycle,
@@ -96,15 +98,12 @@ export default function AdmissionCyclesScreen() {
   const editDialog = useBoolean();
   const [editingCycle, setEditingCycle] = useState<AdmissionCycle | null>(null);
   const [detailsCycle, setDetailsCycle] = useState<AdmissionCycle | null>(null);
+  const [capacityCycle, setCapacityCycle] = useState<AdmissionCycle | null>(null);
   const [actionCycle, setActionCycle] = useState<AdmissionCycle | null>(null);
   const [guardedAction, setGuardedAction] = useState<CycleGuardedAction | null>(null);
   const [configurationMode, setConfigurationMode] = useState<CycleConfigurationMode | null>(null);
   const [publishValidation, setPublishValidation] = useState<AdmissionCycleValidation | null>(null);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState<AdmissionCycleStatus | ''>('');
-  const [windowStatus, setWindowStatus] = useState<AdmissionCycleWindowStatus | ''>('');
+  const { filters, update: updateFilters, clear: clearFilters } = useAdmissionCycleFilters();
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -123,12 +122,17 @@ export default function AdmissionCyclesScreen() {
   );
 
   const { data, isLoading, isFetching, isError, refetch } = useGetAdmissionCyclesQuery({
-    search: search || undefined,
-    status: status === '' ? undefined : status,
-    windowStatus: windowStatus === '' ? undefined : windowStatus,
-    maxResultCount: rowsPerPage,
-    skipCount: page * rowsPerPage,
+    search: filters.search || undefined,
+    academicYearId: filters.academicYearId || undefined,
+    status: filters.status === '' ? undefined : filters.status,
+    windowStatus: filters.windowStatus === '' ? undefined : filters.windowStatus,
+    maxResultCount: filters.rowsPerPage,
+    skipCount: filters.page * filters.rowsPerPage,
   });
+
+  const hasActiveFilters = Boolean(
+    filters.academicYearId || filters.status !== '' || filters.windowStatus !== '' || filters.search
+  );
 
   const [createCycle, { isLoading: creating }] = useCreateAdmissionCycleMutation();
   const [updateCycle, { isLoading: updating }] = useUpdateAdmissionCycleMutation();
@@ -315,7 +319,7 @@ export default function AdmissionCyclesScreen() {
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
         const hasOverflowActions =
-          canAdd ||
+          canView || canAdd ||
           (canDelete && (canCloseCycle(cycle) || canArchiveCycle(cycle)));
         return (
           <ThreeDotsActions
@@ -339,6 +343,7 @@ export default function AdmissionCyclesScreen() {
             moreLabel={`More actions for ${cycle.name}`}
             actions={({ popover }) => (
               <MenuList dense>
+                {canView && <MenuItem onClick={() => { popover.onClose(); setCapacityCycle(cycle); }}><Iconify icon="mdi:seat-outline" />Capacity & reservations</MenuItem>}
                 {canAdd && canPublishCycle(cycle) && <MenuItem onClick={() => { popover.onClose(); openGuardedAction('publish', cycle); }}><Iconify icon={GlobalIcons.publish} />Validate & publish</MenuItem>}
                 {canAdd && canReopenCycle(cycle) && <MenuItem onClick={() => { popover.onClose(); openGuardedAction('reopen', cycle); }}><Iconify icon="mdi:lock-open-outline" />Reopen</MenuItem>}
                 {canAdd && (cycle.status === 1 || cycle.status === 2) && <MenuItem onClick={() => { popover.onClose(); openConfiguration('window', cycle); }}><Iconify icon={GlobalIcons.calendar} />Revise window</MenuItem>}
@@ -359,24 +364,118 @@ export default function AdmissionCyclesScreen() {
       <CustomBreadcrumbs
         heading="Admission Periods"
         description="Create, publish, monitor, close and retain controlled admission periods."
-        links={[{ name: 'Students', href: '/student/dashboard' }, { name: 'Admissions', href: '/student/admissions' }, { name: 'Admission Setup', href: studentPaths.enrollment.settings.root }, { name: 'Admission Periods' }]}
+        links={[
+          { name: 'Students', href: '/student/dashboard' },
+          { name: 'Admissions', href: '/student/admissions' },
+          { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
+          { name: 'Admission Periods' },
+        ]}
+        sx={{
+          flexWrap: { xs: 'wrap', md: 'nowrap' },
+          rowGap: { xs: 0.5, md: 0 },
+          '& > :first-of-type': { flexGrow: { xs: 1, md: 0 } },
+          '& > :nth-of-type(2)': {
+            order: { xs: 3, md: 0 },
+            flexBasis: { xs: '100%', md: 'auto' },
+          },
+        }}
+        slotProps={{
+          action: { order: { xs: 2, md: 0 } },
+          heading: {},
+          moreLink: {},
+          breadcrumbs: {},
+        }}
         action={
-          <Button size="small" variant="contained" disabled={!canAdd} startIcon={<Iconify icon="mdi:plus" />} onClick={() => { setEditingCycle(null); editDialog.onTrue(); }}>
+          <Button
+            size="small"
+            variant="contained"
+            disabled={!canAdd}
+            startIcon={<Iconify icon="mdi:plus" />}
+            sx={{ minHeight: { xs: 44, sm: 32 } }}
+            onClick={() => {
+              setEditingCycle(null);
+              editDialog.onTrue();
+            }}
+          >
             Create cycle
           </Button>
         }
       />
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-        <TextField select size="small" label="Lifecycle" value={status} onChange={(event) => { setStatus(event.target.value === '' ? '' : Number(event.target.value) as AdmissionCycleStatus); setPage(0); }} sx={{ minWidth: 160 }}>
-          <MenuItem value="">All lifecycle states</MenuItem>
-          {Object.entries(lifecycleLabels).map(([value, label]) => <MenuItem key={value} value={Number(value)}>{label}</MenuItem>)}
-        </TextField>
-        <TextField select size="small" label="Application window" value={windowStatus} onChange={(event) => { setWindowStatus(event.target.value === '' ? '' : Number(event.target.value) as AdmissionCycleWindowStatus); setPage(0); }} sx={{ minWidth: 180 }}>
-          <MenuItem value="">All window states</MenuItem>
-          {Object.entries(windowLabels).map(([value, label]) => <MenuItem key={value} value={Number(value)}>{label}</MenuItem>)}
-        </TextField>
-      </Stack>
+      <Paper variant="outlined" sx={{ p: 1 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
+          <TextField
+            select
+            size="small"
+            label="Academic year"
+            value={filters.academicYearId}
+            disabled={academicYearsLoading}
+            onChange={(event) => updateFilters({ academicYearId: event.target.value })}
+            sx={{ minWidth: 180, flex: { sm: 1 } }}
+          >
+            <MenuItem value="">All academic years</MenuItem>
+            {academicYears.map((year) => (
+              <MenuItem key={year.id} value={year.id}>
+                {year.name}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            size="small"
+            label="Lifecycle"
+            value={filters.status}
+            onChange={(event) =>
+              updateFilters({
+                status:
+                  event.target.value === ''
+                    ? ''
+                    : (Number(event.target.value) as AdmissionCycleStatus),
+              })
+            }
+            sx={{ minWidth: 170, flex: { sm: 1 } }}
+          >
+            <MenuItem value="">All lifecycle states</MenuItem>
+            {Object.entries(lifecycleLabels).map(([value, label]) => (
+              <MenuItem key={value} value={Number(value)}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            size="small"
+            label="Application window"
+            value={filters.windowStatus}
+            onChange={(event) =>
+              updateFilters({
+                windowStatus:
+                  event.target.value === ''
+                    ? ''
+                    : (Number(event.target.value) as AdmissionCycleWindowStatus),
+              })
+            }
+            sx={{ minWidth: 190, flex: { sm: 1 } }}
+          >
+            <MenuItem value="">All window states</MenuItem>
+            {Object.entries(windowLabels).map(([value, label]) => (
+              <MenuItem key={value} value={Number(value)}>
+                {label}
+              </MenuItem>
+            ))}
+          </TextField>
+          {hasActiveFilters && (
+            <Button
+              color="inherit"
+              startIcon={<Iconify icon="solar:restart-bold" />}
+              onClick={clearFilters}
+              sx={{ minHeight: 44, flexShrink: 0 }}
+            >
+              Clear filters
+            </Button>
+          )}
+        </Stack>
+      </Paper>
 
       {isError && <AdmissionQueryError onRetry={() => refetch()} />}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
@@ -391,16 +490,32 @@ export default function AdmissionCyclesScreen() {
           isFilter={false}
           serverSidePagination
           serverSideSearch
-          page={page}
-          rowsPerPage={rowsPerPage}
+          page={filters.page}
+          rowsPerPage={filters.rowsPerPage}
+          searchTerm={filters.search}
           totalCount={data?.totalCount ?? 0}
           maxServerRowsPerPage={100}
-          onServerPagination={(nextPage, nextRows) => { setPage(Math.max(nextPage - 1, 0)); setRowsPerPage(nextRows); }}
-          onServerSearch={(term) => { setSearch(term.trim()); setPage(0); }}
+          onServerPagination={(nextPage, nextRows) =>
+            updateFilters({ page: Math.max(nextPage - 1, 0), rowsPerPage: nextRows })
+          }
+          onServerSearch={(term) => updateFilters({ search: term.trim() })}
           columns={columns}
           data={data?.items ?? []}
           handleRowClick={(row) => canView && setDetailsCycle(row as unknown as AdmissionCycle)}
-          noDataText="No admission cycles match the selected filters."
+          noDataText={
+            <Stack spacing={1} alignItems="center">
+              <Typography color="text.secondary">
+                {hasActiveFilters
+                  ? 'No admission periods match the selected filters.'
+                  : 'No admission periods have been created yet.'}
+              </Typography>
+              {hasActiveFilters && (
+                <Button color="inherit" onClick={clearFilters}>
+                  Clear filters
+                </Button>
+              )}
+            </Stack>
+          }
         />
       </Box>
 
@@ -416,6 +531,11 @@ export default function AdmissionCyclesScreen() {
         onSave={saveCycle}
       />
       <AdmissionCycleDetailsDialog cycle={detailsCycle} onClose={() => setDetailsCycle(null)} />
+      <AdmissionCycleCapacityDialog
+        cycle={capacityCycle}
+        canManage={canAdd}
+        onClose={() => setCapacityCycle(null)}
+      />
       <AdmissionCycleActionDialog
         action={guardedAction}
         cycle={actionCycle}

@@ -145,6 +145,22 @@ describe('parseApiProblemDetail', () => {
     expect(parsed.errorCode).toBe('Admissions.WorkflowConcurrencyConflict');
   });
 
+  it('maps a duplicate admission cycle code to an actionable retry message', () => {
+    const parsed = parseApiProblemDetail({
+      data: {
+        status: 400,
+        title: 'Business rule violated',
+        detail: 'One or more business rules were violated.',
+        errorCode: 'Admissions.CycleCodeAlreadyExists',
+      },
+    });
+
+    expect(parsed.detail).toBe(
+      'An admission cycle already uses this code. Choose a different cycle code and try again.'
+    );
+    expect(parsed.errorCode).toBe('Admissions.CycleCodeAlreadyExists');
+  });
+
   it('maps an admission stage status conflict to an actionable message', () => {
     const parsed = parseApiProblemDetail({
       data: {

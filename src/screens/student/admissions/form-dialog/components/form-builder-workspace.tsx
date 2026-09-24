@@ -50,7 +50,11 @@ export function FormBuilderWorkspace({
   }, [desktop, panel]);
   const contents = { outline, form, settings };
   return (
-    <Stack ref={workspaceRef} spacing={1.5} sx={{ flex: 1, width: 1, minWidth: 0, minHeight: 0 }}>
+    <Stack
+      ref={workspaceRef}
+      spacing={1}
+      sx={{ flex: 1, width: 1, minWidth: 0, minHeight: 0, overflow: 'hidden' }}
+    >
       <Tabs
         value={panel}
         onChange={(_, value: Panel) => onPanelChange(value)}
@@ -76,13 +80,18 @@ export function FormBuilderWorkspace({
           display: 'grid',
           gridTemplateColumns: {
             xs: 'minmax(0, 1fr)',
-            lg: '240px minmax(0, 1fr) 320px',
-            xl: '260px minmax(0, 1fr) 350px',
+            lg: '280px minmax(0, 1fr) 360px',
+            xl: '300px minmax(0, 1fr) 390px',
           },
-          gap: 2,
+          gap: 1.5,
           flex: 1,
           minHeight: 0,
-          height: { xs: 600, lg: 1 },
+          height: { xs: 620, lg: 1 },
+          '& .MuiButton-root': { minHeight: { xs: 44, lg: 36 }, py: { lg: 0.5 } },
+          '& .MuiSwitch-switchBase.Mui-checked': { color: 'text.primary' },
+          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+            bgcolor: 'text.primary',
+          },
         }}
       >
         {PANELS.map((item) => (

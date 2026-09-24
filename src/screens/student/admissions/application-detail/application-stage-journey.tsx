@@ -2,61 +2,112 @@
 
 import type { AdmissionApplicationStage } from 'src/redux/student/admissions/admission-applications-api';
 
-import { useResponsive } from 'src/hooks/use-responsive';
-import { Step, Chip, Stepper, StepLabel, Typography } from '@mui/material';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import { Box, Stack, Typography } from '@mui/material';
 
-import { STAGE_STATUS_LABELS } from './application-progress-model';
+import { getStageStatusColor, getStageStatusLabel } from './application-progress-model';
 
 type Props = {
   stages: AdmissionApplicationStage[];
   currentStageId?: string | null;
 };
 
-const statusColor = (status: number) => {
-  if (status === 2) return 'success' as const;
-  if (status === 3) return 'warning' as const;
-  if (status === 4 || status === 5) return 'error' as const;
-  if (status === 1) return 'primary' as const;
-  return 'default' as const;
-};
-
 export function ApplicationStageJourney({ stages, currentStageId }: Props) {
-  const horizontal = useResponsive('up', 'md');
   const orderedStages = [...stages].sort((left, right) => left.displayOrder - right.displayOrder);
-  const activeStep = orderedStages.findIndex((stage) => stage.id === currentStageId);
+
+  if (!orderedStages.length) {
+    return (
+      <Typography variant="body2" color="text.secondary">
+        No admission stages are available for this application.
+      </Typography>
+    );
+  }
 
   return (
-    <Stepper
-      activeStep={activeStep}
-      orientation={horizontal ? 'horizontal' : 'vertical'}
-      alternativeLabel={horizontal}
-      aria-label="Admission journey"
-      sx={{ py: 1 }}
-    >
-      {orderedStages.map((stage) => (
-        <Step
-          key={stage.id}
-          completed={stage.status === 2 || stage.status === 3}
-          aria-current={stage.id === currentStageId ? 'step' : undefined}
-        >
-          <StepLabel
-            error={stage.status === 4 || stage.status === 5}
-            optional={
-              <Chip
-                size="small"
-                color={statusColor(stage.status)}
-                variant={stage.status === 1 ? 'filled' : 'outlined'}
-                label={STAGE_STATUS_LABELS[stage.status] ?? 'Unknown'}
-                sx={{ mt: 0.5 }}
-              />
-            }
+    <Stack component="ol" aria-label="Admission journey" sx={{ m: 0, p: 0, listStyle: 'none' }}>
+      {orderedStages.map((stage, index) => {
+        const completed = stage.status === 2;
+        const current = stage.id === currentStageId || stage.status === 1;
+        const error = stage.status === 4 || stage.status === 5;
+        const skipped = stage.status === 3;
+
+        return (
+          <Box
+            component="li"
+            key={stage.id}
+            aria-current={current ? 'step' : undefined}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: '36px minmax(0, 1fr)',
+              gap: 1,
+              p: 1,
+              mx: -1,
+              borderRadius: 1.5,
+              bgcolor: current ? 'action.hover' : 'transparent',
+              minWidth: 0,
+            }}
           >
-            <Typography variant="subtitle2" sx={{ whiteSpace: 'normal' }}>
-              {stage.name}
-            </Typography>
-          </StepLabel>
-        </Step>
-      ))}
-    </Stepper>
+            <Box sx={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+              {index < orderedStages.length - 1 && (
+                <Box
+                  aria-hidden
+                  sx={{
+                    position: 'absolute',
+                    top: 32,
+                    bottom: -16,
+                    left: '50%',
+                    borderLeft: 2,
+                    borderColor: completed ? 'success.light' : 'divider',
+                  }}
+                />
+              )}
+              <Box
+                aria-hidden
+                sx={{
+                  width: 32,
+                  height: 32,
+                  zIndex: 1,
+                  display: 'grid',
+                  placeItems: 'center',
+                  borderRadius: '50%',
+                  border: 2,
+                  borderColor: completed
+                    ? 'success.main'
+                    : current
+                      ? 'text.primary'
+                      : error
+                        ? 'error.main'
+                        : skipped
+                          ? 'warning.main'
+                          : 'action.disabledBackground',
+                  bgcolor: completed ? 'success.main' : 'background.paper',
+                  color: completed
+                    ? 'success.contrastText'
+                    : current
+                      ? 'text.primary'
+                      : error
+                        ? 'error.main'
+                        : skipped
+                          ? 'warning.main'
+                          : 'text.disabled',
+                  fontWeight: 700,
+                }}
+              >
+                {completed ? <Iconify icon="mdi:check" width={18} /> : index + 1}
+              </Box>
+            </Box>
+            <Box sx={{ minWidth: 0, pb: index < orderedStages.length - 1 ? 1.25 : 0 }}>
+              <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                {stage.name}
+              </Typography>
+              <Label color={getStageStatusColor(stage.status)} sx={{ mt: 0.5 }}>
+                {getStageStatusLabel(stage.status)}
+              </Label>
+            </Box>
+          </Box>
+        );
+      })}
+    </Stack>
   );
 }

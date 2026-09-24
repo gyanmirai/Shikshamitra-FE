@@ -6,9 +6,21 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { CSS } from '@dnd-kit/utilities';
+import { Label } from 'src/components/label';
 import { useSortable } from '@dnd-kit/sortable';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Chip, Stack, Button, Avatar, IconButton, Typography } from '@mui/material';
+import ThreeDotsActions from 'src/components/three-dots-actions';
+import {
+  Box,
+  Card,
+  Stack,
+  Button,
+  Avatar,
+  Divider,
+  MenuItem,
+  IconButton,
+  Typography,
+} from '@mui/material';
 
 import { getTransitionSummary } from '../../workflow-builder-utils';
 
@@ -45,6 +57,14 @@ export function WorkflowStageCard({
     id: stage.id,
     disabled: readOnly,
   });
+  const orderedTransitions = transitions
+    .slice()
+    .sort(
+      (left, right) =>
+        Number(right.isDefault) - Number(left.isDefault) || left.priority - right.priority
+    );
+  const getDestination = (path: AdmissionWorkflowTransition) =>
+    stages.find((item) => item.id === path.toStageId)?.name ?? 'Missing stage';
 
   return (
     <Card
@@ -52,29 +72,32 @@ export function WorkflowStageCard({
       ref={setNodeRef}
       variant="outlined"
       sx={{
-        overflow: 'hidden',
+        zIndex: 1,
+        minWidth: 0,
         borderRadius: 2,
         opacity: isDragging ? 0.65 : 1,
-        borderColor: issueCount > 0 ? 'warning.main' : undefined,
+        bgcolor: 'background.paper',
+        borderColor: issueCount > 0 ? 'warning.main' : 'divider',
         transform: CSS.Transform.toString(transform),
         transition,
-        '&:hover': {
-          borderColor: issueCount > 0 ? 'warning.main' : 'text.disabled',
-        },
+        '&:hover': { borderColor: issueCount > 0 ? 'warning.main' : 'text.disabled' },
       }}
     >
       <Stack
         direction="row"
         alignItems="center"
-        spacing={1}
-        flexWrap={{ xs: 'wrap', sm: 'nowrap' }}
-        sx={{ p: 1.25 }}
+        spacing={{ xs: 0.75, sm: 1.25 }}
+        sx={{ p: { xs: 1, sm: 1.25 } }}
       >
         {!readOnly && (
           <IconButton
             size="small"
             aria-label={`Reorder ${stage.name}`}
-            sx={{ width: 44, height: 44 }}
+            sx={{
+              width: { xs: 44, md: 36 },
+              height: { xs: 44, md: 36 },
+              flexShrink: 0,
+            }}
             {...attributes}
             {...listeners}
           >
@@ -83,186 +106,171 @@ export function WorkflowStageCard({
         )}
         <Avatar
           sx={{
-            width: 34,
-            height: 34,
+            width: 36,
+            height: 36,
             flexShrink: 0,
-            border: 1,
             typography: 'subtitle2',
             color: 'text.primary',
-            borderColor: 'divider',
             bgcolor: 'background.neutral',
+            border: 1,
+            borderColor: 'divider',
           }}
         >
           {stepNumber}
         </Avatar>
-        <Box sx={{ flex: 1, minWidth: { xs: 'calc(100% - 96px)', sm: 0 } }}>
-          <Stack direction="row" alignItems="center" spacing={0.75} useFlexGap flexWrap="wrap">
-            <Typography fontWeight={600}>{stage.name}</Typography>
-            {stage.isEntryStage && <Chip size="small" color="info" label="Entry" />}
-            {stage.isTerminalStage && <Chip size="small" color="success" label="Terminal" />}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Stack direction="row" spacing={0.75} alignItems="center" useFlexGap flexWrap="wrap">
+            <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+              {stage.name}
+            </Typography>
+            {stage.isEntryStage && (
+              <Label color="info" variant="soft">
+                Entry
+              </Label>
+            )}
+            {stage.isTerminalStage && <Label variant="soft">Final</Label>}
             {issueCount > 0 && (
-              <Chip
-                size="small"
+              <Label
                 color="warning"
-                icon={<Iconify icon="mdi:alert-outline" />}
-                label={`${issueCount} ${issueCount === 1 ? 'issue' : 'issues'}`}
-              />
+                variant="soft"
+                startIcon={<Iconify icon="mdi:alert-outline" />}
+              >
+                {issueCount} {issueCount === 1 ? 'issue' : 'issues'}
+              </Label>
             )}
           </Stack>
-          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            noWrap
+            sx={{ display: { xs: 'none', sm: 'block' } }}
+          >
             {stage.description || stage.code}
           </Typography>
-          <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.25 }}>
-            <Typography variant="caption" color="text.disabled" sx={{ fontFamily: 'monospace' }}>
-              {stage.code}
-            </Typography>
-            {stage.isRequired && (
-              <Typography variant="caption" color="text.disabled">
-                · Required
+          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.25, minWidth: 0 }}>
+            <Iconify
+              icon={stage.isTerminalStage ? 'mdi:flag-checkered' : 'mdi:arrow-right'}
+              width={16}
+              color={
+                !stage.isTerminalStage && orderedTransitions.length === 0
+                  ? 'warning.main'
+                  : 'text.disabled'
+              }
+            />
+            {stage.isTerminalStage ? (
+              <Typography variant="caption" color="text.secondary">
+                End of journey
               </Typography>
-            )}
-            {stage.allowManualSkip && (
-              <Typography variant="caption" color="text.disabled">
-                · Manual skip allowed
+            ) : orderedTransitions.length === 0 ? (
+              <Typography variant="caption" color="warning.main">
+                Add a route before publishing
+              </Typography>
+            ) : (
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {orderedTransitions
+                  .map((path) => `${getTransitionSummary(path)} → ${getDestination(path)}`)
+                  .join(' · ')}
               </Typography>
             )}
           </Stack>
         </Box>
-        <Stack
-          direction="row"
-          justifyContent="flex-end"
-          sx={{ width: { xs: 1, sm: 'auto' }, ml: { xs: 'auto', sm: 0 }, mt: { xs: 0.5, sm: 0 } }}
-        >
-          <IconButton
+
+        {!readOnly && !stage.isTerminalStage && (
+          <Button
             size="small"
-            aria-label={`${readOnly ? 'View' : 'Edit'} ${stage.name}`}
-            sx={{ width: 44, height: 44 }}
-            onClick={onEdit}
+            variant="outlined"
+            startIcon={<Iconify icon="mdi:source-branch-plus" width={17} />}
+            onClick={onAddPath}
+            sx={{
+              minHeight: { xs: 44, md: 36 },
+              flexShrink: 0,
+              display: { xs: 'none', sm: 'inline-flex' },
+            }}
           >
-            <Iconify icon={readOnly ? 'mdi:eye-outline' : 'mdi:pencil-outline'} />
-          </IconButton>
-          {!readOnly && (
+            Add route
+          </Button>
+        )}
+
+        <ThreeDotsActions
+          moreLabel={`Actions for ${stage.name}`}
+          sx={{
+            '& .MuiIconButton-root': {
+              width: { xs: 44, md: 36 },
+              height: { xs: 44, md: 36 },
+            },
+          }}
+          actions={({ popover }) => (
             <>
-              <IconButton
-                size="small"
-                aria-label={`Duplicate ${stage.name}`}
-                sx={{ width: 44, height: 44 }}
-                onClick={onDuplicate}
+              <MenuItem
+                onClick={() => {
+                  popover.onClose();
+                  onEdit();
+                }}
               >
-                <Iconify icon="mdi:content-copy" />
-              </IconButton>
-              <IconButton
-                size="small"
-                color="error"
-                aria-label={`Delete ${stage.name}`}
-                sx={{ width: 44, height: 44 }}
-                onClick={onDelete}
-              >
-                <Iconify icon="mdi:delete-outline" />
-              </IconButton>
+                <Iconify icon={readOnly ? 'mdi:eye-outline' : 'mdi:pencil-outline'} />
+                {readOnly ? 'View stage' : 'Edit stage'}
+              </MenuItem>
+              {!readOnly && (
+                <MenuItem
+                  onClick={() => {
+                    popover.onClose();
+                    onDuplicate();
+                  }}
+                >
+                  <Iconify icon="mdi:content-copy" /> Duplicate stage
+                </MenuItem>
+              )}
+              {!readOnly && !stage.isTerminalStage && (
+                <MenuItem
+                  onClick={() => {
+                    popover.onClose();
+                    onAddPath();
+                  }}
+                >
+                  <Iconify icon="mdi:source-branch-plus" /> Add route
+                </MenuItem>
+              )}
+              {orderedTransitions.length > 0 && <Divider />}
+              {orderedTransitions.map((path) => (
+                <Box key={path.id}>
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      onEditPath(path);
+                    }}
+                  >
+                    <Iconify icon={readOnly ? 'mdi:eye-outline' : 'mdi:pencil-outline'} />
+                    {readOnly ? 'View' : 'Edit'} route to {getDestination(path)}
+                  </MenuItem>
+                  {!readOnly && (
+                    <MenuItem
+                      onClick={() => {
+                        popover.onClose();
+                        onDeletePath(path.id);
+                      }}
+                      sx={{ color: 'error.main' }}
+                    >
+                      <Iconify icon="mdi:delete-outline" /> Remove route to {getDestination(path)}
+                    </MenuItem>
+                  )}
+                </Box>
+              ))}
+              {!readOnly && <Divider />}
+              {!readOnly && (
+                <MenuItem
+                  onClick={() => {
+                    popover.onClose();
+                    onDelete();
+                  }}
+                  sx={{ color: 'error.main' }}
+                >
+                  <Iconify icon="mdi:delete-outline" /> Delete stage
+                </MenuItem>
+              )}
             </>
           )}
-        </Stack>
+        />
       </Stack>
-
-      <Box
-        sx={{
-          px: 1.5,
-          py: 1,
-          borderTop: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.neutral',
-        }}
-      >
-        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Iconify
-              icon={stage.isTerminalStage ? 'mdi:flag-checkered' : 'mdi:source-branch'}
-              width={17}
-              color="text.secondary"
-            />
-            <Typography variant="caption" fontWeight={700} color="text.secondary">
-              {stage.isTerminalStage ? 'Journey complete' : 'Next step'}
-            </Typography>
-          </Stack>
-          {!readOnly && !stage.isTerminalStage && (
-            <Button
-              size="small"
-              startIcon={<Iconify icon="mdi:source-branch-plus" width={17} />}
-              onClick={onAddPath}
-              sx={{ minHeight: 44 }}
-            >
-              Add route
-            </Button>
-          )}
-        </Stack>
-
-        {stage.isTerminalStage ? (
-          <Typography variant="body2" color="text.secondary">
-            The applicant journey ends at this stage.
-          </Typography>
-        ) : transitions.length === 0 ? (
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Iconify icon="mdi:alert-outline" width={17} color="warning.main" />
-            <Typography variant="body2" color="warning.main">
-              No next step configured. Add a route before publishing.
-            </Typography>
-          </Stack>
-        ) : (
-          <Stack>
-            {transitions
-              .slice()
-              .sort(
-                (left, right) =>
-                  Number(right.isDefault) - Number(left.isDefault) || left.priority - right.priority
-              )
-              .map((path) => {
-                const destination =
-                  stages.find((item) => item.id === path.toStageId)?.name ?? 'Missing stage';
-                return (
-                  <Stack
-                    key={path.id}
-                    direction="row"
-                    alignItems="center"
-                    spacing={0.75}
-                    sx={{ minHeight: 44, '& + &': { borderTop: 1, borderColor: 'divider' } }}
-                  >
-                    <Iconify
-                      icon={path.isDefault ? 'mdi:arrow-right' : 'mdi:source-branch'}
-                      width={17}
-                      color="text.secondary"
-                    />
-                    <Typography variant="body2" sx={{ flex: 1, minWidth: 0 }} noWrap>
-                      {getTransitionSummary(path)} → <strong>{destination}</strong>
-                    </Typography>
-                    <IconButton
-                      size="small"
-                      aria-label={`${readOnly ? 'View' : 'Edit'} path to ${destination}`}
-                      onClick={() => onEditPath(path)}
-                      sx={{ width: 44, height: 44 }}
-                    >
-                      <Iconify
-                        icon={readOnly ? 'mdi:eye-outline' : 'mdi:pencil-outline'}
-                        width={17}
-                      />
-                    </IconButton>
-                    {!readOnly && (
-                      <IconButton
-                        size="small"
-                        color="error"
-                        aria-label={`Remove path to ${destination}`}
-                        onClick={() => onDeletePath(path.id)}
-                        sx={{ width: 44, height: 44 }}
-                      >
-                        <Iconify icon="mdi:delete-outline" width={17} />
-                      </IconButton>
-                    )}
-                  </Stack>
-                );
-              })}
-          </Stack>
-        )}
-      </Box>
     </Card>
   );
 }

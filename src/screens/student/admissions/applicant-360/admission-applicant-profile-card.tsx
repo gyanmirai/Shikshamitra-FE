@@ -7,7 +7,17 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatDateOnly } from 'src/utils/date-only';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Box, Card, Alert, Stack, Avatar, Button, Typography, CardContent } from '@mui/material';
+import {
+  Box,
+  Card,
+  Alert,
+  Stack,
+  Avatar,
+  Button,
+  Divider,
+  Typography,
+  CardContent,
+} from '@mui/material';
 import { useUpdateAdmissionApplicantProfileMutation } from 'src/redux/student/admissions/admission-applicants-api';
 
 import { AdmissionApplicantProfileDialog } from './admission-applicant-profile-dialog';
@@ -15,6 +25,7 @@ import { formatAdmissionReference } from '../admission-reference';
 import {
   getApplicantName,
   getApplicantInitials,
+  getPrimaryApplication,
   getApplicantJourneyState,
   getApplicantMissingDetails,
 } from './admission-applicant-360-model';
@@ -27,132 +38,84 @@ export function AdmissionApplicantProfileCard({ data }: Props) {
   const locked = data.applications.some(
     (application) => application.status === 10 || application.status === 11
   );
+  const application = getPrimaryApplication(data.applications);
   const name = getApplicantName(data);
   const journey = getApplicantJourneyState(data.applications);
   const missingDetails = getApplicantMissingDetails(data);
-  const guardianName = [data.primaryGuardian?.firstName, data.primaryGuardian?.lastName]
-    .filter(Boolean)
-    .join(' ');
 
   return (
-    <Card variant="outlined" sx={{ overflow: 'visible' }}>
-      <CardContent sx={{ p: { xs: 2, md: 2.5 }, '&:last-child': { pb: { xs: 2, md: 2.5 } } }}>
-        <Stack spacing={2.5}>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            justifyContent="space-between"
-            alignItems={{ sm: 'flex-start' }}
-            gap={2}
-          >
-            <Stack direction="row" spacing={2} alignItems="center" sx={{ minWidth: 0 }}>
-              <Avatar
-                sx={{
-                  width: { xs: 56, sm: 64 },
-                  height: { xs: 56, sm: 64 },
-                  color: 'primary.main',
-                  bgcolor: 'action.selected',
-                  border: 1,
-                  borderColor: 'divider',
-                  fontWeight: 700,
-                  fontSize: { xs: '1.125rem', sm: '1.25rem' },
-                }}
+    <Card variant="outlined">
+      <CardContent sx={{ p: { xs: 1.5, sm: 2 }, '&:last-child': { pb: { xs: 1.5, sm: 2 } } }}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          justifyContent="space-between"
+          alignItems={{ sm: 'center' }}
+          spacing={1.5}
+        >
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
+            <Avatar
+              sx={{
+                width: { xs: 52, sm: 56 },
+                height: { xs: 52, sm: 56 },
+                color: 'success.dark',
+                bgcolor: 'success.lighter',
+                border: 1,
+                borderColor: 'success.light',
+                fontWeight: 700,
+                fontSize: '1.125rem',
+              }}
+            >
+              {getApplicantInitials(data)}
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+                <Typography variant="h5" sx={{ overflowWrap: 'anywhere' }}>
+                  {name}
+                </Typography>
+                <Label color={journey.color}>{journey.label}</Label>
+                {missingDetails.length > 0 && <Label color="warning">Profile incomplete</Label>}
+              </Stack>
+              <Stack
+                direction="row"
+                divider={<Divider orientation="vertical" flexItem />}
+                spacing={1}
+                useFlexGap
+                flexWrap="wrap"
+                sx={{ mt: 0.5 }}
               >
-                {getApplicantInitials(data)}
-              </Avatar>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="overline" color="text.secondary">
-                  Applicant profile
-                </Typography>
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-                  <Typography variant="h5" sx={{ overflowWrap: 'anywhere' }}>
-                    {name}
+                {application && (
+                  <Typography variant="caption" color="text.secondary">
+                    Application: {formatAdmissionReference(application.applicationNumber)}
                   </Typography>
-                  <Label color={journey.color}>{journey.label}</Label>
-                  {missingDetails.length > 0 && <Label color="warning">Profile incomplete</Label>}
-                </Stack>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                  {journey.description}
-                </Typography>
+                )}
                 <Typography variant="caption" color="text.secondary">
                   Family reference: {formatAdmissionReference(data.family?.familyNumber)}
                 </Typography>
-              </Box>
-            </Stack>
-            <Button
-              size="small"
-              variant="outlined"
-              disabled={locked}
-              onClick={dialog.onTrue}
-              startIcon={<Iconify icon="mdi:account-edit-outline" />}
-            >
-              Edit identity
-            </Button>
+              </Stack>
+            </Box>
           </Stack>
-
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: {
-                xs: 'minmax(0, 1fr)',
-                sm: 'repeat(2, minmax(0, 1fr))',
-                lg: 'repeat(4, minmax(0, 1fr))',
-              },
-              gap: 2,
-            }}
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={locked}
+            onClick={dialog.onTrue}
+            startIcon={<Iconify icon="mdi:account-edit-outline" />}
+            sx={{ minHeight: 44, alignSelf: { xs: 'stretch', sm: 'center' } }}
           >
-            <ProfileDetail
-              icon="mdi:cake-variant-outline"
-              label="Date of birth"
-              value={
-                data.applicant.dateOfBirth
-                  ? formatDateOnly(data.applicant.dateOfBirth, 'DD MMM YYYY')
-                  : 'Not provided'
-              }
-              missing={!data.applicant.dateOfBirth}
-            />
-            <ProfileDetail
-              icon="mdi:account-outline"
-              label="Gender"
-              value={data.applicant.gender ?? 'Not provided'}
-              missing={!data.applicant.gender}
-            />
-            <ProfileDetail
-              icon="mdi:account-heart-outline"
-              label="Primary guardian"
-              value={guardianName || 'Not provided'}
-              secondary={data.primaryGuardian?.email ?? undefined}
-            />
-            <ProfileDetail
-              icon="mdi:phone-outline"
-              label="Contact number"
-              value={data.primaryGuardian?.mobile ?? 'Not provided'}
-              missing={!data.primaryGuardian?.mobile}
-            />
-          </Box>
-
-          {missingDetails.length > 0 && !locked && (
-            <Alert severity="warning">
-              Add the applicant’s {missingDetails.join(' and ')} before the admission reaches
-              eligibility, documents, or finalization.
-            </Alert>
-          )}
-
-          {locked && (
-            <Alert severity="info">
-              This admission is finalized. Update identity details from the Student record.
-            </Alert>
-          )}
+            Edit identity
+          </Button>
         </Stack>
       </CardContent>
       <AdmissionApplicantProfileDialog
         open={dialog.value}
         busy={updateState.isLoading}
         applicant={data.applicant}
+        guardian={data.primaryGuardian}
         onClose={dialog.onFalse}
         onSubmit={async (body) => {
           try {
             await updateProfile({ applicantId: data.applicant.id, body }).unwrap();
-            shikshaMitraToast.success({ message: 'Applicant identity updated' });
+            shikshaMitraToast.success({ message: 'Applicant identity and guardian contact updated' });
             return true;
           } catch {
             shikshaMitraToast.error({ message: 'Unable to update applicant identity' });
@@ -164,60 +127,80 @@ export function AdmissionApplicantProfileCard({ data }: Props) {
   );
 }
 
-function ProfileDetail({
-  icon,
-  label,
-  value,
-  secondary,
-  missing = false,
-}: {
-  icon: string;
-  label: string;
-  value: string;
-  secondary?: string;
-  missing?: boolean;
-}) {
+export function AdmissionApplicantEssentials({ data }: Props) {
+  const locked = data.applications.some(
+    (application) => application.status === 10 || application.status === 11
+  );
+  const guardianName = [data.primaryGuardian?.firstName, data.primaryGuardian?.lastName]
+    .filter(Boolean)
+    .join(' ');
+  const details = [
+    {
+      label: 'Date of birth',
+      value: data.applicant.dateOfBirth
+        ? formatDateOnly(data.applicant.dateOfBirth, 'DD MMM YYYY')
+        : 'Not provided',
+      missing: !data.applicant.dateOfBirth,
+    },
+    {
+      label: 'Gender',
+      value: data.applicant.gender ?? 'Not provided',
+      missing: !data.applicant.gender,
+    },
+    {
+      label: 'Primary guardian',
+      value: guardianName || 'Not provided',
+      missing: false,
+    },
+    {
+      label: 'Contact number',
+      value: data.primaryGuardian?.mobile ?? 'Not provided',
+      missing: false,
+    },
+  ];
+
   return (
-    <Stack
-      direction="row"
-      spacing={1.25}
-      alignItems="flex-start"
-      sx={{
-        minWidth: 0,
-        p: 1.5,
-        border: 1,
-        borderColor: 'divider',
-        borderRadius: 1.5,
-        bgcolor: 'action.hover',
-      }}
-    >
-      <Box
-        sx={{
-          width: 32,
-          height: 32,
-          flexShrink: 0,
-          display: 'grid',
-          placeItems: 'center',
-          borderRadius: 1,
-          color: missing ? 'warning.main' : 'text.secondary',
-          bgcolor: 'background.paper',
-        }}
-      >
-        <Iconify icon={icon} width={18} />
-      </Box>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography variant="caption" color="text.secondary">
-          {label}
-        </Typography>
-        <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-          {value}
-        </Typography>
-        {secondary && (
-          <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-            {secondary}
-          </Typography>
-        )}
-      </Box>
-    </Stack>
+    <Box component="section" aria-labelledby="applicant-essentials-heading">
+      <Typography id="applicant-essentials-heading" variant="h6" sx={{ mb: 1 }}>
+        Applicant essentials
+      </Typography>
+      <Stack divider={<Divider flexItem />}>
+        {details.map((detail) => (
+          <Box
+            key={detail.label}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: 'minmax(104px, 0.8fr) minmax(0, 1.2fr)', sm: '1fr 2fr' },
+              gap: 1.5,
+              alignItems: 'start',
+              py: 1.25,
+              minWidth: 0,
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {detail.label}
+            </Typography>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                {detail.value}
+              </Typography>
+              {detail.missing && !locked && (
+                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.25 }}>
+                  <Iconify icon="mdi:alert-outline" width={16} sx={{ color: 'warning.main' }} />
+                  <Typography variant="caption" color="warning.main">
+                    Required before finalization.
+                  </Typography>
+                </Stack>
+              )}
+            </Box>
+          </Box>
+        ))}
+      </Stack>
+      {locked && getApplicantMissingDetails(data).length > 0 && (
+        <Alert severity="info" sx={{ mt: 1.5 }}>
+          This admission is finalized. Update identity details from the Student record.
+        </Alert>
+      )}
+    </Box>
   );
 }

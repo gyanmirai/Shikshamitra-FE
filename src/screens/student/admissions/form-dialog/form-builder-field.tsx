@@ -5,12 +5,12 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import { CSS } from '@dnd-kit/utilities';
-import Tooltip from '@mui/material/Tooltip';
 import { useSortable } from '@dnd-kit/sortable';
 import { Iconify } from 'src/components/iconify';
 import ButtonBase from '@mui/material/ButtonBase';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import { FIELD_TYPES, fieldTypeIcon } from './form-dialog-model';
 
@@ -48,13 +48,13 @@ export function FormBuilderField({
       variant="outlined"
       sx={{
         borderRadius: 1,
-        borderColor: selected ? 'primary.main' : 'divider',
-        bgcolor: selected ? 'action.selected' : 'background.paper',
-        '&:hover': { borderColor: 'primary.main' },
+        borderColor: selected ? 'text.primary' : 'divider',
+        bgcolor: 'background.paper',
+        '&:hover': { borderColor: 'text.primary' },
       }}
     >
       <Stack direction="row" alignItems="center" sx={{ p: 0.5 }}>
-        <Tooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
+        <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
           <IconButton
             ref={sortable.setActivatorNodeRef}
             {...sortable.attributes}
@@ -64,7 +64,7 @@ export function FormBuilderField({
           >
             <Iconify icon="mdi:drag-vertical" width={20} />
           </IconButton>
-        </Tooltip>
+        </CustomTooltip>
         <ButtonBase
           onClick={onSelect}
           aria-label={`Edit ${name} field`}
@@ -80,11 +80,21 @@ export function FormBuilderField({
             '&:focus-visible': { outline: 2, outlineColor: 'primary.main', outlineOffset: 1 },
           }}
         >
-          <Iconify
-            icon={fieldTypeIcon(field.fieldType)}
-            width={20}
-            sx={{ flexShrink: 0, color: selected ? 'primary.main' : 'text.secondary' }}
-          />
+          <Box
+            sx={{
+              width: 34,
+              height: 34,
+              display: 'grid',
+              flexShrink: 0,
+              placeItems: 'center',
+              border: 1,
+              borderColor: 'divider',
+              borderRadius: 1,
+              color: 'text.secondary',
+            }}
+          >
+            <Iconify icon={fieldTypeIcon(field.fieldType)} width={20} />
+          </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
               {name}
@@ -95,17 +105,18 @@ export function FormBuilderField({
               )}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {fieldType} · {field.bindingType === 0 ? 'Student field' : 'Custom field'}
-              {selected ? ' · Editing' : ''}
+              {fieldType}
             </Typography>
           </Box>
-          <Iconify
-            icon={selected ? 'mdi:pencil-outline' : 'mdi:chevron-right'}
-            width={18}
-            sx={{ flexShrink: 0, color: selected ? 'primary.main' : 'text.disabled' }}
-          />
+          {selected && (
+            <Iconify
+              icon="mdi:check-circle"
+              width={22}
+              sx={{ flexShrink: 0, color: 'success.main' }}
+            />
+          )}
         </ButtonBase>
-        <Tooltip title={`Delete ${name}`}>
+        <CustomTooltip title={`Delete ${name}`}>
           <IconButton
             aria-label={`Delete ${name}`}
             onClick={onDelete}
@@ -113,7 +124,7 @@ export function FormBuilderField({
           >
             <Iconify icon="mdi:delete-outline" width={20} />
           </IconButton>
-        </Tooltip>
+        </CustomTooltip>
       </Stack>
     </Card>
   );

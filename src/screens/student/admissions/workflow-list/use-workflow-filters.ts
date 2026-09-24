@@ -17,10 +17,12 @@ export type WorkflowFilters = {
   rowsPerPage: number;
 };
 
-const readStatus = (value: string | null): WorkflowFilters['status'] =>
-  value === '0' || value === '1' || value === '2'
-    ? (Number(value) as AdmissionWorkflowStatus)
+const readStatus = (value: string | null): WorkflowFilters['status'] => {
+  const status = Number(value);
+  return value !== null && Number.isInteger(status) && status >= 0 && status <= 7
+    ? (status as AdmissionWorkflowStatus)
     : 'all';
+};
 
 const areFiltersEqual = (current: WorkflowFilters, next: WorkflowFilters) =>
   (Object.keys(next) as (keyof WorkflowFilters)[]).every((key) => current[key] === next[key]);

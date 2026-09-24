@@ -1,7 +1,10 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
+import { useState } from 'react';
 import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
 import Stack from '@mui/material/Stack';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
@@ -21,6 +24,7 @@ type Props = {
 };
 
 export function FormBuilderProperties({ formik, selectedLocation }: Props) {
+  const [activeTab, setActiveTab] = useState<'basic' | 'rules' | 'data'>('basic');
   const section = selectedLocation
     ? formik.values.sections[selectedLocation.sectionIndex]
     : undefined;
@@ -55,34 +59,47 @@ export function FormBuilderProperties({ formik, selectedLocation }: Props) {
     );
   }
   const settingsProps = { formik, ...selectedLocation };
-  const codeMeta = formik.getFieldMeta<string>(
-    `sections[${selectedLocation.sectionIndex}].fields[${selectedLocation.fieldIndex}].code`
-  );
   return (
     <Stack sx={{ height: 1, minHeight: 0, bgcolor: 'background.paper' }}>
       <FieldPropertiesHeader field={field} sectionName={section?.name} />
+      <Tabs
+        value={activeTab}
+        onChange={(_, value: 'basic' | 'rules' | 'data') => setActiveTab(value)}
+        variant="fullWidth"
+        aria-label="Field settings categories"
+        sx={{
+          flexShrink: 0,
+          borderBottom: 1,
+          borderColor: 'divider',
+          '& .MuiTab-root': { minHeight: 44 },
+          '& .Mui-selected': { color: 'text.primary' },
+          '& .MuiTabs-indicator': { bgcolor: 'common.black' },
+        }}
+      >
+        <Tab value="basic" label="Basic" />
+        <Tab value="rules" label="Rules" />
+        <Tab value="data" label="Data" />
+      </Tabs>
       <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
         <Stack key={field.id} spacing={1.5} sx={{ p: 1.5 }}>
-          <FormFieldCoreFields {...settingsProps} />
-          <FormFieldLocationSettings {...settingsProps} />
-          <FieldSettingsGroup
-            title="More field settings"
-            description="Placeholder, default value, and read-only access."
-          >
-            <FieldGuidanceSettings {...settingsProps} />
-          </FieldSettingsGroup>
-          <FieldSettingsGroup
-            title="Data connection & code"
-            description={
-              field.bindingType === 0
-                ? 'Connected to the student record.'
-                : 'Saved with this admission form.'
-            }
-            forceExpanded={Boolean(codeMeta.touched && codeMeta.error)}
-          >
-            <FieldDataSettings {...settingsProps} />
-          </FieldSettingsGroup>
-          <FormFieldAdvancedFields {...settingsProps} />
+          {activeTab === 'basic' && (
+            <>
+              <FormFieldCoreFields {...settingsProps} />
+              <FieldSettingsGroup
+                title="More options"
+                description="Placeholder, default value, and read-only access."
+              >
+                <FieldGuidanceSettings {...settingsProps} />
+              </FieldSettingsGroup>
+            </>
+          )}
+          {activeTab === 'rules' && (
+            <>
+              <FormFieldLocationSettings {...settingsProps} />
+              <FormFieldAdvancedFields {...settingsProps} />
+            </>
+          )}
+          {activeTab === 'data' && <FieldDataSettings {...settingsProps} />}
           <Typography variant="caption" color="text.secondary">
             Changes stay in this draft until you save.
           </Typography>

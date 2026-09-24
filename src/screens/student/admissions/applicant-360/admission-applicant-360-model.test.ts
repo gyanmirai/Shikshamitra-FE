@@ -5,6 +5,7 @@ import { it, expect, describe } from 'vitest';
 import {
   getCurrentStage,
   getApplicantName,
+  getPrimaryApplication,
   getActivityPresentation,
   getApplicantJourneyState,
   getApplicantMissingDetails,
@@ -53,6 +54,25 @@ describe('Applicant 360 presentation model', () => {
       label: 'In review',
       description: 'Review',
     });
+  });
+
+  it('prefers the active application instead of a terminal historical application', () => {
+    const historical: AdmissionApplicant360['applications'][number] = {
+      id: 'application-old',
+      applicationNumber: 'APP/2025/001',
+      status: 10,
+      creationTime: '2025-09-18T08:00:00Z',
+      stages: [],
+    };
+    const active: AdmissionApplicant360['applications'][number] = {
+      id: 'application-active',
+      applicationNumber: 'APP/2026/001',
+      status: 4,
+      creationTime: '2026-09-18T08:00:00Z',
+      stages: [],
+    };
+
+    expect(getPrimaryApplication([historical, active])).toBe(active);
   });
 
   it('converts internal activity codes into school-facing language', () => {

@@ -1,27 +1,50 @@
 import type { AdmissionApplicant360 } from 'src/redux/student/admissions/admission-applicants-api';
 
-import { it, expect, describe } from 'vitest';
+import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings';
 
+import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import { AdmissionApplicantApplicationsCard } from './admission-applicant-applications-card';
 
-type Application = AdmissionApplicant360['applications'][number];
+let grantedPermissions: { name: string; isGranted: boolean }[] = [];
 
-const renderCard = (applications: Application[]) =>
-  render(
-    <ThemeProvider theme={createTheme(defaultSettings)}>
-      <AdmissionApplicantApplicationsCard applications={applications} />
-    </ThemeProvider>
-  );
+vi.mock('react-redux', () => ({
+  useSelector: () => grantedPermissions,
+}));
 
-const application: Application = {
+vi.mock('../admission-applicant-notes', () => ({
+  default: () => <div>Notes editor</div>,
+}));
+
+vi.mock('./admission-applicant-start-card', () => ({
+  AdmissionApplicantStartCard: () => <div>Start application controls</div>,
+}));
+
+const baseData: AdmissionApplicant360 = {
+  applicant: {
+    id: 'applicant-1',
+    familyId: 'family-1',
+    firstName: 'Parth',
+    lastName: 'Patel',
+    dateOfBirth: '2020-09-21',
+    gender: null,
+  },
+  family: { id: 'family-1', familyNumber: 'FAM/2026/001' },
+  primaryGuardian: { firstName: 'Sanjay', mobile: '8893303939' },
+  applications: [],
+  activities: [],
+  notes: [],
+};
+
+const application: AdmissionApplicant360['applications'][number] = {
   id: 'application-1',
   applicationNumber: 'APP/2026/001',
   status: 4,
   creationTime: '2026-09-18T08:00:00Z',
+  lastSavedAt: '2026-09-18T09:00:00Z',
   stages: [
     {
       code: 'FORM',
@@ -39,29 +62,74 @@ const application: Application = {
       displayOrder: 2,
       enteredAt: '2026-09-18T08:30:00Z',
     },
+    {
+      code: 'DECISION',
+      name: 'Admission decision',
+      stageType: 2,
+      status: 0,
+      displayOrder: 3,
+    },
   ],
 };
 
-describe('AdmissionApplicantApplicationsCard', () => {
-  it('shows a useful first-use state when no application exists', () => {
-    renderCard([]);
+const renderCard = (data: AdmissionApplicant360) =>
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <AdmissionApplicantApplicationsCard applicantId="applicant-1" data={data} />
+    </ThemeProvider>
+  );
 
-    expect(screen.getByText('No application started')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Go to next action' })).toHaveAttribute(
-      'href',
-      '#next-action'
+describe('AdmissionApplicantApplicationsCard', () => {
+  beforeEach(() => {
+    grantedPermissions = [];
+  });
+
+  it('keeps the real first-use controls when no application exists', () => {
+    renderCard(baseData);
+
+    expect(screen.getByText('Applicant essentials')).toBeInTheDocument();
+    expect(screen.getByText('Start application controls')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Open application' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Team notes/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
     );
   });
 
-  it('shows the current stage, readable status, and application destination', () => {
-    renderCard([application]);
+  it('shows the runtime journey, current stage, disclosure sections, and destination', () => {
+    renderCard({ ...baseData, applications: [application] });
 
-    expect(screen.getByText('APP-2026-000001')).toBeInTheDocument();
-    expect(screen.getByText('In review')).toBeInTheDocument();
+    expect(screen.getByText('Admission journey')).toBeInTheDocument();
     expect(screen.getAllByText('Review and verify').length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: 'Open application' })).toHaveAttribute(
-      'href',
-      '/student/admissions/applications/application-1'
+    expect(screen.getAllByText('Current step').length).toBeGreaterThan(0);
+    expect(screen.getByText('Required before finalization.')).toBeInTheDocument();
+
+    const openApplicationLinks = screen.getAllByRole('link', { name: 'Open application' });
+    expect(openApplicationLinks).toHaveLength(1);
+    openApplicationLinks.forEach((link) =>
+      expect(link).toHaveAttribute('href', '/student/admissions/applications/application-1')
+    );
+
+    const information = screen.getByRole('button', { name: 'Application information' });
+    expect(information).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(information);
+    expect(information).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByText('APP-2026-000001')).toBeInTheDocument();
+  });
+
+  it('shows the workflow override only when the existing manage permission is granted', () => {
+    const data = { ...baseData, applications: [application] };
+    const { unmount } = renderCard(data);
+    expect(screen.queryByRole('link', { name: /Override route/ })).not.toBeInTheDocument();
+    unmount();
+
+    grantedPermissions = [{ name: ADMISSION_APPLICATION_PERMISSIONS.manage, isGranted: true }];
+    renderCard(data);
+
+    const overrideLinks = screen.getAllByRole('link', { name: /Override route/ });
+    expect(overrideLinks).toHaveLength(1);
+    overrideLinks.forEach((link) =>
+      expect(link).toHaveAttribute('href', '/student/admissions/applications/application-1')
     );
   });
 });
