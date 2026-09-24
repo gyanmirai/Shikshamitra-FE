@@ -46,6 +46,8 @@ jobs:
         run: npm run ts
       - name: Security documentation
         run: node scripts/docs/validate-docs.mjs --module security
+      - name: HR documentation
+        run: npm run docs:hr:check
       - name: Production build
         run: npm run build
         env:
