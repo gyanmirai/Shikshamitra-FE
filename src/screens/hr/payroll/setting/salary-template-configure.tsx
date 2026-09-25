@@ -31,6 +31,7 @@ type Props = {
   expanded: Set<string>;
   onToggle: (id: string) => void;
   onAdd: (kind: SalaryTemplateRule['lineKind']) => void;
+  onAddProfessionalTax: () => void;
   issues: string[];
 };
 export default function SalaryTemplateConfigure({
@@ -40,6 +41,7 @@ export default function SalaryTemplateConfigure({
   expanded,
   onToggle,
   onAdd,
+  onAddProfessionalTax,
   issues,
 }: Props) {
   const { data: pfData, isError: pfError } = useGetPFQuery({});
@@ -125,11 +127,22 @@ export default function SalaryTemplateConfigure({
                 labelId="salary-template-protection"
                 label="Protection policy"
                 {...formik.getFieldProps('defaultProtectionPolicy')}
+                onChange={(event) => {
+                  formik.setFieldValue('defaultProtectionPolicy', event.target.value);
+                  formik.setFieldValue('defaultSalaryBasis', event.target.value === 'PROTECT_TAKE_HOME' ? 'TAKE_HOME' : 'EMPLOYER_COST');
+                }}
               >
-                <MenuItem value="PROTECT_EMPLOYER_COST">Protect employer cost</MenuItem>
-                <MenuItem value="PROTECT_GROSS">Protect gross salary</MenuItem>
-                <MenuItem value="PROTECT_TAKE_HOME">Protect take-home salary</MenuItem>
+                <MenuItem value="PROTECT_EMPLOYER_COST">Protect school cost (CTC)</MenuItem>
+                <MenuItem value="PROTECT_TAKE_HOME">Protect employee take-home</MenuItem>
+                {formik.values.defaultProtectionPolicy === 'PROTECT_GROSS' && (
+                  <MenuItem value="PROTECT_GROSS" disabled>Legacy gross protection: choose a new policy</MenuItem>
+                )}
               </Select>
+              <FormHelperText>
+                {formik.values.defaultProtectionPolicy === 'PROTECT_TAKE_HOME'
+                  ? 'The school covers PT, employee PF and ESI by adjusting gross. Other deductions still reduce payout.'
+                  : 'Gross adjusts to keep recurring gross plus employer contributions within the agreed CTC.'}
+              </FormHelperText>
             </FormControl>
           </Grid>
         </Grid>
@@ -148,11 +161,28 @@ export default function SalaryTemplateConfigure({
           <Card variant="outlined">
             <CardContent>
               <Typography variant="h6" mb={0.5}>
-                Statutory defaults
+                Statutory deductions
               </Typography>
               <Typography variant="body2" color="text.secondary" mb={2}>
-                PF can default from this version. Professional Tax and ESI always use effective
-                statutory rules.
+                Choose PT and PF for this template. ESI is calculated automatically from statutory coverage.
+              </Typography>
+              <FormControlLabel
+                label="Apply Professional Tax (PT)"
+                control={
+                  <Switch
+                    disabled={readOnly}
+                    checked={formik.values.rules.some((rule) => rule.semanticType === 'PROFESSIONAL_TAX')}
+                    onChange={(_, checked) => {
+                      if (checked) onAddProfessionalTax();
+                      else formik.setFieldValue('rules', formik.values.rules
+                        .filter((rule) => rule.semanticType !== 'PROFESSIONAL_TAX')
+                        .map((rule, displayOrder) => ({ ...rule, displayOrder })));
+                    }}
+                  />
+                }
+              />
+              <Typography variant="body2" color="text.secondary" mb={2}>
+                PT uses the applicable effective slab. The package protection policy determines how gross adjusts.
               </Typography>
               <Grid container spacing={1}>
                 <Grid size={{ xs: 12, md: 5 }}>

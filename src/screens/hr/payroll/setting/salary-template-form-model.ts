@@ -34,7 +34,7 @@ export const editorSchema = Yup.object({
   name: Yup.string().trim().required('Template name is required.').max(160),
   description: Yup.string().trim().max(500),
   defaultSalaryBasis: Yup.string().required(),
-  defaultProtectionPolicy: Yup.string().required(),
+  defaultProtectionPolicy: Yup.string().oneOf(['PROTECT_EMPLOYER_COST', 'PROTECT_TAKE_HOME'], 'Choose CTC or take-home protection.').required(),
   defaultPfRuleId: Yup.string().when('defaultPfApplicable', {
     is: true,
     then: (schema) => schema.required('Choose the default PF rule.'),
@@ -63,6 +63,7 @@ export const editorSchema = Yup.object({
 export const configurationIssues = (values: EditorValues) => {
   const pfPresent = values.rules.some((rule) => rule.formulaType === 'EMPLOYEE_PROVIDENT_FUND');
   return [
+    ...(values.defaultProtectionPolicy === 'PROTECT_GROSS' ? ['Choose CTC or take-home protection before saving a new version.'] : []),
     ...getSaveIssues(values.rules),
     ...(pfPresent && !values.defaultPfRuleId
       ? ['Choose an active PF rule for the PF formula.']

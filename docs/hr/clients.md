@@ -69,3 +69,7 @@ Create/update send the returned preview token with sample amount and effective m
 The compensation-revision client saves recurring results directly through the employee-scoped compensation endpoint, reads immutable history and readiness, and never converts system statutory preview lines into editable salary rows.
 The statutory-scheme client automatically posts URL-backed month, search, coverage, readiness, enrollment, paging, and single-sort state to the paged ESI preview endpoint.
 Its preview summary remains unfiltered, employee rows use server-authored issue and coverage labels, and activation submits the reviewed preview fingerprint.
+
+Protection migration uses previewProtectionMigration and applyProtectionMigration in compensation-revision-api.ts.
+Apply invalidates salary structure, employee and run-payroll caches.
+The server validates employee scope and the reviewed preview before applying a migration.

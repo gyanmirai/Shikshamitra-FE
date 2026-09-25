@@ -46,7 +46,7 @@ import {
 
 import SalaryTemplateReview from './salary-template-review';
 import SalaryTemplateConfigure from './salary-template-configure';
-import { createTemplateRule, normalizeRuleOrder } from './salary-template-editor-utils';
+import { applySemanticType, createTemplateRule, normalizeRuleOrder } from './salary-template-editor-utils';
 import {
   editorSchema,
   initialEditorValues,
@@ -336,6 +336,7 @@ function SalaryTemplateFormContent({
   const [updateTemplate, updateState] = useUpdateSalaryTemplateMutation();
   const [calculate, calculationState] = usePreviewSalaryTemplateMutation();
   const [addKind, setAddKind] = useState<SalaryTemplateRule['lineKind'] | null>(null);
+  const [addingProfessionalTax, setAddingProfessionalTax] = useState(false);
   const [selectedComponent, setSelectedComponent] =
     useState<SalaryTemplateComponentCatalogItem | null>(null);
   const [serverError, setServerError] = useState('');
@@ -574,7 +575,8 @@ function SalaryTemplateFormContent({
               return next;
             })
           }
-          onAdd={setAddKind}
+          onAdd={(kind) => { setAddingProfessionalTax(false); setAddKind(kind); }}
+          onAddProfessionalTax={() => { setAddingProfessionalTax(true); setAddKind('DEDUCTION'); }}
           issues={showIssues ? issues : []}
         />
       ) : (
@@ -604,7 +606,7 @@ function SalaryTemplateFormContent({
           setAddKind(null);
           setSelectedComponent(null);
         }}
-        title={`Add ${addKind === 'EARNING' ? 'earning' : 'deduction'} component`}
+        title={addingProfessionalTax ? 'Choose Professional Tax deduction component' : `Add ${addKind === 'EARNING' ? 'earning' : 'deduction'} component`}
         maxWidth="sm"
         hasForm={false}
         guardUnsavedChanges={false}
@@ -646,7 +648,9 @@ function SalaryTemplateFormContent({
                 'rules',
                 normalizeRuleOrder([
                   ...formik.values.rules,
-                  createTemplateRule(selectedComponent, formik.values.rules.length),
+                  addingProfessionalTax
+                    ? applySemanticType(createTemplateRule(selectedComponent, formik.values.rules.length), 'PROFESSIONAL_TAX')
+                    : createTemplateRule(selectedComponent, formik.values.rules.length),
                 ])
               );
               setExpanded((value) => new Set(value).add(selectedComponent.componentId));

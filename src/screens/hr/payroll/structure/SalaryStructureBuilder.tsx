@@ -49,6 +49,7 @@ import {
 } from '@mui/material';
 
 import { getLocalMonthKey } from './salary-structure-builder-utils';
+import SalaryProtectionMigration from './salary-protection-migration';
 
 type Props = {
   formik: FormikProps<any>;
@@ -336,6 +337,8 @@ export function SalaryStructureBuilder({
     );
   }
 
+  const migrationSource = revisionData?.items.filter((revision) => revision.status === 'EFFECTIVE' && revision.effectiveMonth.slice(0, 7) <= effectiveMonth)
+    .sort((a, b) => b.effectiveMonth.localeCompare(a.effectiveMonth) || b.revisionNumber - a.revisionNumber)[0];
   const permittedRules = (selectedVersion?.rules || []).filter((rule) =>
     ['BASIC', 'DEARNESS_ALLOWANCE', 'ORDINARY'].includes(rule.semanticType)
   );
@@ -353,6 +356,16 @@ export function SalaryStructureBuilder({
       <Alert severity="info">
         Salary saves immediately as an immutable revision. Activating the employee remains a separate action.
       </Alert>
+      {canManage && migrationSource && !migrationSource.protectionCalculationVersion && <SalaryProtectionMigration
+        key={migrationSource.id} employeeId={employeeId} source={migrationSource} effectiveMonth={effectiveMonth}
+        onApplied={(revision) => {
+          setSalaryBasis(revision.salaryBasis);
+          setProtectionPolicy(revision.protectionPolicy);
+          setMonthlyAmount(revision.quotedMonthlyAmount);
+          setCalculation(null);
+          setCalculatedSignature('');
+        }}
+      />}
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
           <FormControl fullWidth disabled={!canManage}>
@@ -415,15 +428,22 @@ export function SalaryStructureBuilder({
               labelId={protectionPolicyLabelId}
               label="Protection policy"
               value={protectionPolicy}
-              onChange={(event) => { setProtectionPolicy(event.target.value as ProtectionPolicy); setCalculation(null); }}
+              onChange={(event) => { setProtectionPolicy(event.target.value as ProtectionPolicy); setSalaryBasis(event.target.value === 'PROTECT_TAKE_HOME' ? 'TAKE_HOME' : 'EMPLOYER_COST'); setCalculation(null); }}
             >
-              <MenuItem value="PROTECT_EMPLOYER_COST">Protect employer cost</MenuItem>
-              <MenuItem value="PROTECT_GROSS">Protect gross salary</MenuItem>
-              <MenuItem value="PROTECT_TAKE_HOME">Protect take-home salary</MenuItem>
+              <MenuItem value="PROTECT_EMPLOYER_COST">Protect school cost (CTC)</MenuItem>
+              <MenuItem value="PROTECT_TAKE_HOME">Protect employee take-home</MenuItem>
+              {protectionPolicy === 'PROTECT_GROSS' && (
+                <MenuItem value="PROTECT_GROSS" disabled>Legacy gross protection: choose a new policy</MenuItem>
+              )}
             </Select>
           </FormControl>
         </Grid>
         <Grid size={{ xs: 12, md: 5 }}>
+          <Typography variant="body2" color="text.secondary" mb={1}>
+            {protectionPolicy === 'PROTECT_TAKE_HOME'
+              ? 'The school covers PT, employee PF and ESI. Other deductions still reduce payout.'
+              : 'Recurring gross plus employer contributions stays within the agreed CTC.'}
+          </Typography>
           <FormControlLabel
             control={
               <Switch
@@ -549,7 +569,7 @@ export function SalaryStructureBuilder({
           variant="outlined"
           startIcon={<Calculate />}
           onClick={calculateSalary}
-          disabled={!canManage || calculationState.isLoading || monthlyAmount <= 0 || (pfApplicable && !pfRuleId)}
+          disabled={!canManage || calculationState.isLoading || protectionPolicy === 'PROTECT_GROSS' || monthlyAmount <= 0 || (pfApplicable && !pfRuleId)}
           sx={{ minHeight: 44 }}
         >
           Calculate
@@ -563,6 +583,8 @@ export function SalaryStructureBuilder({
             <Grid size={{ xs: 6, md: 3 }}><Summary label="Deductions" amount={calculation.totalDeductions} /></Grid>
             <Grid size={{ xs: 6, md: 3 }}><Summary label="Net salary" amount={calculation.netSalary} /></Grid>
             <Grid size={{ xs: 6, md: 3 }}><Summary label="Employer cost" amount={calculation.employerCost} /></Grid>
+            <Grid size={{ xs: 6, md: 3 }}><Summary label="Entered monthly amount" amount={calculation.quotedMonthlyAmount} /></Grid>
+            <Grid size={{ xs: 6, md: 3 }}><Summary label="Protected monthly target" amount={calculation.protectedMonthlyAmount} /></Grid>
           </Grid>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>

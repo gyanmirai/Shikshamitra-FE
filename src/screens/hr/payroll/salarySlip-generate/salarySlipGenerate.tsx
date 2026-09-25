@@ -1,5 +1,6 @@
 'use client';
 
+
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 
@@ -40,6 +41,7 @@ import {
 } from '@mui/material';
 
 import PaySlipPrintView from './payslip-print-view';
+import SalaryProtectionSummary from '../salary-protection-summary';
 import { usePayslipActions, isOfficialPayslipStatus } from './use-payslip-actions';
 import {
   buildPayslipSelection,
@@ -618,9 +620,10 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
         </Grid>
       </Grid>
 
+      <SalaryProtectionSummary result={slip?.salaryProtection} />
       {slip?.compensationTargetDifference ? (
         <Alert severity="warning">
-          The normalized {formatMode(slip?.compensationProtectionPolicy)} result differs from the
+          The {formatMode(slip?.compensationProtectionPolicy)} result differs from the
           saved protected amount by {formatCurrency(slip.compensationTargetDifference)}. This
           payslip preserves the effective revision and records the variance for review.
         </Alert>

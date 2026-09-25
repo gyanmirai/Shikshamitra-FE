@@ -62,6 +62,7 @@ import {
 } from 'src/redux/runPayroll/runPayrollApi';
 
 import { usePayrollPreviewRun } from './use-payroll-preview-run';
+import SalaryProtectionSummary from '../salary-protection-summary';
 import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { getPayrollMutationErrorMessage } from './run-payroll-error-utils';
 import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
@@ -69,6 +70,8 @@ import {
   getPayrollAdjustmentSourceLabel,
   isSystemGeneratedPayrollAdjustment,
 } from './run-payroll-adjustment-utils';
+
+import type { SalaryProtectionResult } from '../salary-protection-summary';
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -104,6 +107,7 @@ type PayrollRow = {
   compensationRevisionId?: string | null;
   compensationRevisionNumber?: number | null;
   compensationSalaryBasis?: string | null;
+  salaryProtection?: SalaryProtectionResult | null;
   compensationProtectionPolicy?: string | null;
   compensationQuotedAmount?: number | null;
   compensationProtectedAmount?: number | null;
@@ -409,6 +413,7 @@ const RunPayroll = () => {
           compensationRevisionId: item.compensationRevisionId,
           compensationRevisionNumber: item.compensationRevisionNumber,
           compensationSalaryBasis: item.compensationSalaryBasis,
+          salaryProtection: item.salaryProtection,
           compensationProtectionPolicy: item.compensationProtectionPolicy,
           compensationQuotedAmount:
             item.compensationQuotedAmount == null ? null : Number(item.compensationQuotedAmount),
@@ -1720,7 +1725,7 @@ const RunPayroll = () => {
                           </Grid>
                           <Grid size={{ xs: 6, sm: 3 }}>
                             <Typography variant="caption" color="text.secondary">
-                              Normalized Result
+                              Protected result
                             </Typography>
                             <Typography variant="body2" fontWeight={700}>
                               {formatCurrency(activeRow.compensationNormalizedProtectedAmount || 0)}
@@ -1743,6 +1748,7 @@ const RunPayroll = () => {
                             </Typography>
                           </Grid>
                         </Grid>
+                        <SalaryProtectionSummary result={activeRow.salaryProtection} />
                         {activeRow.compensationTargetDifference ? (
                           <Alert severity="warning" sx={{ mt: 1.5 }}>
                             Review this variance before locking. Payroll has not changed the

@@ -192,3 +192,18 @@ Salary structure generation labels the resolved value Full-month gross and suppo
 Run Payroll and payslips distinguish Full-month gross, attendance-adjusted Gross Salary, Additional earnings, Total earnings, deductions, and net pay.
 Gross Salary is a read-only summary, separate from the regular earning lines that allocate it.
 The backend calculation contract and policy behavior are documented in [HR backend workflows](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/workflows.md#built-in-gross-salary).
+
+## Salary protection and migration
+
+Salary templates expose Apply Professional Tax (PT) in Statutory deductions.
+Enabling it selects one deduction component and adds its statutory PT rule; disabling it removes the same rule.
+Choose Protect school cost (CTC) or Protect employee take-home once for the package.
+Changing the policy defaults the input basis to its matching target, while the basis remains separately editable.
+The review shows entered monthly amount and protected monthly target alongside gross, net and employer cost.
+
+Employee salary setup offers Review migration for earlier calculation versions.
+Choose the first unlocked effective month, review before-and-after amounts, and apply the signed preview to create a new revision.
+Migration failures retain the preview and show the backend explanation.
+Payroll and payslip views show period target, achieved recurring amount, gross adjustment, ordinary deductions and additional statutory effects.
+Unresolved target variance requires correction before payroll locking.
+Backend behavior is owned by the [HR product contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/product.md#salary-package-protection).

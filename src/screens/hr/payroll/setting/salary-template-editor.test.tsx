@@ -91,6 +91,7 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
         { componentId: 'earning-1', name: 'Basic Salary', lineKind: 'EARNING' },
         { componentId: 'earning-2', name: 'Special Allowance', lineKind: 'EARNING' },
         { componentId: 'deduction-1', name: 'Loan Recovery', lineKind: 'DEDUCTION' },
+        { componentId: 'pt-1', name: 'Professional Tax', lineKind: 'DEDUCTION' },
       ],
     },
     isLoading: false,
@@ -150,6 +151,31 @@ describe('SalaryTemplateEditor', () => {
   });
 
   afterEach(cleanup);
+
+  it('adds one statutory PT rule through the visible option and removes it when disabled', async () => {
+    const user = userEvent.setup();
+    renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" />);
+    const toggle = screen.getByRole('switch', { name: 'Apply Professional Tax (PT)' });
+    expect(toggle).not.toBeChecked();
+    await user.click(toggle);
+    await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));
+    await user.click(screen.getByRole('option', { name: 'Professional Tax' }));
+    await user.click(screen.getByRole('button', { name: 'Add Component' }));
+    expect(toggle).toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Review' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await waitFor(() => expect(mocks.calculate).toHaveBeenCalled());
+    expect(mocks.calculate.mock.calls.at(-1)?.[0].rules.filter((rule: { semanticType: string }) => rule.semanticType === 'PROFESSIONAL_TAX')).toEqual([
+      expect.objectContaining({ componentId: 'pt-1', formulaType: 'PROFESSIONAL_TAX', value: null }),
+    ]);
+    await user.click(screen.getByRole('button', { name: 'Step 1: Configure' }));
+    await user.click(screen.getByRole('switch', { name: 'Apply Professional Tax (PT)' }));
+    expect(screen.getByRole('switch', { name: 'Apply Professional Tax (PT)' })).not.toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Review' }));
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await waitFor(() => expect(mocks.calculate).toHaveBeenCalledTimes(2));
+    expect(mocks.calculate.mock.calls.at(-1)?.[0].rules.some((rule: { semanticType: string }) => rule.semanticType === 'PROFESSIONAL_TAX')).toBe(false);
+  });
 
   it('keeps the title and close action available while loading or reporting an error', async () => {
     const user = userEvent.setup();

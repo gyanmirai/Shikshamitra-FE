@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
   refetchReadiness: vi.fn(),
 }));
 
-vi.mock('react-redux', () => ({ useSelector: () => [] }));
+vi.mock('react-redux', () => ({ useSelector: () => [], useDispatch: () => vi.fn() }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
 // Icon assets are unrelated to salary form behavior and must not start network requests.
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -67,6 +67,8 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
   useCalculateSalaryTemplateMutation: () => [vi.fn(), { isLoading: false }],
 }));
 vi.mock('src/redux/hr/compensation-revision-api', () => ({
+  usePreviewProtectionMigrationMutation: () => [vi.fn(), { isLoading: false }],
+  useApplyProtectionMigrationMutation: () => [vi.fn(), { isLoading: false }],
   useGetCompensationRevisionsQuery: () => ({
     data: { items: mocks.revisions },
     isLoading: false,

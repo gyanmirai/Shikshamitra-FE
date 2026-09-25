@@ -194,6 +194,8 @@ export default function SalaryTemplateReview({
                 ['Net salary', calculation.netSalary],
                 ['Employer contributions', calculation.employerContributionTotal],
                 ['Employer cost', calculation.employerCost],
+                ['Entered monthly amount', calculation.quotedMonthlyAmount],
+                ['Protected monthly target', calculation.protectedMonthlyAmount],
                 ['Target difference', calculation.targetResult.difference],
               ].map(([label, amount]) => (
                 <Grid

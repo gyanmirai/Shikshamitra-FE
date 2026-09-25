@@ -6,6 +6,7 @@ import type {
   SalaryBasis,
   ProtectionPolicy,
   SalaryRuleOverride,
+  SalaryTemplatePreview,
 } from './salary-template-api';
 
 export type EmployeeActivationReadiness = {
@@ -30,6 +31,7 @@ export type CompensationRevisionLine = {
 };
 
 export type CompensationRevision = {
+  protectionCalculationVersion?: number;
   id: string;
   employeeId: string;
   revisionNumber: number;
@@ -78,6 +80,15 @@ export type SaveEmployeeCompensation = {
 export const compensationEndpoint = (employeeId: string) =>
   `/payroll/employees/${employeeId}/compensation`;
 
+export type ProtectionMigrationPreview = {
+  sourceRevisionId: string;
+  previousPolicy: string;
+  previousGross: number;
+  previousNet: number;
+  previousEmployerCost: number;
+  preview: SalaryTemplatePreview;
+};
+
 export const buildSaveEmployeeCompensationRequest = (
   employeeId: string,
   body: SaveEmployeeCompensation
@@ -89,6 +100,19 @@ export const buildSaveEmployeeCompensationRequest = (
 
 export const compensationRevisionApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
+    previewProtectionMigration: builder.mutation<ProtectionMigrationPreview,
+      { employeeId: string; sourceRevisionId: string; effectiveMonth: string }>({
+      query: ({ employeeId, ...body }) => ({
+        url: `${compensationEndpoint(employeeId)}/protection-migration/preview`, method: 'POST', body,
+      }),
+    }),
+    applyProtectionMigration: builder.mutation<CompensationRevision,
+      { employeeId: string; sourceRevisionId: string; effectiveMonth: string; previewToken: string }>({
+      query: ({ employeeId, ...body }) => ({
+        url: `${compensationEndpoint(employeeId)}/protection-migration/apply`, method: 'POST', body,
+      }),
+      invalidatesTags: [employeeType.salaryStructure, employeeType.employee, employeeType.runPayroll],
+    }),
     getCompensationRevisions: builder.query<{ items: CompensationRevision[] }, string>({
       query: compensationEndpoint,
       providesTags: [employeeType.salaryStructure],
@@ -119,6 +143,8 @@ export const compensationRevisionApi = employeeApi.injectEndpoints({
 });
 
 export const {
+  usePreviewProtectionMigrationMutation,
+  useApplyProtectionMigrationMutation,
   useGetCompensationRevisionsQuery,
   useGetEffectiveCompensationRevisionQuery,
   useSaveEmployeeCompensationMutation,

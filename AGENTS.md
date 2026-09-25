@@ -128,3 +128,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Salary protection contract
+
+Read [the salary protection workflow](docs/hr/workflows.md) before changing the template editor, employee salary setup, payroll review, or payslips.
+Offer one package policy: school cost (CTC) by default or employee take-home.
+Keep the entered salary basis separate from the protected target, and use backend calculations.
+The PT control must add or remove the actual template rule; migration requires an explicit impact preview and apply action.
