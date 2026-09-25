@@ -25,6 +25,7 @@ interface TimetableSlotProps {
   day: DayOfWeek;
   index: number;
   timelineStartHour?: number;
+  pixelsPerMinute?: number;
 }
 
 const TimetableSlot: React.FC<TimetableSlotProps> = ({
@@ -38,6 +39,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
   day,
   index,
   timelineStartHour,
+  pixelsPerMinute,
 }) => {
   const deleteDialog = useBoolean();
 
@@ -66,7 +68,12 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
     },
   };
 
-  const { top, height } = calculateSlotPosition(slot.startTime, slot.endTime, timelineStartHour);
+  const { top, height } = calculateSlotPosition(
+    slot.startTime,
+    slot.endTime,
+    timelineStartHour,
+    pixelsPerMinute
+  );
   const isBreak = slot.type === SlotType.BREAK;
   const hasSubjects = slot.subjects && slot.subjects.length > 0;
   const isFilled = hasSubjects || !!attachedSubject;
@@ -539,8 +546,8 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            bgcolor: 'success.lighter',
-                            color: 'success.main',
+                            bgcolor: 'action.selected',
+                            color: 'text.secondary',
                             borderRadius: '50%',
                             p: 0.3,
                           }}
@@ -580,8 +587,8 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            bgcolor: 'success.lighter',
-                            color: 'success.main',
+                            bgcolor: 'action.selected',
+                            color: 'text.secondary',
                             borderRadius: '50%',
                             p: 0.25,
                             verticalAlign: 'middle',
@@ -688,6 +695,7 @@ const TimetableSlot: React.FC<TimetableSlotProps> = ({
       <ConfirmDialog
         open={deleteDialog.value}
         onClose={() => deleteDialog.onFalse()}
+        disableBackdropClick
         title="Delete"
         content={
           <>

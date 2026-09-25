@@ -1842,20 +1842,20 @@ const TimeTableForm = ({
         maxWidth="md"
         hasForm={false}
         title={
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
             <Box
               sx={{
-                width: 40,
-                height: 40,
+                width: 32,
+                height: 32,
                 borderRadius: 1,
                 display: 'grid',
                 placeItems: 'center',
                 color: validationResult?.passed ? 'success.main' : 'error.main',
                 bgcolor: (theme) =>
-                  alpha(
+                  varAlpha(
                     validationResult?.passed
-                      ? theme.palette.success.main
-                      : theme.palette.error.main,
+                      ? theme.vars.palette.success.mainChannel
+                      : theme.vars.palette.error.mainChannel,
                     0.1
                   ),
               }}
@@ -1864,28 +1864,12 @@ const TimeTableForm = ({
                 icon={
                   validationResult?.passed ? 'mdi:check-circle-outline' : 'mdi:alert-circle-outline'
                 }
-                width={24}
+                width={20}
               />
             </Box>
             <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Box component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
-                  {validationResult?.passed ? 'Validation Passed' : 'Validation Failed'}
-                </Box>
-                <CustomTooltip
-                  arrow
-                  placement="bottom-start"
-                  title="Automated validation check verifying period slot coverage, subject load completion, and room/teacher conflict prevention."
-                >
-                  <IconButton size="small" color="info" sx={{ p: 0.5 }}>
-                    <Iconify icon="lucide:info" width={18} />
-                  </IconButton>
-                </CustomTooltip>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                {validationResult?.passed
-                  ? 'The timetable is complete and ready to publish.'
-                  : 'Review the exact issues below before publishing.'}
+              <Typography component="span" sx={{ fontWeight: 700, fontSize: '1.15rem' }}>
+                {validationResult?.passed ? 'Validation Passed' : 'Validation Failed'}
               </Typography>
             </Box>
           </Box>
@@ -1896,49 +1880,6 @@ const TimeTableForm = ({
             <Stack spacing={2}>
               {validationResult.passed ? (
                 <Stack spacing={2}>
-                  <Paper
-                    variant="outlined"
-                    sx={{
-                      p: 2,
-                      borderRadius: 2,
-                      borderColor: (theme) =>
-                        varAlpha(theme.vars.palette.success.mainChannel, 0.24),
-                      bgcolor: (theme) => varAlpha(theme.vars.palette.success.mainChannel, 0.06),
-                      boxShadow: (theme) => `inset 4px 0 0 ${theme.palette.success.main}`,
-                    }}
-                  >
-                    <Stack
-                      direction={{ xs: 'column', sm: 'row' }}
-                      spacing={1.5}
-                      alignItems={{ xs: 'flex-start', sm: 'center' }}
-                    >
-                      <Box
-                        sx={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 1,
-                          display: 'grid',
-                          flexShrink: 0,
-                          placeItems: 'center',
-                          color: 'success.main',
-                          bgcolor: (theme) =>
-                            varAlpha(theme.vars.palette.success.mainChannel, 0.12),
-                        }}
-                      >
-                        <Iconify icon="mdi:check-decagram-outline" width={26} />
-                      </Box>
-                      <Box sx={{ minWidth: 0 }}>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                          Timetable is ready to publish
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          Class {selectedClass} Division {selectedDivision} passed every validation
-                          check and can now move from draft to published.
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </Paper>
-
                   <Grid container spacing={1}>
                     {[
                       {
@@ -1948,19 +1889,16 @@ const TimeTableForm = ({
                           slotSummary.remaining === 0
                             ? 'All lecture periods assigned'
                             : `${slotSummary.remaining} periods remaining`,
-                        icon: 'mdi:calendar-check-outline',
                       },
                       {
                         label: 'Subjects complete',
                         value: `${subjectProgress.completed}/${subjectProgress.total}`,
                         helper: 'Required subject load is balanced',
-                        icon: 'mdi:book-check-outline',
                       },
                       {
                         label: 'Conflicts found',
                         value: '0',
                         helper: 'Teacher and room checks are clear',
-                        icon: 'mdi:shield-check-outline',
                       },
                     ].map((item) => (
                       <Grid key={item.label} size={{ xs: 12, sm: 4 }}>
@@ -1970,21 +1908,15 @@ const TimeTableForm = ({
                             p: 1.5,
                             height: '100%',
                             borderRadius: 1,
+                            borderColor: 'divider',
                             bgcolor: (theme) =>
-                              varAlpha(theme.vars.palette.background.neutralChannel, 0.8),
+                              varAlpha(theme.vars.palette.background.neutralChannel, 0.6),
                           }}
                         >
                           <Stack spacing={1}>
-                            <Stack direction="row" spacing={0.75} alignItems="center">
-                              <Iconify
-                                icon={item.icon}
-                                width={18}
-                                sx={{ color: 'success.main', flexShrink: 0 }}
-                              />
-                              <Typography variant="caption" color="text.secondary">
-                                {item.label}
-                              </Typography>
-                            </Stack>
+                            <Typography variant="caption" color="text.secondary">
+                              {item.label}
+                            </Typography>
                             <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1 }}>
                               {item.value}
                             </Typography>
@@ -1997,24 +1929,14 @@ const TimeTableForm = ({
                     ))}
                   </Grid>
 
-                  <Alert
-                    severity="success"
-                    icon={<Iconify icon="mdi:check-circle-outline" width={22} />}
-                    sx={{ alignItems: 'flex-start' }}
-                  >
-                    <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
-                      Validation passed
-                    </Typography>
-                    <Typography variant="body2">
+                  <Alert severity="info" icon={false}>
+                    <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       Publish now to make this timetable visible to teachers, students, and parents.
                     </Typography>
                   </Alert>
                 </Stack>
               ) : (
                 <Box>
-                  <Typography variant="subtitle2" color="error" sx={{ mb: 1.5, fontWeight: 700 }}>
-                    Please fix the following issues before publishing:
-                  </Typography>
                   <Stack spacing={1}>
                     {validationResult.conflicts.map((err, idx) => (
                       <Card
@@ -2023,7 +1945,7 @@ const TimeTableForm = ({
                         sx={{
                           p: 1.5,
                           borderColor: 'error.light',
-                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.03),
+                          bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.04),
                         }}
                       >
                         <Stack direction="row" spacing={1.25} alignItems="flex-start">
@@ -2067,7 +1989,7 @@ const TimeTableForm = ({
                         sx={{
                           p: 1.5,
                           borderColor: 'error.light',
-                          bgcolor: (theme) => alpha(theme.palette.error.main, 0.03),
+                          bgcolor: (theme) => varAlpha(theme.vars.palette.error.mainChannel, 0.04),
                         }}
                       >
                         <Stack direction="row" spacing={1.25} alignItems="flex-start">
@@ -2110,22 +2032,12 @@ const TimeTableForm = ({
             </Stack>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button
-            onClick={() => setValidationResult(null)}
-            variant="outlined"
-            color="inherit"
-            size="small"
-            startIcon={<Iconify icon={GlobalIcons.cancel} />}
-            disabled={isSubmitting}
-          >
-            Close
-          </Button>
-          {validationResult?.passed && (
+        {validationResult?.passed && (
+          <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
             <LoadingButton
               onClick={handlePublishFromValidation}
               variant="contained"
-              color="primary"
+              color="inherit"
               size="small"
               startIcon={<Iconify icon={GlobalIcons.publish} />}
               loading={isSubmitting}
@@ -2133,8 +2045,8 @@ const TimeTableForm = ({
             >
               Publish Now
             </LoadingButton>
-          )}
-        </DialogActions>
+          </DialogActions>
+        )}
       </CustomDialog>
 
       {/* Publish Confirmation Dialog */}
@@ -2188,8 +2100,8 @@ const TimeTableForm = ({
               const published = await handleSubmit(formik.values.slots, 2);
               if (published) setPublishConfirmOpen(false);
             }}
-            variant="contained"
-            color="primary"
+            variant="outlined"
+            color="inherit"
             size="small"
             loading={isSubmitting}
             disabled={isValidating}

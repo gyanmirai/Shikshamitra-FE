@@ -42,6 +42,8 @@ describe('TimetablePreviewDialog', () => {
     expect(getComputedStyle(surface).backgroundColor).not.toBe('rgba(0, 0, 0, 0)');
     expect(backdrop).not.toBeNull();
     expect(getComputedStyle(backdrop as Element).backgroundColor).toBe('rgba(0, 0, 0, 0.6)');
+    expect(screen.getByText('Timetable Preview')).toBeVisible();
+    expect(screen.queryByText('Timetable Preview (Read Only)')).not.toBeInTheDocument();
     expect(screen.getByText('Preview board')).toBeVisible();
   });
 });

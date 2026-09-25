@@ -24,6 +24,9 @@ interface DayColumnProps {
   onClearDay?: (day: DayOfWeek) => void;
   timelineStartHour?: number;
   timelineEndHour?: number;
+  previewMode?: boolean;
+  slotHeightBase?: number;
+  pixelsPerMinute?: number;
 }
 
 const DAY_LABELS: Record<DayOfWeek, string> = {
@@ -46,9 +49,12 @@ const DayColumn: React.FC<DayColumnProps> = ({
   onClearDay,
   timelineStartHour = TIMELINE_START_HOUR,
   timelineEndHour = TIMELINE_END_HOUR,
+  previewMode = false,
+  slotHeightBase = SLOT_HEIGHT_BASE,
+  pixelsPerMinute = PIXELS_PER_MINUTE,
 }) => {
   const theme = useTheme();
-  const dayHeight = (timelineEndHour - timelineStartHour) * 60 * PIXELS_PER_MINUTE;
+  const dayHeight = (timelineEndHour - timelineStartHour) * 60 * pixelsPerMinute;
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const [isLocked, setIsLocked] = useState(false);
 
@@ -76,7 +82,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
         borderColor: 'divider',
         display: 'flex',
         flexDirection: 'column',
-        minWidth: '140px',
+        minWidth: previewMode ? '180px' : '140px',
         minHeight: dayHeight + 40,
         opacity: isLocked ? 0.65 : 1,
         transition: 'opacity 0.2s ease',
@@ -205,7 +211,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
           position: 'relative',
           height: dayHeight,
           flexShrink: 0,
-          backgroundSize: `100% ${SLOT_HEIGHT_BASE}px`,
+          backgroundSize: `100% ${slotHeightBase}px`,
           backgroundColor: theme.vars.palette.background.neutral,
           overflow: 'hidden',
           pointerEvents: isLocked ? 'none' : 'auto',
@@ -227,6 +233,7 @@ const DayColumn: React.FC<DayColumnProps> = ({
             day={day}
             index={index}
             timelineStartHour={timelineStartHour}
+            pixelsPerMinute={pixelsPerMinute}
           />
         ))}
       </Box>

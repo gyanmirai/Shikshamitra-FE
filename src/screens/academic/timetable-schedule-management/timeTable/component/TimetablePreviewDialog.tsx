@@ -38,7 +38,7 @@ export function TimetablePreviewDialog({
     <CustomDialog
       open={open}
       handleClose={onClose}
-      maxWidth="lg"
+      maxWidth="xl"
       hasForm={false}
       paperProps={{
         sx: {
@@ -57,11 +57,11 @@ export function TimetablePreviewDialog({
       title={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Typography variant="h6" fontWeight={700}>
-            Timetable Preview (Read Only)
+            Timetable Preview
           </Typography>
           <CustomTooltip
             arrow
-            placement="bottom-start"
+            placement="right"
             title="Full-screen read-only preview of the complete weekly timetable board."
           >
             <IconButton aria-label="About timetable preview" size="small" color="info" sx={{ p: 0.5 }}>
@@ -80,6 +80,7 @@ export function TimetablePreviewDialog({
           onChange={() => {}}
           subjects={subjects}
           readOnly
+          previewMode
           selectedClass={selectedClass}
           selectedDivision={selectedDivision}
           standardId={standardId}

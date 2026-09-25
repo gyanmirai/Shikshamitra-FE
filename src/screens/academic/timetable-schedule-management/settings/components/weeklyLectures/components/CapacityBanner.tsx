@@ -52,7 +52,7 @@ export function CapacityBanner({
     <Box
       sx={{
         display: 'flex',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         gap: 1,
         p: 1.5,
         borderRadius: 1.5,
@@ -61,18 +61,8 @@ export function CapacityBanner({
         border: (theme) => `1px solid ${alpha(theme.palette[color].main, 0.35)}`,
       }}
     >
-      <Iconify icon={icon} width={20} sx={{ color: `${color}.main`, mt: 0.25, flexShrink: 0 }} />
+      <Iconify icon={icon} width={20} sx={{ color: `${color}.main`, flexShrink: 0 }} />
       <Box sx={{ minWidth: 0 }}>
-        {hasSlots && (
-          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 0.5 }}>
-            <Typography variant="caption" color="text.secondary">
-              Available teaching slots/week: <strong>{availableCapacity}</strong>
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Assigned weekly lectures: <strong>{requiredLectures}</strong>
-            </Typography>
-          </Box>
-        )}
         <Typography variant="body2" color={`${color}.main`} fontWeight={600}>
           {message}
         </Typography>

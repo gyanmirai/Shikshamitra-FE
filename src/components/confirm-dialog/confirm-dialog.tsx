@@ -32,6 +32,7 @@ export function ConfirmDialog({
   open,
   onClose,
   icon = 'error',
+  disableBackdropClick = false,
   ...other
 }: ConfirmDialogProps) {
   const theme = useTheme();
@@ -41,7 +42,10 @@ export function ConfirmDialog({
       fullWidth
       maxWidth="xs"
       open={open}
-      onClose={onClose}
+      onClose={(_event, reason) => {
+        if (disableBackdropClick && reason === 'backdropClick') return;
+        onClose();
+      }}
       {...other}
       transitionDuration={{
         enter: theme.transitions.duration.shortest,
@@ -72,7 +76,9 @@ export function ConfirmDialog({
         >
           Cancel
         </Button>
-        {isValidElement(action) ? cloneElement(action as React.ReactElement<any>, { size: 'small' }) : action}
+        {isValidElement(action)
+          ? cloneElement(action as React.ReactElement<any>, { size: 'small' })
+          : action}
       </DialogActions>
     </Dialog>
   );

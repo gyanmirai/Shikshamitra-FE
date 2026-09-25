@@ -31,6 +31,7 @@ export interface TimetableBoardProps {
   onChange: (newSlots: Record<DayOfWeek, TimeSlot[]>) => void;
   subjects: Subject[];
   readOnly?: boolean;
+  previewMode?: boolean;
   selectedClass: string;
   selectedDivision: string;
   standardId?: string;
@@ -47,6 +48,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
   onChange,
   subjects,
   readOnly = false,
+  previewMode = false,
   selectedClass,
   selectedDivision,
   standardId = '',
@@ -85,6 +87,9 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
       timelineStamps: generateTimelineStamps(startHour, endHour),
     };
   }, [slots]);
+
+  const previewSlotHeight = previewMode ? 84 : SLOT_HEIGHT_BASE;
+  const pixelsPerMinute = previewSlotHeight / 30;
 
   const createSlotsDialog = useBoolean();
   const [teacherDialog, setTeacherDialog] = useState<TeacherAssignment | null>(null);
@@ -688,7 +693,7 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                 <Box
                   key={time}
                   sx={{
-                    height: `${SLOT_HEIGHT_BASE}px`,
+                    height: `${previewSlotHeight}px`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'flex-end',
@@ -734,8 +739,11 @@ const TimetableBoard: React.FC<TimetableBoardProps> = ({
                 onAssignRoom={handleAssignRoom}
                 onClearDay={handleClearDay}
                 readOnly={readOnly}
+                previewMode={previewMode}
                 timelineStartHour={timelineStartHour}
                 timelineEndHour={timelineEndHour}
+                slotHeightBase={previewSlotHeight}
+                pixelsPerMinute={pixelsPerMinute}
               />
             ))}
           </Box>
