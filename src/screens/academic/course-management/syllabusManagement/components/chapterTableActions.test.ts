@@ -25,9 +25,10 @@ describe('getChapterTableActions', () => {
     expect(actions.map((action) => action.id)).toEqual([
       'view-documents',
       'edit',
+      'delete',
       'create-question',
       'view-questions',
-      'delete',
     ]);
+    expect(actions[0].icon).toBe('solar:document-text-linear');
   });
 });

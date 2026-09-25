@@ -42,7 +42,7 @@ export function ReadinessChecklistDialog({ open, className, division, onClose }:
           Readiness Checklist
           <CustomTooltip
             arrow
-            placement="bottom-start"
+            placement="right"
             title="View the prerequisite checklist required before publishing a timetable for this division."
           >
             <IconButton size="small" color="info" aria-label="About timetable readiness">

@@ -2,9 +2,9 @@ import type { FormikProps } from 'formik';
 
 import dayjs from 'dayjs';
 import { Iconify } from 'src/components/iconify';
+import { Grid, Stack, InputAdornment } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { FormSectionCard } from 'src/components/form-section-card';
-import { Grid, Stack, Typography, InputAdornment } from '@mui/material';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import { LanguageInputField } from 'src/screens/academic/components/language-typing';
 
@@ -117,26 +117,14 @@ export function ChapterDetailsSection({
       <FormSectionCard
         icon="mdi:text-box-plus-outline"
         title="Additional chapter details"
-        description="Add planning, learning outcomes, resources, notes, and assessment details."
-      >
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          alignItems={{ xs: 'stretch', sm: 'center' }}
-          justifyContent="space-between"
-          spacing={1.5}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {additionalFieldsCount > 0
-              ? `${additionalFieldsCount} optional ${additionalFieldsCount === 1 ? 'field' : 'fields'} configured`
-              : 'No optional details configured yet'}
-          </Typography>
-
+        descriptionTooltip="Add planning, learning outcomes, resources, notes, and assessment details."
+        action={
           <AdditionalFieldsActionButton
             configuredCount={additionalFieldsCount}
             onClick={onOpenAdditionalFields}
           />
-        </Stack>
-      </FormSectionCard>
+        }
+      />
     </Stack>
   );
 }

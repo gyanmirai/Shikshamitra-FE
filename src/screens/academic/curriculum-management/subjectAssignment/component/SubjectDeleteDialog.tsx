@@ -32,6 +32,7 @@ const SubjectDeleteDialog = ({
     <ConfirmDialog
       open={open}
       onClose={onClose}
+      disableBackdropClick
       title="Remove"
       content={
         <>

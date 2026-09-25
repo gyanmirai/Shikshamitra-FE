@@ -3,15 +3,15 @@
 import type { RootState } from 'src/redux/store';
 import type { Standards } from 'src/types/school';
 
-import { Stack, Divider } from '@mui/material';
+import { Box, Stack, Divider } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 
 import { INITIAL_COPY_VALUES } from './subject-copy-dialog/constants';
+import { SubjectCopyInfoTooltip } from './subject-copy-dialog/SubjectCopySectionHeading';
 import { useCopySubjects } from './subject-copy-dialog/useCopySubjects';
-import { SubjectCopyIntro } from './subject-copy-dialog/SubjectCopyIntro';
 import { SubjectCopyActions } from './subject-copy-dialog/SubjectCopyActions';
 import { SubjectCopyOptions } from './subject-copy-dialog/SubjectCopyOptions';
 import { useSubjectCopyForm } from './subject-copy-dialog/useSubjectCopyForm';
@@ -84,14 +84,20 @@ export default function SubjectCopyDialog(props: SubjectCopyDialogProps) {
         open={open}
         handleClose={onClose}
         maxWidth="md"
-        title="Copy subject allocations"
+        title={
+          <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+            Copy subject allocations
+            <SubjectCopyInfoTooltip
+              label="Copy subject allocations"
+              description="Choose a source class, review what will be copied, then confirm the destination."
+            />
+          </Box>
+        }
         paperProps={{ sx: { backgroundImage: 'none' } }}
       >
         <BackPopUpChecked initialValues={INITIAL_COPY_VALUES} currentValues={currentValues}>
           <DialogScrollContent>
             <Stack spacing={3}>
-              <SubjectCopyIntro />
-
               <SubjectCopyClassFlow
                 sourceClass={form.copyFromClass}
                 targetClassName={sourceClassName}

@@ -19,9 +19,7 @@ const createSubject = (status: SubjectAssignmentStatus): ISubjectFormValues => (
 const getStatusColumn = (onToggleStatus = vi.fn()) => {
   const columns = getSubjectTableStatusColumns({
     canAdd: true,
-    canView: true,
     canDelete: true,
-    onView: vi.fn(),
     onEdit: vi.fn(),
     onDelete: vi.fn(),
     onToggleStatus,

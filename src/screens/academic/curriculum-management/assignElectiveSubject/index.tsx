@@ -380,6 +380,7 @@ const AssignElectiveSubject = () => {
       <ConfirmDialog
         open={saveDialog.value}
         onClose={saveDialog.onFalse}
+        disableBackdropClick
         title="Save Draft"
         content="Are you sure you want to save these elective assignments as a draft?"
         action={
@@ -393,6 +394,7 @@ const AssignElectiveSubject = () => {
       <ConfirmDialog
         open={lockDialog.value}
         onClose={lockDialog.onFalse}
+        disableBackdropClick
         title="Lock Elective Assignments"
         content="Are you sure you want to lock these elective assignments? Once locked, you will not be able to edit or assign subjects to students for this class and division."
         action={

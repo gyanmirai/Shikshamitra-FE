@@ -25,7 +25,7 @@ export function getChapterTableActions(
     actions.push({
       id: 'view-documents',
       label: 'View documents',
-      icon: GlobalIcons.eye,
+      icon: 'solar:document-text-linear',
       onClick: () => options.onViewDocuments(chapter),
     });
   }
@@ -62,7 +62,6 @@ export function getChapterTableActions(
       onClick: () => options.onViewQuestions?.(chapter),
     }
   );
-
 
   return actions;
 }

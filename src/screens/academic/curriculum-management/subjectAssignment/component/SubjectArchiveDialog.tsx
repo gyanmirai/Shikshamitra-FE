@@ -28,6 +28,7 @@ const SubjectArchiveDialog = ({
     <ConfirmDialog
       open={open}
       onClose={onClose}
+      disableBackdropClick
       title="Archive Subject"
       content={
         <>

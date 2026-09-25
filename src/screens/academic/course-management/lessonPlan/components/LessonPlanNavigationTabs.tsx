@@ -3,6 +3,7 @@
 import Tab from '@mui/material/Tab';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { stylesMode } from 'src/theme/styles';
 
 import { ReviewQueueTabLabel } from './ReviewQueueTabLabel';
 
@@ -65,6 +66,12 @@ export function LessonPlanNavigationTabs({
             )
           }
           icon={<Iconify icon={tab.icon} width={20} />}
+          sx={{
+            '&.Mui-selected': { zIndex: 2 },
+            [stylesMode.dark]: {
+              '&.Mui-selected': { color: 'common.white' },
+            },
+          }}
         />
       ))}
     </CustomTabs>

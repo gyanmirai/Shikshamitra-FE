@@ -33,13 +33,6 @@ export default function SubjectSelectionControl({
       alignItems="flex-start"
       gap={0.75}
     >
-      <Typography
-        variant="caption"
-        sx={{ color: 'text.secondary', fontWeight: 600, lineHeight: 1.25 }}
-      >
-        {disabled ? 'Assignment locked' : ''}
-      </Typography>
-
       <Box display="flex" flexDirection="row" flexWrap="wrap" gap={1}>
         {subjects.map((subject) => {
           const isSelected = selectedSubjectId === subject.subjectId;

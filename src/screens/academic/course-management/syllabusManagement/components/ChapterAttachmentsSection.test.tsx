@@ -21,9 +21,10 @@ describe('ChapterAttachmentsSection', () => {
     );
 
     expect(screen.getByRole('heading', { name: 'Attachments' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Attachments information' })).toBeInTheDocument();
     expect(
-      screen.getByText('Add supporting files and review everything attached to this chapter.')
-    ).toBeInTheDocument();
+      screen.queryByText('Add supporting files and review everything attached to this chapter.')
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Upload files' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'View attachments' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Drop files here or browse' })).toBeInTheDocument();

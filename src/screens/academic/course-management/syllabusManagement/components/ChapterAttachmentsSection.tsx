@@ -20,7 +20,7 @@ export function ChapterAttachmentsSection({
     <FormSectionCard
       icon="solar:folder-with-files-linear"
       title="Attachments"
-      description="Add supporting files and review everything attached to this chapter."
+      descriptionTooltip="Add supporting files and review everything attached to this chapter."
     >
       <Box
         sx={{

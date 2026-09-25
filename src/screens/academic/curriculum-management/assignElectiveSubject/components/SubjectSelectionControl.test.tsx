@@ -53,11 +53,14 @@ describe('SubjectSelectionControl', () => {
     const onToggle = vi.fn();
     renderControl(onToggle, true);
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Unassign Computer Science from Mira Chauhan' })
-    );
+    const selected = screen.getByRole('button', {
+      name: 'Unassign Computer Science from Mira Chauhan',
+    });
 
-    expect(screen.getByText('Assignment locked')).toBeVisible();
+    fireEvent.click(selected);
+
+    expect(screen.queryByText('Assignment locked')).toBeNull();
+    expect(selected).toBeDisabled();
     expect(onToggle).not.toHaveBeenCalled();
   });
 });

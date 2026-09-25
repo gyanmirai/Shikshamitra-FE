@@ -1,7 +1,7 @@
 import { vi, it, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import ChapterImportPreview from './ChapterImportPreview';
@@ -49,5 +49,9 @@ describe('ChapterImportPreview', () => {
     expect(screen.getByText('Numbers')).toBeVisible();
     expect(screen.getByText(/duplicated in this file/)).toBeVisible();
     expect(screen.getByText(/upload the file again/i)).toBeVisible();
+
+    const dataRows = screen.getAllByRole('row').slice(1);
+    expect(within(dataRows[0]).getAllByRole('cell')[0]).toHaveTextContent('1');
+    expect(within(dataRows[1]).getAllByRole('cell')[0]).toHaveTextContent('2');
   });
 });

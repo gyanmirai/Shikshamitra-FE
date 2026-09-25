@@ -15,9 +15,7 @@ import type { ISubjectFormValues } from '../type';
 
 type Options = {
   canAdd: boolean;
-  canView: boolean;
   canDelete: boolean;
-  onView: (row: ISubjectFormValues) => void;
   onEdit: (row: ISubjectFormValues) => void;
   onDelete: (row: ISubjectFormValues) => void;
   onArchive?: (row: ISubjectFormValues) => void;
