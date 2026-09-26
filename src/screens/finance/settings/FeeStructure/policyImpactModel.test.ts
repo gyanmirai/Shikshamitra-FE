@@ -46,18 +46,14 @@ const settings: StructureSettings = {
   ],
 };
 
-it('inherits waiver coverage from late-fee heads and never adds policy-only heads', () => {
+it('shows late-fee coverage and never adds policy-only heads', () => {
   const rows = policyImpactRows('collection', candidate, settings, {
     id: 'collection',
     currentVersionId: 'v1',
     enableLateFee: true,
-    enableWaiver: true,
     lateFeeApplyOnFeeHeads: ['tuition', 'other'],
   });
-  expect(rows?.map((row) => row.treatment)).toEqual([
-    'Late fee applies; waiver eligible',
-    'No late fee',
-  ]);
+  expect(rows?.map((row) => row.treatment)).toEqual(['Late fee applies', 'No late fee']);
   expect(rows).toHaveLength(2);
 });
 

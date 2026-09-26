@@ -1,24 +1,23 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { Close } from '@mui/icons-material';
+import { alpha, useTheme } from '@mui/material/styles';
+import { Box, Stack, Drawer, Button, Typography, IconButton } from '@mui/material';
 import { Label } from 'src/components/label';
-import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Stack, Drawer, Button, Tooltip, Typography, IconButton } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+
 import CollectionSummaryPanel from './collection/CollectionSummaryPanel';
 import { useCollectionPolicyForm } from '../hooks/useCollectionPolicyForm';
-import CollectionWaiverSection from './collection/CollectionWaiverSection';
 import CollectionOnlineSection from './collection/CollectionOnlineSection';
 import CollectionFooterActions from './collection/CollectionFooterActions';
 import CollectionGeneralSection from './collection/CollectionGeneralSection';
 import CollectionLateFeeSection from './collection/CollectionLateFeeSection';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
-import { Close } from '@mui/icons-material';
 
 interface CollectionPolicyDrawerProps {
   open: boolean;
@@ -119,10 +118,10 @@ export default function CollectionPolicyDrawer({
             justifyContent: 'space-between',
             borderBottom: '1px solid',
             borderColor: 'divider',
-            bgcolor: (theme) =>
-              theme.palette.mode === 'dark'
-                ? alpha(theme.palette.background.default, 0.4)
-                : alpha(theme.palette.grey[50], 0.6),
+            bgcolor: (paletteTheme) =>
+              paletteTheme.palette.mode === 'dark'
+                ? alpha(paletteTheme.palette.background.default, 0.4)
+                : alpha(paletteTheme.palette.grey[50], 0.6),
             flexShrink: 0,
           }}
         >
@@ -132,7 +131,7 @@ export default function CollectionPolicyDrawer({
                 width: 40,
                 height: 40,
                 borderRadius: 1.25,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
+                bgcolor: (paletteTheme) => alpha(paletteTheme.palette.primary.main, 0.1),
                 color: 'primary.main',
                 display: 'flex',
                 alignItems: 'center',
@@ -199,7 +198,6 @@ export default function CollectionPolicyDrawer({
                 addSlab={handleAddSlab}
                 removeSlab={handleRemoveSlab}
               />
-              <CollectionWaiverSection formik={formik} />
               <CollectionOnlineSection formik={formik} />
             </Box>
           </Scrollbar>

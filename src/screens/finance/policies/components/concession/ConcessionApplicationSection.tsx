@@ -38,7 +38,7 @@ const APPLY_ON_OPTIONS = [
   {
     value: 'FutureInstallments',
     label: 'Future Installments Only',
-    caption: 'Apply discount strictly to installments whose due dates are in the future',
+    caption: 'Apply to unpaid schedule installments after the earliest unpaid installment',
   },
 ];
 

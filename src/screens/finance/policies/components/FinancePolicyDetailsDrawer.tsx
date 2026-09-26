@@ -566,67 +566,6 @@ export default function FinancePolicyDetailsDrawer({
                       )}
                     </DetailSection>
 
-                    <DetailSection title="Waiver Rules" icon="solar:tag-price-bold">
-                      <Grid container spacing={2}>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <BooleanChip label="Late-fee waiver" value={policyDetails.enableWaiver} />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <BooleanChip
-                            label="Created-charge waiver"
-                            value={policyDetails.enableChargeWaiver}
-                          />
-                        </Grid>
-                        <Grid size={{ xs: 12, sm: 6 }}>
-                          <BooleanChip
-                            label="Maker-Checker Approval Required"
-                            value={policyDetails.requiresApproval}
-                          />
-                        </Grid>
-                        {policyDetails.requiresApproval && (
-                          <>
-                            <Grid size={{ xs: 12 }}>
-                              <Box sx={{ mb: 0.5 }}>
-                                <Typography
-                                  variant="caption"
-                                  color="text.secondary"
-                                  display="block"
-                                  sx={{ fontSize: '0.72rem', mb: 0.25 }}
-                                >
-                                  Approving Roles
-                                </Typography>
-                                <Stack direction="row" spacing={0.5} flexWrap="wrap" gap={0.5}>
-                                  {(policyDetails.approvalRoles ?? []).length === 0 ? (
-                                    <Typography variant="body2" color="text.secondary">
-                                      {policyDetails.approvalRoleIds?.length
-                                        ? `${policyDetails.approvalRoleIds.length} role(s) configured`
-                                        : '—'}
-                                    </Typography>
-                                  ) : (
-                                    (policyDetails.approvalRoles as any[]).map((r, i) => (
-                                      <Chip
-                                        key={i}
-                                        label={r.name || r}
-                                        size="small"
-                                        variant="outlined"
-                                      />
-                                    ))
-                                  )}
-                                </Stack>
-                              </Box>
-                            </Grid>
-                          </>
-                        )}
-                        {policyDetails.enableWaiver && (
-                          <Grid size={{ xs: 12 }}>
-                            <DetailField
-                              label="Late-fee eligibility"
-                              value="Uses the fee heads configured in Late Fee Rules"
-                            />
-                          </Grid>
-                        )}
-                      </Grid>
-                    </DetailSection>
                   </>
                 )}
 

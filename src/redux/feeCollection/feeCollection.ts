@@ -125,6 +125,7 @@ export interface FeeLedgerLine {
   lateFeeExplanation?: string;
   /** Sum of Applied waivers already granted against this line's late fee. */
   lateFeeWaivedAmount?: number;
+  canWaive?: boolean;
 }
 
 export interface FeeLedgerMonth {
@@ -136,10 +137,16 @@ export interface FeeLedgerMonth {
 
 export interface ChargeDetail {
   chargeId: string;
+  sourceType: 'Charge' | 'LateFee';
+  sourceId: string;
+  isSystemGenerated: boolean;
   name: string;
   amount: number;
   paidAmount: number;
   pendingAmount: number;
+  waivedAmount: number;
+  canWaive: boolean;
+  explanation?: string;
   reconciliationAmount?: number;
   status: number | string;
 }
@@ -183,10 +190,15 @@ export interface FeeHeadSummary {
 
 export interface FeeChargeDetail {
   chargeId: string;
+  sourceType?: 'Charge' | 'LateFee';
+  sourceId?: string;
+  isSystemGenerated?: boolean;
   name: string;
   amount: number;
   paidAmount: number;
   pendingAmount: number;
+  waivedAmount: number;
+  canWaive: boolean;
   status: FeeCollectionStatusType;
 }
 
@@ -299,6 +311,27 @@ export interface CollectFeeOutput {
   correlationId?: string;
   auditEventIds?: string[];
   auditSummary?: FinanceAuditSummary;
+}
+
+export type FeeWaiverSourceType = 'LateFee' | 'Charge';
+
+export interface ApplyFeeWaiverInput {
+  sourceType: FeeWaiverSourceType;
+  sourceId: string;
+  reason: string;
+  idempotencyKey: string;
+}
+
+export interface FeeWaiverResult {
+  id: string;
+  sourceType: FeeWaiverSourceType;
+  sourceId: string;
+  studentId: string;
+  academicYearId: string;
+  waivedAmount: number;
+  remainingAmount: number;
+  reason: string;
+  creationTime: string;
 }
 
 // ─── Receipt Detail Types ────────────────────────────────────────────────────
@@ -416,6 +449,19 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
       ],
     }),
 
+    applyFeeWaiver: builder.mutation<FeeWaiverResult, ApplyFeeWaiverInput>({
+      query: (body) => ({
+        url: `${FEE_COLLECTION_V2_BASE_URL}/waivers`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        financeModuleType.feeCollection,
+        financeModuleType.feeDetails,
+        financeModuleType.financeAudit,
+      ],
+    }),
+
     /**
      * Generic receipt PDF download for both fee and charge receipts
      * GET /v1/fee-receipts/{id}/pdf or /v1/charge-receipts/{id}/pdf
@@ -437,5 +483,6 @@ export const {
   useGetCollectFormQuery,
   useGetStudentFeeDetailsQuery,
   useCollectFeeMutation,
+  useApplyFeeWaiverMutation,
   useDownloadReceiptPdfMutation,
 } = feeCollectionApi;

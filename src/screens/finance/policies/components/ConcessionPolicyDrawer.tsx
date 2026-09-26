@@ -11,13 +11,13 @@
 
 import React, { useCallback } from 'react';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Chip, Drawer, Stack, Typography, IconButton } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Box, Chip, Stack, Drawer, Typography, IconButton } from '@mui/material';
 
 import { ConcessionSummaryPanel } from './concession/ConcessionCommon';
 import { useConcessionPolicyForm } from '../hooks/useConcessionPolicyForm';
@@ -168,7 +168,7 @@ export default function ConcessionPolicyDrawer({
                 </Typography>
 
                 <CustomTooltip
-                  title="Concession policies define reusable calculation formulas and maximum discount ceilings. Fee-head eligibility is configured when attaching this policy to fee structures."
+                  title="This policy defines calculation rules, limits, and installment scope. Select it separately on each request."
                   placement="right"
                   arrow
                 >
@@ -203,8 +203,7 @@ export default function ConcessionPolicyDrawer({
               </Stack>
 
               <Typography variant="caption" color="text.secondary" display="block">
-                Configure reusable calculation limits and application behaviour. Fee-head
-                eligibility is attached at the fee structure level.
+                Configure eligibility and calculation rules. Staff choose an applicable policy on each concession request.
               </Typography>
             </Box>
           </Stack>
@@ -234,6 +233,7 @@ export default function ConcessionPolicyDrawer({
                 impact={impact}
                 isImpactLoading={isImpactLoading}
               />
+
 
               {/* Card 2 — Calculation Rules */}
               <ConcessionCalculationSection formik={formik} />

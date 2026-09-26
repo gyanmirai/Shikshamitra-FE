@@ -3,7 +3,7 @@ module: finance
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-09-23
+updated_on: 2026-09-24
 owner: frontend-team
 audience: humans-and-agents
 ---

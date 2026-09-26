@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-21
+updated_on: 2026-09-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -69,8 +69,8 @@ Account Head forms and contracts omit code, currency, direct-posting/control tog
 Focused coverage: `src/hooks/useAccountHeadOptions.test.ts`, `src/screens/finance/settings/account-settings-forms.test.ts`, `src/screens/security/role/permission-catalogue.test.ts`, and `src/screens/security/role/permission-node.test.tsx`.
 
 The current late-fee waiver client owns the scoped paged queue, due-line history, request, approve, and reason-bearing reject operations.
-The approved but unshipped target removes that queue and approval client.
-Collection Policy and Charge Management expose their item-level `AllowWaiver` toggles, while Fee Collection uses one immediate amount-plus-reason apply command for either an eligible late fee or charge as described in [Fee Collection waiver end to end](../../../Shikshamitra-BE/docs/modules/finance/references/fee-collection-waiver-end-to-end.md).
+The approved but unshipped target removes that queue and approval client, and neither Collection Policy nor Charge Management exposes waiver settings.
+Fee Collection receives server-derived `canWaive` actions and uses one reason-only command that applies the full live remaining balance for an eligible late fee or approved charge as described in [Fee Collection waiver end to end](../../../Shikshamitra-BE/docs/modules/finance/references/fee-collection-waiver-end-to-end.md).
 
 Backend Finance behavior is canonical in [Finance backend APIs](../../../Shikshamitra-BE/docs/modules/finance/api.md).
 Confirm request and response behavior there before changing a client shape.

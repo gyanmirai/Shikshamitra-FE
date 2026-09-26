@@ -173,6 +173,20 @@ const MonthGroup = ({
                 lateFeeAmount={item.lateFeeAmount}
                 lateFeeExplanation={item.lateFeeExplanation}
                 lateFeeWaivedAmount={item.lateFeeWaivedAmount}
+                onWaiverApplied={
+                  isSelected
+                    ? () =>
+                        onToggleItem(
+                          item.feeHeadId,
+                          FeeMonth[group.month] as string,
+                          item.due,
+                          group.year,
+                          item.dueFeeId,
+                          item.installmentLabel,
+                          item.lateFeeAmount
+                        )
+                    : undefined
+                }
                 dueFeeId={item.dueFeeId}
                 status={item.status}
                 showStatus

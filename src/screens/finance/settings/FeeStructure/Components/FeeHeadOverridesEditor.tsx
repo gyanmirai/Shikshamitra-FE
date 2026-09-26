@@ -234,10 +234,6 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
           lateFeeIncomeHeadId: policy.lateFeeIncomeHeadId,
           maximumLateFeeAmount: policy.maximumLateFeeAmount,
           maximumChargingDays: policy.maximumChargingDays,
-          enableWaiver: policy.enableWaiver,
-          enableChargeWaiver: policy.enableChargeWaiver,
-          requiresApproval: policy.requiresApproval,
-          approvalRoleIds: policy.approvalRoleIds,
           allowOnlineCollection: policy.allowOnlineCollection,
         },
       }).unwrap();

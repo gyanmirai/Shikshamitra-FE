@@ -1,4 +1,4 @@
-import { financeModuleType } from 'src/redux/tagTypes';
+import { financeModuleType, financePolicyType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../financeModuleApi';
 
@@ -28,6 +28,7 @@ type PreviewCommand = Pick<
   | 'concessionPolicyVersionId'
   | 'concessionTypeId'
   | 'feeHeadConcessions'
+  | 'dueFeeConcessions'
 >;
 
 type UpdateDraftCommand = ConcessionDraftCommand & {
@@ -39,9 +40,13 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
     getConcessionRequestContext: builder.query<
       ConcessionRequestContext,
-      { academicYearId: string; studentId: string; studentFeeStructureId?: string }
+      { academicYearId: string; studentId: string; studentFeeStructureId?: string; concessionTypeId?: string;
+        concessionPolicyId?: string; concessionPolicyVersionId?: string }
     >({
       query: (params) => ({ url: '/concession-request/context', method: 'GET', params }),
+      providesTags: (_result, _error, arg) => [
+        { type: financePolicyType.concessionPolicy, id: `year:${arg.academicYearId}` },
+      ],
     }),
 
     createConcessionRequest: builder.mutation<

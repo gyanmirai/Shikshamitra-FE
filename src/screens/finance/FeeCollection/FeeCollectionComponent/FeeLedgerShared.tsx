@@ -13,7 +13,7 @@ import {
   FeeCollectionStatusTypeColors,
 } from 'src/enums/fee-collection-type';
 
-import LateFeeWaiverButton from './LateFeeWaiverButton';
+import FeeWaiverToggle from './FeeWaiverToggle';
 
 // ─── Constants & Helpers ───────────────────────────────────────────────────────
 
@@ -140,6 +140,9 @@ export interface FeeRowProps {
   lateFeeWaivedAmount?: number;
   /** Enables the waiver action button on this row — omitted for charges and views where the due fee id isn't resolvable. */
   dueFeeId?: string;
+  chargeId?: string;
+  waiverSourceType?: 'Charge' | 'LateFee';
+  onWaiverApplied?: () => void;
 }
 
 export const FeeRow = ({
@@ -159,6 +162,9 @@ export const FeeRow = ({
   lateFeeExplanation,
   lateFeeWaivedAmount,
   dueFeeId,
+  chargeId,
+  waiverSourceType,
+  onWaiverApplied,
   status,
   isSelected,
   isDisabled = false,
@@ -223,6 +229,22 @@ export const FeeRow = ({
             </Typography>
           )}
         </Box>
+        {chargeId && (
+          <FeeWaiverToggle
+            sourceType={waiverSourceType ?? 'Charge'}
+            sourceId={chargeId}
+            remainingAmount={due}
+            onApplied={onWaiverApplied}
+          />
+        )}
+        {!chargeId && safeLateFeeAmount > 0 && dueFeeId && (
+          <FeeWaiverToggle
+            sourceType="LateFee"
+            sourceId={dueFeeId}
+            remainingAmount={safeLateFeeAmount}
+            onApplied={onWaiverApplied}
+          />
+        )}
         {hasRefund && (
           <Tooltip
             arrow
@@ -414,9 +436,6 @@ export const FeeRow = ({
               ?
             </Box>
           </Tooltip>
-        )}
-        {safeLateFeeAmount > 0 && dueFeeId && (
-          <LateFeeWaiverButton dueFeeId={dueFeeId} computedLateFeeAmount={safeLateFeeAmount} />
         )}
       </Box>
 

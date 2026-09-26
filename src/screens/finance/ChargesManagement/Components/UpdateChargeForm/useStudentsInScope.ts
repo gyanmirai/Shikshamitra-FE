@@ -71,11 +71,13 @@ export function useStudentsInScope(
           educationMediumId: string;
           classIds: string[];
           divisionIds?: string[];
+          onlyWithFeeStructureAssignment: boolean;
         } = {
           academicYearId: currentYear.id,
           boardId,
           educationMediumId,
           classIds: standardIds,
+          onlyWithFeeStructureAssignment: true,
         };
 
         // Only send divisionIds to the API when exactly one class is selected

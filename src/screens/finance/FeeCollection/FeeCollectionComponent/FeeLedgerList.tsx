@@ -37,6 +37,7 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
       sx={{
+        mb: 1.25,
         borderRadius: 1.5,
         bgcolor: 'background.paper',
         display: 'flex',
@@ -97,9 +98,13 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
           <FeeRow
             key={charge.chargeId}
             name={charge.chargeName}
+            subtitle={charge.isSystemGenerated ? 'System generated' : undefined}
             total={charge.total ?? charge.amount}
             paid={charge.paid ?? 0}
             due={charge.amount}
+            chargeId={charge.chargeId}
+            waiverSourceType={charge.sourceType}
+            onWaiverApplied={isSelected && !isDisabled ? () => onToggleCharge(charge.chargeId) : undefined}
             status={charge.status as FeeCollectionStatusType}
             isSelected={isSelected}
             isDisabled={isDisabled}
@@ -260,8 +265,9 @@ const FeeLedgerList = ({
 
   // ── Empty state ────────────────────────────────────────────────────────────
   const isEmpty =
-    (activeTab === 'by-month' && !data.monthWise?.length) ||
-    (activeTab === 'by-fee-head' && !data.feeHeadWise?.length);
+    !chargesData?.length &&
+    ((activeTab === 'by-month' && !data.monthWise?.length) ||
+      (activeTab === 'by-fee-head' && !data.feeHeadWise?.length));
 
   if (isEmpty) {
     return (
@@ -290,6 +296,14 @@ const FeeLedgerList = ({
 
   return (
     <Box sx={{ pl: 0.25, mb: 1 }}>
+      {chargesData && chargesData.length > 0 && (
+        <ChargesSection
+          chargesData={chargesData}
+          selectedCharges={charges}
+          onToggleCharge={toggleCharge}
+        />
+      )}
+
       {activeTab === 'by-month' && (
         <ByMonthView
           groups={data.monthWise}
@@ -310,13 +324,6 @@ const FeeLedgerList = ({
         />
       )}
 
-      {chargesData && chargesData.length > 0 && (
-        <ChargesSection
-          chargesData={chargesData}
-          selectedCharges={charges}
-          onToggleCharge={toggleCharge}
-        />
-      )}
     </Box>
   );
 };

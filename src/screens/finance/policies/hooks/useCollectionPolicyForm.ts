@@ -63,10 +63,6 @@ const getInitialValues = (
     considerAsIncome: data?.considerAsIncome ?? false,
     lateFeeIncomeHeadId: data?.lateFeeIncomeHeadId ?? null,
 
-    enableWaiver: data?.enableWaiver ?? false,
-    enableChargeWaiver: data?.enableChargeWaiver ?? false,
-    requiresApproval: data?.requiresApproval ?? true,
-    approvalRoleIds: data?.approvalRoleIds || [],
     allowOnlineCollection: data?.allowOnlineCollection ?? true,
   };
 };
@@ -203,8 +199,6 @@ const validationSchema = Yup.object().shape({
     .integer('Must be a whole number')
     .min(1, 'Must be at least 1 day'),
 
-  enableWaiver: Yup.boolean(),
-  enableChargeWaiver: Yup.boolean(),
   allowOnlineCollection: Yup.boolean(),
   considerAsIncome: Yup.boolean(),
   lateFeeIncomeHeadId: Yup.string()
@@ -212,14 +206,6 @@ const validationSchema = Yup.object().shape({
     .when(['enableLateFee', 'considerAsIncome'], {
       is: (enableLateFee: boolean, considerAsIncome: boolean) => enableLateFee && considerAsIncome,
       then: (s) => s.required('Select the income head for late-fee posting'),
-    }),
-  requiresApproval: Yup.boolean(),
-  approvalRoleIds: Yup.array()
-    .of(Yup.string())
-    .when(['enableWaiver', 'enableChargeWaiver', 'requiresApproval'], {
-      is: (enableWaiver: boolean, enableChargeWaiver: boolean, requiresApproval: boolean) =>
-        (enableWaiver || enableChargeWaiver) && requiresApproval,
-      then: (s) => s.min(1, 'Select at least one approving role'),
     }),
 });
 
@@ -329,10 +315,6 @@ export function useCollectionPolicyForm({
       !v.enableLateFee ||
       !computeSlabIssues(v.escalationRules).hasIssues;
 
-    const waiverApprovalValid =
-      (!v.enableWaiver && !v.enableChargeWaiver) ||
-      !v.requiresApproval ||
-      v.approvalRoleIds.length >= 1;
     const incomeHeadValid =
       !v.enableLateFee || !v.considerAsIncome || Boolean(v.lateFeeIncomeHeadId);
     const isDefaultConflict = false;
@@ -352,7 +334,6 @@ export function useCollectionPolicyForm({
       graceTypeValid &&
       headsValid &&
       lateFeeValid &&
-      waiverApprovalValid &&
       incomeHeadValid &&
       slabValid;
 
@@ -362,7 +343,6 @@ export function useCollectionPolicyForm({
       graceTypeValid,
       headsValid,
       lateFeeValid,
-      waiverApprovalValid,
       incomeHeadValid,
       slabValid,
       isDefaultConflict,

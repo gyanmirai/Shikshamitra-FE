@@ -90,12 +90,18 @@ export interface IFeeHead {
 
 export interface IFeeCharge {
   chargeId: string;
+  sourceType: 'Charge' | 'LateFee';
+  sourceId: string;
+  isSystemGenerated?: boolean;
   id?: string | number; // alias for chargeId or index
   chargeName: string;
   amount: number;
   total?: number;
   dueDate?: string;
   paid?: number;
+  waivedAmount?: number;
+  canWaive?: boolean;
+  explanation?: string;
   status?: number | string;
 }
 
@@ -183,6 +189,7 @@ export interface MonthWiseFeeItem {
   lateFeeAmount?: number;
   lateFeeExplanation?: string;
   lateFeeWaivedAmount?: number;
+  canWaive?: boolean;
   status: FeeCollectionStatusType;
 }
 
@@ -212,6 +219,7 @@ export interface FeeHeadWiseFeeItem {
   lateFeeAmount?: number;
   lateFeeExplanation?: string;
   lateFeeWaivedAmount?: number;
+  canWaive?: boolean;
   status: FeeCollectionStatusType;
 }
 

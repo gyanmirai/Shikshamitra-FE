@@ -259,12 +259,8 @@ export interface ICollectionPolicy extends Omit<
   /** Stop accruing additional late fee once daysLate exceeds this many days. */
   maximumChargingDays: number | null;
   considerAsIncome: boolean;
-  enableWaiver: boolean;
-  enableChargeWaiver: boolean;
   allowOnlineCollection: boolean;
   lateFeeIncomeHeadId?: string | null;
-  requiresApproval: boolean;
-  approvalRoleIds: string[];
   changeReason?: string | null;
   version?: number;
   isUsedInDownstream?: boolean;

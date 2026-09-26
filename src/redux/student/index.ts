@@ -147,15 +147,26 @@ export const StudentApi = api.injectEndpoints({
         educationMediumId: string;
         classIds: string[];
         divisionIds?: string[];
+        onlyWithFeeStructureAssignment?: boolean;
       }
     >({
-      query: ({ academicYearId, boardId, educationMediumId, classIds, divisionIds }) => {
+      query: ({
+        academicYearId,
+        boardId,
+        educationMediumId,
+        classIds,
+        divisionIds,
+        onlyWithFeeStructureAssignment,
+      }) => {
         const params = new URLSearchParams();
         params.append('academicYearId', academicYearId);
         params.append('boardId', boardId);
         params.append('educationMediumId', educationMediumId);
         classIds.forEach((id) => params.append('classIds', id));
         divisionIds?.forEach((id) => params.append('divisionIds', id));
+        if (onlyWithFeeStructureAssignment !== undefined) {
+          params.set('onlyWithFeeStructureAssignment', String(onlyWithFeeStructureAssignment));
+        }
         return {
           url: `/students/records/list/by-scope?${params.toString()}`,
           method: 'GET',

@@ -41,6 +41,7 @@ import type {
   IFeeHeadApprovalViewProps,
   IConcessionFeeHeadWiseGroup,
 } from './type';
+import ReadOnlyConcessionApprovalView from './ReadOnlyConcessionApprovalView';
 
 // ─── Form Types ────────────────────────────────────────────────────────────────
 
@@ -552,7 +553,7 @@ const ApprovalSkeleton = () => (
 // (Validation Schema is defined inside the component using useMemo to access groups/isApprove)
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
+const ConcessionFeeHeadApprovalLegacyView: React.FC<IFeeHeadApprovalViewProps> = ({
   selectedItem,
   mode,
   onBack,
@@ -1178,4 +1179,8 @@ const ConcessionFeeHeadApprovalView: React.FC<IFeeHeadApprovalViewProps> = ({
   );
 };
 
-export default ConcessionFeeHeadApprovalView;
+export default function ConcessionFeeHeadApprovalView(props: IFeeHeadApprovalViewProps) {
+  return props.mode === 'Approve'
+    ? <ReadOnlyConcessionApprovalView {...props} />
+    : <ConcessionFeeHeadApprovalLegacyView {...props} />;
+}
