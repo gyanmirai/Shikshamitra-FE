@@ -179,6 +179,20 @@ const FeeHeadGroup = ({
                 lateFeeAmount={item.lateFeeAmount}
                 lateFeeExplanation={item.lateFeeExplanation}
                 lateFeeWaivedAmount={item.lateFeeWaivedAmount}
+                onWaiverApplied={
+                  isSelected
+                    ? () =>
+                        onToggleItem(
+                          group.feeHeadId,
+                          FeeMonth[item.month] as string,
+                          item.due,
+                          item.year,
+                          item.dueFeeId,
+                          item.installmentLabel,
+                          item.lateFeeAmount
+                        )
+                    : undefined
+                }
                 status={item.status}
                 isSelected={isSelected}
                 isDisabled={!isCollectible}

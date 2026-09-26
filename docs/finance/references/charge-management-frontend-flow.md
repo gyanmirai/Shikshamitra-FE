@@ -3,7 +3,7 @@ module: finance
 domain: charge-management
 content_type: Reference
 status: active
-updated_on: 2026-09-21
+updated_on: 2026-09-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -38,12 +38,12 @@ The route layout and menu protect navigation with Charge View. Navigation access
 ## Current user journey
 
 1. The active page lists charge request batches in Fees and Approvals tabs.
-2. Add/Edit opens `UpdateChargeForm`, which loads Charge Categories and students, builds an audience, and posts to `api/charges`.
+2. Add/Edit opens `UpdateChargeForm`, which loads Charge Categories and only students with a fee-structure assignment for the selected academic year, builds an audience, and posts to `api/charges`.
 3. A detail/review surface loads the request and lets a checker approve or reject selected pending student lines.
 4. Approved lines are fetched by Fee Collection. The collector can include full or partial charge allocations with normal fee allocations.
 5. The backend issues a separate charge receipt and collection views can display the paid charge lines.
 
-This is a partial flow. Charge correction, void, the charge-level `Allow waiver` toggle, refund, source drill-through, account classification, and a complete audit timeline are not available from Charge Management.
+This is a partial flow. Charge correction, void, refund, source drill-through, account classification, and a complete audit timeline are not available from Charge Management. The approved target deliberately keeps waiver controls out of this screen and places the reason-only full-balance toggle in Fee Collection.
 
 ## Confirmed frontend gaps
 
@@ -112,6 +112,7 @@ The API remains authoritative and must return 403 or a stable business error whe
 ### 2. Preview audience and money
 
 - Ask the author to choose `All students in scope` or `Selected students` explicitly.
+- List only enrolled students with a fee-structure assignment for the selected academic year; the backend revalidates this prerequisite for explicit and all-in-scope audiences.
 - For selected mode, require at least one ID.
 - Send scope/category/amount/due date to the preview endpoint.
 - Show resolved count, excluded students and reasons, per-student amount, total obligation, approval rule, revenue mapping, and source identity.

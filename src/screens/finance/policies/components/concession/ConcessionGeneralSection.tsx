@@ -189,7 +189,7 @@ export default function ConcessionGeneralSection({
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                 Modifications to this active policy will generate a new revision version. Historical
-                student snapshots remain immutable.
+                request snapshots remain immutable.
               </Typography>
 
               {isImpactLoading || !impact ? (
@@ -208,16 +208,6 @@ export default function ConcessionGeneralSection({
                     icon={<Iconify icon={GlobalIcons.newversion} width={14} height={14} />}
                     label={`Current: Version ${impact.currentVersion}`}
                     sx={{ fontWeight: 600 }}
-                  />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`${impact.attachedFeeStructureCount} Attached Fee Structures`}
-                  />
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`${impact.studentAssignmentCount} Active Assignments`}
                   />
                   <Chip
                     size="small"

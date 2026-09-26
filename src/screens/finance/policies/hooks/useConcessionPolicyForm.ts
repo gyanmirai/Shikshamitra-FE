@@ -24,7 +24,8 @@ const POLICY_ERROR_MESSAGES: Record<string, string> = {
   'Finance:ConcessionPolicy:010006':
     'A policy with this code already exists for the academic year.',
   'Finance:ConcessionPolicy:010018':
-    'This policy is attached and cannot be moved to Draft or archived.',
+    'This policy is used by concession requests and cannot be moved to Draft or archived.',
+  'Finance:ConcessionPolicy:010025': 'This policy does not apply to the selected concession request.',
   'Finance:ConcessionPolicy:010019': 'The policy was refreshed. Please review and submit again.',
   'Finance:ConcessionPolicy:010020':
     'This policy changed in another session. Refresh and try again.',
@@ -324,8 +325,10 @@ export function useConcessionPolicyForm({
     } else if (values.calculationMethod === 'FixedAmount' && simulatedValue) {
       concessionAmount = simulatedValue;
     } else if (values.calculationMethod === 'FullWaiver') {
-      concessionAmount = pending + simAlreadyPaid;
+      concessionAmount = pending;
     }
+
+    concessionAmount = Math.min(pending, Math.max(0, concessionAmount));
 
     const newOutstanding = Math.max(0, pending - concessionAmount);
 

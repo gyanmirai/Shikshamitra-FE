@@ -12,7 +12,6 @@ export const financePaths = {
   fees: {
     root: '/finance/fees',
     collections: '/finance/fee-collection',
-    waivers: '/finance/waiver-management',
     charges: '/finance/charge-management',
     invoicesAndReceipts: '/finance/invoice-receipt',
     concessions: '/finance/concession',
@@ -84,13 +83,6 @@ export const financePermissions = {
   fees: {
     root: `${defaultModulePermissionName}${defaultFinancePermissionName}Fees`,
     collections: `${defaultFinancePermissionName}Fees.FeeCollections`,
-    waivers: `${defaultFinancePermissionName}Policies.CollectionPolicy.ViewWaivers`,
-    waiverActions: {
-      view: `${defaultFinancePermissionName}Policies.CollectionPolicy.ViewWaivers`,
-      request: `${defaultFinancePermissionName}Policies.CollectionPolicy.RequestWaiver`,
-      approve: `${defaultFinancePermissionName}Policies.CollectionPolicy.ApproveWaiver`,
-      reject: `${defaultFinancePermissionName}Policies.CollectionPolicy.RejectWaiver`,
-    },
     charges: `${defaultFinancePermissionName}Fees.Charges`,
 	chargeActions: {
 		view: `${defaultFinancePermissionName}Fees.Charges.View`,
@@ -336,15 +328,6 @@ const financeModule = {
               shortcutKeyName: 'Alt+F+2+2',
               permissionName: financePermissions.fees.charges,
               icon: menuIconView('mdi:cash-plus'),
-            },
-            {
-              title: 'Waivers',
-              path: financePaths.fees.waivers,
-              _action: 'fee-waivers',
-              shortcutKey: 'Alt+F+2+W',
-              shortcutKeyName: 'Alt+F+2+W',
-              permissionName: financePermissions.fees.waivers,
-              icon: menuIconView('mdi:ticket-percent-outline'),
             },
             {
               title: 'Refunds',

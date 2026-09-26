@@ -1,0 +1,111 @@
+'use client';
+
+import { useRef, useState } from 'react';
+import { LoadingButton } from '@mui/lab';
+import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Box, Alert, Stack, Button, Divider, TextField, Typography } from '@mui/material';
+import {
+  useApproveConcessionRequestMutation,
+  useGetConcessionApprovalContextQuery,
+  usePreviewConcessionApprovalMutation,
+} from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
+
+import type { IFeeHeadApprovalViewProps } from './type';
+
+const money = (value: number) => new Intl.NumberFormat('en-IN', {
+  style: 'currency', currency: 'INR', maximumFractionDigits: 2,
+}).format(value);
+
+export default function ReadOnlyConcessionApprovalView({ selectedItem, onBack }: IFeeHeadApprovalViewProps) {
+  const requestId = selectedItem.studentConcessionTypeRequestId || selectedItem.id || '';
+  const { data: context, isLoading, refetch } = useGetConcessionApprovalContextQuery(requestId, {
+    skip: !requestId,
+  });
+  const [previewApproval, { isLoading: isPreviewing }] = usePreviewConcessionApprovalMutation();
+  const [approve, { isLoading: isApproving }] = useApproveConcessionRequestMutation();
+  const [previewTotal, setPreviewTotal] = useState<number | null>(null);
+  const [message, setMessage] = useState('');
+  const commandKey = useRef('');
+  const changed = (context?.feeHeadGroups ?? []).some((group) => group.hasChangedSinceSubmission);
+
+  const handleAction = async () => {
+    if (!context) return;
+    try {
+      if (previewTotal === null) {
+        const result = await previewApproval({
+          concessionRequestId: requestId,
+          body: {
+            requestConcurrencyStamp: context.requestConcurrencyStamp,
+            previewFingerprint: context.previewFingerprint,
+          },
+        }).unwrap();
+        setPreviewTotal(result.totalApprovedAmount);
+        return;
+      }
+      await approve({
+        studentConcessionTypeRequestId: requestId,
+        body: {
+          message: message.trim() || undefined,
+          requestConcurrencyStamp: context.requestConcurrencyStamp,
+          previewFingerprint: context.previewFingerprint,
+          idempotencyKey: (commandKey.current ||= window.crypto.randomUUID()),
+        },
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Concession approved successfully.' });
+      onBack();
+    } catch (error) {
+      setPreviewTotal(null);
+      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
+      await refetch();
+    }
+  };
+
+  return (
+    <Box sx={{ p: 3, overflowY: 'auto', height: '100%' }}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h6">Approve concession</Typography>
+        <Button onClick={onBack}>Back</Button>
+      </Stack>
+      {isLoading && <Typography>Loading financial impact…</Typography>}
+      {context && (
+        <Stack spacing={2}>
+          <Typography variant="body2" color="text.secondary">
+            {context.concessionPolicyName} · version {context.concessionPolicyVersion}
+          </Typography>
+          {changed && (
+            <Alert severity="warning">
+              The live fee balance or policy calculation has changed since submission. Refresh or create a new request; approval cannot reduce the submitted amount.
+            </Alert>
+          )}
+          {context.feeHeadGroups.map((group) => (
+            <Box key={group.feeHeadId} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 2 }}>
+              <Stack direction="row" justifyContent="space-between" mb={1}>
+                <Typography fontWeight={600}>{group.feeHeadName}</Typography>
+                <Typography fontWeight={700}>{money(group.requestedConcessionAmount)}</Typography>
+              </Stack>
+              {group.dueFeeLines.filter((line) => line.suggestedConcessionAmount > 0).map((line) => (
+                <Stack key={line.dueFeeId} direction="row" justifyContent="space-between" py={0.5}>
+                  <Typography variant="body2">{line.monthLabel} {line.year} · outstanding {money(line.outstandingAmount)}</Typography>
+                  <Typography variant="body2">−{money(line.suggestedConcessionAmount)}</Typography>
+                </Stack>
+              ))}
+            </Box>
+          ))}
+          <Divider />
+          <Stack direction="row" justifyContent="space-between">
+            <Typography fontWeight={700}>Requested concession</Typography>
+            <Typography fontWeight={700}>{money(context.totalRequestedConcessionAmount)}</Typography>
+          </Stack>
+          {previewTotal !== null && <Alert severity="info">Approval will apply {money(previewTotal)}. No amount can be changed here.</Alert>}
+          <TextField label="Approval note (optional)" multiline minRows={2} value={message}
+            onChange={(event) => { setMessage(event.target.value); setPreviewTotal(null); }} />
+          <LoadingButton variant="contained" color="success" disabled={changed || isLoading}
+            loading={isPreviewing || isApproving} onClick={handleAction}>
+            {previewTotal === null ? 'Review impact' : 'Confirm approval'}
+          </LoadingButton>
+        </Stack>
+      )}
+    </Box>
+  );
+}

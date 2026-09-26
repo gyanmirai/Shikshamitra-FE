@@ -472,6 +472,7 @@ const FeeCollectComponentForm = ({
           lateFeeAmount: item.lateFeeAmount,
           lateFeeExplanation: item.lateFeeExplanation,
           lateFeeWaivedAmount: item.lateFeeWaivedAmount,
+          canWaive: item.canWaive,
           status: normalizeStatus(item.status, item.paid, item.due),
         })),
       })) as FeeLedgerData['monthWise'],
@@ -499,6 +500,7 @@ const FeeCollectComponentForm = ({
               lateFeeAmount: item.lateFeeAmount,
               lateFeeExplanation: item.lateFeeExplanation,
               lateFeeWaivedAmount: item.lateFeeWaivedAmount,
+              canWaive: item.canWaive,
               status: normalizeStatus(item.status, item.paid, item.due),
             }))
           )
@@ -530,6 +532,7 @@ const FeeCollectComponentForm = ({
               lateFeeAmount: line.lateFeeAmount,
               lateFeeExplanation: line.lateFeeExplanation,
               lateFeeWaivedAmount: line.lateFeeWaivedAmount,
+              canWaive: line.canWaive,
               status: line.status,
             });
             return acc;
@@ -603,10 +606,16 @@ const FeeCollectComponentForm = ({
     () =>
       (formData?.charges ?? []).map((c: ChargeDetail) => ({
         chargeId: c.chargeId,
+        sourceType: c.sourceType ?? 'Charge',
+        sourceId: c.sourceId ?? c.chargeId,
+        isSystemGenerated: c.isSystemGenerated,
         chargeName: c.name,
         amount: c.pendingAmount,
         total: c.amount,
         paid: c.paidAmount,
+        waivedAmount: c.waivedAmount,
+        canWaive: c.canWaive,
+        explanation: c.explanation,
         reconciliationAmount: c.reconciliationAmount,
         status: c.status,
       })),
@@ -869,14 +878,21 @@ const FeeCollectComponentForm = ({
         });
 
       const lateFeePayments = allocation.allocatedRows
-        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.lateFeePaidAmount > 0)
+        .filter(
+          (r): r is AllocatedFeeRow | AllocatedChargeRow =>
+            (r.type === 'fee' && r.lateFeePaidAmount > 0) ||
+            (r.type === 'charge' && r.sourceType === 'LateFee' && r.paidAmount > 0)
+        )
         .map((r) => ({
-          dueFeeId: resolveAllocatedDueFeeId(r),
-          amount: r.lateFeePaidAmount,
+          dueFeeId: r.type === 'fee' ? resolveAllocatedDueFeeId(r) : r.sourceId,
+          amount: r.type === 'fee' ? r.lateFeePaidAmount : r.paidAmount,
         }));
 
       const chargePayments = allocation.allocatedRows
-        .filter((r): r is AllocatedChargeRow => r.type === 'charge' && r.paidAmount > 0)
+        .filter(
+          (r): r is AllocatedChargeRow =>
+            r.type === 'charge' && r.sourceType === 'Charge' && r.paidAmount > 0
+        )
         .map((r) => ({
           chargeId: r.key,
           amount: r.paidAmount,
@@ -964,14 +980,21 @@ const FeeCollectComponentForm = ({
         });
 
       const lateFeePayments = allocation.allocatedRows
-        .filter((r): r is AllocatedFeeRow => r.type === 'fee' && r.lateFeePaidAmount > 0)
+        .filter(
+          (r): r is AllocatedFeeRow | AllocatedChargeRow =>
+            (r.type === 'fee' && r.lateFeePaidAmount > 0) ||
+            (r.type === 'charge' && r.sourceType === 'LateFee' && r.paidAmount > 0)
+        )
         .map((r) => ({
-          dueFeeId: resolveAllocatedDueFeeId(r),
-          amount: r.lateFeePaidAmount,
+          dueFeeId: r.type === 'fee' ? resolveAllocatedDueFeeId(r) : r.sourceId,
+          amount: r.type === 'fee' ? r.lateFeePaidAmount : r.paidAmount,
         }));
 
       const chargePayments = allocation.allocatedRows
-        .filter((r): r is AllocatedChargeRow => r.type === 'charge' && r.paidAmount > 0)
+        .filter(
+          (r): r is AllocatedChargeRow =>
+            r.type === 'charge' && r.sourceType === 'Charge' && r.paidAmount > 0
+        )
         .map((r) => ({
           chargeId: r.key,
           amount: r.paidAmount,

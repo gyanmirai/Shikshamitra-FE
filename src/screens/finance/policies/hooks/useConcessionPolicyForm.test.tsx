@@ -104,4 +104,21 @@ describe('useConcessionPolicyForm submission validation', () => {
     expect(mocks.toastError).not.toHaveBeenCalled();
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it('waives only unpaid outstanding and never produces a refund', async () => {
+    const { result } = renderHook(() =>
+      useConcessionPolicyForm({ open: true, onClose: vi.fn(), academicYearId: 'academic-year-1' })
+    );
+
+    await act(async () => {
+      result.current.setSimFeeAmount(10000);
+      result.current.setSimAlreadyPaid(4000);
+      await result.current.formik.setFieldValue('valueSource', 'PolicyFixed');
+      await result.current.formik.setFieldValue('calculationMethod', 'FullWaiver');
+    });
+
+    expect(result.current.simulation.concessionAmount).toBe(6000);
+    expect(result.current.simulation.newOutstanding).toBe(0);
+    expect(result.current.simulation.refundRequired).toBe(0);
+  });
 });

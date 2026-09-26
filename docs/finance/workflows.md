@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-09-21
+updated_on: 2026-09-24
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,6 +16,16 @@ The backend [security standard](https://github.com/gyanmirai/Shikshamitra-BE/blo
 Existing backend operations that share one permission identifier remain one capability until a separately approved domain change.
 
 # Trace Finance frontend workflows
+
+## Late-fee charge in Fee Collection
+
+A positive late fee returned by the collect-form API is shown at the top of the Fee Ledger in
+the Additional Charges list as a **System generated** charge. The waiver action is available on
+that charge row. Selecting and collecting it sends a `lateFeePayments` allocation using its
+`sourceId` (`DueFeeId`), while ordinary charges continue to use `chargePayments`.
+
+The fee-head/month ledger does not show or select the same late fee a second time. These generated
+rows are collection-only and do not appear on the Charge Management screen.
 
 TL;DR: trace Finance workflows from the menu route to the App Router page, then screen folder, client, mapper, and backend contract.
 Use this page to pick the first files for common Finance changes.
@@ -47,11 +57,11 @@ Fee collection and receipt flows span Finance and shared fee client folders.
 The current screen supports a late-fee request and approval lifecycle only.
 The approved target removes the Waiver tab, request queue, and approval/rejection flow.
 
-1. Each effective late-fee rule captures its own `Allow waiver` toggle.
-2. Each Charge Management charge captures its own `Allow waiver` toggle.
-3. Fee Collection shows `Waive` only for a positive eligible balance and authorized user.
-4. The collector enters only amount and reason.
-5. Confirmation immediately applies the non-cash reduction and refreshes collection totals.
+1. Collection Policy and Charge Management contain no waiver fields.
+2. Fee Collection shows a waiver toggle for each positive eligible late-fee and approved charge balance.
+3. The collector turns the required row ON and enters only a mandatory reason.
+4. The frontend does not accept or send a waiver amount.
+5. Confirmation makes the server waive the full live remaining balance and refreshes collection totals.
 6. There is no global setting, pending request, approver action, or `/finance/waiver-management` route.
 
 See the [approved Fee Collection waiver target](../../../Shikshamitra-BE/docs/modules/finance/references/fee-collection-waiver-end-to-end.md).

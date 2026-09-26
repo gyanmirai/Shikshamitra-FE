@@ -32,4 +32,29 @@ describe('allocatePayment', () => {
     expect(row.principalPaidAmount).toBe(600);
     expect(row.lateFeePaidAmount).toBe(0);
   });
+
+  it('keeps a system late-fee charge linked to its due-fee source', () => {
+    const result = allocatePayment(
+      [],
+      [
+        {
+          chargeId: 'due-1',
+          sourceId: 'due-1',
+          sourceType: 'LateFee',
+          isSystemGenerated: true,
+          chargeName: 'Late Fee - Tuition (April 2026)',
+          amount: 100,
+        },
+      ],
+      {},
+      100
+    );
+    const row = result.allocatedRows[0];
+
+    expect(row.type).toBe('charge');
+    if (row.type !== 'charge') throw new Error('Expected charge row');
+    expect(row.sourceType).toBe('LateFee');
+    expect(row.sourceId).toBe('due-1');
+    expect(row.paidAmount).toBe(100);
+  });
 });

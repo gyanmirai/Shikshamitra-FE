@@ -24,6 +24,8 @@ export interface AllocatedFeeRow {
 export interface AllocatedChargeRow {
   type: 'charge';
   key: string;
+  sourceType: 'Charge' | 'LateFee';
+  sourceId: string;
   chargeName: string;
   originalAmount: number;
   paidAmount: number;
@@ -111,6 +113,8 @@ const allocateCharge = (wallet: AllocationWallet, charge: IFeeCharge): Allocatio
       {
         type: 'charge',
         key: charge.chargeId,
+        sourceType: charge.sourceType,
+        sourceId: charge.sourceId,
         chargeName: charge.chargeName,
         originalAmount: charge.amount,
         paidAmount,

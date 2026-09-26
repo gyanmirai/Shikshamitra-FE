@@ -102,7 +102,9 @@ const ValueEntryStep: React.FC<Props> = ({
 
   return (
     <Box>
-      {selectedTypes.map((ct: any) => (
+      {policy?.valueSource === 'RequestEnteredWithinLimits' ? (
+        <RequestEnteredInstallments formik={formik} requestContext={requestContext} policy={policy} preview={preview} />
+      ) : selectedTypes.map((ct: any) => (
         <ValueEntryStepItem
           key={ct.id}
           concessionType={ct}
@@ -121,6 +123,86 @@ const ValueEntryStep: React.FC<Props> = ({
     </Box>
   );
 };
+
+function RequestEnteredInstallments({ formik, requestContext, policy, preview }: {
+  formik: any;
+  requestContext?: ConcessionRequestContext;
+  policy: ConcessionPolicyOption;
+  preview?: ConcessionRequestPreview;
+}) {
+  const { values, setFieldValue } = formik;
+  const selectedHeads = new Set<string>(values.selectedFeeHeads[values.concessionTypeId] || []);
+  const lines = (requestContext?.eligibleDueFees || []).filter((line) =>
+    selectedHeads.has(line.feeHeadId) && line.outstandingAmount > 0);
+  const groups = lines.reduce<Record<string, typeof lines>>((acc, line) => {
+    const key = `${line.year}-${line.installmentLabel}`;
+    (acc[key] ||= []).push(line);
+    return acc;
+  }, {});
+  const entries: Record<string, number> = values.dueFeeEntries || {};
+  const enteredTotal = lines.reduce((sum, line) => sum + Number(entries[line.dueFeeId] || 0), 0);
+  const percentage = policy.calculationMethod === 'Percentage';
+  const maximum = percentage ? Math.min(100, policy.maximumPercentage ?? 100)
+    : policy.maximumFixedAmount ?? Number.POSITIVE_INFINITY;
+  const money = (amount: number) => new Intl.NumberFormat('en-IN', {
+    style: 'currency', currency: 'INR', maximumFractionDigits: 2,
+  }).format(amount);
+
+  return (
+    <Stack spacing={2}>
+      <Typography variant="body2" color="text.secondary">
+        Enter a {percentage ? 'percentage' : 'rupee amount'} for each eligible installment line.
+        Paid amounts are excluded; only the remaining outstanding balance can be discounted.
+      </Typography>
+      {Object.entries(groups).map(([installment, rows]) => (
+        <Card key={installment} variant="outlined">
+          <CardContent>
+            <Typography variant="subtitle1" fontWeight={700} mb={1}>{installment.substring(5)}</Typography>
+            <Stack spacing={1.5}>
+              {(rows || []).map((line) => {
+                const value = Number(entries[line.dueFeeId] || 0);
+                const estimate = percentage
+                  ? Math.round(line.outstandingAmount * value) / 100
+                  : Math.min(value, line.outstandingAmount);
+                return (
+                  <Grid container spacing={1} alignItems="center" key={line.dueFeeId}>
+                    <Grid size={{ xs: 12, sm: 5 }}>
+                      <Typography variant="body2" fontWeight={600}>{line.feeHeadName}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Paid {money(line.paidAmount)} · outstanding {money(line.outstandingAmount)}
+                      </Typography>
+                    </Grid>
+                    <Grid size={{ xs: 7, sm: 3 }}>
+                      <TextField fullWidth size="small" type="number"
+                        label={percentage ? 'Concession %' : 'Concession ₹'}
+                        value={entries[line.dueFeeId] ?? ''}
+                        inputProps={{ min: 0, max: percentage ? maximum : line.outstandingAmount, step: 0.01 }}
+                        onChange={(event) => {
+                          const next = event.target.value === '' ? 0 : Number(event.target.value);
+                          if (!Number.isFinite(next) || next < 0 || next >
+                            (percentage ? maximum : line.outstandingAmount)) return;
+                          if (!percentage && enteredTotal - value + next > maximum) return;
+                          setFieldValue('dueFeeEntries', { ...entries, [line.dueFeeId]: next });
+                        }} />
+                    </Grid>
+                    <Grid size={{ xs: 5, sm: 4 }} sx={{ textAlign: 'right' }}>
+                      <Typography variant="body2" color="success.main">−{money(estimate)}</Typography>
+                    </Grid>
+                  </Grid>
+                );
+              })}
+            </Stack>
+          </CardContent>
+        </Card>
+      ))}
+      {lines.length === 0 && <Typography color="text.secondary">Select eligible fee heads to enter installment amounts.</Typography>}
+      {!percentage && Number.isFinite(maximum) && (
+        <Typography variant="caption">Entered total {money(enteredTotal)} of {money(maximum)} allowed</Typography>
+      )}
+      {preview && <Typography variant="subtitle2">Calculated concession: {money(preview.totalConcessionAmount)}</Typography>}
+    </Stack>
+  );
+}
 
 const ValueEntryStepItem = ({
   concessionType,
@@ -358,7 +440,15 @@ const ValueEntryStepItem = ({
 
                   {/* Input Section */}
                   <Grid size={{ xs: 12, sm: 4 }}>
-                    {isPercentage ? (
+                    {isPolicyFixed ? (
+                      <Typography variant="body2" color="text.secondary">
+                        Calculated by policy · {calculationMethod === 'Percentage'
+                          ? `${assignedStructureData?.concessionPercentageValue ?? 0}%`
+                          : calculationMethod === 'FixedAmount'
+                            ? formatCurrency(assignedStructureData?.concessionFixedAmount ?? 0)
+                            : 'Full waiver'}
+                      </Typography>
+                    ) : isPercentage ? (
                       /* ---- Percentage mode: plain number 0-100 ---- */
                       <TextField
                         disabled={isPolicyFixed || isRequestEnteredFixed}

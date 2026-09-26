@@ -8,14 +8,19 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Grid, Button, TextField, DialogActions } from '@mui/material';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useRejectConcessionRequestMutation } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
+import { Grid, Alert, Stack, Button, TextField, Typography, DialogActions } from '@mui/material';
+import { useRejectConcessionRequestMutation, useGetConcessionApprovalContextQuery } from 'src/redux/finance/ConcessionManagement/concessionManagementApi';
 
 import type { IReasonApprovalFormProps } from '../type';
 
 const ReasonApprovalForm = ({ onClose, selectedConcession }: IReasonApprovalFormProps) => {
   const commandKey = useRef('');
+  const requestId = selectedConcession?.studentConcessionTypeRequestId ||
+    selectedConcession?.concessionRequestId || selectedConcession?.id || '';
+  const { data: impact, isLoading: impactLoading } = useGetConcessionApprovalContextQuery(requestId, {
+    skip: !requestId,
+  });
   const [rejectConcessionRequest, { isLoading: isRejectLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useRejectConcessionRequestMutation,
@@ -33,10 +38,6 @@ const ReasonApprovalForm = ({ onClose, selectedConcession }: IReasonApprovalForm
         .required('Reason is required'),
     }),
     onSubmit: async (values) => {
-      const requestId =
-        selectedConcession?.studentConcessionTypeRequestId ||
-        selectedConcession?.concessionRequestId ||
-        selectedConcession?.id;
       if (!requestId) return;
       try {
         await rejectConcessionRequest({
@@ -60,6 +61,22 @@ const ReasonApprovalForm = ({ onClose, selectedConcession }: IReasonApprovalForm
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
         <Grid container spacing={2}>
+          <Grid size={12}>
+            <Alert severity="info">
+              Rejection does not change paid fees or outstanding balances.
+            </Alert>
+            {impactLoading && <Typography variant="body2">Loading request impact…</Typography>}
+            {impact && (
+              <Stack spacing={0.5} sx={{ mt: 1 }}>
+                <Typography variant="subtitle2">Requested impact: ₹{impact.totalRequestedConcessionAmount.toLocaleString('en-IN')}</Typography>
+                {impact.feeHeadGroups.map((group) => (
+                  <Typography key={group.feeHeadId} variant="body2">
+                    {group.feeHeadName}: ₹{group.requestedConcessionAmount.toLocaleString('en-IN')}
+                  </Typography>
+                ))}
+              </Stack>
+            )}
+          </Grid>
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.reason && formik.errors.reason)}>
               <TextField

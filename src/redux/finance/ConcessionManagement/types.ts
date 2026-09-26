@@ -353,6 +353,12 @@ export interface FeeHeadConcessionInput {
   amount: number;
 }
 
+export interface DueFeeConcessionInput {
+  dueFeeId: string;
+  feeHeadId: string;
+  amount: number;
+}
+
 export interface ConcessionDocumentInput {
   documentId: string;
   url: string;
@@ -371,6 +377,7 @@ export interface ConcessionDraftCommand {
   previewFingerprint?: string;
   remarks?: string;
   feeHeadConcessions: FeeHeadConcessionInput[];
+  dueFeeConcessions?: DueFeeConcessionInput[];
   documents: ConcessionDocumentInput[];
 }
 
@@ -406,6 +413,7 @@ export interface ConcessionRequestDetail {
   standardId: string;
   divisionId: string;
   feeHeadConcessions: FeeHeadValueResult[];
+  dueFeeConcessions?: DueFeeConcessionInput[];
   requiredDocuments: ConcessionDocumentRequirement[];
   submittedDocuments: Array<{
     documentId: string;
@@ -490,7 +498,7 @@ export interface ApproveConcessionCommand {
   requestConcurrencyStamp: string;
   previewFingerprint: string;
   idempotencyKey: string;
-  feeHeadApprovals: Array<{
+  feeHeadApprovals?: Array<{
     feeHeadId: string;
     approvedConcessionAmount: number;
     dueFeeAllocations: Array<{
