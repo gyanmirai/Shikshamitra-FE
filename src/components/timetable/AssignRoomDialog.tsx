@@ -349,7 +349,7 @@ const AssignRoomDialog: React.FC<AssignRoomDialogProps> = ({
           </Typography>
           <CustomTooltip
             arrow
-            placement="bottom-start"
+            placement="right"
             title="Select an available classroom or lab for this period slot. Options include applying to all slots of this subject or all slots in the timetable."
           >
             <IconButton size="small" color="info" sx={{ p: 0.5 }}>

@@ -40,6 +40,10 @@ A standard table region should contain:
 - Use one clearly identifiable search field in the table toolbar.
 - Use a consistent placeholder such as `Search...` unless the searchable
   fields need to be named explicitly.
+- Keep table search fields visually consistent with the shared table toolbar;
+  when the table scope is clear, avoid a redundant floating label and use a
+  placeholder that names the searchable fields, such as
+  `Search students by name, roll no. or GR no.`.
 - Search must apply to the visible table dataset and preserve the surrounding
   page context.
 - Clearing the search must restore the unfiltered table.
@@ -122,6 +126,8 @@ table body.
 
 - The empty-state illustration or icon, message, and primary button must be
   centered within the table content area, both visually and as a group.
+- Apply the same horizontal and vertical centering to an empty state shown in a
+  tab panel, using the full content area available below the tabs.
 - The empty state must remain centered when the table width or viewport
   changes.
 - Keep the search and table toolbar visible while the empty state is shown.
@@ -379,3 +385,24 @@ behavior, responsive behavior, and validation requirements.
 When a new table pattern is needed, first determine whether it can follow this
 rulebook. If it cannot, document the reason for the exception before adding a
 module-specific variation.
+
+## 14. Using this rulebook for implementation and verification
+
+Use this file as an implementation and test checklist whenever a table or its
+empty state is created, changed, or reviewed.
+
+- Check each applicable rule against the rendered screen and the relevant
+  interactions. Include loading, populated, genuinely empty, search no-results,
+  filter no-results, error, and prerequisite states when they apply.
+- Verify the table toolbar, row data, counts, pagination, and active tab or
+  filters remain consistent as the table state changes.
+- Check responsive layout, horizontal scrolling, sticky columns, keyboard
+  access, and accessible names for controls relevant to the change.
+- Record findings as `Consistent`, `Inconsistent`, or `Unverified`. Include the
+  page or component, the observed behavior, and the evidence for each finding.
+  Do not report an unverified rule as passing.
+- End every review report with an `Inconsistencies` section. List each confirmed
+  mismatch there with its location, observed behavior, and the applicable rule.
+  If none were found, state `No inconsistencies observed`. Keep unverified
+  checks and blockers in their own sections so they are not mistaken for
+  confirmed inconsistencies.

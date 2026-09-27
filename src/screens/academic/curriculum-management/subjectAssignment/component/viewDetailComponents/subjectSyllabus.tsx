@@ -86,6 +86,41 @@ const SubjectSyllabus: React.FC<SubjectSyllabusProps> = ({ subject }) => {
     );
   }
 
+  if (chapters.length === 0) {
+    return (
+      <Box sx={{ height: '100%', p: { xs: 1.5, sm: 2 } }}>
+        <Paper
+          variant="outlined"
+          sx={{
+            width: '100%',
+            height: '100%',
+            p: 5,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            borderRadius: 2,
+            bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.02),
+            borderStyle: 'dashed',
+          }}
+        >
+          <Iconify
+            icon="solar:notebook-minimalistic-broken"
+            width={56}
+            sx={{ display: 'block', mx: 'auto', color: 'text.disabled', mb: 1.5, opacity: 0.6 }}
+          />
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5 }}>
+            No Syllabus Available
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            There are no syllabus chapters configured for this subject yet.
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ height: '100%', p: { xs: 1.5, sm: 2 } }}>
       <Scrollbar sx={{ height: '100%', pb: 2, pr: 0.5 }}>
@@ -173,30 +208,7 @@ const SubjectSyllabus: React.FC<SubjectSyllabusProps> = ({ subject }) => {
               </Accordion>
             ))}
           </Stack>
-        ) : (
-          <Paper
-            variant="outlined"
-            sx={{
-              p: 5,
-              textAlign: 'center',
-              borderRadius: 2,
-              bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.02),
-              borderStyle: 'dashed',
-            }}
-          >
-            <Iconify
-              icon="solar:notebook-minimalistic-broken"
-              width={56}
-              sx={{ color: 'text.disabled', mb: 1.5, opacity: 0.6 }}
-            />
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5 }}>
-              No Syllabus Available
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              There are no syllabus chapters configured for this subject yet.
-            </Typography>
-          </Paper>
-        )}
+        ) : null}
       </Scrollbar>
     </Box>
   );

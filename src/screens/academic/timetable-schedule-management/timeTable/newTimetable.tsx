@@ -2034,6 +2034,16 @@ const TimeTableForm = ({
         </DialogContent>
         {validationResult?.passed && (
           <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
+            <Button
+              onClick={() => setValidationResult(null)}
+              variant="outlined"
+              color="inherit"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.cancel} />}
+              disabled={isSubmitting || isValidating}
+            >
+              Close
+            </Button>
             <LoadingButton
               onClick={handlePublishFromValidation}
               variant="contained"
@@ -2062,7 +2072,7 @@ const TimeTableForm = ({
             Publish Timetable
             <CustomTooltip
               arrow
-              placement="bottom-start"
+              placement="right"
               title="Publishing will update the timetable status to Active, making it visible to teachers, students, and parents."
             >
               <IconButton size="small" color="info" sx={{ p: 0.5 }}>

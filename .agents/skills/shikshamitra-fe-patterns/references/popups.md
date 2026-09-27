@@ -101,6 +101,9 @@ purpose instead of combining them into one long sentence.
 
 - The primary button must describe the actual outcome.
 - Use `Cancel` or `Keep editing` for the safe secondary action.
+- Confirmation popups must stay open when the user clicks the backdrop. Close
+  them only through an explicit action such as `Cancel` or the decision button,
+  unless the workflow explicitly requires backdrop dismissal.
 - Never use `Yes`, `No`, `Okay`, or `Continue` as the only action labels for a
   consequential decision.
 - Use `Close` for dismissing information or feedback when no decision is

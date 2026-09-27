@@ -98,6 +98,30 @@ const SubjectTable = ({
         onServerPagination={(page, rowPerPage) => {
           setQuery((previous) => ({ ...previous, page: page - 1, pageSize: rowPerPage }));
         }}
+        rowProps={(row) => {
+          const subject = row as ISubjectFormValues;
+
+          return {
+            onClick: (event) => {
+              const target = event.target;
+              if (
+                target instanceof Element &&
+                target.closest('button, a, input, [role="button"], [role="menuitem"]')
+              ) {
+                return;
+              }
+              if (canView) onView(subject);
+            },
+            sx: {
+              cursor: canView ? 'pointer' : 'default',
+              '&:focus-visible': {
+                outline: '2px solid',
+                outlineColor: 'primary.main',
+                outlineOffset: -2,
+              },
+            },
+          };
+        }}
         columns={columns}
         data={rows}
       />

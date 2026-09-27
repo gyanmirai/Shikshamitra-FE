@@ -1684,6 +1684,10 @@ Use `CustomTooltip` from `src/components/custom-tooltip/` for concise supplement
 
 - Always use `CustomTooltip` instead of importing MUI `Tooltip` directly for feature UI.
 - Pass a concise `title` that explains an icon-only action, abbreviation, or non-obvious control.
+- Prefer `placement="right"` for icon-triggered explanatory tooltips so information
+  opens beside its trigger; let viewport collision handling flip the tooltip when
+  the right side is constrained, and use another placement only when the layout
+  requires it.
 - Do not put required instructions, validation errors, or essential status information only in a tooltip.
 - Icon-only controls must still have an accessible name; a tooltip is not a replacement for `aria-label`.
 - Ensure the wrapped child can receive focus and that the information is available through keyboard focus as well as hover.

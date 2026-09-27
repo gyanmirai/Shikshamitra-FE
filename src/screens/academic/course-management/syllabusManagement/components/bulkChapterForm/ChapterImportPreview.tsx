@@ -2,6 +2,7 @@
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { varAlpha } from 'src/theme/styles';
 import {
   Box,
   Paper,
@@ -78,12 +79,12 @@ export default function ChapterImportPreview({ fileName, rows }: Props) {
       </Stack>
 
       {invalidCount > 0 && (
-        <Alert severity="error" variant="outlined" sx={{ m: 1.5, mb: 0 }}>
+        <Alert severity="error" variant="outlined" sx={{ m: 1.5 }}>
           Correct the highlighted rows in the spreadsheet, then upload the file again.
         </Alert>
       )}
       {invalidCount === 0 && (
-        <Alert severity="success" variant="outlined" sx={{ m: 1.5, mb: 0 }}>
+        <Alert severity="success" variant="outlined" sx={{ m: 1.5 }}>
           All rows passed validation and are ready to assign.
         </Alert>
       )}
@@ -102,22 +103,34 @@ export default function ChapterImportPreview({ fileName, rows }: Props) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row) => (
-              <TableRow
-                key={row.rowNumber}
-                sx={{ bgcolor: row.errors.length > 0 ? 'error.lighter' : 'background.paper' }}
-              >
-                <TableCell>{row.rowNumber}</TableCell>
-                <TableCell>{row.chapterNo || '—'}</TableCell>
-                <TableCell>{row.chapterName || '—'}</TableCell>
-                <TableCell>{row.startDate || '—'}</TableCell>
-                <TableCell>{row.endDate || '—'}</TableCell>
-                <TableCell>{row.description || '—'}</TableCell>
-                <TableCell>
-                  <PreviewStatus errors={row.errors} />
-                </TableCell>
-              </TableRow>
-            ))}
+            {rows.map((row, index) => {
+              const hasErrors = row.errors.length > 0;
+
+              return (
+                <TableRow
+                  key={row.rowNumber}
+                  sx={[
+                    { bgcolor: hasErrors ? 'error.lighter' : 'background.paper' },
+                    hasErrors
+                      ? (theme) =>
+                          theme.applyStyles('dark', {
+                            bgcolor: varAlpha(theme.vars.palette.error.mainChannel, 0.16),
+                          })
+                      : {},
+                  ]}
+                >
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{row.chapterNo || '—'}</TableCell>
+                  <TableCell>{row.chapterName || '—'}</TableCell>
+                  <TableCell>{row.startDate || '—'}</TableCell>
+                  <TableCell>{row.endDate || '—'}</TableCell>
+                  <TableCell>{row.description || '—'}</TableCell>
+                  <TableCell>
+                    <PreviewStatus errors={row.errors} />
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </TableContainer>

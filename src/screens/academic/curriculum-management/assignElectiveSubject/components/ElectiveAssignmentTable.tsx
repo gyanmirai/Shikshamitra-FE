@@ -59,9 +59,8 @@ export default function ElectiveAssignmentTable({
       searchTerm={searchTerm}
       onSearchInputChange={onSearchChange}
       searchFieldProps={{
-        label: 'Search students',
-        placeholder: 'Name, roll no. or GR no.',
-        inputProps: { 'aria-label': 'Search students' },
+        placeholder: 'Search students by name, roll no. or GR no.',
+        inputProps: { 'aria-label': 'Search students by name, roll no. or GR no.' },
       }}
       noDataText={<>No students found</>}
       wrapperProps={{ sx: { flex: 1, minHeight: { xs: 420, md: 0 } } }}

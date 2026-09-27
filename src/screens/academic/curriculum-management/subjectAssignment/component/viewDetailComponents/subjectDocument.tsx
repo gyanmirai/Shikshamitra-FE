@@ -83,7 +83,13 @@ const SubjectDocument: React.FC<SubjectDocumentProps> = ({ subject, isLoading })
         <Paper
           variant="outlined"
           sx={{
+            width: '100%',
+            height: '100%',
             p: 5,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
             textAlign: 'center',
             borderRadius: 2,
             bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.02),
@@ -93,7 +99,7 @@ const SubjectDocument: React.FC<SubjectDocumentProps> = ({ subject, isLoading })
           <Iconify
             icon="solar:bill-list-bold-duotone"
             width={56}
-            sx={{ color: 'text.disabled', mb: 1.5, opacity: 0.6 }}
+            sx={{ display: 'block', mx: 'auto', color: 'text.disabled', mb: 1.5, opacity: 0.6 }}
           />
           <Typography variant="subtitle1" sx={{ fontWeight: 600, color: 'text.primary', mb: 0.5 }}>
             No Documents Uploaded

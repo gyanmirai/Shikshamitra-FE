@@ -8,9 +8,7 @@ import type { ISubjectFormValues } from '../type';
 
 type SubjectActionOptions = {
   canAdd: boolean;
-  canView: boolean;
   canDelete: boolean;
-  onView: (row: ISubjectFormValues) => void;
   onEdit: (row: ISubjectFormValues) => void;
   onDelete: (row: ISubjectFormValues) => void;
   onArchive?: (row: ISubjectFormValues) => void;
@@ -24,15 +22,6 @@ export function getSubjectTableActions(
   const actions: AdaptiveThreeDotsAction[] = [];
   const subjectName = subject.subjectName || 'subject';
   const isArchived = subject.status === SubjectAssignmentStatus.Archived;
-
-  if (options.canView) {
-    actions.push({
-      id: 'view',
-      label: `View ${subjectName}`,
-      icon: GlobalIcons.eye,
-      onClick: () => options.onView(subject),
-    });
-  }
 
   if (options.canAdd) {
     actions.push({

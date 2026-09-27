@@ -21,27 +21,23 @@ const createSubject = (
 describe('getSubjectTableActions', () => {
   const createOptions = () => ({
     canAdd: true,
-    canView: true,
     canDelete: true,
-    onView: vi.fn(),
     onEdit: vi.fn(),
     onDelete: vi.fn(),
     onArchive: vi.fn(),
     onRestore: vi.fn(),
   });
 
-  it('orders published-row actions so remove is the fourth overflow action', () => {
+  it('keeps three published-row actions after row activation replaces View', () => {
     const options = createOptions();
     const subject = createSubject(SubjectAssignmentStatus.Published);
 
     const actions = getSubjectTableActions(subject, options);
 
-    expect(actions.map((action) => action.id)).toEqual(['view', 'edit', 'archive', 'remove']);
+    expect(actions.map((action) => action.id)).toEqual(['edit', 'archive', 'remove']);
     actions[0].onClick();
     actions[1].onClick();
     actions[2].onClick();
-    actions[3].onClick();
-    expect(options.onView).toHaveBeenCalledWith(subject);
     expect(options.onEdit).toHaveBeenCalledWith(subject);
     expect(options.onArchive).toHaveBeenCalledWith(subject);
     expect(options.onDelete).toHaveBeenCalledWith(subject);
@@ -53,16 +49,16 @@ describe('getSubjectTableActions', () => {
       createOptions()
     );
 
-    expect(actions.map((action) => action.id)).toEqual(['view', 'edit', 'reactivate', 'remove']);
+    expect(actions.map((action) => action.id)).toEqual(['edit', 'reactivate', 'remove']);
   });
 
-  it('keeps a draft row to three direct actions', () => {
+  it('keeps the two available draft actions after row activation replaces View', () => {
     const actions = getSubjectTableActions(
       createSubject(SubjectAssignmentStatus.Draft),
       createOptions()
     );
 
-    expect(actions.map((action) => action.id)).toEqual(['view', 'edit', 'remove']);
+    expect(actions.map((action) => action.id)).toEqual(['edit', 'remove']);
   });
 
   it('preserves the server-provided reason when remove is disabled', () => {

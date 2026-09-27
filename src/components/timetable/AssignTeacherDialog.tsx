@@ -231,7 +231,7 @@ const AssignTeacherDialog: React.FC<AssignTeacherDialogProps> = ({
           </Typography>
           <CustomTooltip
             arrow
-            placement="bottom-start"
+            placement="right"
             title="Assign a primary or secondary teacher to this timetable slot. You can optionally apply the teacher selection to all slots of this subject."
           >
             <IconButton size="small" color="info" sx={{ p: 0.5 }}>

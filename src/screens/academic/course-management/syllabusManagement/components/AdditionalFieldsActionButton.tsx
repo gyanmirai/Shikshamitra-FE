@@ -25,7 +25,7 @@ export function AdditionalFieldsActionButton({
           width={16}
         />
       }
-      sx={{ minHeight: 44, width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}
+      sx={{ minHeight: 30, flexShrink: 0 }}
     >
       {hasConfiguredFields ? 'Edit details' : 'Add details'}
     </Button>

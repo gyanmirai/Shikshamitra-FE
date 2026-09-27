@@ -38,12 +38,10 @@ export function useSubjectTableColumns(options: Options): IColumn[] {
    */
   return useMemo(
     () => [
-      ...getSubjectTableBaseColumns(onViewSchedule),
+      ...getSubjectTableBaseColumns(onViewSchedule, canView, onView),
       ...getSubjectTableStatusColumns({
         canAdd,
-        canView,
         canDelete,
-        onView,
         onEdit,
         onDelete,
         onArchive,
@@ -53,8 +51,8 @@ export function useSubjectTableColumns(options: Options): IColumn[] {
     ],
     [
       canAdd,
-      canDelete,
       canView,
+      canDelete,
       onArchive,
       onDelete,
       onEdit,

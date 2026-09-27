@@ -6,6 +6,7 @@ import {
   Grid,
   Alert,
   Paper,
+  Stack,
   Button,
   Skeleton,
   TextField,
@@ -85,14 +86,23 @@ export function SubjectCopyClassFlow(props: Props) {
         <Grid size={{ xs: 12, sm: 5.5 }}>
           <Paper
             variant="outlined"
-            sx={{ p: 1.5, borderRadius: 2, bgcolor: 'background.neutral', minHeight: 64 }}
+            sx={{
+              px: 1.5,
+              borderRadius: 2,
+              bgcolor: 'background.neutral',
+              height: 40,
+              display: 'flex',
+              alignItems: 'center',
+            }}
           >
-            <Typography variant="caption" color="text.secondary">
-              Destination class
-            </Typography>
-            <Typography variant="subtitle2" noWrap>
-              {targetClassName || 'Current class'}
-            </Typography>
+            <Stack direction="row" spacing={0.5} alignItems="baseline" sx={{ minWidth: 0 }}>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                Destination class:
+              </Typography>
+              <Typography variant="subtitle2" noWrap>
+                {targetClassName || 'Current class'}
+              </Typography>
+            </Stack>
           </Paper>
         </Grid>
       </Grid>

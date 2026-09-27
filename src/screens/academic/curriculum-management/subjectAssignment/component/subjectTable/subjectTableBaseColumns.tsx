@@ -1,14 +1,17 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { Chip, Stack, Typography } from '@mui/material';
+import { ButtonBase, Chip, Stack, Typography } from '@mui/material';
 
 import { PeriodsPerWeekButton } from './SubjectTableCells';
+import { getSubjectDisplayLabel } from '../../utils/getSubjectDisplayLabel';
 import { getPrimaryTeacherNames } from '../../utils/primaryTeacherNames';
 
 import type { ISubjectFormValues } from '../type';
 
 export function getSubjectTableBaseColumns(
-  onViewSchedule: (row: ISubjectFormValues) => void
+  onViewSchedule: (row: ISubjectFormValues) => void,
+  canView: boolean,
+  onView: (row: ISubjectFormValues) => void
 ): IColumn[] {
   return [
     {
@@ -36,12 +39,42 @@ export function getSubjectTableBaseColumns(
       isSort: false,
       minWidth: 180,
       sticky: true,
-      render: (_value, row) => (
-        <>
-          {row.electiveGroupName ? `${row.electiveGroupName} - ` : ''}
-          {row.subjectNameDisplay}
-        </>
-      ),
+      render: (_value, row) => {
+        const subject = row as ISubjectFormValues;
+        const label = getSubjectDisplayLabel(subject) || subject.subjectName || 'subject';
+        const content = (
+          <>
+            {subject.electiveGroupName ? `${subject.electiveGroupName} - ` : ''}
+            {subject.subjectNameDisplay}
+          </>
+        );
+
+        return canView ? (
+          <ButtonBase
+            aria-label={`View ${label}`}
+            onClick={(event) => {
+              event.stopPropagation();
+              onView(subject);
+            }}
+            sx={{
+              display: 'block',
+              justifyContent: 'flex-start',
+              textAlign: 'left',
+              color: 'inherit',
+              font: 'inherit',
+              '&:focus-visible': {
+                outline: '2px solid',
+                outlineColor: 'primary.main',
+                outlineOffset: 2,
+              },
+            }}
+          >
+            {content}
+          </ButtonBase>
+        ) : (
+          content
+        );
+      },
     },
     {
       id: 'subjectCodeValue',

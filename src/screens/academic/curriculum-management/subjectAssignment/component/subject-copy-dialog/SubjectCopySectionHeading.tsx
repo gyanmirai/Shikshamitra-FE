@@ -1,4 +1,6 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Box, IconButton, Stack, Typography } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 type Props = {
   step: number;
@@ -6,9 +8,24 @@ type Props = {
   description: string;
 };
 
+type InfoTooltipProps = {
+  label: string;
+  description: string;
+};
+
+export function SubjectCopyInfoTooltip({ label, description }: InfoTooltipProps) {
+  return (
+    <CustomTooltip arrow placement="right" title={description}>
+      <IconButton aria-label={`${label} information`} size="small" sx={{ p: 0.25 }}>
+        <Iconify icon="lucide:info" width={16} color="info.main" aria-hidden />
+      </IconButton>
+    </CustomTooltip>
+  );
+}
+
 export function SubjectCopySectionHeading({ step, title, description }: Props) {
   return (
-    <Stack direction="row" spacing={1.25} alignItems="flex-start">
+    <Stack direction="row" spacing={1.25} alignItems="center">
       <Box
         aria-hidden
         sx={{
@@ -26,10 +43,10 @@ export function SubjectCopySectionHeading({ step, title, description }: Props) {
         {step}
       </Box>
       <Box>
-        <Typography variant="subtitle2">{title}</Typography>
-        <Typography variant="body2" color="text.secondary">
-          {description}
-        </Typography>
+        <Stack direction="row" alignItems="center" spacing={0.25}>
+          <Typography variant="subtitle2">{title}</Typography>
+          <SubjectCopyInfoTooltip label={title} description={description} />
+        </Stack>
       </Box>
     </Stack>
   );
