@@ -11,6 +11,8 @@ import { Box, Tooltip, Checkbox, IconButton, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
+  feeInstallmentStatusLabel,
+  chargeCollectionStatusLabel,
 } from 'src/enums/fee-collection-type';
 
 import FeeWaiverToggle from './FeeWaiverToggle';
@@ -469,7 +471,7 @@ export const FeeRow = ({
         <Box sx={{ display: 'flex', justifyContent: 'center' }}>
           {status != null && (
             <Label color={FeeCollectionStatusTypeColors[status]} variant="soft">
-              {FeeCollectionStatusType[status]}
+              {chargeId ? chargeCollectionStatusLabel(status) : feeInstallmentStatusLabel(status)}
             </Label>
           )}
         </Box>

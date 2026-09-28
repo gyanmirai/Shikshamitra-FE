@@ -3,7 +3,7 @@ import type { LabelColor } from 'src/components/label';
 import { Typography } from '@mui/material';
 import { Label } from 'src/components/label';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeConcessionsQuery } from 'src/redux/feeCollection/feeConcession';
@@ -110,11 +110,11 @@ const FeeConcession = ({ student }: { student: IStudentFee | null }) => {
           minWidth: 50,
           render(value, row) {
             return (
-              <ThreeDotsActions
+              <AdaptiveThreeDotsActions
+                actions={[
+                  { id: 'view', label: 'View', icon: 'carbon:view-filled', onClick: () => {} },
+                ]}
                 placement="right-top"
-                showViewIcon
-                showThreeDots={false}
-                handleViewClick={() => {}}
               />
             );
           },

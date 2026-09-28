@@ -291,6 +291,7 @@ export interface ConcessionEligibleDueFee {
   concessionAmount: number;
   adjustmentCreditAmount: number;
   outstandingAmount: number;
+  eligibleConcessionAmount: number;
   status: string;
   concurrencyStamp: string;
 }
@@ -321,7 +322,7 @@ export interface ConcessionPolicyOption {
   fixedAmount?: number | null;
   maximumPercentage?: number | null;
   maximumFixedAmount?: number | null;
-  applyOn: 'CurrentInstallment' | 'FutureInstallments' | 'AllOutstanding';
+  applyOn: 'CurrentInstallment' | 'FutureInstallments' | 'AllOutstanding' | 'AllFees';
   roundingMethod: string;
 }
 
@@ -407,6 +408,13 @@ export interface ConcessionRequestDetail {
   totalApprovedConcessionAmount: number;
   totalReversedConcessionAmount: number;
   netApprovedConcessionAmount: number;
+  refundRequests?: Array<{
+    refundRequestId: string;
+    voucherNumber: string;
+    originalReceiptId: string;
+    amount: number;
+    status: string;
+  }>;
   remarks?: string | null;
   boardId: string;
   educationMediumId: string;
@@ -519,12 +527,25 @@ export interface ConcessionApprovalPreview {
   requestConcurrencyStamp: string;
   previewFingerprint: string;
   totalApprovedAmount: number;
+  refundRequestAmount: number;
   dueFeeAllocations: Array<{
     dueFeeId: string;
     feeHeadId: string;
     month: number;
     year: number;
     concessionAmount: number;
+  }>;
+}
+
+export interface ConcessionApprovalResponse {
+  concessionRequestId: string;
+  totalApprovedAmount: number;
+  refundRequests: Array<{
+    refundRequestId: string;
+    voucherNumber: string;
+    originalReceiptId: string;
+    amount: number;
+    status: string;
   }>;
 }
 

@@ -3,12 +3,12 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+
 import { formatNumber } from 'src/utils/formate_number';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
 import {
   PamentMethodsStatusColor,
@@ -160,21 +160,19 @@ const BankStatements = ({
         minWidth: '60px',
         render(value, row) {
           return (
-            <ThreeDotsActions
-              actions={({ popover }) => (
-                <MenuList>
-                  {PaymentMethodsStatusType[row.status] === 'Bounced' && (
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                      }}
-                    >
-                      <Iconify icon="mdi:bell-ring" />
-                      Send Notification
-                    </MenuItem>
-                  )}
-                </MenuList>
-              )}
+            <AdaptiveThreeDotsActions
+              actions={
+                PaymentMethodsStatusType[row.status] === 'Bounced'
+                  ? [
+                      {
+                        id: 'notify',
+                        label: 'Send Notification',
+                        icon: 'mdi:bell-ring',
+                        onClick: () => {},
+                      },
+                    ]
+                  : []
+              }
               placement="right-top"
             />
           );

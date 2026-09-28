@@ -1,4 +1,5 @@
 import type { RootState } from 'src/redux/store';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
@@ -15,7 +16,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, MenuList, Typography, IconButton } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
 import {
@@ -259,62 +260,51 @@ const DebitCardTable = ({
           };
 
           return (
-            <MenuList>
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                {row.status !== PaymentMethodsStatusType.Approved &&
-                  row.status !== PaymentMethodsStatusType.Rejected &&
-                  canApproveReject && (
-                    <>
-                      <CustomTooltip title="Approve Debit Card" arrow>
-                        <IconButton
-                          onClick={() => {
-                            setIsClearCheck(false);
-                            setSelectedEntry({ ...row, type: 'approve' });
-                            isDialog.onTrue();
-                          }}
-                          sx={{
-                            width: 36,
-                            height: 36,
-                            p: 0,
-                          }}
-                        >
-                          <Iconify icon="mdi:check-decagram" sx={{ color: 'success.main' }} />
-                        </IconButton>
-                      </CustomTooltip>
-
-                      <CustomTooltip title="Reject Debit Card" arrow>
-                        <IconButton
-                          onClick={() => {
-                            setIsClearCheck(true);
-                            setSelectedEntry({ ...row, type: 'reject' });
-                            isDialog.onTrue();
-                          }}
-                          sx={{
-                            width: 36,
-                            height: 36,
-                            p: 0,
-                          }}
-                        >
-                          <Iconify icon="mdi:close-circle" sx={{ color: 'error.main' }} />
-                        </IconButton>
-                      </CustomTooltip>
-                    </>
-                  )}
-
-                <CustomTooltip title="Download Receipt" arrow>
-                  <IconButton
-                    onClick={handleDownloadReceipt}
-                    sx={{
-                      width: 36,
-                      height: 36,
-                      p: 0,
-                    }}
-                  >
-                    <Iconify icon="mdi:download" sx={{ color: 'primary.main' }} />
-                  </IconButton>
-                </CustomTooltip>
-              </Box>
-            </MenuList>
+            <AdaptiveThreeDotsActions
+              actions={[
+                ...(row.status !== PaymentMethodsStatusType.Approved &&
+                row.status !== PaymentMethodsStatusType.Rejected &&
+                canApproveReject
+                  ? [
+                      {
+                        id: 'approve',
+                        label: 'Approve Debit Card',
+                        icon: 'mdi:check-decagram',
+                        color: 'success.main',
+                        onClick: () => {
+                          setIsClearCheck(false);
+                          setSelectedEntry({ ...row, type: 'approve' });
+                          isDialog.onTrue();
+                        },
+                      },
+                    ]
+                  : []),
+                ...(row.status !== PaymentMethodsStatusType.Approved &&
+                row.status !== PaymentMethodsStatusType.Rejected &&
+                canApproveReject
+                  ? [
+                      {
+                        id: 'reject',
+                        label: 'Reject Debit Card',
+                        icon: 'mdi:close-circle',
+                        color: 'error.main',
+                        onClick: () => {
+                          setIsClearCheck(true);
+                          setSelectedEntry({ ...row, type: 'reject' });
+                          isDialog.onTrue();
+                        },
+                      },
+                    ]
+                  : []),
+                {
+                  id: 'download',
+                  label: 'Download Receipt',
+                  icon: 'mdi:download',
+                  color: 'primary.main',
+                  onClick: handleDownloadReceipt,
+                },
+              ]}
+            />
           );
         },
       },

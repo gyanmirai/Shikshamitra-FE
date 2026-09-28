@@ -608,6 +608,20 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           )}
         </Stack>
 
+        {(item.refundRequests?.length ?? 0) > 0 && (
+          <Box mb={1.5}>
+            <Typography variant="overline" color="text.secondary" fontWeight={700}>
+              Refund requests from this concession
+            </Typography>
+            {item.refundRequests?.map((refund) => (
+              <Stack key={refund.refundRequestId} direction="row" justifyContent="space-between" alignItems="center" spacing={1} py={0.5}>
+                <Typography variant="body2">{refund.voucherNumber} · {formatNumber(refund.amount, 'INR')}</Typography>
+                <Label variant="soft" color={refund.status === 'Processed' ? 'success' : 'info'}>{refund.status}</Label>
+              </Stack>
+            ))}
+          </Box>
+        )}
+
         {/* Documents section - only show uploaded docs + See All */}
         <Box mb={1.5}>
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={0.75}>

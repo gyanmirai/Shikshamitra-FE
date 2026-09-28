@@ -6,15 +6,15 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+
 import React, { useMemo, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import { Box, Chip, MenuItem, Typography } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import { Box, Chip, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
@@ -155,9 +155,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         : !isProrationKind || hasGrantedPermission(permissions, prorationPermissions.archive);
   const canRestorePolicy = isCollectionKind
     ? hasGrantedPermission(permissions, [
-      collectionPermissions.restore,
-      collectionPermissions.archive,
-    ])
+        collectionPermissions.restore,
+        collectionPermissions.archive,
+      ])
     : isConcessionKind
       ? hasGrantedPermission(permissions, concessionPermissions.restore)
       : isRefundKind
@@ -245,9 +245,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
 
   const policyData = isCollectionKind
     ? collectionPolicyData && {
-      items: collectionPolicyData.items,
-      totalCount: collectionPolicyData.totalCount,
-    }
+        items: collectionPolicyData.items,
+        totalCount: collectionPolicyData.totalCount,
+      }
     : isConcessionKind
       ? concessionPolicyData
       : isRefundKind
@@ -378,266 +378,266 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       // ── Policy Specific Columns ──
       ...(policyType === 'payment'
         ? [
-          {
-            id: 'allowPartialPayment',
-            label: 'Partial Payment',
-            align: 'left' as const,
-            render: (_: any, row: any) => (
-              <Chip
-                label={row.allowPartialPayment ? 'Allowed' : 'Not Allowed'}
-                color={row.allowPartialPayment ? 'success' : 'default'}
-                size="small"
-                variant="outlined"
-              />
-            ),
-          },
-          {
-            id: 'allocationMethod',
-            label: 'Allocation Method',
-            align: 'left' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value
-                  ? String(value)
-                    .replace(/([A-Z])/g, ' $1')
-                    .trim()
-                  : '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'receiptPrefix',
-            label: 'Receipt Prefix',
-            align: 'left' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px" color="text.secondary">
-                {value || '-'}
-              </Typography>
-            ),
-          },
-        ]
+            {
+              id: 'allowPartialPayment',
+              label: 'Partial Payment',
+              align: 'left' as const,
+              render: (_: any, row: any) => (
+                <Chip
+                  label={row.allowPartialPayment ? 'Allowed' : 'Not Allowed'}
+                  color={row.allowPartialPayment ? 'success' : 'default'}
+                  size="small"
+                  variant="outlined"
+                />
+              ),
+            },
+            {
+              id: 'allocationMethod',
+              label: 'Allocation Method',
+              align: 'left' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value
+                    ? String(value)
+                        .replace(/([A-Z])/g, ' $1')
+                        .trim()
+                    : '-'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'receiptPrefix',
+              label: 'Receipt Prefix',
+              align: 'left' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px" color="text.secondary">
+                  {value || '-'}
+                </Typography>
+              ),
+            },
+          ]
         : []),
       ...(policyType === 'concession'
         ? [
-          {
-            id: 'valueSource',
-            label: 'Value Source',
-            align: 'left' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value
-                  ? String(value)
-                    .replace(/([A-Z])/g, ' $1')
-                    .trim()
-                  : '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'calculationMethod',
-            label: 'Calculation Method',
-            align: 'left' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value || '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'policyLimit',
-            label: 'Value / Limit',
-            align: 'right' as const,
-            render: (_: any, row: any) => (
-              <Typography variant="caption" fontSize="13px" fontWeight="600">
-                {row.calculationMethod === 'Percentage'
-                  ? `${row.valueSource === 'PolicyFixed' ? row.percentageValue : row.maximumPercentage}%`
-                  : row.calculationMethod === 'FixedAmount'
-                    ? `₹${row.valueSource === 'PolicyFixed' ? row.fixedAmount : row.maximumFixedAmount}`
-                    : '100%'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'applyOn',
-            label: 'Apply On',
-            align: 'left' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value
-                  ? String(value)
-                    .replace(/([A-Z])/g, ' $1')
-                    .trim()
-                  : '-'}
-              </Typography>
-            ),
-          },
-        ]
+            {
+              id: 'valueSource',
+              label: 'Value Source',
+              align: 'left' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value
+                    ? String(value)
+                        .replace(/([A-Z])/g, ' $1')
+                        .trim()
+                    : '-'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'calculationMethod',
+              label: 'Calculation Method',
+              align: 'left' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value || '-'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'policyLimit',
+              label: 'Value / Limit',
+              align: 'right' as const,
+              render: (_: any, row: any) => (
+                <Typography variant="caption" fontSize="13px" fontWeight="600">
+                  {row.calculationMethod === 'Percentage'
+                    ? `${row.valueSource === 'PolicyFixed' ? row.percentageValue : row.maximumPercentage}%`
+                    : row.calculationMethod === 'FixedAmount'
+                      ? `₹${row.valueSource === 'PolicyFixed' ? row.fixedAmount : row.maximumFixedAmount}`
+                      : '100%'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'applyOn',
+              label: 'Apply On',
+              align: 'left' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value
+                    ? String(value)
+                        .replace(/([A-Z])/g, ' $1')
+                        .trim()
+                    : '-'}
+                </Typography>
+              ),
+            },
+          ]
         : []),
       ...(policyType === 'refund'
         ? [
-          {
-            id: 'amountMode',
-            label: 'Amount Rule',
-            align: 'left' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value
-                  ? String(value)
-                    .replace(/([A-Z])/g, ' $1')
-                    .trim()
-                  : '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'feeHeadScope',
-            label: 'Fee Head Scope',
-            align: 'left' as const,
-            render: (value: any, row: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value === 'SelectedFeeHeads'
-                  ? `${row.applicableFeeHeadIds?.length ?? 0} selected`
-                  : 'All Fee Heads'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'processingTargetDays',
-            label: 'Processing Target',
-            align: 'center' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value != null ? `${value} days` : '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'allowPartialRefund',
-            label: 'Partial Refund',
-            align: 'center' as const,
-            render: (value: any) => (
-              <Chip
-                label={value ? 'Yes' : 'No'}
-                color={value ? 'primary' : 'default'}
-                size="small"
-                variant="outlined"
-              />
-            ),
-          },
-        ]
+            {
+              id: 'amountMode',
+              label: 'Amount Rule',
+              align: 'left' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value
+                    ? String(value)
+                        .replace(/([A-Z])/g, ' $1')
+                        .trim()
+                    : '-'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'feeHeadScope',
+              label: 'Fee Head Scope',
+              align: 'left' as const,
+              render: (value: any, row: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value === 'SelectedFeeHeads'
+                    ? `${row.applicableFeeHeadIds?.length ?? 0} selected`
+                    : 'All Fee Heads'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'processingTargetDays',
+              label: 'Processing Target',
+              align: 'center' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value != null ? `${value} days` : '-'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'allowPartialRefund',
+              label: 'Partial Refund',
+              align: 'center' as const,
+              render: (value: any) => (
+                <Chip
+                  label={value ? 'Yes' : 'No'}
+                  color={value ? 'primary' : 'default'}
+                  size="small"
+                  variant="outlined"
+                />
+              ),
+            },
+          ]
         : []),
       ...(policyType === 'collection'
         ? [
-          {
-            id: 'enableLateFee',
-            label: 'Late Fee',
-            align: 'center' as const,
-            render: (value: any) => (
-              <Chip
-                label={value ? 'Enabled' : 'Disabled'}
-                color={value ? 'warning' : 'default'}
-                size="small"
-                variant="outlined"
-              />
-            ),
-          },
-          {
-            id: 'lateFeeType',
-            label: 'Late Fee Type',
-            align: 'left' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value || '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'gracePeriodDays',
-            label: 'Grace Days',
-            align: 'center' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value != null ? `${value} days` : '-'}
-              </Typography>
-            ),
-          },
-          {
-            id: 'allowOnlineCollection',
-            label: 'Online Pay',
-            align: 'center' as const,
-            render: (value: any) => (
-              <Chip
-                label={value ? 'Yes' : 'No'}
-                color={value ? 'success' : 'default'}
-                size="small"
-                variant="outlined"
-              />
-            ),
-          },
-        ]
+            {
+              id: 'enableLateFee',
+              label: 'Late Fee',
+              align: 'center' as const,
+              render: (value: any) => (
+                <Chip
+                  label={value ? 'Enabled' : 'Disabled'}
+                  color={value ? 'warning' : 'default'}
+                  size="small"
+                  variant="outlined"
+                />
+              ),
+            },
+            {
+              id: 'lateFeeType',
+              label: 'Late Fee Type',
+              align: 'left' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value || '-'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'gracePeriodDays',
+              label: 'Grace Days',
+              align: 'center' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value != null ? `${value} days` : '-'}
+                </Typography>
+              ),
+            },
+            {
+              id: 'allowOnlineCollection',
+              label: 'Online Pay',
+              align: 'center' as const,
+              render: (value: any) => (
+                <Chip
+                  label={value ? 'Yes' : 'No'}
+                  color={value ? 'success' : 'default'}
+                  size="small"
+                  variant="outlined"
+                />
+              ),
+            },
+          ]
         : []),
       ...(policyType === 'proration'
         ? [
-          {
-            id: 'feeHeadRules',
-            label: 'Fee Heads Configured',
-            align: 'center' as const,
-            render: (_: any, row: any) => {
-              const rules: any[] = row.feeHeadRules ?? [];
-              const enabled = rules.filter((r: any) => r.ruleType !== 'NoProration').length;
-              const total = rules.length;
-              return (
-                <Chip
-                  label={total > 0 ? `${enabled} / ${total}` : '-'}
-                  size="small"
-                  color={enabled > 0 ? 'primary' : 'default'}
-                  variant={enabled > 0 ? 'filled' : 'outlined'}
-                  sx={{ height: 20, fontSize: '0.7rem' }}
-                />
-              );
+            {
+              id: 'feeHeadRules',
+              label: 'Fee Heads Configured',
+              align: 'center' as const,
+              render: (_: any, row: any) => {
+                const rules: any[] = row.feeHeadRules ?? [];
+                const enabled = rules.filter((r: any) => r.ruleType !== 'NoProration').length;
+                const total = rules.length;
+                return (
+                  <Chip
+                    label={total > 0 ? `${enabled} / ${total}` : '-'}
+                    size="small"
+                    color={enabled > 0 ? 'primary' : 'default'}
+                    variant={enabled > 0 ? 'filled' : 'outlined'}
+                    sx={{ height: 20, fontSize: '0.7rem' }}
+                  />
+                );
+              },
             },
-          },
-          {
-            id: 'usedByCount',
-            label: 'Used By',
-            align: 'center' as const,
-            render: (_: any, row: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {row.usedByCount != null
-                  ? `${row.usedByCount} structure${row.usedByCount !== 1 ? 's' : ''}`
-                  : '-'}
-              </Typography>
-            ),
-          },
-        ]
+            {
+              id: 'usedByCount',
+              label: 'Used By',
+              align: 'center' as const,
+              render: (_: any, row: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {row.usedByCount != null
+                    ? `${row.usedByCount} structure${row.usedByCount !== 1 ? 's' : ''}`
+                    : '-'}
+                </Typography>
+              ),
+            },
+          ]
         : []),
       ...(policyType !== 'collection' && policyType !== 'concession' && policyType !== 'refund'
         ? [
-          {
-            id: 'effectiveFrom',
-            label: 'Effective From',
-            align: 'left' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value ? new Date(value).toLocaleDateString('en-IN') : '-'}
-              </Typography>
-            ),
-          },
-        ]
+            {
+              id: 'effectiveFrom',
+              label: 'Effective From',
+              align: 'left' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value ? new Date(value).toLocaleDateString('en-IN') : '-'}
+                </Typography>
+              ),
+            },
+          ]
         : []),
       ...(policyType !== 'concession'
         ? [
-          {
-            id: 'updatedBy',
-            label: 'Updated By',
-            align: 'left' as const,
-            render: (value: any) => (
-              <Typography variant="caption" fontSize="13px">
-                {value || '-'}
-              </Typography>
-            ),
-          },
-        ]
+            {
+              id: 'updatedBy',
+              label: 'Updated By',
+              align: 'left' as const,
+              render: (value: any) => (
+                <Typography variant="caption" fontSize="13px">
+                  {value || '-'}
+                </Typography>
+              ),
+            },
+          ]
         : []),
       {
         id: 'updatedAt',
@@ -647,8 +647,8 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
           <Typography variant="caption" fontSize="13px">
             {value || row.lastModificationTime || row.creationTime
               ? new Date(value || row.lastModificationTime || row.creationTime).toLocaleDateString(
-                'en-IN'
-              )
+                  'en-IN'
+                )
               : '-'}
           </Typography>
         ),
@@ -664,14 +664,14 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
           ? archived
             ? [{ label: 'Archived', value: 'Archived' }]
             : [
+                { label: 'Draft', value: 'Draft' },
+                { label: 'Active', value: 'Active' },
+              ]
+          : [
               { label: 'Draft', value: 'Draft' },
               { label: 'Active', value: 'Active' },
-            ]
-          : [
-            { label: 'Draft', value: 'Draft' },
-            { label: 'Active', value: 'Active' },
-            { label: 'Archived', value: 'Archived' },
-          ],
+              { label: 'Archived', value: 'Archived' },
+            ],
         render: (value) => (
           <Label color={STATUS_COLOR[value as FinancePolicyStatus] ?? 'default'}>{value}</Label>
         ),
@@ -687,115 +687,138 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         render: (_, row) => {
           const policy = row as IFinancePolicyRow;
           return (
-            <ThreeDotsActions
-              showThreeDots
-              showViewIcon
-              handleViewClick={() => {
-                setSelected(policy);
-                detailsDialog.onTrue();
-              }}
-              showEditIcon={canEditPolicy && policy.status !== 'Archived'}
-              handleEditClick={() => onEdit(policy)}
-              showDeleteIcon={isPolicyDeletable(policyType, policy.status)}
-              disableDeleteIcon={policy.isUsedInDownstream}
-              handleDeleteClick={() => {
-                setSelected(policy);
-                deleteDialog.onTrue();
-              }}
-              actions={({ popover }) => (
-                <>
-                  {canClonePolicy && (
-                    <MenuItem
-                      disabled={
-                        isCloning || isCollectionCloning || isRefundCloning || isProrationCloning
-                      }
-                      onClick={async () => {
-                        popover.onClose();
-                        try {
-                          if (isCollectionKind) {
-                            await cloneCollectionPolicy({
-                              id: policy.id,
-                              body: {
+            <AdaptiveThreeDotsActions
+              actions={[
+                {
+                  id: 'view',
+                  label: 'View',
+                  icon: 'carbon:view-filled',
+                  onClick: () => {
+                    setSelected(policy);
+                    detailsDialog.onTrue();
+                  },
+                },
+                ...(canEditPolicy && policy.status !== 'Archived'
+                  ? [
+                      {
+                        id: 'edit',
+                        label: 'Edit',
+                        icon: 'solar:pen-bold',
+                        onClick: () => onEdit(policy),
+                      },
+                    ]
+                  : []),
+                ...(isPolicyDeletable(policyType, policy.status)
+                  ? [
+                      {
+                        id: 'delete',
+                        label: 'Delete',
+                        icon: 'solar:trash-bin-trash-bold',
+                        color: 'error.main',
+                        disabled: policy.isUsedInDownstream,
+                        tooltip:
+                          'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                        onClick: () => {
+                          setSelected(policy);
+                          deleteDialog.onTrue();
+                        },
+                      },
+                    ]
+                  : []),
+                ...(canClonePolicy
+                  ? [
+                      {
+                        id: 'clone',
+                        label: 'Clone',
+                        icon: 'mdi:content-copy',
+                        disabled:
+                          isCloning || isCollectionCloning || isRefundCloning || isProrationCloning,
+                        onClick: async () => {
+                          try {
+                            if (isCollectionKind) {
+                              await cloneCollectionPolicy({
+                                id: policy.id,
+                                body: {
+                                  targetAcademicYearId: academicYearId || policy.academicYearId,
+                                },
+                              }).unwrap();
+                            } else if (isConcessionKind) {
+                              await cloneConcessionPolicy({
+                                id: policy.id,
+                                body: {
+                                  targetAcademicYearId: academicYearId || policy.academicYearId,
+                                },
+                              }).unwrap();
+                            } else if (isRefundKind) {
+                              await cloneRefundPolicy({
+                                id: policy.id,
+                                body: {
+                                  targetAcademicYearId: academicYearId || policy.academicYearId,
+                                },
+                              }).unwrap();
+                            } else if (isProrationKind) {
+                              await cloneProrationPolicy({
+                                id: policy.id,
+                                body: {
+                                  targetAcademicYearId: academicYearId || policy.academicYearId,
+                                },
+                              }).unwrap();
+                            } else {
+                              await clonePolicy({
+                                sourcePolicyId: policy.id,
                                 targetAcademicYearId: academicYearId || policy.academicYearId,
-                              },
-                            }).unwrap();
-                          } else if (isConcessionKind) {
-                            await cloneConcessionPolicy({
-                              id: policy.id,
-                              body: {
-                                targetAcademicYearId: academicYearId || policy.academicYearId,
-                              },
-                            }).unwrap();
-                          } else if (isRefundKind) {
-                            await cloneRefundPolicy({
-                              id: policy.id,
-                              body: {
-                                targetAcademicYearId: academicYearId || policy.academicYearId,
-                              },
-                            }).unwrap();
-                          } else if (isProrationKind) {
-                            await cloneProrationPolicy({
-                              id: policy.id,
-                              body: {
-                                targetAcademicYearId: academicYearId || policy.academicYearId,
-                              },
-                            }).unwrap();
-                          } else {
-                            await clonePolicy({
-                              sourcePolicyId: policy.id,
-                              targetAcademicYearId: academicYearId || policy.academicYearId,
-                            }).unwrap();
+                              }).unwrap();
+                            }
+                            shikshaMitraToast.success({
+                              message: `Policy "${policy.policyName}" cloned successfully.`,
+                            });
+                          } catch (error) {
+                            shikshaMitraToast.error({
+                              message: parseApiProblemDetail(error).detail,
+                            });
                           }
-                          shikshaMitraToast.success({
-                            message: `Policy "${policy.policyName}" cloned successfully.`,
-                          });
-                        } catch (error) {
-                          shikshaMitraToast.error({
-                            message: parseApiProblemDetail(error).detail,
-                          });
-                        }
-                      }}
-                    >
-                      <Iconify icon="mdi:content-copy" sx={{ mr: 1, width: 18, height: 18 }} />
-                      Clone
-                    </MenuItem>
-                  )}
-
-                  {canViewPolicyVersions && (
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        setSelected(policy);
-                        auditDialog.onTrue();
-                      }}
-                    >
-                      <Iconify icon="mdi:history" sx={{ mr: 1, width: 18, height: 18 }} />
-                      Audit Trail
-                    </MenuItem>
-                  )}
-
-                  {canViewPolicyVersions && (
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        setSelected(policy);
-                        versionDialog.onTrue();
-                      }}
-                    >
-                      <Iconify
-                        icon="mdi:timeline-clock-outline"
-                        sx={{ mr: 1, width: 18, height: 18 }}
-                      />
-                      Version History
-                    </MenuItem>
-                  )}
-
-                  {((policy.status === 'Archived' && canRestorePolicy) ||
-                    (policy.status !== 'Archived' && canArchivePolicy)) && (
-                      <MenuItem
-                        disabled={policy.status !== 'Archived' && policy.isUsedInDownstream}
-                        onClick={async () => {
-                          popover.onClose();
+                        },
+                      },
+                    ]
+                  : []),
+                ...(canViewPolicyVersions
+                  ? [
+                      {
+                        id: 'audit-trail',
+                        label: 'Audit Trail',
+                        icon: 'mdi:history',
+                        onClick: () => {
+                          setSelected(policy);
+                          auditDialog.onTrue();
+                        },
+                      },
+                    ]
+                  : []),
+                ...(canViewPolicyVersions
+                  ? [
+                      {
+                        id: 'version-history',
+                        label: 'Version History',
+                        icon: 'mdi:timeline-clock-outline',
+                        onClick: () => {
+                          setSelected(policy);
+                          versionDialog.onTrue();
+                        },
+                      },
+                    ]
+                  : []),
+                ...((policy.status === 'Archived' && canRestorePolicy) ||
+                (policy.status !== 'Archived' && canArchivePolicy)
+                  ? [
+                      {
+                        id: 'status',
+                        label: policy.status === 'Archived' ? 'Restore' : 'Archive',
+                        icon:
+                          policy.status === 'Archived'
+                            ? 'mdi:archive-arrow-up-outline'
+                            : 'mdi:archive-outline',
+                        disabled: policy.status !== 'Archived' && policy.isUsedInDownstream,
+                        onClick: async () => {
                           const isRestoring = policy.status === 'Archived';
                           try {
                             if (isCollectionKind) {
@@ -820,29 +843,20 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                               await patchPolicy({ id: policy.id, body: { status: newStatus } });
                             }
                             shikshaMitraToast.success({
-                              message: `Policy ${policy.policyName} ${isRestoring ? 'restored to Draft' : 'archived'
-                                } successfully.`,
+                              message: `Policy ${policy.policyName} ${
+                                isRestoring ? 'restored to Draft' : 'archived'
+                              } successfully.`,
                             });
                           } catch (error) {
                             shikshaMitraToast.error({
                               message: parseApiProblemDetail(error).detail,
                             });
                           }
-                        }}
-                      >
-                        <Iconify
-                          icon={
-                            policy.status === 'Archived'
-                              ? 'mdi:archive-arrow-up-outline'
-                              : 'mdi:archive-outline'
-                          }
-                          sx={{ mr: 1, width: 18, height: 18 }}
-                        />
-                        {policy.status === 'Archived' ? 'Restore' : 'Archive'}
-                      </MenuItem>
-                    )}
-                </>
-              )}
+                        },
+                      },
+                    ]
+                  : []),
+              ]}
             />
           );
         },
@@ -951,10 +965,10 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         policy={
           selected
             ? {
-              ...selected,
-              policyType,
-              academicYearName: selected.academicYearName || currentYear?.name || '',
-            }
+                ...selected,
+                policyType,
+                academicYearName: selected.academicYearName || currentYear?.name || '',
+              }
             : null
         }
       />
@@ -969,10 +983,10 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         policy={
           selected
             ? {
-              ...selected,
-              policyType,
-              academicYearName: selected.academicYearName || currentYear?.name || '',
-            }
+                ...selected,
+                policyType,
+                academicYearName: selected.academicYearName || currentYear?.name || '',
+              }
             : null
         }
       />

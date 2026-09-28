@@ -7,6 +7,8 @@ import { Box, Stack, Divider, Collapse, IconButton, Typography } from '@mui/mate
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
+  feeInstallmentStatusLabel,
+  chargeCollectionStatusLabel,
 } from 'src/enums/fee-collection-type';
 
 import { selectFeeRows, selectChargeRows, groupFeeRowsByMonth } from './paymentAllocationUtils';
@@ -118,7 +120,7 @@ const FeeItemRow = ({ row }: { row: AllocatedFeeRow }) => {
       {/* STATUS */}
       <Box sx={{ width: 100, display: 'flex', justifyContent: 'center' }}>
         <Label color={FeeCollectionStatusTypeColors[row.status]} variant="soft">
-          {FeeCollectionStatusType[row.status]}
+          {feeInstallmentStatusLabel(row.status)}
         </Label>
       </Box>
     </Box>
@@ -192,7 +194,7 @@ const ChargeItemRow = ({ row }: { row: AllocatedChargeRow }) => {
 
       <Box sx={{ width: 100, display: 'flex', justifyContent: 'center' }}>
         <Label color={FeeCollectionStatusTypeColors[row.status]} variant="soft">
-          {FeeCollectionStatusType[row.status]}
+          {chargeCollectionStatusLabel(row.status)}
         </Label>
       </Box>
     </Box>

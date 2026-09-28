@@ -1169,7 +1169,9 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         Policy: <strong>{selectedPolicy.policyName}</strong> (
                         {selectedPolicy.policyCode}, version {selectedPolicy.version}). It applies
                         to{' '}
-                        {selectedPolicy.applyOn === 'AllOutstanding'
+                        {selectedPolicy.applyOn === 'AllFees'
+                          ? ' all installments, including those already paid'
+                          : selectedPolicy.applyOn === 'AllOutstanding'
                           ? ' all outstanding installments'
                           : selectedPolicy.applyOn === 'CurrentInstallment'
                             ? ' the earliest unpaid installment'

@@ -8,6 +8,8 @@ import { Scrollbar } from 'src/components/scrollbar';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
+  feeInstallmentStatusLabel,
+  chargeCollectionStatusLabel,
 } from 'src/enums/fee-collection-type';
 import {
   Box,
@@ -75,7 +77,7 @@ const FeeInstallmentDialog = ({ open, onClose, selectedTerm }: any) => {
                   <TableRow key={head.name}>
                     <TableCell>{head.name}</TableCell>
                     <TableCell>{head.category}</TableCell>
-                    <TableCell>₹ {(head.total - head.paid).toLocaleString()}</TableCell>
+                    <TableCell>₹ {(head.pending ?? Math.max(0, head.total - head.paid - (head.concessionAmount ?? 0))).toLocaleString()}</TableCell>
                     <TableCell> {head.paid?.toLocaleString()}</TableCell>
 
                     <TableCell>
@@ -86,7 +88,7 @@ const FeeInstallmentDialog = ({ open, onClose, selectedTerm }: any) => {
                           ] as LabelColor
                         }
                       >
-                        {FeeCollectionStatusType[head.status as FeeCollectionStatusType]}
+                        {feeInstallmentStatusLabel(head.status as FeeCollectionStatusType)}
                       </Label>
                     </TableCell>
                   </TableRow>
@@ -123,7 +125,7 @@ const FeeInstallmentDialog = ({ open, onClose, selectedTerm }: any) => {
 
                 <TableBody>
                   {selectedTerm?.charges?.map((ch: any) => {
-                    const pendingAmount = ch.total - ch.paid;
+                    const pendingAmount = ch.pending ?? Math.max(0, ch.total - ch.paid - (ch.waivedAmount ?? 0));
 
                     return (
                       <TableRow key={ch.id}>
@@ -143,7 +145,7 @@ const FeeInstallmentDialog = ({ open, onClose, selectedTerm }: any) => {
                               ] as LabelColor
                             }
                           >
-                            {FeeCollectionStatusType[ch.status as FeeCollectionStatusType]}
+                            {chargeCollectionStatusLabel(ch.status as FeeCollectionStatusType)}
                           </Label>
                         </TableCell>
                       </TableRow>

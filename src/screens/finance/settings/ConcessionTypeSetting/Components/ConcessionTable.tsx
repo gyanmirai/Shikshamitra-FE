@@ -1,17 +1,17 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { LoadingButton } from '@mui/lab';
 import React, { useMemo, useState } from 'react';
-import { Iconify } from 'src/components/iconify';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { usePatchConcessionTypeStatusMutation } from 'src/redux/finance/concessionType';
-import { Box, Chip, Stack, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import { Box, Chip, Stack, TextField, Typography } from '@mui/material';
 
 import type { IConcessionTypeForm, IConcessionTableProps } from '../type';
 
@@ -127,47 +127,64 @@ const ConcessionTypeTable: React.FC<IConcessionTableProps> = ({
         render: (value, row) => {
           const concessionType = row as IConcessionTypeForm;
           return (
-            <ThreeDotsActions
-              showViewIcon={canView}
-              viewLabel={`View ${concessionType.name}`}
-              handleViewClick={() => onView?.(concessionType)}
-              showEditIcon={canEdit && !archived}
-              editLabel={`Edit ${concessionType.name}`}
-              showDeleteIcon={canDelete && !archived}
-              disableDeleteIcon={!canDeleteConcessionType(concessionType)}
-              deleteLabel={`Delete ${concessionType.name}`}
-              handleEditClick={() => onEdit?.(concessionType)}
-              handleDeleteClick={() => onDelete?.(concessionType)}
-              showThreeDots={canView || canChangeStatus}
+            <AdaptiveThreeDotsActions
               moreLabel={`More actions for ${concessionType.name}`}
-              actions={({ popover }) => (
-                <MenuList>
-                  {canView ? (
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        onVersionHistory?.(concessionType);
-                      }}
-                    >
-                      <Iconify icon="mdi:timeline-clock-outline" />
-                      Version History
-                    </MenuItem>
-                  ) : null}
-                  {canChangeStatus ? (
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        handleOpenStatusConfirm(concessionType);
-                      }}
-                    >
-                      <Iconify
-                        icon={archived ? 'mdi:archive-arrow-up-outline' : 'mdi:archive-outline'}
-                      />
-                      {archived ? 'Restore' : 'Archive'}
-                    </MenuItem>
-                  ) : null}
-                </MenuList>
-              )}
+              actions={[
+                ...(canView
+                  ? [
+                      {
+                        id: 'view',
+                        label: `View ${concessionType.name}`,
+                        icon: 'carbon:view-filled',
+                        onClick: () => onView?.(concessionType),
+                      },
+                    ]
+                  : []),
+                ...(canEdit && !archived
+                  ? [
+                      {
+                        id: 'edit',
+                        label: `Edit ${concessionType.name}`,
+                        icon: 'solar:pen-bold',
+                        onClick: () => onEdit?.(concessionType),
+                      },
+                    ]
+                  : []),
+                ...(canDelete && !archived
+                  ? [
+                      {
+                        id: 'delete',
+                        label: `Delete ${concessionType.name}`,
+                        icon: 'solar:trash-bin-trash-bold',
+                        color: 'error.main',
+                        disabled: !canDeleteConcessionType(concessionType),
+                        tooltip:
+                          'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                        onClick: () => onDelete?.(concessionType),
+                      },
+                    ]
+                  : []),
+                ...(canView
+                  ? [
+                      {
+                        id: 'history',
+                        label: 'Version History',
+                        icon: 'mdi:timeline-clock-outline',
+                        onClick: () => onVersionHistory?.(concessionType),
+                      },
+                    ]
+                  : []),
+                ...(canChangeStatus
+                  ? [
+                      {
+                        id: 'status',
+                        label: archived ? 'Restore' : 'Archive',
+                        icon: archived ? 'mdi:archive-arrow-up-outline' : 'mdi:archive-outline',
+                        onClick: () => handleOpenStatusConfirm(concessionType),
+                      },
+                    ]
+                  : []),
+              ]}
             />
           );
         },

@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { LabelColor } from 'src/components/label';
 import type { ConcessionApplication } from 'src/redux/finance/ConcessionManagement/types';
 
@@ -9,7 +10,7 @@ import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import React, { useRef, useMemo, useState } from 'react';
@@ -17,7 +18,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -25,17 +25,7 @@ import { ConcessionStatusType } from 'src/enums/concession-status-type';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
-import {
-  Box,
-  Tab,
-  Card,
-  Tabs,
-  Button,
-  MenuItem,
-  TextField,
-  Typography,
-  DialogActions,
-} from '@mui/material';
+import { Box, Tab, Card, Tabs, Button, TextField, Typography, DialogActions } from '@mui/material';
 import {
   useFinanceAcademicFilters,
   type UseFinanceAcademicFiltersResult,
@@ -173,32 +163,27 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
   const allItems = useMemo(() => allConcessionData?.items || [], [allConcessionData]);
 
   // Filter items by tab
-  const filteredItems = useMemo(
-    () => {
-      const groupedStatuses: Record<string, ConcessionStatusType[]> = {
-        pending: [ConcessionStatusType.Draft, ConcessionStatusType.Pending],
-        approved: [
-          ConcessionStatusType.Approved,
-          ConcessionStatusType.PartiallyReversed,
-          ConcessionStatusType.Reversed,
-        ],
-        rejected: [ConcessionStatusType.Rejected, ConcessionStatusType.Cancelled],
-      };
-      return allItems.filter((item: any) => groupedStatuses[tabs.value]?.includes(item.status));
-    },
-    [allItems, tabs.value]
-  );
+  const filteredItems = useMemo(() => {
+    const groupedStatuses: Record<string, ConcessionStatusType[]> = {
+      pending: [ConcessionStatusType.Draft, ConcessionStatusType.Pending],
+      approved: [
+        ConcessionStatusType.Approved,
+        ConcessionStatusType.PartiallyReversed,
+        ConcessionStatusType.Reversed,
+      ],
+      rejected: [ConcessionStatusType.Rejected, ConcessionStatusType.Cancelled],
+    };
+    return allItems.filter((item: any) => groupedStatuses[tabs.value]?.includes(item.status));
+  }, [allItems, tabs.value]);
 
   const concessionCounts = useMemo(
     () => ({
-      pending:
-        (allConcessionData?.pendingCount ?? 0) + (allConcessionData?.draftCount ?? 0),
+      pending: (allConcessionData?.pendingCount ?? 0) + (allConcessionData?.draftCount ?? 0),
       approved:
         (allConcessionData?.approvedCount ?? 0) +
         (allConcessionData?.partiallyReversedCount ?? 0) +
         (allConcessionData?.reversedCount ?? 0),
-      rejected:
-        (allConcessionData?.rejectedCount ?? 0) + (allConcessionData?.cancelledCount ?? 0),
+      rejected: (allConcessionData?.rejectedCount ?? 0) + (allConcessionData?.cancelledCount ?? 0),
     }),
     [allConcessionData]
   );
@@ -384,60 +369,71 @@ const StudentConcessionTable: React.FC<StudentConcessionTableProps> = ({
                 (row.status === ConcessionStatusType.Rejected ||
                   row.status === ConcessionStatusType.Cancelled);
               return (
-                <ThreeDotsActions
+                <AdaptiveThreeDotsActions
                   placement="right-top"
-                  showViewIcon
-                  showEditIcon={isDraft && canEdit && serverAllows('edit')}
-                  showDeleteIcon={isDraft && canDelete && serverAllows('delete')}
-                  handleDeleteClick={
-                    isDraft && canDelete && serverAllows('delete')
-                      ? () => {
-                          setSelectedConcession(row as ConcessionApplication);
-                          deleteCommandKey.current = window.crypto.randomUUID();
-                          removeConcessionDialog.onTrue();
-                        }
-                      : undefined
-                  }
-                  showThreeDots={canCancelRow || canReplaceRow}
-                  actions={({ popover }) => (
-                    <>
-                      {canCancelRow && (
-                        <MenuItem
-                          onClick={() => {
-                            popover.onClose();
-                            setSelectedConcession(row as ConcessionApplication);
-                            cancelConcessionDialog.onTrue();
-                          }}
-                        >
-                          <Iconify icon="solar:close-circle-bold" sx={{ mr: 1 }} />
-                          Cancel request
-                        </MenuItem>
-                      )}
-                      {canReplaceRow && (
-                        <MenuItem
-                          onClick={() => {
-                            popover.onClose();
-                            onRequestConcession?.({
-                              ...(row as unknown as IStudentInfo),
-                              id: undefined,
-                              concessionRequestId: undefined,
-                              studentConcessionTypeRequestId: undefined,
-                              sourceRequestId: row.id,
-                            });
-                          }}
-                        >
-                          <Iconify icon="solar:copy-bold" sx={{ mr: 1 }} />
-                          Create replacement
-                        </MenuItem>
-                      )}
-                    </>
-                  )}
-                  handleEditClick={
-                    isDraft && canEdit && serverAllows('edit')
-                      ? () => onEditConcession?.(row as IStudentInfo)
-                      : undefined
-                  }
-                  handleViewClick={() => onViewConcession?.(row as IStudentInfo)}
+                  actions={[
+                    {
+                      id: 'view',
+                      label: 'View',
+                      icon: 'carbon:view-filled',
+                      onClick: () => onViewConcession?.(row as IStudentInfo),
+                    },
+                    ...(isDraft && canEdit && serverAllows('edit')
+                      ? [
+                          {
+                            id: 'edit',
+                            label: 'Edit',
+                            icon: 'solar:pen-bold',
+                            onClick: () => onEditConcession?.(row as IStudentInfo),
+                          },
+                        ]
+                      : []),
+                    ...(isDraft && canDelete && serverAllows('delete')
+                      ? [
+                          {
+                            id: 'delete',
+                            label: 'Delete',
+                            icon: 'solar:trash-bin-trash-bold',
+                            color: 'error.main',
+                            onClick: () => {
+                              setSelectedConcession(row as ConcessionApplication);
+                              deleteCommandKey.current = window.crypto.randomUUID();
+                              removeConcessionDialog.onTrue();
+                            },
+                          },
+                        ]
+                      : []),
+                    ...(canCancelRow
+                      ? [
+                          {
+                            id: 'cancel',
+                            label: 'Cancel request',
+                            icon: 'solar:close-circle-bold',
+                            onClick: () => {
+                              setSelectedConcession(row as ConcessionApplication);
+                              cancelConcessionDialog.onTrue();
+                            },
+                          },
+                        ]
+                      : []),
+                    ...(canReplaceRow
+                      ? [
+                          {
+                            id: 'replace',
+                            label: 'Create replacement',
+                            icon: 'solar:copy-bold',
+                            onClick: () =>
+                              onRequestConcession?.({
+                                ...(row as unknown as IStudentInfo),
+                                id: undefined,
+                                concessionRequestId: undefined,
+                                studentConcessionTypeRequestId: undefined,
+                                sourceRequestId: row.id,
+                              }),
+                          },
+                        ]
+                      : []),
+                  ]}
                 />
               );
             },

@@ -3,7 +3,7 @@ import type { LabelColor } from 'src/components/label';
 import React from 'react';
 import { Label } from 'src/components/label';
 import { Box, Typography } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { InvoiceStatusColors, InvoiceStatusOptions } from 'src/enums/finance-invoice-status';
 
@@ -107,10 +107,15 @@ const InvoiceTable = ({
           minWidth: 64,
           render(_value: any, row: any) {
             return (
-              <ThreeDotsActions
-                showThreeDots={false}
-                showViewIcon
-                handleViewClick={() => onView(row as InvoiceData)}
+              <AdaptiveThreeDotsActions
+                actions={[
+                  {
+                    id: 'view',
+                    label: 'View',
+                    icon: 'carbon:view-filled',
+                    onClick: () => onView(row as InvoiceData),
+                  },
+                ]}
               />
             );
           },

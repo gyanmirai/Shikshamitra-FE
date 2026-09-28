@@ -5,7 +5,7 @@ import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
@@ -128,18 +128,30 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <ThreeDotsActions
-              showThreeDots={false}
+            <AdaptiveThreeDotsActions
+              actions={[
+                {
+                  id: 'edit',
+                  label: 'Edit',
+                  icon: 'solar:pen-bold',
+                  onClick: () => {
+                    onEdit(row as IFeeHead);
+                  },
+                },
+                {
+                  id: 'delete',
+                  label: 'Delete',
+                  icon: 'solar:trash-bin-trash-bold',
+                  onClick: () => {
+                    onDelete(row as IFeeHead);
+                  },
+                  disabled: row?.isUsedInDownstream,
+                  tooltip:
+                    'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                  color: 'error.main',
+                },
+              ]}
               placement="right-top"
-              showEditIcon
-              showDeleteIcon
-              disableDeleteIcon={row?.isUsedInDownstream}
-              handleEditClick={() => {
-                onEdit(row as IFeeHead);
-              }}
-              handleDeleteClick={() => {
-                onDelete(row as IFeeHead);
-              }}
             />
           );
         },

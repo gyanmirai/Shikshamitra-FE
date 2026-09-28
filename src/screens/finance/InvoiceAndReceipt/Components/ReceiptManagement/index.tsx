@@ -13,7 +13,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useCallback } from 'react';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
@@ -225,10 +225,15 @@ const ReceiptManagement = () => {
         minWidth: 64,
         render(_value: any, row: any) {
           return (
-            <ThreeDotsActions
-              showThreeDots={false}
-              showViewIcon
-              handleViewClick={() => setPreviewReceiptId(row.id)}
+            <AdaptiveThreeDotsActions
+              actions={[
+                {
+                  id: 'view',
+                  label: 'View',
+                  icon: 'carbon:view-filled',
+                  onClick: () => setPreviewReceiptId(row.id),
+                },
+              ]}
             />
           );
         },

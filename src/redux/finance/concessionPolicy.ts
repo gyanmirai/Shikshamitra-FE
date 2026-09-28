@@ -56,7 +56,7 @@ export interface ConcessionPolicySavePayload {
   fixedAmount: number | null;
   maximumPercentage: number | null;
   maximumFixedAmount: number | null;
-  applyOn: 'AllOutstanding' | 'CurrentInstallment' | 'FutureInstallments';
+  applyOn: 'AllOutstanding' | 'CurrentInstallment' | 'FutureInstallments' | 'AllFees';
   roundingMethod: 'None' | 'RoundUp' | 'RoundDown' | 'NearestRupee';
   changeReason?: string | null;
   concurrencyStamp?: string | null;

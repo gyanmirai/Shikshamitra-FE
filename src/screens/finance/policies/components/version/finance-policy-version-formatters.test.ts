@@ -3,6 +3,7 @@ import { it, expect, describe } from 'vitest';
 import {
   deserializeVersionValue,
   formatFinancePolicyVersionField,
+  formatVersionTimestamp,
   formatFinancePolicyVersionValue,
 } from './finance-policy-version-formatters';
 
@@ -59,6 +60,38 @@ describe('finance policy version formatters', () => {
     ).toBe('Tuition Fee');
     expect(formatFinancePolicyVersionValue('ApplicableFeeHeadIds', '[]', context).text).toBe(
       'None'
+    );
+  });
+
+  it('formats collection policy fee heads and effective calendar dates', () => {
+    const context = {
+      labelsById: {
+        '3a23e578-2df7-465b-477d-80bf033233e3': 'FH 1',
+        '3a23e578-3032-dd30-bce1-f2a9827af9a1': 'FH 2',
+      },
+    };
+
+    expect(
+      formatFinancePolicyVersionValue(
+        'LateFeeApplyOnFeeHeads',
+        '["3a23e578-2df7-465b-477d-80bf033233e3","3a23e578-3032-dd30-bce1-f2a9827af9a1"]',
+        context
+      ).text
+    ).toBe('FH 1, FH 2');
+    expect(
+      formatFinancePolicyVersionValue(
+        'LateFeeApplyOnFeeHeads',
+        '["3a23e578-2df7-465b-477d-80bf033233e3"]'
+      ).text
+    ).toBe('Fee head unavailable');
+    expect(formatFinancePolicyVersionValue('EffectiveFrom', '2026-06-01T00:00:00+00:00').text).toBe(
+      '01-06-2026'
+    );
+    expect(formatFinancePolicyVersionValue('EffectiveTo', '2027-05-31T00:00:00+00:00').text).toBe(
+      '31-05-2027'
+    );
+    expect(formatVersionTimestamp('2026-09-28T17:32:00+00:00')).toMatch(
+      /^\d{2}-\d{2}-2026 \d{2}:\d{2} (AM|PM)$/
     );
   });
 });

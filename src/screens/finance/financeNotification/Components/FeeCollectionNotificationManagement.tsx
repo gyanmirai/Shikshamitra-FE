@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Card, Switch } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import EditNotificationDialog from 'src/screens/student/studentNotification/editNotificationDialog';
 import {
@@ -165,22 +165,31 @@ const FeeCollectionNotificationManagement = ({ dialog, setIsViewMode }: any) => 
               minWidth: 60,
               render(value, row) {
                 return (
-                  <ThreeDotsActions
-                    showThreeDots={false}
-                    showEditIcon
-                    handleEditClick={() => {
-                      setSelectedData(row);
-                      dialog.onTrue();
-                      setView(false);
-                      setIsViewMode(false);
-                    }}
-                    showViewIcon
-                    handleViewClick={() => {
-                      setSelectedData(row);
-                      setView(true);
-                      dialog.onTrue();
-                      setIsViewMode(true);
-                    }}
+                  <AdaptiveThreeDotsActions
+                    actions={[
+                      {
+                        id: 'view',
+                        label: 'View',
+                        icon: 'carbon:view-filled',
+                        onClick: () => {
+                          setSelectedData(row);
+                          setView(true);
+                          dialog.onTrue();
+                          setIsViewMode(true);
+                        },
+                      },
+                      {
+                        id: 'edit',
+                        label: 'Edit',
+                        icon: 'solar:pen-bold',
+                        onClick: () => {
+                          setSelectedData(row);
+                          dialog.onTrue();
+                          setView(false);
+                          setIsViewMode(false);
+                        },
+                      },
+                    ]}
                   />
                 );
               },

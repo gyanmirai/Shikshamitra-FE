@@ -40,6 +40,7 @@ export interface FeeRefundRequestDto {
   studentFeeStructureId?: string;
   refundPolicyId?: string;
   refundPolicyVersionId?: string;
+  concessionRequestId?: string | null;
   refundPolicyName?: string;
   originalReceiptId?: string;
   originalReceiptNumber?: string;
@@ -141,6 +142,21 @@ export interface RefundEligibilityDto {
   feeHeads: RefundEligibilityFeeHeadDto[];
 }
 
+export interface FeeRefundPreviewDto {
+  studentFeeStructureId: string;
+  refundPolicyId: string;
+  refundPolicyVersionId: string;
+  refundPolicyName: string;
+  settledPaidAmount: number;
+  priorProcessedRefund: number;
+  activeReservation: number;
+  requestedAmount: number;
+  deductionAmount: number;
+  capAdjustment: number;
+  maximumAllowedAmount: number;
+  isAllowed: boolean;
+}
+
 export interface RefundEligibleReceiptDto {
   receiptId: string;
   receiptNumber: string;
@@ -224,7 +240,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.feeRefund],
     }),
 
-    previewFeeRefund: builder.mutation<any, IFeeRefundApiPayload>({
+    previewFeeRefund: builder.mutation<FeeRefundPreviewDto, IFeeRefundApiPayload>({
       query: (body) => ({ url: '/fee-refunds/preview', method: 'POST', body }),
     }),
 

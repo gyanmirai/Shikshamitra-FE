@@ -20,6 +20,16 @@ interface Props {
   onClose: () => void;
 }
 
+function displayValue(value: string | null | undefined) {
+  if (value == null || value === '') return '—';
+  try {
+    const parsed = JSON.parse(value);
+    return parsed == null ? '—' : String(parsed);
+  } catch {
+    return value;
+  }
+}
+
 export default function AccountSettingVersionDialog({
   open,
   title,
@@ -47,14 +57,18 @@ export default function AccountSettingVersionDialog({
                 <Stack direction="row" justifyContent="space-between">
                   <Chip size="small" label={`v${item.versionNumber} · ${item.changeAction}`} />
                   <Typography variant="caption" color="text.secondary">
-                    {new Date(item.changeTime).toLocaleString()}
+                    {item.changeTime ? new Date(item.changeTime).toLocaleString() : 'Not recorded'}
                   </Typography>
                 </Stack>
-                <Typography variant="caption">By {item.actorName || 'System'}</Typography>
+                <Typography variant="caption">
+                  {item.changeAction === 'unavailable'
+                    ? 'Changes and editor were not recorded for this older version.'
+                    : `By ${item.actorName || 'System'}`}
+                </Typography>
                 {(item.changedFields || []).map((change: any) => (
                   <Typography key={`${item.id}-${change.fieldName}`} variant="body2">
-                    <strong>{change.fieldName}</strong>: {change.originalValue || '—'} →{' '}
-                    {change.newValue || '—'}
+                    <strong>{change.fieldName}</strong>: {displayValue(change.originalValue)} →{' '}
+                    {displayValue(change.newValue)}
                   </Typography>
                 ))}
                 <Divider />

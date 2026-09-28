@@ -2,7 +2,7 @@
 
 import React from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 export interface IDownstreamUsageActionsProps {
   isUsedInDownstream?: boolean;
@@ -17,7 +17,7 @@ export interface IDownstreamUsageActionsProps {
 }
 
 /**
- * Wrapper component for ThreeDotsActions that adds downstream usage warning
+ * Wrapper component for AdaptiveThreeDotsActions that adds downstream usage warning
  * Disables delete button if item is used in downstream entities
  * Shows tooltip explaining why delete is disabled
  */
@@ -39,16 +39,42 @@ export const DownstreamUsageActions: React.FC<IDownstreamUsageActionsProps> = ({
         placement="top"
       >
         <span>
-          <ThreeDotsActions
-            showViewIcon={showViewIcon}
-            showEditIcon={showEditIcon}
-            showDeleteIcon={showDeleteIcon}
-            disableDeleteIcon
-            showThreeDots={showThreeDots}
+          <AdaptiveThreeDotsActions
+            actions={[
+              ...(showViewIcon
+                ? [
+                    {
+                      id: 'view',
+                      label: 'View',
+                      icon: 'carbon:view-filled',
+                      onClick: () => handleViewClick?.(),
+                    },
+                  ]
+                : []),
+              ...(showEditIcon
+                ? [
+                    {
+                      id: 'edit',
+                      label: 'Edit',
+                      icon: 'solar:pen-bold',
+                      onClick: () => handleEditClick?.(),
+                    },
+                  ]
+                : []),
+              ...(showDeleteIcon
+                ? [
+                    {
+                      id: 'delete',
+                      label: 'Delete',
+                      icon: 'solar:trash-bin-trash-bold',
+                      onClick: () => handleDeleteClick?.(),
+                      disabled: true,
+                      color: 'error.main',
+                    },
+                  ]
+                : []),
+            ]}
             placement={placement}
-            handleViewClick={handleViewClick}
-            handleEditClick={handleEditClick}
-            handleDeleteClick={handleDeleteClick}
           />
         </span>
       </CustomTooltip>
@@ -56,15 +82,41 @@ export const DownstreamUsageActions: React.FC<IDownstreamUsageActionsProps> = ({
   }
 
   return (
-    <ThreeDotsActions
-      showViewIcon={showViewIcon}
-      showEditIcon={showEditIcon}
-      showDeleteIcon={showDeleteIcon}
-      showThreeDots={showThreeDots}
+    <AdaptiveThreeDotsActions
+      actions={[
+        ...(showViewIcon
+          ? [
+              {
+                id: 'view',
+                label: 'View',
+                icon: 'carbon:view-filled',
+                onClick: () => handleViewClick?.(),
+              },
+            ]
+          : []),
+        ...(showEditIcon
+          ? [
+              {
+                id: 'edit',
+                label: 'Edit',
+                icon: 'solar:pen-bold',
+                onClick: () => handleEditClick?.(),
+              },
+            ]
+          : []),
+        ...(showDeleteIcon
+          ? [
+              {
+                id: 'delete',
+                label: 'Delete',
+                icon: 'solar:trash-bin-trash-bold',
+                onClick: () => handleDeleteClick?.(),
+                color: 'error.main',
+              },
+            ]
+          : []),
+      ]}
       placement={placement}
-      handleViewClick={handleViewClick}
-      handleEditClick={handleEditClick}
-      handleDeleteClick={handleDeleteClick}
     />
   );
 };

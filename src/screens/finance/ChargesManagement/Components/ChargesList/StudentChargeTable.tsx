@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { Box, Avatar } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IStudentChargeData } from '../ChargesManage/Component/type';
@@ -85,11 +85,16 @@ const StudentChargeListTable: React.FC<ICombinedProps> = ({
           sticky: true,
           minWidth: 40,
           render: (value, row) => (
-            <ThreeDotsActions
-              showThreeDots={false}
+            <AdaptiveThreeDotsActions
+              actions={[
+                {
+                  id: 'view',
+                  label: 'View',
+                  icon: 'carbon:view-filled',
+                  onClick: () => onViewAllCharges?.(row as IStudentChargeData),
+                },
+              ]}
               placement="right-center"
-              showViewIcon
-              handleViewClick={() => onViewAllCharges?.(row as IStudentChargeData)}
             />
           ),
         },

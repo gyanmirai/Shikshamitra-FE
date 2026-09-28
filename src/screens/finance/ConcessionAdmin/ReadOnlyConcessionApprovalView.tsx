@@ -25,6 +25,7 @@ export default function ReadOnlyConcessionApprovalView({ selectedItem, onBack }:
   const [previewApproval, { isLoading: isPreviewing }] = usePreviewConcessionApprovalMutation();
   const [approve, { isLoading: isApproving }] = useApproveConcessionRequestMutation();
   const [previewTotal, setPreviewTotal] = useState<number | null>(null);
+  const [previewRefund, setPreviewRefund] = useState(0);
   const [message, setMessage] = useState('');
   const commandKey = useRef('');
   const changed = (context?.feeHeadGroups ?? []).some((group) => group.hasChangedSinceSubmission);
@@ -41,9 +42,10 @@ export default function ReadOnlyConcessionApprovalView({ selectedItem, onBack }:
           },
         }).unwrap();
         setPreviewTotal(result.totalApprovedAmount);
+        setPreviewRefund(result.refundRequestAmount);
         return;
       }
-      await approve({
+      const result = await approve({
         studentConcessionTypeRequestId: requestId,
         body: {
           message: message.trim() || undefined,
@@ -52,10 +54,13 @@ export default function ReadOnlyConcessionApprovalView({ selectedItem, onBack }:
           idempotencyKey: (commandKey.current ||= window.crypto.randomUUID()),
         },
       }).unwrap();
-      shikshaMitraToast.success({ message: 'Concession approved successfully.' });
+      shikshaMitraToast.success({ message: result.refundRequests.length > 0
+        ? `Concession approved. ${result.refundRequests.length} refund request(s) submitted for review.`
+        : 'Concession approved successfully.' });
       onBack();
     } catch (error) {
       setPreviewTotal(null);
+      setPreviewRefund(0);
       shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
       await refetch();
     }
@@ -86,7 +91,7 @@ export default function ReadOnlyConcessionApprovalView({ selectedItem, onBack }:
               </Stack>
               {group.dueFeeLines.filter((line) => line.suggestedConcessionAmount > 0).map((line) => (
                 <Stack key={line.dueFeeId} direction="row" justifyContent="space-between" py={0.5}>
-                  <Typography variant="body2">{line.monthLabel} {line.year} · outstanding {money(line.outstandingAmount)}</Typography>
+                  <Typography variant="body2">{line.monthLabel} {line.year} · paid {money(line.paidAmount)} · outstanding {money(line.outstandingAmount)}</Typography>
                   <Typography variant="body2">−{money(line.suggestedConcessionAmount)}</Typography>
                 </Stack>
               ))}
@@ -97,7 +102,10 @@ export default function ReadOnlyConcessionApprovalView({ selectedItem, onBack }:
             <Typography fontWeight={700}>Requested concession</Typography>
             <Typography fontWeight={700}>{money(context.totalRequestedConcessionAmount)}</Typography>
           </Stack>
-          {previewTotal !== null && <Alert severity="info">Approval will apply {money(previewTotal)}. No amount can be changed here.</Alert>}
+          {previewTotal !== null && <Alert severity="info">
+            Approval will apply {money(previewTotal)}.
+            {previewRefund > 0 && ` Refund requests totaling ${money(previewRefund)} will be submitted for separate review and payout.`}
+          </Alert>}
           <TextField label="Approval note (optional)" multiline minRows={2} value={message}
             onChange={(event) => { setMessage(event.target.value); setPreviewTotal(null); }} />
           <LoadingButton variant="contained" color="success" disabled={changed || isLoading}

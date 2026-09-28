@@ -9,6 +9,7 @@ import { Box, Card, Paper, Divider, Checkbox, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
+  feeInstallmentStatusLabel,
 } from 'src/enums/fee-collection-type';
 
 import type { IFeeHead, IFeeCharge, ITermsToCollectProps } from './type';
@@ -137,7 +138,7 @@ const TermsToCollect: React.FC<ITermsToCollectProps> = ({
                           ₹{formatNumber(head.pendingAmount)}
                         </Typography>
                         <Label variant="soft" color={FeeCollectionStatusTypeColors[head.status]}>
-                          {FeeCollectionStatusType[head.status]}
+                          {feeInstallmentStatusLabel(head.status)}
                         </Label>
                       </Box>
                     </Box>
