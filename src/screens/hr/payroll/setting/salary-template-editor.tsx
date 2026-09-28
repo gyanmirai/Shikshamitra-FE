@@ -30,7 +30,6 @@ import {
   Chip,
   Alert,
   Button,
-  Skeleton,
   TextField,
   Autocomplete,
   DialogActions,
@@ -45,6 +44,7 @@ import {
 } from 'src/redux/hr/salary-template-api';
 
 import SalaryTemplateReview from './salary-template-review';
+import SalaryTemplateSkeleton from './salary-template-skeleton';
 import SalaryTemplateConfigure from './salary-template-configure';
 import { createTemplateRule, normalizeRuleOrder } from './salary-template-editor-utils';
 import {
@@ -176,9 +176,26 @@ export default function SalaryTemplateEditor({
           You do not have permission to {isCreate ? 'create' : 'view'} salary templates.
         </Alert>
       ) : loading ? (
-        <Box role="status" aria-label="Loading salary template" sx={{ p: 2 }}>
-          <Skeleton height={60} />
-          <Skeleton height={200} />
+        <Box
+          role="status"
+          aria-label="Loading salary template"
+          aria-busy="true"
+          sx={{ flex: 1, minHeight: 0, minWidth: 0 }}
+        >
+          <CustomStepperWithFormik
+            initialValues={{}}
+            validationSchema={emptySchema}
+            steps={steps}
+            activeStep={0}
+            showSaveButton={false}
+            isStepClickable={() => false}
+            handleBack={close}
+            handleNext={() => {}}
+            onCancel={close}
+            nextButtonLabel="Review"
+            saveAndNextButtonProps={{ disabled: true }}
+            renderItem={() => <SalaryTemplateSkeleton />}
+          />
         </Box>
       ) : failed || (!isCreate && !template) ? (
         <Alert
