@@ -37,6 +37,9 @@ export function ApplicationOfferStage({ applicationId, stage, canAdvance, advanc
         <Chip size="small" label={state.status} color={color(state.status)} sx={{ textTransform: 'capitalize' }} />
       </Stack>
       <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>{state.policy?.message}</Typography>
+      <Typography variant="body2" color="text.secondary">
+        Journey counsellor: {state.assignedCounsellorName || (state.assignedCounsellorId ? 'Assigned' : 'Not assigned')}
+      </Typography>
       {state.policy?.conditions && <Alert severity="info"><strong>Conditions:</strong> {state.policy.conditions}</Alert>}
       {state.expiresAt && <Typography variant="body2" color={state.status === 'expired' ? 'error' : 'text.secondary'}>
         {state.status === 'expired' ? 'Expired' : 'Expires'} {new Date(state.expiresAt).toLocaleString()}</Typography>}

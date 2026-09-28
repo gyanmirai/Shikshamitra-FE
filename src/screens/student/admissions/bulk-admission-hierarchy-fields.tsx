@@ -2,12 +2,12 @@ import type { FormikProps } from 'formik';
 import type { Standards } from 'src/types/school';
 import type { AcademicOrganizationOption } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
-import { Grid, TextField } from '@mui/material';
+import { Grid } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
 import { AdmissionCampusSelect } from './admission-campus-select';
-import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 import { useAdmissionCampusOptions } from './use-admission-campus-options';
+import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
 
@@ -95,7 +95,7 @@ export function BulkAdmissionHierarchyFields({
           helperText={touched.stageId ? errors.stageId : undefined}
         />
       </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={12}>
         <CustomSelect
           multiple
           options={visibleStandards}
@@ -107,19 +107,6 @@ export function BulkAdmissionHierarchyFields({
           onChange={(ids) => change('standardIds', ids)}
           error={touched.standardIds && Boolean(errors.standardIds)}
           helperText={touched.standardIds ? String(errors.standardIds ?? '') : undefined}
-        />
-      </Grid>
-      <Grid size={12}>
-        <TextField
-          fullWidth
-          size="small"
-          label="Code prefix *"
-          {...formik.getFieldProps('codePrefix')}
-          onChange={(event) => change('codePrefix', event.target.value)}
-          error={touched.codePrefix && Boolean(errors.codePrefix)}
-          helperText={
-            touched.codePrefix ? errors.codePrefix : 'Codes are generated as PREFIX-STANDARD.'
-          }
         />
       </Grid>
     </Grid>

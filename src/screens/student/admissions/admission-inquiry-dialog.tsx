@@ -239,6 +239,15 @@ function AdmissionInquiryDrawerContent({ onClose }: Omit<Props, 'open'>) {
               </TextField>
             </ShakingTextField>
           )}
+          {controller.classCapacity && formik.values.offeringId && (
+            <Alert severity={controller.classCapacity.isFull ? 'warning' : 'info'}>
+              {controller.classCapacity.capacity == null
+                ? 'Admission room capacity is not set. Division seats are checked during onboarding. You can continue this inquiry.'
+                : `${controller.classCapacity.remainingSeats} of ${controller.classCapacity.capacity} admission room seats available.`}
+              {controller.classCapacity.isFull &&
+                ' Admission room capacity is full; you can still continue.'}
+            </Alert>
+          )}
         </InquiryFormSection>
 
         {controller.sections.map((section) => (
@@ -314,6 +323,7 @@ function AdmissionInquiryDrawerContent({ onClose }: Omit<Props, 'open'>) {
 
         <AdmissionInquiryDuplicateMatches
           matches={controller.matches}
+          guardianPhone={controller.currentGuardianPhone}
           busy={controller.busy}
           onUseExisting={controller.useExistingFamily}
           onOpenExisting={(inquiryId) => {

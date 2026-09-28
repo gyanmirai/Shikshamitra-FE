@@ -103,7 +103,8 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
             <Typography variant="subtitle2">Test one applicant outcome at a time</Typography>
             <Typography variant="body2" color="text.secondary">
               Change the scenario or its values to see which route the applicant follows. Final
-              validation remains authoritative before publication.
+              validation remains authoritative before publication. This tests routing and configured outcomes;
+              it does not submit forms, verify evidence, collect money, or make an admission decision.
             </Typography>
           </Box>
         </Stack>
@@ -181,6 +182,10 @@ export function WorkflowSimulationPanel({ stages, transitions }: Props) {
       </Alert>
 
       <Box component="section" aria-labelledby="workflow-selected-journey-heading">
+        {result.steps.some((step) => (step.otherMatchingRoutes ?? 0) > 0) && <Alert severity="warning" sx={{ mb: 1 }}>
+          More than one special path matches this scenario. The path with the lowest route order wins.
+          Review the conditions and order before publishing.
+        </Alert>}
         <Typography id="workflow-selected-journey-heading" variant="subtitle2">
           Selected journey
         </Typography>

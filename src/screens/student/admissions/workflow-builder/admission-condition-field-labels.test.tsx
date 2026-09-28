@@ -17,7 +17,7 @@ vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
 
-function Picker({ mode, source }: { mode: string; source: 'application' | 'inquiry' }) {
+function Picker({ mode, source }: { mode: string; source: 'application' }) {
   const [json, setJson] = useState('{"field":"","operator":"Equals","value":"yes"}');
   return (
     <>
@@ -40,9 +40,7 @@ function Picker({ mode, source }: { mode: string; source: 'application' | 'inqui
 describe('contextual applicant answer choices', { timeout: 15000 }, () => {
   it.each([
     ['eligibility', 'application'],
-    ['eligibility', 'inquiry'],
     ['document', 'application'],
-    ['document', 'inquiry'],
   ] as const)(
     'selects the correct father field in %s / %s without changing the comparison',
     async (mode, source) => {
@@ -53,8 +51,6 @@ describe('contextual applicant answer choices', { timeout: 15000 }, () => {
       );
       const user = userEvent.setup();
       renderDocumentUi(<Picker mode={mode} source={source} />);
-      if (mode === 'document' && source === 'inquiry')
-        await chooseDocumentOption(user, 'Answer source', 'Inquiry answer');
       await chooseDocumentOption(user, 'Published form for answer choices', 'Registration · v2');
       const field = screen.getByRole('combobox', { name: 'Applicant answer or fact' });
       await waitFor(() => expect(field).toBeEnabled());
@@ -72,7 +68,7 @@ describe('contextual applicant answer choices', { timeout: 15000 }, () => {
       expect(screen.getByRole('option', { name: uniqueLabel })).toBeInTheDocument();
       await user.click(screen.getByRole('option', { name: `${label} — Father / Identity` }));
       expect(JSON.parse(screen.getByRole('status').textContent ?? '')).toEqual({
-        field: source === 'application' ? 'application.FATHER_NAME' : 'inquiry.father.fullName',
+        field: 'application.FATHER_NAME',
         operator: 'Equals',
         value: 'yes',
       });

@@ -4,8 +4,9 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Iconify } from 'src/components/iconify';
-import { Alert, Stack, MenuItem, TextField } from '@mui/material';
+import { Alert, Stack, TextField } from '@mui/material';
+
+import { WorkflowStageTypeSelect } from './workflow-stage-type-select';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
@@ -15,23 +16,6 @@ type Props = {
 };
 
 export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly }: Props) {
-  const availableStageTypes = stageTypes.filter(
-    (item) =>
-      (item.type !== 0 && item.isRuntimeReady && item.isSelectable !== false) ||
-      item.type === formik.values.stageType
-  );
-  const changeType = (value: string) => {
-    const next = stageTypes.find((item) => String(item.type) === value);
-    if (!next || next.type === formik.values.stageType) return;
-    formik.setValues({
-      ...formik.values,
-      stageType: next.type,
-      configurationJson: undefined,
-      isEntryStage: next.canBeEntryStage && formik.values.isEntryStage,
-      isTerminalStage: next.canBeTerminalStage && formik.values.isTerminalStage,
-    });
-  };
-
   return (
     <Stack spacing={2}>
       <TextField
@@ -53,26 +37,12 @@ export function WorkflowStageBasics({ formik, metadata, stageTypes, readOnly }: 
         error={Boolean(formik.touched.code && formik.errors.code)}
         helperText={formik.touched.code && formik.errors.code}
       />
-      <TextField
-        select
-        fullWidth
-        size="small"
-        label="Stage type *"
-        disabled={readOnly}
-        value={String(formik.values.stageType)}
-        onChange={(event) => changeType(event.target.value)}
-        helperText={metadata?.description}
-      >
-        {availableStageTypes.map((item) => (
-          <MenuItem key={item.type} value={String(item.type)}>
-            <Iconify icon={item.icon} sx={{ mr: 1 }} />
-            {item.displayName}
-            {item.isSelectable === false || !item.isRuntimeReady
-              ? ' (not available for new stages)'
-              : ''}
-          </MenuItem>
-        ))}
-      </TextField>
+      <WorkflowStageTypeSelect
+        formik={formik}
+        metadata={metadata}
+        stageTypes={stageTypes}
+        readOnly={readOnly}
+      />
       {metadata && (!metadata.isRuntimeReady || metadata.isDeprecated) && (
         <Alert severity="error">
           {metadata.replacementGuidance ||

@@ -23,14 +23,22 @@ import {
 
 import { DocumentReviewOptions } from './document-review-options';
 import { DocumentRequirementsList } from './document-requirements-list';
+import { DocumentCollectionSettings } from './document-collection-settings';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   available: boolean;
   readOnly: boolean;
   forms: AdmissionForm[];
+  stages?: AdmissionWorkflowStage[];
 };
-export function WorkflowDocumentSettings({ formik, available, readOnly, forms }: Props) {
+export function WorkflowDocumentSettings({
+  formik,
+  available,
+  readOnly,
+  forms,
+  stages = [],
+}: Props) {
   const json = formik.values.configurationJson;
   const policy = readAdmissionDocumentPolicy(json);
   const invalid = getDocumentConfigurationError(json);
@@ -114,6 +122,12 @@ export function WorkflowDocumentSettings({ formik, available, readOnly, forms }:
               forms={forms}
               documentTypes={documentTypes}
               onChange={(requirements) => update({ requirements })}
+            />
+            <DocumentCollectionSettings
+              policy={policy}
+              stages={stages}
+              disabled={disabled}
+              onChange={update}
             />
             <DocumentReviewOptions policy={policy} disabled={disabled} onChange={update} />
             <Alert severity="info">

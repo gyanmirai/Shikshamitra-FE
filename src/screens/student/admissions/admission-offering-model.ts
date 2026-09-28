@@ -15,12 +15,19 @@ export type AdmissionOfferingFormValues = Omit<
 export const isAdmissionOfferingConfigurationIncomplete = (
   values: Pick<
     AdmissionOfferingFormValues,
-    'workflowDefinitionId' | 'inquiryFormDefinitionId' | 'applicationFormDefinitionId'
+    | 'entryMode'
+    | 'workflowDefinitionId'
+    | 'inquiryFormDefinitionId'
+    | 'applicationFormDefinitionId'
+    | 'inquiryIntakeProfileId'
+    | 'counsellorAssignmentProfileId'
   >
 ) =>
   !values.workflowDefinitionId ||
-  !values.inquiryFormDefinitionId ||
-  !values.applicationFormDefinitionId;
+  (values.entryMode !== 1 && !values.inquiryFormDefinitionId) ||
+  !values.applicationFormDefinitionId ||
+  (values.entryMode !== 1 && !values.inquiryIntakeProfileId) ||
+  !values.counsellorAssignmentProfileId;
 
 export const availabilityLabels = [
   'Configuration incomplete',
@@ -31,6 +38,8 @@ export const availabilityLabels = [
 ] as const;
 
 export const availabilityColors = ['warning', 'info', 'success', 'default', 'default'] as const;
+export const admissionTrackLabels = ['General', 'RTE', 'Management', 'Staff'] as const;
+export const admissionEntryModeLabels = ['Inquiry first', 'Direct registration', 'Inquiry or direct'] as const;
 
 export const getOfferingInitialValues = (
   offering?: {
@@ -41,12 +50,16 @@ export const getOfferingInitialValues = (
     stageId: string;
     standardId: string;
     code: string;
+    track?: AdmissionOfferingFormValues['track'];
+    entryMode?: AdmissionOfferingFormValues['entryMode'];
     useCycleDates: boolean;
     openDate?: string | null;
     closeDate?: string | null;
     workflowDefinitionId?: string | null;
     inquiryFormDefinitionId?: string | null;
     applicationFormDefinitionId?: string | null;
+    inquiryIntakeProfileId?: string | null;
+    counsellorAssignmentProfileId?: string | null;
     isActive: boolean;
   } | null
 ): AdmissionOfferingFormValues => ({
@@ -57,12 +70,16 @@ export const getOfferingInitialValues = (
   stageId: offering?.stageId ?? '',
   standardId: offering?.standardId ?? '',
   code: offering?.code ?? '',
+  track: offering?.track ?? 0,
+  entryMode: offering?.entryMode ?? 0,
   useCycleDates: offering?.useCycleDates ?? true,
   openDate: offering?.openDate ? dayjs(offering.openDate) : null,
   closeDate: offering?.closeDate ? dayjs(offering.closeDate) : null,
   workflowDefinitionId: offering?.workflowDefinitionId ?? null,
   inquiryFormDefinitionId: offering?.inquiryFormDefinitionId ?? null,
   applicationFormDefinitionId: offering?.applicationFormDefinitionId ?? null,
+  inquiryIntakeProfileId: offering?.inquiryIntakeProfileId ?? null,
+  counsellorAssignmentProfileId: offering?.counsellorAssignmentProfileId ?? null,
   isActive: offering?.isActive ?? false,
 });
 
@@ -82,13 +99,13 @@ export const getAdmissionApiError = (error: unknown, fallback: string): string =
   const code = response.data?.error?.code ?? '';
   const messages: Record<string, string> = {
     'Admissions.OfferingDuplicate':
-      'An offering already exists for this cycle and academic hierarchy.',
+      'An offering already exists for this cycle, class, and admission track.',
     'Admissions.Offering.ConcurrencyConflict':
       'This offering was changed by another user. Refresh and try again.',
     'Admissions.Offering.HasApplications':
       'This offering has applications and cannot be deleted. Deactivate it instead.',
     'Admissions.Offering.ConfigurationIncomplete':
-      'Complete the workflow, inquiry form, application form, and dates before activation.',
+      'Complete the required workflow, forms, intake profiles, and dates before activation.',
     'Admissions.Offering.HierarchyOutOfScope':
       'You do not have access to configure the selected academic hierarchy.',
     'Admissions.Offering.StateCommandRequired':

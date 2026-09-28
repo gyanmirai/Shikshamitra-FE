@@ -1,9 +1,12 @@
 import dayjs from 'dayjs';
 import { it, expect, describe } from 'vitest';
 
-import { admissionOfferingSchema } from './admission-offering-schema';
 import { getAdmissionHierarchyOptions } from './admission-hierarchy-options';
 import { bulkOfferingSchema, bulkOfferingInitialValues } from './bulk-admission-offering-model';
+import {
+  admissionOfferingSchema,
+  admissionOfferingIdentitySchema,
+} from './admission-offering-schema';
 import {
   getAdmissionApiError,
   toOfferingWriteInput,
@@ -14,22 +17,39 @@ import {
 describe('Admission Offering form rules', () => {
   it('starts new single and bulk offerings as inactive preparation', () => {
     expect(getOfferingInitialValues().isActive).toBe(false);
+    expect(getOfferingInitialValues()).toMatchObject({ track: 0, entryMode: 0 });
     expect(bulkOfferingInitialValues.isActive).toBe(false);
   });
 
   it('marks an offering incomplete until all published configuration references are selected', () => {
     expect(
       isAdmissionOfferingConfigurationIncomplete({
+        entryMode: 0,
         workflowDefinitionId: 'workflow-1',
         inquiryFormDefinitionId: 'inquiry-1',
         applicationFormDefinitionId: null,
+        inquiryIntakeProfileId: 'inquiry-profile-1',
+        counsellorAssignmentProfileId: 'assignment-profile-1',
       })
     ).toBe(true);
     expect(
       isAdmissionOfferingConfigurationIncomplete({
+        entryMode: 0,
         workflowDefinitionId: 'workflow-1',
         inquiryFormDefinitionId: 'inquiry-1',
         applicationFormDefinitionId: 'application-1',
+        inquiryIntakeProfileId: 'inquiry-profile-1',
+        counsellorAssignmentProfileId: 'assignment-profile-1',
+      })
+    ).toBe(false);
+    expect(
+      isAdmissionOfferingConfigurationIncomplete({
+        entryMode: 1,
+        workflowDefinitionId: 'workflow-1',
+        inquiryFormDefinitionId: null,
+        applicationFormDefinitionId: 'application-1',
+        inquiryIntakeProfileId: null,
+        counsellorAssignmentProfileId: 'assignment-profile-1',
       })
     ).toBe(false);
   });
@@ -82,6 +102,54 @@ describe('Admission Offering form rules', () => {
         closeDate: dayjs('2026-10-01'),
       })
     ).rejects.toThrow('Close date must be on or after the open date');
+  });
+
+  it('validates the edit class step without requiring later configuration fields', async () => {
+    await expect(
+      admissionOfferingIdentitySchema.validate({
+        campusId: null,
+        boardId: 'board',
+        mediumId: 'medium',
+        stageId: 'stage',
+        standardId: 'standard',
+      })
+    ).resolves.toMatchObject({ standardId: 'standard' });
+    await expect(
+      admissionOfferingIdentitySchema.validate({
+        campusId: null,
+        boardId: 'board',
+        mediumId: 'medium',
+        stageId: 'stage',
+        standardId: '',
+      })
+    ).rejects.toThrow('Standard is required');
+  });
+
+  it('requires registration entry for RTE but leaves other tracks configurable', async () => {
+    const draft = {
+      ...getOfferingInitialValues(),
+      name: 'Grade 5 RTE admission',
+      boardId: 'board',
+      mediumId: 'medium',
+      stageId: 'stage',
+      standardId: 'standard',
+      code: 'GRADE-5-RTE',
+    };
+    await expect(
+      admissionOfferingSchema.validate({ ...draft, track: 1, entryMode: 0 })
+    ).rejects.toThrow('RTE admission must start with registration');
+    await expect(
+      admissionOfferingSchema.validate({ ...draft, track: 1, entryMode: 1 })
+    ).resolves.toMatchObject({
+      track: 1,
+      entryMode: 1,
+    });
+    await expect(
+      admissionOfferingSchema.validate({ ...draft, track: 2, entryMode: 0 })
+    ).resolves.toMatchObject({
+      track: 2,
+      entryMode: 0,
+    });
   });
 
   it('allows incomplete bulk configuration only when saving inactive', async () => {

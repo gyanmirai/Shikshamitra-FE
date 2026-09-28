@@ -61,6 +61,8 @@ describe('application progress model', () => {
     expect(canCompleteStageFromProgress(stage({ stageType: 1 }), 0, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 1, true)).toBe(false);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 6, true)).toBe(true);
+    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 7, true)).toBe(true);
+    expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 8, true)).toBe(true);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 5, true)).toBe(true);
     expect(canCompleteStageFromProgress(stage({ stageType: 7 }), 3, true)).toBe(true);
     expect(canCompleteStageFromProgress(stage({ stageType: 5 }), 0, true)).toBe(false);

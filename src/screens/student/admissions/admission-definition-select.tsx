@@ -14,6 +14,7 @@ type Props = {
   initialOption?: AdmissionDefinitionOption | null;
   fetchOptions: AdmissionDefinitionFetcher;
   onChange: (id: string | null) => void;
+  disabled?: boolean;
   error?: boolean;
   helperText?: ReactNode;
   noOptionsText: string;
@@ -30,6 +31,7 @@ export function AdmissionDefinitionSelect({
   initialOption,
   fetchOptions,
   onChange,
+  disabled,
   error,
   helperText,
   noOptionsText,
@@ -47,6 +49,7 @@ export function AdmissionDefinitionSelect({
       label={label}
       loadingLabel={`Loading ${label.toLowerCase()}`}
       value={value}
+      disabled={disabled}
       fetchOptions={fetchOptions}
       minChars={0}
       debounceMs={300}

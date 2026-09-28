@@ -1,11 +1,17 @@
 import type { Dayjs } from 'dayjs';
 import type { Standards } from 'src/types/school';
-import type { BulkAdmissionOfferingInput } from 'src/redux/student/admissions/admission-offerings-api';
+import type {
+  AdmissionTrack,
+  AdmissionEntryMode,
+  BulkAdmissionOfferingInput,
+} from 'src/redux/student/admissions/admission-offerings-api';
 
 import * as Yup from 'yup';
 import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 
 export type BulkOfferingValues = {
+  track: AdmissionTrack;
+  entryMode: AdmissionEntryMode;
   campusId: string | null;
   boardId: string;
   mediumId: string;
@@ -18,10 +24,14 @@ export type BulkOfferingValues = {
   workflowDefinitionId: string;
   inquiryFormDefinitionId: string;
   applicationFormDefinitionId: string;
+  inquiryIntakeProfileId: string;
+  counsellorAssignmentProfileId: string;
   isActive: boolean;
 };
 
 export const bulkOfferingInitialValues: BulkOfferingValues = {
+  track: 0,
+  entryMode: 0,
   campusId: null,
   boardId: '',
   mediumId: '',
@@ -34,10 +44,24 @@ export const bulkOfferingInitialValues: BulkOfferingValues = {
   workflowDefinitionId: '',
   inquiryFormDefinitionId: '',
   applicationFormDefinitionId: '',
+  inquiryIntakeProfileId: '',
+  counsellorAssignmentProfileId: '',
   isActive: false,
 };
 
+export const bulkOfferingSelectionSchema = Yup.object({
+  boardId: Yup.string().required('Board is required'),
+  mediumId: Yup.string().required('Medium is required'),
+  stageId: Yup.string().required('School level is required'),
+  standardIds: Yup.array()
+    .of(Yup.string().required())
+    .min(1, 'Select at least one standard')
+    .required(),
+});
+
 export const bulkOfferingSchema = Yup.object({
+  track: Yup.number().oneOf([0, 1, 2, 3]).required(),
+  entryMode: Yup.number().oneOf([0, 1, 2]).required(),
   boardId: Yup.string().required('Board is required'),
   mediumId: Yup.string().required('Medium is required'),
   stageId: Yup.string().required('Stage is required'),
@@ -70,13 +94,21 @@ export const bulkOfferingSchema = Yup.object({
     is: true,
     then: (schema) => schema.required('Workflow is required for activation'),
   }),
-  inquiryFormDefinitionId: Yup.string().when('isActive', {
-    is: true,
+  inquiryFormDefinitionId: Yup.string().when(['isActive', 'entryMode'], {
+    is: (isActive: boolean, entryMode: number) => isActive && entryMode !== 1,
     then: (schema) => schema.required('Inquiry form is required for activation'),
   }),
   applicationFormDefinitionId: Yup.string().when('isActive', {
     is: true,
     then: (schema) => schema.required('Application form is required for activation'),
+  }),
+  inquiryIntakeProfileId: Yup.string().when(['isActive', 'entryMode'], {
+    is: (isActive: boolean, entryMode: number) => isActive && entryMode !== 1,
+    then: (schema) => schema.required('Inquiry setup is required for activation'),
+  }),
+  counsellorAssignmentProfileId: Yup.string().when('isActive', {
+    is: true,
+    then: (schema) => schema.required('Counsellor assignment is required for activation'),
   }),
   isActive: Yup.boolean().required(),
 });
@@ -92,6 +124,8 @@ export const toBulkOfferingInput = (
   standards: Standards[],
   previewOnly: boolean
 ): BulkAdmissionOfferingInput => ({
+  track: values.track,
+  entryMode: values.entryMode,
   campusId: values.campusId,
   boardId: values.boardId,
   mediumId: values.mediumId,
@@ -102,6 +136,8 @@ export const toBulkOfferingInput = (
   workflowDefinitionId: values.workflowDefinitionId,
   inquiryFormDefinitionId: values.inquiryFormDefinitionId,
   applicationFormDefinitionId: values.applicationFormDefinitionId,
+  inquiryIntakeProfileId: values.inquiryIntakeProfileId || null,
+  counsellorAssignmentProfileId: values.counsellorAssignmentProfileId || null,
   isActive: values.isActive,
   previewOnly,
   items: values.standardIds.map((id) => {

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type {
   AdmissionApplication,
   AdmissionApplicationForm,
@@ -59,6 +60,7 @@ type Props = {
   canReopen: boolean;
   reopening: boolean;
   onReopen: () => void;
+  documents?: ReactNode;
 };
 
 export function ApplicationRuntimeForm({
@@ -80,6 +82,7 @@ export function ApplicationRuntimeForm({
   canReopen,
   reopening,
   onReopen,
+  documents,
 }: Props) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -360,6 +363,9 @@ export function ApplicationRuntimeForm({
               visibleSections.map(renderSection)
             )}
           </Stack>
+          {documents && (!isStepper || activeStep === visibleSteps.length - 1) && (
+            <Stack sx={{ mt: 2 }}>{documents}</Stack>
+          )}
           {isStepper && visibleSteps.length > 1 && (
             <Stack spacing={1} sx={{ mt: 2 }}>
               <Typography variant="caption" color="text.secondary" textAlign="center">

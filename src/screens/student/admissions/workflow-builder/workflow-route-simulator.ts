@@ -2,6 +2,7 @@ import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
+import { getStageRouteBlocker } from './workflow-runtime-route-rules';
 
 type ConditionNode = {
   operator?: string;
@@ -16,6 +17,7 @@ export type WorkflowSimulationStep = {
   transitionId?: string;
   nextStageId?: string;
   routeKind?: 'condition' | 'default';
+  otherMatchingRoutes?: number;
 };
 
 export type WorkflowSimulationResult = {
@@ -142,7 +144,7 @@ const compareNumbers = (
   const leftNumber = Number(left);
   const rightNumber = Number(right);
   return (
-    Number.isFinite(leftNumber) && Number.isFinite(rightNumber) && compare(leftNumber, rightNumber)
+    left.trim() !== '' && right.trim() !== '' && Number.isFinite(leftNumber) && Number.isFinite(rightNumber) && compare(leftNumber, rightNumber)
   );
 };
 
@@ -249,6 +251,8 @@ export function simulateWorkflowRoute(
     const step: WorkflowSimulationStep = { stageId: current.id, stageName: current.name };
     steps.push(step);
     if (current.isTerminalStage) {
+      const blocker = getStageRouteBlocker(current, facts);
+      if (blocker) return { status: 'blocked', message: blocker, steps };
       return {
         status: 'completed',
         message: `This scenario reaches the terminal stage “${current.name}”.`,
@@ -265,6 +269,8 @@ export function simulateWorkflowRoute(
         !transition.isDefault && evaluateWorkflowCondition(transition.conditionRuleJson, facts)
     );
     const winner = eligible[0] ?? outgoing.find((transition) => transition.isDefault);
+    const blocker = getStageRouteBlocker(current, facts, winner, evaluateWorkflowCondition);
+    if (blocker) return { status: 'blocked', message: blocker, steps };
     if (eligible.length > 1 && eligible[0].priority === eligible[1].priority) {
       return {
         status: 'blocked',
@@ -291,6 +297,7 @@ export function simulateWorkflowRoute(
     step.transitionId = winner.id;
     step.nextStageId = next.id;
     step.routeKind = winner.isDefault ? 'default' : 'condition';
+    step.otherMatchingRoutes = Math.max(0, eligible.length - 1);
     current = next;
   }
 

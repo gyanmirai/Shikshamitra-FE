@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { AdmissionWorkflowNotification } from 'src/redux/student/admissions/admission-workflows-api';
+import type { AdmissionWorkflow, AdmissionWorkflowNotification } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -64,7 +64,6 @@ export default function AdmissionWorkflowsScreen() {
     skipCount: filters.page * filters.rowsPerPage,
   });
   const columns = createWorkflowColumns(actions.allowed, {
-    onView: (workflow) => actions.navigate(workflow, 'preview'),
     onEdit: (workflow) => actions.navigate(workflow),
     onClone: actions.openClone,
     onCreateVersion: actions.createVersion,
@@ -150,6 +149,17 @@ export default function AdmissionWorkflowsScreen() {
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={query.data?.items ?? []}
+          handleRowClick={(row) => actions.navigate(row as AdmissionWorkflow, 'preview')}
+          rowProps={(row) => ({
+            tabIndex: 0,
+            sx: { cursor: 'pointer' },
+            onKeyDown: (event) => {
+              if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                actions.navigate(row as AdmissionWorkflow, 'preview');
+              }
+            },
+          })}
           isLoading={query.isLoading}
           isPagination
           isSearch

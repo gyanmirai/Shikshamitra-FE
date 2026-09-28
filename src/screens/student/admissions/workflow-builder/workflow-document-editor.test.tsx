@@ -54,6 +54,7 @@ describe('document verification stage editor', { timeout: 15000 }, () => {
     expect(
       screen.getByRole('radio', { name: 'Basic completion (existing process)' })
     ).toBeChecked();
+    await user.click(screen.getByRole('tab', { name: 'Basics' }));
     await user.type(
       screen.getByRole('textbox', { name: 'Staff instructions' }),
       'Review originals at reception'

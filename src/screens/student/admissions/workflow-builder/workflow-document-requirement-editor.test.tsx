@@ -1,4 +1,6 @@
 import { addIcon } from '@iconify/react';
+import { http, HttpResponse } from 'msw';
+import { mswServer } from 'src/test/mswServer';
 import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { screen, within, waitFor } from '@testing-library/react';
@@ -48,6 +50,37 @@ const json = (change = {}) =>
   });
 
 describe('document requirement editor', { timeout: 15000 }, () => {
+  it('selects classes without a form answer and preserves them when saving the stage', async () => {
+    const id = '10101010-1010-e010-b010-101010101010';
+    mswServer.use(
+      http.get('*/api/student/enrollment/admissions/document-verification/classes', () =>
+        HttpResponse.json([{ id, name: 'Class 10', context: 'CBSE / English / Secondary' }])
+      )
+    );
+    const { user, onSave } = setupDocumentEditor(json());
+    await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
+    await chooseDocumentOption(user, 'Applies to classes', 'Selected classes');
+    const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
+    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
+    expect(
+      await dialog.findByText('Select at least one class, or choose all classes')
+    ).toBeInTheDocument();
+    await user.click(await dialog.findByRole('combobox', { name: 'Classes' }));
+    await user.click(await screen.findByRole('option', { name: /Class 10/ }));
+    await user.keyboard('{Escape}');
+    await user.click(dialog.getByRole('button', { name: 'Save requirement' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('dialog', { name: 'Configure document requirement' })
+      ).not.toBeInTheDocument()
+    );
+    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(
+      JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements[0]
+        .standardIds
+    ).toEqual([id]);
+  });
   it('requires a comparison before saving a conditional document and preserves the chosen rule', async () => {
     const { user, onSave } = setupDocumentEditor(json());
     await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));

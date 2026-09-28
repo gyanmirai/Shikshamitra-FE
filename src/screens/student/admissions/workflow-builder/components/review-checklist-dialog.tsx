@@ -19,13 +19,11 @@ export function ReviewChecklistDialog({
   existingCodes,
   onSave,
   onClose,
-  context = 'review',
 }: {
   initial: AdmissionReviewChecklistItem;
   existingCodes: string[];
   onSave: (item: AdmissionReviewChecklistItem) => void;
   onClose: () => void;
-  context?: 'review' | 'qualification';
 }) {
   const formik = useFormik({
     initialValues: initial,
@@ -46,7 +44,7 @@ export function ReviewChecklistDialog({
       open
       hasForm={false}
       guardUnsavedChanges={formik.dirty}
-      title={`Configure ${context} checklist item`}
+      title="Configure review checklist item"
       handleClose={onClose}
       maxWidth="sm"
     >
@@ -77,11 +75,7 @@ export function ReviewChecklistDialog({
               helperText={formik.touched.code && formik.errors.code}
             />
             <FormControlLabel
-              label={
-                context === 'review'
-                  ? 'Required before submitting a recommendation'
-                  : 'Required before qualifying the inquiry'
-              }
+              label="Required before submitting a recommendation"
               control={
                 <Switch
                   size="small"
@@ -91,8 +85,8 @@ export function ReviewChecklistDialog({
               }
             />
             <Alert severity="info">
-              Staff can record notes for each item. Required items must pass before a qualified
-              outcome can be saved.
+              Staff can record notes for each item. Required items must pass before a recommendation
+              can be submitted.
             </Alert>
           </Stack>
         </DialogScrollContent>

@@ -5,7 +5,7 @@ import type {
 import type { LabelColor } from 'src/components/label';
 
 const ACTIVE_POST_SUBMISSION_STATUSES = new Set<AdmissionApplicationStatus>([1, 4, 5, 6, 7, 8]);
-const RECORDED_DECISION_STATUSES = new Set<AdmissionApplicationStatus>([3, 5, 6]);
+const RECORDED_DECISION_STATUSES = new Set<AdmissionApplicationStatus>([3, 5, 6, 7, 8]);
 
 export const STAGE_STATUS_LABELS: Record<number, string> = {
   0: 'Not started',

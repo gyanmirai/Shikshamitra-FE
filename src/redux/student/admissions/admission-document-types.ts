@@ -51,6 +51,7 @@ export type ApplicationDocumentVerification = DocumentStageKey & {
   documentVerificationEnabled: boolean;
   policy: AdmissionDocumentPolicy | null;
   isActive: boolean;
+  canCollectDuringForm?: boolean;
   canComplete: boolean;
   blockers: string[];
   concurrencyStamp: string;

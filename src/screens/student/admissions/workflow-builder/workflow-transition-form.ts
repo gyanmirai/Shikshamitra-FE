@@ -1,6 +1,7 @@
 import type { AdmissionWorkflowTransition } from 'src/redux/student/admissions/admission-workflows-api';
 
 import * as Yup from 'yup';
+import { hasInquiryCondition, INQUIRY_RULE_REPLACEMENT_MESSAGE } from './workflow-inquiry-retirement';
 
 import type { SimpleTransitionCondition } from '../workflow-builder-utils';
 
@@ -34,7 +35,11 @@ export const workflowTransitionSchema = Yup.object({
   priority: Yup.number().integer().min(0).required(),
   conditionField: Yup.string().when(['hasCondition', 'preserveCondition'], {
     is: (enabled: boolean, preserved: boolean) => enabled && !preserved,
-    then: (item) => item.trim().required('Field is required'),
+    then: (item) => item.trim().required('Field is required').test(
+      'application-stage-field',
+      INQUIRY_RULE_REPLACEMENT_MESSAGE,
+      (value) => !/^inquiry\./i.test(value ?? '')
+    ),
   }),
   conditionValue: Yup.string().when(['hasCondition', 'conditionOperator', 'preserveCondition'], {
     is: (enabled: boolean, operator: string, preserved: boolean) =>
@@ -51,6 +56,7 @@ export function getTransitionConditionEditorState(
 > {
   const empty = { conditionField: '', conditionOperator: 'Equals' as const, conditionValue: '' };
   if (!json?.trim()) return { ...empty, hasCondition: false, preserveCondition: false };
+  if (hasInquiryCondition(json)) return { ...empty, hasCondition: true, preserveCondition: true };
   try {
     const parsed: unknown = JSON.parse(json);
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {

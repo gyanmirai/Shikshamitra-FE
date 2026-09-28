@@ -9,10 +9,10 @@ export function useDocumentPermissions() {
     hasGrantedPermission(permissions, `Students.Admissions.Documents.${action}`);
   return {
     view: granted('View'),
-    upload: granted('Upload'),
-    original: granted('RecordOriginal'),
-    review: granted('Review'),
-    waive: granted('Waive'),
-    download: granted('Download'),
+    upload: granted('Add'),
+    original: granted('Add'),
+    review: granted('Add'),
+    waive: granted('Delete'),
+    download: granted('View'),
   };
 }

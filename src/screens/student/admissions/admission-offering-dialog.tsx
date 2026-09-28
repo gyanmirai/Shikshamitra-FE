@@ -26,6 +26,7 @@ import {
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { useAdmissionOfferingForm } from './use-admission-offering-form';
 import { AdmissionOfferingReadiness } from './admission-offering-readiness';
+import { AdmissionOfferingEditDrawer } from './admission-offering-edit-drawer';
 import { AdmissionOfferingCycleContext } from './admission-offering-cycle-context';
 import { AdmissionOfferingWindowFields } from './admission-offering-window-fields';
 import { AdmissionOfferingHierarchyFields } from './admission-offering-hierarchy-fields';
@@ -42,7 +43,37 @@ type Props = {
   onSave: (values: AdmissionOfferingWriteInput, admissionCycleId: string) => Promise<void>;
 };
 
-export function AdmissionOfferingDialog({
+export function AdmissionOfferingDialog(props: Props) {
+  const { open, onClose, cycle, cycles, mode = 'create', offering, saving, onSave } = props;
+
+  if (mode === 'edit' && offering) {
+    return (
+      <AdmissionOfferingEditDrawer
+        open={open}
+        cycle={cycle}
+        offering={offering}
+        saving={saving}
+        onClose={onClose}
+        onSave={onSave}
+      />
+    );
+  }
+
+  return (
+    <AdmissionOfferingLegacyDialog
+      open={open}
+      onClose={onClose}
+      cycle={cycle}
+      cycles={cycles}
+      mode={mode}
+      offering={offering}
+      saving={saving}
+      onSave={onSave}
+    />
+  );
+}
+
+function AdmissionOfferingLegacyDialog({
   open,
   onClose,
   cycle,
@@ -89,19 +120,13 @@ export function AdmissionOfferingDialog({
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography id="admission-offering-drawer-title" variant="h6" component="div">
             <AdmissionDialogTitle
-              title={
-                mode === 'clone'
-                  ? 'Clone Admission Offering'
-                  : offering
-                    ? 'Edit Admission Offering'
-                    : 'Add Admission Offering'
-              }
-              helpText="An offering connects one cycle and academic standard to the workflow and forms used for new admissions."
+              title={mode === 'clone' ? 'Clone Admission Offering' : 'Add Admission Offering'}
+              helpText="An offering connects a class and admission track to its entry mode, workflow, and forms."
               helpLabel="Admission offering information"
             />
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Configure the intake identity, dates, workflow, and published forms.
+            Configure the class, admission track, entry mode, dates, workflow, and published forms.
           </Typography>
         </Box>
         <IconButton
@@ -139,8 +164,8 @@ export function AdmissionOfferingDialog({
         )}
         <AdmissionOfferingCycleContext cycle={targetCycle} />
         <Box component="p" sx={{ m: 0, typography: 'body2', color: 'text.secondary' }}>
-          Connect one academic intake to the dates, workflow and forms used for new inquiries and
-          applications.
+          Connect this class and admission track to the dates, workflow, and forms used for new
+          inquiries or direct registrations.
         </Box>
         {form.queryFailed && (
           <Alert severity="error">
@@ -157,20 +182,6 @@ export function AdmissionOfferingDialog({
             </Link>
           </Alert>
         )}
-        {offering && !offering.canEditIdentity && (
-          <Alert severity="info">
-            Academic identity is locked because applications already reference this offering.
-            Operational dates, code, workflow, and forms can still be updated.
-          </Alert>
-        )}
-        {mode === 'edit' && offering && offering.applicationCount > 0 && (
-          <Alert severity="warning" variant="outlined">
-            This offering has {offering.applicationCount}{' '}
-            {offering.applicationCount === 1 ? 'application' : 'applications'}. Workflow and form
-            changes apply only to future applications; existing applications keep their frozen
-            versions.
-          </Alert>
-        )}
         {mode === 'clone' && (
           <Alert severity="info">
             Select a valid academic identity for the target cycle. The source offering&apos;s dates,
@@ -184,7 +195,7 @@ export function AdmissionOfferingDialog({
           standards={form.standards}
           hierarchyLoading={form.hierarchyLoading}
           standardsLoading={form.standardsLoading}
-          identityLocked={mode === 'edit' && Boolean(offering && !offering.canEditIdentity)}
+          identityLocked={false}
           initialCampus={
             offering?.campusId && offering.campusName
               ? {
@@ -204,38 +215,8 @@ export function AdmissionOfferingDialog({
             <AdmissionOfferingConfigurationFields
               formik={form.formik}
               fetchWorkflows={form.fetchWorkflows}
-              fetchForms={form.fetchForms}
-              initialWorkflow={
-                offering?.workflowDefinitionId && offering.workflowName && offering.workflowVersion
-                  ? {
-                      id: offering.workflowDefinitionId,
-                      name: offering.workflowName,
-                      version: offering.workflowVersion,
-                    }
-                  : null
-              }
-              initialInquiryForm={
-                offering?.inquiryFormDefinitionId &&
-                offering.inquiryFormName &&
-                offering.inquiryFormVersion
-                  ? {
-                      id: offering.inquiryFormDefinitionId,
-                      name: offering.inquiryFormName,
-                      version: offering.inquiryFormVersion,
-                    }
-                  : null
-              }
-              initialApplicationForm={
-                offering?.applicationFormDefinitionId &&
-                offering.applicationFormName &&
-                offering.applicationFormVersion
-                  ? {
-                      id: offering.applicationFormDefinitionId,
-                      name: offering.applicationFormName,
-                      version: offering.applicationFormVersion,
-                    }
-                  : null
-              }
+              fetchInquiryForms={form.fetchInquiryForms}
+              fetchRegistrationForms={form.fetchRegistrationForms}
             />
           </>
         )}
@@ -257,47 +238,32 @@ export function AdmissionOfferingDialog({
         >
           Cancel
         </Button>
-        {mode === 'edit' ? (
-          <LoadingButton
-            variant="contained"
-            size="small"
-            startIcon={<Iconify icon="mdi:content-save-outline" />}
-            loading={saving || form.validating || form.formik.isSubmitting}
-            disabled={form.queryFailed || form.hierarchyEmpty}
-            onClick={() => form.formik.handleSubmit()}
-          >
-            Save changes
-          </LoadingButton>
-        ) : (
-          <>
-            <LoadingButton
-              variant="outlined"
-              size="small"
-              startIcon={<Iconify icon="mdi:content-save-outline" />}
-              loading={
-                form.submitIntent === 'inactive' &&
-                (saving || form.validating || form.formik.isSubmitting)
-              }
-              disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
-              onClick={() => form.submitWithActiveState(false)}
-            >
-              {mode === 'clone' ? 'Clone as inactive' : 'Save as inactive'}
-            </LoadingButton>
-            <LoadingButton
-              variant="contained"
-              size="small"
-              startIcon={<Iconify icon="mdi:check-decagram-outline" />}
-              loading={
-                form.submitIntent === 'activate' &&
-                (saving || form.validating || form.formik.isSubmitting)
-              }
-              disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
-              onClick={() => form.submitWithActiveState(true)}
-            >
-              {mode === 'clone' ? 'Clone and activate' : 'Validate and activate'}
-            </LoadingButton>
-          </>
-        )}
+        <LoadingButton
+          variant="outlined"
+          size="small"
+          startIcon={<Iconify icon="mdi:content-save-outline" />}
+          loading={
+            form.submitIntent === 'inactive' &&
+            (saving || form.validating || form.formik.isSubmitting)
+          }
+          disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
+          onClick={() => form.submitWithActiveState(false)}
+        >
+          {mode === 'clone' ? 'Clone as inactive' : 'Save as inactive'}
+        </LoadingButton>
+        <LoadingButton
+          variant="contained"
+          size="small"
+          startIcon={<Iconify icon="mdi:check-decagram-outline" />}
+          loading={
+            form.submitIntent === 'activate' &&
+            (saving || form.validating || form.formik.isSubmitting)
+          }
+          disabled={form.queryFailed || form.hierarchyEmpty || Boolean(form.submitIntent)}
+          onClick={() => form.submitWithActiveState(true)}
+        >
+          {mode === 'clone' ? 'Clone and activate' : 'Validate and activate'}
+        </LoadingButton>
       </Stack>
     </Drawer>
   );

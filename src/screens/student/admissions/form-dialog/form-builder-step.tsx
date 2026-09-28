@@ -18,7 +18,6 @@ type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   step: AdmissionFormStepGroup;
   stepIndex: number;
-  stepCount: number;
   selectedSectionId: string | null;
   selectedFieldId: string | null;
   onSelectSection: (sectionId: string) => void;
@@ -29,7 +28,6 @@ export function FormBuilderStep({
   formik,
   step,
   stepIndex,
-  stepCount,
   selectedSectionId,
   selectedFieldId,
   onSelectSection,
@@ -77,7 +75,6 @@ export function FormBuilderStep({
       <FormBuilderStepHeader
         step={step}
         stepIndex={stepIndex}
-        canDelete={stepCount > 1}
         settingsOpen={settings.value}
         onToggleSettings={settings.onToggle}
         onDelete={deleteStep}
@@ -108,7 +105,6 @@ export function FormBuilderStep({
               sectionIndex={sectionIndex}
               selectedSectionId={selectedSectionId}
               selectedFieldId={selectedFieldId}
-              canDelete={step.sections.length > 1}
               onSelectSection={onSelectSection}
               onSelectField={(fieldId) => onSelectField(section.id, fieldId)}
             />

@@ -1,6 +1,8 @@
 import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 
 import { Iconify } from '../iconify';
 import CustomTooltip from '../custom-tooltip';
@@ -44,17 +46,22 @@ function OverflowActionMenuItem({ action, onSelect }: OverflowActionMenuItemProp
 const AdaptiveThreeDotsActions = ({
   actions,
   moreLabel = 'More actions',
+  mobileDirectActionLimit,
   onClickThreeDots,
   onClosePopover,
   placement = 'left-top',
   sx,
 }: AdaptiveThreeDotsActionsProps) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   if (actions.length === 0) {
     return null;
   }
 
-  const directActions = actions.slice(0, DIRECT_ACTION_LIMIT);
-  const overflowActions = actions.slice(DIRECT_ACTION_LIMIT);
+  const directActionLimit = isMobile ? mobileDirectActionLimit ?? DIRECT_ACTION_LIMIT : DIRECT_ACTION_LIMIT;
+  const directActions = actions.slice(0, directActionLimit);
+  const overflowActions = actions.slice(directActionLimit);
   const usesOverflowMenu = overflowActions.length > 0;
 
   return (

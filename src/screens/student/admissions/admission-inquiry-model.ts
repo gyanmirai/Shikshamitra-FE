@@ -3,6 +3,7 @@ import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/adm
 import type {
   AdmissionInquirySource,
   CreateAdmissionInquiry,
+  DuplicateMatch,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 import type {
   AdmissionForm,
@@ -40,6 +41,9 @@ export const admissionInquirySourceOptions = [
   'Existing parent',
   'Manual',
   'Other',
+  'QR code',
+  'School fair',
+  'Social media',
 ];
 
 // Retained for the existing inquiry-management editor. New inquiry capture uses the default.
@@ -344,9 +348,7 @@ export function validateAdmissionInquiry(
   const guardianPhoneField = fields.find(
     (field) =>
       equalsIgnoreCase(field.bindingKey, 'Guardian.Mobile') ||
-      legacyIdentityFieldCodes['Guardian.Mobile'].some((code) =>
-        equalsIgnoreCase(field.code, code)
-      )
+      legacyIdentityFieldCodes['Guardian.Mobile'].some((code) => equalsIgnoreCase(field.code, code))
   );
   const guardianPhone = boundValue(values, fields, 'Guardian.Mobile', 'guardianPhone');
   if (guardianPhoneField && guardianPhone && !/^[6-9]\d{9}$/.test(guardianPhone)) {
@@ -385,4 +387,14 @@ export function buildAdmissionInquiryDuplicateInput(
     applicantName: payload.applicantName,
     applicantDateOfBirth: payload.applicantDateOfBirth ?? undefined,
   };
+}
+
+export function canLinkAdmissionInquiryFamily(match: DuplicateMatch, guardianPhone: string) {
+  const enteredPhone = guardianPhone.replace(/\D/g, '');
+  const matchedPhone = (match.guardianPhone ?? '').replace(/\D/g, '');
+  return (
+    /^[6-9]\d{9}$/.test(enteredPhone) &&
+    matchedPhone === enteredPhone &&
+    match.canLinkFamily !== false
+  );
 }

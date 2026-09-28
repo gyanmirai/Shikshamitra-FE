@@ -19,11 +19,13 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
+  useGetAdmissionClassCapacityQuery: () => ({ currentData: undefined }),
   useGetAdmissionOfferingsQuery: () => ({
     data: {
       items: [
         {
           id: 'offering-1',
+          entryMode: 0,
           standardName: 'Class 4',
           boardName: 'CBSE',
           mediumName: 'English',

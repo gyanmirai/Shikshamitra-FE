@@ -27,6 +27,7 @@ export const studentPaths = {
       root: '/student/admissions/settings/cycles',
       cycles: '/student/admissions/settings/cycles',
       offerings: '/student/admissions/settings/offerings',
+      intakeAssignment: '/student/admissions/settings/intake-assignment',
       workflows: '/student/admissions/settings/workflows',
       forms: '/student/admissions/settings/forms',
     },
@@ -94,6 +95,7 @@ export const studentPermissions = {
       ],
       cycles: `${defaultStudentPermissionName}Admissions.View`,
       offerings: `${defaultStudentPermissionName}Admissions.Offerings.View`,
+      intakeAssignment: `${defaultStudentPermissionName}Admissions.Offerings.View`,
       workflows: `${defaultStudentPermissionName}Admissions.Workflows.View`,
       forms: `${defaultStudentPermissionName}Admissions.Forms.View`,
     },
@@ -219,7 +221,7 @@ const studentModule = (isDdvs: boolean) => ({
                   icon: menuIconView('mdi:calendar-sync-outline'),
                 },
                 {
-                  title: 'Admission Forms',
+                  title: 'Application Experience',
                   path: studentPaths.enrollment.settings.forms,
                   _action: 'student-admissions-settings-forms',
                   permissionName: studentPermissions.enrollment.settings.forms,
@@ -231,6 +233,13 @@ const studentModule = (isDdvs: boolean) => ({
                   _action: 'student-admissions-settings-workflows',
                   permissionName: studentPermissions.enrollment.settings.workflows,
                   icon: menuIconView('mdi:graph-outline'),
+                },
+                {
+                  title: 'Admission Intake & Assignment',
+                  path: studentPaths.enrollment.settings.intakeAssignment,
+                  _action: 'student-admissions-settings-intake-assignment',
+                  permissionName: studentPermissions.enrollment.settings.intakeAssignment,
+                  icon: menuIconView('mdi:account-arrow-right-outline'),
                 },
                 {
                   title: 'Admission Setup',

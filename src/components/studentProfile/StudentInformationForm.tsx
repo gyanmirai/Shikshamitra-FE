@@ -1,5 +1,6 @@
-import { useRef, useEffect } from 'react';
-import { Grid, TextField } from '@mui/material';
+import { useFormik } from 'formik';
+import { useMemo, useState } from 'react';
+import { Grid, Alert, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LoadingScreen } from 'src/components/loading-screen';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -7,13 +8,21 @@ import {
   useGetBasicDetailsQuery,
   useGetFamilyDetailsQuery,
   useGetParentBankDetailsQuery,
+  useUpdateBasicDetailsMutation,
+  useUpdateFamilyDetailsMutation,
   useGetStudentMedicalDetailsQuery,
   useGetPreviousSchoolDetailsQuery,
+  useUpdateParentBankDetailsMutation,
   useGetStudentAdditionalDetailsQuery,
   useGetStudentCommunicationDetailsQuery,
-} from 'src/redux/student/registration/registration-api';
+  useUpdateStudentMedicalDetailsMutation,
+  useUpdatePreviousSchoolDetailsMutation,
+  useUpdateStudentAdditionalDetailsMutation,
+  useUpdateStudentCommunicationDetailsMutation,
+} from 'src/redux/student/records/student-profile-information-api';
 
 import { familyFields } from './form-fields/register-fields';
+import { profileSectionPayload } from './profile-section-payload';
 import { generalFormFields } from './form-fields/GeneralFormFields';
 import { medicalFields } from './form-fields/render-medical-details';
 import { bankDetailsFields } from './form-fields/render-bank-details';
@@ -53,9 +62,16 @@ export const StudentInformationForm = ({
   tabIndex,
   editData,
   isEdit,
+  refetch,
 }: StudentInformationFormProps) => {
-  const initializedStepsRef = useRef<Record<number, boolean>>({});
-
+  const [saveError, setSaveError] = useState<{ tabIndex: number; message: string } | null>(null);
+  const [updateBasicDetails] = useUpdateBasicDetailsMutation();
+  const [updateFamilyDetails] = useUpdateFamilyDetailsMutation();
+  const [updateCommunicationDetails] = useUpdateStudentCommunicationDetailsMutation();
+  const [updateAdditionalDetails] = useUpdateStudentAdditionalDetailsMutation();
+  const [updateMedicalDetails] = useUpdateStudentMedicalDetailsMutation();
+  const [updatePreviousSchoolDetails] = useUpdatePreviousSchoolDetailsMutation();
+  const [updateBankDetails] = useUpdateParentBankDetailsMutation();
   const { data: basicDetails, isLoading: basicDetailsLoading } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetBasicDetailsQuery,
@@ -137,51 +153,25 @@ export const StudentInformationForm = ({
     },
   });
 
-  // This component is read-only for now - just displays the form fields
-  // Form submission will be implemented later
-  const formik: any = {
-    values: {} as Record<string, any>,
-    errors: {} as Record<string, any>,
-    touched: {} as Record<string, any>,
-    handleChange: () => {},
-    handleBlur: () => {},
-    setFieldValue: () => {},
-  };
-
-  useEffect(() => {
-    if (initializedStepsRef.current[tabIndex]) return;
-
-    // Load data based on tab index
-    if (basicDetails?.data && tabIndex === 0) {
-      const values = generalFieldsInitialValues(basicDetails?.data);
-      Object.assign(formik.values, values);
-      initializedStepsRef.current[tabIndex] = true;
-    } else if (familyDetails?.data && tabIndex === 1) {
-      const values = familyFieldsInitialValues(familyDetails?.data);
-      Object.assign(formik.values, values);
-      initializedStepsRef.current[tabIndex] = true;
-    } else if (studentCommunicationDetails?.data && tabIndex === 2) {
-      const values = CommunicationFieldsInitialValues(studentCommunicationDetails?.data);
-      Object.assign(formik.values, values);
-      initializedStepsRef.current[tabIndex] = true;
-    } else if (studentAdditionalDetails?.data && tabIndex === 3) {
-      const values = additionalDetailsInitialValues(studentAdditionalDetails?.data);
-      Object.assign(formik.values, values);
-      initializedStepsRef.current[tabIndex] = true;
-    } else if (studentMedicalDetails?.data && tabIndex === 4) {
-      const values = medicalFieldsInitialValues(studentMedicalDetails?.data);
-      Object.assign(formik.values, values);
-      initializedStepsRef.current[tabIndex] = true;
-    } else if (previousSchoolDetails?.data && tabIndex === 5) {
-      const values = previousSchoolFieldsInitialValues(previousSchoolDetails?.data);
-      Object.assign(formik.values, values);
-      initializedStepsRef.current[tabIndex] = true;
-    } else if (parentBankDetails?.data && tabIndex === 6) {
-      const values = bankDetailsInitialValues(parentBankDetails?.data);
-      Object.assign(formik.values, values);
-      initializedStepsRef.current[tabIndex] = true;
+  const initialValues = useMemo<Record<string, any>>(() => {
+    switch (tabIndex) {
+      case 0:
+        return generalFieldsInitialValues(basicDetails?.data);
+      case 1:
+        return familyFieldsInitialValues(familyDetails?.data);
+      case 2:
+        return CommunicationFieldsInitialValues(studentCommunicationDetails?.data);
+      case 3:
+        return additionalDetailsInitialValues(studentAdditionalDetails?.data);
+      case 4:
+        return medicalFieldsInitialValues(studentMedicalDetails?.data);
+      case 5:
+        return previousSchoolFieldsInitialValues(previousSchoolDetails?.data);
+      case 6:
+        return bankDetailsInitialValues(parentBankDetails?.data);
+      default:
+        return {};
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     basicDetails?.data,
     familyDetails?.data,
@@ -192,6 +182,52 @@ export const StudentInformationForm = ({
     studentCommunicationDetails?.data,
     studentMedicalDetails?.data,
   ]);
+  const formik = useFormik({
+    initialValues,
+    enableReinitialize: true,
+    onSubmit: async (values) => {
+      const studentId = editData?.studentId;
+      if (!studentId) return;
+      const sources = [
+        basicDetails?.data,
+        familyDetails?.data,
+        studentCommunicationDetails?.data,
+        studentAdditionalDetails?.data,
+        studentMedicalDetails?.data,
+        previousSchoolDetails?.data,
+        parentBankDetails?.data,
+      ];
+      const updateSection = [
+        updateBasicDetails,
+        updateFamilyDetails,
+        updateCommunicationDetails,
+        updateAdditionalDetails,
+        updateMedicalDetails,
+        updatePreviousSchoolDetails,
+        updateBankDetails,
+      ][tabIndex];
+      if (!updateSection || !sources[tabIndex]) return;
+      setSaveError(null);
+      try {
+        await updateSection({
+          id: studentId,
+          body: profileSectionPayload(tabIndex, values, sources[tabIndex]),
+        }).unwrap();
+        refetch?.();
+      } catch (error: any) {
+        const validationErrors = Object.values(error?.data?.errors ?? {}).flat();
+        setSaveError({
+          tabIndex,
+          message:
+            error?.data?.error?.message ??
+            error?.data?.message ??
+            (validationErrors.length ? validationErrors.join(' ') : null) ??
+            'Could not save student information. Please try again.',
+        });
+        throw error;
+      }
+    },
+  });
 
   if (
     basicDetailsLoading ||
@@ -207,6 +243,11 @@ export const StudentInformationForm = ({
 
   return (
     <Grid container spacing={2}>
+      {saveError?.tabIndex === tabIndex && (
+        <Grid size={12}>
+          <Alert severity="error">{saveError.message}</Alert>
+        </Grid>
+      )}
       {fields[tabIndex].map((field: FieldsType) => (
         <Grid
           size={{
@@ -237,7 +278,7 @@ export const StudentInformationForm = ({
                   placeholder: field.placeholder,
                   fullWidth: true,
                   size: 'small',
-                  helperText: formik.touched[field.name] && formik.errors[field.name],
+                  helperText: formik.touched[field.name] ? String(formik.errors[field.name] ?? '') : '',
                   error: formik.touched[field.name] && Boolean(formik.errors[field.name]),
                 },
               }}
@@ -254,7 +295,7 @@ export const StudentInformationForm = ({
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               error={formik.touched[field.name] && Boolean(formik.errors[field.name])}
-              helperText={formik.touched[field.name] && formik.errors[field.name]}
+              helperText={formik.touched[field.name] ? String(formik.errors[field.name] ?? '') : ''}
               fullWidth
               disabled={!isEdit}
               {...(field?.otherProps || {})}
