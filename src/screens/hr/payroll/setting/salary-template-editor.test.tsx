@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   calculate: vi.fn(),
   refetch: vi.fn(),
   loading: false,
+  catalogLoading: false,
   failed: false,
   template: {
     id: 'template-1',
@@ -86,14 +87,16 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
     data: { items: [mocks.template.editableVersion] },
   }),
   useGetSalaryTemplateComponentCatalogQuery: () => ({
-    data: {
-      items: [
-        { componentId: 'earning-1', name: 'Basic Salary', lineKind: 'EARNING' },
-        { componentId: 'earning-2', name: 'Special Allowance', lineKind: 'EARNING' },
-        { componentId: 'deduction-1', name: 'Loan Recovery', lineKind: 'DEDUCTION' },
-      ],
-    },
-    isLoading: false,
+    data: mocks.catalogLoading
+      ? undefined
+      : {
+          items: [
+            { componentId: 'earning-1', name: 'Basic Salary', lineKind: 'EARNING' },
+            { componentId: 'earning-2', name: 'Special Allowance', lineKind: 'EARNING' },
+            { componentId: 'deduction-1', name: 'Loan Recovery', lineKind: 'DEDUCTION' },
+          ],
+        },
+    isLoading: mocks.catalogLoading,
     isError: false,
   }),
   useCreateSalaryTemplateMutation: () => [mocks.createTemplate, { isLoading: false }],
@@ -113,6 +116,7 @@ describe('SalaryTemplateEditor', () => {
     mocks.template = structuredClone(originalTemplate);
     mocks.permissions = new Set(['View', 'Add', 'Edit']);
     mocks.loading = false;
+    mocks.catalogLoading = false;
     mocks.failed = false;
     mocks.template.status = 'ACTIVE';
     mocks.calculate.mockReturnValue({
@@ -150,6 +154,36 @@ describe('SalaryTemplateEditor', () => {
   });
 
   afterEach(cleanup);
+
+  it('preserves workflow context and cancellation while the create catalogue loads', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    mocks.catalogLoading = true;
+    const { rerender } = renderEditor(<SalaryTemplateEditor mode="create" onClose={onClose} />);
+
+    expect(screen.getByRole('status', { name: 'Loading salary template' })).toHaveAttribute(
+      'aria-busy',
+      'true'
+    );
+    expect(screen.getByRole('heading', { name: 'Create Salary Template' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Step 1: Configure' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Step 2: Review' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Review' })).toBeDisabled();
+    expect(screen.queryByRole('textbox', { name: 'Template name' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(onClose).toHaveBeenCalledOnce();
+
+    mocks.catalogLoading = false;
+    await act(async () => {
+      rerender(
+        <ThemeProvider theme={theme}>
+          <SalaryTemplateEditor mode="create" onClose={onClose} />
+        </ThemeProvider>
+      );
+    });
+    expect(screen.queryByRole('status', { name: 'Loading salary template' })).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Template name' })).toBeVisible();
+  });
 
   it('keeps the title and close action available while loading or reporting an error', async () => {
     const user = userEvent.setup();
