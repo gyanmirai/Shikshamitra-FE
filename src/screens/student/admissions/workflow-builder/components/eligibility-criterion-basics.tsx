@@ -4,13 +4,12 @@ import type {
   AdmissionEligibilityCriterion,
 } from 'src/redux/student/admissions/admission-eligibility-policy';
 
-import { Stack, TextField } from '@mui/material';
+import { Alert, Stack, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
 export const ELIGIBILITY_KIND_OPTIONS = [
   { value: 'age', label: 'Age on a cutoff date' },
   { value: 'application', label: 'Application answers or previous marks' },
-  { value: 'inquiry', label: 'Inquiry answers' },
   { value: 'assessment', label: 'Entrance assessment result' },
   { value: 'documents', label: 'Verified documents' },
 ];
@@ -67,13 +66,19 @@ export function EligibilityCriterionBasics({
         fullWidth
         size="small"
         label="What should be checked?"
-        value={formik.values.kind}
+        value={formik.values.kind === 'inquiry' ? '' : formik.values.kind}
         options={ELIGIBILITY_KIND_OPTIONS}
         disabled={readOnly}
         onChange={(kind) =>
           formik.setValues(changeKind(formik.values, kind as AdmissionEligibilityKind))
         }
       />
+      {formik.values.kind === 'inquiry' && (
+        <Alert severity="info">
+          This saved criterion uses inquiry answers. Choose another check to replace it in this
+          draft. Existing published applications keep their original criterion.
+        </Alert>
+      )}
       <TextField
         fullWidth
         multiline

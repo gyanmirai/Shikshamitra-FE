@@ -6,7 +6,8 @@ export type AdmissionOfferEvent = {
   actorId?: string | null; occurredAt: string; metadataJson?: string | null;
 };
 export type AdmissionOfferStage = {
-  applicationId: string; stageId: string; offerStageEnabled: boolean;
+  applicationId: string; admissionOfferingId: string; stageId: string; offerStageEnabled: boolean;
+  assignedCounsellorId?: string | null; assignedCounsellorName?: string | null;
   policy?: AdmissionOfferPolicy | null; isActive: boolean; status: string; versionNumber: number;
   extensionCount: number; reissueCount: number; issuedAt?: string | null; expiresAt?: string | null;
   respondedAt?: string | null; concurrencyStamp: string; events: AdmissionOfferEvent[];

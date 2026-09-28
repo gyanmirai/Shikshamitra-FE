@@ -94,7 +94,7 @@ export function FormBuilderSections({
                             {selectedStep.name} /{' '}
                           </Typography>
                         )}
-                        {selectedSection?.name || 'Untitled section'}
+                        {selectedSection?.name || 'No sections yet'}
                       </>
                     )}
                   </Typography>
@@ -148,6 +148,15 @@ export function FormBuilderSections({
                       <Button
                         size="small"
                         variant="outlined"
+                        startIcon={<Iconify icon="mdi:plus" />}
+                        onClick={commands.addSection}
+                        sx={{ minHeight: 44 }}
+                      >
+                        Add section
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
                         startIcon={<Iconify icon="mdi:format-list-bulleted" />}
                         onClick={() => setShowFullStructure(true)}
                       >
@@ -156,6 +165,7 @@ export function FormBuilderSections({
                       <Button
                         size="small"
                         variant="contained"
+                        disabled={!selectedSection}
                         startIcon={<Iconify icon="mdi:plus" />}
                         onClick={fieldLibrary.onTrue}
                         sx={{

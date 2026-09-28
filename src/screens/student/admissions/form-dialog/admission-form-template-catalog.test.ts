@@ -14,6 +14,15 @@ import {
 } from './admission-form-template-catalog';
 
 describe('admission form template catalogue', () => {
+  it('keeps consent sections available without offering a standalone consent form', () => {
+    expect(SYSTEM_ADMISSION_FORM_TEMPLATES.some((item) => item.id === 'consent-declaration')).toBe(
+      false
+    );
+    expect(ADMISSION_FORM_SECTION_TEMPLATES.some((item) => item.id === 'consent-declaration')).toBe(
+      true
+    );
+  });
+
   it.each(SYSTEM_ADMISSION_FORM_TEMPLATES)(
     'creates a valid, accurate $title template',
     async (summary) => {

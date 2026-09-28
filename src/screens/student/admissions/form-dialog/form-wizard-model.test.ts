@@ -8,6 +8,7 @@ function validForm(): CreateUpdateAdmissionForm {
   return {
     name: 'Admission application',
     code: 'ADMISSION_2026',
+    purpose: 1,
     layoutType: 1,
     fieldsPerRow: 1,
     defaultLanguage: 'en',

@@ -9,12 +9,13 @@ export function useReviewPermissions() {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const granted = (action: string) =>
     hasGrantedPermission(permissions, `Students.Admissions.Reviews.${action}`);
+  const canWriteReview = granted('Add');
   return {
     view: granted('View'),
-    edit: granted('Edit'),
-    submit: granted('Submit'),
-    assign: granted('Assign'),
-    decide: granted('Decide'),
+    edit: canWriteReview,
+    submit: canWriteReview,
+    assign: canWriteReview,
+    decide: canWriteReview,
     reopen: hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage),
   };
 }

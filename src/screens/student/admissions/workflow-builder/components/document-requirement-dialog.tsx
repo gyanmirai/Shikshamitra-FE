@@ -3,6 +3,7 @@ import type { AdmissionDocumentTypeOption } from 'src/redux/student/admissions/a
 import type { AdmissionDocumentRequirementPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
 import { useFormik } from 'formik';
+import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { Box, Alert, Stack, Button, DialogActions } from '@mui/material';
@@ -11,8 +12,13 @@ import { emptyCondition } from 'src/redux/student/admissions/admission-condition
 import { documentRequirementSchema } from 'src/redux/student/admissions/admission-document-policy-validation';
 
 import { DocumentRequirementBasics } from './document-requirement-basics';
+import { DocumentRequirementClasses } from './document-requirement-classes';
 import { DocumentConditionFormPicker } from './document-condition-form-picker';
 import { DocumentRequirementCollection } from './document-requirement-collection';
+import {
+  hasInquiryCondition,
+  INQUIRY_RULE_REPLACEMENT_MESSAGE,
+} from '../workflow-inquiry-retirement';
 
 type Props = {
   initial: AdmissionDocumentRequirementPolicy;
@@ -34,7 +40,10 @@ export function DocumentRequirementDialog({
     initialValues: initial,
     validationSchema: documentRequirementSchema,
     validate: (values) => {
-      const errors: { code?: string; documentTypeId?: string } = {};
+      const errors: { code?: string; documentTypeId?: string; conditionJson?: string } = {};
+      if (values.requirement === 'conditional' && hasInquiryCondition(values.conditionJson)) {
+        errors.conditionJson = INQUIRY_RULE_REPLACEMENT_MESSAGE;
+      }
       if (existingCodes.includes(values.code)) errors.code = 'This document code is already in use';
       const mapped = documentTypes.find((item) => item.id === values.documentTypeId);
       if (
@@ -77,13 +86,19 @@ export function DocumentRequirementDialog({
         <DialogScrollContent>
           <Stack spacing={2}>
             <DocumentRequirementBasics formik={formik} />
+            <DocumentRequirementClasses formik={formik} />
             <CustomSelect
               size="small"
               fullWidth
               label="When is it required?"
               value={formik.values.requirement}
               options={[
-                { value: 'required', label: 'Required for every applicant' },
+                {
+                  value: 'required',
+                  label: formik.values.standardIds
+                    ? 'Required in selected classes'
+                    : 'Required for every applicant',
+                },
                 { value: 'optional', label: 'Optional' },
                 { value: 'conditional', label: 'Required when conditions match' },
               ]}
@@ -115,11 +130,23 @@ export function DocumentRequirementDialog({
             <DocumentRequirementCollection formik={formik} documentTypes={documentTypes} />
           </Stack>
         </DialogScrollContent>
-        <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
-          <Button size="small" variant="outlined" onClick={requestClose}>
+        <DialogActions
+          sx={{ p: 2, boxShadow: 'var(--shadows-10)', '& .MuiButton-root': { minHeight: 44 } }}
+        >
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={requestClose}
+            startIcon={<Iconify icon="mdi:close" />}
+          >
             Cancel
           </Button>
-          <Button size="small" variant="contained" type="submit">
+          <Button
+            size="small"
+            variant="contained"
+            type="submit"
+            startIcon={<Iconify icon="mdi:content-save-outline" />}
+          >
             Save requirement
           </Button>
         </DialogActions>

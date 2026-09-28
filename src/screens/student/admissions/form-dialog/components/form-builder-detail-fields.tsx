@@ -47,6 +47,19 @@ export function FormBuilderDetailFields({
           select
           fullWidth
           size="small"
+          label="Form purpose *"
+          value={formik.values.purpose ?? 1}
+          onChange={(event) => formik.setFieldValue('purpose', Number(event.target.value))}
+        >
+          <MenuItem value={0}>Inquiry</MenuItem>
+          <MenuItem value={1}>Registration</MenuItem>
+        </TextField>
+      </Grid>
+      <Grid size={{ xs: 12, sm: 6 }}>
+        <TextField
+          select
+          fullWidth
+          size="small"
           label="Form layout *"
           value={formik.values.layoutType}
           onChange={(event) => formik.setFieldValue('layoutType', Number(event.target.value))}

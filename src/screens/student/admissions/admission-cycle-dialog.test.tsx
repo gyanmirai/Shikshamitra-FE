@@ -1,14 +1,14 @@
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { LocalizationProvider } from '@mui/x-date-pickers';
-import { it, vi, expect, describe } from 'vitest';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { render, screen, waitFor } from '@testing-library/react';
-import { defaultSettings } from 'src/components/settings/config-settings';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
+import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
 
@@ -42,6 +42,45 @@ const editingCycle = {
 };
 
 describe('admission cycle dialog', () => {
+  it('keeps guidance available without inline helper text', async () => {
+    const user = userEvent.setup();
+    const store = configureStore({ reducer: { confirmPopup } });
+
+    render(
+      <Provider store={store}>
+        <ThemeProvider theme={createTheme(defaultSettings)}>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <AdmissionCycleDialog
+              open
+              academicYearId={academicYear.id}
+              academicYears={[academicYear]}
+              academicYearsLoading={false}
+              academicYearsError={false}
+              saving={false}
+              onSave={vi.fn()}
+              onClose={vi.fn()}
+            />
+          </LocalizationProvider>
+        </ThemeProvider>
+      </Provider>
+    );
+
+    expect(screen.queryByText('Uppercase letters, numbers, hyphen and underscore')).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toHaveAttribute(
+      'placeholder',
+      'Internal purpose or audience, e.g. Nursery to Grade 9'
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Admission cycle information' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Save the cycle as a draft first.');
+
+    const code = screen.getByRole('textbox', { name: 'Cycle code' });
+    await user.click(code);
+    expect(screen.getByText('Uppercase letters, numbers, hyphen and underscore')).toBeInTheDocument();
+    await user.tab();
+    expect(screen.queryByText('Uppercase letters, numbers, hyphen and underscore')).not.toBeInTheDocument();
+  });
+
   it('closes directly after a successful save without showing the discard warning', async () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(undefined);

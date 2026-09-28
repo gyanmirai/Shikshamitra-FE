@@ -1,8 +1,7 @@
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 
-import { Iconify } from 'src/components/iconify';
-import { MenuItem, MenuList } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 type Props = {
   form: AdmissionForm;
@@ -11,7 +10,6 @@ type Props = {
   canDelete: boolean;
   canOverrideMakerChecker: boolean;
   currentUserId?: string | null;
-  onPreview: () => void;
   onEdit: () => void;
   onClone: () => void;
   onValidate: () => void;
@@ -68,7 +66,6 @@ export function FormRowActions({
   canDelete,
   canOverrideMakerChecker,
   currentUserId,
-  onPreview,
   onEdit,
   onClone,
   onValidate,
@@ -95,88 +92,21 @@ export function FormRowActions({
     isApprovalRequester,
     canOverrideMakerChecker
   );
-  return (
-    <ThreeDotsActions
-      placement="right-top"
-      moreLabel={`More actions for ${form.name}`}
-      showViewIcon
-      viewIcon="mdi:eye-outline"
-      viewLabel={`Preview ${form.name}`}
-      handleViewClick={onPreview}
-      showEditIcon={canManage}
-      editLabel={`Edit ${form.name}`}
-      disableEditIcon={!visible.edit}
-      handleEditClick={onEdit}
-      showDeleteIcon={canDelete}
-      deleteLabel={`Delete ${form.name}`}
-      disableDeleteIcon={!visible.delete}
-      handleDeleteClick={onDelete}
-      actions={({ popover }) => {
-        const run = (action: () => void) => {
-          popover.onClose();
-          action();
-        };
-        return (
-          <MenuList dense>
-            {visible.clone && (
-              <MenuItem onClick={() => run(onClone)}>
-                <Iconify icon="mdi:content-copy" /> Clone as draft
-              </MenuItem>
-            )}
-            {visible.validate && (
-              <MenuItem onClick={() => run(onValidate)}>
-                <Iconify icon="mdi:check-decagram-outline" /> Validate
-              </MenuItem>
-            )}
-            {visible.requestApproval && (
-              <MenuItem onClick={() => run(onRequestApproval)}>
-                <Iconify icon="mdi:account-arrow-right-outline" /> Request approval
-              </MenuItem>
-            )}
-            {visible.approve && (
-              <MenuItem onClick={() => run(onApprove)}>
-                <Iconify icon="mdi:check-circle-outline" />
-                {isApprovalRequester ? 'Approve with admin override' : 'Approve'}
-              </MenuItem>
-            )}
-            {visible.reject && (
-              <MenuItem onClick={() => run(onReject)}>
-                <Iconify icon="mdi:close-circle-outline" />
-                {isApprovalRequester ? 'Request changes with admin override' : 'Request changes'}
-              </MenuItem>
-            )}
-            {canPublish &&
-              form.status === 0 &&
-              form.approvalStatus === 1 &&
-              isApprovalRequester &&
-              !canOverrideMakerChecker && (
-                <MenuItem disabled>
-                  <Iconify icon="mdi:account-clock-outline" /> Awaiting another authorized reviewer
-                </MenuItem>
-              )}
-            {visible.publish && (
-              <MenuItem onClick={() => run(onPublish)}>
-                <Iconify icon="mdi:publish" /> Publish
-              </MenuItem>
-            )}
-            {visible.createVersion && (
-              <MenuItem onClick={() => run(onCreateVersion)}>
-                <Iconify icon="mdi:source-branch-plus" /> New version
-              </MenuItem>
-            )}
-            {visible.archive && (
-              <MenuItem onClick={() => run(onArchive)}>
-                <Iconify icon="mdi:archive-outline" /> Archive
-              </MenuItem>
-            )}
-            {visible.history && (
-              <MenuItem onClick={() => run(onHistory)}>
-                <Iconify icon="mdi:history" /> History &amp; versions
-              </MenuItem>
-            )}
-          </MenuList>
-        );
-      }}
-    />
-  );
+  const actions: AdaptiveThreeDotsAction[] = [];
+  if (canManage) actions.push({ id: 'edit', label: `Edit ${form.name}`, icon: 'solar:pen-bold', disabled: !visible.edit, onClick: onEdit });
+  if (canDelete) actions.push({ id: 'delete', label: `Delete ${form.name}`, icon: 'solar:trash-bin-trash-bold', color: visible.delete ? 'error.main' : 'text.disabled', disabled: !visible.delete, onClick: onDelete });
+  if (visible.clone) actions.push({ id: 'clone', label: `Clone ${form.name} as draft`, icon: 'mdi:content-copy', onClick: onClone });
+  if (visible.validate) actions.push({ id: 'validate', label: `Validate ${form.name}`, icon: 'mdi:check-decagram-outline', onClick: onValidate });
+  if (visible.requestApproval) actions.push({ id: 'request-approval', label: `Request approval for ${form.name}`, icon: 'mdi:account-arrow-right-outline', onClick: onRequestApproval });
+  if (visible.approve) actions.push({ id: 'approve', label: `${isApprovalRequester ? 'Approve with admin override' : 'Approve'} ${form.name}`, icon: 'mdi:check-circle-outline', onClick: onApprove });
+  if (visible.reject) actions.push({ id: 'reject', label: `${isApprovalRequester ? 'Request changes with admin override for' : 'Request changes for'} ${form.name}`, icon: 'mdi:close-circle-outline', onClick: onReject });
+  if (canPublish && form.status === 0 && form.approvalStatus === 1 && isApprovalRequester && !canOverrideMakerChecker) {
+    actions.push({ id: 'awaiting-reviewer', label: 'Awaiting another authorized reviewer', icon: 'mdi:account-clock-outline', disabled: true, onClick: () => {} });
+  }
+  if (visible.publish) actions.push({ id: 'publish', label: `Publish ${form.name}`, icon: 'mdi:publish', onClick: onPublish });
+  if (visible.createVersion) actions.push({ id: 'new-version', label: `New version of ${form.name}`, icon: 'mdi:source-branch-plus', onClick: onCreateVersion });
+  if (visible.archive) actions.push({ id: 'archive', label: `Archive ${form.name}`, icon: 'mdi:archive-outline', onClick: onArchive });
+  if (visible.history) actions.push({ id: 'history', label: `History & versions for ${form.name}`, icon: 'mdi:history', onClick: onHistory });
+
+  return <AdaptiveThreeDotsActions placement="right-top" moreLabel={`More actions for ${form.name}`} mobileDirectActionLimit={0} sx={{ gap: 0, '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } } }} actions={actions} />;
 }

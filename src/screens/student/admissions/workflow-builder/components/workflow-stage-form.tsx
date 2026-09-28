@@ -3,6 +3,7 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { MenuItem, TextField } from '@mui/material';
+import ShakingTextField from 'src/components/shaking-text-field';
 import { writeAdmissionFormDefinitionId } from 'src/redux/student/admissions/admission-form-stage-policy';
 
 type Props = {
@@ -13,33 +14,41 @@ type Props = {
 };
 
 export function WorkflowStageForm({ formik, forms, formDefinitionId, readOnly }: Props) {
+  const showError = Boolean(formik.touched.configurationJson || formik.submitCount > 0);
+  const hasError = Boolean(showError && formik.errors.configurationJson);
+
   return (
-    <TextField
-      select
-      fullWidth
-      size="small"
-      label="Published form version *"
-      disabled={readOnly}
-      value={formDefinitionId}
-      onChange={(event) =>
-        formik.setFieldValue(
-          'configurationJson',
-          writeAdmissionFormDefinitionId(formik.values.configurationJson, event.target.value)
-        )
-      }
-      error={Boolean(formik.touched.configurationJson && formik.errors.configurationJson)}
-      helperText={
-        (formik.touched.configurationJson && formik.errors.configurationJson) ||
-        (forms.length === 0
-          ? 'Publish a form before attaching it to this stage.'
-          : 'The selected form version is frozen with the workflow.')
-      }
-    >
-      {forms.map((form) => (
-        <MenuItem key={form.id} value={form.id}>
-          {form.name} · v{form.version}
-        </MenuItem>
-      ))}
-    </TextField>
+    <ShakingTextField error={hasError}>
+      <TextField
+        select
+        fullWidth
+        size="small"
+        label="Published form version *"
+        disabled={readOnly}
+        value={formDefinitionId}
+        onBlur={() => formik.setFieldTouched('configurationJson', true)}
+        onChange={(event) =>
+          formik.setFieldValue(
+            'configurationJson',
+            writeAdmissionFormDefinitionId(formik.values.configurationJson, event.target.value)
+          )
+        }
+        error={hasError}
+        helperText={
+          (showError && formik.errors.configurationJson) ||
+          (forms.length === 0
+            ? 'Publish a form before attaching it to this stage.'
+            : formDefinitionId
+              ? 'The selected version is frozen with the workflow.'
+              : undefined)
+        }
+      >
+        {forms.map((form) => (
+          <MenuItem key={form.id} value={form.id}>
+            {form.name} · v{form.version}
+          </MenuItem>
+        ))}
+      </TextField>
+    </ShakingTextField>
   );
 }

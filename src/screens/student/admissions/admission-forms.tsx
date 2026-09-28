@@ -1,10 +1,14 @@
 'use client';
 
 import type { IParams } from 'src/components/customizabaleTable/types';
-import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  AdmissionForm,
+  AdmissionFormPurpose,
+} from 'src/redux/student/admissions/admission-forms-api';
 
-import { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useSearchParams } from 'next/navigation';
+import { useMemo, useState, useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -20,13 +24,31 @@ import { AdmissionFormCloneDialog } from './admission-form-clone-dialog';
 import { buildAdmissionFormListQuery } from './form-list/form-list-query';
 import { AdmissionFormPublishDialog } from './admission-form-publish-dialog';
 import { AdmissionFormHistoryDialog } from './admission-form-history-dialog';
+import { ApplicationExperienceNavigation } from './application-experience-navigation';
+
+import type { ApplicationExperienceView } from './application-experience-navigation';
+
+const FORM_PURPOSES: Record<ApplicationExperienceView, AdmissionFormPurpose> = {
+  inquiry: 0,
+  registration: 1,
+};
+const VIEWS: ApplicationExperienceView[] = ['inquiry', 'registration'];
 
 export default function AdmissionFormsScreen() {
+  const searchParams = useSearchParams();
+  const requestedView = searchParams.get('view') as ApplicationExperienceView | null;
+  const view = requestedView && VIEWS.includes(requestedView) ? requestedView : 'inquiry';
+  const purpose = FORM_PURPOSES[view];
   const actions = useFormListActions();
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState<IParams['filters']>([]);
+  useEffect(() => {
+    setPage(0);
+    setSearch('');
+    setFilters([]);
+  }, [view]);
   const [review, setReview] = useState<{
     form: AdmissionForm;
     action: 'approve' | 'reject';
@@ -40,8 +62,8 @@ export default function AdmissionFormsScreen() {
     actions.currentUserId.toLowerCase() === review.form.approvalRequestedBy.toLowerCase()
   );
   const listQuery = useMemo(
-    () => buildAdmissionFormListQuery({ page, rowsPerPage, search, filters }),
-    [filters, page, rowsPerPage, search]
+    () => buildAdmissionFormListQuery({ page, rowsPerPage, search, filters, purpose }),
+    [filters, page, purpose, rowsPerPage, search]
   );
   const query = useGetAdmissionFormsQuery(listQuery);
   const columns = createFormColumns({
@@ -50,7 +72,6 @@ export default function AdmissionFormsScreen() {
     canDelete: actions.canDelete,
     canOverrideMakerChecker: actions.canOverrideMakerChecker,
     currentUserId: actions.currentUserId,
-    onPreview: (form) => actions.preview(form.id),
     onEdit: (form) => actions.edit(form.id),
     onClone: actions.requestClone,
     onValidate: (form) => actions.validate(form.id),
@@ -67,36 +88,52 @@ export default function AdmissionFormsScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Admission Forms"
-        description="Define reusable inquiry and application fields before publishing."
+        heading="Application Experience"
+        description="Create and publish the inquiry and registration forms used across admissions."
         links={[
-          { name: 'Students', href: '/student/dashboard' },
-          { name: 'Admissions', href: '/student/admissions' },
+          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
-          { name: 'Admission Forms' },
+          { name: 'Application Experience' },
         ]}
-        sx={{ mb: 1 }}
         action={
           <Button
             size="small"
             variant="contained"
             disabled={!actions.canManage}
             startIcon={<Iconify icon="mdi:plus" />}
-            onClick={actions.create}
+            onClick={() => actions.create(purpose)}
           >
             Create form
           </Button>
         }
       />
+      <ApplicationExperienceNavigation value={view} />
       {query.isError && <AdmissionQueryError onRetry={() => query.refetch()} />}
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+      <Box
+        role="tabpanel"
+        id={`application-experience-${view}-panel`}
+        aria-labelledby={`application-experience-${view}-tab`}
+        sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+      >
         <CustomizableTable
-          tableId="admission-forms"
-          tableTitle="Admission forms"
+          tableId={`admission-forms-${view}`}
+          tableTitle={`${view[0].toUpperCase()}${view.slice(1)} forms`}
           wrapperProps={{ sx: { height: 1 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={query.data?.items ?? []}
+          handleRowClick={(row) => actions.preview((row as AdmissionForm).id)}
+          rowProps={(row) => ({
+            tabIndex: 0,
+            sx: { cursor: 'pointer' },
+            onKeyDown: (event) => {
+              if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                actions.preview((row as AdmissionForm).id);
+              }
+            },
+          })}
           totalCount={query.data?.totalCount ?? 0}
           page={page}
           rowsPerPage={rowsPerPage}
@@ -122,13 +159,17 @@ export default function AdmissionFormsScreen() {
             setFilters(value);
             setPage(0);
           }}
-          noDataText="No forms configured yet. Create a draft to begin."
+          noDataText={`No ${view} forms configured yet. Create a draft to begin.`}
         />
       </Box>
       <AdmissionFormDialog
         open={actions.dialog.value}
         onClose={actions.close}
+        editingId={actions.editingId}
         editing={actions.editing}
+        editingError={actions.editingError}
+        onRetryEditing={actions.retryEditing}
+        initialPurpose={actions.creatingPurpose}
         saving={actions.saving}
         onSave={actions.save}
       />

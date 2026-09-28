@@ -42,11 +42,6 @@ export function FormBuilderFieldLibraryDrawer({
   onClose,
   onAddField,
 }: Props) {
-  const addField: Props['onAddField'] = (fieldType, systemBinding, preset) => {
-    onAddField(fieldType, systemBinding, preset);
-    onClose();
-  };
-
   return (
     <Drawer
       anchor="right"
@@ -70,7 +65,7 @@ export function FormBuilderFieldLibraryDrawer({
             </Typography>
             <Typography variant="body2" color="text.secondary">
               Choose the information applicants should provide
-              {targetLabel ? ` in ${targetLabel}` : ''}.
+              {targetLabel ? ` in ${targetLabel}` : ''}. Add as many fields as you need, then close.
             </Typography>
           </Box>
           <IconButton aria-label="Close field library" onClick={onClose}>
@@ -97,7 +92,7 @@ export function FormBuilderFieldLibraryDrawer({
             <FormBuilderPalette
               systemFields={systemFields}
               targetLabel={targetLabel}
-              onAddField={addField}
+              onAddField={onAddField}
             />
           </Box>
         </Stack>

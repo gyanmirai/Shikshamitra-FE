@@ -34,6 +34,8 @@ export type AdmissionApplicant360 = {
     id: string;
     applicationNumber: string;
     status: AdmissionApplicationStatus;
+    assignedCounsellorId?: string | null;
+    assignedCounsellorName?: string | null;
     creationTime: string;
     lastSavedAt?: string | null;
     submittedAt?: string | null;

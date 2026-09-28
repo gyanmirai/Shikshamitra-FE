@@ -11,8 +11,17 @@ export type AdmissionDocumentTypeOption = {
   maxFileSizeMb: number;
 };
 
+export type AdmissionDocumentClassOption = { id: string; name: string; context: string };
+
 export const admissionDocumentSettingsApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getAdmissionDocumentClasses: builder.query<AdmissionDocumentClassOption[], void>({
+      query: () => `${DOCUMENT_VERIFICATION_URL}/classes`,
+      transformResponse: (
+        response: AdmissionDocumentClassOption[] | { data: AdmissionDocumentClassOption[] }
+      ) => unwrapDocuments(response),
+      providesTags: [studentAdmissionsCrmType.admissionWorkflow],
+    }),
     getAdmissionDocumentTypes: builder.query<AdmissionDocumentTypeOption[], void>({
       query: () => `${DOCUMENT_VERIFICATION_URL}/document-types`,
       transformResponse: (
@@ -24,4 +33,5 @@ export const admissionDocumentSettingsApi = api.injectEndpoints({
   overrideExisting: true,
 });
 
-export const { useGetAdmissionDocumentTypesQuery } = admissionDocumentSettingsApi;
+export const { useGetAdmissionDocumentTypesQuery, useGetAdmissionDocumentClassesQuery } =
+  admissionDocumentSettingsApi;

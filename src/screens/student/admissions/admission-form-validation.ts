@@ -15,6 +15,7 @@ type AdmissionFormValidationField = {
 export type AdmissionFormValidationDefinition = {
   sections: {
     fields: AdmissionFormValidationField[];
+    visibilityRuleJson?: string | null;
     isRepeatable?: boolean;
     minEntries?: number;
     maxEntries?: number;
@@ -64,13 +65,14 @@ function fieldError(
   return config.messages?.[String(key)] ?? config.message ?? `${field.label} ${fallback}`;
 }
 
-function createFieldSchema(field: AdmissionFormValidationField) {
+function createFieldSchema(field: AdmissionFormValidationField, sectionRule?: string | null) {
   return Yup.mixed().test('admission-field-validation', function validate(value) {
     const parent = (this.parent ?? {}) as DynamicValues;
     const values = Object.fromEntries(
       Object.entries(parent).map(([key, current]) => [key, asText(current)])
     );
-    if (!isAdmissionRuleVisible(field.visibilityRuleJson, values)) return true;
+    if (!isAdmissionRuleVisible(sectionRule, values) ||
+      !isAdmissionRuleVisible(field.visibilityRuleJson, values)) return true;
 
     const config = parseConfiguration(field.validationJson);
     const requiredByRule = field.requiredRuleJson
@@ -206,7 +208,7 @@ export function buildDynamicAdmissionYupSchema(form: AdmissionFormValidationDefi
         ...result,
         [field.code]: section.isRepeatable
           ? createRepeatableFieldSchema(field, section.minEntries ?? 0, section.maxEntries ?? 1)
-          : createFieldSchema(field),
+          : createFieldSchema(field, section.visibilityRuleJson),
       }),
       {}
     );

@@ -41,10 +41,10 @@ export function WorkflowTransitionList({
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Box>
           <Typography id="workflow-transitions-heading" variant="subtitle1" fontWeight={700}>
-            Transitions
+            Next steps
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Add a default route or controlled condition from each non-terminal stage.
+            Choose the usual next step and any special outcomes for each stage.
           </Typography>
         </Box>
         {!readOnly && transitions.length > 0 && (
@@ -54,7 +54,7 @@ export function WorkflowTransitionList({
             onClick={onAdd}
             disabled={stages.length < 2}
           >
-            Add transition
+            Add next step
           </Button>
         )}
       </Stack>
@@ -76,7 +76,7 @@ export function WorkflowTransitionList({
                 onClick={onAdd}
                 sx={{ mt: 2, minHeight: 44 }}
               >
-                Add first transition
+                Choose first next step
               </Button>
             ) : undefined
           }

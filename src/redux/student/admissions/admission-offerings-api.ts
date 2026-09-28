@@ -3,6 +3,8 @@ import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
 export type AdmissionOfferingAvailabilityStatus = 0 | 1 | 2 | 3 | 4;
 export type AdmissionOfferingConfigurationStatus = 0 | 1;
+export type AdmissionTrack = 0 | 1 | 2 | 3;
+export type AdmissionEntryMode = 0 | 1 | 2;
 
 export type AdmissionOfferingListItem = {
   id: string;
@@ -19,6 +21,8 @@ export type AdmissionOfferingListItem = {
   stageName: string;
   standardId: string;
   standardName: string;
+  track: AdmissionTrack;
+  entryMode: AdmissionEntryMode;
   code: string;
   effectiveOpenDate: string;
   effectiveCloseDate: string;
@@ -42,6 +46,7 @@ export type AdmissionOfferingValidation = {
 };
 
 export type AdmissionOfferingAvailability = {
+  classCapacity?: AdmissionClassCapacity | null;
   isAvailable: boolean;
   status: AdmissionOfferingAvailabilityStatus;
   canCreateInquiry: boolean;
@@ -50,13 +55,33 @@ export type AdmissionOfferingAvailability = {
   reasonMessage?: string | null;
 };
 
+export type AdmissionClassCapacity = {
+  admissionCycleId: string;
+  academicYearId: string;
+  standardId: string;
+  rooms: Array<{ roomId: string; roomName: string; capacity: number }>;
+  capacity?: number | null;
+  occupiedCount: number;
+  remainingSeats?: number | null;
+  isFull: boolean;
+  isOverCapacity: boolean;
+  warning?: string | null;
+};
+
+export type AdmissionRoomChoice = AdmissionClassCapacity['rooms'][number] & {
+  isAllocatedToAnotherClass: boolean;
+};
+
 export type AdmissionOffering = AdmissionOfferingListItem & {
+  classCapacity?: AdmissionClassCapacity | null;
   useCycleDates: boolean;
   openDate?: string | null;
   closeDate?: string | null;
   workflowDefinitionId?: string | null;
   inquiryFormDefinitionId?: string | null;
   applicationFormDefinitionId?: string | null;
+  inquiryIntakeProfileId?: string | null;
+  counsellorAssignmentProfileId?: string | null;
   inquiryFormName?: string | null;
   inquiryFormVersion?: number | null;
   applicationFormName?: string | null;
@@ -71,6 +96,8 @@ export type AdmissionOffering = AdmissionOfferingListItem & {
 
 export type AdmissionOfferingWriteInput = {
   name: string;
+  track: AdmissionTrack;
+  entryMode: AdmissionEntryMode;
   campusId?: string | null;
   boardId: string;
   mediumId: string;
@@ -83,11 +110,15 @@ export type AdmissionOfferingWriteInput = {
   workflowDefinitionId?: string | null;
   inquiryFormDefinitionId?: string | null;
   applicationFormDefinitionId?: string | null;
+  inquiryIntakeProfileId?: string | null;
+  counsellorAssignmentProfileId?: string | null;
   isActive: boolean;
 };
 
 export type AdmissionOfferingListInput = {
   admissionCycleId?: string;
+  track?: AdmissionTrack;
+  entryMode?: AdmissionEntryMode;
   campusId?: string;
   boardId?: string;
   mediumId?: string;
@@ -227,7 +258,15 @@ export const admissionOfferingsApi = api.injectEndpoints({
         id: string;
         body: Pick<
           AdmissionOfferingWriteInput,
-          'name' | 'campusId' | 'boardId' | 'mediumId' | 'stageId' | 'standardId' | 'code'
+          | 'name'
+          | 'track'
+          | 'entryMode'
+          | 'campusId'
+          | 'boardId'
+          | 'mediumId'
+          | 'stageId'
+          | 'standardId'
+          | 'code'
         > & { admissionCycleId: string; isActive?: boolean };
       }
     >({
@@ -259,6 +298,36 @@ export const admissionOfferingsApi = api.injectEndpoints({
         response: ResultEnvelope<AdmissionOfferingAvailability> | AdmissionOfferingAvailability
       ) => unwrapResult(response),
       providesTags: [studentAdmissionsCrmType.admissionOffering],
+    }),
+    getAdmissionClassCapacity: builder.query<AdmissionClassCapacity, string>({
+      query: (id) => `/student/enrollment/admissions/offerings/${id}/class-capacity`,
+      transformResponse: (
+        response: ResultEnvelope<AdmissionClassCapacity> | AdmissionClassCapacity
+      ) => unwrapResult(response),
+      providesTags: [studentAdmissionsCrmType.admissionOffering],
+    }),
+    getAdmissionRoomChoices: builder.query<AdmissionRoomChoice[], { id: string; search?: string }>({
+      query: ({ id, search }) => ({
+        url: `/student/enrollment/admissions/offerings/${id}/class-capacity/rooms`,
+        params: search ? { search } : undefined,
+      }),
+      transformResponse: (
+        response: ResultEnvelope<AdmissionRoomChoice[]> | AdmissionRoomChoice[]
+      ) => unwrapResult(response),
+    }),
+    updateAdmissionClassRooms: builder.mutation<
+      AdmissionClassCapacity,
+      { id: string; roomIds: string[] }
+    >({
+      query: ({ id, roomIds }) => ({
+        url: `/student/enrollment/admissions/offerings/${id}/class-capacity`,
+        method: 'PUT',
+        body: { roomIds },
+      }),
+      transformResponse: (
+        response: ResultEnvelope<AdmissionClassCapacity> | AdmissionClassCapacity
+      ) => unwrapResult(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionOffering],
     }),
     bulkCreateAdmissionOfferings: builder.mutation<
       BulkAdmissionOfferingResult,
@@ -292,5 +361,8 @@ export const {
   useCloneAdmissionOfferingMutation,
   useValidateAdmissionOfferingMutation,
   useGetAdmissionOfferingAvailabilityQuery,
+  useGetAdmissionClassCapacityQuery,
+  useGetAdmissionRoomChoicesQuery,
+  useUpdateAdmissionClassRoomsMutation,
   useBulkCreateAdmissionOfferingsMutation,
 } = admissionOfferingsApi;

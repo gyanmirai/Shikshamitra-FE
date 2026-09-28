@@ -7,7 +7,7 @@ import { vi, expect } from 'vitest';
 import { addIcon } from '@iconify/react';
 import { http, HttpResponse } from 'msw';
 import { mswServer } from 'src/test/mswServer';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, fireEvent } from '@testing-library/react';
 import { DEFAULT_ASSESSMENT_POLICY } from 'src/redux/student/admissions/admission-assessment-policy';
 
 import { AdmissionWorkflowStageDrawer } from '../admission-workflow-stage-drawer';
@@ -85,6 +85,7 @@ export function setupReviewEditor(
       onClose={onClose}
     />
   );
+  fireEvent.click(screen.getByRole('tab', { name: 'Process' }));
   return { onSave, onClose };
 }
 export async function chooseReviewOption(

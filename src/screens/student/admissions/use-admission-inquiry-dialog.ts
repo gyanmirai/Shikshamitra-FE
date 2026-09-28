@@ -8,7 +8,8 @@ import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { readAdmissionInquiryPolicy } from 'src/redux/student/admissions/admission-inquiry-policy';
+import { DEFAULT_INQUIRY_POLICY, readAdmissionInquiryPolicy } from 'src/redux/student/admissions/admission-inquiry-policy';
+import { useGetAdmissionIntakeProfilesQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 import { useGetAdmissionWorkflowQuery } from 'src/redux/student/admissions/admission-workflows-api';
 import {
   type AdmissionFormField,
@@ -35,12 +36,13 @@ import {
   getAdmissionInquirySections,
   buildAdmissionInquiryPayload,
   initialAdmissionInquiryValues,
+  canLinkAdmissionInquiryFamily,
   type AdmissionInquiryFormValues,
   getAdmissionInquiryAcademicOptions,
   buildAdmissionInquiryDuplicateInput,
 } from './admission-inquiry-model';
 
-const ALL_INQUIRY_SOURCES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+const ALL_INQUIRY_SOURCES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 export function useAdmissionInquiryDialog(onClose: () => void) {
   const [matches, setMatches] = useState<DuplicateMatch[]>([]);
@@ -92,6 +94,10 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
   );
   const { data: offeringDetail } = useGetAdmissionOfferingQuery(formik.values.offeringId, {
     skip: !formik.values.offeringId,
+    refetchOnMountOrArgChange: true,
+  });
+  const intakeProfiles = useGetAdmissionIntakeProfilesQuery(undefined, {
+    skip: !offeringDetail?.inquiryIntakeProfileId,
   });
   const { data: form, isFetching: formLoading } = useGetAdmissionFormQuery(
     offeringDetail?.inquiryFormDefinitionId ?? '',
@@ -106,10 +112,17 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     ? getAdmissionInquiryFields(form)
     : [];
   const inquiryStage = workflow?.stages.find((stage) => stage.stageType === 0);
-  const policy = readAdmissionInquiryPolicy(inquiryStage?.configurationJson);
+  const profile = intakeProfiles.data?.find((item) => item.id === offeringDetail?.inquiryIntakeProfileId);
+  const policy = profile
+    ? { ...DEFAULT_INQUIRY_POLICY, ...JSON.parse(profile.configurationJson) }
+    : readAdmissionInquiryPolicy(inquiryStage?.configurationJson);
   const allowedSources = policy?.allowedSources.length
     ? policy.allowedSources
     : ALL_INQUIRY_SOURCES;
+  const selectedOffering = offeringChoices.find((item) => item.id === formik.values.offeringId);
+  const currentGuardianPhone = selectedOffering
+    ? buildAdmissionInquiryDuplicateInput(formik.values, fields, selectedOffering).guardianPhone
+    : '';
 
   useAdmissionUnsavedChanges(true, formik.dirty);
 
@@ -142,7 +155,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
 
         if (active) {
           setOfferingChoices(
-            Array.from(new Map(items.map((offering) => [offering.id, offering])).values())
+            Array.from(new Map(items.filter((offering) => offering.entryMode !== 1)
+              .map((offering) => [offering.id, offering])).values())
           );
         }
       } catch {
@@ -225,6 +239,7 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     sections,
     fields,
     matches,
+    currentGuardianPhone,
     requestError,
     duplicateOverrideReason,
     setDuplicateOverrideReason,
@@ -232,6 +247,8 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     mediums: academicOptions.mediums,
     standards: academicOptions.standards,
     offerings: academicOptions.offerings,
+    classCapacity:
+      offeringDetail?.id === formik.values.offeringId ? offeringDetail.classCapacity : null,
     offeringsLoading,
     offeringsError,
     retryOfferings: () => setOfferingsReload((current) => current + 1),
@@ -242,6 +259,16 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     canAutoAcknowledge,
     busy: createState.isLoading || duplicateState.isLoading || communicationState.isLoading,
     useExistingFamily: async (familyId: string) => {
+      if (
+        !matches.some(
+          (match) =>
+            match.familyId === familyId &&
+            canLinkAdmissionInquiryFamily(match, currentGuardianPhone)
+        )
+      ) {
+        setRequestError('Verify the primary guardian mobile before linking this family.');
+        return;
+      }
       setMatches([]);
       await submit(familyId);
     },

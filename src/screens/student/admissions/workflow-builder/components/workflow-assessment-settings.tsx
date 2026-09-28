@@ -93,8 +93,9 @@ export function WorkflowAssessmentSettings({ formik, available, readOnly }: Prop
                 {policy.reviewRequired ? ' Have another staff member approve the result.' : ''}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Add outcome routes in Transitions. Failed, absent, and retake outcomes need an
-                explicit route to continue. Authorized staff can waive the assessment with a reason.
+                Add special outcome paths on the workflow map. Failed, absent, and retake outcomes
+                need an explicit route to continue. Authorized staff can waive the assessment with a
+                reason.
               </Typography>
             </Stack>
             {invalid && <Alert severity="error">{invalid}</Alert>}

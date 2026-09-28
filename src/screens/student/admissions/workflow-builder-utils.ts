@@ -5,6 +5,7 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { ensureAdmissionFormStageConfiguration } from 'src/redux/student/admissions/admission-form-stage-policy';
+import { ROUTE_OPERATOR_LABELS } from './workflow-builder/workflow-condition-catalog';
 
 export type SimpleTransitionCondition = {
   field: string;
@@ -157,5 +158,5 @@ export const getTransitionSummary = (transition: AdmissionWorkflowTransition) =>
     ?.replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/[_-]/g, ' ');
   const value = condition.value?.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]/g, ' ');
-  return value ? `${field}: ${value}` : `${field}: ${condition.operator}`;
+  return `${field} ${ROUTE_OPERATOR_LABELS[condition.operator] ?? condition.operator}${value ? ` ${value}` : ''}`;
 };

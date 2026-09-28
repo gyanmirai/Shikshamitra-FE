@@ -15,14 +15,15 @@ import { clearAdmissionFormDraft, useAdmissionFormDraftOwner } from '../form-dra
 
 type Props = {
   editing?: AdmissionForm | null;
+  initialPurpose?: CreateUpdateAdmissionForm['purpose'];
   onClose: () => void;
   onSave: (value: CreateUpdateAdmissionForm) => Promise<void>;
 };
 
-export function useAdmissionFormWizard({ editing, onClose, onSave }: Props) {
+export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave }: Props) {
   const draftOwner = useAdmissionFormDraftOwner();
   const [activeStep, setActiveStep] = useState(0);
-  const [initialValues] = useState(() => getAdmissionFormInitialValues(editing));
+  const [initialValues] = useState(() => getAdmissionFormInitialValues(editing, initialPurpose));
   const submitting = useBoolean();
   const savingRef = useRef(false);
   const saveDraft = async (

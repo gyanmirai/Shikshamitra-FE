@@ -70,7 +70,10 @@ export function CustomBreadcrumbs({
       direction="row"
       alignItems={layout === 'stacked' ? 'flex-start' : 'center'}
       spacing={1.5}
-      sx={{ minWidth: 0, flex: layout === 'stacked' ? 1 : '0 1 auto' }}
+      sx={{
+        minWidth: 0,
+        flex: layout === 'stacked' ? 1 : { xs: '0 0 auto', md: '0 1 auto' },
+      }}
     >
       {isBack && (
         <IconButton
@@ -174,9 +177,9 @@ export function CustomBreadcrumbs({
   return (
     <Stack
       data-layout="inline"
-      direction="row"
-      alignItems="center"
-      spacing={2}
+      direction={{ xs: 'column', md: 'row' }}
+      alignItems={{ xs: 'stretch', md: 'center' }}
+      spacing={{ xs: 1, md: 2 }}
       sx={{
         pb: 0,
         px: 1,
@@ -219,7 +222,11 @@ export function CustomBreadcrumbs({
       )}
 
       {/* RIGHT: Actions */}
-      {action && <Box sx={{ flexShrink: 0, ...slotProps?.action }}>{action}</Box>}
+      {action && (
+        <Box sx={{ flexShrink: 0, alignSelf: { xs: 'flex-start', md: 'center' }, ...slotProps?.action }}>
+          {action}
+        </Box>
+      )}
     </Stack>
   );
 }

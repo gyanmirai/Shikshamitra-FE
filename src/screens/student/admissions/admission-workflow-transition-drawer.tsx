@@ -1,5 +1,6 @@
 'use client';
 
+import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
@@ -13,7 +14,12 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 
 import { serializeSimpleCondition } from './workflow-builder-utils';
+import { getRouteSaveError } from './workflow-builder/workflow-route-diagnostics';
 import { WorkflowTransitionFields } from './workflow-builder/components/workflow-transition-fields';
+import {
+  isValidRouteNumber,
+  getRouteConditionFields,
+} from './workflow-builder/workflow-condition-catalog';
 import {
   workflowTransitionSchema,
   getTransitionConditionEditorState,
@@ -25,6 +31,10 @@ type Props = {
   transition: AdmissionWorkflowTransition | null;
   stages: AdmissionWorkflowStage[];
   transitions?: AdmissionWorkflowTransition[];
+  forms?: AdmissionForm[];
+  formsLoading?: boolean;
+  formsError?: boolean;
+  onRetryForms?: () => void;
   readOnly: boolean;
   onClose: () => void;
   onSave: (transition: AdmissionWorkflowTransition) => void;
@@ -35,6 +45,10 @@ export function AdmissionWorkflowTransitionDrawer({
   transition,
   stages,
   transitions = [],
+  forms = [],
+  formsLoading,
+  formsError,
+  onRetryForms,
   readOnly,
   onClose,
   onSave,
@@ -43,6 +57,7 @@ export function AdmissionWorkflowTransitionDrawer({
   const conditionState = getTransitionConditionEditorState(transition?.conditionRuleJson);
   const creatingConditionalPath = transition?.id === '' && transition.isDefault === false;
   const defaultFromStageId = transition?.fromStageId ?? stages[0]?.id ?? '';
+  const conditionFields = getRouteConditionFields(forms, stages, transitions, defaultFromStageId);
   const nextPriority =
     Math.max(
       -1,
@@ -100,6 +115,15 @@ export function AdmissionWorkflowTransitionDrawer({
       ) {
         errors.priority = 'Use a unique priority for each conditional route from this stage';
       }
+      const field = conditionFields.find((item) => item.value === values.conditionField);
+      if (
+        values.hasCondition &&
+        !values.preserveCondition &&
+        field?.fieldType === 2 &&
+        !isValidRouteNumber(values.conditionValue, values.conditionOperator)
+      ) {
+        errors.conditionValue = 'Enter a valid number for this field';
+      }
       return errors;
     },
     onSubmit: (values, helpers) => {
@@ -110,7 +134,7 @@ export function AdmissionWorkflowTransitionDrawer({
             value: values.conditionValue,
           }
         : null;
-      onSave({
+      const route: AdmissionWorkflowTransition = {
         id: values.id || crypto.randomUUID(),
         fromStageId: values.fromStageId,
         toStageId: values.toStageId,
@@ -119,7 +143,14 @@ export function AdmissionWorkflowTransitionDrawer({
         conditionRuleJson: values.preserveCondition
           ? values.conditionRuleJson
           : serializeSimpleCondition(condition),
-      });
+      };
+      const routeError = getRouteSaveError(route, stages, transitions);
+      if (routeError) {
+        helpers.setStatus(routeError);
+        helpers.setSubmitting(false);
+        return;
+      }
+      onSave(route);
       helpers.resetForm({ values });
       onClose();
     },
@@ -164,7 +195,11 @@ export function AdmissionWorkflowTransitionDrawer({
                 Choose the usual next step or add a path for a specific outcome.
               </Typography>
             </Box>
-            <IconButton aria-label="Close next-step editor" onClick={requestClose}>
+            <IconButton
+              aria-label="Close next-step editor"
+              onClick={requestClose}
+              sx={{ width: 44, height: 44 }}
+            >
               <Iconify icon="mdi:close" />
             </IconButton>
           </Stack>
@@ -172,6 +207,18 @@ export function AdmissionWorkflowTransitionDrawer({
           <WorkflowTransitionFields
             formik={formik}
             stages={stages}
+            conditionFields={conditionFields}
+            formsLoading={formsLoading}
+            formsError={formsError}
+            onRetryForms={onRetryForms}
+            competingPaths={
+              transitions.filter(
+                (item) =>
+                  item.id !== formik.values.id &&
+                  item.fromStageId === formik.values.fromStageId &&
+                  !item.isDefault
+              ).length
+            }
             readOnly={readOnly}
             lockFromStage
           />
@@ -197,7 +244,12 @@ function DrawerActions({ onCancel }: { onCancel: () => void }) {
   return (
     <>
       <Divider />
-      <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ p: 2 }}>
+      <Stack
+        direction="row"
+        justifyContent="flex-end"
+        spacing={1}
+        sx={{ p: 2, '& .MuiButton-root': { minHeight: 44 } }}
+      >
         <Button
           variant="outlined"
           size="small"

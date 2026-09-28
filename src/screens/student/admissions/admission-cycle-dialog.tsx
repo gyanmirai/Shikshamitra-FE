@@ -15,12 +15,12 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
+import { Grid, TextField, DialogActions } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
-import { Grid, TextField, Typography, DialogActions } from '@mui/material';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { normalizeCycleCode } from './admission-cycle-model';
@@ -73,6 +73,7 @@ export function AdmissionCycleDialog({
   onSave,
 }: Props) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [codeFocused, setCodeFocused] = useState(false);
   /**
    * Memoization Justification:
    * - Formik uses enableReinitialize and compares initialValues on each render.
@@ -122,6 +123,7 @@ export function AdmissionCycleDialog({
 
   const closeWithoutSaving = () => {
     setConfirmDiscard(false);
+    setCodeFocused(false);
     formik.resetForm();
     onClose();
   };
@@ -141,17 +143,13 @@ export function AdmissionCycleDialog({
       title={
         <AdmissionDialogTitle
           title={editingCycle ? 'Edit Admission Cycle' : 'Create Admission Cycle'}
-          helpText="Define when applications open and close for this admission cycle."
+          helpText="Save the cycle as a draft first. Applicants can apply only after it is published and while the application window is open."
           helpLabel="Admission cycle information"
         />
       }
       maxWidth="sm"
     >
       <DialogScrollContent>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Save the cycle as a draft first. Applicants can apply only after it is published and while
-          this window is open.
-        </Typography>
         <Grid container spacing={1.5}>
           <Grid size={{ xs: 12 }}>
             <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
@@ -175,7 +173,11 @@ export function AdmissionCycleDialog({
                 label="Cycle code"
                 name="code"
                 value={formik.values.code}
-                onBlur={formik.handleBlur}
+                onFocus={() => setCodeFocused(true)}
+                onBlur={(event) => {
+                  setCodeFocused(false);
+                  formik.handleBlur(event);
+                }}
                 onChange={(event) =>
                   formik.setFieldValue('code', normalizeCycleCode(event.target.value))
                 }
@@ -183,7 +185,9 @@ export function AdmissionCycleDialog({
                 helperText={
                   formik.touched.code && formik.errors.code
                     ? formik.errors.code
-                    : 'Uppercase letters, numbers, hyphen and underscore'
+                    : codeFocused
+                      ? 'Uppercase letters, numbers, hyphen and underscore'
+                      : undefined
                 }
                 inputProps={{ maxLength: 64 }}
               />
@@ -232,13 +236,11 @@ export function AdmissionCycleDialog({
               maxRows={4}
               size="small"
               label="Description (optional)"
+              placeholder="Internal purpose or audience, e.g. Nursery to Grade 9"
+              slotProps={{ inputLabel: { shrink: true } }}
               {...formik.getFieldProps('description')}
               error={Boolean(formik.touched.description && formik.errors.description)}
-              helperText={
-                formik.touched.description && formik.errors.description
-                  ? formik.errors.description
-                  : 'Internal purpose or audience, for example “Nursery to Grade 9”.'
-              }
+              helperText={formik.touched.description ? formik.errors.description : undefined}
               inputProps={{ maxLength: 1000 }}
             />
           </Grid>

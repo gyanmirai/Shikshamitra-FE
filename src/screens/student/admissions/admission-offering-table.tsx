@@ -22,7 +22,7 @@ type Props = AdmissionOfferingActionProps & {
 };
 
 export function AdmissionOfferingTable(props: Props) {
-  const { rows, loading, totalCount, page, rowsPerPage, search, onSearch, onSort, onPagination } =
+  const { rows, loading, totalCount, page, rowsPerPage, search, onSearch, onSort, onPagination, onView } =
     props;
   return (
     <CustomizableTable
@@ -30,6 +30,17 @@ export function AdmissionOfferingTable(props: Props) {
       tableTitle="Class admission setup"
       columns={buildAdmissionOfferingColumns(props)}
       data={rows}
+      handleRowClick={(row) => onView(row as AdmissionOfferingListItem)}
+      rowProps={(row) => ({
+        tabIndex: 0,
+        sx: { cursor: 'pointer' },
+        onKeyDown: (event) => {
+          if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+            event.preventDefault();
+            onView(row as AdmissionOfferingListItem);
+          }
+        },
+      })}
       isLoading={loading}
       isPagination
       isSearch

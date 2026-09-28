@@ -227,6 +227,21 @@ export const getWorkflowTemplateDefinition = (id: unknown) =>
 export const getWorkflowStarterDefinition = (id: unknown) =>
   ADMISSION_WORKFLOW_STARTERS.find((template) => template.id === id);
 
+export function findMatchingWorkflowTemplate(
+  stages: AdmissionWorkflowStage[]
+): WorkflowTemplateId | undefined {
+  const orderedStages = [...stages].sort((left, right) => left.displayOrder - right.displayOrder);
+  return ADMISSION_WORKFLOW_TEMPLATES.find(
+    (template) =>
+      template.stages.length === orderedStages.length &&
+      template.stages.every(
+        (stage, index) =>
+          stage.code === orderedStages[index].code &&
+          stage.stageType === orderedStages[index].stageType
+      )
+  )?.id;
+}
+
 const stage = (
   code: string,
   name: string,

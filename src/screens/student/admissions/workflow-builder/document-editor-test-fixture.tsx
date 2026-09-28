@@ -13,8 +13,8 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { clearCachedAuthSession } from 'src/redux/session-cache';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
-import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
 
 import { AdmissionWorkflowStageDrawer } from '../admission-workflow-stage-drawer';
 
@@ -81,6 +81,7 @@ export function renderDocumentEditor(
       </ThemeProvider>
     </Provider>
   );
+  fireEvent.click(screen.getByRole('tab', { name: 'Process' }));
   return { onSave, onClose, store };
 }
 const stores: ReturnType<typeof createEditorStore>[] = [];

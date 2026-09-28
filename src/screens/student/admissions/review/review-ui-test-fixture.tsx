@@ -40,8 +40,10 @@ export function renderReviewUi(
 ) {
   return renderDocumentUi(
     <LocalizationProvider dateAdapter={AdapterDayjs}>{children}</LocalizationProvider>,
-    actions.map((action) =>
-      action.startsWith('Students.') ? action : `Students.Admissions.Reviews.${action}`
-    )
+    [...new Set(actions.map((action) =>
+      action.startsWith('Students.')
+        ? action
+        : `Students.Admissions.Reviews.${action === 'View' ? 'View' : 'Add'}`
+    ))]
   );
 }

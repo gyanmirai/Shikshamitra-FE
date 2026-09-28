@@ -2,7 +2,7 @@ import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
 export type AdmissionInquiryStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-export type AdmissionInquirySource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+export type AdmissionInquirySource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionInquiryWorkQueue = 1 | 2 | 3 | 4;
 export type AdmissionInquiry = {
   id: string;
@@ -21,6 +21,8 @@ export type AdmissionInquiry = {
   preferredLanguageCode: string;
   source: AdmissionInquirySource;
   sourceDetail?: string | null;
+  formResponseDefinitionId?: string | null;
+  formAnswers?: { fieldCode: string; label: string; value: string }[];
   status: AdmissionInquiryStatus;
   contactedAt?: string | null;
   lastActivityAt?: string | null;
@@ -91,7 +93,7 @@ export type AdmissionInquiryCommunicationResult = {
 };
 export type CreateAdmissionInquiry = {
   admissionCycleId: string;
-  admissionOfferingId: string;
+  admissionOfferingId: string | null;
   boardId: string;
   mediumId: string;
   standardId: string;
@@ -122,6 +124,7 @@ export type DuplicateMatch = {
   guardianPhone?: string | null;
   guardianEmail?: string | null;
   dateOfBirth?: string | null;
+  canLinkFamily?: boolean;
 };
 export type UpdateAdmissionInquiry = {
   applicantName: string;
@@ -204,6 +207,18 @@ export const admissionInquiriesApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
         unwrap(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionInquiry],
+    }),
+    confirmAdmissionInquiryOffering: builder.mutation<
+      AdmissionInquiry,
+      { id: string; offeringId: string; concurrencyStamp: string }
+    >({
+      query: ({ id, offeringId, concurrencyStamp }) => ({
+        url: `/student/enrollment/admissions/inquiries/${id}/confirm-offering`,
+        method: 'POST',
+        body: { offeringId, concurrencyStamp },
+      }),
+      transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) => unwrap(response),
       invalidatesTags: [studentAdmissionsCrmType.admissionInquiry],
     }),
     getAdmissionInquiryTimeline: builder.query<AdmissionInquiryTimelineItem[], string>({
@@ -301,6 +316,7 @@ export const {
   useMarkAdmissionInquiryContactedMutation,
   useCreateAdmissionInquiryMutation,
   useUpdateAdmissionInquiryMutation,
+  useConfirmAdmissionInquiryOfferingMutation,
   useGetAdmissionInquiryTimelineQuery,
   useCheckAdmissionInquiryDuplicatesMutation,
   useGetAdmissionInquiryAssignableCounsellorsQuery,

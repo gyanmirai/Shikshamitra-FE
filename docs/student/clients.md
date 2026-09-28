@@ -45,7 +45,10 @@ Assessment sessions and offering/stage choices use `src/redux/student/admissions
 Applicant bookings, attendance, results, review, cancellation, retakes, and waivers use `src/redux/student/admissions/admission-assessments-api.ts`.
 The shared response types are in `src/redux/student/admissions/admission-assessment-types.ts`.
 Assessment stage configuration uses `src/redux/student/admissions/admission-assessment-policy.ts`, preserving unrelated stage configuration and keeping legacy workflows opted out by default.
-Document stage configuration uses `admission-document-policy.ts`, `admission-document-policy-validation.ts`, and `admission-condition-rule.ts`. The editor preserves unrelated settings and rejects unsupported policy versions. `admission-document-settings-api.ts` loads optional student document categories using workflow-view access.
+Document stage configuration uses `admission-document-policy.ts`, `admission-document-policy-validation.ts`, and `admission-condition-rule.ts`. The editor preserves unrelated settings and rejects unsupported policy versions. `admission-document-settings-api.ts` loads optional student document categories and class options using workflow-view access.
+Document requirements retain selected class IDs in `standardIds`; omitted/null means All classes, while an empty selection is invalid.
+`collectionFormStageCode` links early uploads to a Form stage; `documentCollectionAvailable` and `canCollectDuringForm` are server-owned runtime flags.
+Document action guards match the canonical backend bundles: `Students.Admissions.Documents.View` permits viewing/downloading, `.Add` permits upload/original/review actions, and `.Delete` permits waiver. Server capabilities still restrict each action by stage and evidence state; retired granular permission names are not accepted as grants.
 Both clients use the existing global RTK Query API and refresh assessment/application data after mutations; workflow or offering changes also invalidate assessment scope choices.
 Server-provided assessment capabilities determine available applicant actions, while the existing workflow-advance client remains responsible for progression.
 

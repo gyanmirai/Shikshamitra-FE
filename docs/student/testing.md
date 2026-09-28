@@ -24,6 +24,38 @@ Browser acceptance must cover future Academic Year selection, date errors, dirty
 Verify at 390 × 844, 768 × 1024, and 1440 × 900 with no horizontal overflow and reachable dialog actions.
 An older running backend cannot prove these commands until migration `20260915103120_ImplementAdmissionCycleGovernance` is applied and the current Host is restarted.
 
+## Configure stage and next-step checks
+
+Run the focused workflow editor checks with the repository Windows runner:
+
+```powershell
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/student/admissions/workflow-builder/workflow-route-improvements.test.ts src/screens/student/admissions/workflow-builder/workflow-route-simulator.test.ts src/screens/student/admissions/workflow-builder/workflow-transition-safety.test.tsx src/screens/student/admissions/workflow-builder/workflow-outcome-route.test.tsx src/screens/student/admissions/workflow-builder/workflow-stage-type-select.test.tsx src/screens/student/admissions/workflow-builder/workflow-form-stage-drawer.test.tsx --pool=threads --maxWorkers=1
+```
+
+Coverage includes ancestor form fields, numeric and list comparisons, duplicate conditions, managed outcome gates, automatic paths only for simple new journeys, configured-type-change cancellation/confirmation, custom-copy preservation, tab draft retention, and invalid-save tab selection. Icon rendering is mocked locally in editor tests to avoid third-party icon requests during teardown.
+
+Browser acceptance remains required at 390 × 844, 768 × 1024, and 1440 × 900. Verify class lookup failure/retry, class-specific document visibility, linked Form uploads reused in Document verification, dirty-answer upload blocking, replacement requiring fresh review, type-change cancellation, readable Offer fields, typed condition choices, missing/overlapping paths, and disabled outcomes. Unit tests do not prove a complete live admission journey or Student/Onboarding handoff.
+
+The 25 September signed-in browser pass loaded the school class catalogue, selected Class 10 with its academic-year/board/medium context, and saved that requirement inside the temporary stage editor. It exposed and fixed an RFC UUID validation mismatch: ABP sequential GUIDs are valid references, while empty GUIDs and duplicate classes remain invalid. Cancelling a stage-type change preserved the configured requirement. Offer validity labels, stage tabs, outcome-route choices, and the completion/next-step summary were inspected; the stage editor had no document overflow and a reachable 44 px footer at 390 × 844, 768 × 1024, and 1440 × 900. These were unsaved editor checks, not a published workflow or live applicant finalization.
+
+Class-ID and Document/Assessment/Eligibility/Review editor regressions passed 35 tests across seven files after updating the tests to navigate the new tabs. The focused Offer-validity regression also passed. The latest repository-wide type check reports three existing Academic errors in `SubmitDiaryModal.presentation.test.tsx` and `viewSubjectComponent.tsx`; it reports no Admissions errors. Live acceptance coverage is recorded separately below.
+
+The matching backend run executed 24 passing document integration tests and nine passing Document HTTP contract tests. It covers early Form collection, denied early review, shared evidence identity, class scope, replacement re-review, and finalization/handoff rollback; see the [backend testing notes](../../../Shikshamitra-BE/docs/modules/student/testing.md) for the correct method-based filter.
+
+A subsequent local browser pass published `QA Document Reuse 2509`, activated its Class 1 QA offering, and saved synthetic application `APP-2026-000002` through the eight-page form. The linked checklist correctly required the Class 1 evidence and showed the Class 10 report as not applicable. Upload controls initially disappeared because the frontend checked retired action names; the guard now matches the backend's canonical document `View`/`Add`/`Delete` capabilities without changing grants. After reload, the upload dialog was reachable.
+
+The user then uploaded a PNG and accepted its Version 1 after overriding from Form to Documents. History showed a draft save and an override, with no form submission: the application correctly remained Draft and document completion stayed blocked. Submitting through Application form changed it to Submitted without replacing the accepted evidence. The browser then completed Documents, Review, the authorized admission decision, and all four workflow stages. An optional offer was issued and accepted for this synthetic direct-registration application. This path does not establish early Form-stage upload reuse or replacement review in the browser; those remain covered by the automated integration checks above.
+
+After fixing optional-offer finalization compatibility and synchronizing the local schema as recorded in the backend notes, the browser showed `Admission finalized` and opened exactly one matching live Student Onboarding case through Continue onboarding.
+A scoped read-only database check confirmed the same PNG, Version 1, and accepted review were linked to the newly created Student.
+The custom QA requirement has no Student document category mapping, and the onboarding drawer correctly reported no configured onboarding document requirements; this run does not claim that an unrelated onboarding requirement was satisfied or that Student activation occurred.
+The finalization regression selection passed both direct-approval and accepted-optional-offer cases.
+Student documentation validation passed; the repository-wide documentation check still reports 27 issues in the separate `docs/testing` area.
+
+The document UI suite passed 19 tests across seven files, including canonical allowed/denied permission cases and rejection of retired grant names. Four retained Student-evidence tests also passed: download follows both canonical View grants and the server capability, mutation controls stay absent, and either missing View grant prevents the query. Three draft-refresh regressions passed: a save response survives the unchanged cached query, an actual stage/route change invalidates old validation, and validation's own governance-status/stamp update preserves its result. Published workflows cannot reopen or apply the setup template dialog. The current repository-wide type check still reports only the three Academic errors described above.
+
+An isolated `QA Route Fields 2509` clone verified the published Category field and its actual choice values, duplicate-destination rejection, condition save/reload, and the corrected first validation response (`No validation issues found`). This unused clone was restored to Draft and deleted after the check; no offering or applicant referenced it. The published QA workflow also stayed read-only with no template dialog when reopened through its old `setup=standard` link. These checks do not establish live conditional applicant progression.
+
 ## Documentation and hygiene
 
 Run from `Shikshamitra-FE`:
@@ -36,6 +68,7 @@ git diff --check
 ## Focused frontend checks
 
 ```bash
+npx vitest run src/redux/student/admissions/admission-class-capacity-cache.test.ts
 .\node_modules\.bin\eslint.cmd src/screens/student/admissions src/redux/student/admissions
 npx prettier --check src/screens/student/admissions src/redux/student/admissions docs/student
 npm run ts
@@ -188,6 +221,9 @@ Validate at 390 × 844, 768 × 1024, and 1440 × 900; confirm the footer actions
 | Wizard navigation  | **Form details**, **Build form**, and **Review & save** use the shared stepper's single Formik state; **Back** and review edit links retain values, and **Next** never sends a save request.    |
 | Stage validation   | Invalid name/code blocks leaving details without validating unfinished fields; invalid section/field schema blocks leaving the builder; final **Save draft** validates the complete draft.      |
 | Form details       | **Blank form**, **Admission application**, and **Student registration** are visible quick starts. The complete library supports search, category filtering, preview, and school-form reuse.     |
+| Form purpose       | Inquiry and Registration views are URL-backed; new drafts inherit the active purpose and offering selectors reject the wrong published purpose. Correction and Consent are no longer offered as standalone form purposes. |
+| Document rules     | Conditional requirements expose Admission type, Class, Category, RTE status, Transfer admission, Scholarship, and Assessment outcome and still save on the workflow Document stage.          |
+| Parent messages    | The nine admission lifecycle messages create or update `Admissions lifecycle` Communication templates; channel, active state, variables, and permission failures remain Communication-owned. |
 | Template catalogue | Every system template passes the admission-form schema, reports accurate section and field counts, creates fresh IDs, and avoids duplicate system bindings.                                     |
 | Starter choice     | Replacing dirty content requires confirmation, while every selected template remains editable. Reusing a school form creates a new copy without mutating the source.                            |
 | Workspace          | Desktop shows the outline, focused section canvas, and field settings; narrow-screen tabs preserve section/field selection and entered values.                                                  |
@@ -221,8 +257,8 @@ When a frontend contract changes, verify the matching backend contracts under `.
 ## Managed Inquiry checks
 
 ```powershell
-npx vitest run src/constants/student-menu.test.ts src/screens/student/admissions/admission-inquiry-model.test.ts src/screens/student/admissions/inquiry-management/admission-inquiry-columns.test.ts src/screens/student/admissions/inquiry-management/admission-inquiry-communication-dialog.test.ts src/screens/student/admissions/inquiry-management/inquiry-communication-templates.test.ts src/redux/student/admissions/admission-inquiries-api.test.ts src/redux/student/admissions/admission-inquiry-policy.test.ts src/redux/student/admissions/admission-inquiry-management-api.test.ts src/screens/student/admissions/workflow-builder/inquiry-stage-prerequisites.test.ts
-npx eslint --quiet src/screens/student/admissions/admission-inquiries.tsx src/screens/student/admissions/inquiry-management src/screens/student/admissions/workflow-builder/components/inquiry-*.tsx src/screens/student/admissions/workflow-builder/components/workflow-inquiry-settings.tsx
+npx vitest run src/constants/student-menu.test.ts src/screens/student/admissions/admission-inquiry-model.test.ts src/screens/student/admissions/admission-inquiry-duplicate-matches.test.tsx src/screens/student/admissions/inquiry-management/admission-inquiry-columns.test.ts src/screens/student/admissions/inquiry-management/admission-inquiry-communication-dialog.test.ts src/screens/student/admissions/inquiry-management/inquiry-communication-templates.test.ts src/redux/student/admissions/admission-inquiries-api.test.ts src/redux/student/admissions/admission-inquiry-policy.test.ts src/redux/student/admissions/admission-inquiry-management-api.test.ts src/screens/student/admissions/workflow-builder/workflow-inquiry-editor.test.tsx src/screens/student/admissions/workflow-builder/workflow-inquiry-retirement.test.ts
+npx eslint --quiet src/screens/student/admissions/admission-inquiries.tsx src/screens/student/admissions/inquiry-management src/screens/student/admissions/workflow-builder/components/admission-condition-form-picker.tsx src/screens/student/admissions/workflow-builder/workflow-inquiry-retirement.ts
 npm run ts
 ```
 
@@ -278,9 +314,13 @@ Dynamic choice fields use the approved form data-source metadata/options endpoin
 Static option arrays remain supported; source descriptors are resolved at runtime and are never treated as arbitrary URLs.
 In the applicant runtime, **Next** and **Save & Continue** validate the active visible section, while **Submit** validates the complete form.
 
-Permission unit tests must prove that the temporary Admissions bypass applies only in development, is disabled in production, and never grants an unrelated module permission.
+Permission unit tests must prove exact canonical action checks in every environment, including denied actions; no development or role-name bypass is permitted.
 
 The 2026-09-15 focused Offering run passed 23 unit tests, both Playwright scenarios, focused ESLint,
 Prettier, and diff checks. The full TypeScript run reaches ten unrelated Admission dialog call sites
 that still pass the removed `hasUnsavedChanges` prop instead of `guardUnsavedChanges`; no Offering
 error is reported.
+
+## Admission routes, capacity, and counsellor checks (2026-09-25)
+
+The combined focused frontend run passed 19/19 tests across class-capacity caching, offering configuration, applicant start, counsellor filtering and assignment, and managed-offer actions. Focused ESLint and Student documentation validation passed. Class capacity is displayed at inquiry and direct-registration offering selection as a warning-only signal; its source is the room allocation for the class, not a counsellor-entered number. An authenticated browser smoke reached the Applications list, direct-registration dialog, and New Inquiry form after the local API became available. The direct-registration dialog correctly showed that no open direct-registration offering exists for the signed-in school; selecting an Inquiry offering showed the unconfigured-capacity warning. A legacy offering whose name includes `RTE` was present in Inquiry choices because its stored Track and Entry Mode are both General/Inquiry, not because the Inquiry filter ignored Direct Registration. No live capacity/counsellor selection, applicant submission, or live deployment was exercised by this review.

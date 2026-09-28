@@ -22,7 +22,6 @@ type Props = {
   sectionIndex: number;
   selectedSectionId: string | null;
   selectedFieldId: string | null;
-  canDelete?: boolean;
   sectionReorderEnabled?: boolean;
   showInlineAddField?: boolean;
   onSelectSection: (sectionId: string) => void;
@@ -34,7 +33,6 @@ export function FormBuilderSection({
   sectionIndex,
   selectedSectionId,
   selectedFieldId,
-  canDelete = formik.values.sections.length > 1,
   sectionReorderEnabled = true,
   showInlineAddField = true,
   onSelectSection,
@@ -79,7 +77,6 @@ export function FormBuilderSection({
         section={section}
         sectionIndex={sectionIndex}
         selected={selected}
-        canDelete={canDelete}
         settingsOpen={settingsOpen}
         reorderEnabled={sectionReorderEnabled}
         sortable={sortable}

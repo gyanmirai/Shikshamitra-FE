@@ -1,14 +1,18 @@
-import { Alert, Button, Stack, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Alert, Stack, Button, Typography } from '@mui/material';
 
 import { AdmissionWorkflowDialog } from '../admission-workflow-dialog';
+import { useAdmissionDefinitionOptions } from '../use-admission-definition-options';
 
 import type { useWorkflowListActions } from './use-workflow-list-actions';
 
 type Actions = ReturnType<typeof useWorkflowListActions>;
 
 export function WorkflowListDialogs({ actions }: { actions: Actions }) {
+  const { fetchInquiryForms, fetchRegistrationForms } = useAdmissionDefinitionOptions(
+    actions.createDialog.value
+  );
   const pending = actions.pendingConfirmation;
   const deleting = pending?.action === 'delete';
   return (
@@ -16,9 +20,12 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
       <AdmissionWorkflowDialog
         open={actions.createDialog.value}
         onClose={actions.createDialog.onFalse}
-        saving={actions.createState.isLoading}
+        saving={actions.createState.isLoading || actions.openingCreatedWorkflow}
         showStarterJourney
         autoGenerateCode
+        closeOnSave={false}
+        fetchInquiryForms={fetchInquiryForms}
+        fetchRegistrationForms={fetchRegistrationForms}
         onSave={actions.create}
       />
       <AdmissionWorkflowDialog

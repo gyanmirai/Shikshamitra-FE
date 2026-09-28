@@ -11,7 +11,6 @@ import type { AdmissionFormStepGroup } from '../form-step-groups';
 type Props = {
   step: AdmissionFormStepGroup;
   stepIndex: number;
-  canDelete: boolean;
   settingsOpen: boolean;
   onToggleSettings: () => void;
   onDelete: () => void;
@@ -20,7 +19,6 @@ type Props = {
 export function FormBuilderStepHeader({
   step,
   stepIndex,
-  canDelete,
   settingsOpen,
   onToggleSettings,
   onDelete,
@@ -68,7 +66,6 @@ export function FormBuilderStepHeader({
       <FormBuilderDeleteUnit
         name={step.name || `Step ${stepIndex + 1}`}
         unit="step"
-        canDelete={canDelete}
         onDelete={onDelete}
       />
     </Stack>

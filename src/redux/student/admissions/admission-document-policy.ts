@@ -10,6 +10,7 @@ export type AdmissionDocumentRequirementPolicy = {
   allowedExtensions: string[];
   maxFileSizeMb: number;
   documentTypeId?: string | null;
+  standardIds?: string[] | null;
 };
 
 export type AdmissionDocumentPolicy = {
@@ -17,6 +18,7 @@ export type AdmissionDocumentPolicy = {
   enabled: boolean;
   allowWaivers: boolean;
   requireIndependentReview: boolean;
+  collectionFormStageCode?: string | null;
   requirements: AdmissionDocumentRequirementPolicy[];
 };
 
@@ -55,6 +57,9 @@ function isRequirement(value: unknown): value is AdmissionDocumentRequirementPol
     ) &&
     typeof item.maxFileSizeMb === 'number' &&
     Number.isFinite(item.maxFileSizeMb) &&
+    (item.standardIds == null ||
+      (Array.isArray(item.standardIds) &&
+        item.standardIds.every((id) => typeof id === 'string'))) &&
     Array.isArray(item.allowedExtensions) &&
     item.allowedExtensions.every((format) => typeof format === 'string')
   );
@@ -70,6 +75,8 @@ export function readAdmissionDocumentPolicy(json?: string): AdmissionDocumentPol
       (key) => typeof policy[key] !== 'boolean'
     )
   )
+    return null;
+  if (policy.collectionFormStageCode != null && typeof policy.collectionFormStageCode !== 'string')
     return null;
   if (!Array.isArray(policy.requirements) || !policy.requirements.every(isRequirement)) return null;
   return policy as AdmissionDocumentPolicy;

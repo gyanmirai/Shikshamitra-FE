@@ -9,8 +9,10 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useState, useEffect } from 'react';
+import { isEqual } from 'src/utils/helper';
+import { useRef, useState, useEffect } from 'react';
 
+import { getSequentialAppendRoute } from '../workflow-route-diagnostics';
 import { createStage, reorderStages } from '../../workflow-builder-utils';
 import { useAdmissionUnsavedChanges } from '../../use-admission-unsaved-changes';
 import { type WorkflowTemplateId, getAdmissionWorkflowTemplate } from '../../workflow-template';
@@ -28,7 +30,11 @@ export function useWorkflowBuilderDraft(
 ) {
   const [stages, setStages] = useState<AdmissionWorkflowStage[]>([]);
   const [transitions, setTransitions] = useState<AdmissionWorkflowTransition[]>([]);
+  const [defaultInquiryFormDefinitionId, setDefaultInquiryFormDefinitionId] = useState<
+    string | null
+  >(null);
   const [loadedStamp, setLoadedStamp] = useState('');
+  const observedWorkflow = useRef<AdmissionWorkflow | undefined>(undefined);
   const [dirty, setDirty] = useState(false);
   const [editingStage, setEditingStage] = useState<AdmissionWorkflowStage | null>(null);
   const [editingTransition, setEditingTransition] = useState<AdmissionWorkflowTransition | null>(
@@ -46,9 +52,26 @@ export function useWorkflowBuilderDraft(
   useAdmissionUnsavedChanges(true, dirty);
 
   useEffect(() => {
-    if (!workflow || workflow.concurrencyStamp === loadedStamp) return;
+    // A save updates loadedStamp before its invalidated query finishes refetching.
+    // Do not reapply that unchanged, older query snapshot on the local state update.
+    if (!workflow || workflow === observedWorkflow.current) return;
+    const previous = observedWorkflow.current;
+    observedWorkflow.current = workflow;
+    if (workflow.concurrencyStamp === loadedStamp) return;
+    // Successful validation updates governance metadata without changing the journey.
+    // Refresh its concurrency stamp while retaining the result and any local edits.
+    if (
+      previous?.id === workflow.id &&
+      isEqual(previous.stages, workflow.stages) &&
+      isEqual(previous.transitions, workflow.transitions) &&
+      previous.defaultInquiryFormDefinitionId === workflow.defaultInquiryFormDefinitionId
+    ) {
+      setLoadedStamp(workflow.concurrencyStamp);
+      return;
+    }
     setStages([...workflow.stages].sort((left, right) => left.displayOrder - right.displayOrder));
     setTransitions(workflow.transitions);
+    setDefaultInquiryFormDefinitionId(workflow.defaultInquiryFormDefinitionId ?? null);
     setLoadedStamp(workflow.concurrencyStamp);
     setDirty(false);
     setValidation(null);
@@ -120,8 +143,12 @@ export function useWorkflowBuilderDraft(
     );
     setStageDrawerOpen(true);
   };
-  const saveStage = (stage: AdmissionWorkflowStage) => {
+  const saveStage = (stage: AdmissionWorkflowStage, autoConnect = true) => {
     recordHistory();
+    if (autoConnect && workflow?.stages.length === 0 && workflow.transitions.length === 0) {
+      const next = getSequentialAppendRoute(stages, transitions, stage);
+      if (next) setTransitions((current) => [...current, next]);
+    }
     setStages((current) => {
       const normalized = stage.isEntryStage
         ? current.map((item) => ({ ...item, isEntryStage: false }))
@@ -160,11 +187,16 @@ export function useWorkflowBuilderDraft(
     });
     markDirty();
   };
-  const applyWorkflowTemplate = (templateId: WorkflowTemplateId, formDefinitionId?: string) => {
+  const applyWorkflowTemplate = (
+    templateId: WorkflowTemplateId,
+    formDefinitionId: string,
+    inquiryFormDefinitionId: string | null
+  ) => {
     recordHistory();
     const template = getAdmissionWorkflowTemplate(templateId, formDefinitionId);
     setStages(template.stages);
     setTransitions(template.transitions);
+    setDefaultInquiryFormDefinitionId(inquiryFormDefinitionId);
     setValidation(null);
     setDirty(true);
   };
@@ -174,6 +206,8 @@ export function useWorkflowBuilderDraft(
     setStages,
     transitions,
     setTransitions,
+    defaultInquiryFormDefinitionId,
+    setDefaultInquiryFormDefinitionId,
     loadedStamp,
     setLoadedStamp,
     dirty,

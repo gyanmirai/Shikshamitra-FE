@@ -27,6 +27,8 @@ type Props = {
   defaultLabel: string;
   outcomes: readonly WorkflowOutcomeOption[];
   guidance: string;
+  allowedOutcomes?: readonly string[];
+  defaultAllowed?: boolean;
 };
 
 export function WorkflowOutcomeRoute({
@@ -37,6 +39,8 @@ export function WorkflowOutcomeRoute({
   defaultLabel,
   outcomes,
   guidance,
+  allowedOutcomes,
+  defaultAllowed = true,
 }: Props) {
   const { values } = formik;
   const route = isWorkflowOutcomeCondition(values, field, outcomes)
@@ -66,10 +70,10 @@ export function WorkflowOutcomeRoute({
         disabled={readOnly}
         onChange={(event) => selectRoute(event.target.value)}
       >
-        <MenuItem value="default">{defaultLabel}</MenuItem>
+        <MenuItem value="default" disabled={!defaultAllowed}>{defaultLabel}</MenuItem>
         {outcomes.map((outcome) => (
-          <MenuItem key={outcome.value} value={outcome.value}>
-            {outcome.label}
+          <MenuItem key={outcome.value} value={outcome.value} disabled={Boolean(allowedOutcomes && !allowedOutcomes.includes(outcome.value))}>
+            {outcome.label}{allowedOutcomes && !allowedOutcomes.includes(outcome.value) ? ' (enable in stage completion settings)' : ''}
           </MenuItem>
         ))}
         <MenuItem value="custom">Another condition</MenuItem>

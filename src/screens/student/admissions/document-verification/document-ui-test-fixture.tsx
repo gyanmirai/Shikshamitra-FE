@@ -50,7 +50,7 @@ export const documentStage: AdmissionApplicationStage = {
 const stores: ReturnType<typeof createDocumentTestStore>[] = [];
 export function renderDocumentUi(
   children: ReactNode,
-  permissions = ['View', 'Upload', 'RecordOriginal', 'Review', 'Waive', 'Download']
+  permissions = ['View', 'Add', 'Delete']
 ) {
   clearCachedAuthSession();
   mswServer.use(http.get('*/api/auth/session', () => HttpResponse.json(null)));

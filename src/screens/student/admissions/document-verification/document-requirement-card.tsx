@@ -49,11 +49,13 @@ export function DocumentRequirementCard({
           <Stack spacing={0.25}>
             <Typography variant="subtitle1">{requirement.name}</Typography>
             <Typography variant="caption" color="text.secondary">
-              {requirement.requirement === 'conditional'
-                ? `Conditional · ${requirement.isRequired ? 'Required for this applicant' : 'Based on applicant details'}`
-                : requirement.isRequired
-                  ? 'Required'
-                  : 'Optional'}
+              {requirement.status === 'notRequired'
+                ? 'Not applicable to this applicant'
+                : requirement.requirement === 'conditional'
+                  ? `Conditional · ${requirement.isRequired ? 'Required for this applicant' : 'Based on applicant details'}`
+                  : requirement.isRequired
+                    ? 'Required'
+                    : 'Optional'}
               {' · '}
               {collectionLabels[requirement.collectionMode]}
             </Typography>

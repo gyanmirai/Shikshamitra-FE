@@ -12,7 +12,6 @@ import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoadingButton } from 'src/components/loading-button';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import { useStartAdmissionApplicationMutation } from 'src/redux/student/admissions/admission-applications-api';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 import {
@@ -26,16 +25,20 @@ import {
   Typography,
   CardContent,
 } from '@mui/material';
+import {
+  useGetAdmissionOfferingsQuery,
+  useGetAdmissionClassCapacityQuery,
+} from 'src/redux/student/admissions/admission-offerings-api';
 
+import {
+  getAdmissionApplicationStatusColor,
+  getAdmissionApplicationStatusLabel,
+} from '../application-status';
 import {
   getCurrentStage,
   getPrimaryApplication,
   isActiveAdmissionApplication,
 } from './admission-applicant-360-model';
-import {
-  getAdmissionApplicationStatusColor,
-  getAdmissionApplicationStatusLabel,
-} from '../application-status';
 
 type Application = AdmissionApplicant360['applications'][number];
 
@@ -68,6 +71,9 @@ export function AdmissionApplicantStartCard({
   );
   const inquiryState = useGetAdmissionInquiryManagementQuery(inquiryId ?? '', {
     skip: !inquiryId,
+  });
+  const { currentData: classCapacity } = useGetAdmissionClassCapacityQuery(offeringId, {
+    skip: !offeringId,
   });
   const [startApplication, startState] = useStartAdmissionApplicationMutation();
   const blockers = inquiryState.data?.blockers ?? [];
@@ -219,14 +225,17 @@ export function AdmissionApplicantStartCard({
                   : 'Cycle, class, board, and medium'
           }
         >
-          {(offerings?.items ?? []).map((offering) => (
-            <MenuItem key={offering.id} value={offering.id}>
-              {offering.name || offering.code}
-              {offering.name && offering.name !== offering.code ? ` (${offering.code})` : ''} ·{' '}
-              {offering.standardName} · {offering.boardName} / {offering.mediumName} ·{' '}
-              {offering.admissionCycleName}
-            </MenuItem>
-          ))}
+          {(offerings?.items ?? [])
+            .filter((offering) => !inquiryId || offering.entryMode !== 1)
+            .map((offering) => (
+              <MenuItem key={offering.id} value={offering.id}>
+                {offering.name || offering.code}
+                {offering.name && offering.name !== offering.code
+                  ? ` (${offering.code})`
+                  : ''} · {offering.standardName} · {offering.boardName} / {offering.mediumName} ·{' '}
+                {offering.admissionCycleName}
+              </MenuItem>
+            ))}
         </TextField>
         <LoadingButton
           size="small"
@@ -240,6 +249,15 @@ export function AdmissionApplicantStartCard({
           Start application
         </LoadingButton>
       </Stack>
+      {offeringId && classCapacity && (
+        <Alert severity={classCapacity.isFull ? 'warning' : 'info'}>
+          {classCapacity.capacity == null
+            ? 'Admission room capacity is not set. Division seats are checked during onboarding. You can continue registration.'
+            : `${classCapacity.remainingSeats} of ${classCapacity.capacity} admission room seats available.`}
+          {classCapacity.isFull &&
+            ' Admission room capacity is full; registration can continue.'}
+        </Alert>
+      )}
 
       {inquiryId && inquiryState.isError && (
         <Alert severity="info">

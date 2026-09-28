@@ -74,6 +74,8 @@ export function useAdmissionOfferingActions(cycle: AdmissionCycle | null) {
           body: {
             admissionCycleId: targetCycleId,
             name: values.name,
+            track: values.track,
+            entryMode: values.entryMode,
             campusId: values.campusId,
             boardId: values.boardId,
             mediumId: values.mediumId,
