@@ -10,18 +10,14 @@ import { formatCurrency } from 'src/utils/cureencyFormater';
 import { LoadingButton } from 'src/components/loading-button';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { Box, Chip, Grid, Alert, Typography } from '@mui/material';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { Box, Card, Chip, Grid, Alert, Button, Typography, CardContent } from '@mui/material';
 
 import { formatRuleLabel } from './salary-template-editor-utils';
+import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 type Props = {
-  serverError: string;
-  onReload: () => void;
-  templateId?: string;
-  issues: string[];
-  readOnly: boolean;
   previewCurrent: boolean;
   sampleAmount: number;
   setSampleAmount: (value: number) => void;
@@ -33,14 +29,8 @@ type Props = {
   previewError: string;
   calculation?: SalaryTemplateCalculation;
   versions: SalaryTemplateVersion[];
-  onEditSection: (section: 'Basic Information' | 'Earnings' | 'Deductions') => void;
 };
 export default function SalaryTemplateReview({
-  serverError,
-  onReload,
-  templateId,
-  issues,
-  readOnly,
   previewCurrent,
   sampleAmount,
   setSampleAmount,
@@ -52,69 +42,41 @@ export default function SalaryTemplateReview({
   previewError,
   calculation,
   versions,
-  onEditSection,
 }: Props) {
   return (
     <Box display="grid" gap={2}>
-      <Box display="flex" justifyContent="flex-end" gap={1} flexWrap="wrap">
-        {(['Basic Information', 'Earnings', 'Deductions'] as const).map((section) => (
-          <Button
-            key={section}
-            size="small"
-            variant="outlined"
-            startIcon={<Iconify icon="mdi:pencil-outline" />}
-            onClick={() => onEditSection(section)}
-          >
-            {readOnly ? 'View' : 'Edit'} {section}
-          </Button>
-        ))}
-      </Box>
-      {serverError ? (
-        <Alert
-          severity="error"
-          action={
-            templateId ? (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:refresh" />}
-                onClick={onReload}
-              >
-                Reload
-              </Button>
-            ) : undefined
+      <Box
+        component="section"
+        id="salary-sample-calculation"
+        aria-label="Sample calculation"
+        tabIndex={-1}
+      >
+        <SectionCard
+          title="Sample calculation"
+          paperProps={{
+            sx: {
+              mb: 0,
+              borderColor: 'divider',
+              boxShadow: 'none',
+              transition: 'none',
+              '&:hover': { boxShadow: 'none' },
+            },
+          }}
+          gridProps={{ spacing: 0, sx: { display: 'block' } }}
+          headerContent={
+            <Chip
+              size="small"
+              variant="outlined"
+              label={previewCurrent ? 'Current sample' : 'Sample only'}
+            />
           }
         >
-          {serverError}
-        </Alert>
-      ) : null}
-      {issues.length ? (
-        <Alert severity="warning">
-          <Typography variant="subtitle2">Complete these items before saving:</Typography>
-          <Box component="ul" sx={{ pl: 2.5, mb: 0 }}>
-            {issues.map((issue) => (
-              <li key={issue}>{issue}</li>
-            ))}
-          </Box>
-        </Alert>
-      ) : (
-        <Alert severity={!readOnly && previewCurrent ? 'success' : 'info'}>
-          {readOnly
-            ? 'This version is read-only. Existing salary setups remain unchanged.'
-            : previewCurrent
-              ? 'This sample is valid. You can save the active version.'
-              : 'Calculate the current rules to enable Save.'}
-        </Alert>
-      )}
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="h6">Sample calculation</Typography>
           <Typography variant="body2" color="text.secondary" mb={2}>
             Preview the current rules before saving. This sample validates the selected amount;
             employee eligibility is checked during salary generation.
           </Typography>
           <Grid container spacing={1} alignItems="flex-start">
-            <Grid size={{ xs: 12, sm: 5 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 5 }}>
               <ShakingTextField>
                 <NumericFormatCustom
                   size="small"
@@ -131,7 +93,7 @@ export default function SalaryTemplateReview({
                 />
               </ShakingTextField>
             </Grid>
-            <Grid size={{ xs: 12, sm: 5 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 5 }}>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <DatePicker
                   label="Sample effective month"
@@ -149,7 +111,7 @@ export default function SalaryTemplateReview({
               </LocalizationProvider>
             </Grid>
             <Grid
-              size={{ xs: 12, sm: 2 }}
+              size={{ xs: 12, md: 2 }}
               sx={{ display: 'flex', justifyContent: 'flex-end', alignSelf: 'center' }}
             >
               <LoadingButton
@@ -158,14 +120,7 @@ export default function SalaryTemplateReview({
                 startIcon={<Iconify icon="mdi:calculator" />}
                 loading={calculating}
                 onClick={runSample}
-                disabled={
-                  archived ||
-                  calculating ||
-                  issues.length > 0 ||
-                  !Number.isFinite(sampleAmount) ||
-                  sampleAmount <= 0 ||
-                  !effectiveMonth
-                }
+                disabled={archived || calculating}
               >
                 Calculate
               </LoadingButton>
@@ -212,49 +167,62 @@ export default function SalaryTemplateReview({
               ))}
             </Grid>
           ) : null}
-        </CardContent>
-      </Card>
+          {archived && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Archived templates cannot be recalculated.
+            </Typography>
+          )}
+        </SectionCard>
+      </Box>
       {calculation ? (
-        <Box>
+        <Box
+          sx={{
+            display: 'grid',
+            gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(3, minmax(0, 1fr))' },
+            gap: 2,
+          }}
+        >
           {[
             { title: 'Regular earnings', lines: calculation.earnings },
             { title: 'Deductions', lines: calculation.deductions },
             { title: 'Employer contributions', lines: calculation.employerContributions },
           ].map(({ title, lines }) => (
-            <Card key={title} variant="outlined" sx={{ mb: 2 }}>
-              <CardContent>
-                <Typography variant="subtitle2" mb={1}>
-                  {title}
+            <SectionCard
+              key={title}
+              title={title}
+              paperProps={{
+                sx: {
+                  mb: 0,
+                  minWidth: 0,
+                  boxShadow: 'none',
+                  transition: 'none',
+                  '&:hover': { boxShadow: 'none' },
+                },
+              }}
+              gridProps={{ spacing: 0, sx: { display: 'block' } }}
+            >
+              {!lines.length ? (
+                <Typography variant="body2" color="text.secondary">
+                  None for this sample.
                 </Typography>
-                {!lines.length ? (
-                  <Typography variant="body2" color="text.secondary">
-                    None for this sample.
+              ) : null}
+              {lines.map((line) => (
+                <Box key={line.code} display="flex" justifyContent="space-between" gap={2} py={0.5}>
+                  <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+                    {line.name}
                   </Typography>
-                ) : null}
-                {lines.map((line) => (
-                  <Box
-                    key={line.code}
-                    display="flex"
-                    justifyContent="space-between"
-                    gap={2}
-                    py={0.5}
+                  <Typography
+                    variant="body2"
+                    sx={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
                   >
-                    <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
-                      {line.name}
-                    </Typography>
-                    <Typography
-                      variant="body2"
-                      sx={{ whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}
-                    >
-                      {formatCurrency(line.amount)}
-                    </Typography>
-                  </Box>
-                ))}
-              </CardContent>
-            </Card>
+                    {formatCurrency(line.amount)}
+                  </Typography>
+                </Box>
+              ))}
+            </SectionCard>
           ))}
           {calculation.warnings.map((warning) => (
-            <Alert key={warning} severity="warning" sx={{ mt: 1 }}>
+            <Alert key={warning} severity="warning" sx={{ gridColumn: '1 / -1' }}>
               {formatRuleLabel(warning)}
             </Alert>
           ))}
