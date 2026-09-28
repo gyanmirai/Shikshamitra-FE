@@ -1,11 +1,15 @@
 import type { IParams } from 'src/components/customizabaleTable/types';
-import type { AdmissionFormStatus } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  AdmissionFormStatus,
+  AdmissionFormPurpose,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 export type AdmissionFormListState = {
   page: number;
   rowsPerPage: number;
   search: string;
   filters: IParams['filters'];
+  purpose?: AdmissionFormPurpose;
 };
 
 export function getAdmissionFormStatusFilter(
@@ -20,6 +24,7 @@ export function buildAdmissionFormListQuery(state: AdmissionFormListState) {
   return {
     search: state.search.trim() || undefined,
     status: getAdmissionFormStatusFilter(state.filters),
+    ...(state.purpose === undefined ? {} : { purpose: state.purpose }),
     skipCount: state.page * state.rowsPerPage,
     maxResultCount: state.rowsPerPage,
   };

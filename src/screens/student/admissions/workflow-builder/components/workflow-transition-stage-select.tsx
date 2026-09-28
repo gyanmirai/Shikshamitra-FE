@@ -6,7 +6,6 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { readAdmissionSeatPolicy } from 'src/redux/student/admissions/admission-seat-policy';
 import { readAdmissionOfferPolicy } from 'src/redux/student/admissions/admission-offer-policy';
 import { readAdmissionReviewPolicy } from 'src/redux/student/admissions/admission-review-policy';
-import { readAdmissionInquiryPolicy } from 'src/redux/student/admissions/admission-inquiry-policy';
 import { readAdmissionPaymentPolicy } from 'src/redux/student/admissions/admission-payment-policy';
 import { readAdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
 import { readAdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
@@ -59,7 +58,6 @@ export function WorkflowTransitionStageSelect({
             selectedStage?.stageType === 6 &&
             readAdmissionReviewPolicy(selectedStage.configurationJson)?.enabled === true;
           const guidedFieldByType: Partial<Record<number, string>> = {
-            0: 'inquiry.management.outcome',
             4: 'payment.status',
             8: 'offer.status',
             9: 'seat.status',
@@ -68,8 +66,6 @@ export function WorkflowTransitionStageSelect({
             ? guidedFieldByType[selectedStage.stageType]
             : undefined;
           const supportsGuidedOutcome =
-            (selectedStage?.stageType === 0 &&
-              readAdmissionInquiryPolicy(selectedStage.configurationJson)?.enabled === true) ||
             (selectedStage?.stageType === 4 &&
               readAdmissionPaymentPolicy(selectedStage.configurationJson)?.enabled === true) ||
             (selectedStage?.stageType === 8 &&

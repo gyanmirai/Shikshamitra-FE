@@ -23,7 +23,7 @@ function Picker() {
   );
 }
 describe('published form condition choices', { timeout: 15000 }, () => {
-  it('fetches only the chosen form detail and uses the explicitly selected answer source', async () => {
+  it('fetches only the chosen application form and excludes inquiry rule options', async () => {
     const requests: string[] = [];
     mswServer.use(
       http.get('*/api/student/enrollment/admissions/forms/:id', ({ params }) => {
@@ -38,14 +38,44 @@ describe('published form condition choices', { timeout: 15000 }, () => {
     await waitFor(() => expect(requests).toEqual(['form-a']));
     await user.click(screen.getByRole('combobox', { name: 'Applicant answer or fact' }));
     expect(screen.queryByRole('option', { name: /Information only/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Inquiry status' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Inquiry source' })).not.toBeInTheDocument();
     await user.click(await screen.findByRole('option', { name: 'Previous school (Registration)' }));
     expect(screen.getByRole('status')).toHaveTextContent('application.PREVIOUS_SCHOOL');
-    await chooseDocumentOption(user, 'Answer source', 'Inquiry answer');
-    await user.clear(screen.getByRole('combobox', { name: 'Applicant answer or fact' }));
-    await user.click(screen.getByRole('combobox', { name: 'Applicant answer or fact' }));
-    await user.click(await screen.findByRole('option', { name: 'Previous school (Registration)' }));
-    expect(screen.getByRole('status')).toHaveTextContent('inquiry.student.previousSchool');
+    expect(screen.queryByRole('combobox', { name: 'Answer source' })).not.toBeInTheDocument();
     expect(requests).toEqual(['form-a']);
+  });
+
+  it('keeps a nested legacy inquiry rule unchanged until explicitly replaced', async () => {
+    const user = userEvent.setup();
+    const change = vi.fn();
+    renderDocumentUi(
+      <DocumentConditionFormPicker
+        forms={conditionFormList}
+        json={JSON.stringify({ operator: 'ANY', conditions: [
+          { field: 'application.category', operator: 'Equals', value: 'General' },
+          { operator: 'ALL', conditions: [{ field: 'inquiry.source', operator: 'Equals', value: 'Website' }] },
+        ] })}
+        onChange={change}
+      />
+    );
+    expect(change).not.toHaveBeenCalled();
+    expect(screen.queryByRole('combobox', { name: 'Applicant answer or fact' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Replace inquiry condition' }));
+    expect(change).toHaveBeenCalledWith(JSON.stringify({ field: '', operator: 'Equals', value: '' }));
+  });
+
+  it('excludes inquiry forms from published answer choices', async () => {
+    const user = userEvent.setup();
+    renderDocumentUi(
+      <DocumentConditionFormPicker
+        forms={[...conditionFormList, { ...conditionFormList[0], id: 'inquiry-form', name: 'Fair inquiry', purpose: 0 }]}
+        onChange={vi.fn()}
+      />
+    );
+    await user.click(screen.getByRole('combobox', { name: 'Published form for answer choices' }));
+    expect(screen.queryByRole('option', { name: /Fair inquiry/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Registration · v2' })).toBeInTheDocument();
   });
 
   it('preserves an explicit blank-answer condition while retrying a failed form detail request', async () => {

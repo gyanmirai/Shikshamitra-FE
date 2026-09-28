@@ -11,7 +11,7 @@ export const admissionOfferApi = api.injectEndpoints({ endpoints: (builder) => (
     query: offerStageUrl, transformResponse: unwrapOffer<AdmissionOfferStage>, providesTags: offerTags,
   }),
   issueAdmissionStageOffer: builder.mutation<AdmissionOfferStage, AdmissionOfferCommand & {
-    expiresAt?: string; reason?: string; idempotencyKey: string;
+    expiresAt?: string; reason?: string; counsellorId?: string; idempotencyKey: string;
   }>({ query: ({ applicationId, stageId, ...body }) => ({ url: `${offerStageUrl({ applicationId, stageId })}/issue`, method: 'POST', body }),
     transformResponse: unwrapOffer<AdmissionOfferStage>, invalidatesTags: offerTags }),
   respondAdmissionOffer: builder.mutation<AdmissionOfferStage, AdmissionOfferCommand & {
@@ -28,7 +28,7 @@ export const admissionOfferApi = api.injectEndpoints({ endpoints: (builder) => (
   }>({ query: ({ applicationId, stageId, ...body }) => ({ url: `${offerStageUrl({ applicationId, stageId })}/withdraw`, method: 'POST', body }),
     transformResponse: unwrapOffer<AdmissionOfferStage>, invalidatesTags: offerTags }),
   reissueAdmissionOffer: builder.mutation<AdmissionOfferStage, AdmissionOfferCommand & {
-    expiresAt?: string; reason?: string; idempotencyKey: string;
+    expiresAt?: string; reason?: string; counsellorId?: string; idempotencyKey: string;
   }>({ query: ({ applicationId, stageId, ...body }) => ({ url: `${offerStageUrl({ applicationId, stageId })}/reissue`, method: 'POST', body }),
     transformResponse: unwrapOffer<AdmissionOfferStage>, invalidatesTags: offerTags }),
 }) });

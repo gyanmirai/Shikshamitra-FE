@@ -16,7 +16,7 @@ export function AdmissionDialogTitle({ title, helpText, helpLabel }: Props) {
         <IconButton
           aria-label={helpLabel ?? `About ${title}`}
           size="small"
-          sx={{ width: 28, height: 28, color: 'info.main' }}
+          sx={{ width: { xs: 44, sm: 28 }, height: { xs: 44, sm: 28 }, color: 'info.main' }}
         >
           <Iconify icon="mdi:information-outline" width={18} />
         </IconButton>

@@ -3,6 +3,7 @@ import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
 export type AdmissionFormStatus = 0 | 1 | 2;
 export type AdmissionFormLayoutType = 0 | 1;
+export type AdmissionFormPurpose = 0 | 1;
 export type AdmissionFormFieldType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionFormBindingType = 0 | 1;
 export type AdmissionFormApprovalStatus = 0 | 1 | 2 | 3;
@@ -59,6 +60,7 @@ export type AdmissionForm = {
   version: number;
   status: AdmissionFormStatus;
   layoutType: AdmissionFormLayoutType;
+  purpose?: AdmissionFormPurpose;
   fieldsPerRow?: 1 | 2 | 3 | 4;
   defaultLanguage?: string;
   supportedLanguages?: string[];
@@ -81,6 +83,7 @@ export type CreateUpdateAdmissionForm = {
   code: string;
   description?: string | null;
   layoutType: AdmissionFormLayoutType;
+  purpose?: AdmissionFormPurpose;
   fieldsPerRow: 1 | 2 | 3 | 4;
   defaultLanguage: string;
   supportedLanguages: string[];
@@ -146,7 +149,13 @@ export const admissionFormsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getAdmissionForms: builder.query<
       { totalCount: number; items: AdmissionForm[] },
-      { search?: string; status?: AdmissionFormStatus; skipCount?: number; maxResultCount?: number }
+      {
+        search?: string;
+        status?: AdmissionFormStatus;
+        purpose?: AdmissionFormPurpose;
+        skipCount?: number;
+        maxResultCount?: number;
+      }
     >({
       query: (params) => ({ url: '/student/enrollment/admissions/forms', params }),
       transformResponse: (

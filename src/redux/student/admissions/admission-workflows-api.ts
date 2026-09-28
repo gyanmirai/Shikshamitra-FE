@@ -31,6 +31,7 @@ export type AdmissionWorkflow = {
   name: string;
   code: string;
   description?: string;
+  defaultInquiryFormDefinitionId?: string | null;
   version: number;
   status: AdmissionWorkflowStatus;
   parentVersionId?: string | null;
@@ -60,6 +61,7 @@ export type CreateUpdateAdmissionWorkflow = {
   name: string;
   code: string;
   description?: string;
+  defaultInquiryFormDefinitionId?: string | null;
   concurrencyStamp?: string;
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];

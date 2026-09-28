@@ -4,9 +4,11 @@ import { useState } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
+import { emptyCondition } from 'src/redux/student/admissions/admission-condition-rule';
 
 import { getTypedConditionFields } from './admission-condition-fields';
 import { AdmissionConditionEditor } from './admission-condition-editor';
+import { hasInquiryCondition, INQUIRY_RULE_REPLACEMENT_MESSAGE } from '../workflow-inquiry-retirement';
 
 import type { AdmissionConditionField } from './admission-condition-fields';
 
@@ -14,7 +16,6 @@ export function AdmissionConditionFormPicker({
   forms,
   json,
   onChange,
-  source: controlledSource,
   formDefinitionId,
   onFormDefinitionChange,
   readOnly = false,
@@ -25,7 +26,7 @@ export function AdmissionConditionFormPicker({
   forms: AdmissionForm[];
   json?: string | null;
   onChange: (json: string) => void;
-  source?: 'application' | 'inquiry';
+  source?: 'application';
   formDefinitionId?: string;
   onFormDefinitionChange?: (id: string) => void;
   readOnly?: boolean;
@@ -33,31 +34,28 @@ export function AdmissionConditionFormPicker({
   groupLabel?: string;
   getFields?: (
     form: AdmissionForm | undefined,
-    source: 'application' | 'inquiry'
+    source: 'application'
   ) => AdmissionConditionField[];
 }) {
   const [localFormId, setLocalFormId] = useState('');
-  const [localSource, setLocalSource] = useState<'application' | 'inquiry'>('application');
   const formId = formDefinitionId ?? localFormId;
-  const source = controlledSource ?? localSource;
-  const query = useGetAdmissionFormQuery(formId, { skip: !formId });
+  const legacyInquiry = hasInquiryCondition(json);
+  const query = useGetAdmissionFormQuery(formId, { skip: !formId || legacyInquiry });
   const detail = query.currentData;
+  if (legacyInquiry) {
+    return (
+      <Stack spacing={1}>
+        <Alert severity="info">{INQUIRY_RULE_REPLACEMENT_MESSAGE} The saved rule remains unchanged until you replace it.</Alert>
+        {!readOnly && (
+          <Button variant="outlined" size="small" onClick={() => onChange(JSON.stringify(emptyCondition()))}>
+            Replace inquiry condition
+          </Button>
+        )}
+      </Stack>
+    );
+  }
   return (
     <Stack spacing={1}>
-      {!controlledSource && (
-        <CustomSelect
-          size="small"
-          fullWidth
-          label="Answer source"
-          value={source}
-          options={[
-            { value: 'application', label: 'Application answer' },
-            { value: 'inquiry', label: 'Inquiry answer' },
-          ]}
-          disabled={readOnly}
-          onChange={(value) => setLocalSource(value === 'inquiry' ? 'inquiry' : 'application')}
-        />
-      )}
       <CustomSelect
         size="small"
         fullWidth
@@ -70,7 +68,7 @@ export function AdmissionConditionFormPicker({
             label: strictTypes ? 'Choose a published form' : 'Enter a known field directly',
           },
           ...forms
-            .filter((form) => form.status === 1)
+            .filter((form) => form.status === 1 && form.purpose !== 0)
             .map((form) => ({ value: form.id, label: `${form.name} · v${form.version}` })),
         ]}
         onChange={(id) =>
@@ -110,7 +108,7 @@ export function AdmissionConditionFormPicker({
         strictTypes={strictTypes}
         groupLabel={groupLabel}
         onChange={onChange}
-        fields={getFields(detail && !query.isError ? detail : undefined, source)}
+        fields={getFields(detail && !query.isError && detail.purpose !== 0 ? detail : undefined, 'application')}
       />
       <Typography variant="caption" color="text.secondary">
         A missing field pauses this requirement. “Is empty” matches an answer explicitly saved

@@ -2,7 +2,7 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import { it, expect, describe } from 'vitest';
 
-import { getAdmissionFormStepGroups } from './form-step-groups';
+import { nextStepNumber, getAdmissionFormStepGroups } from './form-step-groups';
 
 const section = (
   id: string,
@@ -37,5 +37,15 @@ describe('admission form step grouping', () => {
 
     expect(groups).toHaveLength(2);
     expect(groups[0].name).toBe('Section 1');
+  });
+
+  it('chooses an unused step code after a step is removed', () => {
+    const sections = [section('1', 'A', 0), section('3', 'C', 2)];
+    sections[0].stepCode = 'STEP_1';
+    sections[1].stepCode = 'STEP_3';
+
+    expect(nextStepNumber(sections)).toBe(4);
+    sections[1].stepCode = 'STEP_2';
+    expect(nextStepNumber(sections)).toBe(3);
   });
 });

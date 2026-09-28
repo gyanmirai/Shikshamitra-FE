@@ -56,8 +56,12 @@ const RenderPreviousSchoolFields = (props: any) => {
   ];
   const handleSave = async (): Promise<void | false | undefined> => {
     const validation = await formik.validateForm();
-    await formik?.submitForm?.();
     if (Object.keys(validation).length > 0) return false;
+    try {
+      await formik?.submitForm?.();
+    } catch {
+      return false;
+    }
 
     formik.resetForm({ values: formik.values });
     return undefined;

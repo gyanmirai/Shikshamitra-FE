@@ -27,6 +27,18 @@ describe('admission form list query', () => {
     ).toBe(0);
   });
 
+  it('sends the selected form purpose to the backend', () => {
+    expect(
+      buildAdmissionFormListQuery({
+        page: 0,
+        rowsPerPage: 10,
+        search: '',
+        filters: [],
+        purpose: 0,
+      })
+    ).toMatchObject({ purpose: 0 });
+  });
+
   it('ignores unsupported status values', () => {
     expect(
       getAdmissionFormStatusFilter([

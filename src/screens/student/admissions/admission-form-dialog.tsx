@@ -4,9 +4,18 @@ import type {
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Stack, LinearProgress } from '@mui/material';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  Box,
+  Chip,
+  Alert,
+  Stack,
+  Button,
+  Typography,
+  LinearProgress,
+  CircularProgress,
+} from '@mui/material';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { ADMISSION_FORM_STEPS } from './form-dialog/form-wizard-model';
@@ -17,19 +26,67 @@ import { FormBuilderWizardContent } from './form-dialog/components/form-builder-
 type Props = {
   open: boolean;
   onClose: () => void;
+  editingId?: string | null;
   editing?: AdmissionForm | null;
+  editingError?: boolean;
+  onRetryEditing?: () => void;
+  initialPurpose?: CreateUpdateAdmissionForm['purpose'];
   saving: boolean;
   onSave: (value: CreateUpdateAdmissionForm) => Promise<void>;
 };
 
-export function AdmissionFormDialog({ open, editing, ...props }: Props) {
-  return open ? (
-    <AdmissionFormEditor key={editing?.id ?? 'new'} editing={editing} {...props} />
-  ) : null;
+export function AdmissionFormDialog({
+  open,
+  editingId,
+  editing,
+  editingError,
+  onRetryEditing,
+  ...props
+}: Props) {
+  if (!open) return null;
+  if (editingId && !editing) {
+    return (
+      <CustomDialog
+        open
+        title="Edit admission form"
+        handleClose={props.onClose}
+        hasForm={false}
+        guardUnsavedChanges={false}
+        maxWidth="sm"
+      >
+        <Stack spacing={2} sx={{ p: 3, minHeight: 144, justifyContent: 'center' }}>
+          {editingError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" sx={{ minHeight: 44 }} onClick={onRetryEditing}>
+                  Retry
+                </Button>
+              }
+            >
+              This form could not be loaded. Try again.
+            </Alert>
+          ) : (
+            <Stack direction="row" spacing={1.5} alignItems="center" role="status">
+              <CircularProgress size={24} aria-label="Loading admission form" />
+              <Typography variant="body2">Loading admission form...</Typography>
+            </Stack>
+          )}
+        </Stack>
+      </CustomDialog>
+    );
+  }
+  return <AdmissionFormEditor key={editing?.id ?? 'new'} editing={editing} {...props} />;
 }
 
-function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, 'open'>) {
-  const wizard = useAdmissionFormWizard({ editing, onClose, onSave });
+function AdmissionFormEditor({
+  onClose,
+  editing,
+  initialPurpose,
+  saving,
+  onSave,
+}: Omit<Props, 'open'>) {
+  const wizard = useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave });
   const busy = saving || wizard.submitting;
   return (
     <CustomDialog

@@ -70,3 +70,11 @@ export function nextSectionNumber(sections: CreateUpdateAdmissionForm['sections'
   while (codes.has(`SECTION_${number}`)) number += 1;
   return number;
 }
+
+export function nextStepNumber(sections: CreateUpdateAdmissionForm['sections']) {
+  const steps = getAdmissionFormStepGroups(sections);
+  const codes = new Set(steps.map((step) => step.code.toUpperCase()));
+  let number = steps.length + 1;
+  while (codes.has(`STEP_${number}`)) number += 1;
+  return number;
+}

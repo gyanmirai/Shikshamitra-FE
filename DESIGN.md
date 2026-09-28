@@ -234,9 +234,21 @@ Show scoring presets and representative outcome previews before exposing individ
 Group advanced numeric controls by purpose instead of rendering an unexplained wall of fields.
 
 Use dedicated pages for complex template configuration that requires comparing interdependent settings.
-Salary Template create and edit pages use Configure and Review, with Basic Information above equal-width Earnings and Deductions collections on large screens.
-Stack the collections on narrow screens, use one content scroll region, and keep the action footer visible.
-Use compact component rows with inline values and expandable advanced settings.
+Salary Template create, edit, and view pages use one continuous form with Basic Information beside compact Statutory Defaults in a two-to-one desktop layout.
+Use 24 px field-row spacing, 16 px column spacing, and persistent labels in Basic Information.
+Stretch the desktop top cards to equal content-driven heights, with matching padding and aligned headings and dividers.
+Place equal-width, separately enclosed Earnings and Deductions panels below, followed by full-width Sample Calculation.
+Desktop component panels are 480 px high with stationary headers and independently scrolling lists.
+Stack sections with natural heights on tablet and mobile, retain page scrolling to calculation results, and keep the action footer visible.
+Keep essential statutory guidance visible and expose longer explanations through a keyboard-accessible disclosure.
+Reveal invalid or newly added rows inside their component list before focusing them.
+Use SectionCard headers for section titles and Add actions without component-count badges, and subtle separators between component rows.
+Use a subtle success-green header divider for Earnings and warning-amber for Deductions; retain neutral panel surfaces and explicit section labels.
+These accents distinguish component categories and do not represent validation status.
+The footer shows preview validity, Preview Calculation navigation, and the save action, which requires a current successful server preview.
+Use compact component rows with the name and calculation summary beside the value and expand action.
+Omit Ordinary from row summaries and use inline text for meaningful purposes instead of purpose chips.
+Allow long names and mobile controls to wrap, and keep advanced settings expandable.
 Use the shared right-side editor drawer for focused edits and policy workflows that benefit from retaining list context.
 The drawer owns a stable title, concise description, ordered stepper, scrollable body, and sticky action footer.
 It becomes full width on small screens and keeps the underlying list in context on desktop.

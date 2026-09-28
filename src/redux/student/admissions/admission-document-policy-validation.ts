@@ -4,6 +4,12 @@ import { readStageConfiguration } from './admission-assessment-policy';
 import { getAdmissionConditionError } from './admission-condition-rule';
 import { DOCUMENT_FORMATS, readAdmissionDocumentPolicy } from './admission-document-policy';
 
+// ABP sequential GUIDs do not always contain an RFC UUID version nibble.
+const documentReferenceId = (message: string) =>
+  Yup.string()
+    .matches(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, message)
+    .notOneOf(['00000000-0000-0000-0000-000000000000'], message);
+
 export const documentRequirementSchema = Yup.object({
   code: Yup.string()
     .required('Document code is required')
@@ -30,7 +36,17 @@ export const documentRequirementSchema = Yup.object({
     .of(Yup.string().oneOf(DOCUMENT_FORMATS, 'Choose PDF, JPG, JPEG, or PNG'))
     .min(1, 'Choose at least one file format')
     .required(),
-  documentTypeId: Yup.string().nullable().uuid('Choose a valid student document type'),
+  documentTypeId: documentReferenceId('Choose a valid student document type').nullable(),
+  standardIds: Yup.array()
+    .nullable()
+    .of(documentReferenceId('Choose a valid class').required())
+    .min(1, 'Select at least one class, or choose all classes')
+    .max(100, 'Select at most 100 classes')
+    .test(
+      'unique-classes',
+      'Select each class only once',
+      (ids) => !ids || new Set(ids.map((id) => id?.toLowerCase())).size === ids.length
+    ),
   conditionJson: Yup.string()
     .nullable()
     .when('requirement', {
@@ -50,7 +66,8 @@ export const documentRequirementSchema = Yup.object({
 });
 
 export function getDocumentConfigurationError(json?: string): string | undefined {
-  if (json && json.length > 8000) return 'Shorten the stage settings to fit within 8,000 characters.';
+  if (json && json.length > 8000)
+    return 'Shorten the stage settings to fit within 8,000 characters.';
   const configuration = readStageConfiguration(json);
   if (!configuration)
     return 'The stage settings could not be read. Reopen the stage before saving.';
@@ -58,6 +75,11 @@ export function getDocumentConfigurationError(json?: string): string | undefined
   const policy = readAdmissionDocumentPolicy(json);
   if (!policy) return 'These document settings are unsupported or incomplete. Reload the workflow.';
   if (!policy.enabled) return undefined;
+  if (
+    policy.collectionFormStageCode != null &&
+    !/^[A-Z][A-Z0-9_]{0,63}$/.test(policy.collectionFormStageCode)
+  )
+    return 'Choose a valid Form stage for early document collection.';
   if (!policy.requirements.length || policy.requirements.length > 30)
     return 'Add between 1 and 30 document requirements.';
   if (new Set(policy.requirements.map((item) => item.code)).size !== policy.requirements.length) {

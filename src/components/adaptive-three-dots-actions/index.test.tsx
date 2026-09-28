@@ -1,9 +1,8 @@
 import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import AdaptiveThreeDotsActions from './index';
 
@@ -74,6 +73,42 @@ describe('AdaptiveThreeDotsActions', () => {
     await waitFor(() => {
       expect(screen.queryByRole('menuitem', { name: 'Action 4' })).not.toBeInTheDocument();
     });
+  });
+
+  it('keeps every action available in the menu on narrow screens', async () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('max-width'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+
+    try {
+      const actions = ['Edit', 'Delete', 'Clone'].map((label) => ({
+        id: label.toLowerCase(),
+        label,
+        icon: 'mdi:circle',
+        onClick: vi.fn(),
+      }));
+      render(
+        <ThemeProvider theme={theme}>
+          <AdaptiveThreeDotsActions actions={actions} mobileDirectActionLimit={0} />
+        </ThemeProvider>
+      );
+
+      expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'More actions' }));
+      expect(await screen.findAllByRole('menuitem')).toHaveLength(3);
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Clone' }));
+      expect(actions[2].onClick).toHaveBeenCalledOnce();
+    } finally {
+      window.matchMedia = originalMatchMedia;
+    }
   });
 
   it('preserves the disabled state in direct and overflow modes', async () => {

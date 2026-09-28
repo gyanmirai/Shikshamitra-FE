@@ -35,6 +35,15 @@ export function DocumentRequirementItem({
             }
           />
           <Chip size="small" variant="outlined" label={collectionLabels[item.collectionMode]} />
+          <Chip
+            size="small"
+            variant="outlined"
+            label={
+              item.standardIds
+                ? `${item.standardIds.length} selected ${item.standardIds.length === 1 ? 'class' : 'classes'}`
+                : 'All classes'
+            }
+          />
         </Stack>
         {item.description && (
           <Typography variant="body2" color="text.secondary">

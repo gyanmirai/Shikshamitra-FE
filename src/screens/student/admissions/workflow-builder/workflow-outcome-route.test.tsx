@@ -11,6 +11,8 @@ import { DEFAULT_OFFER_POLICY } from 'src/redux/student/admissions/admission-off
 
 import { AdmissionWorkflowTransitionDrawer } from '../admission-workflow-transition-drawer';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 ['close', 'content-save-outline'].forEach((name) => {
   addIcon(`mdi:${name}`, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 });
@@ -83,7 +85,8 @@ describe('guided workflow outcome routes', { timeout: 15000 }, () => {
     const { user, onClose } = setup();
 
     await user.click(screen.getByRole('combobox', { name: 'Continue when offer is' }));
-    await user.click(screen.getByRole('option', { name: 'Offer expired' }));
+    expect(screen.getByRole('option', { name: /Offer expired/ })).toHaveAttribute('aria-disabled', 'true');
+    await user.click(screen.getByRole('option', { name: 'Offer declined' }));
     await user.click(screen.getByRole('button', { name: 'Close next-step editor' }));
 
     expect(await screen.findByText('Discard next-step changes?')).toBeInTheDocument();

@@ -23,14 +23,16 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { formatDateOnly } from 'src/utils/date-only';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetYearQuery } from 'src/redux/year/yearApi';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Paper, Stack, Button, MenuItem, MenuList, TextField, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { Box, Paper, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import {
   useGetAdmissionCyclesQuery,
   useCloseAdmissionCycleMutation,
@@ -46,6 +48,7 @@ import {
   useUpdateAdmissionCycleWindowMutation,
 } from 'src/redux/student/admissions/admission-cycles-api';
 
+import { AdmissionTableText } from './admission-table-text';
 import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
 import { useAdmissionCycleFilters } from './use-admission-cycle-filters';
@@ -74,7 +77,10 @@ const lifecycleColors: Record<AdmissionCycleStatus, 'default' | 'success' | 'war
   2: 'warning',
   3: 'error',
 };
-const windowColors: Record<AdmissionCycleWindowStatus, 'default' | 'success' | 'warning' | 'error'> = {
+const windowColors: Record<
+  AdmissionCycleWindowStatus,
+  'default' | 'success' | 'warning' | 'error'
+> = {
   0: 'default',
   1: 'success',
   2: 'warning',
@@ -111,11 +117,14 @@ export default function AdmissionCyclesScreen() {
   const canAdd = hasGrantedPermission(permissions, 'Students.Admissions.Add');
   const canDelete = hasGrantedPermission(permissions, 'Students.Admissions.Delete');
 
-  const { data: academicYearsData, isLoading: academicYearsLoading, isError: academicYearsError } =
-    useGetYearQuery(undefined);
+  const {
+    data: academicYearsData,
+    isLoading: academicYearsLoading,
+    isError: academicYearsError,
+  } = useGetYearQuery(undefined);
   const academicYears = useMemo(
     () =>
-      ([...((academicYearsData?.items ?? []) as AcademicYear[])]).sort(
+      [...((academicYearsData?.items ?? []) as AcademicYear[])].sort(
         (left, right) => getAcademicYearSortValue(right) - getAcademicYearSortValue(left)
       ),
     [academicYearsData?.items]
@@ -192,7 +201,10 @@ export default function AdmissionCyclesScreen() {
     if (!actionCycle || !guardedAction) return;
     try {
       if (guardedAction === 'publish') {
-        await publishCycle({ id: actionCycle.id, concurrencyStamp: actionCycle.concurrencyStamp }).unwrap();
+        await publishCycle({
+          id: actionCycle.id,
+          concurrencyStamp: actionCycle.concurrencyStamp,
+        }).unwrap();
       } else if (guardedAction === 'close') {
         await closeCycle({ id: actionCycle.id, body: payload }).unwrap();
       } else if (guardedAction === 'reopen') {
@@ -200,7 +212,10 @@ export default function AdmissionCyclesScreen() {
       } else if (guardedAction === 'archive') {
         await archiveCycle({ id: actionCycle.id, body: payload }).unwrap();
       } else {
-        await deleteCycle({ id: actionCycle.id, concurrencyStamp: actionCycle.concurrencyStamp }).unwrap();
+        await deleteCycle({
+          id: actionCycle.id,
+          concurrencyStamp: actionCycle.concurrencyStamp,
+        }).unwrap();
       }
       const successMessages: Record<CycleGuardedAction, string> = {
         publish: 'Admission cycle published',
@@ -224,9 +239,15 @@ export default function AdmissionCyclesScreen() {
       if (configurationMode === 'clone') {
         await cloneCycle(payload as CloneAdmissionCycle).unwrap();
       } else if (configurationMode === 'window') {
-        await updateWindow({ id: actionCycle.id, body: payload as UpdateAdmissionCycleWindow }).unwrap();
+        await updateWindow({
+          id: actionCycle.id,
+          body: payload as UpdateAdmissionCycleWindow,
+        }).unwrap();
       } else {
-        await scheduleCycle({ id: actionCycle.id, body: payload as ScheduleAdmissionCycle }).unwrap();
+        await scheduleCycle({
+          id: actionCycle.id,
+          body: payload as ScheduleAdmissionCycle,
+        }).unwrap();
       }
       shikshaMitraToast.success({
         message:
@@ -251,12 +272,11 @@ export default function AdmissionCyclesScreen() {
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
         return (
-          <Box>
-            <Typography fontWeight={600}>{cycle.name}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {cycle.code} · {cycle.academicYearName || 'Academic year'}
-            </Typography>
-          </Box>
+          <AdmissionTableText
+            text={cycle.name}
+            secondary={`${cycle.code} · ${cycle.academicYearName || 'Academic year'}`}
+            strong
+          />
         );
       },
     },
@@ -266,31 +286,25 @@ export default function AdmissionCyclesScreen() {
       minWidth: 210,
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
+        const dates = `${formatDateOnly(cycle.startDate)} – ${formatDateOnly(cycle.endDate)}`;
+        const schedule = cycleScheduleSummary(cycle);
         return (
-          <Box>
-            <Typography variant="body2">{dayjs(cycle.startDate).format('DD MMM YYYY')} – {dayjs(cycle.endDate).format('DD MMM YYYY')}</Typography>
-            {cycleScheduleSummary(cycle) && <Typography variant="caption" color="text.secondary">{cycleScheduleSummary(cycle)}</Typography>}
-          </Box>
+          <AdmissionTableText text={dates} tooltip={schedule ? `${dates} · ${schedule}` : dates} />
         );
       },
     },
-    {
-      id: 'windowStatus',
-      label: 'Window',
-      minWidth: 110,
-      render: (value) => (
-        <Label color={windowColors[Number(value) as AdmissionCycleWindowStatus]}>
-          {windowLabels[Number(value) as AdmissionCycleWindowStatus]}
-        </Label>
-      ),
-    },
+
     {
       id: 'applicationCount',
       label: 'Usage',
       minWidth: 150,
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
-        return <Typography variant="body2">{cycle.linkedOfferingCount} offerings · {cycle.applicationCount} applications</Typography>;
+        return (
+          <AdmissionTableText
+            text={`${cycle.linkedOfferingCount} offerings · ${cycle.applicationCount} applications`}
+          />
+        );
       },
     },
     {
@@ -299,6 +313,9 @@ export default function AdmissionCyclesScreen() {
       minWidth: 110,
       sticky: true,
       stickyPosition: 'right',
+      stickyOnMobile: false,
+      headerSx: { display: { xs: 'none', sm: 'table-cell' } },
+      cellSx: { display: { xs: 'none', sm: 'table-cell' } },
       render: (value) => (
         <Label color={lifecycleColors[Number(value) as AdmissionCycleStatus]}>
           {lifecycleLabels[Number(value) as AdmissionCycleStatus]}
@@ -306,11 +323,36 @@ export default function AdmissionCyclesScreen() {
       ),
     },
     {
+      id: 'windowStatus',
+      label: <><Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Window</Box><Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Statuses</Box></>,
+      minWidth: 110,
+      sticky: true,
+      stickyPosition: 'right',
+      render: (value, row) => {
+        const lifecycle = Number((row as AdmissionCycle).status) as AdmissionCycleStatus;
+        const windowStatus = Number(value) as AdmissionCycleWindowStatus;
+        const windowLabel = <Label color={windowColors[windowStatus]}>{windowLabels[windowStatus]}</Label>;
+        return (
+          <>
+            <CustomTooltip title={`Lifecycle: ${lifecycleLabels[lifecycle]} · Window: ${windowLabels[windowStatus]}`} arrow>
+              <Box sx={{ display: { xs: 'flex', sm: 'none' }, flexDirection: 'column', alignItems: 'flex-start', gap: 0.5 }}>
+                <Label color={lifecycleColors[lifecycle]}>{lifecycleLabels[lifecycle]}</Label>
+                {windowLabel}
+              </Box>
+            </CustomTooltip>
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>{windowLabel}</Box>
+          </>
+        );
+      },
+    },
+    {
       id: 'actions',
       label: 'Actions',
       width: 160,
       minWidth: 150,
-      align: 'right',
+      headerSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
+      cellSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
+      align: 'left',
       sticky: true,
       stickyPosition: 'right',
       isSort: false,
@@ -318,41 +360,124 @@ export default function AdmissionCyclesScreen() {
       excludeFromExport: true,
       render: (_, row) => {
         const cycle = row as unknown as AdmissionCycle;
-        const hasOverflowActions =
-          canView || canAdd ||
-          (canDelete && (canCloseCycle(cycle) || canArchiveCycle(cycle)));
+        const actions = [
+          ...(canAdd
+            ? [
+                {
+                  id: 'edit',
+                  label: `Edit ${cycle.name}`,
+                  icon: 'solar:pen-bold',
+                  disabled: !canEditCycle(cycle),
+                  onClick: () => {
+                    setEditingCycle(cycle);
+                    editDialog.onTrue();
+                  },
+                },
+              ]
+            : []),
+          ...(canDelete
+            ? [
+                {
+                  id: 'delete',
+                  label: `Delete ${cycle.name}`,
+                  icon: 'solar:trash-bin-trash-bold',
+                  color: canDeleteCycle(cycle) ? 'error.main' : 'text.disabled',
+                  disabled: !canDeleteCycle(cycle),
+                  tooltip: !canDeleteCycle(cycle)
+                    ? 'Only unused draft admission cycles can be deleted.'
+                    : undefined,
+                  onClick: () => openGuardedAction('delete', cycle),
+                },
+              ]
+            : []),
+          ...(canView
+            ? [
+                {
+                  id: 'capacity',
+                  label: `Capacity & reservations for ${cycle.name}`,
+                  icon: 'mdi:seat-outline',
+                  onClick: () => setCapacityCycle(cycle),
+                },
+              ]
+            : []),
+          ...(canAdd && canPublishCycle(cycle)
+            ? [
+                {
+                  id: 'publish',
+                  label: `Validate & publish ${cycle.name}`,
+                  icon: GlobalIcons.publish,
+                  onClick: () => openGuardedAction('publish', cycle),
+                },
+              ]
+            : []),
+          ...(canAdd && canReopenCycle(cycle)
+            ? [
+                {
+                  id: 'reopen',
+                  label: `Reopen ${cycle.name}`,
+                  icon: 'mdi:lock-open-outline',
+                  onClick: () => openGuardedAction('reopen', cycle),
+                },
+              ]
+            : []),
+          ...(canAdd && (cycle.status === 1 || cycle.status === 2)
+            ? [
+                {
+                  id: 'window',
+                  label: `Revise window for ${cycle.name}`,
+                  icon: GlobalIcons.calendar,
+                  onClick: () => openConfiguration('window', cycle),
+                },
+              ]
+            : []),
+          ...(canAdd && (cycle.status === 0 || cycle.status === 1)
+            ? [
+                {
+                  id: 'schedule',
+                  label: `Schedule actions for ${cycle.name}`,
+                  icon: GlobalIcons.clock,
+                  onClick: () => openConfiguration('schedule', cycle),
+                },
+              ]
+            : []),
+          ...(canAdd
+            ? [
+                {
+                  id: 'clone',
+                  label: `Clone ${cycle.name} as draft`,
+                  icon: GlobalIcons.copy,
+                  onClick: () => openConfiguration('clone', cycle),
+                },
+              ]
+            : []),
+          ...(canDelete && canCloseCycle(cycle)
+            ? [
+                {
+                  id: 'close',
+                  label: `Close ${cycle.name}`,
+                  icon: GlobalIcons.lockIcon,
+                  onClick: () => openGuardedAction('close', cycle),
+                },
+              ]
+            : []),
+          ...(canDelete && canArchiveCycle(cycle)
+            ? [
+                {
+                  id: 'archive',
+                  label: `Archive ${cycle.name}`,
+                  icon: GlobalIcons.archive,
+                  onClick: () => openGuardedAction('archive', cycle),
+                },
+              ]
+            : []),
+        ];
         return (
-          <ThreeDotsActions
+          <AdaptiveThreeDotsActions
             placement="right-top"
-            showViewIcon={canView}
-            viewIcon="mdi:eye-outline"
-            viewLabel={`View ${cycle.name}`}
-            handleViewClick={() => setDetailsCycle(cycle)}
-            showEditIcon={canAdd}
-            editLabel={`Edit ${cycle.name}`}
-            disableEditIcon={!canEditCycle(cycle)}
-            handleEditClick={() => {
-              setEditingCycle(cycle);
-              editDialog.onTrue();
-            }}
-            showDeleteIcon={canDelete}
-            deleteLabel={`Delete ${cycle.name}`}
-            disableDeleteIcon={!canDeleteCycle(cycle)}
-            handleDeleteClick={() => openGuardedAction('delete', cycle)}
-            showThreeDots={hasOverflowActions}
             moreLabel={`More actions for ${cycle.name}`}
-            actions={({ popover }) => (
-              <MenuList dense>
-                {canView && <MenuItem onClick={() => { popover.onClose(); setCapacityCycle(cycle); }}><Iconify icon="mdi:seat-outline" />Capacity & reservations</MenuItem>}
-                {canAdd && canPublishCycle(cycle) && <MenuItem onClick={() => { popover.onClose(); openGuardedAction('publish', cycle); }}><Iconify icon={GlobalIcons.publish} />Validate & publish</MenuItem>}
-                {canAdd && canReopenCycle(cycle) && <MenuItem onClick={() => { popover.onClose(); openGuardedAction('reopen', cycle); }}><Iconify icon="mdi:lock-open-outline" />Reopen</MenuItem>}
-                {canAdd && (cycle.status === 1 || cycle.status === 2) && <MenuItem onClick={() => { popover.onClose(); openConfiguration('window', cycle); }}><Iconify icon={GlobalIcons.calendar} />Revise window</MenuItem>}
-                {canAdd && (cycle.status === 0 || cycle.status === 1) && <MenuItem onClick={() => { popover.onClose(); openConfiguration('schedule', cycle); }}><Iconify icon={GlobalIcons.clock} />Schedule actions</MenuItem>}
-                {canAdd && <MenuItem onClick={() => { popover.onClose(); openConfiguration('clone', cycle); }}><Iconify icon={GlobalIcons.copy} />Clone as draft</MenuItem>}
-                {canDelete && canCloseCycle(cycle) && <MenuItem onClick={() => { popover.onClose(); openGuardedAction('close', cycle); }}><Iconify icon={GlobalIcons.lockIcon} />Close</MenuItem>}
-                {canDelete && canArchiveCycle(cycle) && <MenuItem onClick={() => { popover.onClose(); openGuardedAction('archive', cycle); }}><Iconify icon={GlobalIcons.archive} />Archive</MenuItem>}
-              </MenuList>
-            )}
+            mobileDirectActionLimit={0}
+            sx={{ gap: 0, '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } } }}
+            actions={actions}
           />
         );
       },
@@ -411,9 +536,10 @@ export default function AdmissionCyclesScreen() {
             value={filters.academicYearId}
             disabled={academicYearsLoading}
             onChange={(event) => updateFilters({ academicYearId: event.target.value })}
+            slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
             sx={{ minWidth: 180, flex: { sm: 1 } }}
           >
-            <MenuItem value="">All academic years</MenuItem>
+            <MenuItem value="">All Academic Years</MenuItem>
             {academicYears.map((year) => (
               <MenuItem key={year.id} value={year.id}>
                 {year.name}
@@ -433,9 +559,10 @@ export default function AdmissionCyclesScreen() {
                     : (Number(event.target.value) as AdmissionCycleStatus),
               })
             }
+            slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
             sx={{ minWidth: 170, flex: { sm: 1 } }}
           >
-            <MenuItem value="">All lifecycle states</MenuItem>
+            <MenuItem value="">All Lifecycles</MenuItem>
             {Object.entries(lifecycleLabels).map(([value, label]) => (
               <MenuItem key={value} value={Number(value)}>
                 {label}
@@ -455,9 +582,10 @@ export default function AdmissionCyclesScreen() {
                     : (Number(event.target.value) as AdmissionCycleWindowStatus),
               })
             }
+            slotProps={{ inputLabel: { shrink: true }, select: { displayEmpty: true } }}
             sx={{ minWidth: 190, flex: { sm: 1 } }}
           >
-            <MenuItem value="">All window states</MenuItem>
+            <MenuItem value="">All Application Windows</MenuItem>
             {Object.entries(windowLabels).map(([value, label]) => (
               <MenuItem key={value} value={Number(value)}>
                 {label}
@@ -502,6 +630,20 @@ export default function AdmissionCyclesScreen() {
           columns={columns}
           data={data?.items ?? []}
           handleRowClick={(row) => canView && setDetailsCycle(row as unknown as AdmissionCycle)}
+          rowProps={(row) => ({
+            tabIndex: canView ? 0 : -1,
+            sx: { cursor: canView ? 'pointer' : 'default' },
+            onKeyDown: (event) => {
+              if (
+                canView &&
+                event.target === event.currentTarget &&
+                (event.key === 'Enter' || event.key === ' ')
+              ) {
+                event.preventDefault();
+                setDetailsCycle(row as unknown as AdmissionCycle);
+              }
+            },
+          })}
           noDataText={
             <Stack spacing={1} alignItems="center">
               <Typography color="text.secondary">
@@ -549,7 +691,10 @@ export default function AdmissionCyclesScreen() {
         cycle={actionCycle}
         academicYears={academicYears}
         busy={configurationBusy}
-        onClose={() => { setConfigurationMode(null); setActionCycle(null); }}
+        onClose={() => {
+          setConfigurationMode(null);
+          setActionCycle(null);
+        }}
         onConfirm={confirmConfiguration}
       />
     </Box>

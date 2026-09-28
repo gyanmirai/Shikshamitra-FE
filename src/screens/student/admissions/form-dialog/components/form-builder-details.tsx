@@ -31,7 +31,9 @@ export function FormBuilderDetails({ formik, editing }: Props) {
   } | null>(null);
   const [getSchoolForm, schoolFormQuery] = useLazyGetAdmissionFormQuery();
   const createStarter = (starter: AdmissionFormStarter) =>
-    starter === 'blank' ? getAdmissionFormInitialValues() : getSystemAdmissionFormTemplate(starter);
+    starter === 'blank'
+      ? getAdmissionFormInitialValues(undefined, formik.values.purpose)
+      : getSystemAdmissionFormTemplate(starter);
   const applyStarter = (
     values: CreateUpdateAdmissionForm,
     starter: AdmissionFormStarter | null = null,

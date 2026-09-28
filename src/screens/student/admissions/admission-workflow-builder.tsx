@@ -10,7 +10,11 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { useGetAdmissionFormsQuery } from 'src/redux/student/admissions/admission-forms-api';
+import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
+import {
+  useGetAdmissionFormQuery,
+  useGetAdmissionFormsQuery,
+} from 'src/redux/student/admissions/admission-forms-api';
 import {
   useGetAdmissionWorkflowQuery,
   useGetAdmissionWorkflowUsageQuery,
@@ -28,7 +32,8 @@ import {
 
 import { duplicateStage } from './workflow-builder-utils';
 import { getAdmissionWorkflowAccess } from './workflow-access';
-import { getWorkflowTemplateDefinition } from './workflow-template';
+import { findMatchingWorkflowTemplate } from './workflow-template';
+import { useAdmissionDefinitionOptions } from './use-admission-definition-options';
 import { WorkflowSidePanel } from './workflow-builder/components/workflow-side-panel';
 import { compareWorkflowVersions } from './workflow-builder/workflow-version-comparison';
 import { useWorkflowBuilderDraft } from './workflow-builder/hooks/use-workflow-builder-draft';
@@ -52,8 +57,10 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const builderView = searchParams.get('view') === 'map' ? 'map' : 'configure';
-  const requestedTemplate = getWorkflowTemplateDefinition(searchParams.get('setup'));
-  const standardTemplateDialog = useBoolean(Boolean(requestedTemplate));
+  const standardTemplateDialog = useBoolean();
+  const { fetchInquiryForms, fetchRegistrationForms } = useAdmissionDefinitionOptions(
+    standardTemplateDialog.value
+  );
   const [governanceAction, setGovernanceAction] = useState<WorkflowGovernanceActionMode | null>(
     null
   );
@@ -73,10 +80,6 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const workflowQuery = useGetAdmissionWorkflowQuery(workflowId);
   const stageTypesQuery = useGetAdmissionWorkflowStageTypesQuery();
   const publishedFormsQuery = useGetAdmissionFormsQuery({ status: 1, maxResultCount: 100 });
-  const templateFormsQuery = useGetAdmissionFormsQuery(
-    { maxResultCount: 100 },
-    { skip: !standardTemplateDialog.value }
-  );
   const usageQuery = useGetAdmissionWorkflowUsageQuery(workflowId, { skip: !canViewUsage });
   const versionsQuery = useGetAdmissionWorkflowVersionsQuery(workflowId);
   const governanceSettingsQuery = useGetAdmissionWorkflowGovernanceSettingsQuery();
@@ -87,6 +90,28 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
   const draft = useWorkflowBuilderDraft(
     workflow,
     searchParams.get('panel') === 'usage' ? 'usage' : null
+  );
+  const registrationStageConfigurationJson = [...draft.stages]
+    .sort((left, right) => left.displayOrder - right.displayOrder)
+    .find((stage) => stage.stageType === 1)?.configurationJson;
+  const selectedRegistrationFormDefinitionId = readStageConfiguration(
+    registrationStageConfigurationJson
+  )?.formDefinitionId;
+  const currentRegistrationFormDefinitionId =
+    typeof selectedRegistrationFormDefinitionId === 'string'
+      ? selectedRegistrationFormDefinitionId
+      : null;
+  const defaultInquiryFormQuery = useGetAdmissionFormQuery(
+    draft.defaultInquiryFormDefinitionId ?? '',
+    {
+      skip: !standardTemplateDialog.value || !draft.defaultInquiryFormDefinitionId,
+    }
+  );
+  const registrationFormQuery = useGetAdmissionFormQuery(
+    currentRegistrationFormDefinitionId ?? '',
+    {
+      skip: !standardTemplateDialog.value || !currentRegistrationFormDefinitionId,
+    }
   );
   const commands = useWorkflowBuilderCommands(workflowId, workflow, draft);
   const governanceHistoryQuery = useGetAdmissionWorkflowGovernanceHistoryQuery(workflowId, {
@@ -293,15 +318,18 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         onRollback={() => setGovernanceAction('rollback')}
       />
       <WorkflowStandardTemplateDialog
-        open={standardTemplateDialog.value}
-        forms={templateFormsQuery.data?.items ?? []}
-        loading={templateFormsQuery.isLoading || templateFormsQuery.isFetching}
-        loadError={templateFormsQuery.isError}
-        initialTemplateId={requestedTemplate?.id}
+        open={standardTemplateDialog.value && !readOnly}
+        initialTemplateId={findMatchingWorkflowTemplate(draft.stages)}
+        initialInquiryFormDefinitionId={draft.defaultInquiryFormDefinitionId}
+        initialInquiryForm={defaultInquiryFormQuery.data}
+        initialRegistrationFormDefinitionId={currentRegistrationFormDefinitionId}
+        initialRegistrationForm={registrationFormQuery.data}
+        fetchInquiryForms={fetchInquiryForms}
+        fetchRegistrationForms={fetchRegistrationForms}
         onClose={standardTemplateDialog.onFalse}
-        onApply={draft.applyWorkflowTemplate}
-        onRetry={() => {
-          templateFormsQuery.refetch();
+        onApply={(templateId, formDefinitionId, inquiryFormDefinitionId) => {
+          if (!readOnly)
+            draft.applyWorkflowTemplate(templateId, formDefinitionId, inquiryFormDefinitionId);
         }}
         onOpenFormBuilder={() => router.push(studentPaths.enrollment.settings.forms)}
       />
@@ -388,7 +416,7 @@ export default function AdmissionWorkflowBuilder({ workflowId }: Props) {
         onSaveStage={(stage) => {
           const routeSourceId = pendingRouteSourceId;
           const isNewStage = !draft.stages.some((item) => item.id === stage.id);
-          draft.saveStage(stage);
+          draft.saveStage(stage, !routeSourceId);
           if (!routeSourceId || !isNewStage) return;
           const outgoing = draft.transitions.filter((item) => item.fromStageId === routeSourceId);
           draft.setEditingTransition({

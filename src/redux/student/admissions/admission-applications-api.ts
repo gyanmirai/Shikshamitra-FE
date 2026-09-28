@@ -4,6 +4,36 @@ import { studentOnboardingType, studentAdmissionsCrmType } from 'src/redux/tagTy
 import type { ReviewDecisionCapabilities } from './admission-review-types';
 
 export type AdmissionApplicationStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+export type AdmissionDirectFamilyMatch = {
+  familyId: string;
+  familyNumber: string;
+  primaryGuardianName: string;
+  applicants: string[];
+};
+export type AdmissionApplicationCounsellor = { id: string; userName: string; name: string };
+export type AssignAdmissionApplicationCounsellorInput = {
+  counsellorId: string;
+  concurrencyStamp: string;
+  reason?: string;
+};
+export type StartAdmissionDirectRegistrationInput = {
+  requestId: string;
+  admissionOfferingId: string;
+  counsellorId?: string | null;
+  existingFamilyId?: string | null;
+  createSeparateFamily: boolean;
+  separateFamilyReason?: string | null;
+  applicantFirstName: string;
+  applicantMiddleName?: string | null;
+  applicantLastName?: string | null;
+  applicantDateOfBirth?: string | null;
+  applicantGender?: string | null;
+  guardianFirstName: string;
+  guardianLastName?: string | null;
+  guardianMobile: string;
+  guardianEmail?: string | null;
+  guardianRelationship: 0 | 1 | 2 | 3;
+};
 export type AdmissionApplication = {
   reviewDecision?: ReviewDecisionCapabilities | null;
   id: string;
@@ -13,6 +43,8 @@ export type AdmissionApplication = {
   applicantName: string;
   admissionCycleId: string;
   admissionOfferingId: string;
+  assignedCounsellorId?: string | null;
+  assignedCounsellorName?: string | null;
   status: AdmissionApplicationStatus;
   offeringCode?: string | null;
   currentStageName?: string | null;
@@ -37,11 +69,13 @@ export type AdmissionApplicationListInput = {
   maxResultCount?: number;
   admissionCycleId?: string;
   admissionOfferingId?: string;
+  assignedCounsellorId?: string;
   currentStageInstanceId?: string;
   currentStageSearch?: string;
 };
 export type AdmissionApplicationStage = {
   formStageEnabled?: boolean;
+  documentCollectionAvailable?: boolean;
   paymentStageEnabled?: boolean;
   offerStageEnabled?: boolean;
   seatStageEnabled?: boolean;
@@ -164,6 +198,7 @@ export type AdmissionFormChangeHistory = {
 export type AdmissionApplicationDecisionInput = {
   reason?: string | null;
   offerExpiresAt?: string | null;
+  counsellorId?: string | null;
   concurrencyStamp?: string | null;
 };
 export type AdmissionApplicationDecisionHistory = {
@@ -252,6 +287,32 @@ export const admissionApplicationsApi = api.injectEndpoints({
         unwrap(response),
       providesTags: [studentAdmissionsCrmType.admissionApplication],
     }),
+    getAdmissionApplicationCounsellors: builder.query<
+      AdmissionApplicationCounsellor[],
+      { offeringId?: string; filter?: string }
+    >({
+      query: ({ offeringId, filter }) => ({
+        url: '/student/enrollment/admissions/applications/counsellors',
+        params: { offeringId, filter },
+      }),
+      transformResponse: (
+        response: Result<AdmissionApplicationCounsellor[]> | AdmissionApplicationCounsellor[]
+      ) => unwrap(response),
+      providesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
+    assignAdmissionApplicationCounsellor: builder.mutation<
+      AdmissionApplication,
+      { id: string; input: AssignAdmissionApplicationCounsellorInput }
+    >({
+      query: ({ id, input }) => ({
+        url: `/student/enrollment/admissions/applications/${id}/assign-counsellor`,
+        method: 'POST',
+        body: input,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+    }),
     startAdmissionApplication: builder.mutation<
       AdmissionApplication,
       { applicantId: string; offeringId: string; inquiryId?: string }
@@ -267,6 +328,34 @@ export const admissionApplicationsApi = api.injectEndpoints({
         studentAdmissionsCrmType.admissionApplication,
         studentAdmissionsCrmType.admissionApplicant,
         studentAdmissionsCrmType.admissionInquiry,
+      ],
+    }),
+    findAdmissionDirectFamilies: builder.query<
+      AdmissionDirectFamilyMatch[],
+      { offeringId: string; guardianMobile: string }
+    >({
+      query: (params) => ({
+        url: '/student/enrollment/admissions/applications/direct-registration/family-matches',
+        params,
+      }),
+      transformResponse: (
+        response: Result<AdmissionDirectFamilyMatch[]> | AdmissionDirectFamilyMatch[]
+      ) => unwrap(response),
+    }),
+    startAdmissionDirectRegistration: builder.mutation<
+      AdmissionApplication,
+      StartAdmissionDirectRegistrationInput
+    >({
+      query: (body) => ({
+        url: '/student/enrollment/admissions/applications/direct-registration',
+        method: 'POST',
+        body,
+      }),
+      transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
+        unwrap(response),
+      invalidatesTags: [
+        studentAdmissionsCrmType.admissionApplication,
+        studentAdmissionsCrmType.admissionApplicant,
       ],
     }),
     getAdmissionApplicationWorkflow: builder.query<AdmissionApplicationWorkflow, string>({
@@ -421,7 +510,10 @@ export const admissionApplicationsApi = api.injectEndpoints({
       }),
       transformResponse: (response: Result<AdmissionApplication> | AdmissionApplication) =>
         unwrap(response),
-      invalidatesTags: [studentAdmissionsCrmType.admissionApplication],
+      invalidatesTags: [
+        studentAdmissionsCrmType.admissionApplication,
+        studentAdmissionsCrmType.admissionOffering,
+      ],
     }),
     declineAdmissionOffer: builder.mutation<
       AdmissionApplication,
@@ -458,6 +550,7 @@ export const admissionApplicationsApi = api.injectEndpoints({
       invalidatesTags: [
         studentAdmissionsCrmType.admissionApplication,
         studentAdmissionsCrmType.admissionApplicant,
+        studentAdmissionsCrmType.admissionOffering,
         { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
         { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
       ],
@@ -491,7 +584,11 @@ export const {
   useGetAdmissionApplicationsQuery,
   useGetAdmissionApplicationQuery,
   useLazyGetAdmissionApplicationQuery,
+  useGetAdmissionApplicationCounsellorsQuery,
+  useAssignAdmissionApplicationCounsellorMutation,
   useStartAdmissionApplicationMutation,
+  useLazyFindAdmissionDirectFamiliesQuery,
+  useStartAdmissionDirectRegistrationMutation,
   useGetAdmissionApplicationWorkflowQuery,
   useGetAdmissionApplicationFormQuery,
   useUpdateAdmissionApplicationFormValuesMutation,

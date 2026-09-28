@@ -9,6 +9,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 
 import { AdmissionWorkflowTransitionDrawer } from '../admission-workflow-transition-drawer';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 const stages: AdmissionWorkflowStage[] = [
   {
     id: 'source',

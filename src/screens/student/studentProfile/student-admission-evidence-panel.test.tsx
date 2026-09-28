@@ -12,13 +12,14 @@ vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
 const path = '*/api/student/records/students/student-1/admission-evidence';
-it('shows retained evidence only with both student and admission permissions, without mutation controls', async () => {
+it.each([true, false])('shows retained evidence with canonical view grants and server download capability %s, without mutation controls', async (canDownload) => {
   mswServer.use(
     http.get(path, () =>
       HttpResponse.json({
         data: [
           {
             ...documentEvidence,
+            canDownload,
             applicationId: 'application-1',
             stageInstanceId: 'stage-documents',
             requirementCode: 'BIRTH_CERTIFICATE',
@@ -41,10 +42,10 @@ it('shows retained evidence only with both student and admission permissions, wi
       name: /^(Upload document|Accept|Waive requirement|Request replacement)$/,
     })
   ).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: 'Download' })).not.toBeInTheDocument();
+  expect(Boolean(screen.queryByRole('button', { name: 'Download' }))).toBe(canDownload);
 });
 
-it('does not request student evidence when the viewer lacks student record access', () => {
+it.each([['View'], ['Students.Records.StudentList.View']])('does not request student evidence when only %s is granted', (grant) => {
   let requests = 0;
   mswServer.use(
     http.get(path, () => {
@@ -52,7 +53,7 @@ it('does not request student evidence when the viewer lacks student record acces
       return HttpResponse.json([]);
     })
   );
-  renderDocumentUi(<StudentAdmissionEvidencePanel studentId="student-1" />, ['View', 'Download']);
+  renderDocumentUi(<StudentAdmissionEvidencePanel studentId="student-1" />, [grant]);
   expect(
     screen.getByText(/Student record and admission document access are required/)
   ).toBeInTheDocument();

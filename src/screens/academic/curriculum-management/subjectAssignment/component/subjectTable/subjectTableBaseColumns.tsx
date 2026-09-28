@@ -1,12 +1,13 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { ButtonBase, Chip, Stack, Typography } from '@mui/material';
+import { Chip, Stack, ButtonBase, Typography } from '@mui/material';
 
 import { PeriodsPerWeekButton } from './SubjectTableCells';
-import { getSubjectDisplayLabel } from '../../utils/getSubjectDisplayLabel';
 import { getPrimaryTeacherNames } from '../../utils/primaryTeacherNames';
+import { getSubjectDisplayLabel } from '../../utils/getSubjectDisplayLabel';
 
 import type { ISubjectFormValues } from '../type';
+import type { SubjectTableRow } from './subjectTableTypes';
 
 export function getSubjectTableBaseColumns(
   onViewSchedule: (row: ISubjectFormValues) => void,
@@ -40,7 +41,7 @@ export function getSubjectTableBaseColumns(
       minWidth: 180,
       sticky: true,
       render: (_value, row) => {
-        const subject = row as ISubjectFormValues;
+        const subject = row as SubjectTableRow;
         const label = getSubjectDisplayLabel(subject) || subject.subjectName || 'subject';
         const content = (
           <>

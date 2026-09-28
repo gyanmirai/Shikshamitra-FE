@@ -1,10 +1,12 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import { Typography } from '@mui/material';
+import Box from '@mui/material/Box';
 import { Label } from 'src/components/label';
+import CustomTooltip from 'src/components/custom-tooltip';
 
 import { FormRowActions } from './form-row-actions';
+import { AdmissionTableText } from '../admission-table-text';
 
 type Handlers = {
   canManage: boolean;
@@ -12,7 +14,6 @@ type Handlers = {
   canDelete: boolean;
   canOverrideMakerChecker: boolean;
   currentUserId?: string | null;
-  onPreview: (form: AdmissionForm) => void;
   onEdit: (form: AdmissionForm) => void;
   onClone: (form: AdmissionForm) => void;
   onValidate: (form: AdmissionForm) => void;
@@ -35,6 +36,7 @@ const APPROVAL_LABELS = [
   'Changes requested',
 ] as const;
 const APPROVAL_COLORS = ['default', 'warning', 'success', 'error'] as const;
+const PURPOSE_LABELS = ['Inquiry', 'Registration', 'Correction', 'Consent'] as const;
 
 export function createFormColumns(handlers: Handlers): IColumn[] {
   return [
@@ -44,9 +46,16 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
       minWidth: 220,
       isFilter: false,
       isSort: false,
-      render: (value) => <Typography fontWeight={600}>{value}</Typography>,
+      render: (value) => <AdmissionTableText text={String(value ?? '')} strong />,
     },
-    { id: 'code', label: 'Code', isFilter: false, isSort: false },
+    { id: 'code', label: 'Code', isFilter: false, isSort: false, render: (value) => <AdmissionTableText text={String(value ?? '')} /> },
+    {
+      id: 'purpose',
+      label: 'Purpose',
+      isFilter: false,
+      isSort: false,
+      render: (value) => PURPOSE_LABELS[Number(value ?? 1)] ?? 'Registration',
+    },
     { id: 'version', label: 'Version', isFilter: false, isSort: false },
 
     {
@@ -61,6 +70,12 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
       label: 'Approval',
       isFilter: false,
       isSort: false,
+      sticky: true,
+      stickyPosition: 'right',
+      stickyOnMobile: false,
+      headerSx: { display: { xs: 'none', sm: 'table-cell' } },
+      cellSx: { display: { xs: 'none', sm: 'table-cell' } },
+      align: 'left',
       render: (value) => (
         <Label
           color={APPROVAL_COLORS[Number(value ?? 0)]}
@@ -76,28 +91,44 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
     },
     {
       id: 'status',
-      label: 'Status',
+      label: <><Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Status</Box><Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Statuses</Box></>,
       filterType: 'enum',
       enumOptions: STATUS_LABELS.map((label, value) => ({ label, value })),
       isSort: false,
       sticky: true,
-      render: (value) => (
-        <Label
-          color={STATUS_COLORS[Number(value)]}
-          sx={
-            Number(value) === 0 ? { color: 'text.primary', bgcolor: 'action.selected' } : undefined
-          }
-        >
-          {STATUS_LABELS[Number(value)]}
-        </Label>
-      ),
+      stickyPosition: 'right',
+      render: (value, row) => {
+        const approval = Number((row as AdmissionForm).approvalStatus ?? 0);
+        const status = Number(value);
+        const statusLabel = (
+          <Label
+            color={STATUS_COLORS[status]}
+            sx={status === 0 ? { color: 'text.primary', bgcolor: 'action.selected' } : undefined}
+          >
+            {STATUS_LABELS[status]}
+          </Label>
+        );
+        return (
+          <>
+            <CustomTooltip title={`Approval: ${APPROVAL_LABELS[approval]} · Status: ${STATUS_LABELS[status]}`} arrow>
+              <Box sx={{ display: { xs: 'flex', sm: 'none' }, flexDirection: 'column', alignItems: 'flex-start', gap: 0.5, maxWidth: 120 }}>
+                <Label color={APPROVAL_COLORS[approval]} sx={{ maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis' }}>{APPROVAL_LABELS[approval]}</Label>
+                {statusLabel}
+              </Box>
+            </CustomTooltip>
+            <Box sx={{ display: { xs: 'none', sm: 'block' } }}>{statusLabel}</Box>
+          </>
+        );
+      },
     },
     {
       id: 'actions',
       label: 'Actions',
       width: 160,
       minWidth: 150,
-      align: 'right',
+      headerSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
+      cellSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
+      align: 'left',
       sticky: true,
       stickyPosition: 'right',
       isFilter: false,
@@ -113,7 +144,6 @@ export function createFormColumns(handlers: Handlers): IColumn[] {
             canDelete={handlers.canDelete}
             canOverrideMakerChecker={handlers.canOverrideMakerChecker}
             currentUserId={handlers.currentUserId}
-            onPreview={() => handlers.onPreview(form)}
             onEdit={() => handlers.onEdit(form)}
             onClone={() => handlers.onClone(form)}
             onValidate={() => handlers.onValidate(form)}

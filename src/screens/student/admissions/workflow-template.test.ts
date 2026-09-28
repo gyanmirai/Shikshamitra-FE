@@ -5,6 +5,7 @@ import {
   WORKFLOW_TEMPLATE_IDS,
   ADMISSION_WORKFLOW_TEMPLATES,
   getAdmissionWorkflowTemplate,
+  findMatchingWorkflowTemplate,
   getRegistrationWorkflowTemplate,
 } from './workflow-template';
 
@@ -67,5 +68,12 @@ describe('admissions workflow templates', () => {
       'APPLICATION_REVIEW',
       'ADMISSION_DECISION',
     ]);
+  });
+
+  it('recognizes the saved template shape without mistaking a custom journey for one', () => {
+    const {stages} = getAdmissionWorkflowTemplate('assessment', 'form-1');
+
+    expect(findMatchingWorkflowTemplate(stages)).toBe('assessment');
+    expect(findMatchingWorkflowTemplate(stages.slice(0, -1))).toBeUndefined();
   });
 });

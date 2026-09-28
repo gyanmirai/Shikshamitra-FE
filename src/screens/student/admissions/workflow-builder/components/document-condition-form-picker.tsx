@@ -12,7 +12,7 @@ export function DocumentConditionFormPicker(props: {
     <AdmissionConditionFormPicker
       {...props}
       groupLabel="Require this document when"
-      getFields={(form, source) => getDocumentConditionFields(form ? [form] : [], source)}
+      getFields={(form) => getDocumentConditionFields(form ? [form] : [])}
     />
   );
 }

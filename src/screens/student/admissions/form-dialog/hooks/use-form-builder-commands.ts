@@ -5,7 +5,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { newField, nextFieldOrder, hasSystemBinding } from '../form-dialog-model';
-import { nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
+import { nextStepNumber, nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
 import {
   type AdmissionFormSectionTemplateId,
   materializeAdmissionFormSectionTemplate,
@@ -26,7 +26,7 @@ export function useFormBuilderCommands(
     const id = crypto.randomUUID();
     const sectionNumber = nextSectionNumber(formik.values.sections);
     const stepId = isStepper ? crypto.randomUUID() : undefined;
-    const stepOrder = steps.length;
+    const stepOrder = Math.max(-1, ...steps.map((step) => step.displayOrder)) + 1;
     formik.setFieldValue('sections', [
       ...formik.values.sections,
       {
@@ -35,9 +35,38 @@ export function useFormBuilderCommands(
         name: `Section ${isStepper ? 1 : sectionNumber}`,
         displayOrder: formik.values.sections.length,
         stepId,
-        stepCode: stepId ? `STEP_${stepOrder + 1}` : undefined,
+        stepCode: stepId ? `STEP_${nextStepNumber(formik.values.sections)}` : undefined,
         stepName: stepId ? `Step ${stepOrder + 1}` : undefined,
         stepDisplayOrder: stepId ? stepOrder : undefined,
+        isRepeatable: false,
+        minEntries: 1,
+        maxEntries: 1,
+        fields: [],
+      },
+    ]);
+    onSelect(id, null);
+  };
+  const addSection = () => {
+    const selected = formik.values.sections.find((section) => section.id === selectedSectionId);
+    if (!isStepper || !selected) {
+      addCanvasUnit();
+      return;
+    }
+    const number = nextSectionNumber(formik.values.sections);
+    const step = steps.find((item) => item.sections.some(({ section }) => section.id === selected.id));
+    const id = crypto.randomUUID();
+    formik.setFieldValue('sections', [
+      ...formik.values.sections,
+      {
+        id,
+        code: `SECTION_${number}`,
+        name: `Section ${(step?.sections.length ?? 0) + 1}`,
+        displayOrder: formik.values.sections.length,
+        stepId: step?.id,
+        stepCode: step?.code,
+        stepName: step?.name,
+        stepDisplayOrder: step?.displayOrder,
+        stepVisibilityRuleJson: step?.visibilityRuleJson,
         isRepeatable: false,
         minEntries: 1,
         maxEntries: 1,
@@ -113,5 +142,5 @@ export function useFormBuilderCommands(
     }
   };
 
-  return { addCanvasUnit, addField, addSectionTemplate, systemFieldsQuery };
+  return { addCanvasUnit, addSection, addField, addSectionTemplate, systemFieldsQuery };
 }

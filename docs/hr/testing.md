@@ -102,9 +102,16 @@ Each frontend HR change should satisfy these gates:
 
 ## Salary template page regressions
 
-Run the focused editor, list, model, client-contract, and shared-stepper tests after changing the salary template pages.
-Cover direct create/edit/view routes, denied permissions, Configure validation, compact and expanded rows, additions, ordering, removal, and at least 15 components.
+Run the focused editor, list, model, and client-contract tests after changing the salary template pages.
+Cover direct create/edit/view routes, denied permissions, same-page calculation validation and first-error focus, compact and expanded rows, additions, ordering, removal, and at least 15 components.
 Verify unsaved-navigation protection and that background refetches preserve both edits and their original concurrency context.
 Check preview invalidation, expiry, late responses, failed saves, and save/reopen for all compensation bases.
 Finish in the authenticated Codex browser at 390 by 844, 768 by 1024, and 1440 by 900 pixels.
-Confirm side-by-side large-screen collections, one content scrollbar, accessible error focus, fixed footer actions, 30 px labeled buttons, right alignment, and no document horizontal overflow.
+Confirm side-by-side large-screen collections, independent desktop component scrolling, accessible error focus, fixed footer actions, 30 px labeled buttons, right alignment, and no document horizontal overflow.
+
+Salary-template visual checks cover light and dark themes at 390x844, 768x1024, 1440x900, and 2052x1221.
+Verify populated Basic Information spacing, equal-height top cards with aligned headers, statutory disclosure keyboard support, and equal 480 px desktop component panels with stationary headers.
+Verify compact rows omit Ordinary labels, preserve meaningful purpose text, and align editable values with expand actions without clipping long names or validation messages.
+Verify empty states, long names, 15 or more components, independent list scrolling, natural mobile heights, and a reachable footer without horizontal overflow.
+Adding, reordering, and validation must reveal the relevant row without losing focus behind a panel header or the footer.
+Verify keyboard Preview Calculation navigation, pending-save interaction locking, and inline conflict recovery without losing edits.

@@ -10,7 +10,6 @@ import { useFormik } from 'formik';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { getReviewConfigurationError } from 'src/redux/student/admissions/admission-review-validation';
 import { getAdmissionSeatConfigurationError } from 'src/redux/student/admissions/admission-seat-policy';
-import { getInquiryConfigurationError } from 'src/redux/student/admissions/admission-inquiry-validation';
 import { getAdmissionOfferConfigurationError } from 'src/redux/student/admissions/admission-offer-policy';
 import { getAdmissionPaymentConfigurationError } from 'src/redux/student/admissions/admission-payment-policy';
 import { getEligibilityConfigurationError } from 'src/redux/student/admissions/admission-eligibility-validation';
@@ -22,7 +21,6 @@ import {
 } from 'src/redux/student/admissions/admission-assessment-policy';
 
 import { getReviewStageError } from '../review-stage-prerequisites';
-import { getInquiryStageError } from '../inquiry-stage-prerequisites';
 
 type Props = {
   open: boolean;
@@ -75,7 +73,7 @@ export function useWorkflowStageEditor({
     validationSchema: schema,
     validate: (values) => validateConfiguration(values, stageTypes, stages, forms),
     onSubmit: (values, helpers) => {
-      if (readOnly) return;
+      if (readOnly || values.stageType === 0) return;
       onSave({
         ...values,
         name: values.name.trim(),
@@ -134,10 +132,7 @@ function validateConfiguration(
     return { code: 'Another stage already uses this code' };
   }
   if (values.stageType === 0) {
-    const error =
-      getInquiryConfigurationError(values.configurationJson) ||
-      getInquiryStageError(values, stages);
-    return error ? { configurationJson: error } : {};
+    return { stageType: 'Replace this saved Inquiry stage with an application stage type.' };
   }
   if (values.stageType === 6) {
     const error =

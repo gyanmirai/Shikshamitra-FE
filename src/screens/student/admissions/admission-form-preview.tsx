@@ -101,7 +101,7 @@ export default function AdmissionFormPreviewScreen() {
         links={[
           { name: 'Students', href: '/student/dashboard' },
           { name: 'Admissions', href: '/student/admissions' },
-          { name: 'Admission Forms', href: '/student/admissions/settings/forms' },
+          { name: 'Application Experience', href: '/student/admissions/settings/forms' },
           { name: 'Preview' },
         ]}
         sx={{ mb: 1 }}

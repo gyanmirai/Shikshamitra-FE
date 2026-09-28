@@ -42,7 +42,6 @@ export default function AdmissionOfferingsScreen() {
       <CustomBreadcrumbs
         heading="Class Admission Setup"
         description="Connect classes, admission periods, processes, and forms before accepting applications."
-        layout="stacked"
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
@@ -70,22 +69,11 @@ export default function AdmissionOfferingsScreen() {
           <Stack direction="row" spacing={1}>
             {screen.permissions.bulkCreate && (
               <Button
-                variant="outlined"
-                size="small"
-                startIcon={<Iconify icon={GlobalIcons.copy} />}
-                disabled={!screen.cycle}
-                onClick={screen.openBulk}
-              >
-                Bulk create
-              </Button>
-            )}
-            {screen.permissions.create && (
-              <Button
                 variant="contained"
                 size="small"
                 startIcon={<Iconify icon={GlobalIcons.addIcon} />}
                 disabled={!screen.cycle}
-                onClick={screen.openCreate}
+                onClick={screen.openBulk}
               >
                 Add offering
               </Button>
@@ -181,6 +169,7 @@ export default function AdmissionOfferingsScreen() {
       <AdmissionOfferingDetailsDialog
         open={screen.detailsOpen}
         offering={screen.selected}
+        canManage={screen.permissions.edit}
         onClose={screen.closeDetails}
       />
       <ConfirmDialog

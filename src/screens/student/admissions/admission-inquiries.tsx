@@ -29,6 +29,7 @@ import { getAdmissionInquiryAccess } from './inquiry-access';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import AdmissionInquiryDialog from './admission-inquiry-dialog';
+import { AdmissionUnmatchedInquiryDrawer } from './admission-unmatched-inquiry-drawer';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
 import { AdmissionInquiryManagementDrawer } from './inquiry-management/admission-inquiry-management-drawer';
 import { AdmissionInquiryAssignmentDialog } from './inquiry-management/admission-inquiry-assignment-dialog';
@@ -62,6 +63,7 @@ export default function AdmissionInquiriesScreen() {
     Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
   >([]);
   const createDialog = useBoolean();
+  const unmatchedDialog = useBoolean();
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams.toString());
@@ -297,6 +299,12 @@ export default function AdmissionInquiriesScreen() {
               </Box>
             </Button>
             {canManage && (
+              <Button size="small" variant="outlined" startIcon={<Iconify icon="mdi:help-circle-outline" />}
+                onClick={unmatchedDialog.onTrue}>
+                Offering unknown
+              </Button>
+            )}
+            {canManage && (
               <Button
                 aria-label="New inquiry"
                 size="small"
@@ -318,6 +326,7 @@ export default function AdmissionInquiriesScreen() {
         }
       />
       <AdmissionInquiryDialog open={createDialog.value} onClose={createDialog.onFalse} />
+      <AdmissionUnmatchedInquiryDrawer open={unmatchedDialog.value} onClose={unmatchedDialog.onFalse} />
       <AdmissionInquiryManagementDrawer
         inquiry={
           selectedInquiry ??
