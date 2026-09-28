@@ -3,6 +3,25 @@ import { it, expect, describe } from 'vitest';
 import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
+  it('shows the Income Category dependency reason from problem details', () => {
+    const parsed = parseApiProblemDetail({
+      status: 400,
+      data: {
+        title: 'Business rule violated',
+        detail: 'One or more business rules were violated.',
+        errorCode: 'Finance:Accounts:Settings:CategoryInUse',
+        data: {
+          Reason: 'Deactivate or remap the active Fee Heads using this Income Category first.',
+        },
+      },
+    });
+
+    expect(parsed.detail).toBe(
+      'Deactivate or remap the active Fee Heads using this Income Category first.'
+    );
+    expect(parsed.errorCode).toBe('Finance:Accounts:Settings:CategoryInUse');
+  });
+
   it('prefers specific ABP business details over generic messages', () => {
     const parsed = parseApiProblemDetail({
       data: {

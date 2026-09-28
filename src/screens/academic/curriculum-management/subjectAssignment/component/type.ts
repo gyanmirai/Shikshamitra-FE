@@ -82,6 +82,7 @@ export interface ISubjectFormValues {
   setupHealthScore?: number;
   canDelete?: boolean;
   deleteDisabledReason?: string | null;
+  subjectNameDisplay?: React.ReactNode;
 
   // New schema fields
   academicMediumId?: string;

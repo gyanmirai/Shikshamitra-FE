@@ -11,6 +11,7 @@ import { Box, Card, Grid, Avatar, Divider, Collapse, IconButton, Typography } fr
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
+  feeInstallmentStatusLabel,
 } from 'src/enums/fee-collection-type';
 
 import type { IStudentFee } from './type';
@@ -153,7 +154,7 @@ export const StudentFeeSummaryCard: React.FC<{
                       variant="soft"
                       sx={{ fontWeight: 700, lineHeight: 1 }}
                     >
-                      {FeeCollectionStatusType[student.status]}
+                      {feeInstallmentStatusLabel(student.status)}
                     </Label>
                   </Box>
                 </Box>

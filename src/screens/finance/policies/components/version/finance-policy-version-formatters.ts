@@ -1,3 +1,4 @@
+import { fDate, fDateTime } from 'src/utils/format-time';
 import { fNumber, fPercent, fCurrency } from 'src/utils/format-number';
 
 export type VersionValueKind = 'boolean' | 'empty' | 'status' | 'text';
@@ -10,6 +11,9 @@ export type FormattedVersionValue = {
 export type VersionValueContext = {
   labelsById?: Record<string, string>;
 };
+
+export const formatVersionTimestamp = (value: string) =>
+  fDateTime(value, 'DD-MM-YYYY hh:mm A') || '—';
 
 const FIELD_LABELS: Record<string, string> = {
   policyid: 'Policy',
@@ -163,6 +167,13 @@ export const formatFinancePolicyVersionValue = (
     return { kind: 'boolean', text: value ? 'Yes' : 'No' };
   }
 
+  if ((fieldKey === 'effectivefrom' || fieldKey === 'effectiveto') && typeof value === 'string') {
+    const calendarDate = /^\d{4}-\d{2}-\d{2}/.exec(value)?.[0];
+    if (calendarDate) {
+      return { kind: 'text', text: fDate(calendarDate, 'DD-MM-YYYY') || value };
+    }
+  }
+
   const enumLabel = ENUM_LABELS[fieldKey]?.[String(value).toLowerCase()];
   if (enumLabel) {
     return { kind: fieldKey === 'status' ? 'status' : 'text', text: enumLabel };
@@ -175,6 +186,13 @@ export const formatFinancePolicyVersionValue = (
       .map((item) => {
         const referenceLabel = findReferenceLabel(item, context);
         if (referenceLabel) return referenceLabel;
+        if (
+          fieldKey === 'latefeeapplyonfeeheads' &&
+          typeof item === 'string' &&
+          /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(item)
+        ) {
+          return 'Fee head unavailable';
+        }
         if (item && typeof item === 'object') {
           return formatObject(item as Record<string, unknown>, context);
         }

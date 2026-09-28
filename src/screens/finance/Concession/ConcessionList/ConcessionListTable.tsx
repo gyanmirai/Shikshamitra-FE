@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Box, Avatar } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import type { IStudentInfo } from '../type';
@@ -71,11 +71,16 @@ const StudentConcessionListTable: React.FC<ICombinedProps> = ({ data, onViewAllC
         sticky: true,
         minWidth: 40,
         render: (value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
+          <AdaptiveThreeDotsActions
+            actions={[
+              {
+                id: 'view',
+                label: 'View',
+                icon: 'carbon:view-filled',
+                onClick: () => onViewAllConcession?.(row as IStudentInfo),
+              },
+            ]}
             placement="right-center"
-            showViewIcon
-            handleViewClick={() => onViewAllConcession?.(row as IStudentInfo)}
           />
         ),
       },

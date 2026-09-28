@@ -134,8 +134,8 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
       value: dto?.originalReceiptNumber || 'N/A',
     },
     {
-      label: 'Policy',
-      value: dto?.refundPolicyName || 'N/A',
+      label: 'Source',
+      value: dto?.concessionRequestId ? 'Approved concession' : dto?.refundPolicyName || 'N/A',
     },
     {
       label: 'Requested',

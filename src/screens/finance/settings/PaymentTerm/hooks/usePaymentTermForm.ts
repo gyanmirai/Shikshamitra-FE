@@ -1,6 +1,5 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { FormikTouched } from 'formik';
 import type { RootState } from 'src/redux/store';
 
@@ -14,7 +13,6 @@ import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import {
   useCreateRevisionMutation,
   useCreatePaymentTermMutation,
@@ -28,6 +26,7 @@ import {
 
 import { getInitialPaymentTermData } from '../Components/PaymentTermInitialValues';
 import { paymentTermValidationSchema } from '../Components/PaymentTermValidationSchema';
+import { toPaymentTermApiDate } from '../paymentTermApiDate';
 
 import type { IInstallment, IPaymentTerm, DemandGenerationRule } from '../type';
 
@@ -85,11 +84,6 @@ export interface UsePaymentTermFormReturn {
 // ---------------------------------------------------------------------------
 // API ↔ UI mappers
 // ---------------------------------------------------------------------------
-const toDateTimeOffsetString = (value: string | null | Dayjs | undefined): string => {
-  const date = toDateOnly(value);
-  return date ? dateConvertor(dayjs(date).format(dateFormat)) : '';
-};
-
 const mapApiInstallmentToUi = (inst: PaymentTermInstallmentResponse): IInstallment => ({
   id: inst.id,
   installmentName: inst.name,
@@ -149,21 +143,21 @@ const mapUiInstallmentToApi = (
 ): CreateInstallmentRequest => ({
   sequence: inst.sequence || index + 1,
   name: inst.installmentName,
-  coverageStartDate: toDateTimeOffsetString(inst.startDate),
-  coverageEndDate: toDateTimeOffsetString(inst.endDate),
+  coverageStartDate: toPaymentTermApiDate(inst.startDate),
+  coverageEndDate: toPaymentTermApiDate(inst.endDate),
   demandDate:
     demandGenerationRule === 'SpecificDate'
-      ? toDateTimeOffsetString(
+      ? toPaymentTermApiDate(
           invoiceCreationEnabled
             ? inst.demandDate
             : inst.demandDate || inst.dueDate || inst.startDate
         )
       : undefined,
-  dueDate: toDateTimeOffsetString(inst.dueDate),
+  dueDate: toPaymentTermApiDate(inst.dueDate),
   allocationPercentage: Number(inst.allocationPercentage) || 0,
   demandEnabled: invoiceCreationEnabled,
   reminderEnabled: inst.reminderEnabled ?? true,
-  reminderDate: inst.reminderDate ? toDateTimeOffsetString(inst.reminderDate) : undefined,
+  reminderDate: inst.reminderDate ? toPaymentTermApiDate(inst.reminderDate) : undefined,
   allowPartialOverride: inst.allowPartialOverride ?? null,
   gracePeriodDaysOverride: inst.gracePeriod ?? null,
 });

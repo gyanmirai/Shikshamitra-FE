@@ -9,9 +9,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { formatNumber } from 'src/utils/formate_number';
 import { BudgetStatusType } from 'src/enums/budget-status';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Tab, Tabs, Button, MenuItem, MenuList, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Button, Typography } from '@mui/material';
 
 interface IBudgetTableProps {
   data: any[];
@@ -84,82 +84,6 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
     if (tabs.value === 'All') return data;
     return data?.filter((i) => i.status === tabs.value);
   }, [data, tabs.value]);
-
-  const getActionsForStatus = (status: string, row: any, pop: any) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <MenuList>
-            <MenuItem
-              onClick={() => {
-                onReview?.(row);
-                pop.onClose();
-              }}
-            >
-              <Iconify icon={GlobalIcons.eye} />
-              Review
-            </MenuItem>
-          </MenuList>
-        );
-
-      case 'active':
-        return (
-          <MenuList>
-            <MenuItem
-              onClick={() => {
-                // mark inactive logic
-                pop.onClose();
-              }}
-            >
-              <Iconify icon={GlobalIcons.cancel} />
-              Inactive
-            </MenuItem>
-          </MenuList>
-        );
-
-      case 'inactive':
-        return (
-          <MenuList>
-            <MenuItem
-              onClick={() => {
-                onViewDetail?.(row);
-                pop.onClose();
-              }}
-            >
-              <Iconify icon={GlobalIcons.eye} />
-              View
-            </MenuItem>
-            <MenuItem
-              onClick={() => {
-                onDelete?.(row.id);
-                pop.onClose();
-              }}
-            >
-              <Iconify icon={GlobalIcons.delete} />
-              Delete
-            </MenuItem>
-          </MenuList>
-        );
-
-      case 'archive':
-        return (
-          <MenuList>
-            <MenuItem
-              onClick={() => {
-                onViewDetail?.(row);
-                pop.onClose();
-              }}
-            >
-              <Iconify icon={GlobalIcons.eye} />
-              View
-            </MenuItem>
-          </MenuList>
-        );
-
-      default:
-        return null;
-    }
-  };
 
   return (
     <>
@@ -308,17 +232,29 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               sticky: true,
               render(value, row) {
                 return (
-                  <ThreeDotsActions
-                    showViewIcon
-                    showDeleteIcon
-                    handleViewClick={() => {
-                      onViewDetail?.(row);
-                    }}
-                    handleDeleteClick={() => {
-                      onDelete?.(row.id);
-                    }}
-                    actions={(prop) => getActionsForStatus('active', row, prop.popover)}
+                  <AdaptiveThreeDotsActions
                     placement="right-top"
+                    actions={[
+                      {
+                        id: 'view',
+                        label: 'View',
+                        icon: 'carbon:view-filled',
+                        onClick: () => onViewDetail?.(row),
+                      },
+                      {
+                        id: 'delete',
+                        label: 'Delete',
+                        icon: 'solar:trash-bin-trash-bold',
+                        color: 'error.main',
+                        onClick: () => onDelete?.(row.id),
+                      },
+                      {
+                        id: 'inactive',
+                        label: 'Inactive',
+                        icon: GlobalIcons.cancel,
+                        onClick: () => {},
+                      },
+                    ]}
                   />
                 );
               },
@@ -368,16 +304,26 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               sticky: true,
               render(value, row) {
                 return (
-                  <ThreeDotsActions
-                    showViewIcon
-                    showDeleteIcon
-                    handleViewClick={() => {
-                      onViewDetail?.(row);
-                    }}
-                    handleDeleteClick={() => {
-                      onDelete?.(row.id);
-                    }}
-                    showThreeDots={false}
+                  <AdaptiveThreeDotsActions
+                    actions={[
+                      {
+                        id: 'view',
+                        label: 'View',
+                        icon: 'carbon:view-filled',
+                        onClick: () => {
+                          onViewDetail?.(row);
+                        },
+                      },
+                      {
+                        id: 'delete',
+                        label: 'Delete',
+                        icon: 'solar:trash-bin-trash-bold',
+                        onClick: () => {
+                          onDelete?.(row.id);
+                        },
+                        color: 'error.main',
+                      },
+                    ]}
                     placement="right-top"
                   />
                 );
@@ -428,12 +374,17 @@ const BudgetTable: React.FC<IBudgetTableProps> = ({
               sticky: true,
               render(value, row) {
                 return (
-                  <ThreeDotsActions
-                    showViewIcon
-                    handleViewClick={() => {
-                      onViewDetail?.(row);
-                    }}
-                    showThreeDots={false}
+                  <AdaptiveThreeDotsActions
+                    actions={[
+                      {
+                        id: 'view',
+                        label: 'View',
+                        icon: 'carbon:view-filled',
+                        onClick: () => {
+                          onViewDetail?.(row);
+                        },
+                      },
+                    ]}
                     placement="right-top"
                   />
                 );

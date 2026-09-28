@@ -138,7 +138,7 @@ export interface IConcessionPolicy extends Omit<IFinancePolicyBase, 'status'> {
   maximumPercentage: number | null;
   maximumFixedAmount: number | null;
   roundOff: ConcessionRoundOff;
-  applyOn: 'AllOutstanding' | 'CurrentInstallment' | 'FutureInstallments';
+  applyOn: 'AllOutstanding' | 'CurrentInstallment' | 'FutureInstallments' | 'AllFees';
   version?: number;
   isUsedInDownstream?: boolean;
   concurrencyStamp: string;

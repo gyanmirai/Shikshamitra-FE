@@ -815,24 +815,24 @@ export default function QuestionPaperScreen() {
             Object.entries(scopeFilters).some(([key, value]) =>
               key === 'creationMode' ? Boolean(value) : value !== ALL_FILTER_VALUE
             )) && (
-            <Button
-              size="small"
-              color="error"
-              onClick={() => {
-                setStatusFilter(null);
-                setScopeFilters({
-                  standardName: ALL_FILTER_VALUE,
-                  subjectName: ALL_FILTER_VALUE,
-                  examTitle: ALL_FILTER_VALUE,
-                  creationMode: '',
-                });
-              }}
-              startIcon={<Iconify icon="mdi:close" width={14} />}
-              sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
-            >
-              Clear filters
-            </Button>
-          )}
+              <Button
+                size="small"
+                color="error"
+                onClick={() => {
+                  setStatusFilter(null);
+                  setScopeFilters({
+                    standardName: ALL_FILTER_VALUE,
+                    subjectName: ALL_FILTER_VALUE,
+                    examTitle: ALL_FILTER_VALUE,
+                    creationMode: '',
+                  });
+                }}
+                startIcon={<Iconify icon="mdi:close" width={14} />}
+                sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+              >
+                Clear filters
+              </Button>
+            )}
         </Stack>
         {advancedFiltersOpen && (
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ pt: 1 }}>

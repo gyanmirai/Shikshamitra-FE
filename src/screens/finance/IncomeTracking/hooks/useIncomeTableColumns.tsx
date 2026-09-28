@@ -2,7 +2,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 
 import type { IIncomeRecord } from '../types';
@@ -14,7 +14,6 @@ interface UseIncomeTableColumnsProps {
 }
 
 export const useIncomeTableColumns = ({
-  onView,
   onEdit,
   onDelete,
 }: UseIncomeTableColumnsProps): IColumn[] =>
@@ -78,14 +77,22 @@ export const useIncomeTableColumns = ({
         sticky: true,
         minWidth: 50,
         render: (_value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showEditIcon
-            showDeleteIcon
-            // showViewIcon
-            handleViewClick={() => onView?.(row as IIncomeRecord)}
-            handleEditClick={() => onEdit?.(row as IIncomeRecord)}
-            handleDeleteClick={() => onDelete?.(row as IIncomeRecord)}
+          <AdaptiveThreeDotsActions
+            actions={[
+              {
+                id: 'edit',
+                label: 'Edit',
+                icon: 'solar:pen-bold',
+                onClick: () => onEdit?.(row as IIncomeRecord),
+              },
+              {
+                id: 'delete',
+                label: 'Delete',
+                icon: 'solar:trash-bin-trash-bold',
+                onClick: () => onDelete?.(row as IIncomeRecord),
+                color: 'error.main',
+              },
+            ]}
           />
         ),
       },
@@ -96,5 +103,5 @@ export const useIncomeTableColumns = ({
        * unnecessary table re-renders.
        */
     ],
-    [onView, onEdit, onDelete]
+    [onEdit, onDelete]
   );

@@ -5,6 +5,7 @@ import type { FeeReceiptDetail, ChargeReceiptDetail } from 'src/redux/feeCollect
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
+import { paymentReceiptSummary } from './paymentReceiptSummary';
 import {
   Box,
   Card,
@@ -170,17 +171,9 @@ function UnifiedReceiptDisplay({
                 <Typography variant="subtitle2" fontWeight={700} mb={1} color="info.main">
                   {feeReceipt.auditSummary.headline}
                 </Typography>
-                {feeReceipt.auditSummary.changedFields &&
-                  feeReceipt.auditSummary.changedFields.length > 0 && (
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      {feeReceipt.auditSummary.changedFields
-                        .map(
-                          (field: any) =>
-                            `${field.fieldName}: ${field.oldValue} → ${field.newValue}`
-                        )
-                        .join(', ')}
-                    </Typography>
-                  )}
+                <Typography variant="caption" color="text.secondary" display="block">
+                  {paymentReceiptSummary(feeReceipt.auditSummary, feeReceipt.totalAmount, true)}
+                </Typography>
               </Box>
             )}
             {feeBlobUrl && (
@@ -305,17 +298,9 @@ function UnifiedReceiptDisplay({
                 <Typography variant="subtitle2" fontWeight={700} mb={1} color="info.main">
                   {chargeReceipt.auditSummary.headline}
                 </Typography>
-                {chargeReceipt.auditSummary.changedFields &&
-                  chargeReceipt.auditSummary.changedFields.length > 0 && (
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      {chargeReceipt.auditSummary.changedFields
-                        .map(
-                          (field: any) =>
-                            `${field.fieldName}: ${field.oldValue} → ${field.newValue}`
-                        )
-                        .join(', ')}
-                    </Typography>
-                  )}
+                <Typography variant="caption" color="text.secondary" display="block">
+                  {paymentReceiptSummary(chargeReceipt.auditSummary, chargeReceipt.totalAmount, false)}
+                </Typography>
               </Box>
             )}
             {chargeBlobUrl && (

@@ -90,8 +90,7 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
 
       {/* Charge Rows */}
       {chargesData.map((charge) => {
-        const isDisabled =
-          charge.status === FeeCollectionStatusType.Paid || charge.status === 'Paid';
+        const isDisabled = charge.amount <= 0;
         const isSelected = selectedCharges.includes(charge.chargeId) || isDisabled;
 
         return (

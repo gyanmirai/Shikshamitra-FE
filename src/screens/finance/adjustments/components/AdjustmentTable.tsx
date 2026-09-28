@@ -7,12 +7,12 @@ import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+
 import React, { useMemo, useCallback } from 'react';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Tab, Card, Tabs, Typography, IconButton } from '@mui/material';
+import { Box, Tab, Card, Tabs, Typography } from '@mui/material';
 import { useGetAdjustmentApplicationsQuery } from 'src/redux/finance/adjustments/adjustmentApi';
 
 import { mapAdjustmentApplicationItem } from '../utils/mapAdjustmentApplication';
@@ -32,7 +32,6 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
   activeTab,
   onTabChange,
   tabCounts,
-  onCreateAdjustment,
   onView,
   onApprove,
   onReject,
@@ -108,67 +107,37 @@ const AdjustmentTable: React.FC<IAdjustmentTableProps> = ({
       const { row } = params;
       const isPending = row.status === AdjustmentStatusEnum.Pending;
       return (
-        <Box display="flex" gap={1} alignItems="center">
-          <ThreeDotsActions
-            showThreeDots={false}
-            showViewIcon
-            handleViewClick={() => onView(row)}
-            placement="right-top"
-            actions={({ popover }: any) => (
-              <Box onClick={popover.onClose}>
-                <Box
-                  component="li"
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                    px: 1.5,
-                    py: 1,
-                    cursor: 'pointer',
-                    '&:hover': { bgcolor: 'action.hover' },
-                    listStyle: 'none',
-                  }}
-                  onClick={() => {
-                    onCreateAdjustment();
-                    popover.onClose();
-                  }}
-                >
-                  <Iconify icon="mdi:pencil-plus-outline" sx={{ width: 16, height: 16 }} />
-                  Create Adjustment
-                </Box>
-              </Box>
-            )}
-          />
-          {isPending && onApprove && (
-            <IconButton
-              size="small"
-              onClick={() => onApprove(row)}
-              sx={{
-                color: 'success.main',
-                '&:hover': { backgroundColor: 'success.lighter' },
-              }}
-              title="Approve"
-            >
-              <Iconify icon="mdi:approve" width={20} height={20} />
-            </IconButton>
-          )}
-          {isPending && onReject && (
-            <IconButton
-              size="small"
-              onClick={() => onReject(row)}
-              sx={{
-                color: 'error.main',
-                '&:hover': { backgroundColor: 'error.lighter' },
-              }}
-              title="Reject"
-            >
-              <Iconify icon="entypo:cross" width={20} height={20} />
-            </IconButton>
-          )}
-        </Box>
+        <AdaptiveThreeDotsActions
+          placement="right-top"
+          actions={[
+            { id: 'view', label: 'View', icon: 'carbon:view-filled', onClick: () => onView(row) },
+            ...(isPending && onApprove
+              ? [
+                  {
+                    id: 'approve',
+                    label: 'Approve',
+                    icon: 'mdi:approve',
+                    color: 'success.main',
+                    onClick: () => onApprove?.(row),
+                  },
+                ]
+              : []),
+            ...(isPending && onReject
+              ? [
+                  {
+                    id: 'reject',
+                    label: 'Reject',
+                    icon: 'entypo:cross',
+                    color: 'error.main',
+                    onClick: () => onReject?.(row),
+                  },
+                ]
+              : []),
+          ]}
+        />
       );
     },
-    [onCreateAdjustment, onView, onApprove, onReject]
+    [onView, onApprove, onReject]
   );
 
   return (

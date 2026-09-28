@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
@@ -106,18 +106,32 @@ const AccountHeadTable = ({
         render: (_value, row) => {
           const item = row as IAccountHead;
           return (
-            <ThreeDotsActions
-              showThreeDots={false}
-              showViewIcon
-              viewLabel="Version history"
-              viewIcon="solar:history-bold"
-              showEditIcon
-              showDeleteIcon
-              handleViewClick={() => setHistoryItem(item)}
-              disableEditIcon={!access.canEdit}
-              disableDeleteIcon={!access.canDelete || !item.canDelete}
-              handleEditClick={() => onEdit(item)}
-              handleDeleteClick={() => onDelete(item)}
+            <AdaptiveThreeDotsActions
+              actions={[
+                {
+                  id: 'view',
+                  label: 'Version history',
+                  icon: 'solar:history-bold',
+                  onClick: () => setHistoryItem(item),
+                },
+                {
+                  id: 'edit',
+                  label: 'Edit',
+                  icon: 'solar:pen-bold',
+                  onClick: () => onEdit(item),
+                  disabled: !access.canEdit,
+                },
+                {
+                  id: 'delete',
+                  label: 'Delete',
+                  icon: 'solar:trash-bin-trash-bold',
+                  onClick: () => onDelete(item),
+                  disabled: !access.canDelete || !item.canDelete,
+                  tooltip:
+                    'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                  color: 'error.main',
+                },
+              ]}
             />
           );
         },

@@ -5,11 +5,12 @@ import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
+import { Box, Chip, Alert, Stack, Switch, TextField, Typography } from '@mui/material';
 import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
 import {
   useGetIncomeCategoryVersionsQuery,
@@ -35,18 +36,21 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
   const [patchIncomeCategoryStatus, { isLoading: isStatusLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePatchIncomeCategoryStatusMutation,
+    popupConfig: { error: false },
   });
   const access = useAccountSettingPermissions('IncomeCategory');
 
   const statusConfirm = useBoolean();
   const [statusData, setStatusData] = useState<null | IIncomeCategory>(null);
   const [deactivationReason, setDeactivationReason] = useState('');
+  const [statusError, setStatusError] = useState('');
   const [historyItem, setHistoryItem] = useState<IIncomeCategory | null>(null);
   const history = useGetIncomeCategoryVersionsQuery(historyItem?.id || '', { skip: !historyItem });
 
   const handleOpenStatusConfirm = (row: IIncomeCategory) => {
     setStatusData(row);
     setDeactivationReason('');
+    setStatusError('');
     statusConfirm.onTrue();
   };
 
@@ -138,23 +142,37 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <ThreeDotsActions
-              showThreeDots={false}
-              showViewIcon
-              viewLabel="Version history"
-              viewIcon="solar:history-bold"
-              handleViewClick={() => setHistoryItem(row as IIncomeCategory)}
+            <AdaptiveThreeDotsActions
+              actions={[
+                {
+                  id: 'view',
+                  label: 'Version history',
+                  icon: 'solar:history-bold',
+                  onClick: () => setHistoryItem(row as IIncomeCategory),
+                },
+                {
+                  id: 'edit',
+                  label: 'Edit',
+                  icon: 'solar:pen-bold',
+                  onClick: () => {
+                    onEdit(row as IIncomeCategory);
+                  },
+                  disabled: !access.canEdit,
+                },
+                {
+                  id: 'delete',
+                  label: 'Delete',
+                  icon: 'solar:trash-bin-trash-bold',
+                  onClick: () => {
+                    onDelete(row as IIncomeCategory);
+                  },
+                  disabled: !access.canDelete || !(row as IIncomeCategory).canDelete,
+                  tooltip:
+                    'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                  color: 'error.main',
+                },
+              ]}
               placement="right-top"
-              showDeleteIcon
-              disableEditIcon={!access.canEdit}
-              disableDeleteIcon={!access.canDelete || !(row as IIncomeCategory).canDelete}
-              showEditIcon
-              handleDeleteClick={() => {
-                onDelete(row as IIncomeCategory);
-              }}
-              handleEditClick={() => {
-                onEdit(row as IIncomeCategory);
-              }}
             />
           );
         },
@@ -205,6 +223,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
           statusConfirm.onFalse();
           setStatusData(null);
           setDeactivationReason('');
+          setStatusError('');
         }}
         title={nextStatus ? 'Activate Income Category' : 'Deactivate Income Category'}
         content={
@@ -227,6 +246,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                 onChange={(event) => setDeactivationReason(event.target.value)}
               />
             )}
+            {statusError && <Alert severity="error">{statusError}</Alert>}
           </Stack>
         }
         action={
@@ -238,6 +258,7 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
             size="small"
             onClick={async () => {
               if (!statusData) return;
+              setStatusError('');
               try {
                 await patchIncomeCategoryStatus({
                   id: statusData.id,
@@ -253,8 +274,15 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
                 statusConfirm.onFalse();
                 setStatusData(null);
                 setDeactivationReason('');
-              } catch {
-                // Keep dialog open on error
+                setStatusError('');
+              } catch (error) {
+                const problem = parseApiProblemDetail(error);
+                setStatusError(
+                  problem.errorCode === 'Finance:Accounts:Settings:CategoryInUse' &&
+                    problem.detail === 'One or more business rules were violated.'
+                    ? 'Deactivate or remap the active Fee Heads using this Income Category first.'
+                    : problem.detail
+                );
               }
             }}
           >

@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Box, Tab, Tabs, Typography } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import {
   ChargesPriorityStatus,
@@ -189,13 +189,18 @@ const ChargesApprovalTable: React.FC<ChargesApprovalTableProps> = ({ data, onVie
             isFilter: false,
             render(value, row) {
               return (
-                <ThreeDotsActions
-                  showThreeDots={false}
+                <AdaptiveThreeDotsActions
+                  actions={[
+                    {
+                      id: 'view',
+                      label: 'View',
+                      icon: 'carbon:view-filled',
+                      onClick: () => {
+                        onView(row as IChargeData);
+                      },
+                    },
+                  ]}
                   placement="right-top"
-                  showViewIcon
-                  handleViewClick={() => {
-                    onView(row as IChargeData);
-                  }}
                 />
               );
             },

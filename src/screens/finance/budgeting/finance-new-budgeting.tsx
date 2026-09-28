@@ -14,7 +14,7 @@ import { CustomTabs } from 'src/components/custom-tabs';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Tab, Tooltip, Typography } from '@mui/material';
 import budgetData from 'src/json/finance/budget/budgetData.json';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -141,10 +141,15 @@ const FinanceNewBudgetingScreen = () => {
         align: 'right' as const,
         sticky: true,
         render: (_: any, row: any) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showEditIcon
-            handleEditClick={() => handleEditEntry(row)}
+          <AdaptiveThreeDotsActions
+            actions={[
+              {
+                id: 'edit',
+                label: 'Edit',
+                icon: 'solar:pen-bold',
+                onClick: () => handleEditEntry(row),
+              },
+            ]}
           />
         ),
       },

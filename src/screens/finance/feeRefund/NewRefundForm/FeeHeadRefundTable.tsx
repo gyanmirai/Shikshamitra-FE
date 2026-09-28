@@ -15,6 +15,7 @@ import { useGetRefundEligibilityQuery } from 'src/redux/finance/RefundManagement
 import FeeHeadGroup from './feeHeadRefundTable/FeeHeadGroup';
 import OverallSummaryCard from './feeHeadRefundTable/OverallSummaryCard';
 import RefundTableSkeleton from './feeHeadRefundTable/RefundTableSkeleton';
+import { refundAllocationLabel } from './initialValuesAndValidation';
 
 import type { IMonthItem, RefundFormik, IFeeHeadPayment } from './types';
 
@@ -104,7 +105,14 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       items: fh.months.map((m): IMonthItem => {
         const monthIndex = typeof m.month === 'number' ? m.month : 0;
         const monthName = FeeMonth[monthIndex] ?? `Month ${m.month}`;
-        const monthLabel = `${monthName} ${m.year}${(m as any).receiptNumber ? ` · ${(m as any).receiptNumber}` : ''}`;
+        const repeated = !isAdj && fh.months.filter((other) =>
+          other.month === m.month && other.year === m.year &&
+          (other as any).receiptNumber === (m as any).receiptNumber
+        ).length > 1;
+        const monthLabel = refundAllocationLabel(
+          monthName, m.year, (m as any).receiptNumber ?? '',
+          (m as any).sourceAllocationId ?? '', repeated
+        );
         const refunded = isAdj ? ((m as any).adjusted ?? 0) : ((m as any).refunded ?? 0);
         const refundable = isAdj ? ((m as any).adjustable ?? 0) : ((m as any).refundable ?? 0);
         const concession = (m as any).concession ?? 0;

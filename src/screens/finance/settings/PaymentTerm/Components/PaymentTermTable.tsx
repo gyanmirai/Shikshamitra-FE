@@ -1,15 +1,15 @@
 'use client';
 
 import type { LabelColor } from 'src/components/label';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
 
 import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Chip, Stack, MenuItem, MenuList, Typography } from '@mui/material';
+import { Chip, Stack, Typography } from '@mui/material';
 
 import type { IPaymentTermTableProps } from '../type';
 
@@ -115,82 +115,88 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
           const canActivate = !archived && term.hasDraft && canPublish;
           const archiveDisabled = term.referencedStructureCount > 0 || actionLoading;
           const deleteDisabled = !canDeletePaymentTerm(term) || actionLoading;
-          const hasMenuActions = canView || canActivate || canArchive || canRestore || canDelete;
 
           return (
-            <ThreeDotsActions
-              showViewIcon={canView}
-              viewLabel={`View ${term.name}`}
-              handleViewClick={() => onView(term)}
-              showEditIcon={canEdit && !archived}
-              editLabel={`Edit ${term.name}`}
-              disableEditIcon={actionLoading}
-              handleEditClick={() => onEdit(term)}
-              showThreeDots={hasMenuActions}
+            <AdaptiveThreeDotsActions
               moreLabel={`More actions for ${term.name}`}
-              actions={({ popover }) => (
-                <MenuList>
-                  {canActivate ? (
-                    <MenuItem
-                      disabled={actionLoading}
-                      onClick={() => {
-                        popover.onClose();
-                        onPublish(term);
-                      }}
-                    >
-                      <Iconify icon="mdi:check-decagram-outline" />
-                      Activate
-                    </MenuItem>
-                  ) : null}
-                  {canView ? (
-                    <MenuItem
-                      onClick={() => {
-                        popover.onClose();
-                        onVersionHistory(term);
-                      }}
-                    >
-                      <Iconify icon="mdi:timeline-clock-outline" />
-                      Version History
-                    </MenuItem>
-                  ) : null}
-                  {!archived && canArchive ? (
-                    <MenuItem
-                      disabled={archiveDisabled}
-                      onClick={() => {
-                        popover.onClose();
-                        onArchive(term);
-                      }}
-                    >
-                      <Iconify icon="mdi:archive-outline" />
-                      Archive
-                    </MenuItem>
-                  ) : null}
-                  {archived && canRestore ? (
-                    <MenuItem
-                      disabled={actionLoading}
-                      onClick={() => {
-                        popover.onClose();
-                        onRestore(term);
-                      }}
-                    >
-                      <Iconify icon="mdi:archive-arrow-up-outline" />
-                      Restore
-                    </MenuItem>
-                  ) : null}
-                  {canDelete ? (
-                    <MenuItem
-                      disabled={deleteDisabled}
-                      onClick={() => {
-                        popover.onClose();
-                        onDelete(term);
-                      }}
-                    >
-                      <Iconify icon="solar:trash-bin-trash-bold" />
-                      Delete
-                    </MenuItem>
-                  ) : null}
-                </MenuList>
-              )}
+              actions={[
+                ...(canView
+                  ? [
+                      {
+                        id: 'view',
+                        label: `View ${term.name}`,
+                        icon: 'carbon:view-filled',
+                        onClick: () => onView(term),
+                      },
+                    ]
+                  : []),
+                ...(canEdit && !archived
+                  ? [
+                      {
+                        id: 'edit',
+                        label: `Edit ${term.name}`,
+                        icon: 'solar:pen-bold',
+                        disabled: actionLoading,
+                        onClick: () => onEdit(term),
+                      },
+                    ]
+                  : []),
+                ...(canActivate
+                  ? [
+                      {
+                        id: 'activate',
+                        label: 'Activate',
+                        icon: 'mdi:check-decagram-outline',
+                        disabled: actionLoading,
+                        onClick: () => onPublish(term),
+                      },
+                    ]
+                  : []),
+                ...(canView
+                  ? [
+                      {
+                        id: 'history',
+                        label: 'Version History',
+                        icon: 'mdi:timeline-clock-outline',
+                        onClick: () => onVersionHistory(term),
+                      },
+                    ]
+                  : []),
+                ...(!archived && canArchive
+                  ? [
+                      {
+                        id: 'archive',
+                        label: 'Archive',
+                        icon: 'mdi:archive-outline',
+                        disabled: archiveDisabled,
+                        onClick: () => onArchive(term),
+                      },
+                    ]
+                  : []),
+                ...(archived && canRestore
+                  ? [
+                      {
+                        id: 'restore',
+                        label: 'Restore',
+                        icon: 'mdi:archive-arrow-up-outline',
+                        disabled: actionLoading,
+                        onClick: () => onRestore(term),
+                      },
+                    ]
+                  : []),
+                ...(canDelete
+                  ? [
+                      {
+                        id: 'delete',
+                        label: 'Delete',
+                        icon: 'solar:trash-bin-trash-bold',
+                        color: 'error.main',
+                        disabled: deleteDisabled,
+                        onClick: () => onDelete(term),
+                      },
+                    ]
+                  : []),
+              ]}
             />
           );
         },

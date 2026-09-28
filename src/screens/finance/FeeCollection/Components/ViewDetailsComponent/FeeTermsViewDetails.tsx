@@ -8,6 +8,8 @@ import { Label, type LabelColor } from 'src/components/label';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
+  feeInstallmentStatusLabel,
+  chargeCollectionStatusLabel,
 } from 'src/enums/fee-collection-type';
 import {
   Box,
@@ -150,7 +152,7 @@ export const ConsolidatedFeeDetails = ({
                             color={FeeCollectionStatusTypeColors[head.status] as LabelColor}
                             sx={{ fontSize: 10, height: 18 }}
                           >
-                            {FeeCollectionStatusType[head.status]}
+                             {feeInstallmentStatusLabel(head.status)}
                           </Label>
                         </TableCell>
                       </TableRow>
@@ -228,7 +230,7 @@ export const ConsolidatedFeeDetails = ({
                               color={FeeCollectionStatusTypeColors[charge?.status] as LabelColor}
                               sx={{ fontSize: 10, height: 18 }}
                             >
-                              {FeeCollectionStatusType[charge?.status]}
+                               {chargeCollectionStatusLabel(charge.status)}
                             </Label>
                           </TableCell>
                         </TableRow>

@@ -6,6 +6,7 @@ import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { alpha } from '@mui/material/styles';
 import {
   Box,
   Stack,
@@ -17,7 +18,7 @@ import {
   IconButton,
   CircularProgress,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 
 import VersionSidebar from './version/VersionSidebar';
 import VersionDiffTable from './version/VersionDiffTable';
@@ -48,6 +49,10 @@ export default function FinancePolicyVersionDrawer({
     policyId: policy?.id,
     policyType: policy?.policyType,
   });
+  const { data: feeHeadData, isLoading: isFeeHeadsLoading } = useGetFeeHeadsQuery(
+    { academicYearId: policy?.academicYearId || '', page: 1, pageSize: 1000 },
+    { skip: !open || policy?.policyType !== 'collection' || !policy?.academicYearId }
+  );
 
   const valueContext = useMemo(() => {
     const labelsById: Record<string, string> = {};
@@ -56,9 +61,12 @@ export default function FinancePolicyVersionDrawer({
     if (policy?.academicYearId && policy.academicYearName) {
       labelsById[policy.academicYearId.toLowerCase()] = policy.academicYearName;
     }
+    feeHeadData?.items.forEach((head) => {
+      labelsById[head.id.toLowerCase()] = head.name;
+    });
 
     return { labelsById };
-  }, [policy]);
+  }, [policy, feeHeadData]);
 
   const handleSelectVersion = useCallback(
     (id: string) => {
@@ -176,7 +184,7 @@ export default function FinancePolicyVersionDrawer({
         </Box>
 
         {/* Content Body */}
-        {isLoading ? (
+        {isLoading || (policy.policyType === 'collection' && isFeeHeadsLoading) ? (
           <Stack alignItems="center" justifyContent="center" sx={{ py: 10, flex: 1 }}>
             <CircularProgress size={32} />
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>

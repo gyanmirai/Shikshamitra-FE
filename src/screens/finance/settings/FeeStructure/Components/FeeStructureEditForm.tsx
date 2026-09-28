@@ -11,7 +11,8 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box ,
+import {
+  Box,
   Alert,
   Button,
   Skeleton,
@@ -60,7 +61,7 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({
     addNewFnRef.current = fn;
   }, []);
 
-  const {classes} = editData;
+  const { classes } = editData;
   const isLoadingClasses = false;
   const isFetchingClasses = false;
   const classesError = !Array.isArray(classes);
@@ -155,61 +156,61 @@ const FeeStructureEditForm: React.FC<IFeeStructureEditFormProps> = ({
             >
               {isLoadingClasses || isFetchingClasses
                 ? [1, 2, 3, 4, 5].map((i) => (
-                    <Box key={i} sx={{ px: 1, py: 0.5 }}>
-                      <Skeleton variant="text" width="75%" height={32} />
-                    </Box>
-                  ))
+                  <Box key={i} sx={{ px: 1, py: 0.5 }}>
+                    <Skeleton variant="text" width="75%" height={32} />
+                  </Box>
+                ))
                 : classList.map((cls: any) => {
-                    const isActive = selectedClassId === cls.id;
-                    return (
-                      <ListItemButton
-                        key={cls.id}
-                        selected={isActive}
-                        onClick={() => handleClassClick(cls.id)}
-                        sx={{
-                          borderRadius: 1,
-                          mb: 0.25,
-                          py: 0.75,
-                          px: 1.5,
-                          borderLeft: '3px solid transparent',
-                          '&.Mui-selected': {
-                            bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.08),
-                            borderLeftColor: 'primary.main',
-                            '&:hover': {
-                              bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.12),
-                            },
+                  const isActive = selectedClassId === cls.id;
+                  return (
+                    <ListItemButton
+                      key={cls.id}
+                      selected={isActive}
+                      onClick={() => handleClassClick(cls.id)}
+                      sx={{
+                        borderRadius: 1,
+                        mb: 0.25,
+                        py: 0.75,
+                        px: 1.5,
+                        borderLeft: '3px solid transparent',
+                        '&.Mui-selected': {
+                          bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.08),
+                          borderLeftColor: 'primary.main',
+                          '&:hover': {
+                            bgcolor: varAlpha(theme.palette.primary.mainChannel, 0.12),
                           },
-                          '&:not(.Mui-selected):hover': {
-                            bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.05),
-                            borderLeftColor: varAlpha(theme.palette.primary.mainChannel, 0.3),
-                          },
-                          transition: 'background-color 0.15s ease, color 0.15s ease',
+                        },
+                        '&:not(.Mui-selected):hover': {
+                          bgcolor: varAlpha(theme.palette.grey['500Channel'], 0.05),
+                          borderLeftColor: varAlpha(theme.palette.primary.mainChannel, 0.3),
+                        },
+                        transition: 'background-color 0.15s ease, color 0.15s ease',
+                      }}
+                    >
+                      <ListItemText
+                        primary={cls.name}
+                        primaryTypographyProps={{
+                          variant: 'body2',
+                          fontWeight: isActive ? 700 : 500,
+                          color: isActive ? 'primary.main' : 'text.secondary',
+                          noWrap: true,
                         }}
-                      >
-                        <ListItemText
-                          primary={cls.name}
-                          primaryTypographyProps={{
-                            variant: 'body2',
-                            fontWeight: isActive ? 700 : 500,
-                            color: isActive ? 'primary.main' : 'text.secondary',
-                            noWrap: true,
+                      />
+                      {isActive && (
+                        <Box
+                          sx={{
+                            width: 6,
+                            height: 6,
+                            borderRadius: '50%',
+                            bgcolor: 'primary.main',
+                            flexShrink: 0,
+                            ml: 1,
                           }}
                         />
-                        {isActive && (
-                          <Box
-                            sx={{
-                              width: 6,
-                              height: 6,
-                              borderRadius: '50%',
-                              bgcolor: 'primary.main',
-                              flexShrink: 0,
-                              ml: 1,
-                            }}
-                          />
-                        )}
-                      </ListItemButton>
-                    );
-                  })}
+                      )}
+                    </ListItemButton>
+                  );
+                })}
 
               {/* Empty state */}
               {!isLoadingClasses && !isFetchingClasses && classList.length === 0 && (
