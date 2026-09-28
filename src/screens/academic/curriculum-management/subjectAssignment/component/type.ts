@@ -82,7 +82,6 @@ export interface ISubjectFormValues {
   setupHealthScore?: number;
   canDelete?: boolean;
   deleteDisabledReason?: string | null;
-  subjectNameDisplay?: string;
 
   // New schema fields
   academicMediumId?: string;
