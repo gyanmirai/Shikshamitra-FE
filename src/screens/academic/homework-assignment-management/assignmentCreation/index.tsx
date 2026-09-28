@@ -401,6 +401,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
 
       <ConfirmDialog
         open={deleteAssignmentDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedAssignment(null);
           deleteAssignmentDialog.onFalse();
@@ -446,6 +447,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
 
       <ConfirmDialog
         open={publishAssignmentDialog.value}
+        disableBackdropClick
         onClose={() => {
           publishAssignmentDialog.onFalse();
           setSelectedAssignment(null);
@@ -488,6 +490,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
 
       <ConfirmDialog
         open={closeAssignmentDialog.value}
+        disableBackdropClick
         onClose={() => {
           closeAssignmentDialog.onFalse();
           setSelectedAssignment(null);

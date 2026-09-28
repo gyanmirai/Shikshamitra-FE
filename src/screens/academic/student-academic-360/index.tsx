@@ -6,9 +6,10 @@ import type { Division, Standards, Organization } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import { Iconify } from 'src/components/iconify';
 import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Card, Stack } from '@mui/material';
+import { Box, Card, Stack, Button } from '@mui/material';
 
 import { matchesAcademicFilter, normalizeAcademicStudent } from './listUtils';
 
@@ -38,6 +39,7 @@ const StudentAcademic360Screen = () => {
   const [isStudentsLoading, setIsStudentsLoading] = useState(false);
   const [isStudentsError, setIsStudentsError] = useState(false);
   const [activeFilter, setActiveFilter] = useState<AcademicSmartFilter>('all');
+  const [insightsOpen, setInsightsOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Academic360StudentRow | null>(null);
   const lastFocusedStudentId = useRef('');
 
@@ -190,6 +192,17 @@ const StudentAcademic360Screen = () => {
             disabled={selectedClass !== ALL_OPTION_ID && availableDivisions.length === 0}
             formControlProps={{ sx: { minWidth: { md: 220 } } }}
           />
+          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+              onClick={() => setInsightsOpen(true)}
+            >
+              View full insights
+            </Button>
+          </Box>
         </Stack>
       </Card>
 
@@ -197,6 +210,8 @@ const StudentAcademic360Screen = () => {
         items={academicItems}
         activeFilter={activeFilter}
         onFilterChange={setActiveFilter}
+        insightsOpen={insightsOpen}
+        onCloseInsights={() => setInsightsOpen(false)}
       />
 
       <StudentAcademic360Table

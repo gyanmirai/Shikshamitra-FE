@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-import { Box, Stack, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, ButtonBase, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { AssignmentSubmissionType, ASSIGNMENT_SUBMISSION_TYPE_LABELS } from 'src/enums/assignment';
 
@@ -72,6 +72,17 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
       <CustomizableTable
         tableId="assignment-management"
         isLoading={isLoading}
+        handleRowClick={(row) => {
+          if (!canView) return;
+          const schedules = (row as any).divisionSchedules || row.divisions || [];
+          const divisionData = schedules.find(
+            (division: DivisionHomeworkMeta) => division.divisionId === selectedDivision
+          );
+          onView({ ...row, divisionMeta: divisionData } as IAssignment & {
+            divisionMeta?: DivisionHomeworkMeta;
+          });
+        }}
+        rowProps={() => ({ sx: { cursor: canView ? 'pointer' : 'default' } })}
         noDataText={
           <>
             No learning tasks created yet.
@@ -92,7 +103,25 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
           </>
         }
         columns={[
-          { id: 'title', label: 'Title', align: 'left', filterType: 'string', sticky: true },
+          {
+            id: 'title',
+            label: 'Title',
+            minWidth: 240,
+            align: 'left',
+            filterType: 'string',
+            sticky: true,
+            render: (value) =>
+              canView ? (
+                <ButtonBase
+                  aria-label={`View details for ${value}`}
+                  sx={{ color: 'inherit', font: 'inherit', textAlign: 'left' }}
+                >
+                  {value}
+                </ButtonBase>
+              ) : (
+                value
+              ),
+          },
           { id: 'classDivision', label: 'Class / Division', align: 'left', filterType: 'string' },
           { id: 'subjectChapter', label: 'Subject / Chapter', align: 'left', filterType: 'string' },
           {
@@ -177,15 +206,7 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                 canView,
                 canDelete,
               });
-              const schedules = (row as any).divisionSchedules || row.divisions || [];
-              const divisionData = schedules.find(
-                (d: DivisionHomeworkMeta) => d.divisionId === selectedDivision
-              );
-              const rowWithDivision = { ...row, divisionMeta: divisionData } as IAssignment & {
-                divisionMeta?: DivisionHomeworkMeta;
-              };
               const rowActions = getLearningTaskTableActions({
-                canView,
                 canEdit: actions.canEdit,
                 canPublish: actions.canPublish,
                 canClose: actions.canClose,
@@ -195,7 +216,6 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
                 deleteTooltip: actions.canDelete
                   ? 'Delete'
                   : 'Only draft assignments can be deleted',
-                onView: () => onView(rowWithDivision),
                 onEdit: () => onEdit(assignment),
                 onPublish: () => onSwitchToggle(assignment),
                 onClose: () => onClose(assignment),
@@ -204,11 +224,13 @@ const AssignmentTable: React.FC<IAssignmentTableProps> = ({
               });
 
               return (
-                <AdaptiveThreeDotsActions
-                  actions={rowActions}
-                  placement="right-top"
-                  moreLabel="More assignment actions"
-                />
+                <Box onClick={(event) => event.stopPropagation()}>
+                  <AdaptiveThreeDotsActions
+                    actions={rowActions}
+                    placement="right-top"
+                    moreLabel="More assignment actions"
+                  />
+                </Box>
               );
             },
           },

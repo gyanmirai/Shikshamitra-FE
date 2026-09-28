@@ -34,6 +34,7 @@ import type { IHomeworkType } from './type';
 const HomeworkTypeCreation = () => {
   // Dialog control for add/Update Homework Type
   const addHomeworkTypeDialog = useBoolean();
+  const insightsDrawer = useBoolean();
 
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
@@ -146,22 +147,36 @@ const HomeworkTypeCreation = () => {
         ]}
         description="Create and manage homework types for homework and assignments. Add, edit, or delete assignment types as needed."
         action={
-          canAdd ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button
-              variant="contained"
-              startIcon={<Iconify icon="mdi:plus" />}
-              onClick={addHomeworkTypeDialog.onTrue}
               size="small"
-              sx={{ px: '32px' }}
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+              onClick={insightsDrawer.onTrue}
             >
-              Homework Type
+              View full insights
             </Button>
-          ) : null
+            {canAdd && (
+              <Button
+                variant="contained"
+                startIcon={<Iconify icon="mdi:plus" />}
+                onClick={addHomeworkTypeDialog.onTrue}
+                size="small"
+                sx={{ px: '32px' }}
+              >
+                Homework Type
+              </Button>
+            )}
+          </Box>
         }
       />
 
       {/* Summary Cards */}
       <TimetableSettingsSummaryCards
+        open={insightsDrawer.value}
+        onClose={insightsDrawer.onFalse}
+        hideTrigger
         cards={[
           {
             label: 'Total Types',
@@ -261,6 +276,7 @@ const HomeworkTypeCreation = () => {
 
       <ConfirmDialog
         open={deleteDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedData(null);
           deleteDialog.onFalse();
@@ -301,6 +317,7 @@ const HomeworkTypeCreation = () => {
 
       <ConfirmDialog
         open={archiveDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedData(null);
           archiveDialog.onFalse();

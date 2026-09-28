@@ -3,7 +3,6 @@ import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots
 import { GlobalIcons } from 'src/utils/icons';
 
 type LearningTaskTableActionOptions = {
-  canView: boolean;
   canEdit: boolean;
   canPublish: boolean;
   canClose?: boolean;
@@ -11,7 +10,6 @@ type LearningTaskTableActionOptions = {
   canDelete: boolean;
   deleteDisabled: boolean;
   deleteTooltip: string;
-  onView: () => void;
   onEdit: () => void;
   onPublish: () => void;
   onClose?: () => void;
@@ -23,15 +21,6 @@ export function getLearningTaskTableActions(
   options: LearningTaskTableActionOptions
 ): AdaptiveThreeDotsAction[] {
   const actions: AdaptiveThreeDotsAction[] = [];
-
-  if (options.canView) {
-    actions.push({
-      id: 'view',
-      label: 'View details',
-      icon: GlobalIcons.eye,
-      onClick: options.onView,
-    });
-  }
 
   if (options.canEdit) {
     actions.push({
@@ -83,7 +72,7 @@ export function getLearningTaskTableActions(
       id: 'delete',
       label: 'Delete',
       icon: GlobalIcons.delete,
-      color: 'error.main',
+      color: options.deleteDisabled ? undefined : 'error.main',
       disabled: options.deleteDisabled,
       tooltip: options.deleteTooltip,
       onClick: options.onDelete,

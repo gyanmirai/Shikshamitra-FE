@@ -3,9 +3,8 @@ import { it, vi, expect, describe } from 'vitest';
 import { getLearningTaskTableActions } from './learningTaskTableActions';
 
 describe('getLearningTaskTableActions', () => {
-  it('keeps view, edit, and publish first and sends later actions to overflow', () => {
+  it('keeps edit and publish first and sends later actions to overflow', () => {
     const actions = getLearningTaskTableActions({
-      canView: true,
       canEdit: true,
       canPublish: true,
       canClose: true,
@@ -13,7 +12,6 @@ describe('getLearningTaskTableActions', () => {
       canDelete: true,
       deleteDisabled: false,
       deleteTooltip: 'Delete',
-      onView: vi.fn(),
       onEdit: vi.fn(),
       onPublish: vi.fn(),
       onClose: vi.fn(),
@@ -22,7 +20,6 @@ describe('getLearningTaskTableActions', () => {
     });
 
     expect(actions.map((action) => action.id)).toEqual([
-      'view',
       'edit',
       'publish',
       'close',

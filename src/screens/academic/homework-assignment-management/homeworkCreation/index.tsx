@@ -17,6 +17,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import HomeworkCreation from './component';
 import AssignmentCreation from '../assignmentCreation';
+import { LearningTaskInsightsContext } from './component/learningTaskUi';
 
 const TABS = [
   {
@@ -54,6 +55,11 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
   // Dialog state for each tab
   const addHomeworkDialog = useBoolean(false);
   const addAssignmentDialog = useBoolean(false);
+  const insightsDrawer = useBoolean(false);
+  const insightsContext = useMemo(
+    () => ({ open: insightsDrawer.value, onClose: insightsDrawer.onFalse }),
+    [insightsDrawer.value, insightsDrawer.onFalse]
+  );
 
   // Render corresponding add button based on selected tab
   const renderButton = useMemo(
@@ -111,7 +117,6 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
             { name: 'Homework & Assignment' },
             { name: 'Learning Tasks' },
           ]}
-          action={renderButton[searchParams?.tab as keyof typeof renderButton]}
         />
       )}
       <Paper
@@ -119,46 +124,62 @@ const HomeworkAssignment = ({ showBreadCumb = true }: { showBreadCumb?: boolean 
           '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
         }}
       >
-        <CustomTabs
-          value={searchParams.tab}
-          onChange={(e, value) => {
-            const newIndex = TABS.findIndex((tab) => tab.value === value);
-            if (currentIndex > newIndex) {
-              setIsBackClick(true);
-            } else {
-              setIsBackClick(false);
-            }
+        <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
+          <CustomTabs
+            value={searchParams.tab}
+            onChange={(e, value) => {
+              const newIndex = TABS.findIndex((tab) => tab.value === value);
+              if (currentIndex > newIndex) {
+                setIsBackClick(true);
+              } else {
+                setIsBackClick(false);
+              }
 
-            setSearchParams('tab', value);
-          }}
-          sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
-          role="tablist"
-        >
-          {TABS.map((tab) => (
-            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-          ))}
-        </CustomTabs>
-      </Paper>
-      <FormSlider
-        steps={TABS}
-        isBackClick={isBackClick}
-        step={currentIndex}
-        containerProps={{
-          sx: {
-            p: 0,
-            minHeight: 0,
-          },
-        }}
-      >
-        <Box sx={{ height: '100%' }}>
-          {currentActiveComponent?.component && (
-            <currentActiveComponent.component
-              addHomeworkDialog={addHomeworkDialog}
-              addAssignmentDialog={addAssignmentDialog}
-            />
-          )}
+              setSearchParams('tab', value);
+            }}
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
+            role="tablist"
+          >
+            {TABS.map((tab) => (
+              <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+            ))}
+          </CustomTabs>
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1, p: 1 }}>
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+              onClick={insightsDrawer.onTrue}
+            >
+              View full insights
+            </Button>
+            {showBreadCumb && renderButton[searchParams?.tab as keyof typeof renderButton]}
+          </Box>
         </Box>
-      </FormSlider>
+      </Paper>
+      <LearningTaskInsightsContext.Provider value={insightsContext}>
+        <FormSlider
+          steps={TABS}
+          isBackClick={isBackClick}
+          step={currentIndex}
+          containerProps={{
+            sx: {
+              p: 0,
+              minHeight: 0,
+            },
+          }}
+        >
+          <Box sx={{ height: '100%' }}>
+            {currentActiveComponent?.component && (
+              <currentActiveComponent.component
+                addHomeworkDialog={addHomeworkDialog}
+                addAssignmentDialog={addAssignmentDialog}
+              />
+            )}
+          </Box>
+        </FormSlider>
+      </LearningTaskInsightsContext.Provider>
     </Box>
   );
 };

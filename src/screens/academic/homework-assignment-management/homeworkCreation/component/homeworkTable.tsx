@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import React from 'react';
-import { Box, Stack, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Stack, ButtonBase, Typography } from '@mui/material';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import { getLearningTaskTableActions } from './learningTaskTableActions';
@@ -50,6 +50,16 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
     <CustomizableTable
       tableId="homework-assignment-management"
       isLoading={isLoading}
+      handleRowClick={(row) => {
+        if (!canView) return;
+        const divisionData = row.divisions?.find(
+          (division: DivisionHomeworkMeta) => division.divisionId === selectedDivision
+        );
+        onViewDetails({ ...row, divisionMeta: divisionData } as IHomework & {
+          divisionMeta?: DivisionHomeworkMeta;
+        });
+      }}
+      rowProps={() => ({ sx: { cursor: canView ? 'pointer' : 'default' } })}
       noDataText={
         <>
           No learning tasks created yet.
@@ -75,7 +85,25 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
         </>
       }
       columns={[
-        { id: 'title', label: 'Title', align: 'left', filterType: 'string', sticky: true },
+        {
+          id: 'title',
+          label: 'Title',
+          minWidth: 240,
+          align: 'left',
+          filterType: 'string',
+          sticky: true,
+          render: (value) =>
+            canView ? (
+              <ButtonBase
+                aria-label={`View details for ${value}`}
+                sx={{ color: 'inherit', font: 'inherit', textAlign: 'left' }}
+              >
+                {value}
+              </ButtonBase>
+            ) : (
+              value
+            ),
+        },
         { id: 'classDivision', label: 'Class / Division', align: 'left', filterType: 'string' },
         { id: 'subjectChapter', label: 'Subject / Chapter', align: 'left', filterType: 'string' },
         {
@@ -160,14 +188,12 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
               divisionMeta?: DivisionHomeworkMeta;
             };
             const actions = getLearningTaskTableActions({
-              canView,
               canEdit: canAdd && isDraft,
               canPublish: canAdd && isDraft,
               canViewSubmissions: true,
               canDelete,
               deleteDisabled: !isDraft,
               deleteTooltip: isDraft ? 'Delete' : 'Archive published tasks later',
-              onView: () => onViewDetails(rowWithDivision),
               onEdit: () => onEditDetails(row as IHomework),
               onPublish: () => handleSwitchChange(row as IHomework),
               onViewSubmissions: () =>
@@ -176,11 +202,13 @@ const HomeworkTable: React.FC<IHomeworkTableProps> = ({
             });
 
             return (
-              <AdaptiveThreeDotsActions
-                actions={actions}
-                placement="right-top"
-                moreLabel="More homework actions"
-              />
+              <Box onClick={(event) => event.stopPropagation()}>
+                <AdaptiveThreeDotsActions
+                  actions={actions}
+                  placement="right-top"
+                  moreLabel="More homework actions"
+                />
+              </Box>
             );
           },
         },

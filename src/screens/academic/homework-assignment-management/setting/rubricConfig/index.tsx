@@ -46,6 +46,7 @@ import {
 
 const RubricConfigScreen = () => {
   const addDialog = useBoolean();
+  const insightsDrawer = useBoolean();
   const archiveDialog = useBoolean();
   const previewDialog = useBoolean();
   const usageDialog = useBoolean();
@@ -180,17 +181,28 @@ const RubricConfigScreen = () => {
           ]}
           description="Create reusable scoring frameworks for homework, assignments, projects, practicals, presentations, and academic activities."
           action={
-            canAdd ? (
+            <Stack direction="row" alignItems="center" spacing={1}>
               <Button
-                variant="contained"
                 size="small"
-                startIcon={<Iconify icon="mdi:plus" />}
-                onClick={addDialog.onTrue}
-                sx={{ px: '32px' }}
+                variant="outlined"
+                color="inherit"
+                startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+                onClick={insightsDrawer.onTrue}
               >
-                Create Rubric
+                View full insights
               </Button>
-            ) : null
+              {canAdd && (
+                <Button
+                  variant="contained"
+                  size="small"
+                  startIcon={<Iconify icon="mdi:plus" />}
+                  onClick={addDialog.onTrue}
+                  sx={{ px: '32px' }}
+                >
+                  Create Rubric
+                </Button>
+              )}
+            </Stack>
           }
         />
       )}
@@ -204,6 +216,9 @@ const RubricConfigScreen = () => {
         <>
           {/* KPI summary cards */}
           <TimetableSettingsSummaryCards
+            open={insightsDrawer.value}
+            onClose={insightsDrawer.onFalse}
+            hideTrigger
             cards={[
               {
                 label: 'Total Templates',
@@ -618,6 +633,7 @@ const RubricConfigScreen = () => {
       </CustomDialog>
       <ConfirmDialog
         open={archiveDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedData(null);
           archiveDialog.onFalse();

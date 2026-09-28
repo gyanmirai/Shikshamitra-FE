@@ -8,15 +8,15 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Stack, Button, Typography, IconButton, DialogActions } from '@mui/material';
+import { Box, Button, Typography, DialogActions } from '@mui/material';
 import { AssignmentSubmissionStatusOptions } from 'src/enums/assignment-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { SUBMISSION_TYPE_LABELS } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/learningTaskUi';
@@ -37,11 +37,8 @@ import {
 import {
   FeedbackStatusChip,
   EvaluationStatusChip,
-  filterEvaluationRows,
-  getEvaluationSummary,
   dedupeEvaluationRows,
   EvaluationActionButton,
-  EvaluationSummaryCards,
   isRowEvaluationDisabled,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
@@ -89,7 +86,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   );
 
   const [selectedStudents] = useState<any[]>([]);
-  const [activeFilter, setActiveFilter] = useState('all');
   const {
     data: assignmentSubmissions,
     isLoading: isSubmissionsLoading,
@@ -130,31 +126,21 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     [assignmentSubmissions?.data]
   );
 
-  const filteredData = React.useMemo(
-    () => filterEvaluationRows(normalizedData, activeFilter),
-    [activeFilter, normalizedData]
-  );
-
   // Unsubmitted rows share the API's empty submission UUID. Give the table a
   // stable student-specific ID while retaining the real submission ID for actions.
   const tableData = React.useMemo(
     () =>
-      filteredData.map((row: any) => ({
+      normalizedData.map((row: any) => ({
         ...row,
         submissionId: row.id,
         id: row.studentId || row.id,
       })),
-    [filteredData]
-  );
-
-  const summary = React.useMemo(
-    () => getEvaluationSummary(normalizedData, assignmentSubmissions?.summary),
-    [assignmentSubmissions?.summary, normalizedData]
+    [normalizedData]
   );
 
   const selectedIndex = React.useMemo(
-    () => filteredData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
-    [filteredData, selectedStudent?.studentId]
+    () => normalizedData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
+    [normalizedData, selectedStudent?.studentId]
   );
   const evaluationMethod =
     selectedAssignment?.evaluationMethod ??
@@ -215,7 +201,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   const moveStudent = React.useCallback(
     (direction: 1 | -1) => {
-      const nextRow = filteredData[selectedIndex + direction];
+      const nextRow = normalizedData[selectedIndex + direction];
       if (nextRow) {
         setSelectedStudent({
           ...(nextRow as TStudentGrade),
@@ -223,7 +209,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         });
       }
     },
-    [filteredData, resolveTotalMarks, selectedIndex]
+    [normalizedData, resolveTotalMarks, selectedIndex]
   );
 
   /**
@@ -318,13 +304,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   return (
     <>
-      <Stack spacing={1}>
-        <EvaluationSummaryCards
-          summary={summary}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
-      </Stack>
       <Box>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
@@ -601,7 +580,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             assignmentId={selectedAssignment?.id}
             requiresMarks={requiresMarks}
             hasPrevious={selectedIndex > 0}
-            hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
+            hasNext={selectedIndex >= 0 && selectedIndex < normalizedData.length - 1}
             onPrevious={() => moveStudent(-1)}
             onNext={() => moveStudent(1)}
           />

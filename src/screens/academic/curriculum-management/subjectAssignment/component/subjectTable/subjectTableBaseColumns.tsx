@@ -7,6 +7,7 @@ import { getSubjectDisplayLabel } from '../../utils/getSubjectDisplayLabel';
 import { getPrimaryTeacherNames } from '../../utils/primaryTeacherNames';
 
 import type { ISubjectFormValues } from '../type';
+import type { SubjectTableRow } from './subjectTableTypes';
 
 export function getSubjectTableBaseColumns(
   onViewSchedule: (row: ISubjectFormValues) => void,
@@ -40,7 +41,7 @@ export function getSubjectTableBaseColumns(
       minWidth: 180,
       sticky: true,
       render: (_value, row) => {
-        const subject = row as ISubjectFormValues;
+        const subject = row as SubjectTableRow;
         const label = getSubjectDisplayLabel(subject) || subject.subjectName || 'subject';
         const content = (
           <>

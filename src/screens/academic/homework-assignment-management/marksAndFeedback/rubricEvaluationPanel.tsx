@@ -3,7 +3,18 @@
 import React from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Chip, Paper, Stack, Divider, TextField, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import {
+  Box,
+  Card,
+  Chip,
+  Paper,
+  Stack,
+  Divider,
+  TextField,
+  Typography,
+  IconButton,
+} from '@mui/material';
 import { RubricStatus } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import { useRubricEvaluation } from './useRubricEvaluation';
@@ -19,6 +30,7 @@ const RubricEvaluationPanel = React.forwardRef<
   RubricEvaluationPanelProps
 >((props, ref) => {
   const evaluation = useRubricEvaluation(props);
+  const compact = props.compactLayout ?? false;
 
   React.useImperativeHandle(ref, () => ({ save: evaluation.save }));
 
@@ -26,12 +38,27 @@ const RubricEvaluationPanel = React.forwardRef<
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
         <Box>
-          <Typography component="h2" variant="subtitle1" fontWeight={700}>
-            Rubric Assessment
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Select a performance level and add focused feedback for every criterion.
-          </Typography>
+          <Stack direction="row" alignItems="center" spacing={0.5}>
+            <Typography component="h2" variant="subtitle1" fontWeight={700}>
+              Rubric Assessment
+            </Typography>
+            {compact ? (
+              <CustomTooltip
+                title="Select a performance level and add focused feedback for every criterion."
+                placement="right"
+                arrow
+              >
+                <IconButton size="small" aria-label="About rubric assessment">
+                  <Iconify icon="lucide:info" width={18} color="info.main" />
+                </IconButton>
+              </CustomTooltip>
+            ) : null}
+          </Stack>
+          {!compact ? (
+            <Typography variant="body2" color="text.secondary">
+              Select a performance level and add focused feedback for every criterion.
+            </Typography>
+          ) : null}
         </Box>
         {evaluation.activeRubric ? (
           <Chip
@@ -80,6 +107,7 @@ const RubricEvaluationPanel = React.forwardRef<
               onMarksChange={evaluation.setCriterionMarks}
               onCommentsChange={evaluation.setCriterionComments}
               readOnly={props.readOnly}
+              compact={compact}
             />
           )}
 
@@ -100,11 +128,19 @@ const RubricEvaluationPanel = React.forwardRef<
                   <Typography id="rubric-score-summary" component="h3" variant="subtitle2">
                     Score summary
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Updates automatically as criteria are scored.
-                  </Typography>
+                  {!compact ? (
+                    <Typography variant="caption" color="text.secondary">
+                      Updates automatically as criteria are scored.
+                    </Typography>
+                  ) : null}
                 </Box>
-                <Typography variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontVariantNumeric: 'tabular-nums',
+                    color: compact ? 'primary.main' : 'text.primary',
+                  }}
+                >
                   {evaluation.totalMarks}
                   <Typography component="span" variant="body2" color="text.secondary">
                     {' '}
@@ -125,7 +161,9 @@ const RubricEvaluationPanel = React.forwardRef<
                 multiline
                 rows={3}
                 disabled={props.readOnly}
-                helperText="This note applies to the complete rubric assessment."
+                helperText={
+                  compact ? undefined : 'This note applies to the complete rubric assessment.'
+                }
               />
             </Stack>
           </Paper>

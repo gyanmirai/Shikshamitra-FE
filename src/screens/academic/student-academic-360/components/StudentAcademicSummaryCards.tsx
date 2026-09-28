@@ -12,6 +12,8 @@ type StudentAcademicSummaryCardsProps = {
   items: StudentAcademicListItem[];
   activeFilter: AcademicSmartFilter;
   onFilterChange: (filter: AcademicSmartFilter) => void;
+  insightsOpen: boolean;
+  onCloseInsights: () => void;
 };
 
 const average = (values: number[]) => {
@@ -23,6 +25,8 @@ export function StudentAcademicSummaryCards({
   items,
   activeFilter,
   onFilterChange,
+  insightsOpen,
+  onCloseInsights,
 }: StudentAcademicSummaryCardsProps) {
   const attendanceAverage = average(
     items
@@ -93,6 +97,9 @@ export function StudentAcademicSummaryCards({
 
   return (
     <AcademicInsights
+      open={insightsOpen}
+      onClose={onCloseInsights}
+      hideTrigger
       title="Student academic insights"
       description="Cohort health, engagement and performance for the selected class and division."
       metrics={metrics}

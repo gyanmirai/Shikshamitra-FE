@@ -17,6 +17,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
 import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -46,6 +47,7 @@ import {
   Checkbox,
   Skeleton,
   TextField,
+  IconButton,
   Typography,
   FormControl,
   Autocomplete,
@@ -287,6 +289,13 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
     },
   });
 
+  const divisionSelectionError =
+    formik.touched.divisions &&
+    formik.values.divisions.length === 0 &&
+    typeof formik.errors.divisions === 'string'
+      ? formik.errors.divisions
+      : undefined;
+
   const firstPublishDate = formik.values.divisions?.[0]?.publishDate;
   const shouldSchedule = !!firstPublishDate && dayjs(firstPublishDate).isAfter(dayjs());
 
@@ -466,9 +475,17 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                 title="Basic Details"
                 paperProps={{ sx: cardStyle }}
                 headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Define the core details of the assignment
-                  </Typography>
+                  <Box sx={{ flex: 1, ml: 0.5 }}>
+                    <CustomTooltip
+                      title="Define the core details of the assignment"
+                      placement="right"
+                      arrow
+                    >
+                      <IconButton size="small" aria-label="About basic details" sx={{ p: 0.25 }}>
+                        <Iconify icon="lucide:info" width={18} color="info.main" />
+                      </IconButton>
+                    </CustomTooltip>
+                  </Box>
                 }
               >
                 {/* Class */}
@@ -500,7 +517,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
 
                 {/* Division */}
                 <Grid size={{ xs: 12, md: 6 }}>
-                  <ShakingTextField error={!!(formik.touched.divisions && formik.errors.divisions)}>
+                  <ShakingTextField error={!!divisionSelectionError}>
                     <CustomSelect
                       label="Division *"
                       multiple
@@ -539,20 +556,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                       labelKey="name"
                       valueKey="id"
                       formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                      error={!!(formik.touched.divisions && formik.errors.divisions)}
-                      helperText={
-                        formik.touched.divisions
-                          ? typeof formik.errors.divisions === 'string'
-                            ? formik.errors.divisions
-                            : (formik.errors.divisions as any[])?.some(
-                              (divErr: any) =>
-                                typeof divErr === 'object' &&
-                                (divErr?.publishDate || divErr?.dueDate)
-                            )
-                              ? 'Select schedule dates also'
-                              : undefined
-                          : undefined
-                      }
+                      error={!!divisionSelectionError}
+                      helperText={divisionSelectionError}
                     />
                   </ShakingTextField>
                 </Grid>
@@ -813,9 +818,21 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                 title="Description & Attachments"
                 paperProps={{ sx: cardStyle }}
                 headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Provide instructions and upload necessary files
-                  </Typography>
+                  <Box sx={{ flex: 1, ml: 0.5 }}>
+                    <CustomTooltip
+                      title="Provide instructions and upload necessary files"
+                      placement="right"
+                      arrow
+                    >
+                      <IconButton
+                        size="small"
+                        aria-label="About description and attachments"
+                        sx={{ p: 0.25 }}
+                      >
+                        <Iconify icon="lucide:info" width={18} color="info.main" />
+                      </IconButton>
+                    </CustomTooltip>
+                  </Box>
                 }
               >
                 <Grid size={{ xs: 12 }}>
@@ -902,9 +919,21 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                   title="Schedule & Deadlines"
                   paperProps={{ sx: cardStyle }}
                   headerContent={
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Set publish and due dates for each division
-                    </Typography>
+                    <Box sx={{ flex: 1, ml: 0.5 }}>
+                      <CustomTooltip
+                        title="Set publish and due dates for each division"
+                        placement="right"
+                        arrow
+                      >
+                        <IconButton
+                          size="small"
+                          aria-label="About schedule and deadlines"
+                          sx={{ p: 0.25 }}
+                        >
+                          <Iconify icon="lucide:info" width={18} color="info.main" />
+                        </IconButton>
+                      </CustomTooltip>
+                    </Box>
                   }
                 >
                   <Grid container spacing={1} sx={{ width: '100%' }}>
@@ -1052,9 +1081,21 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                 title="Submission Settings"
                 paperProps={{ sx: cardStyle }}
                 headerContent={
-                  <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    How should students submit this assignment?
-                  </Typography>
+                  <Box sx={{ flex: 1, ml: 0.5 }}>
+                    <CustomTooltip
+                      title="How should students submit this assignment?"
+                      placement="right"
+                      arrow
+                    >
+                      <IconButton
+                        size="small"
+                        aria-label="About submission settings"
+                        sx={{ p: 0.25 }}
+                      >
+                        <Iconify icon="lucide:info" width={18} color="info.main" />
+                      </IconButton>
+                    </CustomTooltip>
+                  </Box>
                 }
               >
                 <Grid size={{ xs: 12 }}>
@@ -1184,6 +1225,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
         />
         <ConfirmDialog
           open={typeDefaultsDialog.value}
+          disableBackdropClick
           onClose={() => {
             typeDefaultsDialog.onFalse();
             setPendingAssignmentTypeId(null);
@@ -1252,6 +1294,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
         />
         <ConfirmDialog
           open={overrideDialog.value}
+          disableBackdropClick
           onClose={() => {
             overrideDialog.onFalse();
             setPendingSubmitValues(null);

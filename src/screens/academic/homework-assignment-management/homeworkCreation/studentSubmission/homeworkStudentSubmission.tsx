@@ -6,8 +6,8 @@ import React, { useState } from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Typography } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
-import { Box, Stack, Typography } from '@mui/material';
 import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
@@ -26,11 +26,8 @@ import {
 import {
   FeedbackStatusChip,
   EvaluationStatusChip,
-  filterEvaluationRows,
-  getEvaluationSummary,
   dedupeEvaluationRows,
   EvaluationActionButton,
-  EvaluationSummaryCards,
   isRowEvaluationDisabled,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
@@ -47,7 +44,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 }) => {
   // Local state for selected students
   const [selectedStudents, setSelectedStudents] = useState<any[]>([]);
-  const [activeFilter, setActiveFilter] = useState('all');
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
 
@@ -103,21 +99,16 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     [normalizedData, selectedHomework?.defaultEvaluationMethod]
   );
 
-  const filteredData = React.useMemo(
-    () => filterEvaluationRows(normalizedData, activeFilter),
-    [activeFilter, normalizedData]
-  );
-
   // Unsubmitted rows share the API's empty submission UUID. Give the table a
   // stable student-specific ID while retaining the real submission ID for actions.
   const tableData = React.useMemo(
     () =>
-      filteredData.map((row: any) => ({
+      normalizedData.map((row: any) => ({
         ...row,
         submissionId: row.id,
         id: row.studentId || row.id,
       })),
-    [filteredData]
+    [normalizedData]
   );
 
   const getSubmissionStudent = React.useCallback(
@@ -128,14 +119,9 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     []
   );
 
-  const summary = React.useMemo(
-    () => getEvaluationSummary(normalizedData, homeworkSubmissions?.summary),
-    [homeworkSubmissions?.summary, normalizedData]
-  );
-
   const selectedIndex = React.useMemo(
-    () => filteredData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
-    [filteredData, selectedStudent?.studentId]
+    () => normalizedData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
+    [normalizedData, selectedStudent?.studentId]
   );
   const selectedSubmissionType =
     selectedStudent?.submissionType || selectedHomework?.submissionType;
@@ -185,12 +171,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   const moveStudent = React.useCallback(
     (direction: 1 | -1) => {
-      const nextRow = filteredData[selectedIndex + direction];
+      const nextRow = normalizedData[selectedIndex + direction];
       if (nextRow) {
         setSelectedStudent(nextRow as TStudentGrade);
       }
     },
-    [filteredData, selectedIndex]
+    [normalizedData, selectedIndex]
   );
 
   /**
@@ -256,14 +242,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         height: '100%',
       }}
     >
-      <Stack spacing={1}>
-        <EvaluationSummaryCards
-          summary={summary}
-          showMarks={hasRubricAssessment}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
-      </Stack>
       <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
@@ -475,7 +453,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           isEdit={isEditMode}
           homeworkId={selectedHomework?.id}
           hasPrevious={selectedIndex > 0}
-          hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
+          hasNext={selectedIndex >= 0 && selectedIndex < normalizedData.length - 1}
           onPrevious={() => moveStudent(-1)}
           onNext={() => moveStudent(1)}
           selectedClass={selectedClass}

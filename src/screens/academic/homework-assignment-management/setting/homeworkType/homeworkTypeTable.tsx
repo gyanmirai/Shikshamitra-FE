@@ -146,7 +146,7 @@ const HomeworkTypeTable: React.FC<IHomeworkTypeTableProps> = ({
                         id: 'delete',
                         label: 'Delete homework type',
                         icon: 'solar:trash-bin-trash-bold',
-                        color: 'error.main',
+                        color: (homeworkType.usageCount || 0) > 0 ? undefined : 'error.main',
                         disabled: (homeworkType.usageCount || 0) > 0,
                         tooltip:
                           (homeworkType.usageCount || 0) > 0
