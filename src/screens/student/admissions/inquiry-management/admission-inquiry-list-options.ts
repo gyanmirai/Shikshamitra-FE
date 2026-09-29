@@ -32,6 +32,9 @@ export const INQUIRY_SOURCE_OPTIONS: Array<{
   { value: 7, label: 'Existing parent' },
   { value: 8, label: 'Manual' },
   { value: 9, label: 'Other' },
+  { value: 10, label: 'QR code' },
+  { value: 11, label: 'School fair' },
+  { value: 12, label: 'Social media' },
 ];
 
 export const inquiryStatusLabel = (value: unknown) =>

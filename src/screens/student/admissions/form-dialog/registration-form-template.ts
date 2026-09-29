@@ -537,6 +537,7 @@ export function getRegistrationFormTemplate(): CreateUpdateAdmissionForm {
     code: 'REGISTRATION_FORM',
     description:
       'Student registration form covering admission, student, family, communication, documents, medical, school, and bank details.',
+    purpose: 1,
     layoutType: 1,
     fieldsPerRow: 4,
     defaultLanguage: 'en',

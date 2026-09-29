@@ -11,15 +11,16 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
+  useLazyGetAdmissionWorkflowQuery,
   useCloneAdmissionWorkflowMutation,
   useCreateAdmissionWorkflowMutation,
   useDeleteAdmissionWorkflowMutation,
   useArchiveAdmissionWorkflowMutation,
-  useLazyGetAdmissionWorkflowQuery,
   useCreateAdmissionWorkflowVersionMutation,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { getAdmissionWorkflowAccess } from '../workflow-access';
+import { getAdmissionWorkflowTemplate } from '../workflow-template';
 
 import type { WorkflowDetails } from '../admission-workflow-dialog';
 
@@ -33,6 +34,7 @@ export function useWorkflowListActions() {
   const createDialog = useBoolean();
   const cloneDialog = useBoolean();
   const [cloneSource, setCloneSource] = useState<AdmissionWorkflow | null>(null);
+  const [openingCreatedWorkflow, setOpeningCreatedWorkflow] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState<PendingWorkflowConfirmation>(null);
   const [confirmationNotice, setConfirmationNotice] = useState<string | null>(null);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -72,16 +74,27 @@ export function useWorkflowListActions() {
       throw error;
     }
   };
-  const create = async ({ starterJourney, ...values }: WorkflowDetails) => {
+  const create = async ({
+    starterJourney,
+    registrationFormDefinitionId,
+    defaultInquiryFormDefinitionId,
+    ...values
+  }: WorkflowDetails) => {
     try {
-      const result = await createWorkflow({ ...values, stages: [], transitions: [] }).unwrap();
-      shikshaMitraToast.success({ message: 'Workflow draft created' });
-      const setupQuery =
+      const journey =
         starterJourney && starterJourney !== 'empty'
-          ? `?setup=${encodeURIComponent(starterJourney)}`
-          : '';
-      router.push(`${studentPaths.enrollment.settings.workflows}/${result.id}${setupQuery}`);
+          ? getAdmissionWorkflowTemplate(starterJourney, registrationFormDefinitionId ?? undefined)
+          : { stages: [], transitions: [] };
+      const result = await createWorkflow({
+        ...values,
+        ...journey,
+        defaultInquiryFormDefinitionId: defaultInquiryFormDefinitionId || null,
+      }).unwrap();
+      shikshaMitraToast.success({ message: 'Workflow draft created' });
+      setOpeningCreatedWorkflow(true);
+      router.push(`${studentPaths.enrollment.settings.workflows}/${result.id}`);
     } catch (error) {
+      setOpeningCreatedWorkflow(false);
       shikshaMitraToast.error({
         message: parseApiProblemDetail(error).detail || 'Unable to create the workflow draft.',
       });
@@ -172,6 +185,7 @@ export function useWorkflowListActions() {
     requestConfirmation,
     closeConfirmation,
     createState,
+    openingCreatedWorkflow,
     cloneState,
     archiveState,
     deleteState,

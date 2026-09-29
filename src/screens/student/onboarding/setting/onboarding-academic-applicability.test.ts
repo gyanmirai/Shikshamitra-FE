@@ -41,12 +41,42 @@ const academicBoards = [
 ] as Board[];
 
 describe('Student Onboarding academic applicability', () => {
-  it('builds fully qualified Board, Medium, School Level, Class, and Division labels', () => {
+
+  it('offers only configured CBSE and GSEB boards', () => {
+    const boards = [...academicBoards, { id: 'board-icse', name: 'ICSE', educationMediums: [] }] as Board[];
+    expect(buildOnboardingAcademicStructureOptions(boards).boards.map(board => board.name)).toEqual(['GSEB']);
+  });
+
+  it('only offers secondary levels and preserves multiple selected standards', () => {
+    const boards = structuredClone(academicBoards);
+    boards[0].educationMediums[0].educationMediumStages.push({
+      id: 'stage-higher', name: 'Higher Secondary', standards: [
+        { id: 'standard-11', name: 'Class 11', divisions: [] },
+        { id: 'standard-12', name: 'Class 12', divisions: [] },
+      ],
+    } as any);
+    boards[0].educationMediums[0].educationMediumStages.push({
+      id: 'stage-primary', name: 'Primary', standards: [{ id: 'standard-1', name: 'Class 1', divisions: [] }],
+    } as any);
+    const options = buildOnboardingAcademicStructureOptions(boards);
+    expect(options.stages.map(s => s.label)).toEqual(['Secondary', 'Higher Secondary']);
+    expect(options.standards.map(s => s.id)).not.toContain('standard-1');
+    const value = normalizeSingleAcademicApplicability({
+      ...createAllAcademicApplicability(), boardMode: 'selected', boardIds: ['board-gseb'],
+      mediumMode: 'selected', academicMediumIds: ['medium-gujarati'],
+      stageMode: 'selected', academicMediumStageIds: ['stage-secondary', 'stage-higher'],
+      classMode: 'selected', standardIds: ['standard-9', 'standard-11', 'standard-12'],
+    }, boards);
+    expect(value.academicMediumStageIds).toHaveLength(2);
+    expect(value.standardIds).toHaveLength(3);
+    expect(getSingleAcademicPathValidationError(value)).toBeNull();
+  });
+  it('uses concise dependent labels and qualified divisions', () => {
     const options = buildOnboardingAcademicStructureOptions(academicBoards);
 
-    expect(options.mediums[0].label).toBe('GSEB / Gujarati');
-    expect(options.stages[0].label).toBe('GSEB / Gujarati / Secondary');
-    expect(options.standards[0].label).toBe('GSEB / Gujarati / Secondary / Standard 9');
+    expect(options.mediums[0].label).toBe('Gujarati');
+    expect(options.stages[0].label).toBe('Secondary');
+    expect(options.standards[0].label).toBe('Standard 9');
     expect(options.divisions[0].label).toBe('GSEB / Gujarati / Secondary / Standard 9 / A');
   });
 
@@ -118,7 +148,7 @@ describe('Student Onboarding academic applicability', () => {
       academicMediumStageIds: [],
       classMode: 'selected',
       standardIds: [],
-      divisionMode: 'selected',
+      divisionMode: 'all',
       divisionIds: [],
     });
     expect(getSingleAcademicPathValidationError(normalized)).toBe('Select one Board.');

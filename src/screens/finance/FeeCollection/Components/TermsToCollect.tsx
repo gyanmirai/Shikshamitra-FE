@@ -8,6 +8,7 @@ import { Box, Card, Divider, Checkbox, Collapse, Typography, IconButton } from '
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
+  feeInstallmentStatusLabel,
 } from 'src/enums/fee-collection-type';
 
 import ChargesList from './ChargesList';
@@ -108,7 +109,7 @@ const TermsToCollect: React.FC<ITermsToCollectDetailedProps> = ({
                         ] as LabelColor
                       }
                     >
-                      {FeeCollectionStatusType[head.status as unknown as FeeCollectionStatusType]}
+                      {feeInstallmentStatusLabel(head.status as unknown as FeeCollectionStatusType)}
                     </Label>
                   </Box>
                 </Box>

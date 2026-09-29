@@ -11,7 +11,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeStructuresQuery } from 'src/redux/finance/financeFeeStructure';
@@ -98,12 +98,25 @@ const FeeStructureTable: React.FC<IFeeStructureTableProps> = ({
         sticky: true,
         minWidth: 50,
         render: (value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showEditIcon={canEdit}
-            showViewIcon
-            handleViewClick={() => onView?.(row as IFeeStructure)}
-            handleEditClick={() => onEdit?.(row as IFeeStructure)}
+          <AdaptiveThreeDotsActions
+            actions={[
+              {
+                id: 'view',
+                label: 'View',
+                icon: 'carbon:view-filled',
+                onClick: () => onView?.(row as IFeeStructure),
+              },
+              ...(canEdit
+                ? [
+                    {
+                      id: 'edit',
+                      label: 'Edit',
+                      icon: 'solar:pen-bold',
+                      onClick: () => onEdit?.(row as IFeeStructure),
+                    },
+                  ]
+                : []),
+            ]}
           />
         ),
       },

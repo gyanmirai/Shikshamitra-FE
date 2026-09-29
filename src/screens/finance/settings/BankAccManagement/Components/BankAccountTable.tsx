@@ -7,7 +7,7 @@ import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermiss
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
@@ -224,23 +224,37 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
         isFilter: false,
         render(value, row) {
           return (
-            <ThreeDotsActions
-              showThreeDots={false}
-              showViewIcon
-              viewLabel="Version history"
-              viewIcon="solar:history-bold"
-              handleViewClick={() => setHistoryItem(row as IBankAccount)}
+            <AdaptiveThreeDotsActions
+              actions={[
+                {
+                  id: 'view',
+                  label: 'Version history',
+                  icon: 'solar:history-bold',
+                  onClick: () => setHistoryItem(row as IBankAccount),
+                },
+                {
+                  id: 'edit',
+                  label: 'Edit',
+                  icon: 'solar:pen-bold',
+                  onClick: () => {
+                    onEdit(row as IBankAccount);
+                  },
+                  disabled: !access.canEdit,
+                },
+                {
+                  id: 'delete',
+                  label: 'Delete',
+                  icon: 'solar:trash-bin-trash-bold',
+                  onClick: () => {
+                    onDelete(row as IBankAccount);
+                  },
+                  disabled: !access.canDelete || !(row as IBankAccount).canDelete,
+                  tooltip:
+                    'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                  color: 'error.main',
+                },
+              ]}
               placement="right-top"
-              showDeleteIcon
-              disableEditIcon={!access.canEdit}
-              disableDeleteIcon={!access.canDelete || !(row as IBankAccount).canDelete}
-              showEditIcon
-              handleDeleteClick={() => {
-                onDelete(row as IBankAccount);
-              }}
-              handleEditClick={() => {
-                onEdit(row as IBankAccount);
-              }}
             />
           );
         },

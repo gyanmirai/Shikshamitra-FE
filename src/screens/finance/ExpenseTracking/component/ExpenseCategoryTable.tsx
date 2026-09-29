@@ -5,7 +5,7 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 
@@ -100,16 +100,22 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         sticky: true,
         minWidth: 100,
         render: (value, row) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showEditIcon
-            showDeleteIcon
-            // showViewIcon
-            // handleViewClick={() => {
-            //   onView?.(row as IExpenseRecord);
-            // }}
-            handleEditClick={() => onEdit?.(row as IExpenseFormValues)}
-            handleDeleteClick={() => onDelete?.(row as IExpenseFormValues)}
+          <AdaptiveThreeDotsActions
+            actions={[
+              {
+                id: 'edit',
+                label: 'Edit',
+                icon: 'solar:pen-bold',
+                onClick: () => onEdit?.(row as IExpenseFormValues),
+              },
+              {
+                id: 'delete',
+                label: 'Delete',
+                icon: 'solar:trash-bin-trash-bold',
+                onClick: () => onDelete?.(row as IExpenseFormValues),
+                color: 'error.main',
+              },
+            ]}
           />
         ),
       },

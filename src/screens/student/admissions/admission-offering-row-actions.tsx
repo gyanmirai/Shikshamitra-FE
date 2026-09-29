@@ -1,9 +1,8 @@
+import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import { MenuItem, MenuList } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 export type AdmissionOfferingActionProps = {
   canEdit: boolean;
@@ -22,78 +21,14 @@ type Props = AdmissionOfferingActionProps & { row: AdmissionOfferingListItem };
 
 export function AdmissionOfferingRowActions({ row, ...actions }: Props) {
   const activationAllowed = row.canActivate || row.configurationStatus === 1;
-  const hasOverflowActions =
-    actions.canClone || (row.isActive ? actions.canDeactivate : actions.canActivate);
+  const rowActions: AdaptiveThreeDotsAction[] = [];
+  if (actions.canEdit) rowActions.push({ id: 'edit', label: `Edit ${row.code}`, icon: 'solar:pen-bold', onClick: () => actions.onEdit(row) });
+  if (actions.canDelete) rowActions.push({ id: 'delete', label: `Delete ${row.code}`, icon: 'solar:trash-bin-trash-bold', color: row.canDelete ? 'error.main' : 'text.disabled', disabled: !row.canDelete, onClick: () => actions.onDelete(row) });
+  if (actions.canClone) rowActions.push({ id: 'clone', label: `Clone ${row.code}`, icon: GlobalIcons.copy, onClick: () => actions.onClone(row) });
+  if (row.isActive && actions.canDeactivate) rowActions.push({ id: 'deactivate', label: `Deactivate ${row.code}`, icon: GlobalIcons.lockIcon, onClick: () => actions.onToggleActive(row) });
+  if (!row.isActive && actions.canActivate && activationAllowed) rowActions.push({ id: 'activate', label: `Activate ${row.code}`, icon: GlobalIcons.publish, onClick: () => actions.onToggleActive(row) });
+  if (!row.isActive && actions.canActivate && !activationAllowed && actions.canEdit) rowActions.push({ id: 'complete-setup', label: `Complete setup for ${row.code} to activate`, icon: 'mdi:clipboard-edit-outline', onClick: () => actions.onEdit(row) });
+  if (!row.isActive && actions.canActivate && !activationAllowed && !actions.canEdit) rowActions.push({ id: 'activation-blocked', label: 'Activation blocked by incomplete setup', icon: 'mdi:alert-circle-outline', disabled: true, onClick: () => {} });
 
-  return (
-    <ThreeDotsActions
-      showViewIcon
-      viewIcon="mdi:eye-outline"
-      viewLabel={`View ${row.code}`}
-      handleViewClick={() => actions.onView(row)}
-      showEditIcon={actions.canEdit}
-      editLabel={`Edit ${row.code}`}
-      handleEditClick={() => actions.onEdit(row)}
-      showDeleteIcon={actions.canDelete}
-      deleteLabel={`Delete ${row.code}`}
-      disableDeleteIcon={!row.canDelete}
-      handleDeleteClick={() => actions.onDelete(row)}
-      showThreeDots={hasOverflowActions}
-      moreLabel={`Actions for ${row.code}`}
-      actions={({ popover }) => (
-        <MenuList dense>
-          {actions.canClone && (
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                actions.onClone(row);
-              }}
-            >
-              <Iconify icon={GlobalIcons.copy} sx={{ mr: 1 }} />
-              Clone
-            </MenuItem>
-          )}
-          {row.isActive && actions.canDeactivate && (
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                actions.onToggleActive(row);
-              }}
-            >
-              <Iconify icon={GlobalIcons.lockIcon} sx={{ mr: 1 }} />
-              Deactivate
-            </MenuItem>
-          )}
-          {!row.isActive && actions.canActivate && activationAllowed && (
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                actions.onToggleActive(row);
-              }}
-            >
-              <Iconify icon={GlobalIcons.publish} sx={{ mr: 1 }} />
-              Activate
-            </MenuItem>
-          )}
-          {!row.isActive && actions.canActivate && !activationAllowed && actions.canEdit && (
-            <MenuItem
-              onClick={() => {
-                popover.onClose();
-                actions.onEdit(row);
-              }}
-            >
-              <Iconify icon="mdi:clipboard-edit-outline" sx={{ mr: 1 }} />
-              Complete setup to activate
-            </MenuItem>
-          )}
-          {!row.isActive && actions.canActivate && !activationAllowed && !actions.canEdit && (
-            <MenuItem disabled>
-              <Iconify icon="mdi:alert-circle-outline" sx={{ mr: 1 }} />
-              Activation blocked by incomplete setup
-            </MenuItem>
-          )}
-        </MenuList>
-      )}
-    />
-  );
+  return <AdaptiveThreeDotsActions placement="right-top" moreLabel={`More actions for ${row.code}`} mobileDirectActionLimit={0} sx={{ gap: 0, '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } } }} actions={rowActions} />;
 }

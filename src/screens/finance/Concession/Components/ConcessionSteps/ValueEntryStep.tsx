@@ -133,7 +133,7 @@ function RequestEnteredInstallments({ formik, requestContext, policy, preview }:
   const { values, setFieldValue } = formik;
   const selectedHeads = new Set<string>(values.selectedFeeHeads[values.concessionTypeId] || []);
   const lines = (requestContext?.eligibleDueFees || []).filter((line) =>
-    selectedHeads.has(line.feeHeadId) && line.outstandingAmount > 0);
+    selectedHeads.has(line.feeHeadId) && line.eligibleConcessionAmount > 0);
   const groups = lines.reduce<Record<string, typeof lines>>((acc, line) => {
     const key = `${line.year}-${line.installmentLabel}`;
     (acc[key] ||= []).push(line);
@@ -152,7 +152,9 @@ function RequestEnteredInstallments({ formik, requestContext, policy, preview }:
     <Stack spacing={2}>
       <Typography variant="body2" color="text.secondary">
         Enter a {percentage ? 'percentage' : 'rupee amount'} for each eligible installment line.
-        Paid amounts are excluded; only the remaining outstanding balance can be discounted.
+        {policy.applyOn === 'AllFees'
+          ? 'Paid amounts can be discounted; any overpayment will create a refund request after approval.'
+          : 'Only the remaining outstanding balance can be discounted.'}
       </Typography>
       {Object.entries(groups).map(([installment, rows]) => (
         <Card key={installment} variant="outlined">
@@ -162,25 +164,25 @@ function RequestEnteredInstallments({ formik, requestContext, policy, preview }:
               {(rows || []).map((line) => {
                 const value = Number(entries[line.dueFeeId] || 0);
                 const estimate = percentage
-                  ? Math.round(line.outstandingAmount * value) / 100
-                  : Math.min(value, line.outstandingAmount);
+                  ? Math.round(line.eligibleConcessionAmount * value) / 100
+                  : Math.min(value, line.eligibleConcessionAmount);
                 return (
                   <Grid container spacing={1} alignItems="center" key={line.dueFeeId}>
                     <Grid size={{ xs: 12, sm: 5 }}>
                       <Typography variant="body2" fontWeight={600}>{line.feeHeadName}</Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Paid {money(line.paidAmount)} · outstanding {money(line.outstandingAmount)}
+                        Paid {money(line.paidAmount)} · eligible {money(line.eligibleConcessionAmount)}
                       </Typography>
                     </Grid>
                     <Grid size={{ xs: 7, sm: 3 }}>
                       <TextField fullWidth size="small" type="number"
                         label={percentage ? 'Concession %' : 'Concession ₹'}
                         value={entries[line.dueFeeId] ?? ''}
-                        inputProps={{ min: 0, max: percentage ? maximum : line.outstandingAmount, step: 0.01 }}
+                        inputProps={{ min: 0, max: percentage ? maximum : line.eligibleConcessionAmount, step: 0.01 }}
                         onChange={(event) => {
                           const next = event.target.value === '' ? 0 : Number(event.target.value);
                           if (!Number.isFinite(next) || next < 0 || next >
-                            (percentage ? maximum : line.outstandingAmount)) return;
+                            (percentage ? maximum : line.eligibleConcessionAmount)) return;
                           if (!percentage && enteredTotal - value + next > maximum) return;
                           setFieldValue('dueFeeEntries', { ...entries, [line.dueFeeId]: next });
                         }} />

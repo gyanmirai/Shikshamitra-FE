@@ -1,163 +1,149 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { Division, Standards, Organization } from 'src/types/school';
+import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { Box, Card, Stack } from '@mui/material';
+import { useRef, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import { Iconify } from 'src/components/iconify';
-import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Card, Stack, Button } from '@mui/material';
 
-import { matchesAcademicFilter, normalizeAcademicStudent } from './listUtils';
-
+import { useStudentAcademic360List } from './hooks/useStudentAcademic360List';
 import { StudentAcademic360Table } from './components/StudentAcademic360Table';
 import { StudentAcademic360Drawer } from './components/StudentAcademic360Drawer';
 import { StudentAcademicSummaryCards } from './components/StudentAcademicSummaryCards';
 
-import type { AcademicSmartFilter } from './listUtils';
-import type { Academic360ApiList, Academic360StudentRow } from './types';
-
-const readStudents = (payload: unknown): Academic360StudentRow[] => {
-  if (Array.isArray(payload)) return payload as Academic360StudentRow[];
-  if (!payload || typeof payload !== 'object') return [];
-
-  const list = payload as Academic360ApiList<Academic360StudentRow>;
-  return list.items || [];
-};
+import type { Academic360StudentRow } from './types';
 
 const ALL_OPTION_ID = 'ALL';
 
+type DrawerPageState = {
+  students: Academic360StudentRow[];
+  page: number;
+  rowsPerPage: number;
+  totalCount: number;
+};
+
+type PendingDrawerNavigation = {
+  page: number;
+  previousPage: number;
+  direction: 'previous' | 'next';
+};
+
 const StudentAcademic360Screen = () => {
-  const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
-  const [allClass, setAllClass] = useState<Standards[]>([]);
+  const { currentYear, currentBoard, currentMedium: medium } = useSelector(
+    (state: RootState) => state.globalState
+  );
   const [selectedClass, setSelectedClass] = useState(ALL_OPTION_ID);
   const [selectedDivision, setSelectedDivision] = useState(ALL_OPTION_ID);
-  const [students, setStudents] = useState<Academic360StudentRow[]>([]);
-  const [isStudentsLoading, setIsStudentsLoading] = useState(false);
-  const [isStudentsError, setIsStudentsError] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<AcademicSmartFilter>('all');
-  const [insightsOpen, setInsightsOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Academic360StudentRow | null>(null);
+  const [drawerPage, setDrawerPage] = useState<DrawerPageState | null>(null);
+  const [pendingDrawerNavigation, setPendingDrawerNavigation] =
+    useState<PendingDrawerNavigation | null>(null);
   const lastFocusedStudentId = useRef('');
 
-  const [getStudentsByDivision] = useLazyGetStudentsByDivisionQuery();
+  const allClass: Standards[] =
+    medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
+  const effectiveClass =
+    selectedClass !== ALL_OPTION_ID && allClass.some((standard) => standard.id === selectedClass)
+      ? selectedClass
+      : ALL_OPTION_ID;
+  const currentClassObj = allClass.find((standard) => standard.id === effectiveClass);
+  const availableDivisions = currentClassObj?.divisions || [];
+  const effectiveDivision =
+    effectiveClass !== ALL_OPTION_ID &&
+    availableDivisions.some((division) => division.id === selectedDivision)
+      ? selectedDivision
+      : ALL_OPTION_ID;
 
-  useEffect(() => {
-    const classes =
-      medium?.educationMediumStages?.flatMap((stage: Organization) => stage.standards || []) || [];
-
-    setAllClass(classes);
-    setSelectedClass(ALL_OPTION_ID);
-    setSelectedDivision(ALL_OPTION_ID);
-  }, [medium]);
+  const list = useStudentAcademic360List({
+    academicYearId: currentYear?.id || '',
+    boardId: currentBoard?.id || '',
+    educationMediumId: medium?.id || '',
+    standardId: effectiveClass === ALL_OPTION_ID ? undefined : effectiveClass,
+    divisionId: effectiveDivision === ALL_OPTION_ID ? undefined : effectiveDivision,
+  });
+  const students = list.data?.items || [];
+  const {
+    data: listData,
+    isError: isListError,
+    page: listPage,
+    changePagination,
+  } = list;
 
   useEffect(() => {
     if (selectedStudent || !lastFocusedStudentId.current) return;
-
     const selector = `[data-student-id="${lastFocusedStudentId.current}"]`;
     window.requestAnimationFrame(() => document.querySelector<HTMLElement>(selector)?.focus());
   }, [selectedStudent]);
 
-  const classOptions = [
-    { id: ALL_OPTION_ID, name: 'All Classes' },
-    ...allClass,
-  ];
+  useEffect(() => {
+    if (!pendingDrawerNavigation || !drawerPage) return;
+    if (isListError) {
+      changePagination(pendingDrawerNavigation.previousPage + 1, drawerPage.rowsPerPage);
+      setPendingDrawerNavigation(null);
+      return;
+    }
+    if (listPage !== pendingDrawerNavigation.page || !listData) return;
 
-  const currentClassObj = allClass.find((standard) => standard.id === selectedClass);
-  const availableDivisions = selectedClass === ALL_OPTION_ID ? [] : currentClassObj?.divisions || [];
-
-  const divisionOptions = [
-    { id: ALL_OPTION_ID, name: 'All Divisions' },
-    ...availableDivisions,
-  ];
+    const nextStudents = listData.items;
+    const nextStudent =
+      pendingDrawerNavigation.direction === 'next'
+        ? nextStudents[0]
+        : nextStudents[nextStudents.length - 1];
+    if (nextStudent) {
+      lastFocusedStudentId.current = nextStudent.studentId || nextStudent.id || '';
+      setDrawerPage({
+        students: nextStudents,
+        page: listPage,
+        rowsPerPage: drawerPage.rowsPerPage,
+        totalCount: listData.totalCount,
+      });
+      setSelectedStudent(nextStudent);
+    }
+    setPendingDrawerNavigation(null);
+  }, [
+    drawerPage,
+    changePagination,
+    listData,
+    isListError,
+    listPage,
+    pendingDrawerNavigation,
+  ]);
 
   const handleClassChange = (newClass: string) => {
     setSelectedClass(newClass);
     setSelectedDivision(ALL_OPTION_ID);
   };
 
-  const fetchStudentRecords = useCallback(async () => {
-    let targetDivisionIds: string[] = [];
-
-    if (selectedClass === ALL_OPTION_ID || !selectedClass) {
-      targetDivisionIds = allClass
-        .flatMap((standard) => standard.divisions || [])
-        .map((d) => d.id)
-        .filter(Boolean);
-    } else if (selectedDivision === ALL_OPTION_ID || !selectedDivision) {
-      targetDivisionIds = (currentClassObj?.divisions || [])
-        .map((d) => d.id)
-        .filter(Boolean);
-    } else {
-      targetDivisionIds = [selectedDivision];
-    }
-
-    if (targetDivisionIds.length === 0) {
-      setStudents([]);
-      setIsStudentsLoading(false);
-      setIsStudentsError(false);
-      return;
-    }
-
-    setIsStudentsLoading(true);
-    setIsStudentsError(false);
-
-    try {
-      const responses = await Promise.all(
-        targetDivisionIds.map((divId) =>
-          getStudentsByDivision({
-            divisionId: divId,
-            skipCount: 0,
-            maxResultCount: 200,
-            searchTerm: '',
-          }).unwrap()
-        )
-      );
-
-      const combined: Academic360StudentRow[] = [];
-      const seenIds = new Set<string>();
-
-      responses.forEach((res) => {
-        const items = readStudents(res);
-        items.forEach((item) => {
-          const uniqueId = item.studentId || item.id || `${item.grNo}-${item.rollNo}-${item.studentName}`;
-          if (uniqueId && !seenIds.has(uniqueId)) {
-            seenIds.add(uniqueId);
-            combined.push(item);
-          }
-        });
-      });
-
-      setStudents(combined);
-    } catch (err) {
-      console.error('Failed to load 360 students:', err);
-      setIsStudentsError(true);
-    } finally {
-      setIsStudentsLoading(false);
-    }
-  }, [allClass, currentClassObj, selectedClass, selectedDivision, getStudentsByDivision]);
-
-  useEffect(() => {
-    fetchStudentRecords();
-  }, [fetchStudentRecords]);
-
-  const academicItems = students.map(normalizeAcademicStudent);
-  const filteredItems = academicItems.filter((item) => matchesAcademicFilter(item, activeFilter));
-  const filteredStudents = filteredItems.map((item) => item.student);
-
-  const activeFilterLabel = activeFilter.replace(/([A-Z])/g, ' $1').toLowerCase();
-
   const openStudent = (student: Academic360StudentRow) => {
     lastFocusedStudentId.current = student.studentId || student.id || '';
+    setDrawerPage({
+      students,
+      page: list.page,
+      rowsPerPage: list.rowsPerPage,
+      totalCount: list.data?.totalCount || students.length,
+    });
     setSelectedStudent(student);
   };
 
   const changeDrawerStudent = (student: Academic360StudentRow | null) => {
     if (student) lastFocusedStudentId.current = student.studentId || student.id || '';
     setSelectedStudent(student);
+  };
+
+  const navigateDrawerPage = (direction: 'previous' | 'next') => {
+    if (!drawerPage || pendingDrawerNavigation) return;
+    const page = drawerPage.page + (direction === 'next' ? 1 : -1);
+    if (page < 0 || page * drawerPage.rowsPerPage >= drawerPage.totalCount) return;
+    setPendingDrawerNavigation({ page, previousPage: drawerPage.page, direction });
+    list.changePagination(page + 1, drawerPage.rowsPerPage);
+  };
+
+  const closeDrawer = () => {
+    setPendingDrawerNavigation(null);
+    setSelectedStudent(null);
   };
 
   return (
@@ -174,65 +160,62 @@ const StudentAcademic360Screen = () => {
       <Card sx={{ p: 1, mb: 1 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
           <CustomSelect
-            options={classOptions}
+            options={[{ id: ALL_OPTION_ID, name: 'All Classes' }, ...allClass]}
             label="Class"
-            value={selectedClass}
+            value={effectiveClass}
             onChange={(value) => handleClassChange(value as string)}
             labelKey="name"
             valueKey="id"
             formControlProps={{ sx: { minWidth: { md: 240 } } }}
           />
           <CustomSelect
-            options={divisionOptions}
+            options={[{ id: ALL_OPTION_ID, name: 'All Divisions' }, ...availableDivisions]}
             label="Division"
-            value={selectedDivision}
+            value={effectiveDivision}
             onChange={(value) => setSelectedDivision(value as string)}
             labelKey="name"
             valueKey="id"
-            disabled={selectedClass !== ALL_OPTION_ID && availableDivisions.length === 0}
+            disabled={effectiveClass === ALL_OPTION_ID || availableDivisions.length === 0}
             formControlProps={{ sx: { minWidth: { md: 220 } } }}
           />
-          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
-            <Button
-              size="small"
-              variant="outlined"
-              color="inherit"
-              startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
-              onClick={() => setInsightsOpen(true)}
-            >
-              View full insights
-            </Button>
-          </Box>
         </Stack>
       </Card>
 
       <StudentAcademicSummaryCards
-        items={academicItems}
-        activeFilter={activeFilter}
-        onFilterChange={setActiveFilter}
-        insightsOpen={insightsOpen}
-        onCloseInsights={() => setInsightsOpen(false)}
+        summary={list.data?.summary}
+        activeFilter={list.activeFilter}
+        onFilterChange={list.changeFilter}
       />
 
       <StudentAcademic360Table
-        key={`${selectedClass}-${selectedDivision}-${activeFilter}`}
-        students={filteredStudents}
-        isLoading={isStudentsLoading}
-        isError={isStudentsError}
-        hasDivision={true}
-        activeFilterLabel={activeFilterLabel}
+        students={students}
+        totalCount={list.data?.totalCount || 0}
+        page={list.page}
+        rowsPerPage={list.rowsPerPage}
+        searchTerm={list.searchTerm}
+        isLoading={list.isFetching}
+        isError={list.isError}
+        isReady={list.isReady}
+        activeFilterLabel={list.activeFilter.replace(/([A-Z])/g, ' $1').toLowerCase()}
         onOpenStudent={openStudent}
-        onRetry={fetchStudentRecords}
+        onRetry={list.refetch}
+        onPagination={list.changePagination}
+        onSearch={list.changeSearch}
+        onSort={list.changeSort}
       />
 
       <StudentAcademic360Drawer
         open={!!selectedStudent}
         student={selectedStudent}
-        students={filteredStudents}
-        standardId={selectedClass}
-        divisionId={selectedDivision}
+        students={drawerPage?.students || students}
+        pageStartIndex={(drawerPage?.page || 0) * (drawerPage?.rowsPerPage || 10)}
+        totalStudents={drawerPage?.totalCount || 0}
+        isPageLoading={!!pendingDrawerNavigation}
+        onAdjacentPage={navigateDrawerPage}
+        standardId={effectiveClass}
+        divisionId={effectiveDivision}
         onStudentChange={changeDrawerStudent}
-        onClose={() => setSelectedStudent(null)}
+        onClose={closeDrawer}
       />
     </Box>
   );

@@ -1,30 +1,19 @@
-import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
-
 import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
 import { Label } from 'src/components/label';
 import MenuItem from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
 import ButtonBase from '@mui/material/ButtonBase';
 import Typography from '@mui/material/Typography';
 
-import { FormTemplateLibraryDialog } from './form-template-library-dialog';
-
-import type { SystemAdmissionFormTemplateId } from '../admission-form-template-catalog';
-
-export type AdmissionFormStarter = 'blank' | SystemAdmissionFormTemplateId;
+export type AdmissionFormStarter = 'blank' | 'admission-application' | 'admission-inquiry';
 
 type Props = {
   selectedStarter: AdmissionFormStarter | null;
-  selectedTemplateLabel: string;
   onSelect: (starter: AdmissionFormStarter) => void;
-  onSelectSchoolForm: (form: AdmissionForm) => Promise<boolean>;
-  applyingSchoolForm?: boolean;
 };
 
 const STARTERS: Array<{
@@ -39,7 +28,7 @@ const STARTERS: Array<{
     id: 'blank',
     title: 'Blank form',
     description: 'Start small and add only the fields your school needs.',
-    detail: 'Includes one editable section and one text field.',
+    detail: 'Includes an empty section ready for student fields.',
     action: 'Start blank',
     icon: 'mdi:file-outline',
   },
@@ -52,41 +41,22 @@ const STARTERS: Array<{
     icon: 'mdi:file-document-edit-outline',
   },
   {
-    id: 'student-registration',
-    title: 'Student registration',
-    description: 'Start with a comprehensive school registration form.',
-    detail: 'Includes student, family, address, document, medical, school, and bank details.',
-    action: 'Use template',
-    icon: 'mdi:clipboard-text-outline',
+    id: 'admission-inquiry',
+    title: 'Inquiry form',
+    description: 'Start with the details needed for an admission inquiry.',
+    detail: 'Includes applicant and guardian contact details.',
+    action: 'Use inquiry form',
+    icon: 'mdi:account-question-outline',
   },
 ];
 
-export function FormTemplateChooser({
-  selectedStarter,
-  selectedTemplateLabel,
-  onSelect,
-  onSelectSchoolForm,
-  applyingSchoolForm = false,
-}: Props) {
-  const [libraryOpen, setLibraryOpen] = useState(false);
+export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
   const [starterMenuAnchor, setStarterMenuAnchor] = useState<HTMLElement | null>(null);
-  const selected = STARTERS.find((starter) => starter.id === selectedStarter) ?? {
-    ...STARTERS[0],
-    title: selectedTemplateLabel,
-    description: 'Selected template',
-    icon: 'mdi:file-document-outline',
-  };
-  const selectSystemTemplate = (id: SystemAdmissionFormTemplateId) => {
-    onSelect(id);
-    setLibraryOpen(false);
-  };
-  const selectSchoolForm = async (form: AdmissionForm) => {
-    if (await onSelectSchoolForm(form)) setLibraryOpen(false);
-  };
+  const selected = STARTERS.find((starter) => starter.id === selectedStarter) ?? STARTERS[0];
   return (
     <Stack spacing={1.5} sx={{ height: 1 }}>
       <Box>
-        <Typography variant="h6">Templates</Typography>
+        <Typography variant="h6">Start with a form</Typography>
         <Typography variant="body2" color="text.secondary">
           Choose a starting point for this form.
         </Typography>
@@ -240,25 +210,6 @@ export function FormTemplateChooser({
           </MenuItem>
         ))}
       </Menu>
-      <Divider />
-      <Button
-        fullWidth
-        size="small"
-        variant="outlined"
-        startIcon={<Iconify icon="mdi:view-grid-plus-outline" />}
-        endIcon={<Iconify icon="mdi:chevron-right" />}
-        onClick={() => setLibraryOpen(true)}
-        sx={{ minHeight: 44, justifyContent: 'space-between' }}
-      >
-        Browse all templates
-      </Button>
-      <FormTemplateLibraryDialog
-        open={libraryOpen}
-        applying={applyingSchoolForm}
-        onClose={() => setLibraryOpen(false)}
-        onUseSystemTemplate={selectSystemTemplate}
-        onUseSchoolForm={selectSchoolForm}
-      />
     </Stack>
   );
 }

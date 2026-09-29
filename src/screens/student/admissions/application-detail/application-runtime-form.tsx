@@ -1,28 +1,16 @@
+import type { ReactNode } from 'react';
 import type {
   AdmissionApplication,
   AdmissionApplicationForm,
 } from 'src/redux/student/admissions/admission-applications-api';
 
-import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
+import CustomStepper from 'src/components/custom-stepper';
+import { Box, Grid, Alert, Stack, Button, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useLazyGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
-import {
-  Card,
-  Grid,
-  Step,
-  Alert,
-  Stack,
-  Button,
-  Stepper,
-  StepLabel,
-  Typography,
-  CardContent,
-  MobileStepper,
-  useMediaQuery,
-} from '@mui/material';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
@@ -59,6 +47,7 @@ type Props = {
   canReopen: boolean;
   reopening: boolean;
   onReopen: () => void;
+  documents?: ReactNode;
 };
 
 export function ApplicationRuntimeForm({
@@ -80,9 +69,8 @@ export function ApplicationRuntimeForm({
   canReopen,
   reopening,
   onReopen,
+  documents,
 }: Props) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const fieldsPerRow = form.definition.fieldsPerRow ?? 1;
   const [activeStep, setActiveStep] = useState(0);
   const [language, setLanguage] = useState(form.definition.defaultLanguage ?? 'en');
@@ -179,7 +167,8 @@ export function ApplicationRuntimeForm({
 
   const renderSectionFields = (
     section: (typeof localizedSections)[number],
-    entryIndex?: number
+    entryIndex?: number,
+    fieldsToRender = section.fields
   ) => {
     const rowValues =
       entryIndex === undefined
@@ -193,7 +182,7 @@ export function ApplicationRuntimeForm({
               ])
             ),
           };
-    return section.fields
+    return fieldsToRender
       .filter((field) => isAdmissionRuleVisible(field.visibilityRuleJson, rowValues))
       .map((field) => {
         const value =
@@ -201,7 +190,10 @@ export function ApplicationRuntimeForm({
             ? (values[field.code] ?? '')
             : (readRepeatableValues(values[field.code])[entryIndex] ?? '');
         return (
-          <Grid key={field.code} size={{ xs: 12, sm: 12 / fieldsPerRow }}>
+          <Grid
+            key={field.code}
+            size={{ xs: 12, md: field.fieldType === 1 ? 12 : 12 / Math.min(fieldsPerRow, 2) }}
+          >
             <AdmissionRuntimeField
               field={{
                 ...field,
@@ -238,12 +230,46 @@ export function ApplicationRuntimeForm({
   };
 
   const renderSection = (section: (typeof localizedSections)[number]) => {
-    if (!section.isRepeatable)
+    if (!section.isRepeatable) {
+      const splitStudentDetails =
+        form.definition.sections.some(
+          (configured) =>
+            configured.id === section.id && configured.name.toLowerCase() === 'student details'
+        ) && section.fields.length >= 10;
+      const groups = splitStudentDetails
+        ? groupStudentDetailFields(
+            section.fields.filter((field) =>
+              isAdmissionRuleVisible(field.visibilityRuleJson, values)
+            )
+          )
+        : [];
       return (
-        <SectionCard key={section.id} title={section.name} gridProps={{ spacing: 1 }}>
-          {renderSectionFields(section)}
-        </SectionCard>
+        <Box key={section.id} sx={{ width: 1 }}>
+          {groups.length ? (
+            <Stack spacing={2}>
+              {groups.map((group) => (
+                <SectionCard
+                  key={group.name}
+                  title={group.name}
+                  gridProps={{ spacing: 2 }}
+                  paperProps={{ sx: { boxShadow: 'none', '&:hover': { boxShadow: 'none' } } }}
+                >
+                  {renderSectionFields(section, undefined, group.fields)}
+                </SectionCard>
+              ))}
+            </Stack>
+          ) : (
+            <SectionCard
+              title={section.name}
+              gridProps={{ spacing: 2 }}
+              paperProps={{ sx: { boxShadow: 'none', '&:hover': { boxShadow: 'none' } } }}
+            >
+              {renderSectionFields(section)}
+            </SectionCard>
+          )}
+        </Box>
       );
+    }
 
     const count = getRepeatableEntryCount(
       section.fields.map((field) => values[field.code]),
@@ -258,7 +284,7 @@ export function ApplicationRuntimeForm({
           <SectionCard
             key={`${section.id}-${entryIndex}`}
             title={`${entryLabel} ${entryIndex + 1}`}
-            gridProps={{ spacing: 1 }}
+            gridProps={{ spacing: 2 }}
           >
             {renderSectionFields(section, entryIndex)}
             {count > Math.max(section.minEntries ?? 0, 1) && application.status === 0 && (
@@ -305,8 +331,8 @@ export function ApplicationRuntimeForm({
           {error}
         </Alert>
       ))}
-      <Card>
-        <CardContent>
+      <Box sx={{ width: 1 }}>
+        <Box sx={{ maxWidth: 1280, mx: 'auto' }}>
           <Typography variant="h6" sx={{ mb: 0.5 }}>
             {form.definition.name} · v{form.formVersion}
           </Typography>
@@ -328,27 +354,14 @@ export function ApplicationRuntimeForm({
               />
             </Stack>
           )}
-          {isStepper &&
-            visibleSteps.length > 0 &&
-            (isMobile ? (
-              <MobileStepper
-                variant="dots"
-                steps={visibleSteps.length}
-                position="static"
+          {isStepper && visibleSteps.length > 1 && (
+            <Box sx={{ mb: 3, overflowX: 'auto', py: 1 }}>
+              <CustomStepper
                 activeStep={activeStep}
-                sx={{ p: 0, mb: 2 }}
-                nextButton={<span />}
-                backButton={<span />}
+                steps={visibleSteps.map((step) => step.name)}
               />
-            ) : (
-              <Stepper activeStep={activeStep} alternativeLabel sx={{ mb: 3 }}>
-                {visibleSteps.map((step) => (
-                  <Step key={step.id}>
-                    <StepLabel>{step.name}</StepLabel>
-                  </Step>
-                ))}
-              </Stepper>
-            ))}
+            </Box>
+          )}
           <Stack spacing={2}>
             {isStepper ? (
               currentSections.length ? (
@@ -360,6 +373,9 @@ export function ApplicationRuntimeForm({
               visibleSections.map(renderSection)
             )}
           </Stack>
+          {documents && (!isStepper || activeStep === visibleSteps.length - 1) && (
+            <Stack sx={{ mt: 2 }}>{documents}</Stack>
+          )}
           {isStepper && visibleSteps.length > 1 && (
             <Stack spacing={1} sx={{ mt: 2 }}>
               <Typography variant="caption" color="text.secondary" textAlign="center">
@@ -400,7 +416,14 @@ export function ApplicationRuntimeForm({
               </Stack>
             </Stack>
           )}
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ mt: 3 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            justifyContent="flex-end"
+            sx={{ mt: 3, pt: 2, borderTop: 1, borderColor: 'divider' }}
+          >
             {showSaveDraft && (
               <Button
                 size="small"
@@ -433,8 +456,8 @@ export function ApplicationRuntimeForm({
               </Button>
             )}
           </Stack>
-        </CardContent>
-      </Card>
+        </Box>
+      </Box>
     </>
   );
 }
@@ -445,3 +468,36 @@ type RuntimeOptionRequest = {
   parentId?: string;
   academicYearId: string;
 };
+
+function groupStudentDetailFields<
+  T extends { code: string; label: string; bindingKey?: string | null },
+>(fields: T[]) {
+  const names = [
+    'Student information',
+    'Parent and guardian',
+    'Address and contact',
+    'Previous school',
+    'Other details',
+  ] as const;
+  const groups = names.map((name) => ({ name, fields: [] as T[] }));
+
+  fields.forEach((field) => {
+    const identity = `${field.bindingKey ?? ''} ${field.code} ${field.label}`.toLowerCase();
+    const groupIndex = /mother tongue/.test(identity)
+      ? 0
+      : /guardian|father|mother|sibling|family|relationship to student/.test(identity)
+        ? 1
+        : /address|city|state|country|postal|emergency|contact/.test(identity)
+          ? 2
+          : /previous|school/.test(identity)
+            ? 3
+            : /applicant|student|gender|birth|applying|admission category|mother tongue/.test(
+                  identity
+                )
+              ? 0
+              : 4;
+    groups[groupIndex].fields.push(field);
+  });
+
+  return groups.filter((group) => group.fields.length > 0);
+}

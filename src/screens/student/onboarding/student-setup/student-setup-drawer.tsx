@@ -5,7 +5,10 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useRef, useState, useEffect, type ReactNode } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { usePreviewStudentOnboardingActivationQuery } from 'src/redux/student/onboarding/student-onboarding-api';
+import {
+  useGetStudentOnboardingCaseQuery,
+  usePreviewStudentOnboardingActivationQuery,
+} from 'src/redux/student/onboarding/student-onboarding-api';
 import {
   Box,
   Card,
@@ -21,24 +24,22 @@ import {
   LinearProgress,
 } from '@mui/material';
 
+import StudentOnboardingFees from './student-onboarding-fees';
 import StudentOnboardingDocuments from './student-onboarding-documents';
-import { defaultReadinessAccessRules } from '../onboarding-settings-model';
+import StudentOnboardingPortalAccounts from './student-onboarding-portal-accounts';
 import StudentOnboardingCaseOperations from './student-onboarding-case-operations';
 import StudentOnboardingStepWaiverDialog from './student-onboarding-step-waiver-dialog';
 import {
-  accountStatusMeta,
   onboardingCheckMeta,
   onboardingStageMeta,
   getReadinessSummary,
 } from './student-onboarding-model';
 
-import type { ReadinessAccessRules } from '../onboarding-settings-model';
 import type { StudentOnboardingItem, OnboardingChecklistItem } from './student-onboarding-model';
 
 type StudentSetupDrawerProps = {
   open: boolean;
   student: StudentOnboardingItem | null;
-  readinessRules?: ReadinessAccessRules;
   onClose: () => void;
   onAssignDivision?: () => void;
   onAssignGrNumber?: () => void;
@@ -61,7 +62,8 @@ const primaryActions = {
   'awaiting-approval': { label: 'Refresh Readiness', icon: 'mdi:refresh' },
   'ready-to-activate': { label: 'Activate Student', icon: 'mdi:account-arrow-right-outline' },
   'action-required': { label: 'Refresh Readiness', icon: 'mdi:refresh' },
-  completed: { label: 'View Student Record', icon: 'mdi:open-in-new' },
+  provisioning: { label: 'Check completion', icon: 'mdi:clipboard-check-outline' },
+  completed: { label: 'Completed', icon: 'mdi:check-decagram-outline' },
   cancelled: { label: 'Cancelled', icon: 'mdi:cancel' },
 } as const;
 
@@ -138,7 +140,6 @@ function KeyValueGrid({ items }: { items: Array<[string, ReactNode]> }) {
 export default function StudentSetupDrawer({
   open,
   student,
-  readinessRules = defaultReadinessAccessRules,
   onClose,
   onAssignDivision,
   onAssignGrNumber,
@@ -156,6 +157,9 @@ export default function StudentSetupDrawer({
   const [showAlert, setShowAlert] = useState(true);
   const [confirmActivation, setConfirmActivation] = useState(false);
   const [waiverCheck, setWaiverCheck] = useState<OnboardingChecklistItem | null>(null);
+  const capturedFieldsQuery = useGetStudentOnboardingCaseQuery(activeStudent?.id ?? '', {
+    skip: !open || activeStudent?.source !== 'onboarding-case',
+  });
   const activationPreviewQuery = usePreviewStudentOnboardingActivationQuery(
     activeStudent?.id ?? '',
     {
@@ -183,8 +187,10 @@ export default function StudentSetupDrawer({
   const readiness = getReadinessSummary(activeStudent);
   const canOpenActivation =
     activeStudent.source === 'onboarding-case' &&
+    !activeStudent.studentEnrollmentId &&
     (activeStudent.backendStatus === 2 || readiness.blockingCount === 0);
-  const primaryAction = canOpenActivation
+  const primaryAction = activeStudent.studentEnrollmentId && activeStudent.backendStatus !== 4
+    ? primaryActions.provisioning : canOpenActivation
     ? { label: 'Activate Student', icon: 'mdi:account-arrow-right-outline' }
     : primaryActions[activeStudent.status];
   const activationPreview = activationPreviewQuery.data;
@@ -195,10 +201,6 @@ export default function StudentSetupDrawer({
     activeStudent.backendStatus !== 5 &&
     canManage &&
     Boolean(onPrimaryAction);
-  const accountRows = [
-    ['Student account', activeStudent.studentAccountStatus] as const,
-    ['Guardian account', activeStudent.guardianAccountStatus] as const,
-  ];
 
   return (
     <Drawer
@@ -324,6 +326,22 @@ export default function StudentSetupDrawer({
             />
           </SectionCard>
 
+          {activeStudent.source === 'onboarding-case' &&
+            Boolean(capturedFieldsQuery.data?.capturedStudentFields?.length) && (
+              <SectionCard
+                icon="mdi:card-account-details-outline"
+                title="Captured admission details"
+                description="Answers carried into this Student record. Review them before using them as verified student details."
+              >
+                <KeyValueGrid
+                  items={capturedFieldsQuery.data!.capturedStudentFields!.map((field) => [
+                    field.label,
+                    field.value,
+                  ])}
+                />
+              </SectionCard>
+            )}
+
           {activeStudent.source === 'onboarding-case' ? (
             <SectionCard
               icon="mdi:account-cog-outline"
@@ -338,6 +356,20 @@ export default function StudentSetupDrawer({
               />
             </SectionCard>
           ) : null}
+
+          {activeStudent.source === 'onboarding-case' && (
+            <SectionCard icon="mdi:cash-check" title="Fee assignment & first payment"
+              description="Finance confirms the saved assignment and first installment. No manual paid checkbox.">
+              <StudentOnboardingFees caseId={activeStudent.id} />
+            </SectionCard>
+          )}
+
+          {activeStudent.source === 'onboarding-case' && (
+            <SectionCard icon="mdi:account-key-outline" title="Portal accounts"
+              description="Create and link the required student and guardian identities securely.">
+              <StudentOnboardingPortalAccounts key={activeStudent.id} student={activeStudent} canManage={canManage} />
+            </SectionCard>
+          )}
 
           <SectionCard
             icon="mdi:account-school-outline"
@@ -358,7 +390,7 @@ export default function StudentSetupDrawer({
                 size="small"
                 startIcon={<Iconify icon="mdi:google-classroom" width={18} />}
                 onClick={onAssignDivision}
-                disabled={!canManage}
+                disabled={!canManage || Boolean(activeStudent.studentEnrollmentId)}
               >
                 {activeStudent.divisionName && activeStudent.divisionName !== '—'
                   ? 'Change Division'
@@ -370,12 +402,11 @@ export default function StudentSetupDrawer({
           <SectionCard
             icon="mdi:identifier"
             title="Identifiers"
-            description="Review the configured GR preview and roll number assignment."
+            description="Review the saved GR and Roll number assignments."
           >
             <KeyValueGrid
               items={[
                 ['GR number', displayValue(activeStudent.grNo)],
-                ['GR preview', displayValue(activeStudent.grPreview)],
                 ['Roll number', displayValue(activeStudent.rollNo)],
                 ['Assignment', activeStudent.grNo ? 'Assigned' : 'Pending activation'],
               ]}
@@ -386,7 +417,7 @@ export default function StudentSetupDrawer({
                 size="small"
                 startIcon={<Iconify icon="mdi:identifier" width={18} />}
                 onClick={onAssignGrNumber}
-                disabled={!canManage}
+                disabled={!canManage || Boolean(activeStudent.studentEnrollmentId)}
               >
                 {activeStudent.grNo ? 'Change GR No.' : 'Assign GR No.'}
               </Button>
@@ -395,7 +426,7 @@ export default function StudentSetupDrawer({
                 size="small"
                 startIcon={<Iconify icon="mdi:format-list-numbered" width={18} />}
                 onClick={onAssignRollNumber}
-                disabled={!canManage}
+                disabled={!canManage || Boolean(activeStudent.studentEnrollmentId)}
               >
                 {activeStudent.rollNo !== undefined && activeStudent.rollNo !== null
                   ? 'Change Roll No.'
@@ -449,55 +480,15 @@ export default function StudentSetupDrawer({
           </SectionCard>
 
           <SectionCard
-            icon="mdi:account-key-outline"
-            title="Accounts & access"
-            description="Review student and guardian account provisioning without duplicating family identities."
-          >
-            <Stack spacing={1}>
-              {accountRows.map(([label, value]) => {
-                const meta = accountStatusMeta[value];
-                return (
-                  <Stack
-                    key={label}
-                    direction="row"
-                    justifyContent="space-between"
-                    alignItems="center"
-                    gap={1}
-                    sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
-                  >
-                    <Typography variant="body2">{label}</Typography>
-                    <Label color={meta.color}>{meta.label}</Label>
-                  </Stack>
-                );
-              })}
-              <KeyValueGrid
-                items={[
-                  [
-                    'Verified guardian contact',
-                    readinessRules.verifiedGuardianContact ? 'Required' : 'Optional',
-                  ],
-                  [
-                    'Credential release',
-                    readinessRules.deliveryTiming === 'after-activation'
-                      ? 'After activation'
-                      : 'Manual release',
-                  ],
-                ]}
-              />
-            </Stack>
-          </SectionCard>
-
-          <SectionCard
             icon="mdi:clipboard-check-outline"
             title="Readiness & activation"
-            description={
-              readinessRules.blockActivation
-                ? 'Blocking checks must pass before the activation action becomes available.'
-                : 'Blocking checks remain visible, but authorized activation is allowed by policy.'
-            }
+            description="Blocking checks must pass before the activation action becomes available."
           >
             <Stack spacing={1}>
-              {activeStudent.readinessItems.map((check) => {
+              {activeStudent.readinessItems.filter((check) =>
+                !(activeStudent.source === 'onboarding-case' &&
+                  check.key === 'finance_accounts_services' && check.status === 'not-required')
+              ).map((check) => {
                 const meta = onboardingCheckMeta[check.status];
                 return (
                   <Stack
@@ -612,7 +603,7 @@ export default function StudentSetupDrawer({
           <Button variant="outlined" size="small" onClick={onClose}>
             Close
           </Button>
-          <Button
+          {activeStudent.backendStatus !== 4 && activeStudent.backendStatus !== 5 && <Button
             variant="contained"
             size="small"
             startIcon={<Iconify icon={primaryAction.icon} />}
@@ -626,7 +617,7 @@ export default function StudentSetupDrawer({
             }}
           >
             {primaryActionLoading ? 'Saving...' : primaryAction.label}
-          </Button>
+          </Button>}
         </Stack>
       </Stack>
 

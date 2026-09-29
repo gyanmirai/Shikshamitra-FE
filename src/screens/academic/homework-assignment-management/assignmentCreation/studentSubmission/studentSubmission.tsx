@@ -1,28 +1,25 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { RubricEvaluationPanelRef } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 
 import React, { useState } from 'react';
-import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
+import CustomDialog from 'src/components/customDialog';
+import { Box, Stack, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
-import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Button, Typography, DialogActions } from '@mui/material';
 import { AssignmentSubmissionStatusOptions } from 'src/enums/assignment-submission-status';
 import SendInstantNotificationDialog from 'src/components/send-instant-notification-dialog';
 import { SUBMISSION_TYPE_LABELS } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/learningTaskUi';
-import RubricEvaluationPanel, {
-  type RubricEvaluationPanelRef,
-} from 'src/screens/academic/homework-assignment-management/marksAndFeedback/rubricEvaluationPanel';
 import {
   AssignmentStatus,
   evaluationUsesMarks,
@@ -37,12 +34,17 @@ import {
 import {
   FeedbackStatusChip,
   EvaluationStatusChip,
+  filterEvaluationRows,
+  getEvaluationSummary,
   dedupeEvaluationRows,
   EvaluationActionButton,
+  EvaluationSummaryCards,
   isRowEvaluationDisabled,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
 import AssignGrade from './assignMarksForm';
+import AssignmentRubricEvaluationContent from './assignmentRubricEvaluationContent';
+import { submitAssignmentRubricEvaluation } from './submitAssignmentRubricEvaluation';
 
 import type { IStudentSubmissionsProps } from '../type';
 import type { TStudentGrade } from '../../homeworkCreation/type';
@@ -86,6 +88,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   );
 
   const [selectedStudents] = useState<any[]>([]);
+  const [activeFilter, setActiveFilter] = useState('all');
   const {
     data: assignmentSubmissions,
     isLoading: isSubmissionsLoading,
@@ -109,6 +112,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const [selectedStudent, setSelectedStudent] = useState<TStudentGrade | null>(null);
   const [isEditMode, setIsEditMode] = useState(true);
   const rubricEvaluationRef = React.useRef<RubricEvaluationPanelRef | null>(null);
+  const rubricSaveInFlightRef = React.useRef(false);
   const [isRubricSaving, setIsRubricSaving] = useState(false);
 
   // Dialog control for sending instant notifications
@@ -126,21 +130,31 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     [assignmentSubmissions?.data]
   );
 
+  const filteredData = React.useMemo(
+    () => filterEvaluationRows(normalizedData, activeFilter),
+    [activeFilter, normalizedData]
+  );
+
   // Unsubmitted rows share the API's empty submission UUID. Give the table a
   // stable student-specific ID while retaining the real submission ID for actions.
   const tableData = React.useMemo(
     () =>
-      normalizedData.map((row: any) => ({
+      filteredData.map((row: any) => ({
         ...row,
         submissionId: row.id,
         id: row.studentId || row.id,
       })),
-    [normalizedData]
+    [filteredData]
+  );
+
+  const summary = React.useMemo(
+    () => getEvaluationSummary(normalizedData, assignmentSubmissions?.summary),
+    [assignmentSubmissions?.summary, normalizedData]
   );
 
   const selectedIndex = React.useMemo(
-    () => normalizedData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
-    [normalizedData, selectedStudent?.studentId]
+    () => filteredData.findIndex((row: any) => row.studentId === selectedStudent?.studentId),
+    [filteredData, selectedStudent?.studentId]
   );
   const evaluationMethod =
     selectedAssignment?.evaluationMethod ??
@@ -151,6 +165,16 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     evaluationMethod
   );
   const usesRubric = evaluationMethod === AssignmentEvaluationMethod.Rubric;
+  const rubricRows = usesRubric
+    ? filteredData.filter(
+        (row: any) => !isRowEvaluationDisabled(row, selectedAssignment?.submissionType)
+      )
+    : [];
+  const rubricIndex = rubricRows.findIndex(
+    (row: any) => row.studentId === selectedStudent?.studentId
+  );
+  const previousRubricRow = rubricIndex > 0 ? rubricRows[rubricIndex - 1] : null;
+  const nextRubricRow = rubricIndex >= 0 ? rubricRows[rubricIndex + 1] : null;
   const requiresMarks = evaluationUsesMarks(
     selectedAssignment?.evaluationRequired,
     evaluationMethod
@@ -201,7 +225,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   const moveStudent = React.useCallback(
     (direction: 1 | -1) => {
-      const nextRow = normalizedData[selectedIndex + direction];
+      const nextRow = filteredData[selectedIndex + direction];
       if (nextRow) {
         setSelectedStudent({
           ...(nextRow as TStudentGrade),
@@ -209,8 +233,12 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         });
       }
     },
-    [normalizedData, resolveTotalMarks, selectedIndex]
+    [filteredData, resolveTotalMarks, selectedIndex]
   );
+
+  const openRubricStudent = (row: TStudentGrade) => {
+    setSelectedStudent({ ...row, totalMarks: resolveTotalMarks(row) });
+  };
 
   /**
    * Handles closing the view submission dialog and resetting the selected student
@@ -268,16 +296,28 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     [resolveTotalMarks, viewSubmissionDialog]
   );
 
-  const handleRubricSubmit = async () => {
-    if (!rubricEvaluationRef.current) return;
+  const handleRubricSubmit = async (advance: boolean) => {
+    const rubricPanel = rubricEvaluationRef.current;
+    if (rubricSaveInFlightRef.current || !rubricPanel) return;
+    const nextStudent = advance ? nextRubricRow : null;
+    if (advance && !nextStudent) return;
 
+    rubricSaveInFlightRef.current = true;
     setIsRubricSaving(true);
     try {
-      if (await rubricEvaluationRef.current.save()) {
+      if (
+        await submitAssignmentRubricEvaluation({
+          save: () => rubricPanel.save(),
+          advance,
+          nextStudent,
+          onAdvance: openRubricStudent,
+          onClose: () => handleClose(null, true),
+        })
+      ) {
         shikshaMitraToast.success({ message: 'Rubric evaluation submitted successfully.' });
-        handleClose(null, true);
       }
     } finally {
+      rubricSaveInFlightRef.current = false;
       setIsRubricSaving(false);
     }
   };
@@ -304,6 +344,13 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   return (
     <>
+      <Stack spacing={1}>
+        <EvaluationSummaryCards
+          summary={summary}
+          activeFilter={activeFilter}
+          onFilterChange={setActiveFilter}
+        />
+      </Stack>
       <Box>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
@@ -360,29 +407,29 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             },
             ...(requiresMarks
               ? [
-                {
-                  id: 'totalMarks',
-                  label: 'Total Marks',
-                  align: 'left' as const,
-                  minWidth: 130,
-                  filterType: 'number' as const,
-                },
-                {
-                  id: 'marks',
-                  label: 'Obtained Marks',
-                  filterType: 'number' as const,
-                  minWidth: 150,
-                  align: 'left' as const,
-                  render: (value: unknown) =>
-                    value !== null && value !== undefined ? (
-                      <Typography variant="caption" fontSize="13px">
-                        {String(value)}
-                      </Typography>
-                    ) : (
-                      <Typography variant="caption">-</Typography>
-                    ),
-                },
-              ]
+                  {
+                    id: 'totalMarks',
+                    label: 'Total Marks',
+                    align: 'left' as const,
+                    minWidth: 130,
+                    filterType: 'number' as const,
+                  },
+                  {
+                    id: 'marks',
+                    label: 'Obtained Marks',
+                    filterType: 'number' as const,
+                    minWidth: 150,
+                    align: 'left' as const,
+                    render: (value: unknown) =>
+                      value !== null && value !== undefined ? (
+                        <Typography variant="caption" fontSize="13px">
+                          {String(value)}
+                        </Typography>
+                      ) : (
+                        <Typography variant="caption">-</Typography>
+                      ),
+                  },
+                ]
               : []),
             {
               id: 'feedback',
@@ -430,7 +477,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
                       p: 0.5,
                     }}
                   >
-                    <CustomTooltip title={text || (canAdd ? 'Click to add feedback' : 'View feedback')} arrow>
+                    <CustomTooltip
+                      title={text || (canAdd ? 'Click to add feedback' : 'View feedback')}
+                      arrow
+                    >
                       <Typography
                         variant="caption"
                         fontSize="13px"
@@ -510,6 +560,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       )}
       <CustomDialog
         open={viewSubmissionDialog.value}
+        disableClose={usesRubric && isRubricSaving}
         handleClose={() => {
           viewSubmissionDialog.onFalse();
           setTimeout(() => {
@@ -558,19 +609,23 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           selectedClass &&
           selectedSubject &&
           selectedAssignment?.id && (
-            <DialogScrollContent sx={{ p: { xs: 1, sm: 1.5 }, flex: 1, minHeight: 0 }}>
-              <RubricEvaluationPanel
-                ref={rubricEvaluationRef}
-                mode="assignment"
-                standardId={selectedClass}
-                subjectId={selectedSubject}
-                taskId={selectedAssignment.id}
-                taskTitle={selectedAssignment.title}
-                studentRow={selectedStudent}
-                ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
-                readOnly={!isEditMode}
-              />
-            </DialogScrollContent>
+            <AssignmentRubricEvaluationContent
+              student={selectedStudent}
+              standardId={selectedClass}
+              subjectId={selectedSubject}
+              assignmentId={selectedAssignment.id}
+              assignmentTitle={selectedAssignment.title}
+              ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
+              rubricRef={rubricEvaluationRef}
+              isEditMode={isEditMode}
+              isSaving={isRubricSaving}
+              hasPrevious={Boolean(previousRubricRow)}
+              hasNext={Boolean(nextRubricRow)}
+              onPrevious={() => previousRubricRow && openRubricStudent(previousRubricRow)}
+              onNext={() => nextRubricRow && openRubricStudent(nextRubricRow)}
+              onClose={() => handleClose(null, false)}
+              onSubmit={handleRubricSubmit}
+            />
           )}
         {!usesRubric && (
           <AssignGrade
@@ -580,34 +635,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             assignmentId={selectedAssignment?.id}
             requiresMarks={requiresMarks}
             hasPrevious={selectedIndex > 0}
-            hasNext={selectedIndex >= 0 && selectedIndex < normalizedData.length - 1}
+            hasNext={selectedIndex >= 0 && selectedIndex < filteredData.length - 1}
             onPrevious={() => moveStudent(-1)}
             onNext={() => moveStudent(1)}
           />
-        )}
-        {usesRubric && (
-          <DialogActions sx={{ p: 2, borderTop: (theme) => `1px solid ${theme.palette.divider}`, flexShrink: 0 }}>
-            {isEditMode ? (
-              <>
-                <Button variant="outlined" size="small" onClick={() => handleClose(null, false)} startIcon={<Iconify icon={GlobalIcons.cancel} />}>
-                  Cancel
-                </Button>
-                <LoadingButton
-                  variant="contained"
-                  size="small"
-                  loading={isRubricSaving}
-                  onClick={handleRubricSubmit}
-                  startIcon={<Iconify icon="solar:check-circle-bold" />}
-                >
-                  Submit
-                </LoadingButton>
-              </>
-            ) : (
-              <Button variant="outlined" size="small" onClick={() => handleClose(null, false)} startIcon={<Iconify icon={GlobalIcons.cancel} />}>
-                Close
-              </Button>
-            )}
-          </DialogActions>
         )}
       </CustomDialog>
     </>

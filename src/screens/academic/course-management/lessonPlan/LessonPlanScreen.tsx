@@ -484,7 +484,9 @@ const LessonPlanScreen = () => {
     },
     {
       skip: !timelineDateParam || !activeTabQueries.timeline,
-      refetchOnMountOrArgChange: true,
+      // Reuse a recently loaded day when returning to this screen. A new date
+      // still has a distinct query key, and lesson-plan mutations invalidate it.
+      refetchOnMountOrArgChange: 60,
     }
   );
 

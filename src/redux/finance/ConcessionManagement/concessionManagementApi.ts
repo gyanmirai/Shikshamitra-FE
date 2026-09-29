@@ -14,6 +14,7 @@ import type {
   ReverseConcessionCommand,
   ConcessionApprovalContext,
   ConcessionApprovalPreview,
+  ConcessionApprovalResponse,
   ConcessionReversalPreview,
   ConcessionApplicationsResponse,
   PreviewConcessionApprovalCommand,
@@ -178,7 +179,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
     }),
 
     approveConcessionRequest: builder.mutation<
-      unknown,
+      ConcessionApprovalResponse,
       { studentConcessionTypeRequestId: string; body: ApproveConcessionCommand }
     >({
       query: ({ studentConcessionTypeRequestId, body }) => ({
@@ -188,6 +189,7 @@ export const concessionManagementApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [
         financeModuleType.concessionRequest,
+        financeModuleType.feeRefund,
         financeModuleType.accountPosting,
         financeModuleType.draftPosting,
       ],

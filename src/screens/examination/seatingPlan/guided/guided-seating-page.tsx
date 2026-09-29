@@ -1,20 +1,17 @@
 'use client';
 
 import { useMemo } from 'react';
-import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import { academicPaths } from 'src/constants/academic-menu';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useGetSeatingPlanWorkspaceQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/guided-seat-allocationApi';
 
 import { normalizeWorkspace } from './normalize-workspace';
 import { GuidedSeatingWorkspace } from './guided-seating-workspace';
+import { GuidedSeatingPageShell } from './guided-seating-page-shell';
 import { GuidedSeatingWorkspaceSkeleton } from './guided-seating-workspace-skeleton';
 
 export default function GuidedSeatingPage() {
-  const router = useRouter();
   const params = useParams<{ examId: string }>();
   const searchParams = useSearchParams();
   const seatingPlanId = searchParams.get('planId') ?? undefined;
@@ -29,24 +26,7 @@ export default function GuidedSeatingPage() {
   const isPublished = normalizedWorkspace?.readiness.isPublished ?? false;
 
   return (
-    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <CustomBreadcrumbs
-        heading={isPublished ? 'Published seating' : 'Seating plan workspace'}
-        description={
-          isPublished
-            ? 'Inspect the final room and seat assignments for this examination.'
-            : 'Plan every subject, verify each seating arrangement, then publish the examination once.'
-        }
-        isBack
-        onBack={() => router.push(academicPaths.examination.seatAllocation)}
-        links={[
-          { name: 'Academics', href: academicPaths.dashboard },
-          { name: 'Examination' },
-          { name: 'Seating plan', href: academicPaths.examination.seatAllocation },
-          { name: isPublished ? 'Published seating' : 'Guided setup' },
-        ]}
-      />
-
+    <GuidedSeatingPageShell isPublished={isPublished}>
       {isLoading || (isFetching && !currentData) ? (
         <GuidedSeatingWorkspaceSkeleton />
       ) : isError || !normalizedWorkspace ? (
@@ -59,6 +39,6 @@ export default function GuidedSeatingPage() {
           workspace={normalizedWorkspace}
         />
       )}
-    </Box>
+    </GuidedSeatingPageShell>
   );
 }

@@ -3,10 +3,10 @@ import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admiss
 
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomSelect from 'src/components/custom-select';
 import { readAdmissionSeatPolicy } from 'src/redux/student/admissions/admission-seat-policy';
 import { readAdmissionOfferPolicy } from 'src/redux/student/admissions/admission-offer-policy';
 import { readAdmissionReviewPolicy } from 'src/redux/student/admissions/admission-review-policy';
-import { readAdmissionInquiryPolicy } from 'src/redux/student/admissions/admission-inquiry-policy';
 import { readAdmissionPaymentPolicy } from 'src/redux/student/admissions/admission-payment-policy';
 import { readAdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
 import { readAdmissionAssessmentPolicy } from 'src/redux/student/admissions/admission-assessment-policy';
@@ -14,20 +14,21 @@ import { readAdmissionEligibilityPolicy } from 'src/redux/student/admissions/adm
 import {
   Alert,
   Stack,
-  Switch,
+  Button,
   Accordion,
   TextField,
   Typography,
   AccordionDetails,
-  FormControlLabel,
   AccordionSummary,
 } from '@mui/material';
 
+import { hasInquiryCondition } from '../workflow-inquiry-retirement';
 import { WorkflowPreservedCondition } from './workflow-preserved-condition';
 import { WorkflowTransitionStageSelect } from './workflow-transition-stage-select';
 import { WorkflowReviewRoute, isReviewOutcomeCondition } from './workflow-review-route';
 import { WorkflowTransitionConditionFields } from './workflow-transition-condition-fields';
 import { WorkflowDocumentRoute, isDocumentOutcomeCondition } from './workflow-document-route';
+import { ROUTE_OPERATOR_LABELS, type WorkflowConditionField } from '../workflow-condition-catalog';
 import { WorkflowAssessmentRoute, isAssessmentOutcomeCondition } from './workflow-assessment-route';
 import {
   WorkflowEligibilityRoute,
@@ -46,20 +47,16 @@ type Props = {
   stages: AdmissionWorkflowStage[];
   readOnly: boolean;
   lockFromStage?: boolean;
+  conditionFields?: WorkflowConditionField[];
+  competingPaths?: number;
+  formsLoading?: boolean;
+  formsError?: boolean;
+  onRetryForms?: () => void;
 };
 
-const inquiryOutcomes: WorkflowOutcomeOption[] = [
-  { value: 'Qualified', label: 'Qualified' },
-  { value: 'Nurture', label: 'Needs follow-up' },
-  { value: 'NotInterested', label: 'Not interested' },
-  { value: 'Lost', label: 'Lost inquiry' },
-  { value: 'Duplicate', label: 'Duplicate inquiry' },
-];
 const paymentOutcomes: WorkflowOutcomeOption[] = [
   { value: 'settled', label: 'Payment settled' },
   { value: 'waived', label: 'Payment waived' },
-  { value: 'pendingVerification', label: 'Waiting for verification' },
-  { value: 'failed', label: 'Payment failed' },
 ];
 const offerOutcomes: WorkflowOutcomeOption[] = [
   { value: 'accepted', label: 'Offer accepted' },
@@ -79,8 +76,17 @@ export function WorkflowTransitionFields({
   stages,
   readOnly,
   lockFromStage = false,
+  conditionFields = [],
+  competingPaths = 0,
+  formsLoading,
+  formsError,
+  onRetryForms,
 }: Props) {
   const from = stages.find((stage) => stage.id === formik.values.fromStageId);
+  const conditionLabel =
+    conditionFields.find((field) => field.value === formik.values.conditionField)?.label ||
+    formik.values.conditionField ||
+    'the selected field';
   const assessment =
     from?.stageType === 2 &&
     readAdmissionAssessmentPolicy(from.configurationJson)?.enabled === true;
@@ -91,8 +97,6 @@ export function WorkflowTransitionFields({
     readAdmissionEligibilityPolicy(from.configurationJson)?.enabled === true;
   const review =
     from?.stageType === 6 && readAdmissionReviewPolicy(from.configurationJson)?.enabled === true;
-  const inquiry =
-    from?.stageType === 0 && readAdmissionInquiryPolicy(from.configurationJson)?.enabled === true;
   const payment =
     from?.stageType === 4 && readAdmissionPaymentPolicy(from.configurationJson)?.enabled === true;
   const offer =
@@ -106,14 +110,13 @@ export function WorkflowTransitionFields({
     (!documents || !isDocumentOutcomeCondition(formik.values)) &&
     (!eligibility || !isEligibilityOutcomeCondition(formik.values)) &&
     (!review || !isReviewOutcomeCondition(formik.values)) &&
-    (!inquiry ||
-      !isWorkflowOutcomeCondition(formik.values, 'inquiry.management.outcome', inquiryOutcomes)) &&
     (!payment || !isWorkflowOutcomeCondition(formik.values, 'payment.status', paymentOutcomes)) &&
     (!offer || !isWorkflowOutcomeCondition(formik.values, 'offer.status', offerOutcomes)) &&
     (!seat || !isWorkflowOutcomeCondition(formik.values, 'seat.status', seatOutcomes));
   return (
     <Scrollbar role="region" aria-label="Next-step configuration" sx={{ flex: 1, minHeight: 0 }}>
       <Stack spacing={2} sx={{ p: 2 }}>
+        {formik.status && <Alert severity="error">{String(formik.status)}</Alert>}
         {lockFromStage ? (
           <Stack spacing={0.25}>
             <Typography variant="caption" color="text.secondary">
@@ -138,7 +141,21 @@ export function WorkflowTransitionFields({
           readOnly={readOnly}
         />
         {formik.values.preserveCondition ? (
-          <WorkflowPreservedCondition json={formik.values.conditionRuleJson ?? ''} />
+          <Stack spacing={1}>
+            <WorkflowPreservedCondition json={formik.values.conditionRuleJson ?? ''} />
+            {!readOnly && hasInquiryCondition(formik.values.conditionRuleJson) && (
+              <Button size="small" variant="outlined" onClick={() => formik.setValues({
+                ...formik.values,
+                preserveCondition: false,
+                conditionRuleJson: undefined,
+                conditionField: '',
+                conditionOperator: 'Equals',
+                conditionValue: '',
+              })}>
+                Replace inquiry condition
+              </Button>
+            )}
+          </Stack>
         ) : assessment ? (
           <WorkflowAssessmentRoute formik={formik} readOnly={readOnly} />
         ) : documents ? (
@@ -147,16 +164,6 @@ export function WorkflowTransitionFields({
           <WorkflowEligibilityRoute formik={formik} readOnly={readOnly} />
         ) : review ? (
           <WorkflowReviewRoute formik={formik} readOnly={readOnly} />
-        ) : inquiry ? (
-          <WorkflowOutcomeRoute
-            formik={formik}
-            readOnly={readOnly}
-            field="inquiry.management.outcome"
-            label="Continue when inquiry is"
-            defaultLabel="Qualified (default route)"
-            outcomes={inquiryOutcomes}
-            guidance="Add matching routes for outcomes that should leave the main admission journey."
-          />
         ) : payment ? (
           <WorkflowOutcomeRoute
             formik={formik}
@@ -175,6 +182,8 @@ export function WorkflowTransitionFields({
             label="Continue when offer is"
             defaultLabel="Accepted (default route)"
             outcomes={offerOutcomes}
+            allowedOutcomes={readAdmissionOfferPolicy(from?.configurationJson)?.allowedCompletionOutcomes}
+            defaultAllowed={readAdmissionOfferPolicy(from?.configurationJson)?.allowedCompletionOutcomes.includes('accepted')}
             guidance="Configure separate routes for declined, expired, and withdrawn offers."
           />
         ) : seat ? (
@@ -185,31 +194,43 @@ export function WorkflowTransitionFields({
             label="Continue when seat is"
             defaultLabel="Confirmed (default route)"
             outcomes={seatOutcomes}
+            allowedOutcomes={readAdmissionSeatPolicy(from?.configurationJson)?.allowedCompletionOutcomes}
             guidance="Configure separate routes for waitlisted, released, and expired seat outcomes."
           />
         ) : (
-          <FormControlLabel
-            control={
-              <Switch
-                size="small"
-                checked={formik.values.hasCondition}
-                disabled={readOnly}
-                onChange={(_, value) => {
-                  formik.setFieldValue('hasCondition', value);
-                  formik.setFieldValue('isDefault', !value);
-                }}
-              />
+          <CustomSelect
+            size="small"
+            fullWidth
+            label="When to continue"
+            disabled={readOnly}
+            value={formik.values.hasCondition ? 'special' : 'usual'}
+            options={[
+              { value: 'usual', label: 'Usual next step' },
+              { value: 'special', label: 'Only when a condition matches' },
+            ]}
+            onChange={(value) =>
+              formik.setValues({
+                ...formik.values,
+                hasCondition: value === 'special',
+                isDefault: value === 'usual',
+              })
             }
-            label="Use a condition"
           />
         )}
         {showCondition ? (
-          <WorkflowTransitionConditionFields formik={formik} readOnly={readOnly} />
+          <>
+          {formsLoading && <Typography variant="caption">Loading published form answers…</Typography>}
+          {formsError && <Alert severity="warning" action={<Button size="small" onClick={onRetryForms}>Retry</Button>}>Some form answers could not load. Saved conditions are retained.</Alert>}
+          <WorkflowTransitionConditionFields
+            formik={formik}
+            readOnly={readOnly}
+            fields={conditionFields}
+          />
+          </>
         ) : !assessment &&
           !documents &&
           !eligibility &&
           !review &&
-          !inquiry &&
           !payment &&
           !offer &&
           !seat &&
@@ -219,27 +240,47 @@ export function WorkflowTransitionFields({
             can have one default route.
           </Alert>
         ) : null}
-        <Accordion disableGutters elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
-          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
-            <Typography variant="subtitle2">Advanced route order</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <TextField
-              fullWidth
-              size="small"
-              type="number"
-              label="Route order *"
-              disabled={readOnly}
-              {...formik.getFieldProps('priority')}
-              error={formik.touched.priority && Boolean(formik.errors.priority)}
-              helperText={
-                formik.touched.priority && formik.errors.priority
-                  ? formik.errors.priority
-                  : 'Lower numbers are checked first when more than one special path matches.'
-              }
-            />
-          </AccordionDetails>
-        </Accordion>
+        <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
+          After {from?.name ?? 'this stage'} is complete, continue to{' '}
+          {stages.find((stage) => stage.id === formik.values.toStageId)?.name ??
+            'the selected stage'}
+          {formik.values.hasCondition
+            ? formik.values.preserveCondition
+              ? ' when the saved advanced condition matches.'
+              : ` when ${conditionLabel} ${ROUTE_OPERATOR_LABELS[formik.values.conditionOperator] ?? formik.values.conditionOperator}${['IsEmpty', 'IsNotEmpty'].includes(formik.values.conditionOperator) ? '' : ` ${formik.values.conditionValue || 'the selected value'}`}.`
+            : ' when no special condition matches.'}
+        </Typography>
+        {formik.values.hasCondition &&
+          (competingPaths > 0 ||
+            formik.values.preserveCondition ||
+            Boolean(formik.errors.priority)) && (
+            <Accordion
+              disableGutters
+              elevation={0}
+              defaultExpanded={Boolean(formik.errors.priority)}
+              sx={{ border: 1, borderColor: 'divider' }}
+            >
+              <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
+                <Typography variant="subtitle2">Advanced route order</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <TextField
+                  fullWidth
+                  size="small"
+                  type="number"
+                  label="Route order *"
+                  disabled={readOnly}
+                  {...formik.getFieldProps('priority')}
+                  error={formik.touched.priority && Boolean(formik.errors.priority)}
+                  helperText={
+                    formik.touched.priority && formik.errors.priority
+                      ? formik.errors.priority
+                      : 'Lower numbers are checked first when more than one special path matches.'
+                  }
+                />
+              </AccordionDetails>
+            </Accordion>
+          )}
       </Stack>
     </Scrollbar>
   );

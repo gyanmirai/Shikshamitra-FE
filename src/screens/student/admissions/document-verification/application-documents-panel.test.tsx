@@ -16,6 +16,38 @@ vi.hoisted(() => {
   process.env.NEXT_PUBLIC_API_URL = 'http://localhost:5000';
 });
 describe('applicant document checklist interactions', { timeout: 15000 }, () => {
+  it.each([
+    { grants: ['View'], canAdd: false, canWaive: false },
+    { grants: ['View', 'Add'], canAdd: true, canWaive: false },
+    { grants: ['View', 'Delete'], canAdd: false, canWaive: true },
+    { grants: ['View', 'Upload', 'Review', 'RecordOriginal', 'Waive'], canAdd: false, canWaive: false },
+  ])('uses canonical document grants: $grants', async ({ grants, canAdd, canWaive }) => {
+    mswServer.use(
+      http.get(documentStagePath, () =>
+        HttpResponse.json({
+          ...documentSummary,
+          requirements: [{
+            ...documentSummary.requirements[0],
+            canUpload: true,
+            canRecordOriginal: true,
+            canReview: true,
+            canAccept: true,
+            canWaive: true,
+          }],
+        })
+      )
+    );
+    renderDocumentUi(
+      <ApplicationDocumentsPanel applicationId="application-1" stage={documentStage} />,
+      grants
+    );
+    await screen.findByText('Birth certificate is required.');
+    ['Upload document', 'Record original', 'Accept', 'Request replacement'].forEach((name) => {
+      expect(Boolean(screen.queryByRole('button', { name }))).toBe(canAdd);
+    });
+    expect(Boolean(screen.queryByRole('button', { name: 'Waive requirement' }))).toBe(canWaive);
+  });
+
   it('shows blockers, uploads a configured file and only enables Continue after confirmed completion', async () => {
     let accepted = false;
     let uploadName = '';

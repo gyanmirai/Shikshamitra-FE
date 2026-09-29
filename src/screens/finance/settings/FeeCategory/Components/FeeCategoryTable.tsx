@@ -1,10 +1,11 @@
 import type { RootState } from 'src/redux/store';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-import { Iconify } from 'src/components/iconify';
+
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -12,25 +13,13 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 import { usePatchFeeHeadMutation } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { getFeeHeadModuleDisplayName } from 'src/redux/feeHeadModule/feeHeadModuleApi';
-import {
-  Box,
-  Chip,
-  Stack,
-  Drawer,
-  Switch,
-  Divider,
-  MenuItem,
-  MenuList,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Stack, Drawer, Switch, Divider, TextField, Typography } from '@mui/material';
 import {
   feeCategoryApi,
   useGetFeeCategoriesQuery,
@@ -340,54 +329,72 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
       isFilter: false,
       render(value, row) {
         return (
-          <ThreeDotsActions
+          <AdaptiveThreeDotsActions
             placement="right-top"
-            showDeleteIcon={canDelete && !archived}
-            showEditIcon={canAdd && !archived}
-            showViewIcon={canView}
-            handleDeleteClick={() => {
-              setSelectedFeeCategory(row as IFeeCategory);
-              deleteFeeCategoryDialog.onTrue();
-            }}
-            disableDeleteIcon={row?.isUsedInDownstream}
-            handleEditClick={() => {
-              setEditData(row as IFeeCategory);
-              onAddFeeCategory.onTrue();
-            }}
-            handleViewClick={() => {
-              onView?.(row as IFeeCategory);
-            }}
-            showThreeDots={canView || canAdd}
             moreLabel={`More actions for ${(row as IFeeCategory).name}`}
-            actions={({ popover }) => (
-              <MenuList>
-                {canView ? (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      setFeeHeadsCategoryId((row as IFeeCategory).id);
-                    }}
-                  >
-                    <Iconify icon="solar:list-bold-duotone" />
-                    View Fee Heads
-                  </MenuItem>
-                ) : null}
-                {canAdd ? (
-                  <MenuItem
-                    disabled={!archived && Boolean(row?.isUsedInDownstream)}
-                    onClick={() => {
-                      popover.onClose();
-                      handleOpenStatusConfirm(row as IFeeCategory);
-                    }}
-                  >
-                    <Iconify
-                      icon={archived ? 'mdi:archive-arrow-up-outline' : 'mdi:archive-outline'}
-                    />
-                    {archived ? 'Restore' : 'Archive'}
-                  </MenuItem>
-                ) : null}
-              </MenuList>
-            )}
+            actions={[
+              ...(canView
+                ? [
+                    {
+                      id: 'view',
+                      label: 'View',
+                      icon: 'carbon:view-filled',
+                      onClick: () => onView?.(row as IFeeCategory),
+                    },
+                  ]
+                : []),
+              ...(canAdd && !archived
+                ? [
+                    {
+                      id: 'edit',
+                      label: 'Edit',
+                      icon: 'solar:pen-bold',
+                      onClick: () => {
+                        setEditData(row as IFeeCategory);
+                        onAddFeeCategory.onTrue();
+                      },
+                    },
+                  ]
+                : []),
+              ...(canDelete && !archived
+                ? [
+                    {
+                      id: 'delete',
+                      label: 'Delete',
+                      icon: 'solar:trash-bin-trash-bold',
+                      color: 'error.main',
+                      disabled: row?.isUsedInDownstream,
+                      tooltip:
+                        'This item cannot be deleted because it is already used in other parts of the system. Please remove all references first.',
+                      onClick: () => {
+                        setSelectedFeeCategory(row as IFeeCategory);
+                        deleteFeeCategoryDialog.onTrue();
+                      },
+                    },
+                  ]
+                : []),
+              ...(canView
+                ? [
+                    {
+                      id: 'fee-heads',
+                      label: 'View Fee Heads',
+                      icon: 'solar:list-bold-duotone',
+                      onClick: () => setFeeHeadsCategoryId((row as IFeeCategory).id),
+                    },
+                  ]
+                : []),
+              ...(canAdd
+                ? [
+                    {
+                      id: 'status',
+                      label: archived ? 'Restore' : 'Archive',
+                      icon: archived ? 'mdi:archive-arrow-up-outline' : 'mdi:archive-outline',
+                      disabled: !archived && Boolean(row?.isUsedInDownstream),
+                      onClick: () => handleOpenStatusConfirm(row as IFeeCategory),
+                    },
+                  ]
+                : []),
+            ]}
           />
         );
       },

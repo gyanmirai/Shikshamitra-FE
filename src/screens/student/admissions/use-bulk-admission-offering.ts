@@ -4,21 +4,15 @@ import type { Standards } from 'src/types/school';
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 import type { BulkAdmissionOfferingResult } from 'src/redux/student/admissions/admission-offerings-api';
 
-import { useRef, useState } from 'react';
-import { useFormik } from 'formik';
+import { useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
-import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { useBulkCreateAdmissionOfferingsMutation } from 'src/redux/student/admissions/admission-offerings-api';
 import { useGetAcademicOrganizationOptionsQuery } from 'src/redux/academicOrganizationOptions/academicOrganizationOptionsApi';
 
 import { getAdmissionApiError } from './admission-offering-model';
-import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
+import { toBulkOfferingInput } from './bulk-admission-offering-model';
 import { useAdmissionDefinitionOptions } from './use-admission-definition-options';
-import {
-  bulkOfferingSchema,
-  toBulkOfferingInput,
-  bulkOfferingInitialValues,
-} from './bulk-admission-offering-model';
 
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
 
@@ -28,52 +22,37 @@ export function useBulkAdmissionOffering(
   onComplete: () => void
 ) {
   const [preview, setPreview] = useState<BulkAdmissionOfferingResult | null>(null);
-  const [submitIntent, setSubmitIntent] = useState<'preview' | 'inactive' | 'activate' | null>(
-    null
-  );
-  const submitMode = useRef<'preview' | 'inactive' | 'activate'>('preview');
+  const [previewStandards, setPreviewStandards] = useState<Standards[]>([]);
   const [bulkCreate, bulkState] = useBulkCreateAdmissionOfferingsMutation();
+  const [loadStandards, standardsState] = useLazyGetClassByMediumQuery();
   const hierarchyQuery = useGetAcademicOrganizationOptionsQuery(
     { academicYearId: cycle.academicYearId },
     { skip: !open }
   );
   const definitionOptions = useAdmissionDefinitionOptions(open);
-  const formik = useFormik<BulkOfferingValues>({
-    initialValues: bulkOfferingInitialValues,
-    validationSchema: bulkOfferingSchema,
-    onSubmit: async (values) => {
-      const standards = (standardsQuery.data ?? []) as Standards[];
-      const previewOnly = submitMode.current === 'preview';
-      const isActive = submitMode.current === 'activate';
-      try {
-        const result = await bulkCreate({
-          admissionCycleId: cycle.id,
-          body: toBulkOfferingInput({ ...values, isActive }, standards, previewOnly),
-        }).unwrap();
-        if (previewOnly) setPreview(result);
-        else {
-          shikshaMitraToast.success({ message: `${result.createdCount} offerings created` });
-          onComplete();
-        }
-      } catch (error) {
-        shikshaMitraToast.error({
-          message: getAdmissionApiError(error, 'Unable to process bulk offerings.'),
-        });
-      }
-    },
-  });
-  const standardsQuery = useGetClassByMediumQuery(formik.values.mediumId, {
-    skip: !open || !formik.values.mediumId,
-  });
-  useAdmissionUnsavedChanges(open, formik.dirty);
-  const submit = async (mode: 'preview' | 'inactive' | 'activate') => {
-    submitMode.current = mode;
-    setSubmitIntent(mode);
+
+  const submit = async (values: BulkOfferingValues, previewOnly: boolean) => {
     try {
-      await formik.setFieldValue('isActive', mode === 'activate', false);
-      await formik.submitForm();
-    } finally {
-      setSubmitIntent(null);
+      const standards = (await loadStandards(values.mediumId, true).unwrap()) as Standards[];
+      const result = await bulkCreate({
+        admissionCycleId: cycle.id,
+        body: toBulkOfferingInput(values, standards, previewOnly),
+      }).unwrap();
+      if (previewOnly) {
+        setPreviewStandards(standards);
+        setPreview(result);
+      } else {
+        shikshaMitraToast.success({
+          message: `${result.createdCount} offering${result.createdCount === 1 ? '' : 's'} created`,
+        });
+        onComplete();
+      }
+      return result;
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: getAdmissionApiError(error, 'Unable to process admission offerings.'),
+      });
+      return null;
     }
   };
   const canSaveInactive = Boolean(
@@ -84,19 +63,19 @@ export function useBulkAdmissionOffering(
   );
 
   return {
-    formik,
     preview,
-    submitIntent,
-    previewOfferings: () => submit('preview'),
-    createInactive: () => submit('inactive'),
-    createActive: () => submit('activate'),
+    previewStandards,
+    previewOfferings: (values: BulkOfferingValues) => submit({ ...values, isActive: false }, true),
+    createOfferings: (values: BulkOfferingValues) => submit(values, false),
     canSaveInactive,
     canActivate,
-    clearPreview: () => setPreview(null),
-    loading: bulkState.isLoading,
+    clearPreview: () => {
+      setPreview(null);
+      setPreviewStandards([]);
+    },
+    loading: bulkState.isLoading || standardsState.isFetching,
     hierarchy: hierarchyQuery.data?.items ?? [],
-    standards: (standardsQuery.data ?? []) as Standards[],
     ...definitionOptions,
-    optionsLoading: hierarchyQuery.isFetching || standardsQuery.isFetching,
+    optionsLoading: hierarchyQuery.isFetching,
   };
 }

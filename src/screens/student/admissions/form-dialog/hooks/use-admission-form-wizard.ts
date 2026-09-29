@@ -10,19 +10,27 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 import { getAdmissionWizardSchema } from '../form-wizard-model';
-import { getAdmissionFormInitialValues } from '../form-dialog-model';
 import { clearAdmissionFormDraft, useAdmissionFormDraftOwner } from '../form-draft-recovery';
+import {
+  getAdmissionFormInitialValues,
+  getBlankAdmissionFormInitialValues,
+} from '../form-dialog-model';
 
 type Props = {
   editing?: AdmissionForm | null;
+  initialPurpose?: CreateUpdateAdmissionForm['purpose'];
   onClose: () => void;
   onSave: (value: CreateUpdateAdmissionForm) => Promise<void>;
 };
 
-export function useAdmissionFormWizard({ editing, onClose, onSave }: Props) {
+export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave }: Props) {
   const draftOwner = useAdmissionFormDraftOwner();
   const [activeStep, setActiveStep] = useState(0);
-  const [initialValues] = useState(() => getAdmissionFormInitialValues(editing));
+  const [initialValues] = useState(() =>
+    editing
+      ? getAdmissionFormInitialValues(editing, initialPurpose)
+      : getBlankAdmissionFormInitialValues(initialPurpose)
+  );
   const submitting = useBoolean();
   const savingRef = useRef(false);
   const saveDraft = async (

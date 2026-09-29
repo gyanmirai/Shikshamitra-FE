@@ -10,23 +10,31 @@ import InputAdornment from '@mui/material/InputAdornment';
 
 import { fieldTypeIcon } from '../form-dialog-model';
 import { PaletteFieldButton } from './palette-field-button';
+import { groupStudentFields } from '../student-field-groups';
 
 type Props = {
   fields: AdmissionFormSystemFieldMetadata[];
+  usedBindings?: readonly string[];
   onAdd: (field: AdmissionFormSystemFieldMetadata) => void;
 };
 
-export function StudentFieldPalette({ fields, onAdd }: Props) {
+export function StudentFieldPalette({ fields, usedBindings = [], onAdd }: Props) {
   const [search, setSearch] = useState('');
   const normalizedSearch = search.trim().toLowerCase();
-  const filteredFields = fields.filter((field) =>
-    `${field.displayName} ${field.key}`.toLowerCase().includes(normalizedSearch)
-  );
+  const groupedFields = groupStudentFields(fields);
+  const visibleGroups = groupedFields
+    .map((group) => ({
+      ...group,
+      fields: group.fields.filter((field) =>
+        `${field.displayName} ${field.key} ${group.name}`.toLowerCase().includes(normalizedSearch)
+      ),
+    }))
+    .filter((group) => group.fields.length > 0);
+  const used = new Set(usedBindings.map((key) => key.toLowerCase()));
+  const availableCount = fields.filter((field) => !used.has(field.key.toLowerCase())).length;
+  const visibleCount = visibleGroups.reduce((count, group) => count + group.fields.length, 0);
   return (
     <>
-      <Typography variant="caption" color="text.secondary">
-        Connect answers to the student record.
-      </Typography>
       <TextField
         fullWidth
         size="small"
@@ -41,17 +49,30 @@ export function StudentFieldPalette({ fields, onAdd }: Props) {
           ),
         }}
       />
+      <Typography variant="caption" color="text.secondary">
+        {normalizedSearch
+          ? `${visibleCount} matching fields`
+          : `${availableCount} available of ${fields.length} student fields`}
+      </Typography>
       <Stack spacing={0.75} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
-        {filteredFields.map((field) => (
-          <PaletteFieldButton
-            key={field.key}
-            label={field.displayName}
-            icon={fieldTypeIcon(field.fieldType)}
-            description={field.description}
-            onClick={() => onAdd(field)}
-          />
+        {visibleGroups.map((group) => (
+          <Stack key={group.name} spacing={0.75} sx={{ pb: 1 }}>
+            <Typography variant="subtitle2" component="h3" sx={{ pt: 0.5 }}>
+              {group.name} ({group.fields.length})
+            </Typography>
+            {group.fields.map((field) => (
+              <PaletteFieldButton
+                key={field.key}
+                label={field.displayName}
+                icon={fieldTypeIcon(field.fieldType)}
+                description={field.description}
+                disabled={used.has(field.key.toLowerCase())}
+                onClick={() => onAdd(field)}
+              />
+            ))}
+          </Stack>
         ))}
-        {!filteredFields.length && (
+        {!visibleGroups.length && (
           <Stack spacing={1} alignItems="center" sx={{ py: 3, textAlign: 'center' }}>
             <Iconify icon="mdi:magnify-close" width={28} sx={{ color: 'text.secondary' }} />
             <Typography variant="subtitle2">No matching fields</Typography>

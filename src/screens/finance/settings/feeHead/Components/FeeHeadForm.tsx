@@ -83,7 +83,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
     () =>
       (incomeCategoryData?.items ?? []).map((category: any) => ({
         id: category.id,
-        displayName: `${category.code ? `${category.code} — ` : ''}${category.name} → ${
+        displayName: `${category.name} → ${
           category.defaultAccountHeadName || 'No account head'
         }`,
       })),

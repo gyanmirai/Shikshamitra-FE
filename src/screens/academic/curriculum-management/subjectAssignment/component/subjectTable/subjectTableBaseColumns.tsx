@@ -1,10 +1,10 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
-import { ButtonBase, Chip, Stack, Typography } from '@mui/material';
+import { Chip, Stack, ButtonBase, Typography } from '@mui/material';
 
 import { PeriodsPerWeekButton } from './SubjectTableCells';
-import { getSubjectDisplayLabel } from '../../utils/getSubjectDisplayLabel';
 import { getPrimaryTeacherNames } from '../../utils/primaryTeacherNames';
+import { getSubjectDisplayLabel } from '../../utils/getSubjectDisplayLabel';
 
 import type { ISubjectFormValues } from '../type';
 import type { SubjectTableRow } from './subjectTableTypes';

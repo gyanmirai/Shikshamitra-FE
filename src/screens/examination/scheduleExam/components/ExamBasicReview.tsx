@@ -3,8 +3,8 @@ import type { Division } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
+import { Box, Grid, Chip } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { Box, Grid, Chip, Divider } from '@mui/material';
 import {
   Class,
   School,
@@ -51,9 +51,9 @@ const ExamBasicReview = ({
       onEdit={onEdit}
       status={statusLabel}
     >
-      <Grid container spacing={2}>
+      <Grid container spacing={1.5}>
         {/* Exam Name */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ExamReviewInfoItem
             icon={<Description />}
             label="Exam Name"
@@ -62,7 +62,7 @@ const ExamBasicReview = ({
         </Grid>
 
         {/* Exam Type */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ExamReviewInfoItem
             icon={<Article />}
             label="Exam Type"
@@ -71,12 +71,12 @@ const ExamBasicReview = ({
         </Grid>
 
         {/* Class */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ExamReviewInfoItem icon={<Class />} label="Class" value={className || '-'} />
         </Grid>
 
         {/* Division (List) */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ExamReviewInfoItem
             icon={<School />}
             label="Division"
@@ -101,7 +101,7 @@ const ExamBasicReview = ({
         </Grid>
 
         {/* Grading Scale */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
           <ExamReviewInfoItem
             icon={<Iconify icon="solar:ranking-bold-duotone" />}
             label="Grading Scale"
@@ -109,12 +109,8 @@ const ExamBasicReview = ({
           />
         </Grid>
 
-        <Grid size={{ xs: 12 }}>
-          <Divider sx={{ borderStyle: 'dashed' }} />
-        </Grid>
-
         {/* Subjects (List) */}
-        <Grid size={{ xs: 12, md: 6 }}>
+        <Grid size={{ xs: 12, md: 4 }}>
           <ExamReviewInfoItem
             icon={<Subject />}
             label="Subjects"

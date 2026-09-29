@@ -4,11 +4,12 @@ import type { LabelColor } from 'src/components/label';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
+
 import { formatNumber } from 'src/utils/formate_number';
-import CustomTooltip from 'src/components/custom-tooltip';
+
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Card, MenuList, MenuItem } from '@mui/material';
+import { Box, Card } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
@@ -20,6 +21,7 @@ import {
   FeeCollectionStatusType,
   FeeCollectionStatusOptions,
   FeeCollectionStatusTypeColors,
+  feeInstallmentStatusLabel,
 } from 'src/enums/fee-collection-type';
 
 import type { IFeeData, IFeeTableProps } from './type';
@@ -272,7 +274,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               render(value) {
                 const statusValue = value as FeeCollectionStatusType;
                 const color = FeeCollectionStatusTypeColors[statusValue] as LabelColor;
-                return <Label color={color}>{FeeCollectionStatusType[statusValue]}</Label>;
+                return <Label color={color}>{feeInstallmentStatusLabel(statusValue)}</Label>;
               },
             },
             {
@@ -286,31 +288,30 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               isFilter: false,
               render(value, row) {
                 return (
-                  <MenuList sx={{ display: 'flex', flexDirection: 'row', p: 0, minWidth: 'auto' }}>
-                    <CustomTooltip title="Collect Fee">
-                      <MenuItem
-                        onClick={() =>
-                          onCollectFee({ ...row, id: row.studentId ?? row.id } as IFeeData)
-                        }
-                      >
-                        <Iconify icon="mdi:cash-plus" sx={{ height: '16px', width: '16px' }} />
-                      </MenuItem>
-                    </CustomTooltip>
-                    <CustomTooltip title="View Details">
-                      <MenuItem onClick={() => onView(row as IFeeData)}>
-                        <Iconify icon={GlobalIcons.eye} sx={{ height: '16px', width: '16px' }} />
-                      </MenuItem>
-                    </CustomTooltip>
-                    <CustomTooltip title="Give Fees Adjustment">
-                      <MenuItem
-                        onClick={() =>
-                          onGiveAdjustment({ ...row, id: row.studentId ?? row.id } as IFeeData)
-                        }
-                      >
-                        <Iconify icon="tdesign:adjustment" sx={{ height: '16px', width: '16px' }} />
-                      </MenuItem>
-                    </CustomTooltip>
-                  </MenuList>
+                  <AdaptiveThreeDotsActions
+                    actions={[
+                      {
+                        id: 'collect',
+                        label: 'Collect Fee',
+                        icon: 'mdi:cash-plus',
+                        onClick: () =>
+                          onCollectFee({ ...row, id: row.studentId ?? row.id } as IFeeData),
+                      },
+                      {
+                        id: 'view',
+                        label: 'View Details',
+                        icon: GlobalIcons.eye,
+                        onClick: () => onView(row as IFeeData),
+                      },
+                      {
+                        id: 'adjust',
+                        label: 'Give Fees Adjustment',
+                        icon: 'tdesign:adjustment',
+                        onClick: () =>
+                          onGiveAdjustment({ ...row, id: row.studentId ?? row.id } as IFeeData),
+                      },
+                    ]}
+                  />
                 );
               },
             },

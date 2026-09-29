@@ -47,6 +47,17 @@ export interface IFeeHeadMonthRefund {
   amount: number | string;
 }
 
+export const refundAllocationLabel = (
+  month: string,
+  year: number,
+  receiptNumber: string,
+  allocationId: string,
+  repeated: boolean
+): string =>
+  `${month} ${year}${receiptNumber ? ` · ${receiptNumber}` : ''}${
+    repeated ? ` · allocation ${allocationId.slice(0, 8)}` : ''
+  }`;
+
 export interface IFeeHeadRefundItem {
   feeHeadId: string;
   months: IFeeHeadMonthRefund[];

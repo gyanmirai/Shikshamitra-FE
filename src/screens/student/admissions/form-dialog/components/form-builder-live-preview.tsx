@@ -55,9 +55,7 @@ export function FormBuilderLivePreview({ form }: { form: CreateUpdateAdmissionFo
   return (
     <Box sx={{ height: 1, overflowY: 'auto', p: { xs: 1, sm: 2 } }}>
       <Stack spacing={1.5} sx={{ mb: 1.5 }}>
-        <Alert severity="info">
-          Applicant preview only. Try fields and conditional rules here; nothing is submitted.
-        </Alert>
+       
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
           <Box sx={{ width: { xs: 1, sm: 260 } }}>
             <CustomSelect
@@ -67,9 +65,7 @@ export function FormBuilderLivePreview({ form }: { form: CreateUpdateAdmissionFo
               onChange={applyPersona}
             />
           </Box>
-          <Typography variant="caption" color="text.secondary">
-            Apply sample answers, then validate the preview to expose missing or conditional data.
-          </Typography>
+         
         </Stack>
       </Stack>
       <FormPreviewContent form={previewForm} formik={formik} resolvedOptions={{}} />

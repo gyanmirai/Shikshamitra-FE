@@ -6,6 +6,7 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { useParams } from 'next/navigation';
 import { useMemo, useState, useEffect } from 'react';
+import { studentPaths } from 'src/constants/student-menu';
 import { Box, Alert, Stack, Skeleton } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import {
@@ -99,9 +100,10 @@ export default function AdmissionFormPreviewScreen() {
         heading={`${form.name} preview`}
         description="Test field visibility and required validation before publishing this form."
         links={[
-          { name: 'Students', href: '/student/dashboard' },
-          { name: 'Admissions', href: '/student/admissions' },
-          { name: 'Admission Forms', href: '/student/admissions/settings/forms' },
+          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Admissions', href: studentPaths.enrollment.root },
+          { name: 'Settings', href: studentPaths.enrollment.settings.root },
+          { name: 'Admission Form', href: studentPaths.enrollment.settings.forms },
           { name: 'Preview' },
         ]}
         sx={{ mb: 1 }}

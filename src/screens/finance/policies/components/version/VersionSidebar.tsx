@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import dayjs from 'dayjs';
 import { varAlpha } from 'src/theme/styles';
+import React, { useMemo, useState } from 'react';
 import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
@@ -19,6 +18,7 @@ import {
   InputAdornment,
 } from '@mui/material';
 
+import { formatVersionTimestamp } from './finance-policy-version-formatters';
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
 
 interface VersionSidebarProps {
@@ -39,7 +39,7 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: Versio
       const vNum = `v${ver.versionNumber}`.toLowerCase();
       const actor = (ver.actor || '').toLowerCase();
       const summary = (ver.summary || '').toLowerCase();
-      const date = ver.date ? dayjs(ver.date).format('DD-MM-YYYY').toLowerCase() : '';
+      const date = ver.date ? formatVersionTimestamp(ver.date).toLowerCase() : '';
 
       return (
         vNum.includes(query) ||
@@ -163,7 +163,7 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: Versio
               <Stack spacing={0.5}>
                 {filteredVersions.map((ver, index) => {
                   const isSelected = ver.eventId === selectedVersionId;
-                  const formattedDate = ver.date ? dayjs(ver.date).format('DD-MM-YYYY') : '—';
+                  const formattedDate = ver.date ? formatVersionTimestamp(ver.date) : '—';
                   const isLatest = index === 0 && !searchQuery;
 
                   return (
@@ -245,7 +245,14 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: Versio
                             }}
                             noWrap
                           >
-                            {formattedDate} · {ver.actor || 'System'}
+                            {formattedDate}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: 'text.secondary', fontSize: '0.7rem', display: 'block' }}
+                            noWrap
+                          >
+                            {ver.actor || 'System'}
                           </Typography>
                         </Box>
 

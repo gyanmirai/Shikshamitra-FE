@@ -122,7 +122,7 @@ function AdmissionInquiryDrawerContent({ onClose }: Omit<Props, 'open'>) {
           controller.boards.length === 0 && (
             <Alert severity="warning">
               No open, ready admission offering is available. Configure and activate an offering in
-              Admission Setup before creating an inquiry.
+              Admission Offering settings before creating an inquiry.
             </Alert>
           )}
 
@@ -239,6 +239,15 @@ function AdmissionInquiryDrawerContent({ onClose }: Omit<Props, 'open'>) {
               </TextField>
             </ShakingTextField>
           )}
+          {controller.classCapacity && formik.values.offeringId && (
+            <Alert severity={controller.classCapacity.isFull ? 'warning' : 'info'}>
+              {controller.classCapacity.capacity == null
+                ? 'Admission room capacity is not set. Division seats are checked during onboarding. You can continue this inquiry.'
+                : `${controller.classCapacity.remainingSeats} of ${controller.classCapacity.capacity} admission room seats available.`}
+              {controller.classCapacity.isFull &&
+                ' Admission room capacity is full; you can still continue.'}
+            </Alert>
+          )}
         </InquiryFormSection>
 
         {controller.sections.map((section) => (
@@ -314,6 +323,7 @@ function AdmissionInquiryDrawerContent({ onClose }: Omit<Props, 'open'>) {
 
         <AdmissionInquiryDuplicateMatches
           matches={controller.matches}
+          guardianPhone={controller.currentGuardianPhone}
           busy={controller.busy}
           onUseExisting={controller.useExistingFamily}
           onOpenExisting={(inquiryId) => {

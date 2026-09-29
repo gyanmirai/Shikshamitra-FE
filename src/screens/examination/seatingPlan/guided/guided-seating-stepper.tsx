@@ -58,7 +58,7 @@ export function GuidedSeatingStepper(props: GuidedStepProps) {
         saveAndNextButtonProps={{
           disabled: workflow.nextDisabled,
           loading: workflow.isBusy,
-          sx: { minHeight: 44, minWidth: 0, px: 1.5 },
+          sx: { minHeight: 40, minWidth: 0, px: 1 },
         }}
         viewMode="vertical"
       />

@@ -5,10 +5,10 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { Label } from 'src/components/label';
-import { Box, Typography } from '@mui/material';
 
 import { WorkflowRowActions } from './workflow-row-actions';
-import { formatWorkflowDateTime } from './workflow-list-format';
+import { AdmissionTableText } from '../admission-table-text';
+import { formatWorkflowDateTime, formatWorkflowListDate } from './workflow-list-format';
 
 import type { WorkflowActionPermissions } from './workflow-row-actions';
 
@@ -37,7 +37,6 @@ const STATUS_COLORS: Record<
 };
 
 type Handlers = {
-  onView: (workflow: AdmissionWorkflow) => void;
   onEdit: (workflow: AdmissionWorkflow) => void;
   onClone: (workflow: AdmissionWorkflow) => void;
   onCreateVersion: (workflow: AdmissionWorkflow) => void;
@@ -54,19 +53,15 @@ export function createWorkflowColumns(
     {
       id: 'name',
       label: 'Workflow',
-      minWidth: 240,
-      sticky:true,
+      width: 300,
+      maxWidth: 300,
+      sticky: true,
+      stickyPosition: 'left',
+      stickyOnMobile: false,
       isFilter: false,
-      render: (value, row) => (
-        <Box>
-          <Typography fontWeight={600}>{value}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {(row as AdmissionWorkflow).description || 'No description'}
-          </Typography>
-        </Box>
-      ),
+      render: (value, row) => <AdmissionTableText text={String(value ?? '')} secondary={(row as AdmissionWorkflow).description || 'No description'} strong />,
     },
-    { id: 'code', label: 'Code', minWidth: 140, isFilter: false },
+    { id: 'code', label: 'Code', minWidth: 250, isFilter: false, render: (value) => <AdmissionTableText text={String(value ?? '')} /> },
     { id: 'version', label: 'Version', minWidth: 90, align: 'center', isFilter: false },
     {
       id: 'offeringCount',
@@ -80,15 +75,17 @@ export function createWorkflowColumns(
       label: 'Last modified',
       minWidth: 170,
       isFilter: false,
-      render: (value, row) =>
-        formatWorkflowDateTime((value as string | null) || (row as AdmissionWorkflow).creationTime),
+      render: (value, row) => {
+        const date = (value as string | null) || (row as AdmissionWorkflow).creationTime;
+        return <AdmissionTableText text={formatWorkflowListDate(date)} tooltip={formatWorkflowDateTime(date)} />;
+      },
     },
     {
       id: 'publishedAt',
       label: 'Published at',
       minWidth: 170,
       isFilter: false,
-      render: (value) => formatWorkflowDateTime(value as string | null),
+      render: (value) => <AdmissionTableText text={formatWorkflowListDate(value as string | null)} tooltip={formatWorkflowDateTime(value as string | null)} />,
     },
     {
       id: 'status',
@@ -107,6 +104,8 @@ export function createWorkflowColumns(
       label: 'Actions',
       width: 160,
       minWidth: 150,
+      headerSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
+      cellSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
       align: 'right',
       sticky: true,
       stickyPosition: 'right',
@@ -119,7 +118,6 @@ export function createWorkflowColumns(
           <WorkflowRowActions
             {...permissions}
             workflow={workflow}
-            onView={() => handlers.onView(workflow)}
             onEdit={() => handlers.onEdit(workflow)}
             onClone={() => handlers.onClone(workflow)}
             onCreateVersion={() => handlers.onCreateVersion(workflow)}

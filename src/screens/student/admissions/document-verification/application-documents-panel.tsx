@@ -22,6 +22,7 @@ export function ApplicationDocumentsPanel({
   advancing = false,
   onComplete,
   historical = false,
+  disabled = false,
 }: {
   applicationId: string;
   stage: AdmissionApplicationStage;
@@ -29,6 +30,7 @@ export function ApplicationDocumentsPanel({
   advancing?: boolean;
   onComplete?: () => void;
   historical?: boolean;
+  disabled?: boolean;
 }) {
   const permissions = useDocumentPermissions();
   const query = useGetApplicationDocumentsQuery(
@@ -71,8 +73,8 @@ export function ApplicationDocumentsPanel({
             <DocumentChecklistContent
               summary={summary}
               permissions={permissions}
-              disabled={query.isFetching || advancing}
-              readOnly={historical || !summary.isActive}
+              disabled={disabled || query.isFetching || advancing}
+              readOnly={historical || !(summary.isActive || summary.canCollectDuringForm)}
               onAction={(action, requirement) => setSelected({ action, requirement, summary })}
             />
             {!historical && summary.isActive && canAdvance && (

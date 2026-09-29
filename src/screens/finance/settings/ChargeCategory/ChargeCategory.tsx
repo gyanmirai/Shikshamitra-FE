@@ -1,6 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
@@ -15,7 +16,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import CustomSelect from 'src/components/custom-select';
@@ -37,8 +37,6 @@ import {
   Stack,
   Button,
   Switch,
-  MenuItem,
-  MenuList,
   TextField,
   Typography,
   DialogActions,
@@ -269,37 +267,45 @@ const FinanceChargeCategory = () => {
         sticky: true,
         render(value, row: any) {
           return (
-            <ThreeDotsActions
-              showEditIcon={canEdit && archiveView === 'current'}
-              showDeleteIcon={canDelete && archiveView === 'current' && !row.isUsedInDownstream}
-              showThreeDots={canChangeStatus}
+            <AdaptiveThreeDotsActions
               placement="right-top"
-              handleDeleteClick={() => {
-                handleDeleteAction(row);
-              }}
-              handleEditClick={() => {
-                handleEdit(row);
-              }}
-              actions={({ popover }) => (
-                <MenuList>
-                  <MenuItem
-                    disabled={isStatusLoading}
-                    onClick={() => {
-                      popover.onClose();
-                      handleOpenStatusConfirm(row);
-                    }}
-                  >
-                    <Iconify
-                      icon={
-                        archiveView === 'archived'
-                          ? 'mdi:archive-arrow-up-outline'
-                          : 'mdi:archive-outline'
-                      }
-                    />
-                    {archiveView === 'archived' ? 'Restore' : 'Archive'}
-                  </MenuItem>
-                </MenuList>
-              )}
+              actions={[
+                ...(canEdit && archiveView === 'current'
+                  ? [
+                      {
+                        id: 'edit',
+                        label: 'Edit',
+                        icon: 'solar:pen-bold',
+                        onClick: () => handleEdit(row),
+                      },
+                    ]
+                  : []),
+                ...(canDelete && archiveView === 'current' && !row.isUsedInDownstream
+                  ? [
+                      {
+                        id: 'delete',
+                        label: 'Delete',
+                        icon: 'solar:trash-bin-trash-bold',
+                        color: 'error.main',
+                        onClick: () => handleDeleteAction(row),
+                      },
+                    ]
+                  : []),
+                ...(canChangeStatus
+                  ? [
+                      {
+                        id: 'status',
+                        label: archiveView === 'archived' ? 'Restore' : 'Archive',
+                        icon:
+                          archiveView === 'archived'
+                            ? 'mdi:archive-arrow-up-outline'
+                            : 'mdi:archive-outline',
+                        disabled: isStatusLoading,
+                        onClick: () => handleOpenStatusConfirm(row),
+                      },
+                    ]
+                  : []),
+              ]}
             />
           );
         },

@@ -8,6 +8,7 @@ import { Box, Card, Grid, Avatar, Typography } from '@mui/material';
 import {
   FeeCollectionStatusType,
   FeeCollectionStatusTypeColors,
+  feeInstallmentStatusLabel,
 } from 'src/enums/fee-collection-type';
 
 import type { IStudentFee } from './type';
@@ -48,7 +49,7 @@ export const FeeSummaryCard = ({
               ] as LabelColor
             }
           >
-            {FeeCollectionStatusType[student?.status as unknown as FeeCollectionStatusType]}
+            {feeInstallmentStatusLabel(student?.status as unknown as FeeCollectionStatusType)}
           </Label>
         </Box>
       )}

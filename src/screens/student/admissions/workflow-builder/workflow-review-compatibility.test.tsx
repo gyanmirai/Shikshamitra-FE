@@ -15,12 +15,14 @@ describe('review configuration compatibility', { timeout: 15000 }, () => {
       [],
       { allowManualSkip: true }
     );
-    const skip = screen.getByRole('switch', { name: 'Allow authorized manual skip' });
-    expect(skip).toBeDisabled();
-    expect(skip).not.toBeChecked();
+    await user.click(screen.getByRole('tab', { name: 'Settings' }));
+    expect(screen.getByRole('switch', { name: 'Allow authorized manual skip' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Allow authorized manual skip' })).not.toBeChecked();
+    await user.click(screen.getByRole('tab', { name: 'Process' }));
     await user.click(screen.getByRole('radio', { name: 'Basic completion (existing process)' }));
-    expect(skip).toBeDisabled();
-    expect(skip).not.toBeChecked();
+    await user.click(screen.getByRole('tab', { name: 'Settings' }));
+    expect(screen.getByRole('switch', { name: 'Allow authorized manual skip' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Allow authorized manual skip' })).not.toBeChecked();
     await user.click(screen.getByRole('button', { name: 'Save stage' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0].allowManualSkip).toBe(false);
@@ -55,6 +57,7 @@ describe('review configuration compatibility', { timeout: 15000 }, () => {
   });
 
   it('shows published settings without exposing editing actions', async () => {
+    const user = userEvent.setup();
     setupReviewEditor(
       JSON.stringify({
         review: {
@@ -66,10 +69,6 @@ describe('review configuration compatibility', { timeout: 15000 }, () => {
     );
     expect(screen.getByText('Identity confirmed')).toBeVisible();
     expect(screen.getByRole('switch', { name: 'Set a review due date' })).toBeDisabled();
-    expect(screen.getByRole('switch', { name: 'Allow authorized manual skip' })).toBeDisabled();
-    expect(
-      screen.getByText('Managed Review requires a recorded decision and cannot be skipped.')
-    ).toBeVisible();
     expect(
       screen.queryByRole('button', { name: 'Add review checklist item' })
     ).not.toBeInTheDocument();
@@ -80,6 +79,11 @@ describe('review configuration compatibility', { timeout: 15000 }, () => {
         'true'
       )
     );
+    await user.click(screen.getByRole('tab', { name: 'Settings' }));
+    expect(screen.getByRole('switch', { name: 'Allow authorized manual skip' })).toBeDisabled();
+    expect(
+      screen.getByText('Managed Review requires a recorded decision and cannot be skipped.')
+    ).toBeVisible();
   });
 
   it('does not offer later or basic source stages and blocks an unavailable saved prerequisite', async () => {

@@ -29,6 +29,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 
+import { AdmissionDialogTitle } from './admission-dialog-title';
+
 type Props = {
   cycle: AdmissionCycle | null;
   canManage: boolean;
@@ -116,7 +118,13 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
     <CustomDialog
       open
       handleClose={onClose}
-      title="Capacity & reservations"
+      title={
+        <AdmissionDialogTitle
+          title="Capacity & reservations"
+          helpText="Capacity is controlled per offering. Reservation, confirmation and waitlist counts come from the live admission journey and are enforced by its Seat stage."
+          helpLabel="About capacity and reservations"
+        />
+      }
       maxWidth="md"
       hasForm={false}
       disableClose={isSaving}
@@ -126,10 +134,6 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
           <Box>
             <Typography variant="subtitle1" fontWeight={600}>
               {cycle.name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Capacity is controlled per offering. Reservation, confirmation and waitlist counts come
-              from the live admission journey and are enforced by its Seat stage.
             </Typography>
           </Box>
 
@@ -180,7 +184,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
               {data.notSeatManagedOfferingCount > 0 && (
                 <Alert severity="info">
                   {data.notSeatManagedOfferingCount} of {data.offeringCount} offerings do not use a Seat
-                  stage. Assign a published admission process with a Seat stage before configuring capacity.
+                  stage. Assign a published Admission Stage workflow with a Seat stage before configuring capacity.
                 </Alert>
               )}
               {data.overCapacityOfferingCount > 0 && (
@@ -288,7 +292,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                               title={
                                 row.isSeatManaged
                                   ? ''
-                                  : 'Assign a published admission process with a Seat stage first.'
+                                  : 'Assign a published Admission Stage workflow with a Seat stage first.'
                               }
                             >
                               <span>

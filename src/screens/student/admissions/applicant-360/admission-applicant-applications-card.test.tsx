@@ -1,10 +1,10 @@
 import type { AdmissionApplicant360 } from 'src/redux/student/admissions/admission-applicants-api';
 
-import { vi, it, expect, describe, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { fireEvent, render, screen } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings';
+import { vi, it, expect, describe, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import { AdmissionApplicantApplicationsCard } from './admission-applicant-applications-card';
@@ -43,6 +43,8 @@ const application: AdmissionApplicant360['applications'][number] = {
   id: 'application-1',
   applicationNumber: 'APP/2026/001',
   status: 4,
+  assignedCounsellorId: 'counsellor-1',
+  assignedCounsellorName: 'Anita Shah',
   creationTime: '2026-09-18T08:00:00Z',
   lastSavedAt: '2026-09-18T09:00:00Z',
   stages: [
@@ -115,6 +117,8 @@ describe('AdmissionApplicantApplicationsCard', () => {
     fireEvent.click(information);
     expect(information).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByText('APP-2026-000001')).toBeInTheDocument();
+    expect(screen.getByText('Journey counsellor')).toBeInTheDocument();
+    expect(screen.getByText('Anita Shah')).toBeInTheDocument();
   });
 
   it('shows the workflow override only when the existing manage permission is granted', () => {

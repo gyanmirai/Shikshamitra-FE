@@ -7,7 +7,7 @@ import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState, useEffect } from 'react';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
@@ -73,20 +73,26 @@ const ChargesTable = ({
   } = filters;
 
   const tabs = useTabs(selectedTab);
-	const permissions = useChargePermissions();
-	const [page, setPage] = useState(1);
-	const [pageSize, setPageSize] = useState(20);
-	const [search, setSearch] = useState('');
+  const permissions = useChargePermissions();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     setSelectedTab(tabs.value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabs.value]);
 
-	useEffect(() => {
-		setPage(1);
-	}, [tabs.value, filterPayload?.academicYearId, filterSelectedBoard, filterSelectedMedium,
-		filterPayload?.standardId, filterPayload?.divisionId]);
+  useEffect(() => {
+    setPage(1);
+  }, [
+    tabs.value,
+    filterPayload?.academicYearId,
+    filterSelectedBoard,
+    filterSelectedMedium,
+    filterPayload?.standardId,
+    filterPayload?.divisionId,
+  ]);
 
   // Fetch charge data — now passes standardId and divisionId to the backend
   const {
@@ -97,19 +103,20 @@ const ChargesTable = ({
     type: 'query',
     currentQueryAndMutation: useGetChargesQuery,
     params: {
-		academicYearId: filterPayload?.academicYearId,
+      academicYearId: filterPayload?.academicYearId,
       boardId: filterSelectedBoard,
       educationMediumId: filterSelectedMedium,
       standardId: filterPayload?.standardId,
       divisionId: filterPayload?.divisionId,
       status: tabs.value,
-		page,
-		pageSize,
-		search: search || undefined,
+      page,
+      pageSize,
+      search: search || undefined,
       _refetchTrigger: refetchTrigger,
     },
     options: {
-		skip: !filterPayload?.academicYearId || !filterSelectedBoard || !filterSelectedMedium || !isReady,
+      skip:
+        !filterPayload?.academicYearId || !filterSelectedBoard || !filterSelectedMedium || !isReady,
     },
   });
 
@@ -217,7 +224,7 @@ const ChargesTable = ({
             No Charges Found{' '}
             <Box
               component="span"
-				onClick={permissions.canAdd ? onAddCharge : undefined}
+              onClick={permissions.canAdd ? onAddCharge : undefined}
               color="primary.main"
               fontWeight={600}
               sx={
@@ -226,7 +233,7 @@ const ChargesTable = ({
                   : undefined
               }
             >
-				{permissions.canAdd ? 'Add Charge' : 'Create permission required'}
+              {permissions.canAdd ? 'Add Charge' : 'Create permission required'}
             </Box>
           </>
         }
@@ -331,48 +338,74 @@ const ChargesTable = ({
             sticky: true,
             render(_value, row: any) {
               const isPending = row.displayStatus === PENDING;
-			  const actions: string[] = row.availableActions ?? [];
-			  const canEdit = isPending && permissions.canEdit && actions.includes('Edit');
-			  const canDelete = isPending && permissions.canDelete && actions.includes('Delete');
-			  const canApprove = isPending && permissions.canApprove && actions.includes('Approve');
-			  const canReject = isPending && permissions.canReject && actions.includes('Reject');
+              const actions: string[] = row.availableActions ?? [];
+              const canEdit = isPending && permissions.canEdit && actions.includes('Edit');
+              const canDelete = isPending && permissions.canDelete && actions.includes('Delete');
+              const canApprove = isPending && permissions.canApprove && actions.includes('Approve');
+              const canReject = isPending && permissions.canReject && actions.includes('Reject');
               const canVoid = permissions.canVoid && actions.includes('Void');
               return (
                 <Box display="flex" gap={1} alignItems="center">
-                  <ThreeDotsActions
+                  <AdaptiveThreeDotsActions
+                    actions={[
+                      {
+                        id: 'view',
+                        label: 'View',
+                        icon: 'carbon:view-filled',
+                        onClick: () => onView(row as IChargeData),
+                      },
+                      ...(canEdit
+                        ? [
+                            {
+                              id: 'edit',
+                              label: 'Edit',
+                              icon: 'solar:pen-bold',
+                              onClick: () => onEdit(row as IChargeData),
+                            },
+                          ]
+                        : []),
+                      ...(canDelete
+                        ? [
+                            {
+                              id: 'delete',
+                              label: 'Delete',
+                              icon: 'solar:trash-bin-trash-bold',
+                              onClick: () => onRemove(row as IChargeData),
+                              color: 'error.main',
+                            },
+                          ]
+                        : []),
+                    ]}
                     placement="right-top"
-                    showViewIcon
-					showEditIcon={canEdit}
-                    showThreeDots={false}
-					showDeleteIcon={canDelete}
-                    handleDeleteClick={() => onRemove(row as IChargeData)}
-                    handleViewClick={() => onView(row as IChargeData)}
-                    handleEditClick={() => onEdit(row as IChargeData)}
                   />
-				  {(canApprove || canReject) && (
+                  {(canApprove || canReject) && (
                     <Box sx={{ display: 'flex' }}>
-					  {canApprove && <IconButton
-                        size="small"
-                        onClick={() => onApprove(row as IChargeData)}
-                        sx={{
-                          color: 'success.main',
-                          '&:hover': { backgroundColor: 'success.lighter' },
-                        }}
-                        title="Approve"
-                      >
-                        <Iconify icon="mdi:approve" width={20} height={20} />
-					  </IconButton>}
-					  {canReject && <IconButton
-                        size="small"
-                        onClick={() => onReject(row as IChargeData)}
-                        sx={{
-                          color: 'error.main',
-                          '&:hover': { backgroundColor: 'error.lighter' },
-                        }}
-                        title="Reject"
-                      >
-                        <Iconify icon="entypo:cross" width={20} height={20} />
-					  </IconButton>}
+                      {canApprove && (
+                        <IconButton
+                          size="small"
+                          onClick={() => onApprove(row as IChargeData)}
+                          sx={{
+                            color: 'success.main',
+                            '&:hover': { backgroundColor: 'success.lighter' },
+                          }}
+                          title="Approve"
+                        >
+                          <Iconify icon="mdi:approve" width={20} height={20} />
+                        </IconButton>
+                      )}
+                      {canReject && (
+                        <IconButton
+                          size="small"
+                          onClick={() => onReject(row as IChargeData)}
+                          sx={{
+                            color: 'error.main',
+                            '&:hover': { backgroundColor: 'error.lighter' },
+                          }}
+                          title="Reject"
+                        >
+                          <Iconify icon="entypo:cross" width={20} height={20} />
+                        </IconButton>
+                      )}
                     </Box>
                   )}
                   {canVoid && (
@@ -391,21 +424,21 @@ const ChargesTable = ({
           },
         ]}
         data={tableData || []}
-		serverSidePagination
-		serverSideSearch
-		totalCount={chargesData?.totalCount ?? 0}
-		page={page - 1}
-		rowsPerPage={pageSize}
-		searchTerm={search}
-		onServerPagination={(nextPage, nextPageSize) => {
-			setPage(nextPage);
-			setPageSize(nextPageSize);
-		}}
-		onServerSearch={(value) => {
-			setSearch(value);
-			setPage(1);
-		}}
-		isFilter={false}
+        serverSidePagination
+        serverSideSearch
+        totalCount={chargesData?.totalCount ?? 0}
+        page={page - 1}
+        rowsPerPage={pageSize}
+        searchTerm={search}
+        onServerPagination={(nextPage, nextPageSize) => {
+          setPage(nextPage);
+          setPageSize(nextPageSize);
+        }}
+        onServerSearch={(value) => {
+          setSearch(value);
+          setPage(1);
+        }}
+        isFilter={false}
       />
     </>
   );

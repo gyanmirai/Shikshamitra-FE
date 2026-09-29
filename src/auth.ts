@@ -1,10 +1,34 @@
 import NextAuth from 'next-auth';
 import { jwtDecode } from 'jwt-decode';
+import { createHash } from 'node:crypto';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 import { refreshAccessToken } from './auth-token';
+import { runAuthRequestOnce } from './auth-request';
 
 async function signInFn({
+  email,
+  password,
+  organizationName,
+}: {
+  email: string;
+  password: string;
+  organizationName: string;
+}) {
+  const requestKey = createHash('sha256')
+    .update(`${organizationName}\u0000${email}\u0000${password}`)
+    .digest('base64url');
+
+  return runAuthRequestOnce(requestKey, () =>
+    requestPasswordToken({
+      email,
+      password,
+      organizationName,
+    })
+  );
+}
+
+async function requestPasswordToken({
   email,
   password,
   organizationName,

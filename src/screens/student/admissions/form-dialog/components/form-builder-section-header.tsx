@@ -15,7 +15,6 @@ type Props = {
   section: AdmissionFormSection;
   sectionIndex: number;
   selected: boolean;
-  canDelete: boolean;
   settingsOpen: boolean;
   reorderEnabled: boolean;
   sortable: ReturnType<typeof useSortable>;
@@ -28,7 +27,6 @@ export function FormBuilderSectionHeader({
   section,
   sectionIndex,
   selected,
-  canDelete,
   settingsOpen,
   reorderEnabled,
   sortable,
@@ -98,7 +96,7 @@ export function FormBuilderSectionHeader({
           <Iconify icon={settingsOpen ? 'mdi:chevron-up' : 'mdi:pencil-outline'} width={18} />
         </IconButton>
       </CustomTooltip>
-      <FormBuilderDeleteUnit name={name} unit="section" canDelete={canDelete} onDelete={onDelete} />
+      <FormBuilderDeleteUnit name={name} unit="section" onDelete={onDelete} />
     </Stack>
   );
 }

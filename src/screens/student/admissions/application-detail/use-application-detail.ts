@@ -23,12 +23,12 @@ import {
 } from 'src/redux/student/admissions/admission-applications-api';
 
 import { readAdmissionFormValue } from '../admission-visibility-rules';
+import { canRequestNormalStageAdvance } from './application-progress-model';
+import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import {
   buildDynamicAdmissionYupSchema,
   getDynamicAdmissionValidationErrors,
 } from '../admission-form-validation';
-import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
-import { canRequestNormalStageAdvance } from './application-progress-model';
 
 export type RuntimeAction = 'skip' | 'override' | null;
 export type AdvanceOptions = {
@@ -117,8 +117,27 @@ export function useApplicationDetail(id: string) {
     await persistChanges(true);
   };
   const advance = async (options?: AdvanceOptions) => {
-    const application = applicationQuery.data;
-    const workflow = workflowQuery.data;
+    let application = applicationQuery.data;
+    let workflow = workflowQuery.data;
+    // Managed review and assessment actions can change the application's stamp
+    // before their query invalidations finish. Read both records at action time.
+    try {
+      [application, workflow] = await Promise.all([
+        applicationQuery.refetch().unwrap(),
+        workflowQuery.refetch().unwrap(),
+      ]);
+    } catch {
+      shikshaMitraToast.error({
+        message: 'The latest application could not be loaded. Try again before continuing.',
+      });
+      return false;
+    }
+    if (workflow.currentStageInstanceId !== workflowQuery.data?.currentStageInstanceId) {
+      shikshaMitraToast.info({
+        message: 'The admission step changed. Review the updated step before continuing.',
+      });
+      return false;
+    }
     if (!application?.concurrencyStamp || !workflow?.currentStageInstanceId) {
       shikshaMitraToast.error({
         message: 'The application changed or is still loading. Refresh it before continuing.',
@@ -144,8 +163,8 @@ export function useApplicationDetail(id: string) {
         id,
         expectedCurrentStageInstanceId: workflow.currentStageInstanceId,
         idempotencyKey: crypto.randomUUID(),
-        concurrencyStamp: application.concurrencyStamp,
         ...options,
+        concurrencyStamp: application.concurrencyStamp,
       }).unwrap();
       setRuntimeAction(null);
       shikshaMitraToast.success({
@@ -233,6 +252,7 @@ export function useApplicationDetail(id: string) {
     formStageQuery,
     formHistoryQuery,
     currentValues,
+    hasUnsavedAnswers: formik.dirty,
     errors,
     fieldErrors,
     runtimeAction,

@@ -249,7 +249,7 @@ export function WorkflowBuilderHeader(props: WorkflowBuilderHeaderProps) {
   return (
     <>
       <CustomBreadcrumbs
-        heading="Admission Process"
+        heading="Admission Stage"
         description={
           workflow.description || 'Configure the stages and routes for this admission journey.'
         }
@@ -258,7 +258,8 @@ export function WorkflowBuilderHeader(props: WorkflowBuilderHeaderProps) {
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'Admission Process' },
+          { name: 'Settings', href: studentPaths.enrollment.settings.root },
+          { name: 'Admission Stage' },
         ]}
         action={
           <Box sx={{ display: { xs: 'none', md: 'block' } }}>

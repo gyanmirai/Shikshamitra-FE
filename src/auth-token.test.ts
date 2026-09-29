@@ -60,4 +60,33 @@ describe('refreshAccessToken', () => {
       error: undefined,
     });
   });
+
+  it('shares one refresh request when the same session is evaluated concurrently', async () => {
+    let resolveResponse: ((response: unknown) => void) | undefined;
+    const fetchToken = vi.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveResponse = resolve;
+        })
+    );
+
+    const firstRefresh = refreshAccessToken(token, fetchToken as any);
+    const secondRefresh = refreshAccessToken(token, fetchToken as any);
+
+    await vi.waitFor(() => expect(fetchToken).toHaveBeenCalledTimes(1));
+    resolveResponse?.({
+      ok: true,
+      json: vi.fn().mockResolvedValue({
+        access_token: 'shared-access-token',
+        refresh_token: 'shared-refresh-token',
+        expires_in: 120,
+      }),
+    });
+
+    const [firstResult, secondResult] = await Promise.all([firstRefresh, secondRefresh]);
+
+    expect(firstResult.accessToken).toBe('shared-access-token');
+    expect(secondResult.accessToken).toBe('shared-access-token');
+    expect(fetchToken).toHaveBeenCalledOnce();
+  });
 });

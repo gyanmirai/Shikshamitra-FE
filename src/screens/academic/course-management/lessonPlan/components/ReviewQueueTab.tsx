@@ -522,7 +522,7 @@ export const ReviewQueueTab = ({
         <Box
           sx={{
             display: 'grid',
-            gap: 2,
+            gap: 1.5,
             alignItems: 'start',
             alignContent: 'start',
             gridAutoRows: 'max-content',
@@ -531,7 +531,7 @@ export const ReviewQueueTab = ({
               sm: 'repeat(2, 1fr)',
               md: 'repeat(2, 1fr)',
               lg: 'repeat(2, 1fr)',
-              xl: 'repeat(3, 1fr)',
+              xl: 'repeat(2, minmax(0, 1fr))',
             },
           }}
         >

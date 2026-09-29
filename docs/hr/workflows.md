@@ -160,11 +160,19 @@ Run Payroll and payslips show revision provenance and protected-target drift wit
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
 Salary Template settings uses one full-height table for Active, Needs setup, and Archived templates.
 The shared inline breadcrumb header owns the Create template action and places reusable-default guidance in its information tooltip.
-Dedicated create and edit pages use Configure and Review, with compact shared controls, a month picker, and a fixed action footer.
-Configure shows Basic Information above side-by-side Earnings and Deductions on large screens, stacking the collections on smaller screens.
-Component values remain directly editable, while expandable details expose formulas, purpose, dependencies, ordering, and removal.
-New rows expand and focus their first setting; validation expands invalid rows.
-Review validates configuration without saving or calculating; Create Template or Save Changes creates the version after a current successful preview.
+Dedicated create, edit, and view pages use a continuous form with compact shared controls, a month picker, and a persistent action footer.
+Basic Information and compact Statutory Defaults share the desktop top row at a two-to-one width ratio with equal content-driven heights and aligned headers.
+Earnings and Deductions use equal-width, 480 px desktop panels with stationary headers and independently scrolling component lists.
+Tablet and mobile stack the sections with natural heights, and Sample Calculation spans the page below the component panels.
+Statutory guidance stays concise, with longer explanations available through How statutory rules apply.
+Compact rows place the name and calculation summary beside the editable value and expand action.
+Ordinary has no row label; meaningful purposes appear inline without chips.
+Expandable details expose formulas, purpose, dependencies, ordering, and removal.
+New rows expand and scroll into view before focusing their first setting; validation expands and reveals invalid rows inside the correct list.
+Reordering keeps focus with the moved component when its action remains available.
+Preview Calculation scrolls to and focuses the sample section without saving or calculating.
+Calculate validates configuration, expands invalid rows, and focuses the first error before sending a preview request.
+Create Template or Save Changes creates the version after a current successful preview, with the footer explaining unmet save requirements.
 The title and breadcrumb return action remain available while loading and when loading fails.
 Selecting an editable table row, template-name link, or Edit action opens the dedicated template page directly in edit mode.
 The create page requires Add and a template detail page requires View; mutation controls additionally require Edit.
@@ -176,9 +184,9 @@ Calculate previews the current rules for new and existing templates before savin
 Changes to rules, values, dependencies, order, compensation defaults, PF, sample amount, or effective month clear the result and disable Save until another successful calculation.
 Name and description edits retain the preview.
 Late responses for superseded inputs are ignored, calculation errors remain inline, and the preview expires after 30 minutes.
-Review shows the sample earning and deduction breakdown, employer contributions, target difference, and statutory warnings.
+Sample Calculation shows the sample earning and deduction breakdown, employer contributions, target difference, and statutory warnings.
 The sample does not establish universal employee eligibility.
-The review step explains that the new version applies to future salary setups while existing employees remain pinned to their saved version.
+Basic Information explains that the new version applies to future salary setups while existing employees remain pinned to their saved version.
 Template formulas override component-master formulas only when the template generates an employee salary structure.
 Template versions define a default quote basis, protection policy, PF applicability, and PF rule.
 Fixed and percentage formulas keep an editable empty numeric value, while remainder and statutory formulas explicitly show that their value is calculated automatically.

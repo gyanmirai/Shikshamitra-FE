@@ -1,9 +1,9 @@
 'use client';
 
-import { useMemo, useState, useEffect } from 'react';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
 import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
@@ -20,8 +20,8 @@ import {
   InputAdornment,
 } from '@mui/material';
 
-import { useRoomAuditLogs } from '../roomAvailability.hooks';
 import { RoomAuditLogPanel } from './RoomAuditLogPanel';
+import { useRoomAuditLogs } from '../roomAvailability.hooks';
 
 import type { RoomAvailabilityItem } from '../types';
 
@@ -48,8 +48,9 @@ export const RoomAuditLogDrawer = ({
   const [selectedRoomId, setSelectedRoomId] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const { data, isLoading, isFetching, error, fetch } = useRoomAuditLogs(
-    selectedRoomId === 'all' ? null : selectedRoomId
+  const { data, isLoading, isFetching, error } = useRoomAuditLogs(
+    selectedRoomId === 'all' ? null : selectedRoomId,
+    { skip: !open }
   );
 
   useEffect(() => {
@@ -59,11 +60,6 @@ export const RoomAuditLogDrawer = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialRoomId]);
-
-  useEffect(() => {
-    if (open) fetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, selectedRoomId]);
 
   const roomOptions = useMemo<RoomOption[]>(
     () => [

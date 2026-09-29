@@ -2,14 +2,15 @@
 
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import NumericFormatCustom from 'src/components/custom-numeric-format';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
   Box,
   Alert,
   Stack,
   Button,
-  MenuItem,
   TextField,
   Typography,
   DialogActions,
@@ -89,6 +90,7 @@ export default function StudentOnboardingOperationDialog({
           id: student.id,
           concurrencyStamp: student.concurrencyStamp,
           divisionId,
+          reason: overrideReason.trim() || undefined,
         }).unwrap();
         shikshaMitraToast.success({
           message: `Division reserved for ${student.studentName}.`,
@@ -100,7 +102,7 @@ export default function StudentOnboardingOperationDialog({
           numberSeriesId,
           rollNumber: parsedRollNumber,
           manualValue: manualValue.trim() || undefined,
-          overrideReason: manualValue.trim() ? overrideReason.trim() : undefined,
+          overrideReason: overrideReason.trim() || undefined,
         }).unwrap();
         shikshaMitraToast.success({
           message: `Identifiers prepared for ${student.studentName}.`,
@@ -119,7 +121,7 @@ export default function StudentOnboardingOperationDialog({
   return (
     <CustomDialog
       open={open}
-      handleClose={onClose}
+      handleClose={() => { if (!isSaving) onClose(); }}
       title={isPlacement ? 'Assign division' : 'Prepare identifiers'}
       maxWidth="sm"
       fullWidth
@@ -139,26 +141,26 @@ export default function StudentOnboardingOperationDialog({
                 Available seats are calculated from active enrollments and live reservations. Saving
                 reserves the selected seat until activation.
               </Alert>
-              <TextField
-                select
+              <CustomSelect
                 fullWidth
                 size="small"
                 label="Division"
                 value={divisionId}
-                onChange={(event) => setDivisionId(event.target.value)}
-                disabled={placementQuery.isFetching}
+                onChange={(value) => setDivisionId(String(value))}
+                options={(placementQuery.data ?? []).map(option => ({ value: option.id, label: `${option.name} · ${option.availableSeats} available` }))}
+                disabledValues={(placementQuery.data ?? []).filter(option => option.isFull).map(option => option.id)}
+                disabledLabel="Full"
+                disabled={placementQuery.isFetching || isSaving}
                 helperText={
                   selectedPlacement
                     ? `${selectedPlacement.availableSeats} of ${selectedPlacement.capacity} seats available`
                     : 'Select a division with live capacity.'
                 }
-              >
-                {(placementQuery.data ?? []).map((option) => (
-                  <MenuItem key={option.id} value={option.id} disabled={option.isFull}>
-                    {option.name} · {option.availableSeats} available
-                  </MenuItem>
-                ))}
-              </TextField>
+              />
+              {student?.divisionId && divisionId !== student.divisionId && <TextField fullWidth size="small"
+                label="Placement change reason" value={overrideReason} disabled={isSaving}
+                onChange={event => setOverrideReason(event.target.value)} inputProps={{ maxLength: 1000 }}
+                helperText="Required when the saved placement rule requires a reason. Approval may also be required." />}
               {placementQuery.isError ? (
                 <Alert severity="error">Division capacity could not be loaded.</Alert>
               ) : null}
@@ -169,45 +171,43 @@ export default function StudentOnboardingOperationDialog({
                 The selected series reserves the next GR number together with the roll number. Both
                 values are committed only when onboarding is activated.
               </Alert>
-              <TextField
-                select
+              <CustomSelect
                 fullWidth
                 size="small"
                 label="Identifier series"
                 value={numberSeriesId}
-                onChange={(event) => setNumberSeriesId(event.target.value)}
-                disabled={seriesQuery.isFetching}
+                onChange={(value) => setNumberSeriesId(String(value))}
+                options={(seriesQuery.data ?? []).map(series => ({ value: series.id, label: `${series.name} · ${series.nextPreview}` }))}
+                disabled={seriesQuery.isFetching || isSaving}
                 helperText={
                   selectedSeries
                     ? `Next value: ${selectedSeries.nextPreview}`
                     : 'Select an active series for this academic context.'
                 }
-              >
-                {(seriesQuery.data ?? []).map((series) => (
-                  <MenuItem key={series.id} value={series.id}>
-                    {series.name} · {series.nextPreview}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
+              />
+              <NumericFormatCustom
                 fullWidth
                 required
                 size="small"
-                type="number"
+                prefix=""
+                thousandSeparator={false}
+                decimalScale={0}
                 label="Roll number"
+                disabled={isSaving}
                 value={rollNumber}
-                onChange={(event) => setRollNumber(event.target.value)}
+                onValueChange={(values) => setRollNumber(values.value)}
                 inputProps={{ min: 1 }}
               />
               <TextField
                 fullWidth
                 size="small"
                 label="Manual identifier override"
+                disabled={isSaving}
                 value={manualValue}
                 onChange={(event) => setManualValue(event.target.value)}
                 helperText="Optional. Leave blank to use the series preview. Backend permission and audit rules still apply."
               />
-              {manualValue.trim() ? (
+              {manualValue.trim() || student?.rollNo ? (
                 <TextField
                   fullWidth
                   required
@@ -215,6 +215,7 @@ export default function StudentOnboardingOperationDialog({
                   minRows={2}
                   size="small"
                   label="Override reason"
+                  disabled={isSaving}
                   value={overrideReason}
                   onChange={(event) => setOverrideReason(event.target.value)}
                   helperText="Required for the identifier allocation audit history."
@@ -229,10 +230,11 @@ export default function StudentOnboardingOperationDialog({
         </Stack>
       </DialogScrollContent>
       <DialogActions sx={{ px: 2, pb: 2 }}>
-        <Button color="inherit" onClick={onClose}>
+        <Button size="small" color="inherit" disabled={isSaving} onClick={onClose}>
           Cancel
         </Button>
         <Button
+          size="small"
           variant="contained"
           startIcon={<Iconify icon={isPlacement ? 'mdi:seat' : 'mdi:identifier'} width={18} />}
           disabled={!canSubmit || isSaving}

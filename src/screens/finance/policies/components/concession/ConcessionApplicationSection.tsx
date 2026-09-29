@@ -26,6 +26,11 @@ import { ConcessionSectionCard } from './ConcessionCommon';
 
 const APPLY_ON_OPTIONS = [
   {
+    value: 'AllFees',
+    label: 'All Installments, Including Paid',
+    caption: 'Approved concessions on paid amounts create refund requests',
+  },
+  {
     value: 'AllOutstanding',
     label: 'All Outstanding Installments',
     caption: 'Apply proportionally across all current and future unpaid installments',
@@ -46,7 +51,7 @@ export default function ConcessionApplicationSection({ formik }: { formik: any }
   return (
     <ConcessionSectionCard
       title="Application Behaviour"
-      subtitle="Define which installments receive the discount. Existing paid collections are strictly protected."
+      subtitle="Choose whether the concession also covers amounts already paid. Paid collections remain in history."
       icon="solar:shield-check-bold"
     >
       <Grid container spacing={2.5}>

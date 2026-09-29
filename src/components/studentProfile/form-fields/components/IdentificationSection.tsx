@@ -191,7 +191,7 @@ const IdentificationSection: React.FC<SectionProps> = ({
           onBlur={() => formik.setFieldTouched('adharNo', true, true)}
           error={(formik.touched as any).adharNo && Boolean((formik.errors as any).adharNo)}
           helperText={(formik.touched as any).adharNo && (formik.errors as any).adharNo}
-          disabled={!isEdit.value}
+          disabled={!isMainForm || !isEdit.value}
           pasteTransformer={(s) => s.replace(/\D/g, '').slice(0, 12)}
         />
       </ShakingTextField>
@@ -247,7 +247,7 @@ const IdentificationSection: React.FC<SectionProps> = ({
           onBlur={() => formik.setFieldTouched('apparId', true, false)}
           error={(formik.touched as any).apparId && Boolean((formik.errors as any).apparId)}
           helperText={(formik.touched as any).apparId && (formik.errors as any).apparId}
-          disabled={!isEdit.value}
+          disabled={!isMainForm || !isEdit.value}
           pasteTransformer={(s) => s.replace(/\D/g, '').slice(0, 12)}
         />
       </ShakingTextField>
@@ -284,7 +284,7 @@ const IdentificationSection: React.FC<SectionProps> = ({
           inputProps={{
             maxLength: 11,
           }}
-          disabled={!isEdit.value}
+          disabled={!isMainForm || !isEdit.value}
         />
       </ShakingTextField>
     </Grid>

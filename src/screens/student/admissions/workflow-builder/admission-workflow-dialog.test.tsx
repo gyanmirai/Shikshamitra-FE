@@ -5,9 +5,9 @@ import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, waitFor } from '@testing-library/react';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { AdmissionWorkflowDialog } from '../admission-workflow-dialog';
 
@@ -20,125 +20,122 @@ import { AdmissionWorkflowDialog } from '../admission-workflow-dialog';
   'lightning-bolt-outline',
   'clipboard-text-outline',
   'email-seal-outline',
+  'pencil-outline',
+  'text-box-plus-outline',
+  'format-list-numbered',
+  'chevron-down',
 ].forEach((name) => {
   addIcon(`mdi:${name}`, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 });
 
-describe('workflow creation dialog', () => {
-  it('generates a code and keeps the standard journey as the recommended start', async () => {
+const inquiryForm = { id: 'inquiry-form', name: 'Parent inquiry', version: 2 };
+const registrationForm = { id: 'registration-form', name: 'Student registration', version: 3 };
+const fetchInquiryForms = vi.fn(async () => ({ data: [inquiryForm], hasMore: false }));
+const fetchRegistrationForms = vi.fn(async () => ({ data: [registrationForm], hasMore: false }));
+
+function renderDrawer() {
+  const onSave = vi.fn().mockResolvedValue(undefined);
+  const store = configureStore({ reducer: { confirmPopup } });
+  render(
+    <Provider store={store}>
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AdmissionWorkflowDialog
+          open
+          saving={false}
+          showStarterJourney
+          autoGenerateCode
+          fetchInquiryForms={fetchInquiryForms}
+          fetchRegistrationForms={fetchRegistrationForms}
+          onClose={vi.fn()}
+          onSave={onSave}
+        />
+      </ThemeProvider>
+    </Provider>
+  );
+  return onSave;
+}
+
+async function selectForm(user: ReturnType<typeof userEvent.setup>, label: string, option: string) {
+  await user.click(screen.getByRole('combobox', { name: label }));
+  await user.click(await screen.findByRole('option', { name: option }));
+}
+
+describe('workflow creation drawer', () => {
+  it('shows forms before templates and keeps the journey preview collapsed until requested', async () => {
     const user = userEvent.setup();
-    const onSave = vi.fn().mockResolvedValue(undefined);
-    const store = configureStore({ reducer: { confirmPopup } });
-    render(
-      <Provider store={store}>
-        <ThemeProvider theme={createTheme(defaultSettings)}>
-          <AdmissionWorkflowDialog
-            open
-            saving={false}
-            showStarterJourney
-            autoGenerateCode
-            onClose={vi.fn()}
-            onSave={onSave}
-          />
-        </ThemeProvider>
-      </Provider>
+    renderDrawer();
+
+    const registration = screen.getByRole('combobox', { name: 'Registration form *' });
+    const templates = screen.getByText('Choose a workflow template');
+    expect(registration.compareDocumentPosition(templates)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(screen.getByRole('button', { name: /Preview journey/ })).toHaveAttribute(
+      'aria-expanded',
+      'false'
     );
 
-    await user.type(screen.getByRole('textbox', { name: 'Workflow name *' }), 'Grade 1 Admission');
+    await user.click(screen.getByRole('button', { name: /Preview journey/ }));
+    expect(screen.getByRole('button', { name: /Preview journey/ })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
+    await user.click(screen.getByRole('button', { name: 'Add workflow description' }));
+    expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toBeInTheDocument();
+  });
+
+  it('keeps the chosen template and both published forms in the create payload', async () => {
+    const user = userEvent.setup();
+    const onSave = renderDrawer();
+
+    expect(document.querySelector('.MuiDrawer-paperAnchorRight')).toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+      target: { value: 'Grade 1 Admission' },
+    });
     expect(screen.getByRole('textbox', { name: 'Workflow code *' })).toHaveValue(
       'GRADE_1_ADMISSION'
     );
-    expect(screen.getByRole('radio', { name: /Standard admission/ })).toBeChecked();
-    expect(
-      screen.queryByText('Use a name staff will recognize in offerings and reports.')
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText('Generated from the workflow name. You can edit it.')
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText('Visible to staff when choosing and reviewing workflows.')
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByText(
-        'Create the draft, choose a starting point, then review every stage before publishing.'
-      )
-    ).not.toBeInTheDocument();
-
-    await user.hover(screen.getByRole('button', { name: 'About creating a workflow' }));
-    expect(
-      await screen.findByRole('tooltip', {
-        name: 'Create the draft, choose a starting point, then review every stage before publishing.',
-      })
-    ).toBeVisible();
-
+    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
+    await selectForm(user, 'Inquiry form (optional)', 'Parent inquiry · v2');
+    await selectForm(user, 'Registration form *', 'Student registration · v3');
     await user.click(screen.getByRole('button', { name: 'Create draft' }));
+
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       name: 'Grade 1 Admission',
       code: 'GRADE_1_ADMISSION',
-      starterJourney: 'standard',
-    });
-  });
-
-  it('allows staff to start with an assessment-based predefined journey', async () => {
-    const user = userEvent.setup();
-    const onSave = vi.fn().mockResolvedValue(undefined);
-    const store = configureStore({ reducer: { confirmPopup } });
-    render(
-      <Provider store={store}>
-        <ThemeProvider theme={createTheme(defaultSettings)}>
-          <AdmissionWorkflowDialog
-            open
-            saving={false}
-            showStarterJourney
-            autoGenerateCode
-            onClose={vi.fn()}
-            onSave={onSave}
-          />
-        </ThemeProvider>
-      </Provider>
-    );
-
-    await user.type(screen.getByRole('textbox', { name: 'Workflow name *' }), 'Entrance Intake');
-    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
-    await user.click(screen.getByRole('button', { name: 'Create draft' }));
-
-    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
-    expect(onSave.mock.calls[0][0]).toMatchObject({
-      name: 'Entrance Intake',
-      code: 'ENTRANCE_INTAKE',
       starterJourney: 'assessment',
+      defaultInquiryFormDefinitionId: 'inquiry-form',
+      registrationFormDefinitionId: 'registration-form',
     });
+  }, 15000);
+
+  it('requires registration form before creating a template workflow', async () => {
+    const user = userEvent.setup();
+    const onSave = renderDrawer();
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+      target: { value: 'Fresh Admission' },
+    });
+    await user.click(screen.getByRole('button', { name: 'Create draft' }));
+
+    expect(await screen.findByText('Select a published registration form')).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('allows staff to start with a blank workflow', async () => {
+  it('allows a blank workflow without a registration form', async () => {
     const user = userEvent.setup();
-    const onSave = vi.fn().mockResolvedValue(undefined);
-    const store = configureStore({ reducer: { confirmPopup } });
-    render(
-      <Provider store={store}>
-        <ThemeProvider theme={createTheme(defaultSettings)}>
-          <AdmissionWorkflowDialog
-            open
-            saving={false}
-            showStarterJourney
-            autoGenerateCode
-            onClose={vi.fn()}
-            onSave={onSave}
-          />
-        </ThemeProvider>
-      </Provider>
-    );
+    const onSave = renderDrawer();
 
-    await user.type(screen.getByRole('textbox', { name: 'Workflow name *' }), 'Custom Admission');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
+      target: { value: 'Custom Admission' },
+    });
     await user.click(screen.getByRole('radio', { name: /Blank workflow/ }));
+    expect(screen.queryByRole('combobox', { name: 'Registration form *' })).toBeNull();
     await user.click(screen.getByRole('button', { name: 'Create draft' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
-      name: 'Custom Admission',
-      code: 'CUSTOM_ADMISSION',
       starterJourney: 'empty',
+      registrationFormDefinitionId: null,
     });
   });
 });

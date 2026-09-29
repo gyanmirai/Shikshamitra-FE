@@ -64,6 +64,8 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   'Finance:Concession:030003':
     'The request or fee balances changed. Refresh, review, and approve again.',
   'Finance:Concession:030004': 'Select and review due-fee allocations before approval.',
+  'Finance:Concession:010030': 'The paid fee has no settled receipt available for an automatic refund. Review its payment before approving the concession.',
+  'Finance:Concession:010031': 'Close or reverse the linked refund requests before fully reversing this concession.',
   'Academic:Timetable:020004':
     'This class already has generated timetable assignments. Remove or update those timetable assignments before changing lecture slot timings.',
   'ShikshaMitra.Submission:UseFeedbackToReview':
@@ -136,6 +138,7 @@ export function parseApiProblemDetail(error: any): ParsedApiProblemDetail {
   const data = error?.data || {};
   const candidates: string[] = [];
 
+  addCandidate(candidates, data?.data?.Reason);
   addCandidate(candidates, data?.data?.Message);
   addCandidate(candidates, data?.data?.message);
   addCandidate(candidates, data?.data?.detail);

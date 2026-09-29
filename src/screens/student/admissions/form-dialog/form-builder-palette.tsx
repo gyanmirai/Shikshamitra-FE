@@ -3,12 +3,10 @@ import type {
   AdmissionFormSystemFieldMetadata,
 } from 'src/redux/student/admissions/admission-forms-api';
 
-import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import { useId, useState } from 'react';
 import Stack from '@mui/material/Stack';
-import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 
 import { CustomFieldPalette } from './components/custom-field-palette';
@@ -18,6 +16,7 @@ import type { AdmissionFieldPreset } from './form-field-presets';
 
 type Props = {
   systemFields: AdmissionFormSystemFieldMetadata[];
+  usedBindings?: readonly string[];
   targetLabel?: string;
   onAddField: (
     fieldType: AdmissionFormFieldType,
@@ -26,36 +25,16 @@ type Props = {
   ) => void;
 };
 
-export function FormBuilderPalette({ systemFields, targetLabel, onAddField }: Props) {
+export function FormBuilderPalette({ systemFields, usedBindings, targetLabel, onAddField }: Props) {
   const tabId = useId();
   const [activeTab, setActiveTab] = useState<'system' | 'custom'>('system');
   return (
     <Stack sx={{ height: 1, minHeight: 0, p: 1.5, bgcolor: 'background.paper' }}>
       <Typography variant="subtitle1">Add fields</Typography>
       <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5 }}>
-        Click a field to add it to your form.
+        Adding to {targetLabel || 'Student Details'}
       </Typography>
-      <Stack
-        direction="row"
-        spacing={1}
-        alignItems="center"
-        sx={{
-          p: 1,
-          mb: 1.5,
-          bgcolor: 'action.selected',
-          borderRadius: 1,
-        }}
-      >
-        <Iconify icon="mdi:arrow-right-circle-outline" sx={{ color: 'primary.main' }} />
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" color="text.secondary">
-            Adding to section
-          </Typography>
-          <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
-            {targetLabel || 'Student Details'}
-          </Typography>
-        </Box>
-      </Stack>
+
       <Tabs
         value={activeTab}
         variant="fullWidth"
@@ -90,6 +69,7 @@ export function FormBuilderPalette({ systemFields, targetLabel, onAddField }: Pr
           {tab === 'system' ? (
             <StudentFieldPalette
               fields={systemFields}
+              usedBindings={usedBindings}
               onAdd={(field) => onAddField(field.fieldType, field.key)}
             />
           ) : (

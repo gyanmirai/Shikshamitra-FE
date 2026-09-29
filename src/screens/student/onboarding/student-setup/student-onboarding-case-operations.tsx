@@ -5,6 +5,7 @@ import type { StudentOnboardingServiceHandoffStatus } from 'src/redux/student/on
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetUsersQuery } from 'src/redux/user/userApi';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -19,6 +20,7 @@ import {
 } from '@mui/material';
 import {
   useCancelStudentOnboardingMutation,
+  useSetStudentOnboardingRouteMutation,
   useAssignStudentOnboardingOwnerMutation,
   useGetStudentOnboardingServiceHandoffsQuery,
   useRetryStudentOnboardingServiceHandoffMutation,
@@ -58,7 +60,9 @@ export default function StudentOnboardingCaseOperations({
   canCancel,
   onCancelled,
 }: StudentOnboardingCaseOperationsProps) {
-  const isClosed = student.backendStatus === 4 || student.backendStatus === 5;
+  const isClosed = Boolean(student.studentEnrollmentId) || student.backendStatus === 4 || student.backendStatus === 5;
+  const [setRoute, routeState] = useSetStudentOnboardingRouteMutation();
+  const [route, setRouteDraft] = useState(student.admissionRoute);
   const usersQuery = useGetUsersQuery(undefined, { skip: !canManage || isClosed });
   const handoffsQuery = useGetStudentOnboardingServiceHandoffsQuery(student.id, {
     skip: student.source !== 'onboarding-case',
@@ -77,10 +81,11 @@ export default function StudentOnboardingCaseOperations({
   );
 
   useEffect(() => {
+    setRouteDraft(student.admissionRoute);
     setOwnerId(student.assignedToUserId ?? '');
     setCancelOpen(false);
     setCancellationReason('');
-  }, [student.assignedToUserId, student.id]);
+  }, [student.assignedToUserId, student.admissionRoute, student.id]);
 
   const saveOwner = async () => {
     try {
@@ -120,6 +125,20 @@ export default function StudentOnboardingCaseOperations({
 
   return (
     <Stack spacing={1.5}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
+        <CustomSelect label="Admission route" size="small" value={route}
+          options={['Fresh admission', 'Transfer student', 'Mid-year admission', 'Returning student'].map(name => ({ label: name, value: name }))}
+          disabled={!canManage || isClosed || routeState.isLoading}
+          onChange={value => setRouteDraft(String(value))} />
+        <Button size="small" variant="outlined" startIcon={<Iconify icon="mdi:content-save-outline" />}
+          disabled={!canManage || isClosed || routeState.isLoading || route === student.admissionRoute}
+          onClick={async () => {
+            try {
+              await setRoute({ id: student.id, admissionRoute: route, concurrencyStamp: student.concurrencyStamp }).unwrap();
+              shikshaMitraToast.success({ message: 'Admission route saved and readiness rules refreshed.' });
+            } catch { shikshaMitraToast.error({ message: 'Admission route could not be saved. Refresh the case and retry.' }); }
+          }}>Save route</Button>
+      </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'flex-start' }}>
         <TextField
           select
@@ -204,7 +223,7 @@ export default function StudentOnboardingCaseOperations({
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Label color={meta.color}>{meta.label}</Label>
-                  {handoff.status === 3 && canManage ? (
+                  {handoff.status === 3 && canManage && ['finance-first-payment', 'student-account', 'guardian-account'].includes(handoff.serviceKey) ? (
                     <Button
                       size="small"
                       variant="outlined"
@@ -212,15 +231,15 @@ export default function StudentOnboardingCaseOperations({
                       onClick={async () => {
                         try {
                           await retryHandoff({ id: student.id, handoffId: handoff.id }).unwrap();
-                          shikshaMitraToast.success({ message: 'Service handoff retry queued.' });
+                          shikshaMitraToast.success({ message: 'Service handoff checked. Review its updated status.' });
                         } catch {
                           shikshaMitraToast.error({
-                            message: 'The service handoff retry could not be queued.',
+                            message: 'The service handoff could not be checked.',
                           });
                         }
                       }}
                     >
-                      Retry
+                      Recheck
                     </Button>
                   ) : null}
                 </Stack>

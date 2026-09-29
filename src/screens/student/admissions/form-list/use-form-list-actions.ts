@@ -3,11 +3,12 @@
 import type { RootState } from 'src/redux/store';
 import type {
   AdmissionForm,
+  AdmissionFormPurpose,
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -37,7 +38,15 @@ export function useFormListActions() {
   const router = useRouter();
   const dialog = useBoolean();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingForm, setEditingForm] = useState<AdmissionForm | null>(null);
+  const [creatingPurpose, setCreatingPurpose] = useState<AdmissionFormPurpose>(1);
   const editingQuery = useGetAdmissionFormQuery(editingId ?? '', { skip: !editingId });
+  useEffect(() => {
+    const form = editingQuery.data;
+    if (editingId && form?.id === editingId) {
+      setEditingForm((current) => (current?.id === editingId ? current : form));
+    }
+  }, [editingId, editingQuery.data]);
   const { permissions, user } = useSelector((state: RootState) => state.auth);
   const { canManage, canPublish, canDelete } = getAdmissionFormAccess(permissions);
   const roles = (Array.isArray(user?.role) ? user.role : [user?.role])
@@ -84,12 +93,15 @@ export function useFormListActions() {
     shikshaMitraToast.success({ message: 'Form draft saved' });
     dialog.onFalse();
     setEditingId(null);
+    setEditingForm(null);
   };
   const close = () => {
     dialog.onFalse();
     setEditingId(null);
+    setEditingForm(null);
   };
   const edit = (id: string) => {
+    setEditingForm(null);
     setEditingId(id);
     dialog.onTrue();
   };
@@ -97,7 +109,10 @@ export function useFormListActions() {
   return {
     dialog,
     editingId,
-    editing: editingQuery.data,
+    editing: editingId === editingForm?.id ? editingForm : null,
+    editingError: Boolean(editingId && editingQuery.isError && !editingForm),
+    retryEditing: () => editingQuery.refetch(),
+    creatingPurpose,
     canManage,
     canPublish,
     canDelete,
@@ -107,8 +122,10 @@ export function useFormListActions() {
     save,
     close,
     edit,
-    create: () => {
+    create: (purpose: AdmissionFormPurpose = 1) => {
       setEditingId(null);
+      setEditingForm(null);
+      setCreatingPurpose(purpose);
       dialog.onTrue();
     },
     preview: (id: string) => router.push(`/student/admissions/settings/forms/${id}/preview`),

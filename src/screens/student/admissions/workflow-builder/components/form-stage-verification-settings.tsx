@@ -1,16 +1,31 @@
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 import type { AdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 
-import { Alert, Switch, Checkbox, FormGroup, Typography, FormControlLabel } from '@mui/material';
+import {
+  Alert,
+  Stack,
+  Button,
+  Switch,
+  Checkbox,
+  FormGroup,
+  Typography,
+  FormControlLabel,
+} from '@mui/material';
 
 export function FormStageVerificationSettings({
   policy,
   form,
+  sectionsLoading = false,
+  sectionsError = false,
+  onRetrySections,
   disabled,
   onChange,
 }: {
   policy: AdmissionFormStagePolicy;
   form?: AdmissionForm;
+  sectionsLoading?: boolean;
+  sectionsError?: boolean;
+  onRetrySections?: () => void;
   disabled: boolean;
   onChange: (change: Partial<AdmissionFormStagePolicy>) => void;
 }) {
@@ -20,29 +35,58 @@ export function FormStageVerificationSettings({
         ? [...policy.verificationSectionCodes, code]
         : policy.verificationSectionCodes.filter((item) => item !== code),
     });
+
   return (
-    <>
-      <FormControlLabel
-        control={
-          <Switch
-            checked={policy.requireSectionVerification}
-            onChange={(_, checked) =>
-              onChange({
-                requireSectionVerification: checked,
-                verificationSectionCodes: checked ? policy.verificationSectionCodes : [],
-                autoAdvanceOnSubmit: checked ? false : policy.autoAdvanceOnSubmit,
-              })
-            }
-          />
-        }
-        label="Require staff verification before completing this stage"
-        disabled={disabled}
-      />
+    <Stack spacing={1.25}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+        <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+          <Typography variant="body2">
+            Require staff verification before completing this stage
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: { xs: 'none', sm: 'block' } }}
+          >
+            Staff must verify selected sections before this stage is marked complete.
+          </Typography>
+        </Stack>
+        <Switch
+          size="small"
+          slotProps={{
+            input: { 'aria-label': 'Require staff verification before completing this stage' },
+          }}
+          checked={policy.requireSectionVerification}
+          disabled={disabled}
+          onChange={(_, checked) =>
+            onChange({
+              requireSectionVerification: checked,
+              verificationSectionCodes: checked ? policy.verificationSectionCodes : [],
+              autoAdvanceOnSubmit: checked ? false : policy.autoAdvanceOnSubmit,
+            })
+          }
+        />
+      </Stack>
       {policy.requireSectionVerification && (
-        <>
+        <Stack spacing={1} sx={{ pl: { sm: 2 } }}>
           <Typography variant="subtitle2">Sections staff must verify</Typography>
-          {!form ? (
+          {sectionsLoading ? (
+            <Alert severity="info">Loading form sections…</Alert>
+          ) : sectionsError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={onRetrySections}>
+                  Retry
+                </Button>
+              }
+            >
+              Unable to load this form&apos;s sections. Retry before choosing sections to verify.
+            </Alert>
+          ) : !form ? (
             <Alert severity="warning">Select a published form first.</Alert>
+          ) : form.sections.length === 0 ? (
+            <Alert severity="warning">This published form has no sections available to verify.</Alert>
           ) : (
             <FormGroup>
               {form.sections.map((section) => (
@@ -61,8 +105,8 @@ export function FormStageVerificationSettings({
               ))}
             </FormGroup>
           )}
-        </>
+        </Stack>
       )}
-    </>
+    </Stack>
   );
 }

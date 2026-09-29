@@ -159,6 +159,7 @@ function createForm(
     name,
     code,
     description,
+    purpose: code.includes('INQUIRY') ? 0 : 1,
     layoutType: 1,
     fieldsPerRow: 2,
     defaultLanguage: 'en',
@@ -958,9 +959,9 @@ export const ADMISSION_FORM_TEMPLATE_CATEGORIES: AdmissionFormTemplateCategory[]
   'Surveys',
 ];
 
-export const SYSTEM_ADMISSION_FORM_TEMPLATES: AdmissionFormTemplateSummary[] = DEFINITIONS.map(
-  ({ create: _create, ...summary }) => summary
-);
+export const SYSTEM_ADMISSION_FORM_TEMPLATES: AdmissionFormTemplateSummary[] = DEFINITIONS.filter(
+  (definition) => definition.id !== 'consent-declaration'
+).map(({ create: _create, ...summary }) => summary);
 
 export function getSystemAdmissionFormTemplate(id: SystemAdmissionFormTemplateId) {
   const definition = DEFINITIONS.find((item) => item.id === id);
@@ -995,6 +996,9 @@ export function cloneSchoolFormAsStarter(source: AdmissionForm): CreateUpdateAdm
     code: copyCode,
     description: source.description,
     layoutType: source.layoutType,
+    purpose:
+      source.purpose ??
+      (source.code.includes('INQUIRY') || source.name.toLowerCase().includes('inquiry') ? 0 : 1),
     fieldsPerRow: source.fieldsPerRow ?? 1,
     defaultLanguage: source.defaultLanguage ?? 'en',
     supportedLanguages: source.supportedLanguages?.length ? source.supportedLanguages : ['en'],

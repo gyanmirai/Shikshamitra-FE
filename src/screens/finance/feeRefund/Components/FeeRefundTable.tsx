@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
@@ -278,20 +278,42 @@ const StudentFeeRefundTable: React.FC<StudentFeeRefundTableProps> = ({
               const isDraft = actions.includes('edit');
               return (
                 <Box display="flex" gap={1} alignItems="center">
-                  <ThreeDotsActions
-                    showThreeDots={false}
-                    showViewIcon
-                    showEditIcon={isDraft}
-                    showDeleteIcon={actions.includes('delete')}
-                    handleViewClick={() => {
-                      onView?.(row as IStudentFeeData);
-                    }}
-                    handleEditClick={() => {
-                      onEdit?.(row as IStudentFeeData);
-                    }}
-                    handleDeleteClick={() => {
-                      onDelete?.(row as IStudentFeeData);
-                    }}
+                  <AdaptiveThreeDotsActions
+                    actions={[
+                      {
+                        id: 'view',
+                        label: 'View',
+                        icon: 'carbon:view-filled',
+                        onClick: () => {
+                          onView?.(row as IStudentFeeData);
+                        },
+                      },
+                      ...(isDraft
+                        ? [
+                            {
+                              id: 'edit',
+                              label: 'Edit',
+                              icon: 'solar:pen-bold',
+                              onClick: () => {
+                                onEdit?.(row as IStudentFeeData);
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(actions.includes('delete')
+                        ? [
+                            {
+                              id: 'delete',
+                              label: 'Delete',
+                              icon: 'solar:trash-bin-trash-bold',
+                              onClick: () => {
+                                onDelete?.(row as IStudentFeeData);
+                              },
+                              color: 'error.main',
+                            },
+                          ]
+                        : []),
+                    ]}
                     placement="right-top"
                   />
                   {(actions.includes('approve') || actions.includes('reject')) && (

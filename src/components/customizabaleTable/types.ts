@@ -59,6 +59,7 @@ export interface ICustomizableTableProps {
   columns: IColumn[];
   data: IData[];
   tableTitle?: ReactNode;
+  exportLabel?: string;
   serverSide?: boolean;
   serverSidePagination?: boolean;
   serverSideSearch?: boolean;

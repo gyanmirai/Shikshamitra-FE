@@ -3,7 +3,8 @@ import type {
   ApplicationDocumentVerification,
 } from 'src/redux/student/admissions/admission-document-types';
 
-import { Alert, Stack, Typography, LinearProgress } from '@mui/material';
+import { useState } from 'react';
+import { Alert, Stack, Button, Typography, LinearProgress } from '@mui/material';
 
 import { DocumentRequirementCard } from './document-requirement-card';
 
@@ -23,6 +24,11 @@ export function DocumentChecklistContent({
   readOnly: boolean;
   onAction: (action: DocumentAction, requirement: AdmissionDocumentRequirement) => void;
 }) {
+  const [showNotApplicable, setShowNotApplicable] = useState(false);
+  const notApplicable = summary.requirements.filter((item) => item.status === 'notRequired');
+  const visible = summary.requirements.filter(
+    (item) => item.status !== 'notRequired' || showNotApplicable
+  );
   const required = summary.requirements.filter((item) => item.isRequired);
   const complete = required.filter(
     (item) => item.status === 'accepted' || item.status === 'waived'
@@ -65,7 +71,7 @@ export function DocumentChecklistContent({
       {summary.requirements.length === 0 ? (
         <Alert severity="info">No document requirements are configured for this step.</Alert>
       ) : (
-        summary.requirements.map((requirement) => (
+        visible.map((requirement) => (
           <DocumentRequirementCard
             key={requirement.code}
             requirement={requirement}
@@ -75,6 +81,17 @@ export function DocumentChecklistContent({
             onAction={(action) => onAction(action, requirement)}
           />
         ))
+      )}
+      {notApplicable.length > 0 && (
+        <Button
+          size="small"
+          sx={{ alignSelf: 'flex-start' }}
+          aria-expanded={showNotApplicable}
+          onClick={() => setShowNotApplicable((value) => !value)}
+        >
+          {showNotApplicable ? 'Hide' : 'Show'} documents not applicable to this applicant (
+          {notApplicable.length})
+        </Button>
       )}
     </Stack>
   );

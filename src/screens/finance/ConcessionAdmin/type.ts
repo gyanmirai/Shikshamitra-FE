@@ -41,6 +41,13 @@ export interface IConcessionRequestItem {
   totalApprovedAmount: number;
   totalReversedAmount: number;
   netApprovedAmount: number;
+  refundRequests?: Array<{
+    refundRequestId: string;
+    voucherNumber: string;
+    originalReceiptId: string;
+    amount: number;
+    status: string;
+  }>;
   feeHeads: IConcessionFeeHead[];
   submittedDocuments: IConcessionSubmittedDocument[];
   requiredDocuments?: IRequiredDocument[];

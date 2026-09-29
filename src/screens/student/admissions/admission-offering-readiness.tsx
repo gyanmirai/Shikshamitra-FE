@@ -1,7 +1,7 @@
 import type { AdmissionOfferingValidation } from 'src/redux/student/admissions/admission-offerings-api';
 
-import { Alert, AlertTitle, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
+import { List, Alert, ListItem, AlertTitle, ListItemIcon, ListItemText } from '@mui/material';
 
 type Props = { result?: AdmissionOfferingValidation | null };
 
@@ -15,8 +15,8 @@ export function AdmissionOfferingReadiness({ result }: Props) {
             'Academic hierarchy and your access',
             'Duplicate Offering scope',
             'Dates inside the selected cycle',
-            'Published workflow and both forms',
-            'Workflow, form, counsellor and reviewer compatibility',
+            'Published workflow and forms needed by the entry mode',
+            'Intake profiles, counsellor scope, and reviewer compatibility',
           ].map((message) => (
             <ListItem key={message} disableGutters>
               <ListItemIcon sx={{ minWidth: 28 }}>

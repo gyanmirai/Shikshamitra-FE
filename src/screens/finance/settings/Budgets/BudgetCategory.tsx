@@ -10,7 +10,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -172,17 +172,27 @@ const FinanceBudgetCategorySettings = () => {
             sticky: true,
             render(value, row: any) {
               return (
-                <ThreeDotsActions
-                  showEditIcon
-                  showDeleteIcon
-                  showThreeDots={false}
+                <AdaptiveThreeDotsActions
+                  actions={[
+                    {
+                      id: 'edit',
+                      label: 'Edit',
+                      icon: 'solar:pen-bold',
+                      onClick: () => {
+                        handleEdit(row);
+                      },
+                    },
+                    {
+                      id: 'delete',
+                      label: 'Delete',
+                      icon: 'solar:trash-bin-trash-bold',
+                      onClick: () => {
+                        handleDeleteAction(row);
+                      },
+                      color: 'error.main',
+                    },
+                  ]}
                   placement="right-top"
-                  handleDeleteClick={() => {
-                    handleDeleteAction(row);
-                  }}
-                  handleEditClick={() => {
-                    handleEdit(row);
-                  }}
                 />
               );
             },

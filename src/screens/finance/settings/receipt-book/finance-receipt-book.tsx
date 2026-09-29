@@ -14,7 +14,7 @@ import CustomDialog from 'src/components/customDialog';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useCallback } from 'react';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -217,19 +217,29 @@ const FinanceReceiptBookSetting = () => {
         align: 'left',
         minWidth: 40,
         render: (value, row: any) => (
-          <ThreeDotsActions
-            showThreeDots={false}
-            showDeleteIcon
-            handleDeleteClick={() => {
-              setSelectedEntry(row);
-              deleteDialog.onTrue();
-            }}
-            showEditIcon
-            handleEditClick={() => {
-              setIsEdit(true);
-              setSelectedEntry(row);
-              receiptBookDialog.onTrue();
-            }}
+          <AdaptiveThreeDotsActions
+            actions={[
+              {
+                id: 'edit',
+                label: 'Edit',
+                icon: 'solar:pen-bold',
+                onClick: () => {
+                  setIsEdit(true);
+                  setSelectedEntry(row);
+                  receiptBookDialog.onTrue();
+                },
+              },
+              {
+                id: 'delete',
+                label: 'Delete',
+                icon: 'solar:trash-bin-trash-bold',
+                onClick: () => {
+                  setSelectedEntry(row);
+                  deleteDialog.onTrue();
+                },
+                color: 'error.main',
+              },
+            ]}
           />
         ),
       },

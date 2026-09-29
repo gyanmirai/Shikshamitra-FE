@@ -37,9 +37,7 @@ export const ReviewCardActions = ({
   const isReviewActionLoading = isApproving || isRequesting || isRejecting;
 
   return (
-    <Box
-      sx={{ px: 2, py: 1.25, borderTop: 1, borderColor: 'divider', bgcolor: 'background.neutral' }}
-    >
+    <Box sx={{ px: 2, py: 1, borderTop: 1, borderColor: 'divider', bgcolor: 'action.selected' }}>
       <Stack direction="row" spacing={1} justifyContent="flex-end" useFlexGap flexWrap="wrap">
         {isPending && canReviewSubmissions && isSelfSubmission && (
           <Chip label="Your submission" size="small" variant="outlined" />

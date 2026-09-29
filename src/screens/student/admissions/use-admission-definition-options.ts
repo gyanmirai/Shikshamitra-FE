@@ -39,13 +39,14 @@ export function useAdmissionDefinitionOptions(open: boolean) {
     [getWorkflows, open]
   );
 
-  const fetchForms = useCallback<AdmissionDefinitionFetcher>(
-    async (query, page) => {
+  const fetchFormsByPurpose = useCallback(
+    async (purpose: 0 | 1, query: string, page: number) => {
       if (!open) return { data: [], hasMore: false };
       const skipCount = (page - 1) * PAGE_SIZE;
       const result = await getForms({
         search: query || undefined,
         status: 1,
+        purpose,
         skipCount,
         maxResultCount: PAGE_SIZE,
       }).unwrap();
@@ -57,5 +58,14 @@ export function useAdmissionDefinitionOptions(open: boolean) {
     [getForms, open]
   );
 
-  return { fetchWorkflows, fetchForms };
+  const fetchInquiryForms = useCallback<AdmissionDefinitionFetcher>(
+    (query, page) => fetchFormsByPurpose(0, query, page),
+    [fetchFormsByPurpose]
+  );
+  const fetchRegistrationForms = useCallback<AdmissionDefinitionFetcher>(
+    (query, page) => fetchFormsByPurpose(1, query, page),
+    [fetchFormsByPurpose]
+  );
+
+  return { fetchWorkflows, fetchInquiryForms, fetchRegistrationForms };
 }

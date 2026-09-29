@@ -13,6 +13,7 @@ import { EligibilityAgeFields } from './eligibility-age-fields';
 import { EligibilityCriterionBasics } from './eligibility-criterion-basics';
 import { AdmissionConditionFormPicker } from './admission-condition-form-picker';
 import { EligibilitySourceStageFields } from './eligibility-source-stage-fields';
+import { hasInquiryCondition, INQUIRY_RULE_REPLACEMENT_MESSAGE } from '../workflow-inquiry-retirement';
 
 export function EligibilityCriterionDialog({
   initial,
@@ -37,10 +38,14 @@ export function EligibilityCriterionDialog({
   const formik = useFormik<AdmissionEligibilityCriterion>({
     initialValues: initial,
     validationSchema: eligibilityCriterionSchema,
-    validate: (value) =>
-      existingCodes.includes(value.code.toUpperCase())
+    validate: (value) => {
+      if (value.kind === 'inquiry' || hasInquiryCondition(value.conditionJson)) {
+        return { kind: INQUIRY_RULE_REPLACEMENT_MESSAGE };
+      }
+      return existingCodes.includes(value.code.toUpperCase())
         ? { code: 'This criterion code is already in use.' }
-        : {},
+        : {};
+    },
     onSubmit: (value) => {
       if (readOnly) return;
       onSave({ ...value, name: value.name.trim(), failureMessage: value.failureMessage?.trim() });
@@ -80,11 +85,10 @@ export function EligibilityCriterionDialog({
                   readOnly={readOnly}
                 />
               )}
-              {(value.kind === 'application' || value.kind === 'inquiry') && (
+              {value.kind === 'application' && (
                 <AdmissionConditionFormPicker
                   forms={forms}
                   json={value.conditionJson}
-                  source={value.kind}
                   formDefinitionId={value.formDefinitionId ?? ''}
                   onFormDefinitionChange={(id) =>
                     formik.setValues({ ...value, formDefinitionId: id, conditionJson: null })
@@ -129,7 +133,7 @@ export function EligibilityCriterionDialog({
         title="Discard criterion changes?"
         content="Your changes have not been added to the stage draft."
         action={
-          <Button color="error" variant="contained" onClick={onClose}>
+          <Button size="small" color="error" variant="contained" onClick={onClose}>
             Discard changes
           </Button>
         }

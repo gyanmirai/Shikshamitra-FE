@@ -163,7 +163,7 @@ export function WorkflowStageCard({
               </Typography>
             ) : orderedTransitions.length === 0 ? (
               <Typography variant="caption" color="warning.main">
-                Add a route before publishing
+                Choose the next step before publishing
               </Typography>
             ) : (
               <Typography variant="caption" color="text.secondary" noWrap>
@@ -187,7 +187,7 @@ export function WorkflowStageCard({
               display: { xs: 'none', sm: 'inline-flex' },
             }}
           >
-            Add route
+            {orderedTransitions.some((path) => path.isDefault) ? 'Add special outcome' : 'Choose next step'}
           </Button>
         )}
 
@@ -227,7 +227,7 @@ export function WorkflowStageCard({
                     onAddPath();
                   }}
                 >
-                  <Iconify icon="mdi:source-branch-plus" /> Add route
+                  <Iconify icon="mdi:source-branch-plus" /> {orderedTransitions.some((path) => path.isDefault) ? 'Add special outcome' : 'Choose next step'}
                 </MenuItem>
               )}
               {orderedTransitions.length > 0 && <Divider />}

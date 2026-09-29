@@ -35,14 +35,64 @@ import {
 interface CustomStepperProps {
   steps: string[];
   activeStep: number;
+  orientation?: 'horizontal' | 'vertical';
+  ariaLabel?: string;
+  stepStates?: ('completed' | 'skipped' | 'error' | 'pending' | 'active')[];
+  stepCaptions?: React.ReactNode[];
 }
 
-const CustomStepper: React.FC<CustomStepperProps> = ({ steps, activeStep }) => (
+const CustomStepper: React.FC<CustomStepperProps> = ({
+  steps,
+  activeStep,
+  orientation = 'horizontal',
+  ariaLabel,
+  stepStates,
+  stepCaptions,
+}) => (
   <Box sx={{ width: '100%' }}>
-    <Stepper activeStep={activeStep} alternativeLabel>
+    <Stepper
+      role="list"
+      aria-label={ariaLabel}
+      activeStep={activeStep}
+      orientation={orientation}
+      alternativeLabel={orientation === 'horizontal'}
+      sx={{
+        m: 0,
+        p: 0,
+        ...(orientation === 'vertical' && {
+          '& .MuiStepConnector-line': { minHeight: 20 },
+        }),
+      }}
+    >
       {steps.map((label, index) => (
-        <Step key={label} sx={{ '& svg': { height: '28px', width: '28px' } }}>
-          <StepLabel sx={{ '& span': { fontSize: '12px' } }}>{label}</StepLabel>
+        <Step
+          role="listitem"
+          key={`${index}-${label}`}
+          completed={stepStates ? stepStates[index] === 'completed' : undefined}
+          aria-current={index === activeStep ? 'step' : undefined}
+          sx={{
+            listStyle: 'none',
+            '& svg': { height: 28, width: 28 },
+            ...(stepStates?.[index] === 'skipped' && {
+              '& .MuiStepIcon-root': { color: 'warning.main' },
+            }),
+            ...(stepStates?.[index] === 'error' && {
+              '& .MuiStepIcon-root': { color: 'error.main' },
+            }),
+          }}
+        >
+          <StepLabel
+            error={stepStates?.[index] === 'error'}
+            optional={stepCaptions?.[index]}
+            sx={{
+              '& .MuiStepLabel-label': {
+                typography: 'subtitle2',
+                overflowWrap: 'anywhere',
+              },
+            }}
+          >
+            {label}
+          </StepLabel>
         </Step>
       ))}
     </Stepper>

@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Label } from 'src/components/label';
-import { useBoolean } from 'src/hooks/use-boolean';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
-import { studentPaths } from 'src/constants/student-menu';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { studentPaths } from 'src/constants/student-menu';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Alert, Box, Button, Paper, Skeleton, Stack, Tab, Typography } from '@mui/material';
+import { Box, Tab, Alert, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
@@ -22,23 +22,25 @@ import { ApplicationCurrentTask } from './application-detail/application-current
 import { ApplicationProgressCard } from './application-detail/application-progress-card';
 import { ApplicationDecisionCard } from './application-detail/application-decision-card';
 import { ApplicationManagedStages } from './application-detail/application-managed-stages';
-import { isAdmissionApplicationNotFound } from './application-detail/application-detail-query-state';
+import { ApplicationCounsellorCard } from './application-detail/application-counsellor-card';
+import { ApplicationFormDocuments } from './document-verification/application-form-documents';
 import { requiresStageCompletionDetails } from './application-detail/admission-stage-completion';
 import { AdmissionWorkflowRuntimeActionDialog } from './admission-workflow-runtime-action-dialog';
+import { isAdmissionApplicationNotFound } from './application-detail/application-detail-query-state';
 import { AdmissionStageCompletionDialog } from './application-detail/admission-stage-completion-dialog';
+import {
+  getAdmissionApplicationStatusColor,
+  getAdmissionApplicationStatusLabel,
+} from './application-status';
 import {
   isFormStage,
   isApprovalStage,
   isAdmissionDecisionStage,
   hasManagedStageWorkspace,
   canRetrySubmittedFormHandoff,
-  canStageTypeCompleteForStatus,
   canCompleteStageFromProgress,
+  canStageTypeCompleteForStatus,
 } from './application-detail/application-progress-model';
-import {
-  getAdmissionApplicationStatusColor,
-  getAdmissionApplicationStatusLabel,
-} from './application-status';
 
 type DetailTab = 'current' | 'form' | 'history';
 
@@ -87,6 +89,14 @@ export default function AdmissionApplicationDetailScreen() {
         canReopen={detail.canReopen}
         reopening={detail.reopenState.isLoading}
         onReopen={detail.reopenApplication}
+        documents={
+          <ApplicationFormDocuments
+            applicationId={application.id}
+            stages={workflow?.stages ?? []}
+            unsaved={detail.hasUnsavedAnswers}
+            saving={detail.updateState.isLoading || detail.submitState.isLoading}
+          />
+        }
       />
     );
   };
@@ -209,6 +219,7 @@ export default function AdmissionApplicationDetailScreen() {
                   aria-labelledby="application-tab-current"
                   spacing={2}
                 >
+                  <ApplicationCounsellorCard application={application} />
                   {currentStage && (
                     <ApplicationCurrentTask
                       stage={currentStage}
@@ -309,9 +320,10 @@ export default function AdmissionApplicationDetailScreen() {
 
           <Paper
             square
-            elevation={8}
+            elevation={0}
             sx={{
-              display: { xs: 'block', md: 'none' },
+              display: { xs: 'flex', md: 'none' },
+              justifyContent: 'flex-end',
               flexShrink: 0,
               p: 1,
               borderTop: 1,
@@ -319,18 +331,10 @@ export default function AdmissionApplicationDetailScreen() {
             }}
           >
             <Button
-              fullWidth
               size="small"
-              variant="contained"
-              color="inherit"
+              variant="outlined"
               startIcon={<Iconify icon="mdi:file-document-outline" />}
               onClick={() => setActiveTab('form')}
-              sx={{
-                minHeight: 44,
-                bgcolor: 'common.black',
-                color: 'common.white',
-                '&:hover': { bgcolor: 'grey.800' },
-              }}
             >
               Review application form
             </Button>

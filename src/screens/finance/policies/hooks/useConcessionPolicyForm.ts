@@ -106,7 +106,7 @@ const validationSchema = Yup.object().shape({
           .min(0.01, 'Fixed amount must be greater than 0'),
     }),
   applyOn: Yup.string()
-    .oneOf(['AllOutstanding', 'CurrentInstallment', 'FutureInstallments'])
+    .oneOf(['AllOutstanding', 'CurrentInstallment', 'FutureInstallments', 'AllFees'])
     .required('Apply concession on is required'),
   maximumPercentage: Yup.number()
     .nullable()

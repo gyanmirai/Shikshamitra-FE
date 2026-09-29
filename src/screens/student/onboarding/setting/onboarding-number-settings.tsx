@@ -29,7 +29,6 @@ import {
   Drawer,
   Switch,
   Divider,
-  Tooltip,
   MenuItem,
   TextField,
   IconButton,
@@ -40,10 +39,11 @@ import {
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import { OnboardingSettingsBreadcrumbInfo } from './onboarding-settings-breadcrumb-info';
 import {
-  usePersistedOnboardingPolicy,
-  usePersistedIdentifierSeries,
-  PersistedNumberingPolicyFields,
-} from './onboarding-operational-settings';
+  formatGrNumber,
+  academicTargetsOverlap,
+  getAcademicApplicabilityScore,
+  defaultDivisionChangeConfiguration,
+} from '../onboarding-settings-model';
 import {
   SingleAcademicPathFields,
   getAcademicApplicabilitySummary,
@@ -52,64 +52,19 @@ import {
   createEmptySingleAcademicApplicability,
   buildOnboardingAcademicStructureOptions,
 } from './onboarding-academic-applicability';
-import {
-  formatGrNumber,
-  findOnboardingProfile,
-  academicTargetsOverlap,
-  findRollNumberConfiguration,
-  isGrConfigurationApplicable,
-  compareAcademicApplicability,
-  getAcademicApplicabilityScore,
-  findDivisionChangeConfiguration,
-  defaultDivisionChangeConfiguration,
-} from '../onboarding-settings-model';
 
 import type {
-  DivisionChangeRules,
-  AcademicPathContext,
   GrNumberConfiguration,
   RollNumberConfiguration,
   DivisionChangeConfiguration,
 } from '../onboarding-settings-model';
 
-const rollArrangeByOptions = [
-  { value: 'studentName', label: 'Student Name' },
-  { value: 'admissionDate', label: 'Admission Date' },
-  { value: 'admissionNumber', label: 'Admission No.' },
-  { value: 'grNumber', label: 'GR No.' },
-];
-
-const rollArrangeTypeOptions = [
-  { value: 'ascending', label: 'Ascending' },
-  { value: 'descending', label: 'Descending' },
-];
 
 const rollNumberScopeOptions = [
   { value: 'class-division', label: 'Class and Division' },
   { value: 'class', label: 'Entire Class' },
 ];
 
-const rollAssignmentTimingOptions = [
-  { value: 'after-division', label: 'After Division assignment' },
-  { value: 'during-activation', label: 'During activation' },
-  { value: 'first-academic-day', label: 'On first academic day' },
-  { value: 'manual-bulk', label: 'Manual bulk assignment' },
-];
-
-const midYearHandlingOptions = [
-  { value: 'next-available', label: 'Next available number' },
-  { value: 'insert-without-recalculation', label: 'Insert alphabetically, preserve others' },
-  { value: 'insert-and-recalculate', label: 'Insert and recalculate' },
-  { value: 'manual', label: 'Manual assignment' },
-];
-
-const divisionStrategyOptions = [
-  { value: 'next-available', label: 'Next available Division' },
-  { value: 'balance-count', label: 'Balance student count' },
-  { value: 'balance-tolerance', label: 'Balance within tolerance' },
-  { value: 'sequential', label: 'Fill Divisions sequentially' },
-  { value: 'preserve-preferred', label: 'Preserve preferred Division' },
-];
 
 export function SettingsDrawer({
   open,
@@ -385,11 +340,13 @@ const academicApplicabilitySchemaFields = {
   stageMode: Yup.string().oneOf(['selected'], 'Select one School Level').required(),
   academicMediumStageIds: Yup.array()
     .of(Yup.string().required())
-    .length(1, 'Select one School Level'),
+    .min(1, 'Select at least one School Level'),
   classMode: Yup.string().oneOf(['selected'], 'Select one Class').required(),
-  standardIds: Yup.array().of(Yup.string().required()).length(1, 'Select one Class'),
-  divisionMode: Yup.string().oneOf(['selected'], 'Select one Division').required(),
-  divisionIds: Yup.array().of(Yup.string().required()).length(1, 'Select one Division'),
+  standardIds: Yup.array().of(Yup.string().required()).min(1, 'Select at least one Standard'),
+  divisionMode: Yup.string().oneOf(['all', 'selected']).required(),
+  divisionIds: Yup.array().of(Yup.string().required()).when('divisionMode', {
+    is: 'selected', then: (schema) => schema.min(1, 'Select at least one Division'),
+  }),
   includeFutureStructures: Yup.boolean().required(),
 };
 
@@ -403,8 +360,8 @@ const grSchema = Yup.object({
   formatPattern: Yup.string()
     .trim()
     .required('Enter a format pattern')
-    .test('sequence-token', 'Format must include {SEQUENCE}', (value) =>
-      Boolean(value?.includes('{SEQUENCE}'))
+    .test('sequence-token', 'Use one {SEQUENCE} and only PREFIX, SUFFIX, YEAR or YEAR_SHORT tokens.', (value) =>
+      Boolean(value && value.split('{SEQUENCE}').length === 2 && !value.replace(/\{(?:PREFIX|SUFFIX|YEAR|YEAR_SHORT|SEQUENCE)\}/g, '').match(/[{}]/))
     ),
   sequenceScope: Yup.string().required(),
   resetPolicy: Yup.string().required(),
@@ -724,16 +681,13 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
         onSubmit={() => formik.submitForm()}
       >
         <Stack spacing={2} component="form" onSubmit={formik.handleSubmit}>
-          <Alert severity="info">
-            This configuration is saved for policy resolution and preview. Durable GR allocation
-            continues to use the backend identifier series under Saved GR &amp; seat settings.
-          </Alert>
+
           {formik.status ? <Alert severity="error">{String(formik.status)}</Alert> : null}
 
           <SettingsSectionCard
             icon="mdi:target-account"
             title="Series details"
-            description="Give staff a clear series name and choose one Board, Medium, School Level, Class, and Division."
+            description="Give staff a clear series name and choose a Board, Medium, School Levels, and Standards."
           >
             <TextField
               fullWidth
@@ -809,7 +763,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
               helperText={
                 formik.touched.formatPattern && formik.errors.formatPattern
                   ? formik.errors.formatPattern
-                  : 'Tokens: {PREFIX}, {SEQUENCE}, {SUFFIX}, {YEAR}, {YEAR_SHORT}, {SCHOOL_CODE}'
+                  : 'Tokens: {PREFIX}, {SEQUENCE}, {SUFFIX}, {YEAR}, {YEAR_SHORT}. Put your school code in Prefix.'
               }
             />
             <Box
@@ -894,7 +848,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                     )}
                   </Typography>
                 </Box>
-                <Label color="info">Session preview</Label>
+                <Label color="info">Format example</Label>
               </Stack>
             </Card>
           </SettingsSectionCard>
@@ -925,9 +879,8 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
                 control={
                   <Switch
                     name="requireManualReason"
-                    checked={formik.values.requireManualReason}
-                    disabled={!formik.values.manualEntryAllowed}
-                    onChange={formik.handleChange}
+                    checked
+                    disabled
                   />
                 }
                 label="Require reason for a manual value"
@@ -1125,43 +1078,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
       render: (value: string) =>
         rollNumberScopeOptions.find((option) => option.value === value)?.label ?? value,
     },
-    {
-      id: 'assignmentTiming',
-      label: 'Timing',
-      width: 190,
-      render: (value: string) =>
-        rollAssignmentTimingOptions.find((option) => option.value === value)?.label ?? value,
-    },
-    {
-      id: 'midYearHandling',
-      label: 'Mid-year Rule',
-      width: 210,
-      render: (value: string) =>
-        midYearHandlingOptions.find((option) => option.value === value)?.label ?? value,
-    },
-    {
-      id: 'orderingRules',
-      label: 'Ordering',
-      width: 220,
-      isFilter: false,
-      render: (_value: unknown, row: IData) =>
-        (row.orderingRules as RollNumberConfiguration['orderingRules'])
-          .map(
-            (rule) =>
-              `${rollArrangeByOptions.find((option) => option.value === rule.field)?.label ?? rule.field} ${rule.direction === 'ascending' ? '↑' : '↓'}`
-          )
-          .join(' → '),
-    },
     { id: 'startingNumber', label: 'Starts At', width: 105, filterType: 'number' as const },
-    {
-      id: 'preserveExisting',
-      label: 'Existing',
-      width: 120,
-      filterType: 'enum' as const,
-      render: (value: boolean) => (
-        <Label color={value ? 'success' : 'warning'}>{value ? 'Preserve' : 'Recalculate'}</Label>
-      ),
-    },
     {
       id: 'status',
       label: 'Status',
@@ -1202,7 +1119,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
       {!embedded ? (
         <SettingsPageHeader
           title="Roll Number Rules"
-          description="Configure class-wise roll number ordering for Student Onboarding."
+          description="Configure Roll number scope, starting values, and approval requirements for Student Onboarding."
         />
       ) : null}
       <NumberingWorkspaceBar
@@ -1230,7 +1147,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
       <SettingsDrawer
         open={editorOpen}
         title={`${editingConfigurationId ? 'Edit' : 'Add'} Roll Number Configuration`}
-        description="Control numbering scope, timing, mid-year insertion, ordering, locks, and approvals."
+        description="Choose where Roll numbers must be unique, their starting value, and required approvals."
         icon="mdi:format-list-numbered"
         statusLabel={editingConfigurationId ? 'Editing rule' : 'New rule'}
         footerNote="Saved for the selected scope and reused by Student Setup after reload."
@@ -1243,14 +1160,14 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
       >
         <Stack spacing={2} component="form" onSubmit={formik.handleSubmit}>
           <Alert severity="info">
-            This rule is saved for assignment guidance and preview. The onboarding case command
-            remains responsible for durable Roll number allocation and uniqueness.
+            Saved rules are checked when staff assign Roll numbers in Student Setup. Duplicate
+            numbers within the selected numbering scope are blocked.
           </Alert>
           {formik.status ? <Alert severity="error">{String(formik.status)}</Alert> : null}
           <SettingsSectionCard
             icon="mdi:calendar-account-outline"
-            title="Academic path and timing"
-            description="Choose one Board, Medium, School Level, Class, and Division, then define when assignment becomes eligible."
+            title="Academic path and numbering scope"
+            description="Choose a Board and Medium, then select School Levels, Standards, and the numbering scope."
           >
             <SingleAcademicPathFields
               value={formik.values}
@@ -1283,154 +1200,10 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
                   </MenuItem>
                 ))}
               </TextField>
-              <TextField
-                select
-                fullWidth
-                size="small"
-                name="assignmentTiming"
-                label="Assignment timing"
-                value={formik.values.assignmentTiming}
-                onChange={formik.handleChange}
-              >
-                {rollAssignmentTimingOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
             </Box>
-            <TextField
-              select
-              fullWidth
-              size="small"
-              name="midYearHandling"
-              label="Mid-year student handling"
-              value={formik.values.midYearHandling}
-              onChange={formik.handleChange}
-            >
-              {midYearHandlingOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
           </SettingsSectionCard>
 
-          <SettingsSectionCard
-            icon="mdi:sort-variant"
-            title="Ordering and tie-breakers"
-            description="Rules are evaluated from primary ordering to the last configured tie-breaker."
-          >
-            <TextField
-              select
-              fullWidth
-              size="small"
-              name="arrangeBy"
-              label="Arrange By"
-              value={formik.values.arrangeBy}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.arrangeBy && Boolean(formik.errors.arrangeBy)}
-              helperText={formik.touched.arrangeBy ? formik.errors.arrangeBy : undefined}
-            >
-              {rollArrangeByOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              select
-              fullWidth
-              size="small"
-              name="arrangeType"
-              label="Arrange Type"
-              value={formik.values.arrangeType}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.arrangeType && Boolean(formik.errors.arrangeType)}
-              helperText={formik.touched.arrangeType ? formik.errors.arrangeType : undefined}
-            >
-              {rollArrangeTypeOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-                gap: 1.5,
-              }}
-            >
-              <TextField
-                select
-                fullWidth
-                size="small"
-                name="tieBreakerOne"
-                label="First tie-breaker"
-                value={formik.values.tieBreakerOne}
-                onChange={formik.handleChange}
-              >
-                <MenuItem value="">None</MenuItem>
-                {rollArrangeByOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                fullWidth
-                size="small"
-                name="tieBreakerOneDirection"
-                label="First tie-breaker direction"
-                value={formik.values.tieBreakerOneDirection}
-                onChange={formik.handleChange}
-                disabled={!formik.values.tieBreakerOne}
-              >
-                {rollArrangeTypeOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                fullWidth
-                size="small"
-                name="tieBreakerTwo"
-                label="Second tie-breaker"
-                value={formik.values.tieBreakerTwo}
-                onChange={formik.handleChange}
-                disabled={!formik.values.tieBreakerOne}
-              >
-                <MenuItem value="">None</MenuItem>
-                {rollArrangeByOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              <TextField
-                select
-                fullWidth
-                size="small"
-                name="tieBreakerTwoDirection"
-                label="Second tie-breaker direction"
-                value={formik.values.tieBreakerTwoDirection}
-                onChange={formik.handleChange}
-                disabled={!formik.values.tieBreakerTwo}
-              >
-                {rollArrangeTypeOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Box>
-          </SettingsSectionCard>
+          <Alert severity="info">Roll numbers are entered by authorized staff during identifier preparation. Existing students are not renumbered automatically.</Alert>
 
           <SettingsSectionCard
             icon="mdi:shield-lock-outline"
@@ -1449,31 +1222,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
               error={formik.touched.startingNumber && Boolean(formik.errors.startingNumber)}
               helperText={formik.touched.startingNumber ? formik.errors.startingNumber : undefined}
             />
-            <TextField
-              select
-              fullWidth
-              size="small"
-              name="preserveExisting"
-              label="When rules change"
-              value={String(formik.values.preserveExisting)}
-              onChange={(event) =>
-                formik.setFieldValue('preserveExisting', event.target.value === 'true')
-              }
-            >
-              <MenuItem value="true">Preserve existing roll numbers</MenuItem>
-              <MenuItem value="false">Preview recalculation for all students</MenuItem>
-            </TextField>
             <Stack spacing={0.5}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    name="allowIndividualLocks"
-                    checked={formik.values.allowIndividualLocks}
-                    onChange={formik.handleChange}
-                  />
-                }
-                label="Allow individual Roll number locks"
-              />
               <FormControlLabel
                 control={
                   <Switch
@@ -1492,7 +1241,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
                     onChange={formik.handleChange}
                   />
                 }
-                label="Require approval for recalculation or manual changes"
+                label="Require approval after Roll number preparation"
               />
             </Stack>
             <Box
@@ -1524,30 +1273,6 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
                 label="Rule is active"
               />
             </Box>
-            <Card variant="outlined" sx={{ p: 1.5, bgcolor: 'background.neutral' }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Effective Roll policy preview
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {
-                  rollNumberScopeOptions.find(
-                    (option) => option.value === formik.values.numberingScope
-                  )?.label
-                }{' '}
-                ·{' '}
-                {
-                  rollAssignmentTimingOptions.find(
-                    (option) => option.value === formik.values.assignmentTiming
-                  )?.label
-                }{' '}
-                ·{' '}
-                {
-                  midYearHandlingOptions.find(
-                    (option) => option.value === formik.values.midYearHandling
-                  )?.label
-                }
-              </Typography>
-            </Card>
           </SettingsSectionCard>
         </Stack>
       </SettingsDrawer>
@@ -1555,28 +1280,6 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
   );
 }
 
-function DivisionInfoTooltip({ title }: { title: string }) {
-  return (
-    <Tooltip title={title} arrow placement="top">
-      <IconButton
-        size="small"
-        aria-label={`More information: ${title}`}
-        sx={{ width: 24, height: 24, color: 'text.secondary' }}
-      >
-        <Iconify icon="mdi:information-outline" width={18} />
-      </IconButton>
-    </Tooltip>
-  );
-}
-
-function DivisionControlHeading({ title, description }: { title: string; description: string }) {
-  return (
-    <Stack direction="row" spacing={0.5} alignItems="center">
-      <Typography variant="subtitle2">{title}</Typography>
-      <DivisionInfoTooltip title={description} />
-    </Stack>
-  );
-}
 
 function DivisionRuleRow({
   title,
@@ -1735,24 +1438,9 @@ export function DivisionChangesSettingsPanel() {
   const tableData = configurations.map((configuration) => ({
     ...configuration,
     academicCoverage: getAcademicApplicabilitySummary(configuration, filters.boards),
-    assignmentMethod:
-      configuration.assignmentMode === 'both'
-        ? 'Automatic and manual'
-        : configuration.assignmentMode === 'automatic'
-          ? 'Automatic only'
-          : 'Manual only',
-    strategy:
-      divisionStrategyOptions.find((option) => option.value === configuration.automaticStrategy)
-        ?.label ?? configuration.automaticStrategy,
-    capacity: `${configuration.capacityRequired ? 'Required' : 'Optional'} · Warn at ${configuration.capacityWarningThreshold}`,
-    approval: configuration.requireApproval
-      ? 'Always required'
-      : configuration.approvalRequiredAfter
-        ? `From ${dayjs(configuration.approvalRequiredAfter).format('DD MMM YYYY')}`
-        : configuration.overCapacityBehavior === 'approval'
-          ? 'Capacity exceptions'
-          : 'Not required',
-    rollImpact: configuration.recalculateRollNumber ? 'Recalculate' : 'Preserve',
+    assignmentMethod: 'Manual placement',
+    capacity: 'Live capacity; full divisions blocked',
+    approval: configuration.requireApproval ? 'Required for changes' : 'Readiness rule applies',
     effectiveDateLabel: configuration.effectiveDate
       ? dayjs(configuration.effectiveDate).format('DD MMM YYYY')
       : 'Immediate',
@@ -1761,18 +1449,8 @@ export function DivisionChangesSettingsPanel() {
     { id: 'name', label: 'Rule', width: 190, minWidth: 170 },
     { id: 'academicCoverage', label: 'Academic Path', width: 380, minWidth: 300 },
     { id: 'assignmentMethod', label: 'Assignment Method', width: 175, minWidth: 155 },
-    { id: 'strategy', label: 'Strategy', width: 190, minWidth: 170 },
     { id: 'capacity', label: 'Capacity', width: 170, minWidth: 150 },
     { id: 'approval', label: 'Approval', width: 170, minWidth: 150 },
-    {
-      id: 'rollImpact',
-      label: 'Roll No. Impact',
-      width: 135,
-      minWidth: 120,
-      render: (value: string) => (
-        <Label color={value === 'Recalculate' ? 'warning' : 'default'}>{value}</Label>
-      ),
-    },
     { id: 'effectiveDateLabel', label: 'Effective Date', width: 135, minWidth: 120 },
     {
       id: 'status',
@@ -1839,7 +1517,7 @@ export function DivisionChangesSettingsPanel() {
       <SettingsDrawer
         open={editorOpen}
         title={`${editingConfigurationId ? 'Edit' : 'Add'} Division Assignment Rule`}
-        description="Configure placement strategy, capacity protection, approvals, and record impact."
+        description="Choose where placement rules apply and whether changes need a reason or approval."
         icon="mdi:account-switch-outline"
         statusLabel={editingConfigurationId ? 'Editing rule' : 'New override'}
         footerNote="Saved for the selected scope and reused by Student Setup after reload."
@@ -1855,14 +1533,14 @@ export function DivisionChangesSettingsPanel() {
       >
         <Stack spacing={2}>
           <Alert severity="info">
-            This rule guides placement decisions. Student records change only when an authorized
-            user runs the backend placement command for an onboarding case.
+            Saved rules apply when authorized staff select or change a Division in Student Setup.
+            Full divisions cannot be selected.
           </Alert>
           {validationError ? <Alert severity="error">{validationError}</Alert> : null}
           <SettingsSectionCard
             icon="mdi:target-account"
             title="Academic path"
-            description="Choose one Board, Medium, School Level, Class, and Division path."
+            description="Choose a Board and Medium, then select the School Levels and Standards where this rule applies."
           >
             <TextField
               fullWidth
@@ -1898,172 +1576,28 @@ export function DivisionChangesSettingsPanel() {
               label="Rule is active"
             />
           </SettingsSectionCard>
-          <SettingsSectionCard
-            icon="mdi:account-group-outline"
-            title="Assignment and capacity"
-            description="Configure how Student Setup places students and handles available seats."
-          >
-            <Stack spacing={1}>
-              <DivisionControlHeading
-                title="Assignment method"
-                description="Choose whether staff can use automatic placement, manual selection, or both."
-              />
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Allowed assignment method"
-                value={draft.assignmentMode}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    assignmentMode: event.target.value as DivisionChangeRules['assignmentMode'],
-                  }))
-                }
-              >
-                <MenuItem value="automatic">Automatic only</MenuItem>
-                <MenuItem value="manual">Manual only</MenuItem>
-                <MenuItem value="both">Automatic and manual</MenuItem>
-              </TextField>
-            </Stack>
-            <Divider />
-            <Stack spacing={1}>
-              <DivisionControlHeading
-                title="Automatic assignment strategy"
-                description="Choose how Student Setup proposes a Division when automatic placement is allowed."
-              />
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Division strategy"
-                value={draft.automaticStrategy}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    automaticStrategy: event.target
-                      .value as DivisionChangeRules['automaticStrategy'],
-                  }))
-                }
-              >
-                {divisionStrategyOptions.map((option) => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </TextField>
-              {draft.automaticStrategy === 'balance-tolerance' ? (
-                <TextField
-                  fullWidth
-                  size="small"
-                  type="number"
-                  label="Balance tolerance"
-                  value={draft.balanceTolerance}
-                  onChange={(event) =>
-                    setDraft((current) => ({
-                      ...current,
-                      balanceTolerance: Math.max(0, Number(event.target.value) || 0),
-                    }))
-                  }
-                  inputProps={{ min: 0 }}
-                />
-              ) : null}
-            </Stack>
-            <Divider />
-            <DivisionRuleRow
-              title="Capacity data required"
-              description="Block automatic placement when the target Division has no connected capacity data."
-              checked={draft.capacityRequired}
-              onChange={setBooleanRule('capacityRequired')}
-            />
-            <Box
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
-                gap: 1.5,
-              }}
-            >
-              <TextField
-                fullWidth
-                size="small"
-                type="number"
-                label="Capacity warning threshold"
-                value={draft.capacityWarningThreshold}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    capacityWarningThreshold: Math.max(0, Number(event.target.value) || 0),
-                  }))
-                }
-                inputProps={{ min: 0 }}
-              />
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Over-capacity behavior"
-                value={draft.overCapacityBehavior}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    overCapacityBehavior: event.target
-                      .value as DivisionChangeRules['overCapacityBehavior'],
-                  }))
-                }
-              >
-                <MenuItem value="block">Block assignment</MenuItem>
-                <MenuItem value="approval">Allow with approval</MenuItem>
-              </TextField>
-            </Box>
+          <SettingsSectionCard icon="mdi:account-group-outline" title="Assignment and capacity" description="Staff reserve a division using live capacity.">
+            <Alert severity="info">Placement is manual. Full divisions are blocked; automatic balancing and capacity overrides are not available.</Alert>
           </SettingsSectionCard>
           <SettingsSectionCard
             icon="mdi:shield-check-outline"
-            title="Approval and record impact"
-            description="Define the checks, timing, and follow-up actions for a Division change."
+            title="Change approval"
+            description="Choose the reason and approval requirements and when this rule takes effect."
           >
             <DivisionRuleRow
               title="Require a change reason"
-              description="Require staff to explain every individual or bulk Division change."
+              description="Require staff to explain changes to an onboarding student's Division."
               checked={draft.requireReason}
               onChange={setBooleanRule('requireReason')}
             />
             <Divider />
             <DivisionRuleRow
               title="Require approval"
-              description="Keep Division changes pending until an authorized user approves them."
+              description="Require onboarding approval after a Division change before activation."
               checked={draft.requireApproval}
               onChange={setBooleanRule('requireApproval')}
             />
-            <DatePicker
-              label="Require approval on or after"
-              value={toDateValue(draft.approvalRequiredAfter)}
-              onChange={(value) =>
-                setDraft((current) => ({
-                  ...current,
-                  approvalRequiredAfter: toIsoDate(value),
-                }))
-              }
-              format="DD/MM/YYYY"
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  size: 'small',
-                },
-              }}
-            />
             <Divider />
-            <DivisionRuleRow
-              title="Recalculate roll number after division change"
-              description="Preview a new Division-scoped Roll number and preserve the previous value in audit history."
-              checked={draft.recalculateRollNumber}
-              onChange={setBooleanRule('recalculateRollNumber')}
-            />
-            <DivisionRuleRow
-              title="Notify class teacher"
-              description="Include the affected class teacher in the change notification after approval."
-              checked={draft.notifyClassTeacher}
-              onChange={setBooleanRule('notifyClassTeacher')}
-            />
             <DatePicker
               label="Effective date for Division changes"
               value={toDateValue(draft.effectiveDate)}
@@ -2073,26 +1607,6 @@ export function DivisionChangesSettingsPanel() {
               format="DD/MM/YYYY"
               slotProps={{ textField: { fullWidth: true, size: 'small' } }}
             />
-            <Card variant="outlined" sx={{ p: 1.5, bgcolor: 'background.neutral' }}>
-              <Typography variant="subtitle2" gutterBottom>
-                Effective Division policy preview
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {
-                  divisionStrategyOptions.find((option) => option.value === draft.automaticStrategy)
-                    ?.label
-                }{' '}
-                · {draft.capacityRequired ? 'capacity required' : 'capacity optional'} ·{' '}
-                {draft.overCapacityBehavior === 'block'
-                  ? 'over-capacity blocked'
-                  : 'over-capacity needs approval'}
-                {draft.recalculateRollNumber
-                  ? ' · recalculate Roll number'
-                  : ' · preserve Roll number'}
-                {' · '}
-                {getAcademicApplicabilitySummary(draft, filters.boards)}
-              </Typography>
-            </Card>
           </SettingsSectionCard>
         </Stack>
       </SettingsDrawer>
@@ -2100,171 +1614,6 @@ export function DivisionChangesSettingsPanel() {
   );
 }
 
-function EffectivePolicyPreview({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { settings, scope } = useOnboardingSettings();
-  const filters = useFinanceAcademicFilters();
-  const admissionRoutes = Array.from(
-    new Set(settings.onboardingProfiles.flatMap((profile) => profile.admissionRoutes))
-  );
-  const [admissionRoute, setAdmissionRoute] = useState(admissionRoutes[0] ?? '');
-  const [academicPathId, setAcademicPathId] = useState('');
-  const academicOptions = buildOnboardingAcademicStructureOptions(filters.boards);
-  const academicPaths = academicOptions.divisions.length
-    ? academicOptions.divisions
-    : academicOptions.standards;
-  const selectedAcademicPath = academicPaths.find((item) => item.id === academicPathId);
-  const academicContext: AcademicPathContext = selectedAcademicPath
-    ? {
-        boardId: selectedAcademicPath.boardId,
-        academicMediumId: selectedAcademicPath.academicMediumId,
-        academicMediumStageId: selectedAcademicPath.academicMediumStageId,
-        standardId: selectedAcademicPath.standardId,
-        divisionId: selectedAcademicPath.divisionId,
-      }
-    : {};
-  const profile = findOnboardingProfile(
-    settings.onboardingProfiles,
-    admissionRoute,
-    academicContext
-  );
-  const grConfiguration = [...settings.grNumber.configurations]
-    .filter((configuration) =>
-      isGrConfigurationApplicable(configuration, profile?.id, undefined, academicContext)
-    )
-    .sort(compareAcademicApplicability)[0];
-  const rollConfiguration = findRollNumberConfiguration(
-    settings.rollNumber.configurations,
-    academicContext
-  );
-  const divisionConfiguration = findDivisionChangeConfiguration(
-    settings.divisionChange.configurations,
-    academicContext
-  );
-  const readinessRules = profile?.rules ?? settings.readinessAccess;
-  const approvalSummary =
-    readinessRules.approvalMode === 'always' ||
-    rollConfiguration.requireApproval ||
-    divisionConfiguration.requireApproval
-      ? 'Required by at least one effective policy'
-      : readinessRules.approvalMode === 'conditional'
-        ? 'Required only for configured exceptions'
-        : 'Not required by the selected policies';
-
-  return (
-    <SettingsDrawer
-      open={open}
-      title="Effective policy preview"
-      description="Review the combined profile, numbering, placement, and approval behavior."
-      icon="mdi:tune-variant"
-      statusLabel="Applied policy"
-      footerNote="Read-only summary of policies currently applied to Student Setup."
-      onClose={onClose}
-      onSubmit={onClose}
-      submitLabel="Done"
-      submitIcon="mdi:check"
-      showCancel={false}
-    >
-      <Stack spacing={2}>
-        <Alert severity="info">
-          This preview reflects the saved policies applied to Student Setup for the selected scope.
-        </Alert>
-        <SettingsSectionCard
-          icon="mdi:clipboard-text-search-outline"
-          title="Resolved onboarding policy"
-          description="Select an admission route and academic path to inspect the effective profile, numbering, placement, and approval result."
-        >
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Admission route"
-            value={admissionRoute}
-            onChange={(event) => setAdmissionRoute(event.target.value)}
-          >
-            {admissionRoutes.map((route) => (
-              <MenuItem key={route} value={route}>
-                {route}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Academic path context"
-            value={academicPathId}
-            onChange={(event) => setAcademicPathId(event.target.value)}
-          >
-            <MenuItem value="">All academic paths fallback</MenuItem>
-            {academicPaths.map((item) => (
-              <MenuItem key={item.id} value={item.id}>
-                {item.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
-            {[
-              ['Profile', profile?.name ?? 'School default — no matching academic profile'],
-              ['Scope', scope.label],
-              ['Academic path', selectedAcademicPath?.label ?? 'All academic paths fallback'],
-              [
-                'GR rule',
-                grConfiguration
-                  ? `${grConfiguration.name}: ${formatGrNumber(grConfiguration, 0, {
-                      academicYearName: scope.academicYearName,
-                      schoolCode: scope.schoolCode,
-                    })}`
-                  : 'No applicable active series',
-              ],
-              [
-                'Roll timing',
-                rollAssignmentTimingOptions.find(
-                  (option) => option.value === rollConfiguration.assignmentTiming
-                )?.label ?? rollConfiguration.assignmentTiming,
-              ],
-              [
-                'Mid-year rule',
-                midYearHandlingOptions.find(
-                  (option) => option.value === rollConfiguration.midYearHandling
-                )?.label ?? rollConfiguration.midYearHandling,
-              ],
-              [
-                'Division strategy',
-                divisionStrategyOptions.find(
-                  (option) => option.value === divisionConfiguration.automaticStrategy
-                )?.label ?? divisionConfiguration.automaticStrategy,
-              ],
-              ['Approval', approvalSummary],
-            ].map(([label, value], index) => (
-              <Stack
-                key={label}
-                direction={{ xs: 'column', sm: 'row' }}
-                spacing={0.5}
-                sx={{
-                  px: 1.5,
-                  py: 1.25,
-                  borderTop: index ? 1 : 0,
-                  borderColor: 'divider',
-                }}
-              >
-                <Typography variant="caption" color="text.secondary" sx={{ width: 130 }}>
-                  {label}
-                </Typography>
-                <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }}>
-                  {value}
-                </Typography>
-              </Stack>
-            ))}
-          </Paper>
-          <Typography variant="caption" color="text.secondary">
-            Final capacity, uniqueness, scheduling, permission, and notification decisions remain
-            backend-owned by the onboarding case commands.
-          </Typography>
-        </SettingsSectionCard>
-      </Stack>
-    </SettingsDrawer>
-  );
-}
 
 const numberingPlacementTabs = [
   { value: 'gr-number', label: 'GR Number', icon: 'mdi:identifier' },
@@ -2272,43 +1621,10 @@ const numberingPlacementTabs = [
   { value: 'division-changes', label: 'Division Changes', icon: 'mdi:account-switch-outline' },
 ] as const;
 
-function SavedNumberingSettingsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const persistedPolicy = usePersistedOnboardingPolicy(open);
-  const persistedSeries = usePersistedIdentifierSeries(open);
-
-  return (
-    <SettingsDrawer
-      open={open}
-      title="Saved GR & seat settings"
-      description="Manage the backend GR sequence and seat-reservation duration for the selected academic year."
-      icon="mdi:database-check-outline"
-      statusLabel={
-        persistedPolicy.schoolDefaultPolicy
-          ? persistedPolicy.schoolDefaultPolicy.isActive
-            ? 'Active'
-            : 'Inactive'
-          : 'New'
-      }
-      footerNote="GR series are created separately; Save applies the seat-reservation duration."
-      onClose={onClose}
-      onSubmit={persistedPolicy.savePolicy}
-      submitLabel={persistedPolicy.isSaving ? 'Saving...' : 'Save seat setting'}
-      submitDisabled={!persistedPolicy.canSave}
-    >
-      <PersistedNumberingPolicyFields
-        policyEditor={persistedPolicy}
-        seriesEditor={persistedSeries}
-      />
-    </SettingsDrawer>
-  );
-}
-
 export function NumberingPlacementSettingsScreen() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [policyPreviewOpen, setPolicyPreviewOpen] = useState(false);
-  const [savedSettingsOpen, setSavedSettingsOpen] = useState(false);
   const requestedTab = searchParams.get('tab');
   const activeTab = numberingPlacementTabs.some((tab) => tab.value === requestedTab)
     ? requestedTab
@@ -2392,26 +1708,6 @@ export function NumberingPlacementSettingsScreen() {
               ))}
             </CustomTabs>
           </Box>
-          <Stack direction="row" spacing={1} sx={{ mx: { xs: 1, sm: 0 }, flexShrink: 0 }}>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:database-check-outline" width={16} />}
-              onClick={() => setSavedSettingsOpen(true)}
-              sx={{ borderRadius: 1.5, whiteSpace: 'nowrap' }}
-            >
-              Saved GR & seat settings
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:eye-outline" width={16} />}
-              onClick={() => setPolicyPreviewOpen(true)}
-              sx={{ borderRadius: 1.5, whiteSpace: 'nowrap' }}
-            >
-              Policy preview
-            </Button>
-          </Stack>
         </Stack>
       </Paper>
       <Box
@@ -2424,16 +1720,6 @@ export function NumberingPlacementSettingsScreen() {
         {activeTab === 'roll-number' ? <RollNumberSettingsScreen embedded /> : null}
         {activeTab === 'division-changes' ? <DivisionChangesSettingsPanel /> : null}
       </Box>
-      <EffectivePolicyPreview
-        open={policyPreviewOpen}
-        onClose={() => setPolicyPreviewOpen(false)}
-      />
-      {savedSettingsOpen ? (
-        <SavedNumberingSettingsDrawer
-          open={savedSettingsOpen}
-          onClose={() => setSavedSettingsOpen(false)}
-        />
-      ) : null}
     </Stack>
   );
 }

@@ -3,10 +3,19 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Stack, LinearProgress } from '@mui/material';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import {
+  Box,
+  Alert,
+  Stack,
+  Button,
+  Typography,
+  LinearProgress,
+  CircularProgress,
+} from '@mui/material';
 
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { ADMISSION_FORM_STEPS } from './form-dialog/form-wizard-model';
@@ -17,19 +26,67 @@ import { FormBuilderWizardContent } from './form-dialog/components/form-builder-
 type Props = {
   open: boolean;
   onClose: () => void;
+  editingId?: string | null;
   editing?: AdmissionForm | null;
+  editingError?: boolean;
+  onRetryEditing?: () => void;
+  initialPurpose?: CreateUpdateAdmissionForm['purpose'];
   saving: boolean;
   onSave: (value: CreateUpdateAdmissionForm) => Promise<void>;
 };
 
-export function AdmissionFormDialog({ open, editing, ...props }: Props) {
-  return open ? (
-    <AdmissionFormEditor key={editing?.id ?? 'new'} editing={editing} {...props} />
-  ) : null;
+export function AdmissionFormDialog({
+  open,
+  editingId,
+  editing,
+  editingError,
+  onRetryEditing,
+  ...props
+}: Props) {
+  if (!open) return null;
+  if (editingId && !editing) {
+    return (
+      <CustomDialog
+        open
+        title="Edit admission form"
+        handleClose={props.onClose}
+        hasForm={false}
+        guardUnsavedChanges={false}
+        maxWidth="sm"
+      >
+        <Stack spacing={2} sx={{ p: 3, minHeight: 144, justifyContent: 'center' }}>
+          {editingError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" sx={{ minHeight: 44 }} onClick={onRetryEditing}>
+                  Retry
+                </Button>
+              }
+            >
+              This form could not be loaded. Try again.
+            </Alert>
+          ) : (
+            <Stack direction="row" spacing={1.5} alignItems="center" role="status">
+              <CircularProgress size={24} aria-label="Loading admission form" />
+              <Typography variant="body2">Loading admission form...</Typography>
+            </Stack>
+          )}
+        </Stack>
+      </CustomDialog>
+    );
+  }
+  return <AdmissionFormEditor key={editing?.id ?? 'new'} editing={editing} {...props} />;
 }
 
-function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, 'open'>) {
-  const wizard = useAdmissionFormWizard({ editing, onClose, onSave });
+function AdmissionFormEditor({
+  onClose,
+  editing,
+  initialPurpose,
+  saving,
+  onSave,
+}: Omit<Props, 'open'>) {
+  const wizard = useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave });
   const busy = saving || wizard.submitting;
   return (
     <CustomDialog
@@ -45,30 +102,10 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
               helpText="Build the reusable fields, validation, and review structure used by admission applicants and staff."
               helpLabel="Admission form information"
             />
-            <Chip component="span" size="small" label="Draft" variant="outlined" />
+            <Label color="default" variant="soft">
+              Draft
+            </Label>
           </Stack>
-          <Box
-            component="span"
-            sx={{
-              mt: 0.25,
-              display: 'block',
-              typography: 'body2',
-              fontWeight: 400,
-              color: 'text.secondary',
-            }}
-          >
-            <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
-              {wizard.activeStep === 0
-                ? 'Choose a template and add the basic details.'
-                : wizard.activeStep === 1
-                  ? 'Arrange sections and fields, then configure each field.'
-                  : 'Review the form before saving this draft.'}
-            </Box>
-            <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }}>
-              Step {wizard.activeStep + 1} of {ADMISSION_FORM_STEPS.length} ·{' '}
-              {ADMISSION_FORM_STEPS[wizard.activeStep]}
-            </Box>
-          </Box>
           <LinearProgress
             variant="determinate"
             value={((wizard.activeStep + 1) / ADMISSION_FORM_STEPS.length) * 100}
@@ -122,7 +159,7 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
             saveButtonLabel="Save draft"
             nextButtonLabel="Continue"
             finalButtonLabel="Save draft"
-            backButtonProps={{ sx: { minHeight: 44 } }}
+            backButtonProps={{ size: 'small' }}
             saveAndNextButtonProps={{
               loading: busy,
               startIcon:
@@ -133,13 +170,7 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
                 wizard.activeStep < ADMISSION_FORM_STEPS.length - 1 ? (
                   <Iconify icon="mdi:arrow-right" width={18} />
                 ) : undefined,
-              sx: {
-                minHeight: 44,
-                bgcolor: 'common.black',
-                color: 'common.white',
-                '&:hover': { bgcolor: 'grey.800' },
-                '&.Mui-disabled': { bgcolor: 'action.disabledBackground' },
-              },
+              size: 'small',
               onClickCapture: (event) => {
                 if (event.detail > 1) {
                   event.preventDefault();
@@ -151,7 +182,7 @@ function AdmissionFormEditor({ onClose, editing, saving, onSave }: Omit<Props, '
               loading: busy,
               title: 'Save this draft and close the form builder',
               startIcon: <Iconify icon="mdi:content-save-outline" width={18} />,
-              sx: { minHeight: 44 },
+              size: 'small',
             }}
             handleBack={wizard.back}
             handleNext={wizard.next}

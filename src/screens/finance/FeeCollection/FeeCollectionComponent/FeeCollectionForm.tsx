@@ -323,7 +323,7 @@ const normalizeStatus = (
 };
 
 const isChargeSelectable = (charge: IFeeCharge): boolean =>
-  charge.status !== FeeCollectionStatusType.Paid && charge.status !== 'Paid' && charge.amount > 0;
+  charge.amount > 0;
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 

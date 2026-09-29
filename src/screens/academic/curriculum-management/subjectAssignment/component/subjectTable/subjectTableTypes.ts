@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 import type { ISubjectFormValues } from '../type';
 
-export type SubjectTableRow = ISubjectFormValues & {
+export type SubjectTableRow = Omit<ISubjectFormValues, 'subjectNameDisplay'> & {
   subjectTypeValue: string;
   subjectsName: string;
   subjectNameDisplay: ReactNode;

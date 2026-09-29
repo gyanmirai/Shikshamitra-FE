@@ -1,7 +1,5 @@
 'use client';
 
-import type { FormikProps } from 'formik';
-import type { MutableRefObject } from 'react';
 import type { RootState } from 'src/redux/store';
 import type {
   SalaryTemplate,
@@ -11,18 +9,17 @@ import type {
   SalaryTemplateComponentCatalogItem,
 } from 'src/redux/hr/salary-template-api';
 
-import * as Yup from 'yup';
-import { getIn } from 'formik';
 import { toast } from 'sonner';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { LoadingButton } from 'src/components/loading-button';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { getIn, useFormik, setNestedObjectValues } from 'formik';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -30,8 +27,8 @@ import {
   Chip,
   Alert,
   Button,
-  Skeleton,
   TextField,
+  Typography,
   Autocomplete,
   DialogActions,
 } from '@mui/material';
@@ -45,6 +42,7 @@ import {
 } from 'src/redux/hr/salary-template-api';
 
 import SalaryTemplateReview from './salary-template-review';
+import SalaryTemplateSkeleton from './salary-template-skeleton';
 import SalaryTemplateConfigure from './salary-template-configure';
 import { createTemplateRule, normalizeRuleOrder } from './salary-template-editor-utils';
 import {
@@ -62,10 +60,6 @@ type Props = {
   onSaved?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
 };
-type Controls = { review: () => void; save: () => void };
-type Status = { valid: boolean; previewCurrent: boolean; busy: boolean; calculating: boolean };
-const steps = ['Configure', 'Review'];
-const emptySchema = Yup.object({});
 const operationKey = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 
 export default function SalaryTemplateEditor({
@@ -176,9 +170,44 @@ export default function SalaryTemplateEditor({
           You do not have permission to {isCreate ? 'create' : 'view'} salary templates.
         </Alert>
       ) : loading ? (
-        <Box role="status" aria-label="Loading salary template" sx={{ p: 2 }}>
-          <Skeleton height={60} />
-          <Skeleton height={200} />
+        <Box
+          role="status"
+          aria-label="Loading salary template"
+          aria-busy="true"
+          sx={{ flex: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
+        >
+          <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
+            <SalaryTemplateSkeleton />
+          </Box>
+          <Box
+            component="footer"
+            sx={{
+              flexShrink: 0,
+              p: { xs: 1, md: 2 },
+              borderTop: 1,
+              borderColor: 'divider',
+              bgcolor: 'background.paper',
+              display: 'flex',
+              gap: 1,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
+          >
+            <Button size="small" variant="outlined" onClick={close}>
+              {readOnly ? 'Close' : 'Cancel'}
+            </Button>
+            <Typography variant="body2" color="text.secondary" sx={{ flex: '1 1 200px' }}>
+              Loading template configuration…
+            </Typography>
+            <Button size="small" variant="outlined" disabled>
+              Preview Calculation
+            </Button>
+            {!readOnly && (
+              <Button size="small" variant="contained" disabled>
+                {isCreate ? 'Create Template' : 'Save Changes'}
+              </Button>
+            )}
+          </Box>
         </Box>
       ) : failed || (!isCreate && !template) ? (
         <Alert
@@ -231,86 +260,8 @@ type WorkflowProps = {
   onBusyChange: (busy: boolean) => void;
   onReload: () => void;
 };
-function SalaryTemplateWorkflow({ template: sourceTemplate, ...props }: WorkflowProps) {
-  const { readOnly, isCreate, onClose } = props;
-  // Pin the version and concurrency stamp for this editing session. Refetches must not replace edits.
-  const [template] = useState(sourceTemplate);
-  const [initialValues] = useState(() => initialEditorValues(template));
-  const [activeStep, setActiveStep] = useState(0);
-  const controller = useRef<Controls | null>(null);
-  const [status, setStatus] = useState<Status>({
-    valid: false,
-    previewCurrent: false,
-    busy: false,
-    calculating: false,
-  });
-  const reportStatus = useCallback(
-    (next: Status) =>
-      setStatus((previous) =>
-        Object.keys(next).every(
-          (key) => previous[key as keyof Status] === next[key as keyof Status]
-        )
-          ? previous
-          : next
-      ),
-    []
-  );
-  return (
-    <CustomStepperWithFormik
-      scrollbarHeight="auto"
-      showSaveButton={false}
-      initialValues={initialValues}
-      validationSchema={readOnly ? emptySchema : editorSchema}
-      steps={steps}
-      activeStep={activeStep}
-      completedSteps={[...(status.valid ? [0] : []), ...(status.previewCurrent ? [1] : [])]}
-      handleBack={() => setActiveStep(0)}
-      onCancel={onClose}
-      handleNext={(last) => {
-        if (last) {
-          if (readOnly) onClose();
-          else controller.current?.save();
-        } else controller.current?.review();
-      }}
-      onStepClick={(index) => {
-        if (index === 0) setActiveStep(0);
-        else controller.current?.review();
-      }}
-      validateForwardStepClick={!readOnly}
-      validateFinalStep={!readOnly}
-      nextButtonLabel="Review"
-      finalButtonLabel={readOnly ? 'Close' : isCreate ? 'Create Template' : 'Save Changes'}
-      disableSubmit={
-        !readOnly && (!status.previewCurrent || !status.valid || status.calculating || status.busy)
-      }
-      saveAndNextButtonProps={{
-        loading: status.busy,
-        sx: isCreate && activeStep === 1 ? { minWidth: 140 } : undefined,
-      }}
-      renderItem={({ formik }) => (
-        <SalaryTemplateFormContent
-          {...props}
-          template={template}
-          formik={formik}
-          activeStep={activeStep}
-          setActiveStep={setActiveStep}
-          controller={controller}
-          reportStatus={reportStatus}
-        />
-      )}
-    />
-  );
-}
-
-type ContentProps = WorkflowProps & {
-  formik: FormikProps<EditorValues>;
-  activeStep: number;
-  setActiveStep: (step: number) => void;
-  controller: MutableRefObject<Controls | null>;
-  reportStatus: (status: Status) => void;
-};
-function SalaryTemplateFormContent({
-  template,
+function SalaryTemplateWorkflow({
+  template: sourceTemplate,
   isCreate,
   readOnly,
   catalogData,
@@ -319,18 +270,24 @@ function SalaryTemplateFormContent({
   onDirtyChange,
   onBusyChange,
   onReload,
-  formik,
-  activeStep,
-  setActiveStep,
-  controller,
-  reportStatus,
-}: ContentProps) {
+}: WorkflowProps) {
+  // Pin the loaded version so background refreshes cannot replace edits.
+  const [template] = useState(sourceTemplate);
+  const [initialValues] = useState(() => initialEditorValues(template));
+  const formik = useFormik<EditorValues>({
+    initialValues,
+    validationSchema: editorSchema,
+    onSubmit: async () => {
+      await save();
+    },
+  });
   const templateId = template?.id;
   const { data: versionData } = useGetSalaryTemplateVersionsQuery(templateId || '', {
     skip: !templateId,
   });
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [pendingFocus, setPendingFocus] = useState<string | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const [showIssues, setShowIssues] = useState(false);
   const [createTemplate, createState] = useCreateSalaryTemplateMutation();
   const [updateTemplate, updateState] = useUpdateSalaryTemplateMutation();
@@ -348,6 +305,8 @@ function SalaryTemplateFormContent({
   const [previewError, setPreviewError] = useState('');
   const requestSequence = useRef(0);
   const operationKeyRef = useRef('');
+  const savingRef = useRef(false);
+  const calculatingRef = useRef(false);
   const previewInput: PreviewSalaryTemplateRequest = {
     templateId: templateId || null,
     expectedActiveVersionId: template?.activeVersion ? template.editableVersion.id : null,
@@ -416,6 +375,7 @@ function SalaryTemplateFormContent({
   useEffect(() => onDirtyChange?.(formik.dirty), [formik.dirty, onDirtyChange]);
 
   const save = async () => {
+    if (savingRef.current || calculatingRef.current) return;
     const errors = await formik.validateForm();
     if (
       Object.keys(errors).length > 0 ||
@@ -427,6 +387,8 @@ function SalaryTemplateFormContent({
       formik.setTouched({ name: true, defaultPfRuleId: true });
       return;
     }
+    if (savingRef.current || calculatingRef.current) return;
+    savingRef.current = true;
     setServerError('');
     operationKeyRef.current ||= operationKey();
     const body = {
@@ -476,10 +438,60 @@ function SalaryTemplateFormContent({
           ? 'Another administrator changed this template. Reload the latest version, review your edits, and save again.'
           : parsed.detail
       );
+    } finally {
+      savingRef.current = false;
     }
   };
 
+  const validateConfiguration = async () => {
+    const errors = await formik.validateForm();
+    const currentIssues = configurationIssues(formik.values);
+    setShowIssues(true);
+    await formik.setTouched(setNestedObjectValues(errors, true), false);
+    const invalidRules = formik.values.rules.filter((_, index) => getIn(errors, `rules[${index}]`));
+    if (invalidRules.length) {
+      setExpanded(
+        (current) => new Set([...current, ...invalidRules.map((rule) => rule.componentId)])
+      );
+    }
+    const target =
+      errors.name || errors.description
+        ? 'salary-basic-information'
+        : errors.defaultPfRuleId
+          ? 'salary-statutory-defaults'
+          : invalidRules.length
+            ? `salary-rule-${invalidRules[0].componentId}`
+            : currentIssues.length
+              ? currentIssues[0].includes('PF')
+                ? 'salary-statutory-defaults'
+                : 'salary-earnings'
+              : null;
+    if (target) setPendingFocus(target);
+    return Object.keys(errors).length === 0 && currentIssues.length === 0;
+  };
+
   const runSample = async () => {
+    if (calculatingRef.current || savingRef.current || template?.status === 'ARCHIVED') return;
+    calculatingRef.current = true;
+    try {
+      if (!readOnly && !(await validateConfiguration())) return;
+      if (
+        !Number.isFinite(sampleAmount) ||
+        sampleAmount <= 0 ||
+        sampleAmount > 100000000 ||
+        !/^\d{4}-(0[1-9]|1[0-2])$/.test(effectiveMonth)
+      ) {
+        setPreviewError('Enter a sample amount greater than zero and a valid effective month.');
+        setPendingFocus('salary-sample-calculation');
+        return;
+      }
+      await calculateSample();
+    } finally {
+      calculatingRef.current = false;
+    }
+  };
+
+  const calculateSample = async () => {
     requestSequence.current += 1;
     const sequence = requestSequence.current;
     const signature = inputSignature;
@@ -498,106 +510,186 @@ function SalaryTemplateFormContent({
     }
   };
 
-  const busy = createState.isLoading || updateState.isLoading;
+  const busy = createState.isLoading || updateState.isLoading || formik.isSubmitting;
   const valid = editorSchema.isValidSync(formik.values) && issues.length === 0;
-  useEffect(() => {
-    reportStatus({
-      valid,
-      previewCurrent: Boolean(previewCurrent),
-      busy,
-      calculating: calculationState.isLoading,
-    });
-  }, [valid, previewCurrent, busy, calculationState.isLoading, reportStatus]);
   useEffect(() => onBusyChange(busy), [busy, onBusyChange]);
   useEffect(() => {
-    controller.current = {
-      save,
-      review: () => {
-        if (!readOnly && issues.length) {
-          setShowIssues(true);
-          setPendingFocus(issues[0].includes('PF') ? 'salary-deductions' : 'salary-earnings');
-          return;
-        }
-        setActiveStep(1);
-      },
-    };
-  });
-  useEffect(() => {
-    const invalid = formik.values.rules.filter(
-      (rule, index) =>
-        getIn(formik.touched, `rules[${index}]`) && getIn(formik.errors, `rules[${index}]`)
-    );
-    if (!invalid.length) return;
-    setExpanded((current) => new Set([...current, ...invalid.map((rule) => rule.componentId)]));
-    setPendingFocus(`salary-rule-${invalid[0].componentId}`);
-  }, [formik.errors, formik.touched, formik.values.rules]);
-  useEffect(() => {
-    if (!pendingFocus || activeStep !== 0) return undefined;
+    if (!pendingFocus) return undefined;
     const frame = requestAnimationFrame(() => {
       const region = document.getElementById(pendingFocus);
+      const active = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       const target =
         region?.querySelector<HTMLElement>('[aria-invalid="true"]:not([type="hidden"])') ||
+        (active && region?.contains(active) && !active.matches(':disabled') ? active : null) ||
         region?.querySelector<HTMLElement>(
           'input:not([type="hidden"]):not([disabled]), [role="combobox"]:not([aria-disabled="true"])'
         ) ||
         region?.querySelector<HTMLElement>('button:not([disabled])') ||
         region;
-      target?.focus();
-      target?.scrollIntoView?.({ block: 'center' });
+      target?.focus({ preventScroll: true });
+      const list = target?.closest<HTMLElement>('[data-salary-rule-scroll]');
+      if (target && list && list.scrollHeight > list.clientHeight) {
+        const offset = target.getBoundingClientRect().top - list.getBoundingClientRect().top;
+        list.scrollTo({ top: list.scrollTop + offset - list.clientHeight / 2 });
+      }
+      const content = contentRef.current;
+      if (target && content) {
+        const offset = target.getBoundingClientRect().top - content.getBoundingClientRect().top;
+        content.scrollTo({ top: content.scrollTop + offset - content.clientHeight / 2 });
+      }
       setPendingFocus(null);
     });
     return () => cancelAnimationFrame(frame);
-  }, [pendingFocus, activeStep]);
-  const editSection = (section: 'Basic Information' | 'Earnings' | 'Deductions') => {
-    setActiveStep(0);
-    setPendingFocus(
-      section === 'Basic Information'
-        ? 'salary-basic-information'
-        : section === 'Earnings'
-          ? 'salary-earnings'
-          : 'salary-deductions'
-    );
-  };
+  }, [pendingFocus]);
+  const previewStatus = readOnly
+    ? 'Read only. Existing salary setups remain unchanged.'
+    : busy
+      ? 'Saving template…'
+      : calculationState.isLoading
+        ? 'Calculating sample…'
+        : !valid
+          ? 'Complete the configuration, then calculate a sample to save.'
+          : previewCurrent
+            ? 'Sample is current. Ready to save.'
+            : 'Calculate the current rules to enable Save.';
   return (
-    <Box sx={{ p: { xs: 1, md: 2 }, minWidth: 0 }}>
-      {activeStep === 0 ? (
-        <SalaryTemplateConfigure
-          formik={formik}
-          readOnly={readOnly}
-          componentNames={componentNames}
-          expanded={expanded}
-          onToggle={(id) =>
-            setExpanded((current) => {
-              const next = new Set(current);
-              if (next.has(id)) next.delete(id);
-              else next.add(id);
-              return next;
-            })
-          }
-          onAdd={setAddKind}
-          issues={showIssues ? issues : []}
-        />
-      ) : (
-        <SalaryTemplateReview
-          serverError={serverError}
-          onReload={onReload}
-          templateId={templateId}
-          issues={issues}
-          readOnly={readOnly}
-          previewCurrent={Boolean(previewCurrent)}
-          sampleAmount={sampleAmount}
-          setSampleAmount={setSampleAmount}
-          effectiveMonth={effectiveMonth}
-          setEffectiveMonth={setEffectiveMonth}
-          runSample={runSample}
-          calculating={calculationState.isLoading}
-          archived={template?.status === 'ARCHIVED'}
-          previewError={previewError}
-          calculation={previewCurrent ? preview?.result.calculation : undefined}
-          versions={versionData?.items || []}
-          onEditSection={editSection}
-        />
-      )}
+    <Box
+      component="form"
+      noValidate
+      onSubmit={formik.handleSubmit}
+      sx={{ height: 1, minHeight: 0, minWidth: 0, display: 'flex', flexDirection: 'column' }}
+    >
+      <Box
+        ref={contentRef}
+        role="region"
+        aria-label="Salary template configuration"
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          p: { xs: 1, md: 2 },
+          scrollPaddingBlock: 2,
+        }}
+      >
+        <Box
+          component="fieldset"
+          disabled={busy}
+          inert={busy || undefined}
+          aria-busy={busy}
+          sx={{
+            border: 0,
+            p: 0,
+            m: 0,
+            minWidth: 0,
+            display: 'grid',
+            gap: 3,
+            opacity: busy ? 0.6 : 1,
+          }}
+        >
+          <SalaryTemplateConfigure
+            formik={formik}
+            readOnly={readOnly}
+            componentNames={componentNames}
+            expanded={expanded}
+            onToggle={(id) =>
+              setExpanded((current) => {
+                const next = new Set(current);
+                if (next.has(id)) next.delete(id);
+                else next.add(id);
+                return next;
+              })
+            }
+            onReveal={(id) => setPendingFocus(`salary-rule-${id}`)}
+            onAdd={setAddKind}
+            issues={showIssues ? issues : []}
+          />
+          <SalaryTemplateReview
+            previewCurrent={Boolean(previewCurrent)}
+            sampleAmount={sampleAmount}
+            setSampleAmount={setSampleAmount}
+            effectiveMonth={effectiveMonth}
+            setEffectiveMonth={setEffectiveMonth}
+            runSample={runSample}
+            calculating={calculationState.isLoading}
+            archived={template?.status === 'ARCHIVED'}
+            previewError={previewError}
+            calculation={previewCurrent ? preview?.result.calculation : undefined}
+            versions={versionData?.items || []}
+          />
+        </Box>
+      </Box>
+      <Box
+        component="footer"
+        sx={{
+          flexShrink: 0,
+          borderTop: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
+          p: { xs: 1, md: 2 },
+          display: 'grid',
+          gap: 1,
+        }}
+      >
+        {serverError && (
+          <Alert
+            severity="error"
+            action={
+              templateId ? (
+                <Button size="small" variant="outlined" onClick={onReload} disabled={busy}>
+                  Reload
+                </Button>
+              ) : undefined
+            }
+          >
+            {serverError}
+          </Alert>
+        )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+          <Button size="small" type="button" variant="outlined" onClick={onClose} disabled={busy}>
+            {readOnly ? 'Close' : 'Cancel'}
+          </Button>
+          <Typography
+            id="salary-preview-status"
+            role="status"
+            variant="body2"
+            color="text.secondary"
+            sx={{ flex: '1 1 220px', order: { xs: -1, sm: 0 }, width: { xs: '100%', sm: 'auto' } }}
+          >
+            {previewStatus}
+          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              gap: 1,
+              ml: 'auto',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <Button
+              size="small"
+              type="button"
+              variant="outlined"
+              disabled={busy}
+              onClick={() => setPendingFocus('salary-sample-calculation')}
+            >
+              Preview Calculation
+            </Button>
+            {!readOnly && (
+              <LoadingButton
+                size="small"
+                variant="contained"
+                type="submit"
+                loading={busy}
+                aria-describedby="salary-preview-status"
+                disabled={!valid || !previewCurrent || calculationState.isLoading || busy}
+              >
+                {isCreate ? 'Create Template' : 'Save Changes'}
+              </LoadingButton>
+            )}
+          </Box>
+        </Box>
+      </Box>
       <CustomDialog
         open={Boolean(addKind)}
         handleClose={() => {

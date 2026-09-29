@@ -38,6 +38,7 @@ export function useWorkflowBuilderCommands(
           name: workflow.name,
           code: workflow.code,
           description: workflow.description,
+          defaultInquiryFormDefinitionId: draft.defaultInquiryFormDefinitionId,
           concurrencyStamp: draft.loadedStamp || workflow.concurrencyStamp,
           stages,
           transitions: draft.transitions,
@@ -46,6 +47,7 @@ export function useWorkflowBuilderCommands(
       draft.setLoadedStamp(result.concurrencyStamp);
       draft.setStages(result.stages);
       draft.setTransitions(result.transitions);
+      draft.setDefaultInquiryFormDefinitionId(result.defaultInquiryFormDefinitionId ?? null);
       draft.setDirty(false);
       shikshaMitraToast.success({ message: 'Workflow draft saved' });
       return result;
@@ -64,7 +66,8 @@ export function useWorkflowBuilderCommands(
       const result = await validateWorkflow(workflowId).unwrap();
       draft.setValidation(result);
       draft.setSidePanel('validation');
-      if (result.isValid) shikshaMitraToast.success({ message: 'Workflow is valid and ready to publish' });
+      if (result.isValid)
+        shikshaMitraToast.success({ message: 'Workflow is valid and ready to publish' });
       return result;
     } catch (error) {
       showError(error, 'Unable to validate the workflow.');

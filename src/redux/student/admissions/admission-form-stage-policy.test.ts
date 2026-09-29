@@ -53,6 +53,27 @@ describe('managed Form stage policy', () => {
     });
   });
 
+  it('clears verification sections from the previous published form version', () => {
+    const previous = JSON.stringify({
+      custom: { kept: true },
+      formDefinitionId: form.id,
+      form: {
+        ...DEFAULT_FORM_STAGE_POLICY,
+        requireSectionVerification: true,
+        verificationSectionCodes: ['STUDENT'],
+      },
+    });
+    const nextFormId = 'different-published-form';
+
+    expect(JSON.parse(writeAdmissionFormDefinitionId(previous, nextFormId))).toMatchObject({
+      custom: { kept: true },
+      formDefinitionId: nextFormId,
+      form: { requireSectionVerification: true, verificationSectionCodes: [] },
+    });
+    expect(JSON.parse(writeAdmissionFormDefinitionId(previous, form.id)).form.verificationSectionCodes)
+      .toEqual(['STUDENT']);
+  });
+
   it('supports ownership, deadlines, corrections, and selected verification sections', () => {
     const policy = {
       ...DEFAULT_FORM_STAGE_POLICY,

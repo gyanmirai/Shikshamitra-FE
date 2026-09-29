@@ -4,10 +4,10 @@ import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { StudentOnboardingSettingsRecord } from 'src/redux/student/onboarding/student-onboarding-types';
 
-import { useRef, useMemo, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Box, LinearProgress } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useMemo, useEffect, useCallback } from 'react';
+import { Box, Alert, Button, LinearProgress } from '@mui/material';
 import {
   useGetStudentOnboardingSettingsQuery,
   useSaveStudentOnboardingSettingsMutation,
@@ -64,19 +64,25 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
   const settingsQuery = useGetStudentOnboardingSettingsQuery(
     academicYearId ? { academicYearId } : undefined
   );
+  // RTK Query's data may still belong to the previous year while new arguments load.
+  // Only currentData can initialize this year's editable settings and concurrency stamps.
+  const records = settingsQuery.currentData;
   const [saveSettings] = useSaveStudentOnboardingSettingsMutation();
   const [deleteSettings] = useDeleteStudentOnboardingSettingsMutation();
   const recordsRef = useRef(new Map<string, StudentOnboardingSettingsRecord>());
 
   useEffect(() => {
-    if (!settingsQuery.data) return;
+    if (!records) {
+      recordsRef.current = new Map();
+      return;
+    }
     recordsRef.current = new Map(
-      settingsQuery.data.map((record) => [getRecordKey(record.academicYearId), record])
+      records.map((record) => [getRecordKey(record.academicYearId), record])
     );
-  }, [settingsQuery.data]);
+  }, [records]);
 
   const initialState = useMemo(() => {
-    const schoolRecord = settingsQuery.data?.find((record) => !record.academicYearId);
+    const schoolRecord = records?.find((record) => !record.academicYearId);
     const schoolSettings = parseConfiguration(schoolRecord) ?? defaultOnboardingSettings;
     const initialOverrides: Record<string, OnboardingSettingsConfiguration> = {};
 
@@ -85,7 +91,7 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
     }
 
     if (academicYearId) {
-      const academicRecord = settingsQuery.data?.find(
+      const academicRecord = records?.find(
         (record) => record.academicYearId === academicYearId
       );
       const academicSettings = parseConfiguration(academicRecord);
@@ -95,7 +101,7 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
     }
 
     return { initialOverrides };
-  }, [academicYearId, settingsQuery.data]);
+  }, [academicYearId, records]);
 
   const persist = useCallback(
     async (
@@ -152,7 +158,7 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
     [deleteSettings]
   );
 
-  if (settingsQuery.isLoading) {
+  if (settingsQuery.isLoading || (!records && !settingsQuery.isError)) {
     return (
       <Box sx={{ width: 1, pt: 0.5 }}>
         <LinearProgress aria-label="Loading onboarding configuration" />
@@ -161,12 +167,28 @@ export function PersistedOnboardingSettingsProvider({ children }: { children: Re
   }
 
   if (settingsQuery.isError) {
-    return <OnboardingSettingsProvider>{children}</OnboardingSettingsProvider>;
+    return (
+      <Alert severity="error" action={<Button size="small" color="inherit" onClick={() => settingsQuery.refetch()}>Retry</Button>}>
+        Onboarding settings could not be loaded. Retry before making changes.
+      </Alert>
+    );
+  }
+
+  if (records?.some(record => !parseConfiguration(record))) {
+    return <Alert severity="error">The saved onboarding configuration is invalid or uses an unsupported version. Ask an administrator to repair it before making changes; saved rules have not been replaced with defaults.</Alert>;
   }
 
   return (
     <OnboardingSettingsProvider
       key={academicYearId ?? 'school'}
+      initialScope={academicYearId ? {
+        ...defaultOnboardingConfigurationScope,
+        level: 'academic-year',
+        key: getAcademicScopeKey(academicYearId),
+        label: `Academic year — ${currentYear?.name ?? ''}`,
+        academicYearId,
+        academicYearName: currentYear?.name ?? '',
+      } : defaultOnboardingConfigurationScope}
       initialSettings={defaultOnboardingSettings}
       initialOverrides={initialState.initialOverrides}
       onPersist={persist}

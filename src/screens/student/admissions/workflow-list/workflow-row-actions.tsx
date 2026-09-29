@@ -1,8 +1,7 @@
+import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Iconify } from 'src/components/iconify';
-import { MenuItem, MenuList } from '@mui/material';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 export type WorkflowActionPermissions = {
   canEdit: boolean;
@@ -15,7 +14,6 @@ export type WorkflowActionPermissions = {
 
 type Props = WorkflowActionPermissions & {
   workflow: AdmissionWorkflow;
-  onView: () => void;
   onEdit: () => void;
   onClone: () => void;
   onCreateVersion: () => void;
@@ -32,7 +30,6 @@ export function WorkflowRowActions({
   canCreateVersion,
   canArchive,
   canViewUsage,
-  onView,
   onEdit,
   onClone,
   onCreateVersion,
@@ -40,45 +37,13 @@ export function WorkflowRowActions({
   onArchive,
   onDelete,
 }: Props) {
-  const item = (label: string, icon: string, action: () => void, color?: string) => (
-    <MenuItem aria-label={`${label} ${workflow.name}`} onClick={action}>
-      <Iconify icon={icon} color={color} /> {label}
-    </MenuItem>
-  );
-  return (
-    <ThreeDotsActions
-      placement="right-top"
-      moreLabel={`More actions for ${workflow.name}`}
-      showViewIcon
-      viewIcon="mdi:eye-outline"
-      viewLabel={`Preview ${workflow.name}`}
-      handleViewClick={onView}
-      showEditIcon={canEdit}
-      editLabel={`Edit ${workflow.name}`}
-      disableEditIcon={workflow.status !== 0}
-      handleEditClick={onEdit}
-      showDeleteIcon={canDelete}
-      deleteLabel={`Delete ${workflow.name}`}
-      disableDeleteIcon={workflow.status !== 0}
-      handleDeleteClick={onDelete}
-      actions={({ popover }) => {
-        const run = (action: () => void) => {
-          popover.onClose();
-          action();
-        };
-        return (
-          <MenuList dense>
-            {canClone && item('Clone as draft', 'mdi:content-copy', () => run(onClone))}
-            {canCreateVersion &&
-              [1, 2, 7].includes(workflow.status) &&
-              item('Create new version', 'mdi:file-plus-outline', () => run(onCreateVersion))}
-            {canViewUsage && item('View usage', 'mdi:chart-box-outline', () => run(onUsage))}
-            {canArchive &&
-              [1, 7].includes(workflow.status) &&
-              item('Archive', 'mdi:archive-outline', () => run(onArchive), 'warning.main')}
-          </MenuList>
-        );
-      }}
-    />
-  );
+  const actions: AdaptiveThreeDotsAction[] = [];
+  if (canEdit) actions.push({ id: 'edit', label: `Edit ${workflow.name}`, icon: 'solar:pen-bold', disabled: workflow.status !== 0, onClick: onEdit });
+  if (canDelete) actions.push({ id: 'delete', label: `Delete ${workflow.name}`, icon: 'solar:trash-bin-trash-bold', color: workflow.status === 0 ? 'error.main' : 'text.disabled', disabled: workflow.status !== 0, onClick: onDelete });
+  if (canClone) actions.push({ id: 'clone', label: `Clone ${workflow.name} as draft`, icon: 'mdi:content-copy', onClick: onClone });
+  if (canCreateVersion && [1, 2, 7].includes(workflow.status)) actions.push({ id: 'new-version', label: `Create new version of ${workflow.name}`, icon: 'mdi:file-plus-outline', onClick: onCreateVersion });
+  if (canViewUsage) actions.push({ id: 'usage', label: `View usage of ${workflow.name}`, icon: 'mdi:chart-box-outline', onClick: onUsage });
+  if (canArchive && [1, 7].includes(workflow.status)) actions.push({ id: 'archive', label: `Archive ${workflow.name}`, icon: 'mdi:archive-outline', color: 'warning.main', onClick: onArchive });
+
+  return <AdaptiveThreeDotsActions placement="right-top" moreLabel={`More actions for ${workflow.name}`} mobileDirectActionLimit={0} sx={{ gap: 0, '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } } }} actions={actions} />;
 }

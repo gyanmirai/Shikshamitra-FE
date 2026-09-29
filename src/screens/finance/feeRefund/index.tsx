@@ -16,7 +16,7 @@ import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Card, Stack, Button, TextField, Typography } from '@mui/material';
+import { Box, Card, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import {
   feeRefundApi,
@@ -34,6 +34,7 @@ import RefundRemarksForm from './Components/RefundRemarksForm';
 import StudentFeeRefundTable from './Components/FeeRefundTable';
 import FeeRefundFormComponent from './NewRefundForm/RefundForm';
 import FeeRefundReasonApprovalForm from './Components/FeeRefuncRejectApproveForm';
+import { refundPaymentMethodsConfig } from './NewRefundForm/refundPaymentDetailsConfig';
 
 import type { IStudentFeeData } from './type';
 
@@ -88,6 +89,7 @@ const FeeRefund = () => {
   // null when no student is selected
   const [selectedFeeRefund, setSelectedFeeRefund] = useState<IStudentFeeData | null>(null);
   const [externalReference, setExternalReference] = useState('');
+  const [settlementMethod, setSettlementMethod] = useState('');
   const [settlementKey, setSettlementKey] = useState('');
   const [reversalReason, setReversalReason] = useState('');
 
@@ -254,6 +256,7 @@ const FeeRefund = () => {
           }}
           onProcess={(data) => {
             setSelectedFeeRefund(data);
+            setSettlementMethod(data._refundMethod ?? '');
             setExternalReference('');
             setSettlementKey(crypto.randomUUID());
             processDialog.onTrue();
@@ -433,10 +436,17 @@ const FeeRefund = () => {
           />
           <TextField
             label="Payout method"
-            value={selectedFeeRefund?._refundMethod ?? ''}
+            value={settlementMethod}
+            onChange={(event) => setSettlementMethod(event.target.value)}
             size="small"
-            disabled
-          />
+            select={!selectedFeeRefund?._refundMethod}
+            disabled={!!selectedFeeRefund?._refundMethod}
+            required
+          >
+            {Object.keys(refundPaymentMethodsConfig).map((method) => (
+              <MenuItem key={method} value={method}>{method}</MenuItem>
+            ))}
+          </TextField>
           <TextField
             label="Bank / transaction reference"
             value={externalReference}
@@ -450,7 +460,7 @@ const FeeRefund = () => {
             </Button>
             <Button
               variant="contained"
-              disabled={isProcessing || !selectedFeeRefund?._refundRequestId}
+              disabled={isProcessing || !selectedFeeRefund?._refundRequestId || !settlementMethod}
               onClick={async () => {
                 if (!selectedFeeRefund?._refundRequestId) return;
                 try {
@@ -458,7 +468,7 @@ const FeeRefund = () => {
                     id: selectedFeeRefund._refundRequestId,
                     body: {
                       idempotencyKey: settlementKey,
-                      method: selectedFeeRefund._refundMethod,
+                      method: settlementMethod,
                       amount: selectedFeeRefund._approvedAmount,
                       settlementDate: new Date().toISOString(),
                       externalReference: externalReference || undefined,

@@ -32,9 +32,6 @@ export function FormBuilderCanvas({
     (section) => section.id === selectedSectionId
   );
   const selectedSection = formik.values.sections[selectedSectionIndex] ?? formik.values.sections[0];
-  const selectedStep = steps.find((step) =>
-    step.sections.some(({ section }) => section.id === selectedSection?.id)
-  );
   const focused = !showFullStructure && Boolean(selectedSection);
   const selectSection = (sectionId: string) => {
     onSelect(sectionId, null);
@@ -49,7 +46,9 @@ export function FormBuilderCanvas({
       <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
         <Stack spacing={1.5} sx={{ p: { xs: 1.5, sm: 2 } }}>
           <Typography variant="caption" color="text.secondary">
-            {focused
+            {!formik.values.sections.length
+              ? 'This draft has no sections. Add a section to continue building the form.'
+              : focused
               ? 'Select a field to edit its settings. Drag fields to change their order.'
               : 'Select a section in the outline or below to focus its fields.'}
           </Typography>
@@ -59,11 +58,11 @@ export function FormBuilderCanvas({
               strategy={verticalListSortingStrategy}
             >
               <FormBuilderSection
+                key={selectedSection.id}
                 formik={formik}
                 sectionIndex={selectedSectionIndex >= 0 ? selectedSectionIndex : 0}
                 selectedSectionId={selectedSection.id}
                 selectedFieldId={selectedFieldId}
-                canDelete={(selectedStep?.sections.length ?? formik.values.sections.length) > 1}
                 sectionReorderEnabled={false}
                 showInlineAddField={false}
                 onSelectSection={selectSection}
@@ -77,7 +76,6 @@ export function FormBuilderCanvas({
                 formik={formik}
                 step={step}
                 stepIndex={stepIndex}
-                stepCount={steps.length}
                 selectedSectionId={selectedSectionId}
                 selectedFieldId={selectedFieldId}
                 onSelectSection={selectSection}

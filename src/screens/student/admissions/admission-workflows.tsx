@@ -1,7 +1,7 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { AdmissionWorkflowNotification } from 'src/redux/student/admissions/admission-workflows-api';
+import type { AdmissionWorkflow, AdmissionWorkflowNotification } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -64,7 +64,6 @@ export default function AdmissionWorkflowsScreen() {
     skipCount: filters.page * filters.rowsPerPage,
   });
   const columns = createWorkflowColumns(actions.allowed, {
-    onView: (workflow) => actions.navigate(workflow, 'preview'),
     onEdit: (workflow) => actions.navigate(workflow),
     onClone: actions.openClone,
     onCreateVersion: actions.createVersion,
@@ -75,13 +74,13 @@ export default function AdmissionWorkflowsScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Admission Process"
+        heading="Admission Stage"
         description="Design, validate, version, and publish the admission journey used by offerings."
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
-          { name: 'Admission Process' },
+          { name: 'Settings', href: studentPaths.enrollment.settings.root },
+          { name: 'Admission Stage' },
         ]}
       />
       <Paper variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
@@ -145,11 +144,22 @@ export default function AdmissionWorkflowsScreen() {
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
           tableId="admission-workflows"
-          tableTitle="Admission processes"
+          tableTitle="Admission stage workflows"
           wrapperProps={{ sx: { height: 1 } }}
           tableContainerProps={{ sx: { height: 1 } }}
           columns={columns}
           data={query.data?.items ?? []}
+          handleRowClick={(row) => actions.navigate(row as AdmissionWorkflow, 'preview')}
+          rowProps={(row) => ({
+            tabIndex: 0,
+            sx: { cursor: 'pointer' },
+            onKeyDown: (event) => {
+              if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                event.preventDefault();
+                actions.navigate(row as AdmissionWorkflow, 'preview');
+              }
+            },
+          })}
           isLoading={query.isLoading}
           isPagination
           isSearch

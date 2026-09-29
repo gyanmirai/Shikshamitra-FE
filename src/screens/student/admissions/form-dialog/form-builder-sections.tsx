@@ -3,9 +3,15 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import { useState } from 'react';
 import Box from '@mui/material/Box';
+import Tab from '@mui/material/Tab';
+import Tabs from '@mui/material/Tabs';
+import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
+import Drawer from '@mui/material/Drawer';
+import Divider from '@mui/material/Divider';
 import { Iconify } from 'src/components/iconify';
+import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import { useBoolean } from 'src/hooks/use-boolean';
 import ButtonGroup from '@mui/material/ButtonGroup';
@@ -20,6 +26,7 @@ import {
 } from '@dnd-kit/core';
 
 import { reorderFormBuilder } from './reorder-form-builder';
+import { FormBuilderPalette } from './form-builder-palette';
 import { FormValidationPanel } from './form-validation-panel';
 import { getAdmissionFormStepGroups } from './form-step-groups';
 import { FormBuilderProperties } from './form-builder-properties';
@@ -30,7 +37,6 @@ import { useFormBuilderCommands } from './hooks/use-form-builder-commands';
 import { useFormBuilderSelection } from './hooks/use-form-builder-selection';
 import { FormBuilderLivePreview } from './components/form-builder-live-preview';
 import { FormBuilderValidationNotice } from './components/form-builder-validation-notice';
-import { FormBuilderFieldLibraryDrawer } from './components/form-builder-field-library-drawer';
 import { FormBuilderSectionLibraryDrawer } from './components/form-builder-section-library-drawer';
 
 export function FormBuilderSections({
@@ -41,9 +47,18 @@ export function FormBuilderSections({
   const selection = useFormBuilderSelection(formik.values.sections);
   const [canvasMode, setCanvasMode] = useState<'design' | 'preview'>('design');
   const [showFullStructure, setShowFullStructure] = useState(false);
-  const fieldLibrary = useBoolean();
+  const [mobilePanel, setMobilePanel] = useState<'fields' | 'form'>('form');
+  const [sidePanel, setSidePanel] = useState<'settings' | 'outline' | null>(null);
   const sectionLibrary = useBoolean();
   const commands = useFormBuilderCommands(formik, selection.selectedSectionId, selection.select);
+  const selectCanvasField = (sectionId: string, fieldId: string | null) => {
+    selection.select(sectionId, fieldId);
+    if (fieldId) setSidePanel('settings');
+  };
+  const showFields = () => {
+    setSidePanel(null);
+    setMobilePanel('fields');
+  };
   const { selectedSection } = selection;
   const selectedStep = getAdmissionFormStepGroups(formik.values.sections).find((step) =>
     step.sections.some(({ section }) => section.id === selectedSection?.id)
@@ -60,19 +75,36 @@ export function FormBuilderSections({
     >
       <>
         <FormBuilderWorkspace
-          panel={selection.panel}
-          onPanelChange={selection.setPanel}
-          outline={
-            <FormBuilderOutline
-              form={formik.values}
-              selectedSectionId={selection.selectedSectionId}
-              onSelectSection={(sectionId) => {
-                selection.select(sectionId, null);
-                setShowFullStructure(false);
-              }}
-              onAddSection={sectionLibrary.onTrue}
-              onAddField={fieldLibrary.onTrue}
-            />
+          panel={mobilePanel}
+          onPanelChange={setMobilePanel}
+          fields={
+            <Stack sx={{ flex: 1, minHeight: 0 }}>
+              {commands.systemFieldsQuery.isError && (
+                <Alert
+                  severity="warning"
+                  action={
+                    <Button size="small" onClick={() => commands.systemFieldsQuery.refetch()}>
+                      Retry
+                    </Button>
+                  }
+                >
+                  Student fields could not load. Custom fields are still available.
+                </Alert>
+              )}
+              {commands.systemFieldsQuery.isLoading && (
+                <Alert severity="info">Loading student fields...</Alert>
+              )}
+              <FormBuilderPalette
+                systemFields={commands.systemFieldsQuery.data ?? []}
+                usedBindings={formik.values.sections.flatMap((section) =>
+                  section.fields
+                    .filter((field) => field.bindingType === 0 && field.bindingKey)
+                    .map((field) => field.bindingKey!)
+                )}
+                targetLabel={selectedSection?.name}
+                onAddField={commands.addField}
+              />
+            </Stack>
           }
           form={
             <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
@@ -94,7 +126,7 @@ export function FormBuilderSections({
                             {selectedStep.name} /{' '}
                           </Typography>
                         )}
-                        {selectedSection?.name || 'Untitled section'}
+                        {selectedSection?.name || 'No sections yet'}
                       </>
                     )}
                   </Typography>
@@ -106,7 +138,10 @@ export function FormBuilderSections({
                     </Typography>
                     <FormValidationPanel
                       form={formik.values}
-                      onSelectField={selection.selectField}
+                      onSelectField={(fieldId) => {
+                        selection.selectField(fieldId);
+                        setSidePanel('settings');
+                      }}
                     />
                   </Stack>
                 </Box>
@@ -148,6 +183,22 @@ export function FormBuilderSections({
                       <Button
                         size="small"
                         variant="outlined"
+                        startIcon={<Iconify icon="mdi:plus" />}
+                        onClick={commands.addSection}
+                      >
+                        Add section
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<Iconify icon="mdi:format-list-bulleted" />}
+                        onClick={() => setSidePanel('outline')}
+                      >
+                        Outline
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
                         startIcon={<Iconify icon="mdi:format-list-bulleted" />}
                         onClick={() => setShowFullStructure(true)}
                       >
@@ -156,8 +207,9 @@ export function FormBuilderSections({
                       <Button
                         size="small"
                         variant="contained"
+                        disabled={!selectedSection}
                         startIcon={<Iconify icon="mdi:plus" />}
-                        onClick={fieldLibrary.onTrue}
+                        onClick={showFields}
                         sx={{
                           bgcolor: 'common.black',
                           color: 'common.white',
@@ -211,7 +263,7 @@ export function FormBuilderSections({
                     selectedSectionId={selection.selectedSectionId}
                     selectedFieldId={selection.selectedFieldId}
                     showFullStructure={showFullStructure}
-                    onSelect={selection.select}
+                    onSelect={selectCanvasField}
                     onShowFullStructureChange={setShowFullStructure}
                   />
                 ) : (
@@ -220,28 +272,63 @@ export function FormBuilderSections({
               </Box>
             </Box>
           }
-          settings={
-            <Box sx={{ flex: 1, minHeight: 0 }}>
-              <FormBuilderProperties
-                formik={formik}
-                selectedLocation={selection.selectedLocation}
-              />
-            </Box>
-          }
         >
-          <FormBuilderValidationNotice formik={formik} onSelect={selection.select} />
+          <FormBuilderValidationNotice formik={formik} onSelect={selectCanvasField} />
         </FormBuilderWorkspace>
 
-        <FormBuilderFieldLibraryDrawer
-          open={fieldLibrary.value}
-          targetLabel={selection.selectedSection?.name}
-          systemFields={commands.systemFieldsQuery.data ?? []}
-          loading={commands.systemFieldsQuery.isLoading}
-          error={commands.systemFieldsQuery.isError}
-          onRetry={() => commands.systemFieldsQuery.refetch()}
-          onClose={fieldLibrary.onFalse}
-          onAddField={commands.addField}
-        />
+        <Drawer
+          anchor="right"
+          open={sidePanel !== null}
+          onClose={() => setSidePanel(null)}
+          aria-labelledby="admission-form-side-panel-title"
+          sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}
+          slotProps={{ paper: { sx: { width: { xs: 1, sm: 440 }, maxWidth: 1 } } }}
+        >
+          <Stack sx={{ height: 1, minHeight: 0 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ p: 2 }}>
+              <Typography id="admission-form-side-panel-title" variant="h6">
+                {sidePanel === 'outline' ? 'Form outline' : 'Edit field'}
+              </Typography>
+              <IconButton aria-label="Close form side panel" onClick={() => setSidePanel(null)}>
+                <Iconify icon="mdi:close" />
+              </IconButton>
+            </Stack>
+            <Divider />
+            <Tabs
+              value={sidePanel ?? 'settings'}
+              onChange={(_, value: 'settings' | 'outline') => setSidePanel(value)}
+              variant="fullWidth"
+              aria-label="Builder side panel views"
+            >
+              {selection.selectedLocation && <Tab value="settings" label="Field settings" />}
+              <Tab value="outline" label="Outline" />
+            </Tabs>
+            <Box sx={{ flex: 1, minHeight: 0 }}>
+              {sidePanel === 'outline' ? (
+                <FormBuilderOutline
+                  form={formik.values}
+                  selectedSectionId={selection.selectedSectionId}
+                  onSelectSection={(sectionId) => {
+                    selection.select(sectionId, null);
+                    setShowFullStructure(false);
+                    setSidePanel(null);
+                    setMobilePanel('form');
+                  }}
+                  onAddSection={() => {
+                    setSidePanel(null);
+                    sectionLibrary.onTrue();
+                  }}
+                  onAddField={showFields}
+                />
+              ) : (
+                <FormBuilderProperties
+                  formik={formik}
+                  selectedLocation={selection.selectedLocation}
+                />
+              )}
+            </Box>
+          </Stack>
+        </Drawer>
         <FormBuilderSectionLibraryDrawer
           open={sectionLibrary.value}
           targetLabel={selection.selectedSection?.name}

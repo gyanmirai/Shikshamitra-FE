@@ -1,11 +1,14 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useGetStudentAcademic360TabQuery } from 'src/redux/academicAPI/StudentAcademic360Api/studentAcademic360Api';
 import {
   Box,
   Tab,
   Tabs,
+  Grid,
+  Card,
   Alert,
   Stack,
   Badge,
@@ -13,11 +16,7 @@ import {
   Drawer,
   Divider,
   Skeleton,
-  Grid,
-  Card,
-  Tooltip,
 } from '@mui/material';
-import { useGetStudentAcademic360TabQuery } from 'src/redux/academicAPI/StudentAcademic360Api/studentAcademic360Api';
 
 import { getStudentId } from '../types';
 import { SuccessOverview } from './SuccessOverview';
@@ -31,6 +30,10 @@ type StudentAcademic360DrawerProps = {
   open: boolean;
   student: Academic360StudentRow | null;
   students: Academic360StudentRow[];
+  pageStartIndex?: number;
+  totalStudents?: number;
+  isPageLoading?: boolean;
+  onAdjacentPage?: (direction: 'previous' | 'next') => void;
   standardId: string;
   divisionId: string;
   onStudentChange: (student: Academic360StudentRow) => void;
@@ -50,6 +53,10 @@ export function StudentAcademic360Drawer({
   open,
   student,
   students = [],
+  pageStartIndex = 0,
+  totalStudents = students.length,
+  isPageLoading = false,
+  onAdjacentPage,
   standardId: _standardId,
   divisionId: _divisionId,
   onStudentChange,
@@ -59,8 +66,26 @@ export function StudentAcademic360Drawer({
   const [isExpanded, setIsExpanded] = useState(false);
   const studentId = student ? getStudentId(student) : '';
   const currentIndex = students.findIndex((item) => getStudentId(item) === studentId);
-  const canGoPrevious = currentIndex > 0;
-  const canGoNext = currentIndex >= 0 && currentIndex < students.length - 1;
+  const canGoPrevious = !isPageLoading && currentIndex >= 0 && pageStartIndex + currentIndex > 0;
+  const canGoNext =
+    !isPageLoading && currentIndex >= 0 && pageStartIndex + currentIndex < totalStudents - 1;
+
+  /**
+   * Memoization Justification:
+   * The keyboard listener depends on this navigation handler; a stable reference
+   * avoids replacing the listener when unrelated drawer data changes.
+   */
+  const moveStudent = useCallback(
+    (direction: 'previous' | 'next') => {
+      const nextIndex = currentIndex + (direction === 'next' ? 1 : -1);
+      if (nextIndex >= 0 && nextIndex < students.length) {
+        onStudentChange(students[nextIndex]);
+      } else {
+        onAdjacentPage?.(direction);
+      }
+    },
+    [currentIndex, onAdjacentPage, onStudentChange, students]
+  );
 
   const { data, isFetching, isError } = useGetStudentAcademic360TabQuery(
     { studentId, tab: activeTab },
@@ -81,10 +106,10 @@ export function StudentAcademic360Drawer({
       if (isTyping) return;
 
       if (event.key === 'ArrowLeft' && canGoPrevious) {
-        onStudentChange(students[currentIndex - 1]);
+        moveStudent('previous');
       }
       if (event.key === 'ArrowRight' && canGoNext) {
-        onStudentChange(students[currentIndex + 1]);
+        moveStudent('next');
       }
       if (event.key === 'Escape') {
         onClose();
@@ -93,14 +118,14 @@ export function StudentAcademic360Drawer({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canGoNext, canGoPrevious, currentIndex, onClose, onStudentChange, open, students]);
+  }, [canGoNext, canGoPrevious, moveStudent, onClose, open]);
 
   const handlePrevious = () => {
-    if (canGoPrevious) onStudentChange(students[currentIndex - 1]);
+    if (canGoPrevious) moveStudent('previous');
   };
 
   const handleNext = () => {
-    if (canGoNext) onStudentChange(students[currentIndex + 1]);
+    if (canGoNext) moveStudent('next');
   };
 
   const handlePrint = () => {
@@ -125,8 +150,8 @@ export function StudentAcademic360Drawer({
             student={drawerStudent}
             health={academic360?.academicHealth}
             kpis={academic360?.kpis}
-            currentIndex={currentIndex}
-            totalStudents={students.length}
+            currentIndex={pageStartIndex + currentIndex}
+            totalStudents={totalStudents}
             onPrevious={handlePrevious}
             onNext={handleNext}
             onClose={onClose}

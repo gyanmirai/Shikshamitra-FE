@@ -1,8 +1,8 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { AdmissionApplicant360 } from 'src/redux/student/admissions/admission-applicants-api';
-import type { ReactNode } from 'react';
 
 import NextLink from 'next/link';
 import { useState } from 'react';
@@ -11,24 +11,24 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
-import CustomAccordion from 'src/components/custom-accordian';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import CustomAccordion from 'src/components/custom-accordian';
 import { Box, Paper, Stack, Button, Divider, Typography, LinearProgress } from '@mui/material';
 
-import AdmissionApplicantNotes from '../admission-applicant-notes';
 import { formatAdmissionReference } from '../admission-reference';
-import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
+import AdmissionApplicantNotes from '../admission-applicant-notes';
 import { AdmissionApplicantStartCard } from './admission-applicant-start-card';
 import { AdmissionApplicantEssentials } from './admission-applicant-profile-card';
+import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
+import {
+  getAdmissionApplicationStatusColor,
+  getAdmissionApplicationStatusLabel,
+} from '../application-status';
 import {
   getCurrentStage,
   getPrimaryApplication,
   isActiveAdmissionApplication,
 } from './admission-applicant-360-model';
-import {
-  getAdmissionApplicationStatusColor,
-  getAdmissionApplicationStatusLabel,
-} from '../application-status';
 
 type Application = AdmissionApplicant360['applications'][number];
 type Stage = Application['stages'][number];
@@ -503,6 +503,11 @@ function ApplicationInformation({
     {
       label: 'Application number',
       value: formatAdmissionReference(application.applicationNumber),
+    },
+    {
+      label: 'Journey counsellor',
+      value: application.assignedCounsellorName ||
+        (application.assignedCounsellorId ? 'Assigned counsellor' : 'Not assigned'),
     },
     {
       label: 'Started',

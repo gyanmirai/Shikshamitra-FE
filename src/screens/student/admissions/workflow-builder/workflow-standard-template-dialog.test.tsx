@@ -1,5 +1,3 @@
-import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
-
 import { Provider } from 'react-redux';
 import { addIcon } from '@iconify/react';
 import { configureStore } from '@reduxjs/toolkit';
@@ -11,14 +9,12 @@ import { render, screen, waitFor } from '@testing-library/react';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
-import { ADMISSION_WORKFLOW_TEMPLATES } from '../workflow-template';
 import { WorkflowStandardTemplateDialog } from './components/workflow-standard-template-dialog';
 
 [
   'close',
   'auto-fix',
   'open-in-new',
-  'refresh',
   'school-outline',
   'lightning-bolt-outline',
   'clipboard-text-outline',
@@ -31,35 +27,27 @@ import { WorkflowStandardTemplateDialog } from './components/workflow-standard-t
   addIcon(`mdi:${name}`, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 });
 
-const form = (status: AdmissionForm['status']): AdmissionForm => ({
-  id: status === 1 ? 'published-form' : 'draft-form',
-  name: status === 1 ? 'Published registration' : 'New registration',
-  code: status === 1 ? 'PUBLISHED_REGISTRATION' : 'NEW_REGISTRATION',
-  version: 1,
-  status,
-  layoutType: 0,
-  sectionCount: 1,
-  sections: [],
-  concurrencyStamp: 'stamp-1',
-});
+const inquiryForm = { id: 'inquiry-form', name: 'Parent inquiry', version: 2 };
+const registrationForm = { id: 'registration-form', name: 'Student registration', version: 3 };
+const fetchInquiryForms = vi.fn(async () => ({ data: [inquiryForm], hasMore: false }));
+const fetchRegistrationForms = vi.fn(async () => ({ data: [registrationForm], hasMore: false }));
 
-function renderDialog(
-  forms: AdmissionForm[],
-  overrides: Partial<React.ComponentProps<typeof WorkflowStandardTemplateDialog>> = {}
-) {
-  const store = configureStore({ reducer: { confirmPopup } });
+function renderDrawer(initialForms = false) {
   const props = {
     open: true,
-    forms,
-    loading: false,
-    loadError: false,
     onClose: vi.fn(),
     onApply: vi.fn(),
-    onRetry: vi.fn(),
     onOpenFormBuilder: vi.fn(),
-    ...overrides,
+    fetchInquiryForms,
+    fetchRegistrationForms,
+    ...(initialForms && {
+      initialInquiryFormDefinitionId: inquiryForm.id,
+      initialInquiryForm: inquiryForm,
+      initialRegistrationFormDefinitionId: registrationForm.id,
+      initialRegistrationForm: registrationForm,
+    }),
   };
-
+  const store = configureStore({ reducer: { confirmPopup } });
   render(
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -67,75 +55,55 @@ function renderDialog(
       </ThemeProvider>
     </Provider>
   );
-
   return props;
 }
 
-describe('WorkflowStandardTemplateDialog', () => {
-  it('shows a draft form and explains that it must be published', async () => {
-    const user = userEvent.setup();
-    const props = renderDialog([form(0)]);
+async function selectForm(user: ReturnType<typeof userEvent.setup>, label: string, option: string) {
+  await user.click(screen.getByRole('combobox', { name: label }));
+  await user.click(await screen.findByRole('option', { name: option }));
+}
 
-    expect(
-      screen.getByText(/1 draft form is available, but must be published/i)
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Replace journey' })).toBeDisabled();
+describe('manual workflow template drawer', () => {
+  it('shows the forms already attached to the workflow', async () => {
+    renderDrawer(true);
 
-    await user.click(screen.getByLabelText('Published application form *'));
-    const option = await screen.findByRole('option', {
-      name: /New registration · Version 1 · Draft/i,
-    });
-    expect(option).toHaveAttribute('aria-disabled', 'true');
-
-    await user.keyboard('{Escape}');
-    await user.click(screen.getByRole('button', { name: 'Open Admission Forms' }));
-    expect(props.onOpenFormBuilder).toHaveBeenCalledOnce();
+    expect(screen.getByRole('combobox', { name: 'Published inquiry form (optional)' })).toHaveValue(
+      'Parent inquiry · v2'
+    );
+    expect(screen.getByRole('combobox', { name: 'Published registration form *' })).toHaveValue(
+      'Student registration · v3'
+    );
   });
 
-  it('selects a published form and applies the recommended standard journey', async () => {
+  it('applies the selected template and both published forms to the draft', async () => {
     const user = userEvent.setup();
-    const props = renderDialog([form(0), form(1)]);
+    const props = renderDrawer();
 
-    const selector = screen.getByLabelText('Published application form *');
-    expect(selector).toHaveTextContent('Published registration · Version 1 · Published');
-
-    expect(screen.getByRole('radio', { name: /Standard admission/ })).toBeChecked();
-    expect(screen.getByText('Recommended')).toBeInTheDocument();
-    expect(screen.getByText('Preview', { selector: 'button' })).toBeInTheDocument();
-    const standard = ADMISSION_WORKFLOW_TEMPLATES.find((template) => template.id === 'standard')!;
-    expect(screen.getAllByText(`${standard.stages.length} stages`)).not.toHaveLength(0);
-
+    expect(document.querySelector('.MuiDrawer-paperAnchorRight')).toBeInTheDocument();
+    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
+    await selectForm(user, 'Published inquiry form (optional)', 'Parent inquiry · v2');
+    await selectForm(user, 'Published registration form *', 'Student registration · v3');
     await user.click(screen.getByRole('button', { name: 'Replace journey' }));
 
-    await waitFor(() => expect(props.onApply).toHaveBeenCalledWith('standard', 'published-form'));
+    await waitFor(() =>
+      expect(props.onApply).toHaveBeenCalledWith('assessment', 'registration-form', 'inquiry-form')
+    );
     expect(props.onClose).toHaveBeenCalledOnce();
   });
 
-  it('previews and applies a different school-ready journey', async () => {
+  it('requires a registration form and guards unsaved selections', async () => {
     const user = userEvent.setup();
-    const props = renderDialog([form(1)]);
-
-    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
-
-    expect(screen.getByLabelText('Assessment-based admission stages')).toBeInTheDocument();
-    const assessment = ADMISSION_WORKFLOW_TEMPLATES.find(
-      (template) => template.id === 'assessment'
-    )!;
-    expect(screen.getAllByText(`${assessment.stages.length} stages`)).not.toHaveLength(0);
-    expect(screen.getByText('Entrance assessment completed')).toBeInTheDocument();
+    const props = renderDrawer();
 
     await user.click(screen.getByRole('button', { name: 'Replace journey' }));
-    await waitFor(() => expect(props.onApply).toHaveBeenCalledWith('assessment', 'published-form'));
-  });
+    expect(await screen.findByText('Select a published registration form')).toBeInTheDocument();
+    expect(props.onApply).not.toHaveBeenCalled();
 
-  it('offers retry when registration forms cannot be loaded', async () => {
-    const user = userEvent.setup();
-    const props = renderDialog([], { loadError: true });
-
-    expect(screen.getByText(/Application forms could not be loaded/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Replace journey' })).toBeDisabled();
-
-    await user.click(screen.getByRole('button', { name: 'Retry' }));
-    expect(props.onRetry).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.getByText('Discard template selections?')).toBeInTheDocument();
+    expect(props.onClose).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Discard selections' }));
+    expect(props.onClose).toHaveBeenCalledOnce();
   });
 });

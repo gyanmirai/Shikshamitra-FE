@@ -16,6 +16,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import {
   Box,
+  Alert,
   Chip,
   Grid,
   Paper,
@@ -28,6 +29,7 @@ import {
 import {
   useGetFeeRefundByIdQuery,
   type FeeRefundRequestDto,
+  type FeeRefundPreviewDto,
   type RefundEligibilityDto,
   useCreateFeeRefundMutation,
   useSubmitFeeRefundMutation,
@@ -42,6 +44,7 @@ import {
   buildRefundInitialValues,
   buildFeeRefundApiPayload,
   buildRefundValidationSchema,
+  refundAllocationLabel,
 } from './initialValuesAndValidation';
 
 import type { IFeeHeadRefundItem } from './initialValuesAndValidation';
@@ -173,6 +176,11 @@ const FeeRefundFormComponent = ({
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const theme = useTheme();
   const [loadingEditData, setLoadingEditData] = React.useState(false);
+  const [reviewedPreview, setReviewedPreview] = React.useState<{
+    fingerprint: string;
+    result: FeeRefundPreviewDto;
+  } | null>(null);
+  const submitIntent = React.useRef<'draft' | 'submit'>('submit');
   const [createFeeRefund, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateFeeRefundMutation,
@@ -248,7 +256,16 @@ const FeeRefundFormComponent = ({
                 dueFeeId: m.dueFeeId,
                 sourceAllocationId: m.sourceAllocationId,
                 sourceReceiptId: m.sourceReceiptId,
-                month: `${FeeMonth[m.month] ?? `Month ${m.month}`} ${m.year}`,
+                month: refundAllocationLabel(
+                  FeeMonth[m.month] ?? `Month ${m.month}`,
+                  m.year,
+                  m.receiptNumber,
+                  m.sourceAllocationId,
+                  feeHead.months.filter((other) =>
+                    other.month === m.month && other.year === m.year &&
+                    other.receiptNumber === m.receiptNumber
+                  ).length > 1
+                ),
                 amount: lineAmountByAllocationId.get(m.sourceAllocationId) ?? 0,
               }));
 
@@ -329,15 +346,42 @@ const FeeRefundFormComponent = ({
           shikshaMitraToast.error({ message: 'Enter a refund amount for at least one month.' });
           return;
         }
-
-        await previewFeeRefund(payload).unwrap();
+        const fingerprint = JSON.stringify(payload);
+        if (reviewedPreview?.fingerprint !== fingerprint) {
+          setReviewedPreview(null);
+          const result = await previewFeeRefund(payload).unwrap();
+          if (!result.isAllowed || result.maximumAllowedAmount <= 0) {
+            shikshaMitraToast.error({ message: 'This refund is not eligible under the assigned policy.' });
+            return;
+          }
+          setReviewedPreview({ fingerprint, result });
+          return;
+        }
+        // Recheck capacity and policy immediately before persisting the reviewed request.
+        const latest = await previewFeeRefund(payload).unwrap();
+        if (!latest.isAllowed ||
+            latest.maximumAllowedAmount !== reviewedPreview.result.maximumAllowedAmount ||
+            latest.refundPolicyVersionId !== reviewedPreview.result.refundPolicyVersionId) {
+          setReviewedPreview({ fingerprint, result: latest });
+          shikshaMitraToast.error({ message: 'Refund eligibility changed. Review the updated amount before submitting.' });
+          return;
+        }
         if (isEdit && editRefundId) {
           await updateFeeRefund({ id: editRefundId, body: payload }).unwrap();
-          shikshaMitraToast.success({ message: 'Refund draft updated successfully.' });
+          if (submitIntent.current === 'submit') {
+            await submitFeeRefund(editRefundId).unwrap();
+            shikshaMitraToast.success({ message: 'Refund request submitted successfully.' });
+          } else {
+            shikshaMitraToast.success({ message: 'Refund draft updated successfully.' });
+          }
         } else {
           const draft = await createFeeRefund(payload).unwrap();
-          await submitFeeRefund(draft.id).unwrap();
-          shikshaMitraToast.success({ message: 'Refund request submitted successfully.' });
+          if (submitIntent.current === 'submit') {
+            await submitFeeRefund(draft.id).unwrap();
+            shikshaMitraToast.success({ message: 'Refund request submitted successfully.' });
+          } else {
+            shikshaMitraToast.success({ message: 'Refund draft saved successfully.' });
+          }
         }
 
         helpers.resetForm();
@@ -352,6 +396,12 @@ const FeeRefundFormComponent = ({
     formik.resetForm();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentYear?.id]);
+  const currentFingerprint = currentYear?.id
+    ? JSON.stringify(buildFeeRefundApiPayload(formik.values, currentYear.id))
+    : '';
+  const currentPreview = reviewedPreview?.fingerprint === currentFingerprint
+    ? reviewedPreview.result
+    : null;
   // ── Derived totals for sticky footer ────────────────────────────────────────
   const { totalSelectedMonths, totalRefundRequested } = useMemo(() => {
     const refunds = formik.values.feeHeadRefunds as IFeeHeadRefundItem[];
@@ -436,6 +486,16 @@ const FeeRefundFormComponent = ({
           py: 1.5,
         }}
       >
+        {currentPreview && (
+          <Alert severity="info" sx={{ mb: 1.5 }}>
+            <strong>Review calculated refund:</strong> {currentPreview.refundPolicyName} ·
+            {' '}Requested {formatCurrency(currentPreview.requestedAmount)} ·
+            {' '}Deduction {formatCurrency(currentPreview.deductionAmount)} ·
+            {' '}Cap adjustment {formatCurrency(currentPreview.capAdjustment)} ·
+            {' '}Final {formatCurrency(currentPreview.maximumAllowedAmount)}.
+            {' '}Select {isEdit ? 'Update draft' : 'Submit request'} to confirm.
+          </Alert>
+        )}
         <Box
           display="flex"
           alignItems="center"
@@ -489,6 +549,19 @@ const FeeRefundFormComponent = ({
             >
               Cancel
             </Button>
+            {currentPreview && (
+              <LoadingButton
+                variant="outlined"
+                size="small"
+                loading={isSubmitting || isUpdating || isPreviewing || isSubmittingDraft}
+                onClick={() => {
+                  submitIntent.current = 'draft';
+                  formik.handleSubmit();
+                }}
+              >
+                Save draft
+              </LoadingButton>
+            )}
             <LoadingButton
               type="submit"
               variant="contained"
@@ -504,9 +577,12 @@ const FeeRefundFormComponent = ({
               }
               loadingPosition="start"
               startIcon={<Iconify icon={isEdit ? GlobalIcons.edit : GlobalIcons.submit} />}
-              onClick={() => formik.handleSubmit()}
+              onClick={() => {
+                submitIntent.current = 'submit';
+                formik.handleSubmit();
+              }}
             >
-              {isEdit ? 'Update' : 'Submit'}
+              {currentPreview ? (isEdit ? 'Update draft' : 'Submit request') : 'Preview refund'}
             </LoadingButton>
           </Box>
         </Box>

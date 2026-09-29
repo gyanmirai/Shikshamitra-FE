@@ -1,9 +1,7 @@
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
+import { Typography } from '@mui/material';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Stack, Button, Typography } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { PublishUnpublishStatusOptions } from 'src/enums/publishUnpublish-status';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
@@ -24,7 +22,6 @@ type Options = {
 };
 
 export function getSubjectTableStatusColumns(options: Options): IColumn[] {
-  const { canAdd } = options;
   return [
     {
       id: 'setupHealthScore',
@@ -56,8 +53,8 @@ export function getSubjectTableStatusColumns(options: Options): IColumn[] {
       id: 'statusValue',
       label: 'Status',
       align: 'left',
-      // minWidth: 180,
-      // width: 184,
+      minWidth: 100,
+      width: 110,
       isSort: false,
       isFilter: false,
       sticky: true,
@@ -65,34 +62,13 @@ export function getSubjectTableStatusColumns(options: Options): IColumn[] {
       render: (value, row) => {
         const subject = row as ISubjectFormValues;
         const isPublished = subject.status === SubjectAssignmentStatus.Published;
-        const canPublish = canAdd && subject.status === SubjectAssignmentStatus.Draft;
         const statusLabel = String(value || 'Draft');
 
         if (isPublished) {
           return <Label color="success">Published</Label>;
         }
 
-        if (!canPublish) {
-          return <Label color="default">{statusLabel}</Label>;
-        }
-
-        return (
-          <Stack direction="row" alignItems="center" spacing={0.75}>
-            <Label color="default">Draft</Label>
-            <CustomTooltip title="Publish this draft" arrow placement="left">
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="solar:upload-minimalistic-outline" width={16} />}
-                aria-label="Current status: Draft. Publish subject allocation"
-                onClick={() => options.onToggleStatus(subject)}
-                sx={{ minWidth: 92, minHeight: 32, px: 1.25, whiteSpace: 'nowrap' }}
-              >
-                Publish
-              </Button>
-            </CustomTooltip>
-          </Stack>
-        );
+        return <Label color="default">{statusLabel}</Label>;
       },
     },
     {
@@ -106,7 +82,19 @@ export function getSubjectTableStatusColumns(options: Options): IColumn[] {
       isFilter: false,
       render: (_value, row) => {
         const subject = row as ISubjectFormValues;
-        const actions = getSubjectTableActions(subject, options);
+        const actions = [
+          ...(options.canAdd && subject.status === SubjectAssignmentStatus.Draft
+            ? [
+                {
+                  id: 'publish',
+                  label: `Publish ${subject.subjectName || 'subject'}`,
+                  icon: 'solar:upload-minimalistic-outline',
+                  onClick: () => options.onToggleStatus(subject),
+                },
+              ]
+            : []),
+          ...getSubjectTableActions(subject, options),
+        ];
 
         return (
           <AdaptiveThreeDotsActions

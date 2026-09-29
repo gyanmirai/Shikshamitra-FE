@@ -71,6 +71,7 @@ export const admissionFormSchema = Yup.object({
     .max(64)
     .required('Form code is required'),
   layoutType: Yup.number().oneOf([0, 1]).required('Choose a form layout'),
+  purpose: Yup.number().oneOf([0, 1]).required('Choose a form purpose'),
   fieldsPerRow: Yup.number().oneOf([1, 2, 3, 4]).required('Choose fields per row'),
   defaultLanguage: Yup.string().trim().required('Choose the default language'),
   supportedLanguages: Yup.array()
@@ -182,7 +183,8 @@ export const newField = (
 });
 
 export function getAdmissionFormInitialValues(
-  editing?: AdmissionForm | null
+  editing?: AdmissionForm | null,
+  purpose: CreateUpdateAdmissionForm['purpose'] = 1
 ): CreateUpdateAdmissionForm {
   const sectionId = editing?.sections[0]?.id ?? crypto.randomUUID();
   const stepId = editing?.sections[0]?.stepId ?? crypto.randomUUID();
@@ -192,6 +194,7 @@ export function getAdmissionFormInitialValues(
     description: editing?.description ?? '',
     concurrencyStamp: editing?.concurrencyStamp,
     layoutType: editing?.layoutType ?? 1,
+    purpose: editing?.purpose ?? purpose,
     fieldsPerRow: editing?.fieldsPerRow ?? 1,
     defaultLanguage: editing?.defaultLanguage ?? 'en',
     supportedLanguages: editing?.supportedLanguages?.length ? editing.supportedLanguages : ['en'],
@@ -211,5 +214,15 @@ export function getAdmissionFormInitialValues(
         fields: [newField(sectionId, 0)],
       },
     ],
+  };
+}
+
+export function getBlankAdmissionFormInitialValues(
+  purpose: CreateUpdateAdmissionForm['purpose'] = 1
+): CreateUpdateAdmissionForm {
+  const form = getAdmissionFormInitialValues(undefined, purpose);
+  return {
+    ...form,
+    sections: form.sections.map((section) => ({ ...section, fields: [] })),
   };
 }

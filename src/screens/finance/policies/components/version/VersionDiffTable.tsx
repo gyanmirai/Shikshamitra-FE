@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { alpha } from '@mui/material/styles';
 import {
   Box,
   Stack,
@@ -16,10 +16,10 @@ import {
   Typography,
   TableContainer,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 
 import {
   formatFinancePolicyVersionField,
+  formatVersionTimestamp,
   formatFinancePolicyVersionValue,
 } from './finance-policy-version-formatters';
 
@@ -79,7 +79,7 @@ const renderValueCell = (
 
 function VersionDiffTable({ selectedVersion, valueContext }: VersionDiffTableProps) {
   const formattedDateTime = selectedVersion.date
-    ? dayjs(selectedVersion.date).format('DD-MM-YYYY hh:mm A')
+    ? formatVersionTimestamp(selectedVersion.date)
     : '—';
 
   return (

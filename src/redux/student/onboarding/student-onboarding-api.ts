@@ -5,16 +5,16 @@ import type {
   StudentOnboardingCase,
   StudentIdentifierSeries,
   StudentOnboardingPolicy,
-  SaveStudentOnboardingSettings,
-  StudentOnboardingSettingsRecord,
   StudentOnboardingCasePage,
   StudentOnboardingAnalytics,
   StudentOnboardingDocuments,
   StudentOnboardingListInput,
   StudentOnboardingStepStatus,
+  SaveStudentOnboardingSettings,
   UpsertStudentOnboardingPolicy,
   CreateStudentIdentifierSeries,
   StudentOnboardingFilterOptions,
+  StudentOnboardingSettingsRecord,
   StudentOnboardingServiceHandoff,
   StudentOnboardingPlacementOption,
   HistoricalAdmissionReconciliation,
@@ -22,12 +22,19 @@ import type {
 
 type Result<T> = { data?: T };
 
+export type StudentPortalAccount = {
+  studentId: string; studentName: string; userId: string;
+  accountType: 'student' | 'guardian'; relationship: string;
+  email: string; emailConfirmed: boolean; isActive: boolean;
+};
+
 const unwrap = <T>(response: Result<T> | T): T =>
   response && typeof response === 'object' && 'data' in response && response.data !== undefined
     ? response.data
     : (response as T);
 
 const caseTags = (id: string) => [
+  { type: studentOnboardingType.onboardingServiceHandoffs, id },
   { type: studentOnboardingType.onboardingCaseDetail, id },
   { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
   { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
@@ -35,6 +42,19 @@ const caseTags = (id: string) => [
 
 export const studentOnboardingApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getStudentPortalAccounts: builder.query<StudentPortalAccount[], string>({
+      query: id => `/student/onboarding/${id}/portal-accounts`,
+      transformResponse: (response: Result<StudentPortalAccount[]> | StudentPortalAccount[]) => unwrap(response),
+      providesTags: (_result, _error, id) => [{ type: studentOnboardingType.onboardingCaseDetail, id }],
+    }),
+    provisionStudentPortalAccount: builder.mutation<StudentPortalAccount, {
+      id: string; accountType: 'student' | 'guardian'; relationship: string; email: string;
+      relationshipVerified: boolean; linkExistingGuardian: boolean; concurrencyStamp?: string | null;
+    }>({
+      query: ({ id, ...body }) => ({ url: `/student/onboarding/${id}/portal-accounts`, method: 'POST', body }),
+      transformResponse: (response: Result<StudentPortalAccount> | StudentPortalAccount) => unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
     getStudentOnboardingCases: builder.query<
       StudentOnboardingCasePage,
       StudentOnboardingListInput | void
@@ -120,6 +140,11 @@ export const studentOnboardingApi = api.injectEndpoints({
         unwrap(response),
       invalidatesTags: (_result, _error, { id }) => caseTags(id),
     }),
+    setStudentOnboardingRoute: builder.mutation<StudentOnboardingCase, { id: string; admissionRoute: string; concurrencyStamp?: string | null }>({
+      query: ({ id, ...body }) => ({ url: `/student/onboarding/${id}/admission-route`, method: 'PUT', body }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) => unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
     updateStudentOnboardingStep: builder.mutation<
       StudentOnboardingCase,
       {
@@ -142,7 +167,7 @@ export const studentOnboardingApi = api.injectEndpoints({
     }),
     setStudentOnboardingPlacement: builder.mutation<
       StudentOnboardingCase,
-      { id: string; concurrencyStamp?: string | null; divisionId: string }
+      { id: string; concurrencyStamp?: string | null; divisionId: string; reason?: string }
     >({
       query: ({ id, ...body }) => ({
         url: `/student/onboarding/${id}/placement`,
@@ -428,6 +453,8 @@ export const studentOnboardingApi = api.injectEndpoints({
 });
 
 export const {
+  useGetStudentPortalAccountsQuery,
+  useProvisionStudentPortalAccountMutation,
   useGetStudentOnboardingCasesQuery,
   useGetStudentOnboardingFilterOptionsQuery,
   useGetStudentOnboardingAnalyticsQuery,
@@ -436,6 +463,7 @@ export const {
   useGetAvailableStudentIdentifierSeriesQuery,
   useRefreshStudentOnboardingReadinessMutation,
   useAssignStudentOnboardingOwnerMutation,
+  useSetStudentOnboardingRouteMutation,
   useUpdateStudentOnboardingStepMutation,
   useSetStudentOnboardingPlacementMutation,
   useAllocateStudentOnboardingIdentifierMutation,

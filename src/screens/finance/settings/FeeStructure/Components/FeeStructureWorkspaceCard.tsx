@@ -20,7 +20,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import ThreeDotsActions from 'src/components/three-dots-actions';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -81,27 +81,27 @@ const families: {
   description: string;
   empty: string;
 }[] = [
-    {
-      key: 'collection',
-      label: 'Collection Policy',
-      description:
-        'Late fees and waivers apply to matching heads. Collection controls stay at structure level.',
-      empty: 'Select a policy before publishing. Drafts may be incomplete.',
-    },
-    {
-      key: 'proration',
-      label: 'Proration Policy',
-      description: 'Rules apply to matching recurring heads. Uncovered heads retain full charge.',
-      empty: 'Full charge — no proration policy',
-    },
-    {
-      key: 'refund',
-      label: 'Refund Policy',
-      description:
-        'Defines eligibility for matching heads. Attaching a policy does not approve a refund.',
-      empty: 'No refund policy attached',
-    },
-  ];
+  {
+    key: 'collection',
+    label: 'Collection Policy',
+    description:
+      'Late fees and waivers apply to matching heads. Collection controls stay at structure level.',
+    empty: 'Select a policy before publishing. Drafts may be incomplete.',
+  },
+  {
+    key: 'proration',
+    label: 'Proration Policy',
+    description: 'Rules apply to matching recurring heads. Uncovered heads retain full charge.',
+    empty: 'Full charge — no proration policy',
+  },
+  {
+    key: 'refund',
+    label: 'Refund Policy',
+    description:
+      'Defines eligibility for matching heads. Attaching a policy does not approve a refund.',
+    empty: 'No refund policy attached',
+  },
+];
 const money = (value: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
 
@@ -216,10 +216,10 @@ export default function FeeStructureWorkspaceCard({
             next[`${policy.family}PolicyId`]
               ? next
               : {
-                ...next,
-                [`${policy.family}PolicyId`]: policy.id,
-                [`${policy.family}PolicyVersionId`]: policy.versionId,
-              },
+                  ...next,
+                  [`${policy.family}PolicyId`]: policy.id,
+                  [`${policy.family}PolicyVersionId`]: policy.versionId,
+                },
           old
         )
       );
@@ -771,7 +771,7 @@ export default function FeeStructureWorkspaceCard({
                             )}
                             helperText={
                               (touched[row.feeHeadId] || submitted) &&
-                                amountError(amountInputs[row.feeHeadId] ?? row.amount)
+                              amountError(amountInputs[row.feeHeadId] ?? row.amount)
                                 ? amountError(amountInputs[row.feeHeadId] ?? row.amount)
                                 : 'Required. Enter the total fee; installments split this amount.'
                             }
@@ -824,12 +824,12 @@ export default function FeeStructureWorkspaceCard({
                                 !settings.permissions.termsRead
                                   ? 'You do not have permission to browse Payment Terms.'
                                   : writable &&
-                                    (touched[`term:${row.feeHeadId}`] || submitted) &&
-                                    termError
+                                      (touched[`term:${row.feeHeadId}`] || submitted) &&
+                                      termError
                                     ? termError
                                     : !settings.terms.length &&
-                                      !terms.loading &&
-                                      !row.paymentTermVersionId
+                                        !terms.loading &&
+                                        !row.paymentTermVersionId
                                       ? 'Publish a Payment Term for this academic year and board, then retry terms.'
                                       : !row.paymentTermVersionId
                                         ? 'Required. Select an active, published Payment Term.'
@@ -837,9 +837,9 @@ export default function FeeStructureWorkspaceCard({
                               }
                               disabledValues={
                                 row.paymentTermVersionId &&
-                                  !settings.terms.some(
-                                    (term) => term.versionId === row.paymentTermVersionId
-                                  )
+                                !settings.terms.some(
+                                  (term) => term.versionId === row.paymentTermVersionId
+                                )
                                   ? [row.paymentTermVersionId]
                                   : []
                               }
@@ -847,21 +847,21 @@ export default function FeeStructureWorkspaceCard({
                               options={
                                 locked && row.paymentTermVersionId
                                   ? [
-                                    {
-                                      value: row.paymentTermVersionId,
-                                      label: `${row.paymentTermName || 'Attached term'} · v${row.paymentTermVersionNumber ?? '?'}`,
-                                    },
-                                  ]
-                                  : termOptions.some((x) => x.value === row.paymentTermVersionId) ||
-                                    !row.paymentTermVersionId
-                                    ? termOptions
-                                    : [
-                                      ...termOptions,
                                       {
                                         value: row.paymentTermVersionId,
-                                        label: `${row.paymentTermName || 'Attached term'} · v${row.paymentTermVersionNumber ?? '?'} · unavailable for new use`,
+                                        label: `${row.paymentTermName || 'Attached term'} · v${row.paymentTermVersionNumber ?? '?'}`,
                                       },
                                     ]
+                                  : termOptions.some((x) => x.value === row.paymentTermVersionId) ||
+                                      !row.paymentTermVersionId
+                                    ? termOptions
+                                    : [
+                                        ...termOptions,
+                                        {
+                                          value: row.paymentTermVersionId,
+                                          label: `${row.paymentTermName || 'Attached term'} · v${row.paymentTermVersionNumber ?? '?'} · unavailable for new use`,
+                                        },
+                                      ]
                               }
                               labelKey="label"
                               valueKey="value"
@@ -948,23 +948,29 @@ export default function FeeStructureWorkspaceCard({
                       isFilter: false,
                       render: (_v, row) =>
                         writable && (
-                          <ThreeDotsActions
-                            showThreeDots={false}
-                            showDeleteIcon
-                            handleDeleteClick={() => {
-                              pendingTermDefaults.current.delete(row.feeHeadId);
-                              setAmountInputs((old) => {
-                                const next = { ...old };
-                                delete next[row.feeHeadId];
-                                return next;
-                              });
-                              change({
-                                ...candidate,
-                                feeHeads: candidate.feeHeads.filter(
-                                  (x) => x.feeHeadId !== row.feeHeadId
-                                ),
-                              });
-                            }}
+                          <AdaptiveThreeDotsActions
+                            actions={[
+                              {
+                                id: 'delete',
+                                label: 'Delete',
+                                icon: 'solar:trash-bin-trash-bold',
+                                onClick: () => {
+                                  pendingTermDefaults.current.delete(row.feeHeadId);
+                                  setAmountInputs((old) => {
+                                    const next = { ...old };
+                                    delete next[row.feeHeadId];
+                                    return next;
+                                  });
+                                  change({
+                                    ...candidate,
+                                    feeHeads: candidate.feeHeads.filter(
+                                      (x) => x.feeHeadId !== row.feeHeadId
+                                    ),
+                                  });
+                                },
+                                color: 'error.main',
+                              },
+                            ]}
                           />
                         ),
                     },
@@ -1083,15 +1089,15 @@ export default function FeeStructureWorkspaceCard({
                                 : candidate[versionKey]
                                   ? 'The selected version is pinned. A newer policy version will never replace it automatically.'
                                   : settings.policies.filter((p) => p.family === key && p.isDefault)
-                                    .length > 1
+                                        .length > 1
                                     ? 'Multiple default policies exist. Choose one explicitly and correct defaults in Settings.'
                                     : empty
                           }
                           disabledValues={
                             candidate[versionKey] &&
-                              !settings.policies.some(
-                                (p) => p.family === key && p.versionId === candidate[versionKey]
-                              )
+                            !settings.policies.some(
+                              (p) => p.family === key && p.versionId === candidate[versionKey]
+                            )
                               ? [candidate[versionKey]!]
                               : []
                           }
@@ -1333,11 +1339,15 @@ export default function FeeStructureWorkspaceCard({
                 )}
               </Stack>
             )}
-            {!viewOnly && !locked && record && settings.permissions.publish && publishBlockReason && (
-              <Typography variant="body2" color="text.secondary" sx={{ px: 2, pb: 2 }}>
-                {publishBlockReason}
-              </Typography>
-            )}
+            {!viewOnly &&
+              !locked &&
+              record &&
+              settings.permissions.publish &&
+              publishBlockReason && (
+                <Typography variant="body2" color="text.secondary" sx={{ px: 2, pb: 2 }}>
+                  {publishBlockReason}
+                </Typography>
+              )}
           </>
         )}
         {selectedImpact && settings && (

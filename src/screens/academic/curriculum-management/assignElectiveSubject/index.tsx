@@ -30,6 +30,7 @@ import ValidationIssuesDrawer from './components/ValidationIssuesDrawer';
 import AssignmentSummaryDrawer from './components/AssignmentSummaryDrawer';
 import ElectiveAssignmentTable from './components/ElectiveAssignmentTable';
 import useElectiveAssignmentState from './hooks/useElectiveAssignmentState';
+import useAutoSelectElectiveGroup from './hooks/useAutoSelectElectiveGroup';
 import ElectiveAssignmentActions from './components/ElectiveAssignmentActions';
 import { buildElectiveAssignmentUpdates } from './utils/buildElectiveAssignmentUpdates';
 
@@ -64,7 +65,7 @@ const AssignElectiveSubject = () => {
   // FETCH ELECTIVE GROUPS (subject-assignments filtered to elective/subjectType=1)
   // --------------------------------------------
   const {
-    data: subjectAssignmentsData,
+    currentData: subjectAssignmentsData,
     isLoading,
     isFetching,
   } = useQueryAndMutation({
@@ -76,17 +77,24 @@ const AssignElectiveSubject = () => {
 
   const electiveGroups = useMemo(() => {
     const seen = new Set<string>();
-    return (subjectAssignmentsData?.data?.items ?? [])
-      .filter(
-        (item: any) => item.subjectType === 1 && item.electiveGroupId && item.electiveGroupName
-      )
-      .reduce((acc: { id: string; name: string }[], item: any) => {
-        if (!seen.has(item.electiveGroupId)) {
-          seen.add(item.electiveGroupId);
-          acc.push({ id: item.electiveGroupId, name: item.electiveGroupName });
+    const assignments: {
+      subjectType: number;
+      electiveGroupId?: string | null;
+      electiveGroupName?: string | null;
+    }[] = subjectAssignmentsData?.data?.items ?? [];
+
+    return assignments
+      .reduce<{ id: string; name: string }[]>((acc, item) => {
+        const { electiveGroupId: groupId, electiveGroupName: groupName } = item;
+        if (item.subjectType === 1 && groupId && groupName && !seen.has(groupId)) {
+          seen.add(groupId);
+          acc.push({ id: groupId, name: groupName });
         }
         return acc;
-      }, []);
+      }, [])
+      .sort(
+        (left, right) => left.name.localeCompare(right.name) || left.id.localeCompare(right.id)
+      );
   }, [subjectAssignmentsData]);
 
   // --------------------------------------------
@@ -111,6 +119,15 @@ const AssignElectiveSubject = () => {
     setElectiveGroupId('');
     setStudents([]);
   }, [allClass, classes]);
+
+  useAutoSelectElectiveGroup({
+    classId: classes,
+    divisionId: division,
+    groups: electiveGroups,
+    selectedGroupId: electiveGroupId,
+    isLoading: isLoading || isFetching,
+    onSelect: setElectiveGroupId,
+  });
 
   // --------------------------------------------
   // GET ELECTIVE ASSIGNMENTS USING useQueryAndMutation
