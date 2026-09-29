@@ -52,7 +52,7 @@ export function SubjectCopyOptions({ form }: Props) {
 
       <Grid container spacing={1.5} sx={{ mt: 1.5 }}>
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2, height: 1 }}>
+          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
             <Typography variant="subtitle2">Include supporting data</Typography>
             <ToggleRow
               label="Documents and links"
@@ -71,7 +71,7 @@ export function SubjectCopyOptions({ form }: Props) {
         </Grid>
 
         <Grid size={{ xs: 12, sm: 6 }}>
-          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2, height: 1 }}>
+          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
               If a subject already exists
             </Typography>

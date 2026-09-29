@@ -69,6 +69,7 @@ describe('StudentFieldPalette', () => {
     const fullCatalogue = Array.from({ length: 100 }, (_, index) => ({
       key: `Identity.Record${index + 1}`,
       displayName: `Student record ${index + 1}`,
+      description: `Student record ${index + 1}`,
       fieldType: 0 as const,
       readOnly: false,
     }));

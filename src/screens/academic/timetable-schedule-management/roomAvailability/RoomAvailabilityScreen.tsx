@@ -112,24 +112,11 @@ const RoomAvailabilityScreen = () => {
     createdDate: reservationDateFilter || undefined,
   });
 
-  // Initial load
-  useEffect(() => {
-    availability.fetch();
-    reservationsHook.fetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   useEffect(() => {
     if (!isApprover && activeTab === 'approvals') {
       setActiveTab('availability');
     }
   }, [isApprover, activeTab]);
-
-  // Re-fetch availability when filters change
-  useEffect(() => {
-    availability.fetch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
 
   // ── Filter helpers ─────────────────────────────────────────────────────────
   const patchFilters = useCallback((patch: Partial<RoomAvailabilityFilters>) => {
@@ -240,13 +227,10 @@ const RoomAvailabilityScreen = () => {
   }, [availability, reservationsHook]);
 
   // ── Screen Loading States ──────────────────────────────────────────────────
-  const isScreenLoading =
-    availability.isLoading ||
+  const isReservationLoading =
     reservationsHook.isLoading ||
     reservationsHook.isFetching ||
     reservationsHook.isMutationLoading;
-  const isScreenFetching =
-    availability.isFetching || reservationsHook.isFetching || reservationsHook.isMutationLoading;
 
   // ── Pending count for approval badge ──────────────────────────────────────
   const pendingCount = useMemo(
@@ -452,7 +436,7 @@ const RoomAvailabilityScreen = () => {
           <RoomReservationsTab
             reservations={reservationsHook.data}
             canApprove={isApprover}
-            isLoading={isScreenLoading}
+            isLoading={isReservationLoading}
             pendingAction={pendingAction}
             onCancel={handleCancelReservation}
             onApprove={handleApproveReservation}
@@ -465,7 +449,7 @@ const RoomAvailabilityScreen = () => {
         {isApprover && activeTab === 'approvals' && (
           <RoomApprovalQueue
             reservations={reservationsHook.data}
-            isLoading={isScreenLoading}
+            isLoading={isReservationLoading}
             pendingAction={pendingAction}
             onApprove={handleApproveReservation}
             onReject={handleRejectReservation}

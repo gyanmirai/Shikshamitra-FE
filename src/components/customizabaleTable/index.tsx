@@ -42,6 +42,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   columns,
   data,
   tableTitle = 'Table View',
+  exportLabel = 'Export',
   serverSide = false,
   serverSidePagination = false,
   serverSideSearch = false,
@@ -383,6 +384,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
           }}
         >
           <TableToolbar
+            exportLabel={exportLabel}
             isSearch={isSearch}
             isFilter={isFilter}
             searchValue={searchTerm}
@@ -565,6 +567,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       theme.vars.palette.divider,
       isSearch,
       isFilter,
+      exportLabel,
       searchTerm,
       handleSearch,
       handleClearSearch,

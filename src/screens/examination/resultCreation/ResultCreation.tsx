@@ -21,7 +21,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { ExamReportTitle, ExamReportApiTypeMap } from 'src/enums/examination-reports';
@@ -57,14 +56,14 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/ResultApi/resultApi';
 
 import { buildStudentResultDocumentTitle } from './resultPrintUtils';
-import StudentResultPrintReport, {
-  STUDENT_RESULT_PRINT_PAGE_STYLE,
-} from './StudentResultPrintReport';
 import {
   getExamMonthRange,
   getDefaultExamMonth,
-  buildExamMonthOptions,
 } from '../exam-month-filter';
+import { buildResultExamQuery, buildResultExamMonthOptions } from './result-exam-filter';
+import StudentResultPrintReport, {
+  STUDENT_RESULT_PRINT_PAGE_STYLE,
+} from './StudentResultPrintReport';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -1431,7 +1430,7 @@ const ResultCreation = (_props: TabComponentType) => {
   const [division, setDivision] = useState<string>('');
   const [examId, setExamId] = useState<string>('');
   const [selectedMonth, setSelectedMonth] = useState<string>('');
-  const monthOptions = useMemo(() => buildExamMonthOptions(currentYear), [currentYear]);
+  const monthOptions = useMemo(() => buildResultExamMonthOptions(currentYear), [currentYear]);
   const selectedMonthRange = useMemo(
     () => getExamMonthRange(monthOptions, selectedMonth),
     [monthOptions, selectedMonth]
@@ -1478,16 +1477,7 @@ const ResultCreation = (_props: TabComponentType) => {
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetExamsQuery,
-    params: {
-      AcademicMediumId: medium?.id,
-      StandardId: classes,
-      DivisionId: division,
-      Status: examScheduledStatus.Completed,
-      GradeEntryPublishedOnly: true,
-      StartDate: selectedMonthRange?.startDate,
-      EndDate: selectedMonthRange?.endDate,
-      MaxResultCount: 1000,
-    },
+    params: buildResultExamQuery(medium?.id, classes, division, selectedMonthRange),
     options: { skip: !(medium?.id && classes && division && selectedMonthRange) },
   });
 

@@ -129,7 +129,7 @@ export function CalendarToolbar({
           {renderCompToHeader}
         </Box>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <IconButton onClick={onPrevDate}>
+          <IconButton aria-label="Previous date" onClick={onPrevDate}>
             <Iconify icon="eva:arrow-ios-back-fill" />
           </IconButton>
 
@@ -137,7 +137,7 @@ export function CalendarToolbar({
             {date}
           </Typography>
 
-          <IconButton onClick={onNextDate}>
+          <IconButton aria-label="Next date" onClick={onNextDate}>
             <Iconify icon="eva:arrow-ios-forward-fill" />
           </IconButton>
         </Stack>

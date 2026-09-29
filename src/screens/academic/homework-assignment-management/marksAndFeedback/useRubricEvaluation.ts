@@ -90,6 +90,10 @@ export const useRubricEvaluation = (props: RubricEvaluationPanelProps) => {
 
   const save = async () => {
     if (!activeRubric || !studentId) return false;
+    if (evaluationQueries.isLoading || evaluationQueries.hasEvaluationError) {
+      shikshaMitraToast.error({ message: 'Wait for this student’s rubric evaluation to load.' });
+      return false;
+    }
     const invalidCriterion = validateCriterionValues(activeRubric, criterionValues);
     if (invalidCriterion) {
       shikshaMitraToast.error({

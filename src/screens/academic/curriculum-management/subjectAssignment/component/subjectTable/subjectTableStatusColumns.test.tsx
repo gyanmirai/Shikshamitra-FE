@@ -1,5 +1,5 @@
 import { vi, it, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import { SubjectAssignmentStatus } from '../../enum/subjectType';
 import { getSubjectTableStatusColumns } from './subjectTableStatusColumns';
@@ -32,20 +32,15 @@ const getStatusColumn = (onToggleStatus = vi.fn()) => {
 };
 
 describe('subject table status column', () => {
-  it('shows the draft state separately from the publish action', () => {
+  it('keeps the status column limited to the draft state', () => {
     const subject = createSubject(SubjectAssignmentStatus.Draft);
-    const { statusColumn, onToggleStatus } = getStatusColumn();
+    const { statusColumn } = getStatusColumn();
 
     render(<>{statusColumn?.render?.('Draft', subject)}</>);
 
     expect(screen.getByText('Draft')).toBeInTheDocument();
 
-    const publishButton = screen.getByRole('button', {
-      name: 'Current status: Draft. Publish subject allocation',
-    });
-
-    fireEvent.click(publishButton);
-    expect(onToggleStatus).toHaveBeenCalledWith(subject);
+    expect(screen.queryByRole('button')).toBeNull();
   });
 
   it('shows published as a state without a publish action', () => {

@@ -43,7 +43,7 @@ export function GroupedRoomSelector({
         },
       }}
       renderGroup={(params) => (
-        <Box component="li" key={params.key} sx={{ mb: 0.75 }}>
+        <Box component="li" key={params.key} sx={{ mb: 0.25, listStyle: 'none' }}>
           <Typography
             component="div"
             variant="caption"
@@ -51,8 +51,8 @@ export function GroupedRoomSelector({
               position: 'sticky',
               top: 0,
               zIndex: 1,
-              px: 1.5,
-              py: 0.75,
+              px: 1,
+              py: 0.5,
               color: 'text.secondary',
               bgcolor: 'background.neutral',
               fontWeight: 700,
@@ -63,7 +63,7 @@ export function GroupedRoomSelector({
           </Typography>
           <Box
             component="ul"
-            sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, p: 1.25, m: 0, listStyle: 'none' }}
+            sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, p: 0.75, m: 0, listStyle: 'none' }}
           >
             {params.children}
           </Box>

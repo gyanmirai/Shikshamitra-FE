@@ -51,12 +51,21 @@ const AcademicDashboard = () => {
           <AcademicTeacherDashboardScreen
             mode="classTeacher"
             classAssignments={dashboardContext?.classAssignments}
+            supportsSections={dashboardContext?.supportsSectionDashboard === true}
           />
         );
       case 'teacher':
-        return <AcademicTeacherDashboardScreen />;
+        return (
+          <AcademicTeacherDashboardScreen
+            supportsSections={dashboardContext?.supportsSectionDashboard === true}
+          />
+        );
       case 'leadership':
-        return <AcademicPrincipalDashboardScreen />;
+        return (
+          <AcademicPrincipalDashboardScreen
+            supportsSections={dashboardContext?.supportsSectionDashboard === true}
+          />
+        );
       default:
         return <CommonAcademicDashboardScreen displayName={dashboardContext?.displayName} />;
     }

@@ -79,7 +79,7 @@ export function useInlineLessonPlanForm({
       try {
         await onSave(
           buildInlineLessonPlanForm(context, selectedDate, values, completion.target),
-          false
+          true
         );
         onCreated();
       } catch (error) {

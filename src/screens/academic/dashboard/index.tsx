@@ -2,14 +2,13 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Label } from 'src/components/label';
+import dynamic from 'next/dynamic';
+import { useDispatch } from 'react-redux';
 import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { academicType } from 'src/redux/tagTypes';
 import { EmptyContent } from 'src/components/empty-content';
 import { academicPaths } from 'src/constants/academic-menu';
-import { HomeworkStatus } from 'src/screens/student/dashboard/teacher/charts';
-import { UpcomingExams } from 'src/screens/student/dashboard/teacher/OperationsTasks';
-import { DashboardWidgetWrapper } from 'src/screens/mainDashboard/component/dashboard-widget-wrapper';
 import {
   Box,
   Card,
@@ -17,7 +16,6 @@ import {
   Chip,
   Stack,
   Alert,
-  Avatar,
   Button,
   Skeleton,
   Typography,
@@ -25,32 +23,31 @@ import {
   LinearProgress,
 } from '@mui/material';
 import {
-  type TeacherAcademicDashboardData,
-  useGetTeacherAcademicDashboardQuery,
+  academicDashboardApi,
   type AcademicDashboardClassAssignment,
+  type TeacherAcademicDashboardOverviewData,
+  type TeacherAcademicDashboardAttentionData,
+  type TeacherAcademicDashboardAssessmentData,
+  type TeacherAcademicDashboardAssignmentsData,
 } from 'src/redux/academicAPI/academicDashboardApi';
 
-import AcademicDashbordAnalysisChart from './components/AcademicDashbordAnalysisChart';
 import { AcademicActionQueue } from '../components/command-center/AcademicActionQueue';
 import { AcademicCommandHeader } from '../components/command-center/AcademicCommandHeader';
 import { TodayAcademicTimeline } from '../components/today-timeline/TodayAcademicTimeline';
-import AcademicDashboardChapterProgress from './components/AcademicDashboardChapterProgress';
+import { DashboardSectionState } from '../AcademicDashboard/Components/DashboardSectionState';
 import { AcademicHealthScoreCard } from '../components/command-center/AcademicHealthScoreCard';
 import { AcademicModuleHealthGrid } from '../components/command-center/AcademicModuleHealthGrid';
+import { useTeacherAcademicDashboardSections } from './hooks/useTeacherAcademicDashboardSections';
+import { DeferredDashboardSection } from '../AcademicDashboard/Components/DeferredDashboardSection';
 
 import type {
   AcademicActionItem,
   AcademicModuleHealthItem,
 } from '../components/command-center/types';
 
-const metricColor = {
-  success: '#22C55E',
-  warning: '#F59E0B',
-  error: '#EF4444',
-  info: '#3B82F6',
-  primary: '#2563EB',
-  secondary: '#8B5CF6',
-} as const;
+const DeferredTeacherDetails = dynamic(() => import('./components/DeferredTeacherDetails'), {
+  loading: () => <Skeleton variant="rounded" height={390} />,
+});
 
 type TopSummaryTone = 'primary' | 'success' | 'info' | 'warning' | 'error' | 'secondary';
 
@@ -66,7 +63,12 @@ const toActionSeverity = (severity?: string): AcademicActionItem['severity'] => 
   return 'info';
 };
 
-const toTeacherActions = (data: TeacherAcademicDashboardData): AcademicActionItem[] => [
+const toTeacherActions = (
+  data: Pick<
+    TeacherAcademicDashboardOverviewData,
+    'actionCenterItems' | 'pendingTasks' | 'insights'
+  >
+): AcademicActionItem[] => [
   ...(data.actionCenterItems || []).map((item) => ({
     id: `academic-action-${item.id}`,
     title: item.title,
@@ -101,7 +103,9 @@ const toTeacherActions = (data: TeacherAcademicDashboardData): AcademicActionIte
   })),
 ];
 
-const toTeacherModuleHealth = (data: TeacherAcademicDashboardData): AcademicModuleHealthItem[] => [
+const toTeacherModuleHealth = (
+  data: TeacherAcademicDashboardOverviewData
+): AcademicModuleHealthItem[] => [
   {
     id: 'lectures',
     module: 'Today Lectures',
@@ -380,7 +384,13 @@ const CommandMetricRow = ({
   </Box>
 );
 
-const TeacherAssignmentSnapshotCard = ({ data }: { data: TeacherAcademicDashboardData }) => {
+const TeacherAssignmentSnapshotCard = ({
+  data,
+  alertCount,
+}: {
+  data: TeacherAcademicDashboardAssignmentsData;
+  alertCount?: number;
+}) => {
   const hasAssignments = data.assignedClassesCount > 0 || data.assignedSubjectsCount > 0;
 
   return (
@@ -410,7 +420,7 @@ const TeacherAssignmentSnapshotCard = ({ data }: { data: TeacherAcademicDashboar
           <Grid size={{ xs: 12, sm: 6 }}>
             <TopMetricTile
               label="System Alerts"
-              value={formatCount(data.systemAlertsCount)}
+              value={alertCount === undefined ? '—' : formatCount(alertCount)}
               helper="Action required"
               icon="solar:bell-bing-bold"
               tone="error"
@@ -430,7 +440,13 @@ const TeacherAssignmentSnapshotCard = ({ data }: { data: TeacherAcademicDashboar
   );
 };
 
-const TeacherEvaluationsPulseCard = ({ data }: { data: TeacherAcademicDashboardData }) => {
+const TeacherEvaluationsPulseCard = ({
+  data,
+  pendingHomework,
+}: {
+  data: TeacherAcademicDashboardAssessmentData;
+  pendingHomework?: number;
+}) => {
   const { evaluationsRate } = data;
 
   return (
@@ -500,11 +516,11 @@ const TeacherEvaluationsPulseCard = ({ data }: { data: TeacherAcademicDashboardD
           <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
             <CommandMetricRow
               label="Pending Homework"
-              value={formatCount(data.pendingHomework)}
+              value={pendingHomework === undefined ? '—' : formatCount(pendingHomework)}
               helper="Due soon"
               icon="solar:notebook-bookmark-bold"
               tone="warning"
-              emphasis={data.pendingHomework > 0}
+              emphasis={pendingHomework !== undefined && pendingHomework > 0}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6, xl: 4 }}>
@@ -531,7 +547,7 @@ const TeacherEvaluationsPulseCard = ({ data }: { data: TeacherAcademicDashboardD
   );
 };
 
-const TeacherStudentAttentionCard = ({ data }: { data: TeacherAcademicDashboardData }) => (
+const TeacherStudentAttentionCard = ({ data }: { data: TeacherAcademicDashboardAttentionData }) => (
   <DashboardSectionCard
     title="Student Performance"
     subheader="Attention & class summary"
@@ -597,7 +613,7 @@ const TeacherStudentAttentionCard = ({ data }: { data: TeacherAcademicDashboardD
   </DashboardSectionCard>
 );
 
-const TeacherInsightsCard = ({ data }: { data: TeacherAcademicDashboardData }) => (
+const TeacherInsightsCard = ({ data }: { data: TeacherAcademicDashboardAttentionData }) => (
   <DashboardSectionCard
     title="Smart Teacher Insights & Alerts"
     subheader="Actionable alerts regarding student performance & teaching deliverables"
@@ -681,248 +697,6 @@ const TeacherInsightsCard = ({ data }: { data: TeacherAcademicDashboardData }) =
   </DashboardSectionCard>
 );
 
-const quickActions = [
-  {
-    id: 'qa-2',
-    label: 'Upload Homework',
-    icon: 'solar:notebook-bold',
-    path: academicPaths.homework.learningTasks,
-    color: 'success',
-  },
-  {
-    id: 'qa-3',
-    label: 'Add Assignment',
-    icon: 'solar:clipboard-add-bold',
-    path: academicPaths.homework.learningTasks,
-    color: 'secondary',
-  },
-  {
-    id: 'qa-4',
-    label: 'Enter Grades',
-    icon: 'solar:document-text-bold',
-    path: academicPaths.examination.recordMarks,
-    color: 'warning',
-  },
-  {
-    id: 'qa-5',
-    label: 'Open Timetable',
-    icon: 'solar:calendar-bold',
-    path: academicPaths.timetable.management,
-    color: 'info',
-  },
-];
-
-const priorityColor = {
-  high: 'error',
-  medium: 'warning',
-  low: 'success',
-} as const;
-
-interface PendingTaskItem {
-  id: string;
-  title: string;
-  count: number;
-  priority: 'high' | 'medium' | 'low';
-  action: string;
-  icon: string;
-  path: string;
-}
-
-function PendingTaskCenter({ tasks }: { tasks?: PendingTaskItem[] }) {
-  const displayTasks = tasks || [];
-  const urgentCount = displayTasks.filter((t) => t.priority === 'high').length;
-
-  return (
-    <DashboardWidgetWrapper
-      title="Pending Task Center"
-      subheader="Actionable tasks requiring attention today"
-      action={
-        urgentCount > 0 ? (
-          <Label color="error" variant="soft">
-            {urgentCount} Urgent
-          </Label>
-        ) : null
-      }
-    >
-      {displayTasks.length === 0 ? (
-        <EmptyContent
-          filled
-          title="No pending academic tasks"
-          description="New evaluation and grade-entry work will appear here."
-          sx={{ minHeight: 220 }}
-          slotProps={{ img: { maxWidth: 96 } }}
-        />
-      ) : null}
-      <Stack spacing={1}>
-        {displayTasks.map((task) => (
-          <Stack
-            key={task.id}
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            sx={{
-              p: 1.25,
-              borderRadius: 1.5,
-              border: (theme) =>
-                `1px solid ${alpha(theme.palette[priorityColor[task.priority] || 'info'].main, 0.2)}`,
-            }}
-          >
-            <Box
-              sx={{
-                width: 34,
-                height: 34,
-                borderRadius: 1,
-                display: 'grid',
-                placeItems: 'center',
-                color: `${priorityColor[task.priority] || 'info'}.main`,
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon={task.icon || 'solar:info-circle-bold'} width={18} />
-            </Box>
-
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.25 }}>
-                <Typography variant="subtitle2">{task.count}</Typography>
-                <Typography variant="body2" noWrap>
-                  {task.title}
-                </Typography>
-              </Stack>
-              <Label variant="soft" color={priorityColor[task.priority] || 'info'}>
-                {task.priority} priority
-              </Label>
-            </Box>
-
-            <Button
-              component={Link}
-              href={task.path}
-              size="small"
-              variant="contained"
-              color="inherit"
-            >
-              {task.action}
-            </Button>
-          </Stack>
-        ))}
-      </Stack>
-    </DashboardWidgetWrapper>
-  );
-}
-
-interface AttentionStudentItem {
-  id: string;
-  name: string;
-  classDivision: string;
-  attendance: number | null;
-  performance: number;
-  warning: string;
-  avatarUrl: string;
-}
-
-function StudentsAttentionPanel({ students }: { students?: AttentionStudentItem[] }) {
-  const displayStudents = students || [];
-
-  return (
-    <DashboardWidgetWrapper
-      title="Students Needing Attention"
-      subheader="Low attendance and weak performance flags"
-    >
-      {displayStudents.length === 0 ? (
-        <EmptyContent
-          filled
-          title="No students need immediate attention"
-          description="Performance and attendance flags from your assigned classes will appear here."
-          sx={{ minHeight: 220 }}
-          slotProps={{ img: { maxWidth: 96 } }}
-        />
-      ) : null}
-      <Stack spacing={1}>
-        {displayStudents.map((student) => (
-          <Stack
-            key={student.id}
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            sx={{
-              p: 1.25,
-              borderRadius: 1.5,
-              border: (theme) => `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Avatar src={student.avatarUrl} alt={student.name} sx={{ width: 40, height: 40 }} />
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle2" noWrap>
-                {student.name}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap>
-                {student.classDivision}
-                {student.attendance === null ? '' : ` • Att ${student.attendance}%`} • Perf{' '}
-                {student.performance}%
-              </Typography>
-              <Label variant="soft" color="error" sx={{ mt: 0.5 }}>
-                {student.warning}
-              </Label>
-            </Box>
-            <Button size="small" variant="outlined">
-              Profile
-            </Button>
-          </Stack>
-        ))}
-      </Stack>
-    </DashboardWidgetWrapper>
-  );
-}
-
-function QuickActionsPanel() {
-  return (
-    <DashboardWidgetWrapper
-      title="Quick Actions Panel"
-      subheader="One-click shortcuts for daily workflows"
-    >
-      <Grid container spacing={1}>
-        {quickActions.map((action) => (
-          <Grid size={{ xs: 6, sm: 4, md: 2 }} key={action.id}>
-            <Button
-              component={Link}
-              href={action.path}
-              color="inherit"
-              sx={{
-                width: '100%',
-                px: 1,
-                py: 1.25,
-                borderRadius: 1.5,
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-                bgcolor: 'background.neutral',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 0.75,
-                '&:hover': {
-                  bgcolor: 'background.paper',
-                  boxShadow: (theme) => theme.shadows[3],
-                },
-              }}
-            >
-              <Iconify
-                icon={action.icon}
-                width={20}
-                sx={{
-                  color: `${metricColor[action.color as keyof typeof metricColor] || 'info'}.main`,
-                }}
-              />
-              <Typography
-                variant="caption"
-                sx={{ fontWeight: 600, textAlign: 'center', lineHeight: 1.2 }}
-              >
-                {action.label}
-              </Typography>
-            </Button>
-          </Grid>
-        ))}
-      </Grid>
-    </DashboardWidgetWrapper>
-  );
-}
-
 const DashboardSkeleton = () => (
   <Stack spacing={1}>
     <Grid container spacing={1}>
@@ -954,19 +728,39 @@ const DashboardSkeleton = () => (
 type AcademicTeacherDashboardScreenProps = {
   mode?: 'teacher' | 'classTeacher';
   classAssignments?: AcademicDashboardClassAssignment[];
+  supportsSections?: boolean;
 };
 
 const AcademicTeacherDashboardScreen = ({
   mode = 'teacher',
   classAssignments = [],
+  supportsSections = false,
 }: AcademicTeacherDashboardScreenProps) => {
-  const { data, isLoading, isFetching, isError, refetch } = useGetTeacherAcademicDashboardQuery();
+  const dispatch = useDispatch();
+  const {
+    legacy,
+    assignments,
+    assessment,
+    attention,
+    assignmentData,
+    assessmentData,
+    attentionData,
+    actionData,
+    data,
+    isFetching,
+    retryAll,
+  } = useTeacherAcademicDashboardSections(supportsSections);
 
   const handleRefresh = () => {
-    refetch();
+    dispatch(
+      academicDashboardApi.util.invalidateTags([
+        academicType.academicReport,
+        academicType.lessonPlan,
+      ])
+    );
   };
 
-  if (isLoading) {
+  if (!supportsSections && legacy.isLoading) {
     return (
       <Box sx={{ p: 2 }}>
         <Typography variant="h4" sx={{ mb: 2 }}>
@@ -977,13 +771,13 @@ const AcademicTeacherDashboardScreen = ({
     );
   }
 
-  if (isError || !data) {
+  if (!supportsSections && (legacy.isError || !legacy.data)) {
     return (
       <Box sx={{ p: 2 }}>
         <Alert
           severity="error"
           action={
-            <Button color="inherit" size="small" onClick={() => refetch()}>
+            <Button color="inherit" size="small" onClick={retryAll}>
               Retry
             </Button>
           }
@@ -1031,42 +825,74 @@ const AcademicTeacherDashboardScreen = ({
 
       <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 4 }}>
-          <AcademicHealthScoreCard
-            title="My Academic Health"
-            score={Math.round(
-              (data.evaluationsRate + Math.max(0, 100 - data.studentsAttentionCount * 5)) / 2
-            )}
-            status={
-              data.studentsAttentionCount > 0 || data.pendingEvaluations > 0
-                ? 'Needs Attention'
-                : 'Healthy'
-            }
-            description="Combines evaluation progress and the current student-attention workload."
-            factors={[
-              {
-                label: 'Classes',
-                value: `${data.assignedClassesCount} assigned`,
-                tone: 'info',
-              },
-              {
-                label: 'Subjects',
-                value: `${data.assignedSubjectsCount} assigned`,
-                tone: 'success',
-              },
-              { label: 'Evaluation', value: `${data.evaluationsRate}%`, tone: 'warning' },
-              { label: 'Students', value: `${data.studentsAttentionCount} alerts`, tone: 'error' },
-            ]}
-          />
+          <DashboardSectionState
+            dataAvailable={Boolean(data)}
+            isLoading={assignments.isLoading || assessment.isLoading || attention.isLoading}
+            isError={assignments.isError || assessment.isError || attention.isError}
+            onRetry={retryAll}
+            height={260}
+          >
+            {data ? (
+              <AcademicHealthScoreCard
+                title="My Academic Health"
+                score={Math.round(
+                  (data.evaluationsRate + Math.max(0, 100 - data.studentsAttentionCount * 5)) / 2
+                )}
+                status={
+                  data.studentsAttentionCount > 0 || data.pendingEvaluations > 0
+                    ? 'Needs Attention'
+                    : 'Healthy'
+                }
+                description="Combines evaluation progress and the current student-attention workload."
+                factors={[
+                  {
+                    label: 'Classes',
+                    value: `${data.assignedClassesCount} assigned`,
+                    tone: 'info',
+                  },
+                  {
+                    label: 'Subjects',
+                    value: `${data.assignedSubjectsCount} assigned`,
+                    tone: 'success',
+                  },
+                  { label: 'Evaluation', value: `${data.evaluationsRate}%`, tone: 'warning' },
+                  {
+                    label: 'Students',
+                    value: `${data.studentsAttentionCount} alerts`,
+                    tone: 'error',
+                  },
+                ]}
+              />
+            ) : null}
+          </DashboardSectionState>
         </Grid>
         <Grid size={{ xs: 12, lg: 4 }}>
-          <AcademicActionQueue
-            title="Today Action Queue"
-            subtitle="Teaching, evaluation and student follow-up work"
-            items={toTeacherActions(data)}
-          />
+          <DashboardSectionState
+            dataAvailable={Boolean(actionData)}
+            isLoading={assessment.isLoading || attention.isLoading}
+            isError={assessment.isError || attention.isError}
+            onRetry={retryAll}
+            height={260}
+          >
+            {actionData ? (
+              <AcademicActionQueue
+                title="Today Action Queue"
+                subtitle="Teaching, evaluation and student follow-up work"
+                items={toTeacherActions(actionData)}
+              />
+            ) : null}
+          </DashboardSectionState>
         </Grid>
         <Grid size={{ xs: 12, lg: 4 }}>
-          <AcademicModuleHealthGrid items={toTeacherModuleHealth(data)} />
+          <DashboardSectionState
+            dataAvailable={Boolean(data)}
+            isLoading={assignments.isLoading || assessment.isLoading || attention.isLoading}
+            isError={assignments.isError || assessment.isError || attention.isError}
+            onRetry={retryAll}
+            height={260}
+          >
+            {data ? <AcademicModuleHealthGrid items={toTeacherModuleHealth(data)} /> : null}
+          </DashboardSectionState>
         </Grid>
       </Grid>
 
@@ -1085,53 +911,72 @@ const AcademicTeacherDashboardScreen = ({
 
       <Grid container spacing={1}>
         <Grid size={{ xs: 12, lg: 4 }}>
-          <TeacherAssignmentSnapshotCard data={data} />
+          <DashboardSectionState
+            dataAvailable={Boolean(assignmentData)}
+            isLoading={supportsSections ? assignments.isLoading : legacy.isLoading}
+            isError={supportsSections ? assignments.isError : legacy.isError}
+            onRetry={supportsSections ? assignments.refetch : legacy.refetch}
+          >
+            {assignmentData ? (
+              <TeacherAssignmentSnapshotCard
+                data={assignmentData}
+                alertCount={assessmentData?.systemAlertsCount}
+              />
+            ) : null}
+          </DashboardSectionState>
         </Grid>
         <Grid size={{ xs: 12, lg: 5 }}>
-          <TeacherEvaluationsPulseCard data={data} />
+          <DashboardSectionState
+            dataAvailable={Boolean(assessmentData)}
+            isLoading={supportsSections ? assessment.isLoading : legacy.isLoading}
+            isError={supportsSections ? assessment.isError : legacy.isError}
+            onRetry={supportsSections ? assessment.refetch : legacy.refetch}
+          >
+            {assessmentData ? (
+              <TeacherEvaluationsPulseCard
+                data={assessmentData}
+                pendingHomework={assignmentData?.pendingHomework}
+              />
+            ) : null}
+          </DashboardSectionState>
         </Grid>
         <Grid size={{ xs: 12, lg: 3 }}>
-          <TeacherStudentAttentionCard data={data} />
+          <DashboardSectionState
+            dataAvailable={Boolean(attentionData)}
+            isLoading={supportsSections ? attention.isLoading : legacy.isLoading}
+            isError={supportsSections ? attention.isError : legacy.isError}
+            onRetry={supportsSections ? attention.refetch : legacy.refetch}
+          >
+            {attentionData ? <TeacherStudentAttentionCard data={attentionData} /> : null}
+          </DashboardSectionState>
         </Grid>
       </Grid>
 
       {/* Smart Alerts & Insights */}
       <Grid container spacing={1}>
         <Grid size={{ xs: 12 }}>
-          <TeacherInsightsCard data={data} />
+          <DashboardSectionState
+            dataAvailable={Boolean(attentionData)}
+            isLoading={supportsSections ? attention.isLoading : legacy.isLoading}
+            isError={supportsSections ? attention.isError : legacy.isError}
+            onRetry={supportsSections ? attention.refetch : legacy.refetch}
+            height={200}
+          >
+            {attentionData ? <TeacherInsightsCard data={attentionData} /> : null}
+          </DashboardSectionState>
         </Grid>
       </Grid>
 
-      {/* Rest of the Dashboard Panels */}
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12 }}>
-          <QuickActionsPanel />
-        </Grid>
-
-        <Grid size={{ xs: 12 }}>
-          <AcademicDashbordAnalysisChart chartData={data.performanceDistribution} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 7 }}>
-          <AcademicDashboardChapterProgress chartData={data.chapterProgressChart} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 5 }}>
-          <PendingTaskCenter tasks={data.pendingTasks} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <HomeworkStatus data={data.homeworkStatus} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <UpcomingExams exams={data.upcomingExamsList} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <StudentsAttentionPanel students={data.studentsAttention} />
-        </Grid>
-      </Grid>
+      <DeferredDashboardSection>
+        {data ? (
+          <DeferredTeacherDetails
+            data={data}
+            legacyAnalytics={supportsSections ? undefined : legacy.data}
+          />
+        ) : (
+          <Skeleton variant="rounded" height={390} />
+        )}
+      </DeferredDashboardSection>
     </Box>
   );
 };

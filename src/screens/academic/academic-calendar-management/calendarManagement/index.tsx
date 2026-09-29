@@ -35,7 +35,7 @@ import {
 import { buildCalendarDayMap } from './calendarViewModel';
 import CalendarYearView from './components/CalendarYearView';
 import { calculateCalendarSummary } from './calendarSummary';
-import CalendarMonthView from './components/CalendarMonthView';
+import AcademicCalendarView from './components/AcademicCalendarView';
 import CalendarDayFormDialog from './components/CalendarDayFormDialog';
 import { CalendarYearSkeleton, CalendarMonthSkeleton } from './components/CalendarSkeleton';
 
@@ -52,7 +52,7 @@ const TABS = [
   },
   {
     value: 'monthView',
-    label: 'Month View',
+    label: 'Calendar View',
     icon: <Iconify icon="mdi:calendar-today-outline" width={18} />,
   },
 ];
@@ -61,9 +61,9 @@ const TABS = [
 
 const CalendarManagement = () => {
   const theme = useTheme();
-  const { getAllParams, setParam } = useCustomSearchParams({ tab: 'yearView' });
+  const { getAllParams, setParam } = useCustomSearchParams({ tab: 'monthView' });
   const searchParams = getAllParams();
-  const activeTab = searchParams.tab || 'yearView';
+  const activeTab = searchParams.tab || 'monthView';
   const { permissions } = useSelector((state: RootState) => state.auth);
   const {
     currentYear,
@@ -102,7 +102,7 @@ const CalendarManagement = () => {
   // Local state
   const [selectedCalendarId, setSelectedCalendarId] = useState<string>('');
   const [selectedDayDate, setSelectedDayDate] = useState<string>('');
-  const [currentMonth, setCurrentMonth] = useState(dayjs());
+  const [selectedDayMarkerId, setSelectedDayMarkerId] = useState<string>('');
   const [filterStandardId, setFilterStandardId] = useState<string>('all');
   const [activeDayType, setActiveDayType] = useState<DayType | null>(null);
 
@@ -249,40 +249,6 @@ const CalendarManagement = () => {
     }
   }, [calendars]);
 
-  // Sync Month View's active month to the current ongoing month (or calendar start/end date if out of range)
-  React.useEffect(() => {
-    const startD = selectedCalendar?.startDate || currentBoard?.startDate;
-    const endD = selectedCalendar?.endDate || currentBoard?.endDate;
-    const now = dayjs();
-
-    if (startD && endD) {
-      const start = dayjs(startD);
-      const end = dayjs(endD);
-      if (now.isSameOrAfter(start, 'month') && now.isSameOrBefore(end, 'month')) {
-        setCurrentMonth(now);
-      } else if (now.isBefore(start, 'month')) {
-        setCurrentMonth(start);
-      } else {
-        setCurrentMonth(end);
-      }
-    } else if (startD) {
-      const start = dayjs(startD);
-      if (now.isSameOrAfter(start, 'month')) {
-        setCurrentMonth(now);
-      } else {
-        setCurrentMonth(start);
-      }
-    } else {
-      setCurrentMonth(now);
-    }
-  }, [
-    selectedCalendarId,
-    selectedCalendar?.startDate,
-    selectedCalendar?.endDate,
-    currentBoard?.startDate,
-    currentBoard?.endDate,
-  ]);
-
   // Handlers
 
   const handlePublish = async (cal: any) => {
@@ -303,8 +269,9 @@ const CalendarManagement = () => {
     }
   };
 
-  const handleDayClick = (date: string) => {
+  const handleDayClick = (date: string, markerId?: string) => {
     setSelectedDayDate(date);
+    setSelectedDayMarkerId(markerId ?? '');
     addDayDialog.onTrue();
   };
 
@@ -320,6 +287,7 @@ const CalendarManagement = () => {
       shikshaMitraToast.success({ message: 'Calendar day deleted successfully' });
       addDayDialog.onFalse();
       setSelectedDayDate('');
+      setSelectedDayMarkerId('');
     } catch (err: any) {
       shikshaMitraToast.error({ message: err?.data?.detail || 'Failed to delete calendar day' });
     }
@@ -345,7 +313,7 @@ const CalendarManagement = () => {
       );
     });
     if (markers.length === 0) return undefined;
-    const first = markers[0];
+    const first = markers.find((marker) => marker.id === selectedDayMarkerId) ?? markers[0];
     const group = markers.filter((m) => m.title === first.title && m.dayType === first.dayType);
     const rangeStartDate = group.reduce(
       (earliest, marker) =>
@@ -359,7 +327,7 @@ const CalendarManagement = () => {
       standardIds: group.map((m) => m.standardId).filter(Boolean),
       deleteIds: group.map((m) => m.id).filter(Boolean),
     };
-  }, [filteredCalendarDays, selectedDayDate]);
+  }, [filteredCalendarDays, selectedDayDate, selectedDayMarkerId]);
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
@@ -596,17 +564,18 @@ const CalendarManagement = () => {
           <>
             {calendarsLoading ? (
               <CalendarMonthSkeleton />
-            ) : !selectedCalendarId ? (
+            ) : !selectedCalendar ? (
               <Paper sx={{ p: 4, textAlign: 'center', borderRadius: 2 }}>
                 <Typography color="text.secondary">Select a calendar to view</Typography>
               </Paper>
             ) : (
-              <CalendarMonthView
+              <AcademicCalendarView
+                calendarId={selectedCalendarId}
                 dayMap={visibleCalendarDayMap}
-                currentMonth={currentMonth}
-                onMonthChange={setCurrentMonth}
+                calendarStartDate={calendarStartDate}
+                calendarEndDate={calendarEndDate}
                 onDayClick={handleDayClick}
-                isLoading={daysLoading && calendarDays.length === 0}
+                isLoading={daysLoading || calendarsLoading}
               />
             )}
           </>
@@ -622,6 +591,7 @@ const CalendarManagement = () => {
           onClose={() => {
             addDayDialog.onFalse();
             setSelectedDayDate('');
+            setSelectedDayMarkerId('');
           }}
           calendarId={selectedCalendarId}
           calendarStatus={selectedCalendar.status}

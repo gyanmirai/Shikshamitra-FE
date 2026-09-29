@@ -60,7 +60,7 @@ it('retains validation when the server changes only governance status and concur
 });
 
 it('keeps exactly one entry when another stage is selected', () => {
-  const assessment = {
+  const assessment: AdmissionWorkflow['stages'][number] = {
     ...original.stages[0],
     id: 'assessment',
     code: 'ENTRANCE_EXAM',

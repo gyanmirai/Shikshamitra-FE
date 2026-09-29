@@ -1,9 +1,12 @@
 'use client';
 
+import type { IColumn } from 'src/components/customizabaleTable/types';
+
 import React, { useState } from 'react';
+import { Iconify } from 'src/components/iconify';
+import CustomizableTable from 'src/components/customizabaleTable';
 import {
   Box,
-  Card,
   Chip,
   Stack,
   Avatar,
@@ -11,28 +14,33 @@ import {
   Tooltip,
   Typography,
   IconButton,
-  CircularProgress,
 } from '@mui/material';
 
-import { Iconify } from 'src/components/iconify';
-import CustomizableTable from 'src/components/customizabaleTable';
-import type { IColumn } from 'src/components/customizabaleTable/types';
-
 import { readText } from '../types';
-import { getMetricPercentage, normalizeAcademicStudent } from '../listUtils';
 import { NotifyParentDialog } from './NotifyParentDialog';
+import { getMetricPercentage, normalizeAcademicStudent } from '../listUtils';
 
-import type { Academic360Metric, Academic360StudentRow } from '../types';
 import type { StudentAcademicListItem } from '../listUtils';
+import type { Academic360Metric, Academic360StudentRow } from '../types';
 
 type StudentAcademic360TableProps = {
   students: Academic360StudentRow[];
+  totalCount: number;
+  page: number;
+  rowsPerPage: number;
+  searchTerm: string;
   isLoading: boolean;
   isError: boolean;
-  hasDivision: boolean;
+  isReady: boolean;
   activeFilterLabel?: string;
   onOpenStudent: (student: Academic360StudentRow) => void;
   onRetry: () => void;
+  onPagination: (page: number, rowsPerPage: number) => void;
+  onSearch: (searchTerm: string) => void;
+  onSort: (
+    column: string,
+    sorts: Array<{ column: string; direction: 'asc' | 'desc' }>
+  ) => void;
 };
 
 const formatMetric = (metric?: Academic360Metric, suffix = '%') => {
@@ -85,12 +93,19 @@ const MetricCell = ({ primary, secondary }: { primary: string; secondary: string
 
 export function StudentAcademic360Table({
   students,
+  totalCount,
+  page,
+  rowsPerPage,
+  searchTerm,
   isLoading,
   isError,
-  hasDivision,
+  isReady,
   activeFilterLabel,
   onOpenStudent,
   onRetry,
+  onPagination,
+  onSearch,
+  onSort,
 }: StudentAcademic360TableProps) {
   const items = students.map(normalizeAcademicStudent);
   const [notifyStudent, setNotifyStudent] = useState<Academic360StudentRow | null>(null);
@@ -261,14 +276,6 @@ export function StudentAcademic360Table({
     },
   ];
 
-  if (isLoading) {
-    return (
-      <Box sx={{ minHeight: 300, display: 'grid', placeItems: 'center' }}>
-        <CircularProgress size={28} />
-      </Box>
-    );
-  }
-
   if (isError) {
     return (
       <Box
@@ -288,7 +295,7 @@ export function StudentAcademic360Table({
     );
   }
 
-  if (!hasDivision || students.length === 0) {
+  if (!isReady) {
     return (
       <Box
         sx={{ minHeight: 300, display: 'grid', placeItems: 'center', px: 2, textAlign: 'center' }}
@@ -300,14 +307,10 @@ export function StudentAcademic360Table({
             sx={{ color: 'text.disabled', mb: 1 }}
           />
           <Typography variant="subtitle1">
-            {!hasDivision ? 'Select class and division' : 'No students found'}
+            Select academic year, board and medium
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {!hasDivision
-              ? 'Students will appear here after both filters are selected.'
-              : activeFilterLabel && activeFilterLabel !== 'all'
-                ? `No students match the ${activeFilterLabel} filter.`
-                : 'Students will appear here after they are enrolled and assigned to this class.'}
+            Students will appear after the academic context is selected.
           </Typography>
         </Box>
       </Box>
@@ -322,7 +325,25 @@ export function StudentAcademic360Table({
         data={items}
         isLoading={isLoading}
         isShowedDense
-        defaultRowsPerPage={10}
+        isFilter={false}
+        serverSidePagination
+        serverSideSearch
+        serverSideSort
+        serverSideSortMode="single"
+        totalCount={totalCount}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        searchTerm={searchTerm}
+        rowsPerPageOptions={[10, 25, 100]}
+        onServerPagination={onPagination}
+        onServerSearch={onSearch}
+        onServerSort={onSort}
+        exportLabel="Export current page"
+        noDataText={
+          activeFilterLabel && activeFilterLabel !== 'all'
+            ? `No students match the ${activeFilterLabel} filter.`
+            : 'No students found in the selected scope.'
+        }
       />
       <NotifyParentDialog
         open={!!notifyStudent}
