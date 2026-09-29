@@ -19,6 +19,7 @@ import {
 } from '@mui/material';
 
 import SalaryTemplateRules from './salary-template-rules';
+import SalaryTemplatePolicyHelp from './salary-template-policy-help';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 import type { EditorValues } from './salary-template-form-model';
@@ -144,6 +145,7 @@ export default function SalaryTemplateConfigure({
                     size="small"
                     labelId="salary-template-protection"
                     label="Protection policy"
+                    inputProps={{ 'aria-describedby': 'salary-template-protection-help' }}
                     {...formik.getFieldProps('defaultProtectionPolicy')}
                   >
                     <MenuItem value="PROTECT_EMPLOYER_COST">Protect employer cost</MenuItem>
@@ -151,6 +153,7 @@ export default function SalaryTemplateConfigure({
                     <MenuItem value="PROTECT_TAKE_HOME">Protect take-home salary</MenuItem>
                   </Select>
                 </FormControl>
+                <SalaryTemplatePolicyHelp policy={formik.values.defaultProtectionPolicy} />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Typography variant="body2" color="text.secondary">

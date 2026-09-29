@@ -104,6 +104,8 @@ Each frontend HR change should satisfy these gates:
 
 Run the focused editor, list, model, and client-contract tests after changing the salary template pages.
 Cover direct create/edit/view routes, denied permissions, same-page calculation validation and first-error focus, compact and expanded rows, additions, ordering, removal, and at least 15 components.
+Verify protection-policy helper text follows the selection and the comparison dialog works in create, edit, and read-only modes.
+Check keyboard opening, Escape and Close dismissal, focus restoration, and preservation of unsaved edits and the current preview when viewing help.
 Verify unsaved-navigation protection and that background refetches preserve both edits and their original concurrency context.
 Check preview invalidation, expiry, late responses, failed saves, and save/reopen for all compensation bases.
 Finish in the authenticated Codex browser at 390 by 844, 768 by 1024, and 1440 by 900 pixels.

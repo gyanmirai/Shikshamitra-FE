@@ -189,6 +189,8 @@ The sample does not establish universal employee eligibility.
 Basic Information explains that the new version applies to future salary setups while existing employees remain pinned to their saved version.
 Template formulas override component-master formulas only when the template generates an employee salary structure.
 Template versions define a default quote basis, protection policy, PF applicability, and PF rule.
+Protection policy includes selection-specific guidance and a Compare policies dialog explaining salary basis, protected amounts, and amounts that may vary.
+Viewing or closing this help preserves the draft and preview, including in read-only mode.
 Fixed and percentage formulas keep an editable empty numeric value, while remainder and statutory formulas explicitly show that their value is calculated automatically.
 
 ## Built-in Gross Salary
