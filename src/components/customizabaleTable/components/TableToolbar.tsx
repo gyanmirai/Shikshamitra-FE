@@ -24,6 +24,7 @@ import CustomTooltip from '../../custom-tooltip';
 import type { IColumn } from '../types';
 
 interface TableToolbarProps {
+  exportLabel: string;
   isSearch: boolean;
   isFilter: boolean;
   searchValue: string;
@@ -46,6 +47,7 @@ interface TableToolbarProps {
  */
 export const TableToolbar = React.memo(
   ({
+    exportLabel,
     isSearch,
     isFilter,
     searchValue,
@@ -262,7 +264,7 @@ export const TableToolbar = React.memo(
                   fontWeight: 600,
                 }}
               >
-                Export
+                {exportLabel}
               </Button>
               <Menu
                 anchorEl={exportAnchorEl}

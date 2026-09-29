@@ -55,10 +55,12 @@ const isFiltered = (filters: AcademicAuditFilters) =>
 const buildQueryArgs = (
   filters: AcademicAuditFilters,
   academicYearId: string | undefined,
+  academicMediumId: string | undefined,
   page: number,
   rowsPerPage: number
 ): AcademicAuditEventListArgs => ({
   academicYearId,
+  academicMediumId,
   subModuleCode: isAllSentinel(filters.subModuleCode) ? undefined : filters.subModuleCode,
   action: isAllSentinel(filters.action) ? undefined : filters.action,
   fromDate: filters.fromDate || undefined,
@@ -70,7 +72,7 @@ const buildQueryArgs = (
 });
 
 const AcademicAuditTrail = () => {
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const { currentYear, currentMedium } = useSelector((state: RootState) => state.globalState);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -80,15 +82,19 @@ const AcademicAuditTrail = () => {
    * Memoization Justification:
    * - RTK Query uses the argument object as a cache key.
    * - Keeping this object stable avoids unnecessary query argument churn when only drawer state changes.
-   * - The computation depends only on active filters, academic year, and pagination.
+   * - The computation depends only on active filters, academic context, and pagination.
    */
   const queryArgs = useMemo(
-    () => buildQueryArgs(filters, currentYear?.id, page, rowsPerPage),
-    [filters, currentYear?.id, page, rowsPerPage]
+    () => buildQueryArgs(filters, currentYear?.id, currentMedium?.id, page, rowsPerPage),
+    [filters, currentYear?.id, currentMedium?.id, page, rowsPerPage]
   );
 
-  const { data, isLoading, isFetching, isError, refetch } =
-    useGetAcademicAuditEventsQuery(queryArgs);
+  const { data, isLoading, isFetching, isError, refetch } = useGetAcademicAuditEventsQuery(
+    queryArgs,
+    {
+      skip: !currentYear?.id || !currentMedium?.id,
+    }
+  );
 
   /**
    * Memoization Justification:

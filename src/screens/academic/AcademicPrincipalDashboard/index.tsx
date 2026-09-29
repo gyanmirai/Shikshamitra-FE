@@ -2,15 +2,13 @@
 
 import React from 'react';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import { useDispatch } from 'react-redux';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { alpha, useTheme } from '@mui/material/styles';
-import { Chart, useChart } from 'src/components/chart';
+import { academicType } from 'src/redux/tagTypes';
 import { EmptyContent } from 'src/components/empty-content';
 import { academicPaths } from 'src/constants/academic-menu';
-import {
-  type PrincipalAcademicDashboardData,
-  useGetPrincipalAcademicDashboardQuery,
-} from 'src/redux/academicAPI/academicDashboardApi';
 import {
   Box,
   Grid,
@@ -24,16 +22,21 @@ import {
   CardHeader,
   LinearProgress,
 } from '@mui/material';
+import {
+  academicDashboardApi,
+  type PrincipalAcademicDashboardOverviewData,
+  type PrincipalAcademicDashboardCurriculumData,
+  type PrincipalAcademicDashboardOperationsData,
+  type PrincipalAcademicDashboardPerformanceData,
+} from 'src/redux/academicAPI/academicDashboardApi';
 
-import { PerformersList } from '../AcademicDashboard/Components/Performers';
-import AcademicDashboardExams from '../dashboard/components/AcademicDashboardExams';
 import { AcademicActionQueue } from '../components/command-center/AcademicActionQueue';
-import SubjectPassFailChart from '../AcademicDashboard/Components/SubjectPassFailChart';
 import { AcademicCommandHeader } from '../components/command-center/AcademicCommandHeader';
-import ChapterCompletionChart from '../AcademicDashboard/Components/ChapterCompletionChart';
+import { DashboardSectionState } from '../AcademicDashboard/Components/DashboardSectionState';
 import { AcademicHealthScoreCard } from '../components/command-center/AcademicHealthScoreCard';
 import { AcademicModuleHealthGrid } from '../components/command-center/AcademicModuleHealthGrid';
-import TeacherPerformanceComparisonChart from '../AcademicDashboard/Components/TeacherPerformanceComparisonChart';
+import { DeferredDashboardSection } from '../AcademicDashboard/Components/DeferredDashboardSection';
+import { usePrincipalAcademicDashboardSections } from './hooks/usePrincipalAcademicDashboardSections';
 
 import type {
   AcademicActionItem,
@@ -42,7 +45,11 @@ import type {
 
 const formatCount = (value?: number | null) => new Intl.NumberFormat('en-IN').format(value || 0);
 
-const toPrincipalActions = (data: PrincipalAcademicDashboardData): AcademicActionItem[] =>
+const PrincipalDetails = dynamic(() => import('./Components/PrincipalDetails'), {
+  loading: () => <Skeleton variant="rounded" height={390} />,
+});
+
+const toPrincipalActions = (data: PrincipalAcademicDashboardOperationsData): AcademicActionItem[] =>
   data.insights.map((insight, index) => ({
     id: `principal-insight-${index}`,
     title: insight.title,
@@ -54,7 +61,7 @@ const toPrincipalActions = (data: PrincipalAcademicDashboardData): AcademicActio
   }));
 
 const toPrincipalModuleHealth = (
-  data: PrincipalAcademicDashboardData
+  data: PrincipalAcademicDashboardOverviewData
 ): AcademicModuleHealthItem[] => [
   {
     id: 'school-performance',
@@ -317,27 +324,12 @@ const CommandMetricRow = ({
   </Box>
 );
 
-const SchoolAcademicSnapshotCard = ({ data }: { data: PrincipalAcademicDashboardData }) => {
-  const theme = useTheme();
+const SchoolAcademicSnapshotCard = ({
+  data,
+}: {
+  data: PrincipalAcademicDashboardPerformanceData;
+}) => {
   const { schoolPerformanceIndex } = data;
-
-  const schoolChartOptions = useChart({
-    labels: ['Completed', 'Target Remaining'],
-    colors: [theme.palette.primary.main, theme.palette.info.main],
-    stroke: { width: 0 },
-    legend: { show: false },
-    tooltip: { y: { formatter: (value: number) => `${value}%` } },
-    plotOptions: {
-      pie: {
-        donut: {
-          size: '74%',
-          labels: {
-            show: false,
-          },
-        },
-      },
-    },
-  });
 
   return (
     <DashboardSectionCard
@@ -364,11 +356,25 @@ const SchoolAcademicSnapshotCard = ({ data }: { data: PrincipalAcademicDashboard
               border: (muiTheme) => `1px solid ${alpha(muiTheme.palette.primary.main, 0.14)}`,
             }}
           >
-            <Chart
-              type="donut"
-              series={[schoolPerformanceIndex, 100 - schoolPerformanceIndex]}
-              options={schoolChartOptions}
-              sx={{ width: 138, height: 138 }}
+            <Box
+              role="img"
+              aria-label={`${schoolPerformanceIndex} out of 100 school performance index`}
+              sx={{
+                width: 138,
+                height: 138,
+                borderRadius: '50%',
+                background: (muiTheme) =>
+                  `conic-gradient(${muiTheme.palette.primary.main} 0 ${Math.max(0, Math.min(100, schoolPerformanceIndex))}%, ${alpha(muiTheme.palette.info.main, 0.2)} ${Math.max(0, Math.min(100, schoolPerformanceIndex))}% 100%)`,
+                display: 'grid',
+                placeItems: 'center',
+                '&::after': {
+                  content: '""',
+                  width: 102,
+                  height: 102,
+                  borderRadius: '50%',
+                  bgcolor: 'background.paper',
+                },
+              }}
             />
             <Box
               sx={{
@@ -433,7 +439,11 @@ const SchoolAcademicSnapshotCard = ({ data }: { data: PrincipalAcademicDashboard
   );
 };
 
-const SyllabusCoveragePulseCard = ({ data }: { data: PrincipalAcademicDashboardData }) => {
+const SyllabusCoveragePulseCard = ({
+  data,
+}: {
+  data: PrincipalAcademicDashboardCurriculumData;
+}) => {
   const { syllabusProgress } = data;
   const hasSubjectBreakdown =
     data.mathTarget > 0 || data.scienceTarget > 0 || data.englishTarget > 0;
@@ -546,7 +556,7 @@ const SyllabusCoveragePulseCard = ({ data }: { data: PrincipalAcademicDashboardD
   );
 };
 
-const PrincipalReadinessCard = ({ data }: { data: PrincipalAcademicDashboardData }) => {
+const PrincipalReadinessCard = ({ data }: { data: PrincipalAcademicDashboardOperationsData }) => {
   const { readinessRate } = data;
 
   return (
@@ -647,7 +657,7 @@ const PrincipalReadinessCard = ({ data }: { data: PrincipalAcademicDashboardData
   );
 };
 
-const PrincipalInsightsCard = ({ data }: { data: PrincipalAcademicDashboardData }) => (
+const PrincipalInsightsCard = ({ data }: { data: PrincipalAcademicDashboardOperationsData }) => (
   <DashboardSectionCard
     title="Smart Principal Insights & Alerts"
     subheader="School performance & compliance notifications"
@@ -755,14 +765,30 @@ const DashboardSkeleton = () => (
   </Stack>
 );
 
-const AcademicPrincipalDashboardScreen = () => {
-  const { data, isLoading, isFetching, isError, refetch } = useGetPrincipalAcademicDashboardQuery();
+const AcademicPrincipalDashboardScreen = ({
+  supportsSections = false,
+}: {
+  supportsSections?: boolean;
+}) => {
+  const dispatch = useDispatch();
+  const {
+    legacy,
+    performance,
+    curriculum,
+    operations,
+    performanceData,
+    curriculumData,
+    operationsData,
+    data,
+    isFetching,
+    retryAll,
+  } = usePrincipalAcademicDashboardSections(supportsSections);
 
   const handleRefresh = () => {
-    refetch();
+    dispatch(academicDashboardApi.util.invalidateTags([academicType.academicReport]));
   };
 
-  if (isLoading) {
+  if (!supportsSections && legacy.isLoading) {
     return (
       <Box sx={{ p: 2 }}>
         <Typography variant="h4" sx={{ mb: 2 }}>
@@ -773,13 +799,13 @@ const AcademicPrincipalDashboardScreen = () => {
     );
   }
 
-  if (isError || !data) {
+  if (!supportsSections && (legacy.isError || !legacy.data)) {
     return (
       <Box sx={{ p: 2 }}>
         <Alert
           severity="error"
           action={
-            <Button color="inherit" size="small" onClick={() => refetch()}>
+            <Button color="inherit" size="small" onClick={retryAll}>
               Retry
             </Button>
           }
@@ -821,90 +847,121 @@ const AcademicPrincipalDashboardScreen = () => {
 
       <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, lg: 4 }}>
-          <AcademicHealthScoreCard
-            title="School Academic Health"
-            score={Math.round(
-              (data.schoolPerformanceIndex + data.syllabusProgress + data.readinessRate) / 3
-            )}
-            status={
-              data.readinessRate >= 85 && data.syllabusProgress >= 80
-                ? 'Healthy'
-                : 'Needs Attention'
-            }
-            description="Combines performance index, syllabus progress and assessment readiness."
-            factors={[
-              { label: 'Performance', value: `${data.schoolPerformanceIndex}`, tone: 'success' },
-              { label: 'Attendance', value: data.averageAttendance, tone: 'info' },
-              { label: 'Syllabus', value: `${data.syllabusProgress}%`, tone: 'warning' },
-              { label: 'Readiness', value: `${data.readinessRate}%`, tone: 'success' },
-            ]}
-          />
+          <DashboardSectionState
+            dataAvailable={Boolean(data)}
+            isLoading={performance.isLoading || curriculum.isLoading || operations.isLoading}
+            isError={performance.isError || curriculum.isError || operations.isError}
+            onRetry={retryAll}
+            height={260}
+          >
+            {data ? (
+              <AcademicHealthScoreCard
+                title="School Academic Health"
+                score={Math.round(
+                  (data.schoolPerformanceIndex + data.syllabusProgress + data.readinessRate) / 3
+                )}
+                status={
+                  data.readinessRate >= 85 && data.syllabusProgress >= 80
+                    ? 'Healthy'
+                    : 'Needs Attention'
+                }
+                description="Combines performance index, syllabus progress and assessment readiness."
+                factors={[
+                  {
+                    label: 'Performance',
+                    value: `${data.schoolPerformanceIndex}`,
+                    tone: 'success',
+                  },
+                  { label: 'Attendance', value: data.averageAttendance, tone: 'info' },
+                  { label: 'Syllabus', value: `${data.syllabusProgress}%`, tone: 'warning' },
+                  { label: 'Readiness', value: `${data.readinessRate}%`, tone: 'success' },
+                ]}
+              />
+            ) : null}
+          </DashboardSectionState>
         </Grid>
         <Grid size={{ xs: 12, lg: 4 }}>
-          <AcademicActionQueue
-            title="Leadership Attention Queue"
-            subtitle="School-level academic signals requiring follow-up"
-            items={toPrincipalActions(data)}
-          />
+          <DashboardSectionState
+            dataAvailable={Boolean(operationsData)}
+            isLoading={supportsSections ? operations.isLoading : legacy.isLoading}
+            isError={supportsSections ? operations.isError : legacy.isError}
+            onRetry={supportsSections ? operations.refetch : legacy.refetch}
+            height={260}
+          >
+            {operationsData ? (
+              <AcademicActionQueue
+                title="Leadership Attention Queue"
+                subtitle="School-level academic signals requiring follow-up"
+                items={toPrincipalActions(operationsData)}
+              />
+            ) : null}
+          </DashboardSectionState>
         </Grid>
         <Grid size={{ xs: 12, lg: 4 }}>
-          <AcademicModuleHealthGrid items={toPrincipalModuleHealth(data)} />
+          <DashboardSectionState
+            dataAvailable={Boolean(data)}
+            isLoading={performance.isLoading || curriculum.isLoading || operations.isLoading}
+            isError={performance.isError || curriculum.isError || operations.isError}
+            onRetry={retryAll}
+            height={260}
+          >
+            {data ? <AcademicModuleHealthGrid items={toPrincipalModuleHealth(data)} /> : null}
+          </DashboardSectionState>
         </Grid>
       </Grid>
 
       {/* Snapshot Cards */}
       <Grid container spacing={1}>
         <Grid size={{ xs: 12, lg: 4 }}>
-          <SchoolAcademicSnapshotCard data={data} />
+          <DashboardSectionState
+            dataAvailable={Boolean(performanceData)}
+            isLoading={supportsSections ? performance.isLoading : legacy.isLoading}
+            isError={supportsSections ? performance.isError : legacy.isError}
+            onRetry={supportsSections ? performance.refetch : legacy.refetch}
+          >
+            {performanceData ? <SchoolAcademicSnapshotCard data={performanceData} /> : null}
+          </DashboardSectionState>
         </Grid>
         <Grid size={{ xs: 12, lg: 5 }}>
-          <SyllabusCoveragePulseCard data={data} />
+          <DashboardSectionState
+            dataAvailable={Boolean(curriculumData)}
+            isLoading={supportsSections ? curriculum.isLoading : legacy.isLoading}
+            isError={supportsSections ? curriculum.isError : legacy.isError}
+            onRetry={supportsSections ? curriculum.refetch : legacy.refetch}
+          >
+            {curriculumData ? <SyllabusCoveragePulseCard data={curriculumData} /> : null}
+          </DashboardSectionState>
         </Grid>
         <Grid size={{ xs: 12, lg: 3 }}>
-          <PrincipalReadinessCard data={data} />
+          <DashboardSectionState
+            dataAvailable={Boolean(operationsData)}
+            isLoading={supportsSections ? operations.isLoading : legacy.isLoading}
+            isError={supportsSections ? operations.isError : legacy.isError}
+            onRetry={supportsSections ? operations.refetch : legacy.refetch}
+          >
+            {operationsData ? <PrincipalReadinessCard data={operationsData} /> : null}
+          </DashboardSectionState>
         </Grid>
       </Grid>
 
       {/* Smart Alerts & Insights */}
       <Grid container spacing={1}>
         <Grid size={{ xs: 12 }}>
-          <PrincipalInsightsCard data={data} />
+          <DashboardSectionState
+            dataAvailable={Boolean(operationsData)}
+            isLoading={supportsSections ? operations.isLoading : legacy.isLoading}
+            isError={supportsSections ? operations.isError : legacy.isError}
+            onRetry={supportsSections ? operations.refetch : legacy.refetch}
+            height={180}
+          >
+            {operationsData ? <PrincipalInsightsCard data={operationsData} /> : null}
+          </DashboardSectionState>
         </Grid>
       </Grid>
 
-      {/* Charts & Detail Grid */}
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <ChapterCompletionChart chartData={data.chapterCompletionChart} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <SubjectPassFailChart chartData={data.subjectPassFailChart} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <TeacherPerformanceComparisonChart chartData={data.teacherPerformanceComparison} />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <AcademicDashboardExams list={data.upcomingExamsList} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <PerformersList
-            title="Top Performers"
-            list={data.topPerformers}
-            type="top"
-            sx={{ height: '100%' }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6 }}>
-          <PerformersList
-            title="Bottom Performers"
-            list={data.bottomPerformers}
-            type="bottom"
-            sx={{ height: '100%' }}
-          />
-        </Grid>
-      </Grid>
+      <DeferredDashboardSection>
+        <PrincipalDetails legacyAnalytics={supportsSections ? undefined : legacy.data} />
+      </DeferredDashboardSection>
     </Box>
   );
 };

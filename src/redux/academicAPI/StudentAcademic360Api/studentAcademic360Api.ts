@@ -1,9 +1,42 @@
+import type { Academic360ListResponse } from 'src/screens/academic/student-academic-360/types';
+
 import { academicType } from 'src/redux/tagTypes';
 
 import { academicApi } from '../academicApi';
 
 export const studentAcademic360Api = academicApi.injectEndpoints({
   endpoints: (builder) => ({
+    getStudentAcademic360List: builder.query<
+      Academic360ListResponse,
+      {
+        academicYearId: string;
+        boardId: string;
+        educationMediumId: string;
+        standardId?: string;
+        divisionId?: string;
+        skipCount: number;
+        maxResultCount: number;
+        searchTerm: string;
+        smartFilter: number;
+        sorting?: string;
+      }
+    >({
+      query: (input) => {
+        const params = new URLSearchParams();
+        params.set('academicYearId', input.academicYearId);
+        params.set('boardId', input.boardId);
+        params.set('educationMediumId', input.educationMediumId);
+        params.set('skipCount', String(input.skipCount));
+        params.set('maxResultCount', String(input.maxResultCount));
+        params.set('smartFilter', String(input.smartFilter));
+        if (input.standardId) params.set('standardId', input.standardId);
+        if (input.divisionId) params.set('divisionId', input.divisionId);
+        if (input.searchTerm) params.set('searchTerm', input.searchTerm);
+        if (input.sorting) params.set('sorting', input.sorting);
+        return { url: `academics/student-academic-360?${params.toString()}`, method: 'GET' };
+      },
+      providesTags: [academicType.academic360],
+    }),
     getStudentAcademic360: builder.query({
       query: ({
         studentId,
@@ -60,4 +93,8 @@ export const studentAcademic360Api = academicApi.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetStudentAcademic360Query, useGetStudentAcademic360TabQuery } = studentAcademic360Api;
+export const {
+  useGetStudentAcademic360ListQuery,
+  useGetStudentAcademic360Query,
+  useGetStudentAcademic360TabQuery,
+} = studentAcademic360Api;

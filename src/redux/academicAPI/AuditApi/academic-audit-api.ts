@@ -44,6 +44,7 @@ export type AcademicAuditEvent = {
 
 export type AcademicAuditEventListArgs = {
   academicYearId?: string;
+  academicMediumId?: string;
   subModuleCode?: string;
   entityType?: string;
   entityId?: string;

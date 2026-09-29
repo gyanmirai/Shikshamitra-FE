@@ -966,8 +966,6 @@ const ClassTeacherAssignment = () => {
               id: 'assignmentStatus',
               label: 'Status',
               minWidth: 130,
-              sticky: true,
-              stickyPosition: 'right',
               filterType: 'enum',
               enumOptions: [
                 { label: 'Assigned', value: 'Assigned' },

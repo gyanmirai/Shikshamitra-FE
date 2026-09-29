@@ -38,6 +38,20 @@ export type Academic360ApiList<T> = {
   totalCount?: number;
 };
 
+export type Academic360ListSummary = {
+  totalStudents: number;
+  needsAttention: number;
+  averageAttendance: number | null;
+  homeworkCompletion: number | null;
+  averageExamScore: number | null;
+};
+
+export type Academic360ListResponse = {
+  items: Academic360StudentRow[];
+  totalCount: number;
+  summary: Academic360ListSummary;
+};
+
 export type Academic360Record = Record<string, unknown>;
 
 export type Academic360Metric = {

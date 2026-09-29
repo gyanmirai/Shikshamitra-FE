@@ -74,7 +74,7 @@ export const CalendarYearSkeleton = () => {
     <Box
       aria-busy="true"
       aria-label="Loading academic calendar"
-      sx={{ '& .MuiSkeleton-root': { animation: 'none' } }}
+      sx={{ width: '100%', minWidth: 0, '& .MuiSkeleton-root': { animation: 'none' } }}
     >
       {/* Legend & Filter Bar Skeleton */}
       <Paper
@@ -168,12 +168,7 @@ export const CalendarYearSkeleton = () => {
         sx={{
           display: 'grid',
           gap: 1.5,
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(3, 1fr)',
-            lg: 'repeat(4, minmax(280px, 1fr))',
-          },
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
         }}
       >
         {Array.from({ length: 12 }).map((_, i) => (

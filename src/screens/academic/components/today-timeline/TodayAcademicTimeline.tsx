@@ -25,7 +25,7 @@ const TimelineSkeleton = () => (
 
 export function TodayAcademicTimeline({ contextLabel }: { contextLabel?: string }) {
   const [now, setNow] = useState(() => new Date());
-  const today = dayjs().format('YYYY-MM-DDTHH:mm:ssZ');
+  const today = dayjs(now).startOf('day').format('YYYY-MM-DDTHH:mm:ssZ');
   const { data, isLoading, isFetching, isError, refetch } = useGetLessonPlanTimelineQuery({
     date: today,
   });

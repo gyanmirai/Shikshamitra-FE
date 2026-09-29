@@ -67,7 +67,7 @@ export function InlineLessonPlanForm({
             Create lesson plan
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            Choose the lesson content and save it as a draft for this period.
+            Choose the lesson content and submit it for approval for this period.
           </Typography>
         </Box>
         <Stack direction="row" spacing={0.5} alignItems="center" color="text.secondary">
@@ -109,10 +109,10 @@ export function InlineLessonPlanForm({
           variant="contained"
           loading={formik.isSubmitting}
           disabled={completion.loading}
-          startIcon={<Iconify icon="mdi:content-save-outline" width={18} />}
+          startIcon={<Iconify icon="solar:plain-bold" width={18} />}
           sx={{ minHeight: 44 }}
         >
-          Save plan
+          Submit lesson plan
         </LoadingButton>
       </Stack>
     </Box>

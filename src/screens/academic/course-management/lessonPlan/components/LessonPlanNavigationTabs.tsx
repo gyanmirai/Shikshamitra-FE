@@ -1,9 +1,9 @@
 'use client';
 
 import Tab from '@mui/material/Tab';
+import { useRef, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { CustomTabs } from 'src/components/custom-tabs';
-import { stylesMode } from 'src/theme/styles';
 
 import { ReviewQueueTabLabel } from './ReviewQueueTabLabel';
 
@@ -29,9 +29,18 @@ export function LessonPlanNavigationTabs({
   pendingReviewCount,
   onChange,
 }: LessonPlanNavigationTabsProps) {
+  const selectedTabRef = useRef<HTMLDivElement>(null);
   const visibleTabs = LESSON_PLAN_TABS.filter(
     (tab) => tab.value !== 'reviewQueue' || canReviewSubmissions
   );
+
+  useEffect(() => {
+    selectedTabRef.current?.scrollIntoView({
+      behavior: 'instant',
+      block: 'nearest',
+      inline: 'nearest',
+    });
+  }, [value]);
 
   return (
     <CustomTabs
@@ -43,12 +52,18 @@ export function LessonPlanNavigationTabs({
         flex: 1,
         minWidth: 0,
         '& .MuiTabs-flexContainer': { gap: 1 },
+        '& .MuiTabs-indicator': { display: 'none' },
         '& .MuiTab-root': {
           gap: 0.75,
           px: 1.5,
           minWidth: 'auto',
           minHeight: 40,
           borderRadius: 1,
+          color: 'text.secondary',
+          '&.Mui-selected': {
+            color: 'text.primary',
+            bgcolor: 'action.selected',
+          },
         },
       }}
       role="tablist"
@@ -56,6 +71,7 @@ export function LessonPlanNavigationTabs({
       {visibleTabs.map((tab) => (
         <Tab
           key={tab.value}
+          ref={tab.value === value ? selectedTabRef : undefined}
           value={tab.value}
           iconPosition="start"
           label={
@@ -66,12 +82,6 @@ export function LessonPlanNavigationTabs({
             )
           }
           icon={<Iconify icon={tab.icon} width={20} />}
-          sx={{
-            '&.Mui-selected': { zIndex: 2 },
-            [stylesMode.dark]: {
-              '&.Mui-selected': { color: 'common.white' },
-            },
-          }}
         />
       ))}
     </CustomTabs>
