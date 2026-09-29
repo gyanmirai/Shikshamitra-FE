@@ -828,6 +828,7 @@ const TimeTableGrid = () => {
             { name: 'Timetable Management' },
           ]}
           description="View and manage timetables for different classes and divisions. Create new schedules or modify existing ones to organize academic activities"
+          action={<TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />}
         />
       )}
       <CustomDialog
@@ -892,7 +893,6 @@ const TimeTableGrid = () => {
                   setSelectedStandardId(found?.id || '');
                 }}
               />
-              <TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />
             </Box>
           </Card>
           <CustomizableTable

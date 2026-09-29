@@ -66,7 +66,7 @@ describe('InlineLessonPlanForm', () => {
     it('shows field-level validation and does not save', async () => {
       const { onSave } = renderForm();
 
-      fireEvent.click(screen.getByRole('button', { name: 'Save plan' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Submit lesson plan' }));
 
       expect(await screen.findAllByText('Chapter is required.')).not.toHaveLength(0);
       expect(screen.getByText('Topic is required.')).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe('InlineLessonPlanForm', () => {
   });
 
   describe('when chapter and topic are valid', () => {
-    it('saves this card as a draft and closes the inline form', async () => {
+    it('submits this card for approval and closes the inline form', async () => {
       const { onSave, onCancel } = renderForm(vi.fn().mockResolvedValue(undefined));
 
       fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Chapter *' }));
@@ -83,7 +83,7 @@ describe('InlineLessonPlanForm', () => {
       fireEvent.change(screen.getByRole('textbox', { name: 'Topic *' }), {
         target: { value: 'Addition of fractions' },
       });
-      fireEvent.click(screen.getByRole('button', { name: 'Save plan' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Submit lesson plan' }));
 
       await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
       expect(onSave).toHaveBeenCalledWith(
@@ -93,9 +93,25 @@ describe('InlineLessonPlanForm', () => {
           timetableSlotId: 'slot-1',
           plannedCompletionPercentage: 10,
         }),
-        false
+        true
       );
       expect(onCancel).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the form open when submission fails', async () => {
+      const { onSave, onCancel } = renderForm(vi.fn().mockRejectedValue(new Error('Submission failed')));
+
+      fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Chapter *' }));
+      fireEvent.click(await screen.findByRole('option', { name: 'Fractions' }));
+      fireEvent.change(screen.getByRole('textbox', { name: 'Topic *' }), {
+        target: { value: 'Addition of fractions' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Submit lesson plan' }));
+
+      await waitFor(() => expect(onSave).toHaveBeenCalledWith(expect.any(Object), true));
+      expect(await screen.findByRole('alert')).toHaveTextContent('Submission failed');
+      expect(onCancel).not.toHaveBeenCalled();
+      expect(screen.getByRole('textbox', { name: 'Topic *' })).toHaveValue('Addition of fractions');
     });
   });
 });

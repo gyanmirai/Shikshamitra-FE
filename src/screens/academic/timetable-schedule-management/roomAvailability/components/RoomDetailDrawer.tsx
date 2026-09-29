@@ -41,12 +41,18 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
   const activeTab = tabState.value ? 'audit' : 'details';
 
   const [selectedDate, setSelectedDate] = useState<dayjs.Dayjs | null>(dayjs());
-  const scheduleHook = useRoomSchedule(room?.roomId || null, selectedDate?.format('YYYY-MM-DD'));
+  const [readyRoomId, setReadyRoomId] = useState<string | null>(null);
+  const scheduleHook = useRoomSchedule(
+    open && readyRoomId === room?.roomId ? readyRoomId : null,
+    selectedDate?.format('YYYY-MM-DD')
+  );
 
   useEffect(() => {
     if (open && room) {
       setSelectedDate(dayjs());
-      scheduleHook.fetch();
+      setReadyRoomId(room.roomId);
+    } else {
+      setReadyRoomId(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, room?.roomId]);
@@ -300,7 +306,7 @@ export const RoomDetailDrawer = ({ open, room, onClose }: RoomDetailDrawerProps)
                 onChange={(newDate) => setSelectedDate(newDate)}
                 slotProps={{ textField: { size: 'small', fullWidth: true, sx: { mb: 2 } } }}
               />
-              {scheduleHook.isLoading || scheduleHook.isFetching ? (
+              {!readyRoomId || scheduleHook.isLoading || scheduleHook.isFetching ? (
                 <Stack spacing={1}>
                   {[1, 2, 3].map((i) => (
                     <Skeleton key={i} height={44} sx={{ borderRadius: 1.5 }} />

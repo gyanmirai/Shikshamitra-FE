@@ -5,6 +5,8 @@ import { Box, Card, Stack, Avatar, Typography } from '@mui/material';
 type StudentFeedbackContextProps = {
   studentName?: string;
   rollNumber?: string;
+  grNumber?: string;
+  title?: string;
 };
 
 type HomeworkFeedbackContextProps = {
@@ -15,8 +17,15 @@ type HomeworkFeedbackContextProps = {
 export const StudentFeedbackContext = ({
   studentName,
   rollNumber,
+  grNumber,
+  title,
 }: StudentFeedbackContextProps) => (
   <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+    {title && (
+      <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+        {title}
+      </Typography>
+    )}
     <Stack direction="row" alignItems="center" spacing={1.5}>
       <Avatar
         alt={studentName || 'Student'}
@@ -36,6 +45,7 @@ export const StudentFeedbackContext = ({
         </Typography>
         <Typography variant="body2" color="text.secondary">
           Roll No: {rollNumber || '--'}
+          {grNumber ? ` · GR No: ${grNumber}` : ''}
         </Typography>
       </Box>
     </Stack>

@@ -42,7 +42,8 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
       <AccordionSummary
         expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
         sx={{
-          p: 2,
+          px: 2,
+          py: 1,
           bgcolor: 'action.hover',
           color: 'text.primary',
           '& .MuiAccordionSummary-content': {
@@ -70,16 +71,17 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
                 ? 'Exam ready for save'
                 : `${readiness.blocking.length} blocking issue${readiness.blocking.length > 1 ? 's' : ''} before publish`}
             </Typography>
-            <Typography variant="body2">
-              {readiness.warnings.length
-                ? `${readiness.warnings.length} warning${readiness.warnings.length > 1 ? 's' : ''} can be reviewed.`
-                : 'No warnings found.'}
-            </Typography>
+            {readiness.warnings.length > 0 && (
+              <Typography variant="body2">
+                {readiness.warnings.length} warning{readiness.warnings.length > 1 ? 's' : ''} to
+                review
+              </Typography>
+            )}
           </Box>
         </Stack>
       </AccordionSummary>
 
-      <AccordionDetails sx={{ p: issues.length > 0 ? 2 : 1.5, bgcolor: 'background.paper' }}>
+      <AccordionDetails sx={{ p: issues.length > 0 ? 2 : 1, bgcolor: 'background.paper' }}>
         {issues.length > 0 ? (
           <Stack spacing={1}>
             {issues.map((issue) => (
@@ -128,7 +130,7 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
           </Stack>
         ) : (
           <Typography variant="body2" color="text.secondary">
-            All exam details and requirements are validated. Ready for save.
+            All required details are complete.
           </Typography>
         )}
       </AccordionDetails>

@@ -1,7 +1,7 @@
+import type { KeyboardEvent } from 'react';
 import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
 import type { Standards, Organization } from 'src/types/school';
-import type { KeyboardEvent } from 'react';
 
 import dayjs from 'dayjs';
 import { jsPDF } from 'jspdf';
@@ -26,17 +26,7 @@ import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
 import { CustomDateRangePicker } from 'src/components/custom-date-range-picker';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
-import {
-  Box,
-  Tab,
-  Chip,
-  Tabs,
-  Paper,
-  Stack,
-  Alert,
-  Button,
-  Typography,
-} from '@mui/material';
+import { Box, Tab, Chip, Tabs, Paper, Stack, Alert, Button, Typography } from '@mui/material';
 import {
   usePublishExamMutation,
   useLazyGetExamScheduleQuery,
@@ -754,7 +744,10 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
       <ConfirmDialog
         open={publishExamDialog.value}
+        disableBackdropClick={isPublishing}
+        disableEscapeKeyDown={isPublishing}
         onClose={() => {
+          if (isPublishing) return;
           publishExamDialog.onFalse();
           setSelectedTimetable(null);
         }}

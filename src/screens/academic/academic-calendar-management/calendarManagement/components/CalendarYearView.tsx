@@ -342,7 +342,7 @@ const CalendarYearView = ({
   // Summary stats are shown inline in the legend filter chips (no separate redundant row needed)
 
   return (
-    <Box>
+    <Box sx={{ width: '100%', minWidth: 0 }}>
       {/* Integrated Streamlined Legend & Filter Section */}
       <Paper
         elevation={0}
@@ -499,17 +499,12 @@ const CalendarYearView = ({
         </Stack>
       </Paper>
 
-      {/* Monthly Grids — max 4 columns so cards are never cramped (Bug #5408) */}
+      {/* Month cards wrap to the available calendar width instead of a viewport breakpoint. */}
       <Box
         sx={{
           display: 'grid',
           gap: 1.5,
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: 'repeat(2, 1fr)',
-            md: 'repeat(3, 1fr)',
-            lg: 'repeat(4, minmax(280px, 1fr))',
-          },
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
         }}
       >
         {months.map((month) => (

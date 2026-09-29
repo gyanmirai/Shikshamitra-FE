@@ -548,6 +548,8 @@ type AvailabilityFormState = {
   teacherId: string;
   teacherName: string;
   departmentName: string;
+  shiftStartTime: string;
+  shiftEndTime: string;
   availabilityDate: Dayjs | null;
   startTime: string;
   endTime: string;
@@ -597,6 +599,8 @@ const defaultAvailabilityForm: AvailabilityFormState = {
   teacherId: '',
   teacherName: '',
   departmentName: '',
+  shiftStartTime: '',
+  shiftEndTime: '',
   availabilityDate: dayjs(todayIso),
   startTime: '09:00',
   endTime: '10:45',
@@ -710,21 +714,20 @@ const SubstitutionManagementScreen = () => {
   const [availabilityForm, setAvailabilityForm] = useState(defaultAvailabilityForm);
   const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
 
-  const availabilityStartTimeStr = useMemo(() => {
-    if (availabilityForm.isFullDay) return '09:00';
-    if (!availabilityForm.startTime) return '';
-    return typeof availabilityForm.startTime === 'string'
-      ? availabilityForm.startTime
-      : dayjs(availabilityForm.startTime).format('HH:mm');
-  }, [availabilityForm.isFullDay, availabilityForm.startTime]);
-
-  const availabilityEndTimeStr = useMemo(() => {
-    if (availabilityForm.isFullDay) return '14:15';
-    if (!availabilityForm.endTime) return '';
-    return typeof availabilityForm.endTime === 'string'
-      ? availabilityForm.endTime
-      : dayjs(availabilityForm.endTime).format('HH:mm');
-  }, [availabilityForm.isFullDay, availabilityForm.endTime]);
+  const hasAvailabilityTeacherShift = Boolean(
+    availabilityForm.shiftStartTime && availabilityForm.shiftEndTime
+  );
+  // Full-day records use the assigned shift; teachers without one cover the calendar day.
+  const availabilityStartTimeStr = availabilityForm.isFullDay
+    ? availabilityForm.teacherId
+      ? availabilityForm.shiftStartTime || '00:00'
+      : ''
+    : availabilityForm.startTime;
+  const availabilityEndTimeStr = availabilityForm.isFullDay
+    ? availabilityForm.teacherId
+      ? availabilityForm.shiftEndTime || '23:59'
+      : ''
+    : availabilityForm.endTime;
 
   const getTeacherAvailabilityConflict = (option: EmployeeOption) => {
     if (
@@ -900,8 +903,8 @@ const SubstitutionManagementScreen = () => {
       teacherId: availabilityForm.teacherId || undefined,
       teacherName: availabilityForm.teacherName || undefined,
       availabilityDate: toDateTimeOffset(availabilityForm.availabilityDate?.startOf('day')),
-      startTime: availabilityForm.isFullDay ? '09:00' : availabilityStartTimeStr,
-      endTime: availabilityForm.isFullDay ? '14:15' : availabilityEndTimeStr,
+      startTime: availabilityStartTimeStr,
+      endTime: availabilityEndTimeStr,
       isFullDay: availabilityForm.isFullDay,
       maxResultCount: 100,
     },
@@ -1613,29 +1616,7 @@ const SubstitutionManagementScreen = () => {
       return;
     }
 
-    const date = substitutionForm.date.format('YYYY-MM-DD');
     const payloadDate = toDateTimeOffset(substitutionForm.date.startOf('day'));
-    const hasActiveSlot = substitutions.some(
-      (item) =>
-        item.date === date &&
-        item.className === substitutionForm.className &&
-        item.divisionName === substitutionForm.divisionName &&
-        item.period === substitutionForm.period &&
-        isOverlap(
-          item.startTime,
-          item.endTime,
-          selectedCreateLecture?.startTime || substitutionForm.startTime,
-          selectedCreateLecture?.endTime || substitutionForm.endTime
-        ) &&
-        !['Cancelled', 'Rejected'].includes(item.status)
-    );
-
-    if (hasActiveSlot) {
-      shikshaMitraToast.error({
-        message: 'This slot already has an active substitution assignment.',
-      });
-      return;
-    }
 
     const selectedTeachers = substitutionForm.selectedSubstitutes
       .map((selection) =>
@@ -1701,7 +1682,7 @@ const SubstitutionManagementScreen = () => {
         message: 'Substitution coverage assigned and notification queued.',
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to create substitution.';
+      const message = resolveDutyActionErrorMessage(error, 'Unable to create substitution.');
       shikshaMitraToast.error({ message });
     } finally {
       setCreateSubmitType(null);
@@ -1710,9 +1691,7 @@ const SubstitutionManagementScreen = () => {
     createSubstitution,
     resetCreateSubstitution,
     createFieldErrors,
-    selectedCreateLecture,
     substitutionForm,
-    substitutions,
     suggestedTeacherRows,
     currentYear,
     medium,
@@ -4433,6 +4412,8 @@ const SubstitutionManagementScreen = () => {
                         teacherId: value?.id || '',
                         teacherName: value?.label || '',
                         departmentName: value?.departmentName || '',
+                        shiftStartTime: value?.shiftStartTime || '',
+                        shiftEndTime: value?.shiftEndTime || '',
                       }))
                     }
                     getOptionLabel={(option) => option?.label || ''}
@@ -4514,13 +4495,22 @@ const SubstitutionManagementScreen = () => {
                     }
                     label="Full Day Unavailability"
                   />
+                  {availabilityForm.isFullDay &&
+                    availabilityForm.teacherId &&
+                    !hasAvailabilityTeacherShift && (
+                      <Alert severity="info" sx={{ mt: 1 }}>
+                        This teacher has no assigned shift. The full calendar day will be used.
+                      </Alert>
+                    )}
                 </Grid>
                 <Grid size={{ xs: 12, md: 6 }}>
                   <TimePicker
                     label="Start Time *"
                     value={
                       availabilityForm.isFullDay
-                        ? dayjs('2000-01-01T09:00')
+                        ? availabilityStartTimeStr
+                          ? dayjs(`2000-01-01T${availabilityStartTimeStr}`)
+                          : null
                         : availabilityForm.startTime
                           ? dayjs(`2000-01-01T${availabilityForm.startTime}`)
                           : null
@@ -4557,7 +4547,9 @@ const SubstitutionManagementScreen = () => {
                     label="End Time *"
                     value={
                       availabilityForm.isFullDay
-                        ? dayjs('2000-01-01T14:15')
+                        ? availabilityEndTimeStr
+                          ? dayjs(`2000-01-01T${availabilityEndTimeStr}`)
+                          : null
                         : availabilityForm.endTime
                           ? dayjs(`2000-01-01T${availabilityForm.endTime}`)
                           : null

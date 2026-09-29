@@ -16,6 +16,7 @@ export type AcademicDashboardClassAssignment = {
 
 export type AcademicDashboardContext = {
   defaultMode: AcademicDashboardMode;
+  supportsSectionDashboard?: boolean;
   availableModes: AcademicDashboardMode[];
   displayName: string;
   classAssignments: AcademicDashboardClassAssignment[];
@@ -217,6 +218,47 @@ export type PrincipalAcademicDashboardData = {
   }>;
 };
 
+export type PrincipalAcademicDashboardAnalyticsData = Pick<
+  PrincipalAcademicDashboardData,
+  | 'chapterCompletionChart'
+  | 'subjectPassFailChart'
+  | 'teacherPerformanceComparison'
+  | 'upcomingExamsList'
+  | 'topPerformers'
+  | 'bottomPerformers'
+>;
+
+export type PrincipalAcademicDashboardOverviewData = Omit<
+  PrincipalAcademicDashboardData,
+  keyof PrincipalAcademicDashboardAnalyticsData
+>;
+
+export type PrincipalAcademicDashboardPerformanceData = Pick<
+  PrincipalAcademicDashboardOverviewData,
+  | 'schoolPerformanceIndex'
+  | 'schoolAverageGrade'
+  | 'averageAttendance'
+  | 'totalTeachers'
+  | 'totalStudents'
+  | 'performanceIndexHelper'
+>;
+
+export type PrincipalAcademicDashboardCurriculumData = Pick<
+  PrincipalAcademicDashboardOverviewData,
+  | 'syllabusProgress'
+  | 'mathProgress'
+  | 'mathTarget'
+  | 'scienceProgress'
+  | 'scienceTarget'
+  | 'englishProgress'
+  | 'englishTarget'
+>;
+
+export type PrincipalAcademicDashboardOperationsData = Omit<
+  PrincipalAcademicDashboardOverviewData,
+  keyof PrincipalAcademicDashboardPerformanceData | keyof PrincipalAcademicDashboardCurriculumData
+>;
+
 export type TeacherAcademicDashboardData = {
   attendanceRate: number;
   todaysLecturesCount: number;
@@ -309,6 +351,39 @@ export type TeacherAcademicDashboardData = {
     completionPercentages: number[];
   };
 };
+
+export type TeacherAcademicDashboardAnalyticsData = Pick<
+  TeacherAcademicDashboardData,
+  'performanceDistribution' | 'chapterProgressChart'
+>;
+
+export type TeacherAcademicDashboardOverviewData = Omit<
+  TeacherAcademicDashboardData,
+  keyof TeacherAcademicDashboardAnalyticsData
+>;
+
+export type TeacherAcademicDashboardAssignmentsData = Pick<
+  TeacherAcademicDashboardOverviewData,
+  | 'attendanceRate'
+  | 'todaysLecturesCount'
+  | 'lecturesDone'
+  | 'lecturesOngoing'
+  | 'pendingAttendanceClasses'
+  | 'assignedClassesCount'
+  | 'assignedSubjectsCount'
+  | 'pendingHomework'
+  | 'todaySchedule'
+>;
+
+export type TeacherAcademicDashboardAttentionData = Pick<
+  TeacherAcademicDashboardOverviewData,
+  'studentsAttentionCount' | 'studentsAttention' | 'insights'
+>;
+
+export type TeacherAcademicDashboardAssessmentData = Omit<
+  TeacherAcademicDashboardOverviewData,
+  keyof TeacherAcademicDashboardAssignmentsData | keyof TeacherAcademicDashboardAttentionData
+>;
 
 const mockAdminData: AdminAcademicDashboardData = {
   curriculumCompletion: 75,
@@ -955,6 +1030,74 @@ export const academicDashboardApi = academicApi.injectEndpoints({
       providesTags: [academicType.timetableManagement, academicType.academicReport],
     }),
 
+    getPrincipalAcademicDashboardOverview: builder.query<
+      PrincipalAcademicDashboardOverviewData,
+      void
+    >({
+      async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+        let result = await baseQuery({
+          url: '/academic/dashboard/principal/overview',
+          method: 'GET',
+        });
+        if (result.error?.status === 404) {
+          result = await baseQuery({ url: '/academic/dashboard/principal', method: 'GET' });
+        }
+        if (result.error) {
+          return useAcademicDashboardMockFallback
+            ? { data: mockPrincipalData }
+            : { error: result.error };
+        }
+        return { data: result.data as PrincipalAcademicDashboardOverviewData };
+      },
+      providesTags: [academicType.timetableManagement, academicType.academicReport],
+    }),
+
+    getPrincipalAcademicDashboardPerformance: builder.query<
+      PrincipalAcademicDashboardPerformanceData,
+      void
+    >({
+      query: () => ({ url: '/academic/dashboard/principal/performance', method: 'GET' }),
+      providesTags: [academicType.academicReport],
+    }),
+
+    getPrincipalAcademicDashboardCurriculum: builder.query<
+      PrincipalAcademicDashboardCurriculumData,
+      void
+    >({
+      query: () => ({ url: '/academic/dashboard/principal/curriculum', method: 'GET' }),
+      providesTags: [academicType.academicReport],
+    }),
+
+    getPrincipalAcademicDashboardOperations: builder.query<
+      PrincipalAcademicDashboardOperationsData,
+      void
+    >({
+      query: () => ({ url: '/academic/dashboard/principal/operations', method: 'GET' }),
+      providesTags: [academicType.timetableManagement, academicType.academicReport],
+    }),
+
+    getPrincipalAcademicDashboardAnalytics: builder.query<
+      PrincipalAcademicDashboardAnalyticsData,
+      void
+    >({
+      async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+        let result = await baseQuery({
+          url: '/academic/dashboard/principal/analytics',
+          method: 'GET',
+        });
+        if (result.error?.status === 404) {
+          result = await baseQuery({ url: '/academic/dashboard/principal', method: 'GET' });
+        }
+        if (result.error) {
+          return useAcademicDashboardMockFallback
+            ? { data: mockPrincipalData }
+            : { error: result.error };
+        }
+        return { data: result.data as PrincipalAcademicDashboardAnalyticsData };
+      },
+      providesTags: [academicType.academicReport],
+    }),
+
     getTeacherAcademicDashboard: builder.query<TeacherAcademicDashboardData, void>({
       async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
         const result = await baseQuery({
@@ -969,6 +1112,71 @@ export const academicDashboardApi = academicApi.injectEndpoints({
         return { data: result.data as TeacherAcademicDashboardData };
       },
       providesTags: [academicType.timetableManagement, academicType.academicReport],
+    }),
+
+    getTeacherAcademicDashboardOverview: builder.query<TeacherAcademicDashboardOverviewData, void>({
+      async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+        let result = await baseQuery({
+          url: '/academic/dashboard/teacher/overview',
+          method: 'GET',
+        });
+        if (result.error?.status === 404) {
+          result = await baseQuery({ url: '/academic/dashboard/teacher', method: 'GET' });
+        }
+        if (result.error) {
+          return useAcademicDashboardMockFallback
+            ? { data: mockTeacherData }
+            : { error: result.error };
+        }
+        return { data: result.data as TeacherAcademicDashboardOverviewData };
+      },
+      providesTags: [academicType.timetableManagement, academicType.academicReport],
+    }),
+
+    getTeacherAcademicDashboardAssignments: builder.query<
+      TeacherAcademicDashboardAssignmentsData,
+      void
+    >({
+      query: () => ({ url: '/academic/dashboard/teacher/assignments', method: 'GET' }),
+      providesTags: [academicType.academicReport],
+    }),
+
+    getTeacherAcademicDashboardAssessment: builder.query<
+      TeacherAcademicDashboardAssessmentData,
+      void
+    >({
+      query: () => ({ url: '/academic/dashboard/teacher/assessment', method: 'GET' }),
+      providesTags: [academicType.timetableManagement, academicType.academicReport],
+    }),
+
+    getTeacherAcademicDashboardAttention: builder.query<
+      TeacherAcademicDashboardAttentionData,
+      void
+    >({
+      query: () => ({ url: '/academic/dashboard/teacher/attention', method: 'GET' }),
+      providesTags: [academicType.academicReport],
+    }),
+
+    getTeacherAcademicDashboardAnalytics: builder.query<
+      TeacherAcademicDashboardAnalyticsData,
+      void
+    >({
+      async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+        let result = await baseQuery({
+          url: '/academic/dashboard/teacher/analytics',
+          method: 'GET',
+        });
+        if (result.error?.status === 404) {
+          result = await baseQuery({ url: '/academic/dashboard/teacher', method: 'GET' });
+        }
+        if (result.error) {
+          return useAcademicDashboardMockFallback
+            ? { data: mockTeacherData }
+            : { error: result.error };
+        }
+        return { data: result.data as TeacherAcademicDashboardAnalyticsData };
+      },
+      providesTags: [academicType.academicReport],
     }),
 
     refreshAcademicDashboard: builder.mutation<void, void>({
@@ -1042,7 +1250,17 @@ export const {
   useGetAdminAcademicDashboardAssessmentQuery,
   useGetAdminAcademicDashboardAnalyticsQuery,
   useGetPrincipalAcademicDashboardQuery,
+  useGetPrincipalAcademicDashboardOverviewQuery,
+  useGetPrincipalAcademicDashboardPerformanceQuery,
+  useGetPrincipalAcademicDashboardCurriculumQuery,
+  useGetPrincipalAcademicDashboardOperationsQuery,
+  useGetPrincipalAcademicDashboardAnalyticsQuery,
   useGetTeacherAcademicDashboardQuery,
+  useGetTeacherAcademicDashboardOverviewQuery,
+  useGetTeacherAcademicDashboardAssignmentsQuery,
+  useGetTeacherAcademicDashboardAssessmentQuery,
+  useGetTeacherAcademicDashboardAttentionQuery,
+  useGetTeacherAcademicDashboardAnalyticsQuery,
   useRefreshAcademicDashboardMutation,
   useGetSubjectPassFailChartFilteredQuery,
   useGetChapterCompletionChartFilteredQuery,

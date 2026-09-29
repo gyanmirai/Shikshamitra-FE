@@ -6,10 +6,10 @@ import dayjs from 'dayjs';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
-import CustomSelect from 'src/components/custom-select';
 import LoadingButton from '@mui/lab/LoadingButton';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { TimePicker, renderTimeViewClock } from '@mui/x-date-pickers';
 import { AcademicDatePicker as DatePicker } from 'src/components/academic-date-picker';
@@ -111,9 +111,14 @@ export const DirectRoomReservationDrawer = ({
   });
   const [validationError, setValidationError] = useState('');
   const [slotDurationMinutes, setSlotDurationMinutes] = useState(DEFAULT_SLOT_DURATION_MINUTES);
+  const [readyRoomId, setReadyRoomId] = useState<string | null>(null);
+  const roomId = room?.roomId ?? null;
 
-  // Dynamically query the schedule for the selected date
-  const schedule = useRoomSchedule(room?.roomId || null, requirements.date);
+  // Wait for the drawer's room and prefilled date before starting the schedule request.
+  const schedule = useRoomSchedule(
+    open && readyRoomId === roomId ? readyRoomId : null,
+    requirements.date
+  );
   const createReservation = useCreateRoomReservation();
 
   const patchRequirements = useCallback((patch: Partial<ReservationRequirements>) => {
@@ -130,16 +135,19 @@ export const DirectRoomReservationDrawer = ({
 
   // Initialize form when drawer opens
   useEffect(() => {
-    if (open && room) {
+    if (open && roomId) {
       setRequirements({
         ...defaultRequirements,
         date: prefillDate || dayjs().format('YYYY-MM-DD'),
       });
+      setReadyRoomId(roomId);
       setSlotDurationMinutes(DEFAULT_SLOT_DURATION_MINUTES);
       setValidationError('');
       setFieldErrors({});
+    } else {
+      setReadyRoomId(null);
     }
-  }, [open, room, prefillDate]);
+  }, [open, roomId, prefillDate]);
 
   const isStartTimeOutOfRange = useMemo(() => {
     if (!requirements.startTime) return false;
@@ -166,6 +174,7 @@ export const DirectRoomReservationDrawer = ({
     () => generateReservationSlots(schedule.data?.slots || [], slotDurationMinutes),
     [schedule.data?.slots, slotDurationMinutes]
   );
+  const isScheduleLoading = open && (!readyRoomId || schedule.isLoading || schedule.isFetching);
 
   // Slot tiles are always derived from the Start/End Time fields, so typing a time
   // and clicking a tile stay in sync automatically instead of tracking selection separately.
@@ -519,7 +528,7 @@ export const DirectRoomReservationDrawer = ({
                   '&::-webkit-scrollbar-thumb:hover': { bgcolor: 'action.disabled' },
                 }}
               >
-                {(schedule.isLoading || schedule.isFetching) && (
+                {isScheduleLoading && (
                   <Box sx={{ py: 8, textAlign: 'center' }}>
                     <CircularProgress size={40} />
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
@@ -534,7 +543,7 @@ export const DirectRoomReservationDrawer = ({
                   </Alert>
                 )}
 
-                {!(schedule.isLoading || schedule.isFetching) &&
+                {!isScheduleLoading &&
                   !schedule.error &&
                   !schedule.data && (
                     <Alert severity="info" sx={{ borderRadius: 1.5 }}>
@@ -542,7 +551,7 @@ export const DirectRoomReservationDrawer = ({
                     </Alert>
                   )}
 
-                {!(schedule.isLoading || schedule.isFetching) && schedule.data && (
+                {!isScheduleLoading && schedule.data && (
                   <Box
                     sx={{
                       display: 'grid',

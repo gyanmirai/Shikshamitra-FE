@@ -401,8 +401,11 @@ const LectureSlots = () => {
             { name: 'Lecture Slots' },
           ]}
           action={
-            <Stack direction="row" spacing={1} alignItems="center">
-              <TimetableSettingsSummaryCards cards={summaryCards} buttonSx={{ mb: 0 }} />
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="nowrap">
+              <TimetableSettingsSummaryCards
+                cards={summaryCards}
+                buttonSx={{ mb: 0, flexShrink: 0, whiteSpace: 'nowrap' }}
+              />
               {canAdd && (
                 <Button
                   sx={{ width: '160px' }}
