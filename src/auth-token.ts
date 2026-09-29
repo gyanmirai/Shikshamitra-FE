@@ -30,23 +30,25 @@ export async function refreshAccessToken(
   token: AuthToken,
   fetchToken: typeof fetch = fetch
 ): Promise<AuthToken> {
-  if (!token.refreshToken) {
+  const refreshToken = token.refreshToken;
+  if (!refreshToken) {
     return failedRefresh(token);
   }
 
-  return runAuthRequestOnce(`refresh:${token.refreshToken}`, () =>
-    requestRefreshedAccessToken(token, fetchToken)
+  return runAuthRequestOnce(`refresh:${refreshToken}`, () =>
+    requestRefreshedAccessToken(token, refreshToken, fetchToken)
   );
 }
 
 async function requestRefreshedAccessToken(
   token: AuthToken,
+  refreshToken: string,
   fetchToken: typeof fetch
 ): Promise<AuthToken> {
   try {
     const body = new URLSearchParams({
       grant_type: 'refresh_token',
-      refresh_token: token.refreshToken,
+      refresh_token: refreshToken,
       client_id: process.env.NEXT_PUBLIC_CLIENT_ID!,
       client_secret: process.env.NEXT_PUBLIC_CLIENT_SECRET!,
     });
@@ -82,7 +84,7 @@ async function requestRefreshedAccessToken(
       refreshToken:
         typeof refreshed.refresh_token === 'string' && refreshed.refresh_token
           ? refreshed.refresh_token
-          : token.refreshToken,
+          : refreshToken,
       tokenType:
         typeof refreshed.token_type === 'string' && refreshed.token_type
           ? refreshed.token_type
