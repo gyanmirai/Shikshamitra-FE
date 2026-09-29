@@ -12,6 +12,7 @@ type StudentFeedbackContextProps = {
 type HomeworkFeedbackContextProps = {
   title?: string;
   description?: string;
+  compact?: boolean;
 };
 
 export const StudentFeedbackContext = ({
@@ -52,7 +53,11 @@ export const StudentFeedbackContext = ({
   </Card>
 );
 
-export const HomeworkFeedbackContext = ({ title, description }: HomeworkFeedbackContextProps) => (
+export const HomeworkFeedbackContext = ({
+  title,
+  description,
+  compact = false,
+}: HomeworkFeedbackContextProps) => (
   <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
     <Stack direction="row" alignItems="flex-start" spacing={1.5}>
       <Box
@@ -69,14 +74,20 @@ export const HomeworkFeedbackContext = ({ title, description }: HomeworkFeedback
       >
         <Iconify icon="solar:notebook-bookmark-bold-duotone" width={24} />
       </Box>
-      <Box sx={{ minWidth: 0 }}>
+      <Box sx={{ minWidth: 0, flex: compact ? 1 : undefined }}>
         <Typography variant="caption" color="text.secondary">
           Homework
         </Typography>
-        <Typography variant="subtitle1" fontWeight={600}>
+        <Typography
+          variant="subtitle1"
+          fontWeight={600}
+          noWrap={compact}
+          title={title || 'Untitled homework'}
+          sx={{ minWidth: 0 }}
+        >
           {title || 'Untitled homework'}
         </Typography>
-        {description ? (
+        {!compact && description ? (
           <Box
             sx={{
               mt: 0.5,
@@ -87,11 +98,11 @@ export const HomeworkFeedbackContext = ({ title, description }: HomeworkFeedback
             }}
             dangerouslySetInnerHTML={{ __html: sanitizeHtml(description) }}
           />
-        ) : (
+        ) : !compact ? (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             No homework description provided.
           </Typography>
-        )}
+        ) : null}
       </Box>
     </Stack>
   </Card>

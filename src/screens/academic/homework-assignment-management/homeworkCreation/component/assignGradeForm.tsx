@@ -158,29 +158,268 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     normalizedSubmissionType.includes('inperson') ||
     normalizedSubmissionType.includes('in person');
   const isNoSubmissionRequired =
-    numSubmissionType === 3 ||
-    normalizedSubmissionType.includes('no submission');
+    numSubmissionType === 3 || normalizedSubmissionType.includes('no submission');
   const isOnlineTextSubmission =
     numSubmissionType === 0 ||
     normalizedSubmissionType.includes('text') ||
     Boolean(data?.submittedContent?.trim() && !data?.submittedDocumentUrl);
+
+  const submissionSection = (
+    <Grid size={{ xs: 12, md: isEdit ? 4 : 12 }} sx={{ display: 'flex', '& > *': { flex: 1 } }}>
+      <Card
+        variant={isEdit ? 'outlined' : undefined}
+        sx={{
+          p: isEdit ? 2 : 0,
+          borderRadius: isEdit ? 2 : undefined,
+          overflow: 'hidden',
+          boxShadow: isEdit ? 'none' : 'var(--shadows-10)',
+          display: isEdit ? 'flex' : undefined,
+          alignItems: isEdit ? 'center' : undefined,
+        }}
+      >
+        {!isEdit && (
+          <Box
+            sx={{
+              px: 2,
+              py: 1.25,
+              bgcolor: 'background.neutral',
+              borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+            }}
+          >
+            <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Iconify icon="solar:document-text-bold" width={20} sx={{ color: 'info.main' }} />
+              Student Submission
+            </Typography>
+          </Box>
+        )}
+        <Box
+          sx={{
+            p: isEdit ? 0 : 2,
+            maxHeight: isEdit ? 180 : undefined,
+            overflowY: isEdit ? 'auto' : undefined,
+            width: isEdit ? '100%' : undefined,
+          }}
+        >
+          {isInPersonSubmission ? (
+            <Box
+              sx={{
+                p: isEdit ? 0 : 2.5,
+                borderRadius: 1,
+                bgcolor: isEdit ? 'transparent' : 'background.neutral',
+                border: isEdit ? 0 : (theme) => `1px solid ${theme.palette.divider}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 1,
+                  bgcolor: 'success.lighter',
+                  color: 'success.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Iconify icon="solar:user-check-rounded-bold" width={24} />
+              </Box>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600}>
+                  In-Person / Physical Submission
+                </Typography>
+                {!isEdit ? (
+                  <Typography variant="caption" color="text.secondary">
+                    This homework task is reviewed and evaluated physically in class (e.g. notebook
+                    inspection, viva, or physical demonstration).
+                  </Typography>
+                ) : null}
+              </Box>
+            </Box>
+          ) : isNoSubmissionRequired ? (
+            <Box
+              sx={{
+                p: isEdit ? 0 : 2.5,
+                borderRadius: 1,
+                bgcolor: isEdit ? 'transparent' : 'background.neutral',
+                border: isEdit ? 0 : (theme) => `1px solid ${theme.palette.divider}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 1,
+                  bgcolor: 'info.lighter',
+                  color: 'info.main',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <Iconify icon="solar:info-circle-bold" width={24} />
+              </Box>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600}>
+                  No Submission Required
+                </Typography>
+                {!isEdit ? (
+                  <Typography variant="caption" color="text.secondary">
+                    This homework task was assigned for self-study / practice and does not require
+                    online submission.
+                  </Typography>
+                ) : null}
+              </Box>
+            </Box>
+          ) : isOnlineTextSubmission && data?.submittedContent?.trim() ? (
+            <Card
+              variant={isEdit ? undefined : 'outlined'}
+              sx={{ p: isEdit ? 0 : 2, bgcolor: 'background.paper', boxShadow: 'none' }}
+            >
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ display: 'block', mb: 1, fontWeight: 600 }}
+              >
+                Submitted Answer / Text:
+              </Typography>
+              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
+                {data.submittedContent}
+              </Typography>
+            </Card>
+          ) : data?.submittedDocumentUrl ? (
+            <Card
+              variant={isEdit ? undefined : 'outlined'}
+              sx={{
+                p: isEdit ? 0 : 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: isEdit ? 'wrap' : 'nowrap',
+                gap: isEdit ? 1 : 0,
+                bgcolor: 'background.paper',
+                boxShadow: 'none',
+                '&:hover': {
+                  bgcolor: 'background.neutral',
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  minWidth: 0,
+                  flex: isEdit ? '1 1 160px' : undefined,
+                }}
+              >
+                {getFileIconByType(data.originalFileName ?? document.type ?? 'txt', 36)}
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography
+                    variant="subtitle2"
+                    noWrap
+                    sx={{ maxWidth: isEdit ? '100%' : 280, fontWeight: 600 }}
+                  >
+                    {data.originalFileName || 'Submitted document'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {data.submissionDate
+                      ? `Submitted on ${data.submissionDate}`
+                      : 'Uploaded by student'}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Stack direction="row" spacing={1} flexShrink={0} sx={{ ml: isEdit ? 'auto' : 0 }}>
+                <Tooltip title="Preview File">
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      handleDownload({
+                        ...document,
+                        name: data.originalFileName || document.name,
+                        url: data.submittedDocumentUrl!,
+                      })
+                    }
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    <Iconify icon={GlobalIcons.eye} width={20} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Download File">
+                  <IconButton
+                    size="small"
+                    onClick={() =>
+                      handleDownload({
+                        ...document,
+                        name: data.originalFileName || document.name,
+                        url: data.submittedDocumentUrl!,
+                      })
+                    }
+                    sx={{ color: 'text.secondary' }}
+                  >
+                    <Iconify icon={GlobalIcons.download} width={20} />
+                  </IconButton>
+                </Tooltip>
+              </Stack>
+            </Card>
+          ) : (
+            <Box
+              sx={{
+                p: isEdit ? 0 : 3,
+                textAlign: 'center',
+                bgcolor: isEdit ? 'transparent' : 'background.neutral',
+                borderRadius: 1,
+                border: isEdit ? 0 : (theme) => `1px dashed ${theme.palette.divider}`,
+              }}
+            >
+              <Iconify
+                icon="solar:file-remove-bold-duotone"
+                width={40}
+                sx={{ color: 'text.disabled', mb: 1 }}
+              />
+              <Typography variant="body2" color="text.secondary">
+                No submission file or text provided by student
+              </Typography>
+            </Box>
+          )}
+        </Box>
+      </Card>
+    </Grid>
+  );
 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <DialogScrollContent>
         <Grid container spacing={1.5}>
           {/* Student Profile Section */}
-          <Grid size={{ xs: 12 }}>
+          <Grid
+            size={{ xs: 12, md: isEdit ? 4 : 12 }}
+            sx={{ display: 'flex', '& > *': { flex: 1 } }}
+          >
             <StudentFeedbackContext studentName={data?.studentName} rollNumber={data?.rollNumber} />
           </Grid>
 
           {/* Homework Context Section */}
-          <Grid size={{ xs: 12 }}>
+          <Grid
+            size={{ xs: 12, md: isEdit ? 4 : 12 }}
+            sx={{ display: 'flex', '& > *': { flex: 1 } }}
+          >
             <HomeworkFeedbackContext
               title={selectedHomework?.title}
               description={selectedHomework?.description}
+              compact={isEdit}
             />
           </Grid>
+
+          {isEdit && submissionSection}
 
           {/* Rubric Evaluation Panel */}
           {data &&
@@ -192,6 +431,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                 <RubricEvaluationPanel
                   ref={rubricEvaluationRef}
                   mode="homework"
+                  compactLayout={isEdit}
                   standardId={selectedClass}
                   subjectId={selectedSubject}
                   taskId={selectedHomework.id}
@@ -203,194 +443,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               </Grid>
             )}
 
-          {/* Student Submission Section (Based on Submission Type) */}
-          <Grid size={{ xs: 12 }}>
-            <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
-              <Box
-                sx={{
-                  px: 2,
-                  py: 1.25,
-                  bgcolor: 'background.neutral',
-                  borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                }}
-              >
-                <Typography
-                  variant="subtitle2"
-                  sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
-                >
-                  <Iconify icon="solar:document-text-bold" width={20} sx={{ color: 'info.main' }} />
-                  Student Submission
-                </Typography>
-              </Box>
-              <Box sx={{ p: 2 }}>
-                {isInPersonSubmission ? (
-                  <Box
-                    sx={{
-                      p: 2.5,
-                      borderRadius: 1,
-                      bgcolor: 'background.neutral',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 2,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 1,
-                        bgcolor: 'success.lighter',
-                        color: 'success.main',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Iconify icon="solar:user-check-rounded-bold" width={24} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        In-Person / Physical Submission
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        This homework task is reviewed and evaluated physically in class (e.g. notebook inspection, viva, or physical demonstration).
-                      </Typography>
-                    </Box>
-                  </Box>
-                ) : isNoSubmissionRequired ? (
-                  <Box
-                    sx={{
-                      p: 2.5,
-                      borderRadius: 1,
-                      bgcolor: 'background.neutral',
-                      border: (theme) => `1px solid ${theme.palette.divider}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 2,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 1,
-                        bgcolor: 'info.lighter',
-                        color: 'info.main',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Iconify icon="solar:info-circle-bold" width={24} />
-                    </Box>
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight={600}>
-                        No Submission Required
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        This homework task was assigned for self-study / practice and does not require online submission.
-                      </Typography>
-                    </Box>
-                  </Box>
-                ) : isOnlineTextSubmission && data?.submittedContent?.trim() ? (
-                  <Card variant="outlined" sx={{ p: 2, bgcolor: 'background.paper' }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1, fontWeight: 600 }}>
-                      Submitted Answer / Text:
-                    </Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.7 }}>
-                      {data.submittedContent}
-                    </Typography>
-                  </Card>
-                ) : data?.submittedDocumentUrl ? (
-                  <Card
-                    variant="outlined"
-                    sx={{
-                      p: 1.5,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      bgcolor: 'background.paper',
-                      '&:hover': {
-                        bgcolor: 'background.neutral',
-                      },
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                      {getFileIconByType(data.originalFileName ?? document.type ?? 'txt', 36)}
-                      <Box>
-                        <Typography variant="subtitle2" noWrap sx={{ maxWidth: 280, fontWeight: 600 }}>
-                          {data.originalFileName || 'Submitted document'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {data.submissionDate
-                            ? `Submitted on ${data.submissionDate}`
-                            : 'Uploaded by student'}
-                        </Typography>
-                      </Box>
-                    </Box>
-
-                    <Stack direction="row" spacing={1} flexShrink={0}>
-                      <Tooltip title="Preview File">
-                        <IconButton
-                          size="small"
-                          onClick={() =>
-                            handleDownload({
-                              ...document,
-                              name: data.originalFileName || document.name,
-                              url: data.submittedDocumentUrl!,
-                            })
-                          }
-                          sx={{ color: 'text.secondary' }}
-                        >
-                          <Iconify icon={GlobalIcons.eye} width={20} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Download File">
-                        <IconButton
-                          size="small"
-                          onClick={() =>
-                            handleDownload({
-                              ...document,
-                              name: data.originalFileName || document.name,
-                              url: data.submittedDocumentUrl!,
-                            })
-                          }
-                          sx={{ color: 'text.secondary' }}
-                        >
-                          <Iconify icon={GlobalIcons.download} width={20} />
-                        </IconButton>
-                      </Tooltip>
-                    </Stack>
-                  </Card>
-                ) : (
-                  <Box
-                    sx={{
-                      p: 3,
-                      textAlign: 'center',
-                      bgcolor: 'background.neutral',
-                      borderRadius: 1,
-                      border: (theme) => `1px dashed ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Iconify
-                      icon="solar:file-remove-bold-duotone"
-                      width={40}
-                      sx={{ color: 'text.disabled', mb: 1 }}
-                    />
-                    <Typography variant="body2" color="text.secondary">
-                      No submission file or text provided by student
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-            </Card>
-          </Grid>
+          {!isEdit && submissionSection}
 
           {/* Feedback Section */}
-          <Grid size={{ xs: 12 }}>
+          <Grid size={{ xs: 12 }} sx={{ display: 'flex', '& > *': { flex: 1 } }}>
             <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
               <Box
                 sx={{
@@ -513,7 +569,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                           borderLeft: (theme) => `4px solid ${theme.palette.primary.main}`,
                         }}
                       >
-                        <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                        <Typography
+                          variant="body2"
+                          sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}
+                        >
                           {data.feedback}
                         </Typography>
                       </Card>
@@ -540,7 +599,9 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         </Grid>
       </DialogScrollContent>
 
-      <DialogActions sx={{ bgcolor: 'background.paper', p: 2, flexShrink: 0, boxShadow: 'var(--shadows-10)' }}>
+      <DialogActions
+        sx={{ bgcolor: 'background.paper', p: 2, flexShrink: 0, boxShadow: 'var(--shadows-10)' }}
+      >
         <Stack direction="row" spacing={1} sx={{ mr: 'auto' }}>
           <Button
             variant="outlined"

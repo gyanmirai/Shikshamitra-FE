@@ -7,6 +7,7 @@ export type RubricStudentRow = {
 
 export type RubricEvaluationPanelProps = {
   mode: 'homework' | 'assignment';
+  compactLayout?: boolean;
   standardId: string;
   subjectId: string;
   taskId: string;
@@ -33,4 +34,5 @@ export type RubricCriterionScoringProps = {
   onMarksChange: (criterionId: string, marks: string) => void;
   onCommentsChange: (criterionId: string, comments: string) => void;
   readOnly?: boolean;
+  compact?: boolean;
 };

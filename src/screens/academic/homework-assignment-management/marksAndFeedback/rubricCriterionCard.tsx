@@ -3,7 +3,9 @@ import type {
   AssessmentRubricCriterionDto,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
-import { Box, Card, Chip, Stack, Divider, TextField, Typography } from '@mui/material';
+import { Box, Card, Chip, Stack, Divider, TextField, Typography, IconButton } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Iconify } from 'src/components/iconify';
 
 import RubricScoreSelector from './rubricScoreSelector';
 
@@ -17,6 +19,7 @@ type RubricCriterionCardProps = {
   onMarksChange: (criterionId: string, marks: string) => void;
   onCommentsChange: (criterionId: string, comments: string) => void;
   readOnly?: boolean;
+  compact?: boolean;
 };
 
 const RubricCriterionCard = ({
@@ -27,6 +30,7 @@ const RubricCriterionCard = ({
   onMarksChange,
   onCommentsChange,
   readOnly,
+  compact = false,
 }: RubricCriterionCardProps) => {
   const headingId = `rubric-criterion-${criterion.id}`;
 
@@ -52,21 +56,45 @@ const RubricCriterionCard = ({
               <Typography id={headingId} component="h3" variant="subtitle2" fontWeight={700}>
                 {criterion.title}
               </Typography>
-              <Chip
-                size="small"
-                variant="outlined"
-                label={criterion.isRequired ? 'Required' : 'Optional'}
-                sx={{ bgcolor: 'transparent' }}
-              />
+              {compact && (criterion.description || criterion.teacherGuidance) ? (
+                <CustomTooltip
+                  title={
+                    <Stack spacing={0.5} sx={{ p: 1.5, maxWidth: 320 }}>
+                      {criterion.description ? (
+                        <Typography variant="body2">{criterion.description}</Typography>
+                      ) : null}
+                      {criterion.teacherGuidance ? (
+                        <Typography variant="body2">
+                          Teacher guidance: {criterion.teacherGuidance}
+                        </Typography>
+                      ) : null}
+                    </Stack>
+                  }
+                  placement="right"
+                  arrow
+                >
+                  <IconButton size="small" aria-label={`About ${criterion.title}`}>
+                    <Iconify icon="lucide:info" width={18} color="info.main" />
+                  </IconButton>
+                </CustomTooltip>
+              ) : null}
+              {(!compact || !criterion.isRequired) && (
+                <Chip
+                  size="small"
+                  variant="outlined"
+                  label={criterion.isRequired ? 'Required' : 'Optional'}
+                  sx={{ bgcolor: 'transparent' }}
+                />
+              )}
             </Stack>
 
-            {criterion.description ? (
+            {!compact && criterion.description ? (
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
                 {criterion.description}
               </Typography>
             ) : null}
 
-            {criterion.teacherGuidance ? (
+            {!compact && criterion.teacherGuidance ? (
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -83,7 +111,7 @@ const RubricCriterionCard = ({
               px: 1.25,
               py: 0.75,
               border: 1,
-              borderColor: 'divider',
+              borderColor: compact && value.marks ? 'primary.main' : 'divider',
               borderRadius: 1,
               textAlign: { xs: 'left', sm: 'center' },
               alignSelf: { xs: 'flex-start', sm: 'auto' },
@@ -92,7 +120,13 @@ const RubricCriterionCard = ({
             <Typography variant="caption" color="text.secondary" display="block">
               Score
             </Typography>
-            <Typography variant="subtitle2" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+            <Typography
+              variant="subtitle2"
+              sx={{
+                fontVariantNumeric: 'tabular-nums',
+                color: compact && value.marks ? 'primary.main' : 'text.primary',
+              }}
+            >
               {value.marks || '—'} / {criterion.maxMarks}
             </Typography>
           </Box>
@@ -106,6 +140,7 @@ const RubricCriterionCard = ({
           marks={value.marks}
           onMarksChange={onMarksChange}
           readOnly={readOnly}
+          compact={compact}
         />
 
         <TextField

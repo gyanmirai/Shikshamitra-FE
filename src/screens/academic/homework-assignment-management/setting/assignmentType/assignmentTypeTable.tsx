@@ -185,7 +185,7 @@ const AssignmentTypeTable: React.FC<IAssignmentTypeTableProps> = ({
                         id: 'delete',
                         label: 'Delete assignment type',
                         icon: 'solar:trash-bin-trash-bold',
-                        color: 'error.main',
+                        color: (assignmentType.usageCount || 0) > 0 ? undefined : 'error.main',
                         disabled: (assignmentType.usageCount || 0) > 0,
                         tooltip:
                           (assignmentType.usageCount || 0) > 0

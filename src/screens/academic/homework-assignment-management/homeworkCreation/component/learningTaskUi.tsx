@@ -2,6 +2,7 @@ import type { Theme, SxProps } from '@mui/material/styles';
 
 import dayjs from 'dayjs';
 import { Chip } from '@mui/material';
+import { useContext, createContext } from 'react';
 import {
   type ITimetableSummaryCard,
   TimetableSettingsSummaryCards,
@@ -11,6 +12,11 @@ type LearningTaskStatus = {
   label: string;
   color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning';
 };
+
+export const LearningTaskInsightsContext = createContext<{
+  open: boolean;
+  onClose: () => void;
+} | null>(null);
 
 export const SUBMISSION_TYPE_LABELS: Record<number, string> = {
   0: 'Online Text',
@@ -123,6 +129,7 @@ export const LearningTaskSummaryCards = ({
   tasks: any[];
   buttonSx?: SxProps<Theme>;
 }) => {
+  const insights = useContext(LearningTaskInsightsContext);
   const summary = getLearningTaskSummary(tasks);
   const cards: ITimetableSummaryCard[] = [
     {
@@ -148,5 +155,13 @@ export const LearningTaskSummaryCards = ({
     },
   ];
 
-  return <TimetableSettingsSummaryCards cards={cards} buttonSx={buttonSx} />;
+  return (
+    <TimetableSettingsSummaryCards
+      cards={cards}
+      buttonSx={buttonSx}
+      hideTrigger={!!insights}
+      open={insights?.open}
+      onClose={insights?.onClose}
+    />
+  );
 };

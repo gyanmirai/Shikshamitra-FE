@@ -11,6 +11,7 @@ type RubricScoreSelectorProps = {
   marks: string;
   onMarksChange: (criterionId: string, marks: string) => void;
   readOnly?: boolean;
+  compact?: boolean;
 };
 
 const RubricScoreSelector = ({
@@ -19,6 +20,7 @@ const RubricScoreSelector = ({
   marks,
   onMarksChange,
   readOnly,
+  compact = false,
 }: RubricScoreSelectorProps) => (
   <Box component="fieldset" sx={{ p: 0, m: 0, border: 0, minWidth: 0 }}>
     <Typography
@@ -55,12 +57,12 @@ const RubricScoreSelector = ({
           borderRadius: '8px !important',
         },
         '& .MuiToggleButton-root.Mui-selected': {
-          color: 'text.primary',
-          bgcolor: 'action.selected',
-          borderColor: 'text.primary !important',
+          color: compact ? 'primary.darker' : 'text.primary',
+          bgcolor: compact ? 'primary.lighter' : 'action.selected',
+          borderColor: compact ? 'primary.main !important' : 'text.primary !important',
         },
         '& .MuiToggleButton-root.Mui-selected:hover': {
-          bgcolor: 'action.selected',
+          bgcolor: compact ? 'primary.lighter' : 'action.selected',
         },
       }}
     >
@@ -72,10 +74,23 @@ const RubricScoreSelector = ({
           aria-label={`${criterion.title}: ${level.label}, ${level.score} points`}
         >
           <Stack spacing={0.25} alignItems="flex-start" sx={{ width: '100%' }}>
-            <Typography variant="body2" fontWeight={600} textAlign="left">
+            <Typography
+              variant="body2"
+              fontWeight={600}
+              textAlign="left"
+              sx={{
+                color: compact && marks === String(level.score) ? 'primary.darker' : undefined,
+              }}
+            >
               {level.label}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{
+                color: compact && marks === String(level.score) ? 'primary.darker' : undefined,
+              }}
+            >
               {level.score} {level.score === 1 ? 'point' : 'points'}
             </Typography>
           </Stack>

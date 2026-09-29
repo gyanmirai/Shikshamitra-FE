@@ -10,6 +10,7 @@ const RubricPerformanceCards = ({
   onMarksChange,
   onCommentsChange,
   readOnly,
+  compact,
 }: RubricCriterionScoringProps) => {
   const orderedLevels = [...rubric.performanceLevels].sort(
     (left, right) => right.level - left.level
@@ -27,6 +28,7 @@ const RubricPerformanceCards = ({
           onMarksChange={onMarksChange}
           onCommentsChange={onCommentsChange}
           readOnly={readOnly}
+          compact={compact}
         />
       ))}
     </Stack>

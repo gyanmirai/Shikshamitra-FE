@@ -1,4 +1,6 @@
-import { Card, Stack, TextField, Typography } from '@mui/material';
+import { Card, Stack, TextField, Typography, IconButton } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Iconify } from 'src/components/iconify';
 
 import RubricPerformanceCards from './rubricPerformanceCards';
 import { usesPerformanceLevels } from './rubricEvaluationUtils';
@@ -6,7 +8,7 @@ import { usesPerformanceLevels } from './rubricEvaluationUtils';
 import type { RubricCriterionScoringProps } from './rubricEvaluationTypes';
 
 const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
-  const { rubric, values, onMarksChange, onCommentsChange, readOnly } = props;
+  const { rubric, values, onMarksChange, onCommentsChange, readOnly, compact } = props;
   if (usesPerformanceLevels(rubric)) {
     return <RubricPerformanceCards {...props} />;
   }
@@ -20,16 +22,40 @@ const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
           <Card key={criterion.id} variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
             <Stack spacing={1}>
               <Stack direction="row" justifyContent="space-between" spacing={1}>
-                <Typography variant="body2" fontWeight={600}>
-                  {criterion.title}
-                  {criterion.isRequired ? ' *' : ''}
-                </Typography>
+                <Stack direction="row" alignItems="center" spacing={0.5}>
+                  <Typography variant="body2" fontWeight={600}>
+                    {criterion.title}
+                    {criterion.isRequired ? ' *' : ''}
+                  </Typography>
+                  {compact && (criterion.description || criterion.teacherGuidance) ? (
+                    <CustomTooltip
+                      title={
+                        <Stack spacing={0.5} sx={{ p: 1.5, maxWidth: 320 }}>
+                          {criterion.description ? (
+                            <Typography variant="body2">{criterion.description}</Typography>
+                          ) : null}
+                          {criterion.teacherGuidance ? (
+                            <Typography variant="body2">
+                              Teacher guidance: {criterion.teacherGuidance}
+                            </Typography>
+                          ) : null}
+                        </Stack>
+                      }
+                      placement="right"
+                      arrow
+                    >
+                      <IconButton size="small" aria-label={`About ${criterion.title}`}>
+                        <Iconify icon="lucide:info" width={18} color="info.main" />
+                      </IconButton>
+                    </CustomTooltip>
+                  ) : null}
+                </Stack>
                 <Typography variant="caption" color="text.secondary">
                   Max {criterion.maxMarks}
                 </Typography>
               </Stack>
 
-              {criterion.description ? (
+              {!compact && criterion.description ? (
                 <Typography variant="caption" color="text.secondary">
                   {criterion.description}
                 </Typography>

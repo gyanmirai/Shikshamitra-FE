@@ -34,6 +34,7 @@ import type { IAssignmentType } from './type';
 const AssignmentTypeCreation = () => {
   // Dialog control for add/edit form
   const addAssignmentTypeDialog = useBoolean();
+  const insightsDrawer = useBoolean();
   // Dialog control for delete confirmation
   const deleteDialog = useBoolean();
   const archiveDialog = useBoolean();
@@ -139,22 +140,36 @@ const AssignmentTypeCreation = () => {
         heading="Assignment Type"
         description="Create and manage assignment types for homework and assignments. Add, edit, or delete assignment types as needed."
         action={
-          canAdd ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button
-              startIcon={<Iconify icon="eva:plus-fill" />}
-              variant="contained"
-              onClick={addAssignmentTypeDialog.onTrue}
               size="small"
-              sx={{ px: '32px' }}
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+              onClick={insightsDrawer.onTrue}
             >
-              Assignment Type
+              View full insights
             </Button>
-          ) : null
+            {canAdd && (
+              <Button
+                startIcon={<Iconify icon="eva:plus-fill" />}
+                variant="contained"
+                onClick={addAssignmentTypeDialog.onTrue}
+                size="small"
+                sx={{ px: '32px' }}
+              >
+                Assignment Type
+              </Button>
+            )}
+          </Box>
         }
       />
 
       {/* Summary Cards */}
       <TimetableSettingsSummaryCards
+        open={insightsDrawer.value}
+        onClose={insightsDrawer.onFalse}
+        hideTrigger
         cards={[
           {
             label: 'Total Types',
@@ -254,6 +269,7 @@ const AssignmentTypeCreation = () => {
       {/* Delete Assignment Type Dialog */}
       <ConfirmDialog
         open={deleteDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedData(null);
           deleteDialog.onFalse();
@@ -293,6 +309,7 @@ const AssignmentTypeCreation = () => {
       />
       <ConfirmDialog
         open={archiveDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedData(null);
           archiveDialog.onFalse();
