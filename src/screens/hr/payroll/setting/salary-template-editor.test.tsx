@@ -5,7 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { act, render, screen, cleanup, waitFor } from '@testing-library/react';
+import { act, render, screen, within, cleanup, waitFor } from '@testing-library/react';
 
 import SalaryTemplateEditor from './salary-template-editor';
 
@@ -154,6 +154,78 @@ describe('SalaryTemplateEditor', () => {
   });
 
   afterEach(cleanup);
+
+  it('explains each protection policy beside the create selector', async () => {
+    const user = userEvent.setup();
+    renderEditor(<SalaryTemplateEditor mode="create" />);
+    const selector = screen.getByRole('combobox', { name: /Protection policy/ });
+    expect(selector).toHaveAccessibleDescription(/Protects total school cost/);
+
+    await user.click(selector);
+    await user.click(screen.getByRole('option', { name: 'Protect gross salary' }));
+    expect(selector).toHaveAccessibleDescription(
+      'Protects gross salary before employee deductions. Take-home salary and total school cost may change.'
+    );
+
+    await user.click(selector);
+    await user.click(screen.getByRole('option', { name: 'Protect take-home salary' }));
+    expect(selector).toHaveAccessibleDescription(
+      'Protects net salary after employee deductions. Gross salary and total school cost may change.'
+    );
+    await user.click(screen.getByRole('button', { name: 'Compare policies' }));
+    const dialog = screen.getByRole('dialog', { name: 'Compare protection policies' });
+    expect(within(dialog).getByText('Current policy').closest('dt')).toHaveTextContent(
+      'Protect take-home salary'
+    );
+  });
+
+  it('opens policy help by keyboard without changing a draft or invalidating its preview', async () => {
+    const user = userEvent.setup();
+    const onDirtyChange = vi.fn();
+    renderEditor(
+      <SalaryTemplateEditor templateId="template-1" mode="edit" onDirtyChange={onDirtyChange} />
+    );
+    await user.type(screen.getByRole('textbox', { name: 'Template name' }), ' draft');
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled());
+    const dirtyCalls = onDirtyChange.mock.calls.length;
+    const help = screen.getByRole('button', { name: 'Compare policies' });
+    act(() => help.focus());
+    await user.keyboard('{Enter}');
+    const dialog = screen.getByRole('dialog', { name: 'Compare protection policies' });
+    const introduction = within(dialog).getByText(/Salary basis tells us which amount you enter/);
+    await waitFor(() => expect(introduction).toHaveFocus());
+    expect(within(dialog).getByText('Current policy').closest('dt')).toHaveTextContent(
+      'Protect employer cost'
+    );
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(help).toHaveFocus();
+    expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue(
+      'Flexible Salary draft'
+    );
+    expect(screen.getByRole('button', { name: 'Save Changes' })).toBeEnabled();
+    expect(onDirtyChange).toHaveBeenCalledTimes(dirtyCalls);
+    expect(mocks.calculate).toHaveBeenCalledOnce();
+    expect(mocks.updateTemplate).not.toHaveBeenCalled();
+  });
+
+  it('keeps protection policy help available in the read-only editor', async () => {
+    const user = userEvent.setup();
+    renderEditor(<SalaryTemplateEditor templateId="template-1" mode="view" />);
+    expect(screen.getByRole('combobox', { name: /Protection policy/ })).toHaveAttribute(
+      'aria-disabled',
+      'true'
+    );
+    const help = screen.getByRole('button', { name: 'Compare policies' });
+    await user.click(help);
+    const dialog = screen.getByRole('dialog', { name: 'Compare protection policies' });
+    await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(dialog).not.toBeInTheDocument());
+    expect(help).toHaveFocus();
+    expect(mocks.calculate).not.toHaveBeenCalled();
+    expect(mocks.updateTemplate).not.toHaveBeenCalled();
+  });
 
   it('preserves workflow context and cancellation while the create catalogue loads', async () => {
     const user = userEvent.setup();

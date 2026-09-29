@@ -236,6 +236,9 @@ Group advanced numeric controls by purpose instead of rendering an unexplained w
 Use dedicated pages for complex template configuration that requires comparing interdependent settings.
 Salary Template create, edit, and view pages use one continuous form with Basic Information beside compact Statutory Defaults in a two-to-one desktop layout.
 Use 24 px field-row spacing, 16 px column spacing, and persistent labels in Basic Information.
+Explain the selected protection policy beneath its selector, with a Compare policies action available in create, edit, and read-only views.
+The informational dialog distinguishes salary basis from protection policy, compares protected amounts and variable amounts, and identifies the current selection without editing it.
+Closing help preserves the draft and current preview and restores focus to its trigger.
 Stretch the desktop top cards to equal content-driven heights, with matching padding and aligned headings and dividers.
 Place equal-width, separately enclosed Earnings and Deductions panels below, followed by full-width Sample Calculation.
 Desktop component panels are 480 px high with stationary headers and independently scrolling lists.
