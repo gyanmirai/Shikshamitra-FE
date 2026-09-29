@@ -16,13 +16,16 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
+import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
+import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
+import { useGetProrationPoliciesQuery } from 'src/redux/finance/prorationPolicy';
 import {
   useGetPaymentTermsQuery,
   useLazyGetPaymentTermByIdQuery,
@@ -160,6 +163,38 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     onSubmit: () => {},
   });
 
+  const appliedDefaults = useRef(new Set<string>());
+  const { data: collectionPolicies } = useGetCollectionPoliciesQuery(
+    { academicYearId: currentYear?.id as string, status: 'Active' },
+    { skip: !currentYear?.id }
+  );
+  const { data: refundPolicies } = useGetRefundPoliciesQuery(
+    { academicYearId: currentYear?.id as string, status: 'Active', page: 1, pageSize: 100 },
+    { skip: !currentYear?.id }
+  );
+  const { data: prorationPolicies } = useGetProrationPoliciesQuery(
+    { academicYearId: currentYear?.id as string, status: 'Active', page: 1, pageSize: 100 },
+    { skip: !currentYear?.id }
+  );
+  const collectionDefaultId = collectionPolicies?.items?.find((p: any) => p.isDefault)?.id;
+  const refundDefaultId = refundPolicies?.items?.find((p) => p.isDefault)?.id;
+  const prorationDefaultId = prorationPolicies?.items?.find((p) => p.isDefault)?.id;
+
+  useEffect(() => {
+    if (!isEditing || !currentYear?.id) return;
+    const defaults = [
+      ['collectionPolicyId', collectionDefaultId],
+      ['refundPolicyId', refundDefaultId],
+      ['prorationPolicyId', prorationDefaultId],
+    ] as const;
+    defaults.forEach(([field, policyId]) => {
+      const key = `${currentYear.id}:${field}`;
+      if (!policyId || appliedDefaults.current.has(key)) return;
+      appliedDefaults.current.add(key);
+      if (!formik.values[field]) formik.setFieldValue(field, policyId);
+    });
+  }, [collectionDefaultId, refundDefaultId, prorationDefaultId, currentYear?.id, isEditing, formik]);
+
   const addFeeHeadDialog = useBoolean();
   const deleteDlg = useBoolean();
   const lockDlg = useBoolean();
@@ -219,6 +254,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
 
   const discardEdit = () => {
     formik.resetForm();
+    appliedDefaults.current.clear();
     setSubmitAttempted(false);
     setIsEditing(false);
   };

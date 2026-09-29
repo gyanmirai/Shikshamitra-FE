@@ -2,7 +2,7 @@ import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 
@@ -45,6 +45,7 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   const [selectedMedium, setSelectedMediumState] = useState('');
   const [selectedStandardId, setSelectedStandardIdState] = useState('All Classes');
   const [selectedDivisionId, setSelectedDivisionIdState] = useState('All Divisions');
+  const initializedYearId = useRef<string | null>(null);
 
   const boards = useMemo<Board[]>(() => currentYear?.boards ?? [], [currentYear?.boards]);
 
@@ -111,13 +112,21 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   }, []);
 
   useEffect(() => {
-    if (!currentYear?.boards?.length) return;
-    const firstBoard = currentYear.boards[0];
-    const firstMedium = firstBoard?.educationMediums?.[0]?.id ?? '';
-    setSelectedBoardState(firstBoard?.id ?? '');
-    setSelectedMediumState(firstMedium);
-    resetClassAndDivision();
-  }, [currentYear?.id, currentYear?.boards, resetClassAndDivision]);
+    if (!currentYear?.id || !boards.length) return;
+    const yearChanged = initializedYearId.current !== currentYear.id;
+    initializedYearId.current = currentYear.id;
+    const board = boards.find((item) => item.id === selectedBoard);
+
+    if (yearChanged || !board) {
+      const firstBoard = boards[0];
+      setSelectedBoardState(firstBoard.id);
+      setSelectedMediumState(firstBoard.educationMediums?.[0]?.id ?? '');
+      resetClassAndDivision();
+    } else if (!board.educationMediums?.some((medium) => medium.id === selectedMedium)) {
+      setSelectedMediumState(board.educationMediums?.[0]?.id ?? '');
+      resetClassAndDivision();
+    }
+  }, [currentYear?.id, boards, selectedBoard, selectedMedium, resetClassAndDivision]);
 
   useEffect(() => {
     if (selectedMedium) {

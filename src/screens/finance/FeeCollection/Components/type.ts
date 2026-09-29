@@ -179,6 +179,8 @@ export interface MonthWiseFeeItem {
   total: number;
   scheduledTotal?: number;
   prorationPolicyVersionId?: string | null;
+  prorationPolicyName?: string | null;
+  prorationPolicyVersionNumber?: number | null;
   prorationExplanation?: string | null;
   paid: number;
   due: number;
@@ -209,6 +211,8 @@ export interface FeeHeadWiseFeeItem {
   total: number;
   scheduledTotal?: number;
   prorationPolicyVersionId?: string | null;
+  prorationPolicyName?: string | null;
+  prorationPolicyVersionNumber?: number | null;
   prorationExplanation?: string | null;
   paid: number;
   due: number;

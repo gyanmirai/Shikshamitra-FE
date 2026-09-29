@@ -462,6 +462,8 @@ const FeeCollectComponentForm = ({
           total: item.total,
           scheduledTotal: item.scheduledTotal,
           prorationPolicyVersionId: item.prorationPolicyVersionId,
+          prorationPolicyName: item.prorationPolicyName,
+          prorationPolicyVersionNumber: item.prorationPolicyVersionNumber,
           prorationExplanation: item.prorationExplanation,
           paid: item.paid,
           due: item.due,
@@ -490,6 +492,8 @@ const FeeCollectComponentForm = ({
               total: item.total,
               scheduledTotal: item.scheduledTotal,
               prorationPolicyVersionId: item.prorationPolicyVersionId,
+              prorationPolicyName: item.prorationPolicyName,
+              prorationPolicyVersionNumber: item.prorationPolicyVersionNumber,
               prorationExplanation: item.prorationExplanation,
               paid: item.paid,
               due: item.due,
@@ -1409,7 +1413,7 @@ const FeeCollectComponentForm = ({
           >
             {/* Student Summary Card */}
             <Box mb={1}>
-              <StudentFeeSummaryCard student={student} />
+              <StudentFeeSummaryCard student={student} studentInfo={formData?.student} />
             </Box>
 
             <FeeLedgerFilterBar

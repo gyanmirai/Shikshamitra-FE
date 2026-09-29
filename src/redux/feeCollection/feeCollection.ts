@@ -103,6 +103,8 @@ export interface FeeLedgerLine {
   scheduledTotal?: number;
   prorationPolicyId?: string | null;
   prorationPolicyVersionId?: string | null;
+  prorationPolicyName?: string | null;
+  prorationPolicyVersionNumber?: number | null;
   prorationFactor?: number | null;
   prorationRuleType?: string | null;
   prorationRoundingMode?: string | null;

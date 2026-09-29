@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-09-24
+updated_on: 2026-09-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -118,6 +118,10 @@ Before manually entering installment rows, a user may choose **Apply Template** 
 10. Collection shows an installment only when its server-calculated bill generation date has arrived. If a structure is assigned late, all dates already reached are available immediately.
 
 The four bill-generation rules are: installment start date, X days before due date, due date, and a specific per-installment date. The frontend previews calculated dates, but the backend remains authoritative.
+
+### Fee Structure policy defaults
+
+When an editable Fee Structure opens, the Policies form loads the academic year's Active Collection, Refund, and Proration policies. It fills an empty selection with that type's Default before the Policies tab is opened. Staff can choose a different policy; saved structures keep their explicit selections.
 
 ### Collection Policy history and audit
 

@@ -31,9 +31,8 @@ export function useStudentsInScope(
   divisionIds: string[]
 ) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const [students, setStudents] = useState<IStudentOption[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [hasFetched, setHasFetched] = useState(false);
+  const [result, setResult] = useState<{ key: string; students: IStudentOption[] } | null>(null);
+  const [loadingKey, setLoadingKey] = useState<string | null>(null);
 
   const [getStudentsByScope] = useQueryAndMutation({
     type: 'mutation',
@@ -52,18 +51,26 @@ export function useStudentsInScope(
       }),
     [boardId, educationMediumId, standardIds, divisionIds, currentYear?.id]
   );
+  const hasFetched = result?.key === scopeKey;
+  const students = hasFetched ? result.students : [];
+  const isLoading =
+    loadingKey === scopeKey ||
+    (!hasFetched &&
+      !!boardId &&
+      !!educationMediumId &&
+      standardIds.length > 0 &&
+      !!currentYear?.id);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       if (!boardId || !educationMediumId || standardIds.length === 0 || !currentYear?.id) {
-        setStudents([]);
-        setHasFetched(true);
+        setResult({ key: scopeKey, students: [] });
         return;
       }
 
-      setIsLoading(true);
+      setLoadingKey(scopeKey);
       try {
         const params: {
           academicYearId: string;
@@ -85,8 +92,8 @@ export function useStudentsInScope(
           params.divisionIds = divisionIds;
         }
 
-        const result: any = await getStudentsByScope(params);
-        const items: any[] = Array.isArray(result?.data) ? result.data : [];
+        const response: any = await getStudentsByScope(params);
+        const items: any[] = Array.isArray(response?.data) ? response.data : [];
 
         if (!cancelled) {
           const unique = new Map<string, IStudentOption>();
@@ -94,11 +101,10 @@ export function useStudentsInScope(
             const mapped = mapStudent(item);
             if (mapped.id) unique.set(mapped.id, mapped);
           });
-          setStudents(Array.from(unique.values()));
-          setHasFetched(true);
+          setResult({ key: scopeKey, students: Array.from(unique.values()) });
         }
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) setLoadingKey(null);
       }
     }
 

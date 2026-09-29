@@ -10,6 +10,7 @@ import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -174,6 +175,13 @@ const FeeRefundFormComponent = ({
   editRefundId,
 }: FeeRefundFormProps): React.ReactElement => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  // List filters may refresh while the request is being edited.
+  const [openingScope] = React.useState(() => ({
+    defaultBoardId,
+    defaultMediumId,
+    defaultStandardId,
+    defaultDivisionId,
+  }));
   const theme = useTheme();
   const [loadingEditData, setLoadingEditData] = React.useState(false);
   const [reviewedPreview, setReviewedPreview] = React.useState<{
@@ -184,18 +192,22 @@ const FeeRefundFormComponent = ({
   const [createFeeRefund, { isLoading: isSubmitting }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateFeeRefundMutation,
+    popupConfig: { error: false },
   });
   const [updateFeeRefund, { isLoading: isUpdating }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateFeeRefundMutation,
+    popupConfig: { error: false },
   });
   const [previewFeeRefund, { isLoading: isPreviewing }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: usePreviewFeeRefundMutation,
+    popupConfig: { error: false },
   });
   const [submitFeeRefund, { isLoading: isSubmittingDraft }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useSubmitFeeRefundMutation,
+    popupConfig: { error: false },
   });
   const {
     data: editRefundDetail,
@@ -291,18 +303,18 @@ const FeeRefundFormComponent = ({
     () =>
       buildRefundInitialValues({
         boardId: isEdit
-          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.boardId ?? defaultBoardId)
-          : defaultBoardId,
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.boardId ?? openingScope.defaultBoardId)
+          : openingScope.defaultBoardId,
         mediumId: isEdit
           ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.educationMediumId ??
-            defaultMediumId)
-          : defaultMediumId,
+            openingScope.defaultMediumId)
+          : openingScope.defaultMediumId,
         standardId: isEdit
-          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.standardId ?? defaultStandardId)
-          : defaultStandardId,
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.standardId ?? openingScope.defaultStandardId)
+          : openingScope.defaultStandardId,
         divisionId: isEdit
-          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.divisionId ?? defaultDivisionId)
-          : defaultDivisionId,
+          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.divisionId ?? openingScope.defaultDivisionId)
+          : openingScope.defaultDivisionId,
         studentId: isEdit
           ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.studentId ?? '')
           : '',
@@ -319,10 +331,7 @@ const FeeRefundFormComponent = ({
         feeHeadRefunds: isEdit ? prefilledFeeHeadRefunds : [],
       }),
     [
-      defaultBoardId,
-      defaultMediumId,
-      defaultStandardId,
-      defaultDivisionId,
+      openingScope,
       isEdit,
       editRefundDetail,
       prefilledFeeHeadRefunds,
@@ -387,7 +396,10 @@ const FeeRefundFormComponent = ({
         helpers.resetForm();
         onCancel?.(null, true);
       } catch (err: any) {
-        const message = err?.data?.error?.message ?? 'Failed to save refund request.';
+        const parsed = parseApiProblemDetail(err);
+        const message = err?.status === 500 && parsed.detail === 'The request failed.'
+          ? 'The refund request could not be checked. Please try again or contact support.'
+          : parsed.detail;
         shikshaMitraToast.error({ message });
       }
     },

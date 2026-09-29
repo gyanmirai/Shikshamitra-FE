@@ -284,47 +284,19 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
   );
   const { data: collectionPolicyData } = useGetCollectionPoliciesQuery(
     { academicYearId: currentYear?.id as string, status: 'Active' },
-    { skip: !currentYear?.id || !values.collectionPolicyId }
+    { skip: !currentYear?.id }
   );
   const selectedCollectionPolicy = (collectionPolicyData?.items ?? []).find(
     (p: any) => p.id === values.collectionPolicyId
-  );
-  const defaultCollectionPolicy = (collectionPolicyData?.items ?? []).find(
-    (policy: any) => policy.isDefault
   );
   const { data: prorationPolicyData } = useGetProrationPoliciesQuery(
     { academicYearId: currentYear?.id as string, status: 'Active', page: 1, pageSize: 100 },
     { skip: !currentYear?.id }
   );
-  const defaultProrationPolicy = (prorationPolicyData?.items ?? []).find(
-    (policy) => policy.isDefault
-  );
   const selectedProrationPolicy = (prorationPolicyData?.items ?? []).find(
     (policy) => policy.id === values.prorationPolicyId
   );
 
-  React.useEffect(() => {
-    if (isEditing && !values.collectionPolicyId && defaultCollectionPolicy?.id) {
-      onChange('collectionPolicyId', defaultCollectionPolicy.id);
-    }
-  }, [defaultCollectionPolicy?.id, isEditing, onChange, values.collectionPolicyId]);
-
-  React.useEffect(() => {
-    if (
-      isEditing &&
-      canManageProrationAttachment &&
-      !values.prorationPolicyId &&
-      defaultProrationPolicy?.id
-    ) {
-      onChange('prorationPolicyId', defaultProrationPolicy.id);
-    }
-  }, [
-    canManageProrationAttachment,
-    defaultProrationPolicy?.id,
-    isEditing,
-    onChange,
-    values.prorationPolicyId,
-  ]);
 
   const [validateAttachment, { data: attachmentImpact, isLoading: impactLoading }] =
     useValidateCollectionPolicyAttachmentMutation();

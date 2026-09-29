@@ -72,6 +72,12 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   const theme = useTheme();
   const dispatch = useDispatch();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const [openingScope] = useState(() => ({
+    defaultBoardId,
+    defaultMediumId,
+    defaultStandardId,
+    defaultDivisionId,
+  }));
 
   // Determine mode based on chargeId or isEdit flag
   const isEditMode = isEdit || !!chargeId;
@@ -144,15 +150,15 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       purposeDescription: '',
       amount: '',
       dueDate: null,
-      boardId: defaultBoardId,
-      educationMediumId: defaultMediumId,
-      standardId: defaultStandardId ? [defaultStandardId] : [],
-      divisionIds: defaultDivisionId ? [defaultDivisionId] : [],
+      boardId: openingScope.defaultBoardId,
+      educationMediumId: openingScope.defaultMediumId,
+      standardId: openingScope.defaultStandardId ? [openingScope.defaultStandardId] : [],
+      divisionIds: openingScope.defaultDivisionId ? [openingScope.defaultDivisionId] : [],
       studentIds: [],
       selectedStudents: [],
       selectionMode: 'selected',
     };
-  }, [prefillValues, defaultBoardId, defaultMediumId, defaultStandardId, defaultDivisionId]);
+  }, [prefillValues, openingScope]);
 
   const validationSchema = useMemo(
     () => createUpdateChargeValidationSchema(currentYear, isEditMode),
