@@ -60,7 +60,7 @@ export function AdmissionInquiryConfirmOffering({ inquiry, onConfirmed }: {
         {offerings.isError && <Alert severity="error">Offerings could not be loaded.</Alert>}
         {!offerings.isFetching && !offerings.isError && inquiryOfferings.length === 0 && (
           <Alert severity="info">
-            No ready inquiry offerings are available for this cycle. Check the form and workflow settings in Admission Setup.
+            No ready inquiry offerings are available for this cycle. Check Admission Form, Admission Stage, and Admission Offering settings.
           </Alert>
         )}
         <LoadingButton size="small" variant="contained" loading={mutation.isLoading}

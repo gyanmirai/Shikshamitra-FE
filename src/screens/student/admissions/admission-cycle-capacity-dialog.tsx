@@ -184,7 +184,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
               {data.notSeatManagedOfferingCount > 0 && (
                 <Alert severity="info">
                   {data.notSeatManagedOfferingCount} of {data.offeringCount} offerings do not use a Seat
-                  stage. Assign a published admission process with a Seat stage before configuring capacity.
+                  stage. Assign a published Admission Stage workflow with a Seat stage before configuring capacity.
                 </Alert>
               )}
               {data.overCapacityOfferingCount > 0 && (
@@ -292,7 +292,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                               title={
                                 row.isSeatManaged
                                   ? ''
-                                  : 'Assign a published admission process with a Seat stage first.'
+                                  : 'Assign a published Admission Stage workflow with a Seat stage first.'
                               }
                             >
                               <span>

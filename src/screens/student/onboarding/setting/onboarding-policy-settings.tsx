@@ -33,21 +33,18 @@ import { useOnboardingSettings } from '../onboarding-settings-context';
 import { SettingsDrawer, SettingsSectionCard } from './onboarding-number-settings';
 import { OnboardingSettingsBreadcrumbInfo } from './onboarding-settings-breadcrumb-info';
 import {
-  usePersistedOnboardingPolicy,
-  PersistedReadinessPolicyFields,
-} from './onboarding-operational-settings';
-import {
-  AcademicApplicabilityFields,
-  getAcademicApplicabilitySummary,
-} from './onboarding-academic-applicability';
-import {
   defaultAccountRules,
   defaultOnboardingRules,
   academicTargetsOverlap,
   getAcademicApplicabilityScore,
   createAllAcademicApplicability,
-  getAcademicApplicabilityValidationError,
 } from '../onboarding-settings-model';
+import {
+  AcademicApplicabilityFields,
+  getAcademicApplicabilitySummary,
+  getSingleAcademicPathValidationError,
+  createEmptySingleAcademicApplicability,
+} from './onboarding-academic-applicability';
 
 import type {
   AccountRules,
@@ -56,7 +53,6 @@ import type {
   OnboardingProfile,
   ReadinessCheckKey,
   ReadinessAccessRules,
-  AcademicApplicableRule,
   ConditionalApprovalTrigger,
 } from '../onboarding-settings-model';
 
@@ -72,11 +68,9 @@ const approvalTriggerOptions: Array<{
   value: ConditionalApprovalTrigger;
   label: string;
 }> = [
-  { value: 'manual-identifier', label: 'Manual GR or Roll number entry' },
+  { value: 'manual-identifier', label: 'Manual GR entry' },
   { value: 'division-change', label: 'Division change after initial placement' },
-  { value: 'capacity-override', label: 'Division capacity override' },
   { value: 'mid-year-admission', label: 'Mid-year admission' },
-  { value: 'incomplete-optional-check', label: 'Activation with an incomplete optional check' },
 ];
 
 type RuleRowProps = {
@@ -586,69 +580,10 @@ export function AccountsAccessSettingsScreen() {
   );
 }
 
-const createReadinessOverrideApplicability = (
-  source: AcademicApplicableRule
-): AcademicApplicableRule => {
-  const applicability: AcademicApplicableRule = {
-    ...source,
-    boardIds: [...source.boardIds],
-    academicMediumIds: [...source.academicMediumIds],
-    academicMediumStageIds: [...source.academicMediumStageIds],
-    standardIds: [...source.standardIds],
-    divisionIds: [...source.divisionIds],
-  };
-
-  if (applicability.boardMode === 'all') {
-    return { ...applicability, boardMode: 'selected', boardIds: [] };
-  }
-  if (applicability.mediumMode === 'all') {
-    return { ...applicability, mediumMode: 'selected', academicMediumIds: [] };
-  }
-  if (applicability.stageMode === 'all') {
-    return {
-      ...applicability,
-      stageMode: 'selected',
-      academicMediumStageIds: [],
-    };
-  }
-  if (applicability.classMode === 'all') {
-    return { ...applicability, classMode: 'selected', standardIds: [] };
-  }
-  return { ...applicability, divisionMode: 'selected', divisionIds: [] };
-};
-
-function SchoolReadinessDefaultsDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const persistedPolicy = usePersistedOnboardingPolicy(open);
-
-  return (
-    <SettingsDrawer
-      open={open}
-      title="School readiness defaults"
-      description="Save the backend requirements, service handoffs, access preparation, and completion deadline."
-      icon="mdi:database-check-outline"
-      statusLabel={
-        persistedPolicy.schoolDefaultPolicy
-          ? persistedPolicy.schoolDefaultPolicy.isActive
-            ? 'Active'
-            : 'Inactive'
-          : 'New'
-      }
-      footerNote="These defaults persist for the selected academic year."
-      onClose={onClose}
-      onSubmit={persistedPolicy.savePolicy}
-      submitLabel={persistedPolicy.isSaving ? 'Saving...' : 'Save defaults'}
-      submitDisabled={!persistedPolicy.canSave}
-    >
-      <PersistedReadinessPolicyFields editor={persistedPolicy} />
-    </SettingsDrawer>
-  );
-}
-
 export function ReadinessAccessSettingsScreen() {
   const { settings, applyOnboardingProfile } = useOnboardingSettings();
   const filters = useFinanceAcademicFilters();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [schoolDefaultsOpen, setSchoolDefaultsOpen] = useState(false);
   const [pendingProfile, setPendingProfile] = useState<OnboardingProfile | null>(null);
   const [selectedProfileId, setSelectedProfileId] = useState(
     settings.onboardingProfiles[0]?.id ?? ''
@@ -673,7 +608,7 @@ export function ReadinessAccessSettingsScreen() {
     admissionRouteDraft !== selectedProfile?.admissionRoutes[0] ||
     JSON.stringify(saved) !== JSON.stringify(draft) ||
     JSON.stringify(savedApplicability) !== JSON.stringify(applicabilityDraft);
-  const applicabilityError = getAcademicApplicabilityValidationError(applicabilityDraft);
+  const applicabilityError = getSingleAcademicPathValidationError(applicabilityDraft);
   const hasApplicabilityConflict = settings.onboardingProfiles.some(
     (profile) =>
       profile.id !== selectedProfile?.id &&
@@ -771,7 +706,7 @@ export function ReadinessAccessSettingsScreen() {
       ...source,
       id: `${source.id}-${Date.now()}`,
       name: `${source.name} academic override`,
-      applicability: createReadinessOverrideApplicability(source.applicability),
+      applicability: createEmptySingleAcademicApplicability(),
       rules: {
         ...source.rules,
         approvalTriggers: [...source.rules.approvalTriggers],
@@ -798,7 +733,7 @@ export function ReadinessAccessSettingsScreen() {
       name: 'New readiness rule',
       description: 'School-defined readiness and access rule.',
       admissionRoutes: [source.admissionRoutes[0] ?? 'Fresh admission'],
-      applicability: createReadinessOverrideApplicability(source.applicability),
+      applicability: createEmptySingleAcademicApplicability(),
       rules: {
         ...source.rules,
         approvalTriggers: [...source.rules.approvalTriggers],
@@ -858,8 +793,7 @@ export function ReadinessAccessSettingsScreen() {
       approval: approvalLabel(profile.rules.approvalMode),
       approvalMode: profile.rules.approvalMode,
       accounts: accountSummary(profile.rules),
-      accessRelease:
-        profile.rules.deliveryTiming === 'after-activation' ? 'After activation' : 'Manual release',
+      accessRelease: 'Owner password setup',
       statusLabel: 'Applied',
       profile,
     };
@@ -1001,14 +935,6 @@ export function ReadinessAccessSettingsScreen() {
           <Stack direction="row" spacing={1}>
             <Button
               size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:database-check-outline" width={18} />}
-              onClick={() => setSchoolDefaultsOpen(true)}
-            >
-              Saved defaults
-            </Button>
-            <Button
-              size="small"
               variant="contained"
               startIcon={<Iconify icon="mdi:plus" width={18} />}
               onClick={openNewRule}
@@ -1019,11 +945,6 @@ export function ReadinessAccessSettingsScreen() {
         }
       />
 
-      <Alert severity="info" variant="outlined" sx={{ flexShrink: 0 }}>
-        Readiness rules are saved for the selected scope and reused by Student Setup after reload.
-        Activation requirements and service handoffs remain controlled by the saved operational
-        defaults.
-      </Alert>
 
       <Box
         sx={{
@@ -1049,12 +970,6 @@ export function ReadinessAccessSettingsScreen() {
         />
       </Box>
 
-      {schoolDefaultsOpen ? (
-        <SchoolReadinessDefaultsDrawer
-          open={schoolDefaultsOpen}
-          onClose={() => setSchoolDefaultsOpen(false)}
-        />
-      ) : null}
 
       <SettingsDrawer
         open={drawerOpen && Boolean(selectedProfile)}
@@ -1154,12 +1069,12 @@ export function ReadinessAccessSettingsScreen() {
             </Stack>
           </Paper>
 
-          {profileValidationError ? <Alert severity="error">{profileValidationError}</Alert> : null}
+          {profileValidationError && !applicabilityError ? <Alert severity="error">{profileValidationError}</Alert> : null}
 
           <SettingsSectionCard
             icon="mdi:school-outline"
             title="Academic applicability"
-            description="Configure Board, Medium, School Level, Class, and Division independently for this admission route."
+            description="Choose a board and its medium, then select the school levels and standards where this rule applies."
           >
             <AcademicApplicabilityFields
               value={applicabilityDraft}
@@ -1171,7 +1086,7 @@ export function ReadinessAccessSettingsScreen() {
           <SettingsSectionCard
             icon="mdi:clipboard-list-outline"
             title="Readiness checks"
-            description="Choose what is required, what blocks activation, and who owns each check."
+            description="Admission, placement and identifiers are mandatory. Documents are configurable. Accounts are checked after enrollment; owner labels are guidance, not automatic task assignment."
           >
             <Box
               sx={{
@@ -1217,16 +1132,17 @@ export function ReadinessAccessSettingsScreen() {
                   </Box>
                   <Switch
                     size="small"
-                    checked={check.required}
+                    checked={check.key === 'documents' ? check.required : check.key === 'accounts' ? draft.studentAccount || draft.guardianAccount : true}
+                    disabled={check.key !== 'documents'}
                     onChange={(event) =>
-                      updateCheckRule(check.key, { required: event.target.checked })
+                      updateCheckRule(check.key, { required: event.target.checked, blocking: event.target.checked })
                     }
                     slotProps={{ input: { 'aria-label': `${check.label} required` } }}
                   />
                   <Switch
                     size="small"
-                    checked={check.blocking}
-                    disabled={!check.required}
+                    checked={check.key === 'accounts' ? false : check.key === 'documents' ? check.required : true}
+                    disabled
                     onChange={(event) =>
                       updateCheckRule(check.key, { blocking: event.target.checked })
                     }
@@ -1297,24 +1213,13 @@ export function ReadinessAccessSettingsScreen() {
                   ))}
                 </Box>
               ) : null}
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={draft.blockActivation}
-                    onChange={(event) => setBooleanRule('blockActivation')(event.target.checked)}
-                    inputProps={{ 'aria-label': 'Block activation on failed checks' }}
-                  />
-                }
-                label="Block activation on failed checks"
-                sx={{ m: 0, justifyContent: 'space-between' }}
-                labelPlacement="start"
-              />
+              <Alert severity="info">Failed required checks always block activation. Fee assignment and the first installment must be confirmed before onboarding completes.</Alert>
             </SettingsSectionCard>
 
             <SettingsSectionCard
               icon="mdi:account-key-outline"
               title="Student and guardian access"
-              description="Prepare portal accounts and control when credentials are released."
+              description="Choose the portal links required before onboarding can complete."
             >
               {[
                 {
@@ -1324,10 +1229,6 @@ export function ReadinessAccessSettingsScreen() {
                 {
                   key: 'guardianAccount' as const,
                   label: 'Prepare guardian account',
-                },
-                {
-                  key: 'verifiedGuardianContact' as const,
-                  label: 'Require verified guardian contact',
                 },
               ].map((rule) => (
                 <FormControlLabel
@@ -1344,22 +1245,7 @@ export function ReadinessAccessSettingsScreen() {
                   labelPlacement="start"
                 />
               ))}
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Credential release timing"
-                value={draft.deliveryTiming}
-                onChange={(event) =>
-                  setDraft((current) => ({
-                    ...current,
-                    deliveryTiming: event.target.value as AccountRules['deliveryTiming'],
-                  }))
-                }
-              >
-                <MenuItem value="after-activation">Automatically after activation</MenuItem>
-                <MenuItem value="manual-release">Manual release by authorized staff</MenuItem>
-              </TextField>
+              <Alert severity="info">After enrollment, authorized staff verify the saved contact and create or link each required account. The owner sets a password through Forgot password. This screen does not send credentials automatically.</Alert>
             </SettingsSectionCard>
           </Box>
         </Stack>

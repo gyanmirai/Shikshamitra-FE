@@ -11,6 +11,7 @@ import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
+import { readAdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 
 import { WorkflowStageFields } from './workflow-builder/components/workflow-stage-fields';
 import { useWorkflowStageEditor } from './workflow-builder/hooks/use-workflow-stage-editor';
@@ -39,8 +40,23 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
     onClose,
     onSave,
   } = props;
-  const { formik, metadata, formDefinitionId, discard, close, requestClose } =
+  const {
+    formik,
+    metadata,
+    formDefinitionId,
+    forms: resolvedForms,
+    formDetailsLoading,
+    formDetailsError,
+    formDetailsUnavailable,
+    retryFormDetails,
+    discard,
+    close,
+    requestClose,
+  } =
     useWorkflowStageEditor({ open, stage, stageTypes, stages, forms, readOnly, onClose, onSave });
+  const verificationRequired =
+    formik.values.stageType === 1 &&
+    readAdmissionFormStagePolicy(formik.values.configurationJson)?.requireSectionVerification;
 
   return (
     <>
@@ -87,7 +103,10 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
             formik={formik}
             metadata={metadata}
             stageTypes={stageTypes}
-            forms={forms}
+            forms={resolvedForms}
+            formDetailsLoading={formDetailsLoading}
+            formDetailsError={formDetailsError}
+            onRetryFormDetails={retryFormDetails}
             stages={stages}
             transitions={transitions}
             formDefinitionId={formDefinitionId}
@@ -120,7 +139,10 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={formik.values.stageType === 0}
+                  disabled={
+                    formik.values.stageType === 0 ||
+                    (verificationRequired && formDetailsUnavailable)
+                  }
                   variant="contained"
                   size="small"
                   startIcon={<Iconify icon="mdi:content-save-outline" />}

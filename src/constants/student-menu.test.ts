@@ -116,10 +116,10 @@ describe('student navigation', () => {
     const settings = admissions?.children?.find((item) => item.title === 'Settings');
     expect(settings?.children?.map((item) => item.title)).toEqual([
       'Admission Periods',
-      'Application Experience',
-      'Admission Process',
-      'Admission Intake & Assignment',
-      'Admission Setup',
+      'Admission Form',
+      'Admission Stage',
+      'Intake & Assignment',
+      'Admission Offering',
     ]);
     expect(settings?.children?.map((item) => item.path)).toEqual([
       '/student/admissions/settings/cycles',

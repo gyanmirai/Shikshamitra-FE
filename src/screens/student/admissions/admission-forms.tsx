@@ -88,13 +88,13 @@ export default function AdmissionFormsScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Application Experience"
+        heading="Admission Form"
         description="Create and publish the inquiry and registration forms used across admissions."
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
-          { name: 'Application Experience' },
+          { name: 'Settings', href: studentPaths.enrollment.settings.root },
+          { name: 'Admission Form' },
         ]}
         action={
           <Button

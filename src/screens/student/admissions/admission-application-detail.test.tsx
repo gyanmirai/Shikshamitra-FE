@@ -1,5 +1,5 @@
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 
 import AdmissionApplicationDetailScreen from './admission-application-detail';
 
@@ -41,6 +41,10 @@ vi.mock('./application-detail/use-application-detail', () => ({
 
 vi.mock('./application-detail/application-progress-card', () => ({
   ApplicationProgressCard: () => <div>Journey workspace</div>,
+}));
+
+vi.mock('./application-detail/application-counsellor-card', () => ({
+  ApplicationCounsellorCard: () => <div>Journey counsellor</div>,
 }));
 
 vi.mock('./application-detail/application-current-task', () => ({

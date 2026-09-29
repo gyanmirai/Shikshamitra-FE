@@ -67,7 +67,7 @@ describe('WorkflowBuilderHeader', () => {
     );
 
     const controls = screen.getByRole('region', { name: 'Workflow version controls' });
-    expect(screen.getAllByText('Admission Process')).not.toHaveLength(0);
+    expect(screen.getAllByText('Admission Stage')).not.toHaveLength(0);
     expect(within(controls).queryByText('Draft')).not.toBeInTheDocument();
     expect(within(controls).queryByText('Version 3')).not.toBeInTheDocument();
     expect(within(controls).queryByText('Unsaved')).not.toBeInTheDocument();
@@ -85,7 +85,7 @@ describe('WorkflowBuilderHeader', () => {
     expect(within(builderTools).getByText('Actions', { selector: 'button' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Configure' })).toHaveAttribute('href', '#');
     const breadcrumbs = screen.getByRole('navigation');
-    expect(within(breadcrumbs).getByText('Admission Process')).toBeInTheDocument();
+    expect(within(breadcrumbs).getByText('Admission Stage')).toBeInTheDocument();
     expect(within(breadcrumbs).queryByText('Version 3')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Back' }));
     expect(onBack).toHaveBeenCalledOnce();

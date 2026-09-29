@@ -18,7 +18,7 @@ export function ApplicationExperienceNavigation({ value }: { value: ApplicationE
         value={value}
         variant="scrollable"
         scrollButtons="auto"
-        aria-label="Application experience settings"
+        aria-label="Admission form views"
         guardUnsavedChanges={false}
         slotProps={{ tab: { minHeight: 44 } }}
       >

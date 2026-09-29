@@ -229,7 +229,7 @@ export function WorkflowStandardTemplateDialog({
               onClick={() => requestExit('forms')}
               sx={{ alignSelf: 'flex-start' }}
             >
-              Open Application Experience
+              Open Admission Form
             </Button>
           </Stack>
         </Box>

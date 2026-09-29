@@ -13,6 +13,7 @@ export type OnboardingStage =
   | 'awaiting-approval'
   | 'ready-to-activate'
   | 'action-required'
+  | 'provisioning'
   | 'completed'
   | 'cancelled';
 
@@ -85,6 +86,7 @@ export type StudentOnboardingItem = {
   dueAt?: string | null;
   isOverdue?: boolean;
   documentUploadsEnabled?: boolean;
+  studentEnrollmentId?: string | null;
 };
 
 export const getStudentAcademicPathContext = (
@@ -102,6 +104,7 @@ export const onboardingStageMeta: Record<
   { label: string; icon: string; color: LabelColor }
 > = {
   all: { label: 'All', icon: 'mdi:format-list-bulleted', color: 'default' },
+  provisioning: { label: 'Provisioning', icon: 'mdi:progress-clock', color: 'info' },
   'to-prepare': { label: 'To Prepare', icon: 'mdi:clipboard-edit-outline', color: 'warning' },
   'awaiting-approval': {
     label: 'In Progress',
@@ -308,6 +311,7 @@ const onboardingCaseStage: Record<StudentOnboardingCase['status'], OnboardingIte
   3: 'action-required',
   4: 'completed',
   5: 'cancelled',
+  6: 'provisioning',
 };
 
 const onboardingStepStatus: Record<StudentOnboardingStepStatus, OnboardingCheckStatus> = {
@@ -323,9 +327,12 @@ export const mapOnboardingCaseToItem = (
   onboardingCase: StudentOnboardingCase
 ): StudentOnboardingItem => {
   const documentStep = onboardingCase.steps.find((step) => step.key === 'documents');
-  const accountStep = onboardingCase.steps.find((step) => step.key === 'finance_accounts_services');
   const documentPassed = documentStep?.status === 2 || documentStep?.status === 4;
-  const accountsReady = accountStep?.status === 2 || accountStep?.status === 4;
+  const accountStatus = (required: boolean | undefined, status: number | null | undefined): OnboardingAccountStatus => {
+    if (required === undefined) return 'not-connected';
+    if (!required) return 'not-required';
+    return status === 2 ? 'ready' : 'pending';
+  };
 
   return {
     id: onboardingCase.id,
@@ -335,14 +342,14 @@ export const mapOnboardingCaseToItem = (
     admissionReference: onboardingCase.offeringCode,
     admissionRoute: onboardingCase.isHistoricalBackfill
       ? 'Historical admission backfill'
-      : 'Admission finalization',
+      : onboardingCase.admissionRoute ?? 'Fresh admission',
     admissionDate: onboardingCase.creationTime ?? null,
     ownerName: onboardingCase.assignedToUserName || 'Not assigned',
     assignedToUserId: onboardingCase.assignedToUserId ?? null,
     boardId: onboardingCase.intendedBoardId,
-    boardName: 'Admission board',
+    boardName: onboardingCase.intendedBoardName || 'Not available',
     academicMediumId: onboardingCase.intendedMediumId,
-    mediumName: 'Admission medium',
+    mediumName: onboardingCase.intendedMediumName || 'Not available',
     academicMediumStageId: onboardingCase.intendedStageId,
     standardId: onboardingCase.intendedStandardId,
     standardName: onboardingCase.intendedStandardName,
@@ -355,16 +362,8 @@ export const mapOnboardingCaseToItem = (
     status: onboardingCaseStage[onboardingCase.status],
     documentsPassed: documentPassed ? 1 : 0,
     documentsRequired: documentStep?.required ? 1 : 0,
-    studentAccountStatus: accountStep?.required
-      ? accountsReady
-        ? 'ready'
-        : 'pending'
-      : 'not-required',
-    guardianAccountStatus: accountStep?.required
-      ? accountsReady
-        ? 'ready'
-        : 'pending'
-      : 'not-required',
+    studentAccountStatus: accountStatus(onboardingCase.studentAccountRequired, onboardingCase.studentAccountStatus),
+    guardianAccountStatus: accountStatus(onboardingCase.guardianAccountRequired, onboardingCase.guardianAccountStatus),
     readinessItems: onboardingCase.steps.map((step) => ({
       key: step.key,
       label: step.label,
@@ -393,5 +392,6 @@ export const mapOnboardingCaseToItem = (
     dueAt: onboardingCase.dueAt,
     isOverdue: onboardingCase.isOverdue,
     documentUploadsEnabled: onboardingCase.documentUploadsEnabled,
+    studentEnrollmentId: onboardingCase.studentEnrollmentId,
   };
 };

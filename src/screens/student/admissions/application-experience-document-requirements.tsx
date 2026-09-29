@@ -59,10 +59,10 @@ export function ApplicationExperienceDocumentRequirements() {
         <Paper variant="outlined" sx={{ p: 3, textAlign: 'center' }}>
           <Iconify icon="mdi:file-document-alert-outline" width={30} />
           <Typography variant="subtitle1" sx={{ mt: 1 }}>
-            No admission process yet
+            No admission stage workflow yet
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Create an admission process, add a Document verification stage, then configure its
+            Create an admission stage workflow, add a Document verification stage, then configure its
             checklist here.
           </Typography>
           <Button
@@ -71,7 +71,7 @@ export function ApplicationExperienceDocumentRequirements() {
             sx={{ mt: 2, minHeight: { xs: 44, sm: 36 } }}
             onClick={() => router.push('/student/admissions/settings/workflows')}
           >
-            Open admission process
+            Open Admission Stage
           </Button>
         </Paper>
       )}

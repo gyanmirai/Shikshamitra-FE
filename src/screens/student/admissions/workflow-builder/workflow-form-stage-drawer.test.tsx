@@ -4,6 +4,8 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
+import { http, HttpResponse } from 'msw';
+import { mswServer } from 'src/test/mswServer';
 import { vi, it, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { screen, waitFor } from '@testing-library/react';
@@ -166,5 +168,126 @@ describe('Form stage drawer', { timeout: 15000 }, () => {
     expect(onSave).not.toHaveBeenCalled();
     expect(await screen.findByText('Select a published form version.')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Basics' })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('loads sections for a selected published form from its detail endpoint', async () => {
+    mswServer.use(
+      http.get('*/student/enrollment/admissions/forms/form-1', () =>
+        HttpResponse.json({ data: form })
+      )
+    );
+    const onSave = vi.fn();
+    const configurationJson = JSON.stringify({
+      formDefinitionId: form.id,
+      form: {
+        ...DEFAULT_FORM_STAGE_POLICY,
+        requireSectionVerification: true,
+        autoAdvanceOnSubmit: false,
+      },
+    });
+    renderDocumentUi(
+      <AdmissionWorkflowStageDrawer
+        open
+        stage={{ ...stage, configurationJson }}
+        stageTypes={[metadata]}
+        forms={[{ ...form, sections: [] }]}
+        readOnly={false}
+        onClose={vi.fn()}
+        onSave={onSave}
+      />
+    );
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('tab', { name: /Process/ }));
+    await screen.findByRole('checkbox', { name: 'Applicant details' });
+    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByText('Choose at least one section that staff must verify.')).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: 'Basics' }));
+    expect(screen.getByRole('combobox', { name: 'Published form version *' })).not.toHaveAttribute(
+      'aria-invalid',
+      'true'
+    );
+    await user.click(screen.getByRole('tab', { name: /Process/ }));
+
+    await user.click(screen.getByRole('checkbox', { name: 'Applicant details' }));
+    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).form.verificationSectionCodes).toEqual([
+      'APPLICANT',
+    ]);
+  });
+
+  it('loads sections when a published form is attached after opening the stage', async () => {
+    mswServer.use(
+      http.get('*/student/enrollment/admissions/forms/form-1', () =>
+        HttpResponse.json({ data: form })
+      )
+    );
+    const onSave = vi.fn();
+    const configurationJson = JSON.stringify({
+      form: {
+        ...DEFAULT_FORM_STAGE_POLICY,
+        requireSectionVerification: true,
+        autoAdvanceOnSubmit: false,
+      },
+    });
+    renderDocumentUi(
+      <AdmissionWorkflowStageDrawer
+        open
+        stage={{ ...stage, configurationJson }}
+        stageTypes={[metadata]}
+        forms={[{ ...form, sections: [] }]}
+        readOnly={false}
+        onClose={vi.fn()}
+        onSave={onSave}
+      />
+    );
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('combobox', { name: 'Published form version *' }));
+    await user.click(screen.getByRole('option', { name: 'Application form · v2' }));
+    await user.click(screen.getByRole('tab', { name: /Process/ }));
+    await user.click(await screen.findByRole('checkbox', { name: 'Applicant details' }));
+    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
+      formDefinitionId: form.id,
+      form: { verificationSectionCodes: ['APPLICANT'] },
+    });
+  });
+
+  it('shows a retry path when the selected form sections cannot be loaded', async () => {
+    let attempts = 0;
+    mswServer.use(
+      http.get('*/student/enrollment/admissions/forms/form-1', () => {
+        attempts += 1;
+        return attempts === 1 ? new HttpResponse(null, { status: 500 }) : HttpResponse.json({ data: form });
+      })
+    );
+    const configurationJson = JSON.stringify({
+      formDefinitionId: form.id,
+      form: { ...DEFAULT_FORM_STAGE_POLICY, requireSectionVerification: true },
+    });
+    renderDocumentUi(
+      <AdmissionWorkflowStageDrawer
+        open
+        stage={{ ...stage, configurationJson }}
+        stageTypes={[metadata]}
+        forms={[{ ...form, sections: [] }]}
+        readOnly={false}
+        onClose={vi.fn()}
+        onSave={vi.fn()}
+      />
+    );
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('tab', { name: /Process/ }));
+    expect(await screen.findByText(/Unable to load this form's sections/)).toBeInTheDocument();
+    expect(screen.queryByText('Choose at least one section that staff must verify.')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save stage' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByRole('checkbox', { name: 'Applicant details' })).toBeInTheDocument();
   });
 });

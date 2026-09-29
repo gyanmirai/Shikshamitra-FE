@@ -72,9 +72,15 @@ export function writeAdmissionFormStagePolicy(
 export function writeAdmissionFormDefinitionId(json: string | undefined, formDefinitionId: string) {
   const configuration = readStageConfiguration(json);
   if (!configuration) throw new Error('The stage settings could not be read. Reopen the stage.');
+  const previousFormId =
+    typeof configuration.formDefinitionId === 'string' ? configuration.formDefinitionId : '';
+  const policy = readAdmissionFormStagePolicy(json);
   const updated = JSON.stringify({
     ...configuration,
     formDefinitionId: formDefinitionId.trim(),
+    ...(policy && previousFormId !== formDefinitionId.trim()
+      ? { form: { ...policy, verificationSectionCodes: [] } }
+      : {}),
   });
   return ensureAdmissionFormStageConfiguration(updated) ?? updated;
 }

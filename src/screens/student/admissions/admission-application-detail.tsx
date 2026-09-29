@@ -320,9 +320,10 @@ export default function AdmissionApplicationDetailScreen() {
 
           <Paper
             square
-            elevation={8}
+            elevation={0}
             sx={{
-              display: { xs: 'block', md: 'none' },
+              display: { xs: 'flex', md: 'none' },
+              justifyContent: 'flex-end',
               flexShrink: 0,
               p: 1,
               borderTop: 1,
@@ -330,18 +331,10 @@ export default function AdmissionApplicationDetailScreen() {
             }}
           >
             <Button
-              fullWidth
               size="small"
-              variant="contained"
-              color="inherit"
+              variant="outlined"
               startIcon={<Iconify icon="mdi:file-document-outline" />}
               onClick={() => setActiveTab('form')}
-              sx={{
-                minHeight: 44,
-                bgcolor: 'common.black',
-                color: 'common.white',
-                '&:hover': { bgcolor: 'grey.800' },
-              }}
             >
               Review application form
             </Button>

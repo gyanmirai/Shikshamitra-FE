@@ -126,13 +126,13 @@ export default function AdmissionIntakeAssignmentScreen() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
-        heading="Admission Intake & Assignment"
+        heading="Intake & Assignment"
         description="Set inquiry rules and assign one journey counsellor to each student from intake through onboarding."
         links={[
           { name: 'Students', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
-          { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
-          { name: 'Admission Intake & Assignment' },
+          { name: 'Settings', href: studentPaths.enrollment.settings.root },
+          { name: 'Intake & Assignment' },
         ]}
         action={
           canEdit && (

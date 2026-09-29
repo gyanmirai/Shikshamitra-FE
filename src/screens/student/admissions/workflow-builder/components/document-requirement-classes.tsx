@@ -62,7 +62,7 @@ export function DocumentRequirementClasses({
               helperText={
                 error
                   ? String(formik.errors.standardIds)
-                  : 'Uses the class selected in Admission Setup. Additional conditions apply within these classes.'
+                  : 'Uses the class selected for the Admission Offering. Additional conditions apply within these classes.'
               }
               noOptionsMessage="No classes are available. Add classes in Institute Setup."
             />

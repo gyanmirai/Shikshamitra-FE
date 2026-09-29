@@ -73,3 +73,27 @@ it('shows ownership without offering assignment controls to a view-only user', (
     screen.queryByRole('combobox', { name: 'Change journey counsellor' })
   ).not.toBeInTheDocument();
 });
+
+it('keeps an assigned counsellor compact until the user chooses to change it', async () => {
+  const user = userEvent.setup();
+  renderDocumentUi(
+    <ApplicationCounsellorCard
+      application={{
+        ...application,
+        assignedCounsellorId: 'counsellor-1',
+        assignedCounsellorName: 'Counsellor One',
+      }}
+    />,
+    ['Students.Admissions.Applications.Add']
+  );
+
+  expect(screen.getByText('Counsellor One')).toBeInTheDocument();
+  expect(
+    screen.queryByRole('combobox', { name: 'Change journey counsellor' })
+  ).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole('button', { name: 'Change counsellor' }));
+
+  expect(screen.getByRole('combobox', { name: 'Change journey counsellor' })).toBeInTheDocument();
+  expect(screen.getByRole('textbox', { name: 'Reason for change (optional)' })).toBeInTheDocument();
+});

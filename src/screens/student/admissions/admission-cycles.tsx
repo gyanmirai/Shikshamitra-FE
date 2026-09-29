@@ -492,7 +492,7 @@ export default function AdmissionCyclesScreen() {
         links={[
           { name: 'Students', href: '/student/dashboard' },
           { name: 'Admissions', href: '/student/admissions' },
-          { name: 'Admission Setup', href: studentPaths.enrollment.settings.root },
+          { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Periods' },
         ]}
         sx={{

@@ -25,7 +25,9 @@ export const hasAssignedGrNumber = (student: StudentOnboardingItem) => hasValue(
 export const hasAssignedRollNumber = (student: StudentOnboardingItem) => hasValue(student.rollNo);
 
 export const hasAssignedDivision = (student: StudentOnboardingItem) =>
-  hasValue(student.divisionName) && student.divisionName.trim() !== '—';
+  student.source === 'onboarding-case'
+    ? hasValue(student.divisionId)
+    : hasValue(student.divisionName) && student.divisionName.trim() !== '—';
 
 export const parseStudentSetupView = (value: string | null): StudentSetupView =>
   value && validViews.has(value as StudentSetupView) ? (value as StudentSetupView) : 'readiness';

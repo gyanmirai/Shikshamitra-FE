@@ -3,6 +3,7 @@ import type { StudentOnboardingCase } from 'src/redux/student/onboarding/student
 import { it, expect, describe } from 'vitest';
 
 import { getReadinessSummary, mapOnboardingCaseToItem } from './student-onboarding-model';
+import { getPendingStudentCount, filterStudentsForSetupView } from './student-setup-view';
 
 const buildCase = (overrides: Partial<StudentOnboardingCase> = {}): StudentOnboardingCase => ({
   id: 'case-1',
@@ -81,6 +82,28 @@ const buildCase = (overrides: Partial<StudentOnboardingCase> = {}): StudentOnboa
 });
 
 describe('mapOnboardingCaseToItem', () => {
+  it('keeps an unplaced live case in the pending-division worklist despite its display placeholder', () => {
+    const unplaced = mapOnboardingCaseToItem(buildCase({ divisionId: null, divisionName: null }));
+    const placed = mapOnboardingCaseToItem(buildCase({ id: 'case-2' }));
+    expect(unplaced.divisionName).toBe('Pending');
+    expect(getPendingStudentCount([unplaced, placed], 'division')).toBe(1);
+    expect(filterStudentsForSetupView([unplaced, placed], 'division', 'pending')).toEqual([unplaced]);
+  });
+  it('uses separate portal handoffs even when the pre-activation combined check is optional', () => {
+    const item = mapOnboardingCaseToItem(buildCase({
+      intendedBoardName: 'CBSE', intendedMediumName: 'English',
+      studentAccountRequired: true, guardianAccountRequired: true,
+      studentAccountStatus: 2, guardianAccountStatus: 0,
+      steps: [{ id: 'accounts', key: 'finance_accounts_services', label: 'Services',
+        displayOrder: 8, required: false, status: 5 }],
+    }));
+    expect(item).toMatchObject({ boardName: 'CBSE', mediumName: 'English',
+      studentAccountStatus: 'ready', guardianAccountStatus: 'pending' });
+    expect(mapOnboardingCaseToItem(buildCase({ studentAccountRequired: false })).studentAccountStatus)
+      .toBe('not-required');
+    expect(mapOnboardingCaseToItem(buildCase()).studentAccountStatus).toBe('not-connected');
+  });
+
   it('preserves durable status, concurrency, blockers, and audit events', () => {
     const item = mapOnboardingCaseToItem(buildCase());
 

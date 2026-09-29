@@ -7,9 +7,18 @@ import {
   hasSystemBinding,
   CREATABLE_FIELD_TYPES,
   getConfigurableFieldTypes,
+  getBlankAdmissionFormInitialValues,
 } from './form-dialog-model';
 
 describe('admission form field codes', () => {
+  it('starts a blank form with an empty section ready for student fields', () => {
+    const form = getBlankAdmissionFormInitialValues(0);
+
+    expect(form.purpose).toBe(0);
+    expect(form.sections).toHaveLength(1);
+    expect(form.sections[0].fields).toEqual([]);
+  });
+
   it('generates a unique field sequence across every step', () => {
     const sections = [
       { fields: [{ code: 'FIELD_1' }, { code: 'FIELD_3' }] },

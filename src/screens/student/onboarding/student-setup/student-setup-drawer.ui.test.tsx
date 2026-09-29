@@ -11,6 +11,10 @@ const mocks = vi.hoisted(() => ({
     progressPercent: 100,
     concurrencyStamp: 'latest-case-stamp',
   },
+  capturedFields: [
+    { key: 'Medical.BloodGroup', label: 'Blood group', value: 'O+' },
+    { key: 'PreviousSchool.Name', label: 'Previous school name', value: 'Sample School' },
+  ],
 }));
 
 vi.mock('src/components/iconify', () => ({
@@ -22,6 +26,9 @@ vi.mock('react-redux', () => ({
     selector({ confirmPopup: { isChanges: false } }),
 }));
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
+  useGetStudentOnboardingCaseQuery: () => ({
+    data: { capturedStudentFields: mocks.capturedFields },
+  }),
   usePreviewStudentOnboardingActivationQuery: () => ({
     data: mocks.activationPreview,
     isFetching: false,
@@ -30,6 +37,8 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useUpdateStudentOnboardingStepMutation: () => [vi.fn(), { isLoading: false }],
 }));
 vi.mock('./student-onboarding-documents', () => ({ default: () => null }));
+vi.mock('./student-onboarding-fees', () => ({ default: () => null }));
+vi.mock('./student-onboarding-portal-accounts', () => ({ default: () => null }));
 vi.mock('./student-onboarding-case-operations', () => ({ default: () => null }));
 
 const student = studentOnboardingPreviewData[0];
@@ -56,7 +65,8 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.getByRole('heading', { name: 'Placement' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Identifiers' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Documents' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Accounts & access' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Accounts & access' })).not.toBeInTheDocument();
+    expect(screen.queryByText('GR preview')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Readiness & activation' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Activity & audit' })).toBeInTheDocument();
 
@@ -75,6 +85,23 @@ describe('Student Setup drawer readiness UI', () => {
     render(<StudentSetupDrawer open student={null} onClose={vi.fn()} />);
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('does not offer a nonfunctional student-record action or misleading optional Finance check', () => {
+    render(<StudentSetupDrawer open canManage onClose={vi.fn()} student={{
+      ...student, source: 'onboarding-case', status: 'completed', backendStatus: 4,
+      studentEnrollmentId: 'enrollment-1',
+      readinessItems: [{ key: 'finance_accounts_services', label: 'Finance, accounts, and optional services',
+        detail: '', status: 'not-required', blocking: false, owner: 'Student Onboarding' }],
+    }} />);
+    expect(screen.queryByRole('button', { name: 'View Student Record' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Finance, accounts, and optional services')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Fee assignment & first payment' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Portal accounts' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Captured admission details' })).toBeInTheDocument();
+    expect(screen.getByText('Blood group')).toBeInTheDocument();
+    expect(screen.getByText('O+')).toBeInTheDocument();
+    expect(screen.getByText('Sample School')).toBeInTheDocument();
   });
 
   it('uses the latest backend activation-preview stamp when activation is confirmed', async () => {

@@ -216,3 +216,13 @@ export function getAdmissionFormInitialValues(
     ],
   };
 }
+
+export function getBlankAdmissionFormInitialValues(
+  purpose: CreateUpdateAdmissionForm['purpose'] = 1
+): CreateUpdateAdmissionForm {
+  const form = getAdmissionFormInitialValues(undefined, purpose);
+  return {
+    ...form,
+    sections: form.sections.map((section) => ({ ...section, fields: [] })),
+  };
+}
