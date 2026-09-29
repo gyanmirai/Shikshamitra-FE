@@ -12,6 +12,12 @@ audience: humans-and-agents
 
 TL;DR: run the documentation check first, then focused lint, formatting, type, unit, and browser checks for the Enrollment Admissions surface that changed.
 
+## Onboarding integration checks
+
+Run focused academic-applicability, policy-settings UI and student-drawer tests with one worker, then TypeScript and changed-file lint. Browser acceptance must verify the year-only header, dependent checkboxes in all four settings editors, absent saved-default/preview menus, live fee assignment/collection navigation, portal-account permissions and responsive drawers. Unit tests do not replace those browser checks.
+
+Persisted local QA is recorded in `C:\Repo\2026\ONBOARDING_QA_2026-09-29.md`: fictional Jay completed admission and onboarding after two partial receipts fully settled the first installment. No production payment or external email was tested.
+
 ## Admission Cycle checks
 
 ```bash

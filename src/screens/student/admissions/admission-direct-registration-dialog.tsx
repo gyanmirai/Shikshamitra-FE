@@ -302,7 +302,7 @@ function DirectRegistrationDrawer({ onClose }: { onClose: () => void }) {
         {!offeringsLoading && !offeringsError && !offerings.length && (
           <Alert severity="warning">
             No open direct-registration offering is available. Configure and activate one in
-            Admission Setup.
+            Admission Offering settings.
           </Alert>
         )}
         <Typography variant="subtitle1">Offering</Typography>

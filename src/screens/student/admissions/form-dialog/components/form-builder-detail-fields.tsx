@@ -100,6 +100,13 @@ export function FormBuilderDetailFields({
         <Autocomplete
           multiple
           disableCloseOnSelect
+          slotProps={{
+            chip: {
+              size: 'small',
+              color: 'default',
+              sx: { bgcolor: 'action.selected', color: 'text.primary' },
+            },
+          }}
           options={ADMISSION_FORM_LANGUAGES}
           value={ADMISSION_FORM_LANGUAGES.filter((option) =>
             formik.values.supportedLanguages.includes(option.value)

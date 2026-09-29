@@ -9,30 +9,15 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import useMediaQuery from '@mui/material/useMediaQuery';
 
-const PANELS = [
-  { id: 'outline', label: 'Outline', icon: 'mdi:format-list-bulleted' },
-  { id: 'form', label: 'Your form', icon: 'mdi:form-select' },
-  { id: 'settings', label: 'Field settings', icon: 'mdi:tune-variant' },
-] as const;
-
-type Panel = (typeof PANELS)[number]['id'];
 type Props = {
-  panel: Panel;
-  onPanelChange: (panel: Panel) => void;
-  outline: ReactNode;
+  panel: 'fields' | 'form';
+  onPanelChange: (panel: 'fields' | 'form') => void;
+  fields: ReactNode;
   form: ReactNode;
-  settings: ReactNode;
   children: ReactNode;
 };
 
-export function FormBuilderWorkspace({
-  panel,
-  onPanelChange,
-  outline,
-  form,
-  settings,
-  children,
-}: Props) {
+export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, children }: Props) {
   const theme = useTheme();
   const desktop = useMediaQuery(theme.breakpoints.up('lg'));
   const workspaceRef = useRef<HTMLDivElement>(null);
@@ -48,7 +33,6 @@ export function FormBuilderWorkspace({
       workspace.querySelector<HTMLElement>(`#builder-panel-${panel}`)?.focus();
     }
   }, [desktop, panel]);
-  const contents = { outline, form, settings };
   return (
     <Stack
       ref={workspaceRef}
@@ -57,67 +41,80 @@ export function FormBuilderWorkspace({
     >
       <Tabs
         value={panel}
-        onChange={(_, value: Panel) => onPanelChange(value)}
+        onChange={(_, value: 'fields' | 'form') => onPanelChange(value)}
         variant="fullWidth"
         aria-label="Form builder workspace"
-        sx={{ display: { lg: 'none' }, bgcolor: 'background.paper', borderRadius: 1 }}
+        sx={{ display: { lg: 'none' }, bgcolor: 'background.paper' }}
       >
-        {PANELS.map((item) => (
-          <Tab
-            key={item.id}
-            value={item.id}
-            label={item.label}
-            id={`builder-tab-${item.id}`}
-            aria-controls={`builder-panel-${item.id}`}
-            icon={<Iconify icon={item.icon} width={18} />}
-            iconPosition="start"
-            sx={{ px: 1, minWidth: 0, minHeight: 44 }}
-          />
-        ))}
+        <Tab
+          value="fields"
+          label="Student fields"
+          icon={<Iconify icon="mdi:account-details-outline" width={18} />}
+          iconPosition="start"
+          id="builder-tab-fields"
+          aria-controls="builder-panel-fields"
+        />
+        <Tab
+          value="form"
+          label="Your form"
+          icon={<Iconify icon="mdi:form-select" width={18} />}
+          iconPosition="start"
+          id="builder-tab-form"
+          aria-controls="builder-panel-form"
+        />
       </Tabs>
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: {
-            xs: 'minmax(0, 1fr)',
-            lg: '280px minmax(0, 1fr) 360px',
-            xl: '300px minmax(0, 1fr) 390px',
-          },
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: '300px minmax(0, 1fr)' },
           gap: 1.5,
           flex: 1,
           minHeight: 0,
-          height: { xs: 620, lg: 1 },
-          '& .MuiButton-root': { minHeight: { xs: 44, lg: 36 }, py: { lg: 0.5 } },
+          minWidth: 0,
           '& .MuiSwitch-switchBase.Mui-checked': { color: 'text.primary' },
-          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-            bgcolor: 'text.primary',
-          },
+          '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { bgcolor: 'text.primary' },
         }}
       >
-        {PANELS.map((item) => (
-          <Box
-            key={item.id}
-            id={`builder-panel-${item.id}`}
-            role={desktop ? 'region' : 'tabpanel'}
-            tabIndex={desktop ? undefined : -1}
-            aria-labelledby={desktop ? undefined : `builder-tab-${item.id}`}
-            aria-label={desktop ? item.label : undefined}
-            sx={{
-              display: { xs: panel === item.id ? 'flex' : 'none', lg: 'flex' },
-              flexDirection: 'column',
-              minWidth: 0,
-              minHeight: 0,
-              height: 1,
-              overflow: 'hidden',
-              border: 1,
-              borderColor: 'divider',
-              borderRadius: 2,
-              bgcolor: 'background.paper',
-            }}
-          >
-            {contents[item.id]}
-          </Box>
-        ))}
+        <Box
+          id="builder-panel-fields"
+          role={desktop ? 'region' : 'tabpanel'}
+          tabIndex={desktop ? undefined : -1}
+          aria-labelledby={desktop ? undefined : 'builder-tab-fields'}
+          aria-label={desktop ? 'Student fields' : undefined}
+          sx={{
+            display: { xs: panel === 'fields' ? 'flex' : 'none', lg: 'flex' },
+            flexDirection: 'column',
+            minHeight: 0,
+            minWidth: 0,
+            overflow: 'hidden',
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 2,
+            bgcolor: 'background.paper',
+          }}
+        >
+          {fields}
+        </Box>
+        <Box
+          id="builder-panel-form"
+          role={desktop ? 'region' : 'tabpanel'}
+          tabIndex={desktop ? undefined : -1}
+          aria-labelledby={desktop ? undefined : 'builder-tab-form'}
+          aria-label={desktop ? 'Your form' : undefined}
+          sx={{
+            display: { xs: panel === 'form' ? 'flex' : 'none', lg: 'flex' },
+            flexDirection: 'column',
+            minHeight: 0,
+            minWidth: 0,
+            overflow: 'hidden',
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 2,
+            bgcolor: 'background.paper',
+          }}
+        >
+          {form}
+        </Box>
       </Box>
       {children}
     </Stack>

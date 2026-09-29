@@ -1,3 +1,5 @@
+import { runAuthRequestOnce } from './auth-request';
+
 export const REFRESH_ACCESS_TOKEN_ERROR = 'RefreshAccessTokenError';
 
 type AuthToken = Record<string, any> & {
@@ -32,6 +34,15 @@ export async function refreshAccessToken(
     return failedRefresh(token);
   }
 
+  return runAuthRequestOnce(`refresh:${token.refreshToken}`, () =>
+    requestRefreshedAccessToken(token, fetchToken)
+  );
+}
+
+async function requestRefreshedAccessToken(
+  token: AuthToken,
+  fetchToken: typeof fetch
+): Promise<AuthToken> {
   try {
     const body = new URLSearchParams({
       grant_type: 'refresh_token',

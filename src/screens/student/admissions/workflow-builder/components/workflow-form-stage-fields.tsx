@@ -27,6 +27,9 @@ type Props = {
   stages: AdmissionWorkflowStage[];
   transitions?: AdmissionWorkflowTransition[];
   formDefinitionId: string;
+  formDetailsLoading?: boolean;
+  formDetailsError?: boolean;
+  onRetryFormDetails?: () => void;
   readOnly: boolean;
 };
 
@@ -37,7 +40,18 @@ const FORM_STAGE_TABS = [
 ] as const;
 
 export function WorkflowFormStageFields(props: Props) {
-  const { formik, metadata, forms, formDefinitionId, readOnly, stages, transitions } = props;
+  const {
+    formik,
+    metadata,
+    forms,
+    formDefinitionId,
+    formDetailsLoading,
+    formDetailsError,
+    onRetryFormDetails,
+    readOnly,
+    stages,
+    transitions,
+  } = props;
   const tabs = useTabs(FORM_STAGE_TABS[0].value);
   const hasConfigurationError = Boolean(formik.errors.configurationJson);
   const lastSubmit = useRef(formik.submitCount);
@@ -127,6 +141,9 @@ export function WorkflowFormStageFields(props: Props) {
               formik={formik}
               forms={forms}
               formDefinitionId={formDefinitionId}
+              formDetailsLoading={formDetailsLoading}
+              formDetailsError={formDetailsError}
+              onRetryFormDetails={onRetryFormDetails}
               readOnly={readOnly}
               available={metadata?.supportedConfiguration?.includes('form') === true}
               onGoToBasics={() => tabs.setValue('basics')}

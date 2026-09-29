@@ -4,6 +4,7 @@ import type { AdmissionFormStagePolicy } from 'src/redux/student/admissions/admi
 import {
   Alert,
   Stack,
+  Button,
   Switch,
   Checkbox,
   FormGroup,
@@ -14,11 +15,17 @@ import {
 export function FormStageVerificationSettings({
   policy,
   form,
+  sectionsLoading = false,
+  sectionsError = false,
+  onRetrySections,
   disabled,
   onChange,
 }: {
   policy: AdmissionFormStagePolicy;
   form?: AdmissionForm;
+  sectionsLoading?: boolean;
+  sectionsError?: boolean;
+  onRetrySections?: () => void;
   disabled: boolean;
   onChange: (change: Partial<AdmissionFormStagePolicy>) => void;
 }) {
@@ -63,8 +70,23 @@ export function FormStageVerificationSettings({
       {policy.requireSectionVerification && (
         <Stack spacing={1} sx={{ pl: { sm: 2 } }}>
           <Typography variant="subtitle2">Sections staff must verify</Typography>
-          {!form ? (
+          {sectionsLoading ? (
+            <Alert severity="info">Loading form sections…</Alert>
+          ) : sectionsError ? (
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={onRetrySections}>
+                  Retry
+                </Button>
+              }
+            >
+              Unable to load this form&apos;s sections. Retry before choosing sections to verify.
+            </Alert>
+          ) : !form ? (
             <Alert severity="warning">Select a published form first.</Alert>
+          ) : form.sections.length === 0 ? (
+            <Alert severity="warning">This published form has no sections available to verify.</Alert>
           ) : (
             <FormGroup>
               {form.sections.map((section) => (

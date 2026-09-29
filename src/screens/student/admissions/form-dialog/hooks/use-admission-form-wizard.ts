@@ -10,8 +10,11 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 import { getAdmissionWizardSchema } from '../form-wizard-model';
-import { getAdmissionFormInitialValues } from '../form-dialog-model';
 import { clearAdmissionFormDraft, useAdmissionFormDraftOwner } from '../form-draft-recovery';
+import {
+  getAdmissionFormInitialValues,
+  getBlankAdmissionFormInitialValues,
+} from '../form-dialog-model';
 
 type Props = {
   editing?: AdmissionForm | null;
@@ -23,7 +26,11 @@ type Props = {
 export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave }: Props) {
   const draftOwner = useAdmissionFormDraftOwner();
   const [activeStep, setActiveStep] = useState(0);
-  const [initialValues] = useState(() => getAdmissionFormInitialValues(editing, initialPurpose));
+  const [initialValues] = useState(() =>
+    editing
+      ? getAdmissionFormInitialValues(editing, initialPurpose)
+      : getBlankAdmissionFormInitialValues(initialPurpose)
+  );
   const submitting = useBoolean();
   const savingRef = useRef(false);
   const saveDraft = async (

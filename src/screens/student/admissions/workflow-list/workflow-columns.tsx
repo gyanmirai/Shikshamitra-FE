@@ -53,14 +53,15 @@ export function createWorkflowColumns(
     {
       id: 'name',
       label: 'Workflow',
-      minWidth: 240,
+      width: 300,
+      maxWidth: 300,
       sticky: true,
       stickyPosition: 'left',
       stickyOnMobile: false,
       isFilter: false,
       render: (value, row) => <AdmissionTableText text={String(value ?? '')} secondary={(row as AdmissionWorkflow).description || 'No description'} strong />,
     },
-    { id: 'code', label: 'Code', minWidth: 140, isFilter: false, render: (value) => <AdmissionTableText text={String(value ?? '')} /> },
+    { id: 'code', label: 'Code', minWidth: 250, isFilter: false, render: (value) => <AdmissionTableText text={String(value ?? '')} /> },
     { id: 'version', label: 'Version', minWidth: 90, align: 'center', isFilter: false },
     {
       id: 'offeringCount',

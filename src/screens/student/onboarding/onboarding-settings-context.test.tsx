@@ -7,8 +7,8 @@ import { useOnboardingSettings, OnboardingSettingsProvider } from './onboarding-
 import {
   defaultOnboardingSettings,
   defaultRollNumberConfiguration,
-  defaultOnboardingConfigurationScope,
   type OnboardingConfigurationScope,
+  defaultOnboardingConfigurationScope,
 } from './onboarding-settings-model';
 
 const academicScope: OnboardingConfigurationScope = {
@@ -25,6 +25,20 @@ const wrapper = ({ children }: { children: ReactNode }) => (
 );
 
 describe('OnboardingSettingsProvider configuration scopes', () => {
+
+  it('opens and saves the selected academic year without a separate scope selector', async () => {
+    const onPersist = vi.fn().mockResolvedValue(undefined);
+    const yearSettings = { ...defaultOnboardingSettings, readinessAccess: { ...defaultOnboardingSettings.readinessAccess, requireDocuments: false } };
+    const { result } = renderHook(() => useOnboardingSettings(), { wrapper: ({ children }) => (
+      <OnboardingSettingsProvider initialScope={academicScope} initialOverrides={{ [academicScope.key]: yearSettings }} onPersist={onPersist}>
+        {children}
+      </OnboardingSettingsProvider>
+    ) });
+    expect(result.current.scope).toEqual(academicScope);
+    expect(result.current.settings.readinessAccess.requireDocuments).toBe(false);
+    await act(async () => result.current.applyReadinessAccess({ ...result.current.settings.readinessAccess, requireDocuments: true }));
+    expect(onPersist).toHaveBeenCalledWith(academicScope, expect.anything());
+  });
 
   it('commits a scoped change only after backend persistence and deletes only that override', async () => {
     const onPersist = vi.fn().mockResolvedValue(undefined);

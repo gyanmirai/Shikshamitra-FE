@@ -5,20 +5,24 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import * as Yup from 'yup';
-import { useEffect } from 'react';
 import { useFormik } from 'formik';
+import { useRef, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
 import { getReviewConfigurationError } from 'src/redux/student/admissions/admission-review-validation';
 import { getAdmissionSeatConfigurationError } from 'src/redux/student/admissions/admission-seat-policy';
 import { getAdmissionOfferConfigurationError } from 'src/redux/student/admissions/admission-offer-policy';
 import { getAdmissionPaymentConfigurationError } from 'src/redux/student/admissions/admission-payment-policy';
 import { getEligibilityConfigurationError } from 'src/redux/student/admissions/admission-eligibility-validation';
 import { getDocumentConfigurationError } from 'src/redux/student/admissions/admission-document-policy-validation';
-import { getAdmissionFormStageConfigurationError } from 'src/redux/student/admissions/admission-form-stage-policy';
 import {
   readStageConfiguration,
   getAssessmentConfigurationError,
 } from 'src/redux/student/admissions/admission-assessment-policy';
+import {
+  readAdmissionFormStagePolicy,
+  getAdmissionFormStageConfigurationError,
+} from 'src/redux/student/admissions/admission-form-stage-policy';
 
 import { getReviewStageError } from '../review-stage-prerequisites';
 
@@ -67,11 +71,12 @@ export function useWorkflowStageEditor({
   onSave,
 }: Props) {
   const discard = useBoolean();
+  const validationForms = useRef(forms);
   const formik = useFormik<AdmissionWorkflowStage>({
     enableReinitialize: true,
     initialValues: stage ?? emptyStage,
     validationSchema: schema,
-    validate: (values) => validateConfiguration(values, stageTypes, stages, forms),
+    validate: (values) => validateConfiguration(values, stageTypes, stages, validationForms.current),
     onSubmit: (values, helpers) => {
       if (readOnly || values.stageType === 0) return;
       onSave({
@@ -103,12 +108,44 @@ export function useWorkflowStageEditor({
 
   const metadata = stageTypes.find((item) => item.type === formik.values.stageType);
   const formId = readStageConfiguration(formik.values.configurationJson)?.formDefinitionId;
+  const formDefinitionId = typeof formId === 'string' ? formId : '';
+  const listedForm = forms.find((form) => form.id === formDefinitionId);
+  const formPolicy = readAdmissionFormStagePolicy(formik.values.configurationJson);
+  const needsFormDetails =
+    open &&
+    formik.values.stageType === 1 &&
+    formPolicy?.enabled === true &&
+    formPolicy.requireSectionVerification &&
+    Boolean(formDefinitionId) &&
+    (!listedForm ||
+      listedForm.sections.length === 0 ||
+      listedForm.sections.length < listedForm.sectionCount);
+  const formDetailsQuery = useGetAdmissionFormQuery(formDefinitionId, {
+    skip: !needsFormDetails,
+  });
+  const formDetails =
+    formDetailsQuery.currentData?.id === formDefinitionId
+      ? formDetailsQuery.currentData
+      : undefined;
+  const resolvedForms = formDetails
+    ? forms.some((form) => form.id === formDefinitionId)
+      ? forms.map((form) => (form.id === formDefinitionId ? formDetails : form))
+      : [...forms, formDetails]
+    : forms;
+  validationForms.current = resolvedForms;
+
   return {
     formik,
     metadata,
     discard,
     close,
-    formDefinitionId: typeof formId === 'string' ? formId : '',
+    formDefinitionId,
+    forms: resolvedForms,
+    formDetailsLoading:
+      needsFormDetails && !formDetails && !formDetailsQuery.isError,
+    formDetailsError: needsFormDetails && !formDetails && formDetailsQuery.isError,
+    formDetailsUnavailable: needsFormDetails && !formDetails,
+    retryFormDetails: formDetailsQuery.refetch,
     requestClose: () => {
       if (!readOnly && formik.dirty) discard.onTrue();
       else close();

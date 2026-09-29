@@ -51,9 +51,7 @@ function renderChooser() {
   });
   const props = {
     selectedStarter: 'blank' as const,
-    selectedTemplateLabel: 'Blank form',
     onSelect: vi.fn(),
-    onSelectSchoolForm: vi.fn().mockResolvedValue(true),
   };
   render(
     <Provider store={store}>
@@ -78,8 +76,9 @@ describe('FormTemplateChooser', () => {
       screen.getByRole('button', { name: 'Use recommended: Admission application' })
     ).toBeInTheDocument();
     expect(
-      screen.getByRole('button', { name: 'Use template: Student registration' })
+      screen.getByRole('button', { name: 'Use inquiry form: Inquiry form' })
     ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Browse all templates/i })).not.toBeInTheDocument();
 
     await user.click(
       screen.getByRole('button', { name: 'Use recommended: Admission application' })
@@ -87,20 +86,11 @@ describe('FormTemplateChooser', () => {
     expect(props.onSelect).toHaveBeenCalledWith('admission-application');
   });
 
-  it('searches, previews, and applies a template from the complete library', async () => {
+  it('selects the inquiry form directly', async () => {
     const user = userEvent.setup();
     const props = renderChooser();
 
-    await user.click(screen.getByRole('button', { name: /Browse all templates/i }));
-    expect(screen.getByRole('dialog', { name: 'Choose a form template' })).toBeInTheDocument();
-
-    await user.type(screen.getByLabelText('Search templates'), 'scholarship');
-    await user.click(screen.getByRole('button', { name: /Scholarship or fee concession/i }));
-
-    await user.click(screen.getByRole('button', { name: 'Use template' }));
-    expect(props.onSelect).toHaveBeenCalledWith('scholarship-request');
-    expect(
-      screen.queryByRole('dialog', { name: 'Choose a form template' })
-    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Use inquiry form: Inquiry form' }));
+    expect(props.onSelect).toHaveBeenCalledWith('admission-inquiry');
   });
 });

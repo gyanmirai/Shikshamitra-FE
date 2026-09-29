@@ -3,17 +3,9 @@
 import type { Board } from 'src/types/school';
 
 import { useMemo } from 'react';
-import {
-  Box,
-  Paper,
-  Stack,
-  Switch,
-  Checkbox,
-  MenuItem,
-  TextField,
-  Typography,
-  FormControlLabel,
-} from '@mui/material';
+import { Box } from '@mui/material';
+import CustomSelect from 'src/components/custom-select';
+import ShakingTextField from 'src/components/shaking-text-field';
 
 import type {
   AcademicApplicableRule,
@@ -49,20 +41,23 @@ export const buildOnboardingAcademicStructureOptions = (
   const divisions: AcademicStructureOption[] = [];
 
   boards.forEach((board) => {
+    if (!['CBSE', 'GSEB'].includes(board.name.trim().toUpperCase())) return;
     boardOptions.push({ id: board.id, name: board.name, label: board.name, boardId: board.id });
     (board.educationMediums ?? []).forEach((medium) => {
       mediums.push({
         id: medium.id,
         name: medium.name,
-        label: `${board.name} / ${medium.name}`,
+        label: medium.name,
         boardId: board.id,
         academicMediumId: medium.id,
       });
       (medium.educationMediumStages ?? []).forEach((stage) => {
+        const levelName = stage.name.replace(`${board.name} - ${medium.name} - `, '').trim();
+        if (!['secondary', 'higher secondary'].includes(levelName.toLowerCase())) return;
         stages.push({
           id: stage.id,
           name: stage.name,
-          label: `${board.name} / ${medium.name} / ${stage.name}`,
+          label: levelName,
           boardId: board.id,
           academicMediumId: medium.id,
           academicMediumStageId: stage.id,
@@ -71,7 +66,7 @@ export const buildOnboardingAcademicStructureOptions = (
           standards.push({
             id: standard.id,
             name: standard.name,
-            label: `${board.name} / ${medium.name} / ${stage.name} / ${standard.name}`,
+            label: standard.name,
             boardId: board.id,
             academicMediumId: medium.id,
             academicMediumStageId: stage.id,
@@ -190,11 +185,11 @@ export const normalizeSingleAcademicApplicability = (
     mediumMode: 'selected',
     academicMediumIds: value.academicMediumIds.slice(0, 1),
     stageMode: 'selected',
-    academicMediumStageIds: value.academicMediumStageIds.slice(0, 1),
+    academicMediumStageIds: value.academicMediumStageIds,
     classMode: 'selected',
-    standardIds: value.standardIds.slice(0, 1),
-    divisionMode: 'selected',
-    divisionIds: value.divisionIds.slice(0, 1),
+    standardIds: value.standardIds,
+    divisionMode: value.divisionMode,
+    divisionIds: value.divisionIds,
     includeFutureStructures: false,
   };
 
@@ -210,7 +205,7 @@ export const createEmptySingleAcademicApplicability = (): AcademicApplicableRule
   academicMediumStageIds: [],
   classMode: 'selected',
   standardIds: [],
-  divisionMode: 'selected',
+  divisionMode: 'all',
   divisionIds: [],
   includeFutureStructures: false,
 });
@@ -220,14 +215,14 @@ export const getSingleAcademicPathValidationError = (value: AcademicApplicableRu
   if (value.mediumMode !== 'selected' || value.academicMediumIds.length !== 1) {
     return 'Select one Medium.';
   }
-  if (value.stageMode !== 'selected' || value.academicMediumStageIds.length !== 1) {
-    return 'Select one School Level.';
+  if (value.stageMode !== 'selected' || value.academicMediumStageIds.length === 0) {
+    return 'Select at least one School Level.';
   }
-  if (value.classMode !== 'selected' || value.standardIds.length !== 1) {
-    return 'Select one Class.';
+  if (value.classMode !== 'selected' || value.standardIds.length === 0) {
+    return 'Select at least one Standard.';
   }
-  if (value.divisionMode !== 'selected' || value.divisionIds.length !== 1) {
-    return 'Select one Division.';
+  if (value.divisionMode === 'selected' && value.divisionIds.length === 0) {
+    return 'Select at least one Division.';
   }
   return null;
 };
@@ -283,227 +278,9 @@ export const getAcademicApplicabilitySummary = (value: AcademicApplicableRule, b
   ].join(' / ');
 };
 
-function DimensionFields({
-  title,
-  mode,
-  selectedIds,
-  options,
-  allLabel,
-  selectionLabel,
-  emptyMessage,
-  onModeChange,
-  onSelectedIdsChange,
-}: {
-  title: string;
-  mode: AcademicApplicabilityMode;
-  selectedIds: string[];
-  options: AcademicStructureOption[];
-  allLabel: string;
-  selectionLabel: string;
-  emptyMessage: string;
-  onModeChange: (mode: AcademicApplicabilityMode) => void;
-  onSelectedIdsChange: (ids: string[]) => void;
-}) {
-  const selectionRequired = mode === 'selected' && selectedIds.length === 0;
-  const pluralTitle = title === 'Class' ? 'Classes' : `${title}s`;
-  return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: { xs: '1fr', sm: 'minmax(180px, 0.7fr) minmax(0, 1.3fr)' },
-        gap: 1.25,
-      }}
-    >
-      <TextField
-        select
-        fullWidth
-        size="small"
-        label={`${title} coverage`}
-        value={mode}
-        onChange={(event) => onModeChange(event.target.value as AcademicApplicabilityMode)}
-      >
-        <MenuItem value="all">{allLabel}</MenuItem>
-        <MenuItem value="selected">Selected {pluralTitle}</MenuItem>
-      </TextField>
-      <TextField
-        select
-        fullWidth
-        size="small"
-        disabled={mode === 'all'}
-        label={selectionLabel}
-        value={selectedIds}
-        onChange={(event) => {
-          const { value } = event.target;
-          onSelectedIdsChange(typeof value === 'string' ? value.split(',') : value);
-        }}
-        error={selectionRequired}
-        helperText={
-          selectionRequired
-            ? `Select at least one ${title}.`
-            : options.length
-              ? undefined
-              : emptyMessage
-        }
-        SelectProps={{
-          multiple: true,
-          renderValue: (selected) => {
-            const ids = selected as string[];
-            const names = getSelectedNames(ids, options);
-            return names.length <= 2 ? names.join(', ') : `${names.length} selected`;
-          },
-        }}
-      >
-        {options.map((option) => (
-          <MenuItem key={option.id} value={option.id}>
-            <Checkbox size="small" checked={selectedIds.includes(option.id)} />
-            <Typography variant="body2">{option.label}</Typography>
-          </MenuItem>
-        ))}
-      </TextField>
-    </Box>
-  );
-}
-
+/** Preserve hierarchy IDs while showing concise labels in dependent selectors. */
 export function AcademicApplicabilityFields({
-  value,
-  boards,
-  onChange,
-}: {
-  value: AcademicApplicableRule;
-  boards: Board[];
-  onChange: (value: AcademicApplicableRule) => void;
-}) {
-  const options = useMemo(() => buildOnboardingAcademicStructureOptions(boards), [boards]);
-  const available = useMemo(() => filterAcademicOptions(value, options), [options, value]);
-  const update = (patch: Partial<AcademicApplicableRule>) =>
-    onChange(normalizeApplicability({ ...value, ...patch }, options));
-
-  const activeBoardIds = selectedParentIds(
-    value.boardMode,
-    value.boardIds,
-    options.boards.map((option) => option.id)
-  );
-  const activeMediumIds = selectedParentIds(
-    value.mediumMode,
-    value.academicMediumIds,
-    available.mediums.map((option) => option.id)
-  );
-  const activeStageIds = selectedParentIds(
-    value.stageMode,
-    value.academicMediumStageIds,
-    available.stages.map((option) => option.id)
-  );
-  const activeStandardIds = selectedParentIds(
-    value.classMode,
-    value.standardIds,
-    available.standards.map((option) => option.id)
-  );
-  const activeDivisionIds = selectedParentIds(
-    value.divisionMode,
-    value.divisionIds,
-    available.divisions.map((option) => option.id)
-  );
-
-  return (
-    <Stack spacing={1.5}>
-      <DimensionFields
-        title="Board"
-        mode={value.boardMode}
-        selectedIds={value.boardIds}
-        options={options.boards}
-        allLabel="All Boards"
-        selectionLabel="Selected Boards"
-        emptyMessage="No Board is configured for the active academic year."
-        onModeChange={(boardMode) => update({ boardMode, boardIds: [] })}
-        onSelectedIdsChange={(boardIds) => update({ boardIds })}
-      />
-      <DimensionFields
-        title="Medium"
-        mode={value.mediumMode}
-        selectedIds={value.academicMediumIds}
-        options={available.mediums}
-        allLabel="All Media"
-        selectionLabel="Selected Media"
-        emptyMessage="Configure a Medium below the selected Board coverage first."
-        onModeChange={(mediumMode) => update({ mediumMode, academicMediumIds: [] })}
-        onSelectedIdsChange={(academicMediumIds) => update({ academicMediumIds })}
-      />
-      <DimensionFields
-        title="School Level"
-        mode={value.stageMode}
-        selectedIds={value.academicMediumStageIds}
-        options={available.stages}
-        allLabel="All School Levels"
-        selectionLabel="Selected School Levels"
-        emptyMessage="Configure a School Level below the selected Medium coverage first."
-        onModeChange={(stageMode) => update({ stageMode, academicMediumStageIds: [] })}
-        onSelectedIdsChange={(academicMediumStageIds) => update({ academicMediumStageIds })}
-      />
-      <DimensionFields
-        title="Class"
-        mode={value.classMode}
-        selectedIds={value.standardIds}
-        options={available.standards}
-        allLabel="All Classes"
-        selectionLabel="Selected Classes"
-        emptyMessage="Configure a Class below the selected School Level coverage first."
-        onModeChange={(classMode) => update({ classMode, standardIds: [] })}
-        onSelectedIdsChange={(standardIds) => update({ standardIds })}
-      />
-      <DimensionFields
-        title="Division"
-        mode={value.divisionMode}
-        selectedIds={value.divisionIds}
-        options={available.divisions}
-        allLabel="All Divisions"
-        selectionLabel="Selected Divisions"
-        emptyMessage="Configure a Division below the selected Class coverage first."
-        onModeChange={(divisionMode) => update({ divisionMode, divisionIds: [] })}
-        onSelectedIdsChange={(divisionIds) => update({ divisionIds })}
-      />
-
-      <Paper variant="outlined" sx={{ p: 1.25, bgcolor: 'background.neutral' }}>
-        <Typography variant="subtitle2">Current academic coverage</Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-          {getAcademicApplicabilitySummary(value, boards)}
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {activeBoardIds.length} Boards · {activeMediumIds.length} Media · {activeStageIds.length}{' '}
-          School Levels · {activeStandardIds.length} Classes · {activeDivisionIds.length} Divisions
-        </Typography>
-      </Paper>
-
-      <FormControlLabel
-        sx={{ m: 0, alignItems: 'flex-start' }}
-        control={
-          <Switch
-            checked={value.includeFutureStructures}
-            onChange={(event) => update({ includeFutureStructures: event.target.checked })}
-            slotProps={{ input: { 'aria-label': 'Include future academic structures' } }}
-          />
-        }
-        label={
-          <Box sx={{ pt: 0.5 }}>
-            <Typography variant="subtitle2">Include future academic structures</Typography>
-            <Typography variant="caption" color="text.secondary">
-              This records the intended policy only. The backend must publish a reviewed snapshot
-              before new matching structures can inherit the rule automatically.
-            </Typography>
-          </Box>
-        }
-      />
-    </Stack>
-  );
-}
-
-const getSingleSelectedId = (mode: AcademicApplicabilityMode, ids: string[]) =>
-  mode === 'selected' ? (ids[0] ?? '') : '';
-
-export function SingleAcademicPathFields({
-  value,
-  boards,
-  onChange,
-  showErrors = false,
+  value, boards, onChange, showErrors = false,
 }: {
   value: AcademicApplicableRule;
   boards: Board[];
@@ -511,154 +288,66 @@ export function SingleAcademicPathFields({
   showErrors?: boolean;
 }) {
   const options = useMemo(() => buildOnboardingAcademicStructureOptions(boards), [boards]);
-  const normalizedValue = useMemo(
-    () => normalizeSingleAcademicApplicability(value, boards),
-    [boards, value]
+  const available = useMemo(() => filterAcademicOptions(value, options), [options, value]);
+  const update = (patch: Partial<AcademicApplicableRule>) =>
+    onChange(normalizeApplicability({ ...value, includeFutureStructures: false, ...patch }, options));
+  const boardId = value.boardMode === 'selected' ? value.boardIds[0] ?? '' : '';
+  const mediumId = value.mediumMode === 'selected' ? value.academicMediumIds[0] ?? '' : '';
+  const stages = value.stageMode === 'selected' ? value.academicMediumStageIds : [];
+  const standards = value.classMode === 'selected' ? value.standardIds : [];
+  const selectOptions = (choices: AcademicStructureOption[]) =>
+    choices.map((option) => ({ value: option.id, label: option.label }));
+  const multiple = (
+    label: string, ids: string[], choices: AcademicStructureOption[],
+    disabled: boolean, onSelect: (ids: string[]) => void, optional = false
+  ) => (
+    <ShakingTextField error={showErrors && !optional && ids.length === 0}>
+      <CustomSelect
+        size="small" label={label} multiple value={ids} options={selectOptions(choices)}
+        required={!optional} disabled={disabled || choices.length === 0}
+        error={showErrors && !optional && ids.length === 0}
+        helperText={disabled ? 'Choose the parent selection first.' : optional ? 'Leave empty for all divisions in the selected standards.' : undefined}
+        onChange={(selectedIds) => onSelect(selectedIds.map(String))}
+      />
+    </ShakingTextField>
   );
-  const available = useMemo(
-    () => filterAcademicOptions(normalizedValue, options),
-    [normalizedValue, options]
-  );
-  const update = (nextValue: AcademicApplicableRule) =>
-    onChange(normalizeSingleAcademicApplicability(nextValue, boards));
-  const boardSelected = normalizedValue.boardIds.length === 1;
-  const mediumSelected = normalizedValue.academicMediumIds.length === 1;
-  const stageSelected = normalizedValue.academicMediumStageIds.length === 1;
-  const classSelected = normalizedValue.standardIds.length === 1;
-
-  const selectValue = (
-    selectedId: string,
-    modeKey: 'boardMode' | 'mediumMode' | 'stageMode' | 'classMode' | 'divisionMode',
-    idsKey:
-      'boardIds' | 'academicMediumIds' | 'academicMediumStageIds' | 'standardIds' | 'divisionIds',
-    reset: Partial<AcademicApplicableRule>
-  ) =>
-    update({
-      ...normalizedValue,
-      [modeKey]: 'selected',
-      [idsKey]: selectedId ? [selectedId] : [],
-      ...reset,
-    });
-
-  const fields = [
-    {
-      label: 'Board',
-      value: getSingleSelectedId(normalizedValue.boardMode, normalizedValue.boardIds),
-      emptyLabel: options.boards.length ? 'Select Board' : 'No Boards configured',
-      errorMessage: 'Select one Board.',
-      options: options.boards,
-      disabled: options.boards.length === 0,
-      onSelect: (selectedId: string) =>
-        selectValue(selectedId, 'boardMode', 'boardIds', {
-          mediumMode: 'selected',
-          academicMediumIds: [],
-          stageMode: 'selected',
-          academicMediumStageIds: [],
-          classMode: 'selected',
-          standardIds: [],
-          divisionMode: 'selected',
-          divisionIds: [],
-        }),
-    },
-    {
-      label: 'Medium',
-      value: getSingleSelectedId(normalizedValue.mediumMode, normalizedValue.academicMediumIds),
-      emptyLabel: !boardSelected
-        ? 'Select Board first'
-        : available.mediums.length
-          ? 'Select Medium'
-          : 'No Media configured',
-      errorMessage: 'Select one Medium.',
-      options: available.mediums,
-      disabled: !boardSelected || available.mediums.length === 0,
-      onSelect: (selectedId: string) =>
-        selectValue(selectedId, 'mediumMode', 'academicMediumIds', {
-          stageMode: 'selected',
-          academicMediumStageIds: [],
-          classMode: 'selected',
-          standardIds: [],
-          divisionMode: 'selected',
-          divisionIds: [],
-        }),
-    },
-    {
-      label: 'School Level',
-      value: getSingleSelectedId(normalizedValue.stageMode, normalizedValue.academicMediumStageIds),
-      emptyLabel: !mediumSelected
-        ? 'Select Medium first'
-        : available.stages.length
-          ? 'Select School Level'
-          : 'No School Levels configured',
-      errorMessage: 'Select one School Level.',
-      options: available.stages,
-      disabled: !mediumSelected || available.stages.length === 0,
-      onSelect: (selectedId: string) =>
-        selectValue(selectedId, 'stageMode', 'academicMediumStageIds', {
-          classMode: 'selected',
-          standardIds: [],
-          divisionMode: 'selected',
-          divisionIds: [],
-        }),
-    },
-    {
-      label: 'Class',
-      value: getSingleSelectedId(normalizedValue.classMode, normalizedValue.standardIds),
-      emptyLabel: !stageSelected
-        ? 'Select School Level first'
-        : available.standards.length
-          ? 'Select Class'
-          : 'No Classes configured',
-      errorMessage: 'Select one Class.',
-      options: available.standards,
-      disabled: !stageSelected || available.standards.length === 0,
-      onSelect: (selectedId: string) =>
-        selectValue(selectedId, 'classMode', 'standardIds', {
-          divisionMode: 'selected',
-          divisionIds: [],
-        }),
-    },
-    {
-      label: 'Division',
-      value: getSingleSelectedId(normalizedValue.divisionMode, normalizedValue.divisionIds),
-      emptyLabel: !classSelected
-        ? 'Select Class first'
-        : available.divisions.length
-          ? 'Select Division'
-          : 'No Divisions configured',
-      errorMessage: 'Select one Division.',
-      options: available.divisions,
-      disabled: !classSelected || available.divisions.length === 0,
-      onSelect: (selectedId: string) => selectValue(selectedId, 'divisionMode', 'divisionIds', {}),
-    },
-  ];
-
   return (
-    <Stack spacing={1.5}>
-      {fields.map((field) => (
-        <TextField
-          key={field.label}
-          select
-          fullWidth
-          size="small"
-          label={field.label}
-          value={field.value}
-          disabled={field.disabled}
-          error={showErrors && !field.value}
-          helperText={showErrors && !field.value ? field.errorMessage : undefined}
-          onChange={(event) => field.onSelect(event.target.value)}
-          InputLabelProps={{ shrink: true }}
-          SelectProps={{ displayEmpty: true }}
-        >
-          <MenuItem value="" disabled>
-            {field.emptyLabel}
-          </MenuItem>
-          {field.options.map((option) => (
-            <MenuItem key={option.id} value={option.id}>
-              {option.label}
-            </MenuItem>
-          ))}
-        </TextField>
-      ))}
-    </Stack>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 1 }}>
+      <ShakingTextField error={showErrors && !boardId}>
+        <CustomSelect size="small" required label="Board" value={boardId}
+          options={selectOptions(options.boards)} disabled={!options.boards.length}
+          error={showErrors && !boardId}
+          onChange={(id) => update({
+            boardMode: 'selected', boardIds: [String(id)],
+            mediumMode: 'selected', academicMediumIds: [],
+            stageMode: 'selected', academicMediumStageIds: [],
+            classMode: 'selected', standardIds: [], divisionMode: 'all', divisionIds: [],
+          })} />
+      </ShakingTextField>
+      <ShakingTextField error={showErrors && !mediumId}>
+        <CustomSelect size="small" required label="Medium" value={mediumId}
+          options={selectOptions(available.mediums)} disabled={!boardId || !available.mediums.length}
+          error={showErrors && !mediumId} helperText={!boardId ? 'Choose a board first.' : undefined}
+          onChange={(id) => update({
+            mediumMode: 'selected', academicMediumIds: [String(id)],
+            stageMode: 'selected', academicMediumStageIds: [],
+            classMode: 'selected', standardIds: [], divisionMode: 'all', divisionIds: [],
+          })} />
+      </ShakingTextField>
+      {multiple('School levels', stages, available.stages, !mediumId, (ids) => update({
+        stageMode: 'selected', academicMediumStageIds: ids,
+        classMode: 'selected', standardIds: [], divisionMode: 'all', divisionIds: [],
+      }))}
+      {multiple('Standards', standards, available.standards, !stages.length, (ids) => update({
+        classMode: 'selected', standardIds: ids, divisionMode: 'all', divisionIds: [],
+      }))}
+      <Box sx={{ gridColumn: '1 / -1' }}>
+        {multiple('Divisions', value.divisionIds, available.divisions, !standards.length, (ids) => update({
+          divisionMode: ids.length ? 'selected' : 'all', divisionIds: ids,
+        }), true)}
+      </Box>
+    </Box>
   );
 }
+
+export const SingleAcademicPathFields = AcademicApplicabilityFields;

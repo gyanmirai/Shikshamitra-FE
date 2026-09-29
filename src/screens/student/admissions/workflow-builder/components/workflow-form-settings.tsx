@@ -21,6 +21,9 @@ type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
   forms: AdmissionForm[];
   formDefinitionId: string;
+  formDetailsLoading?: boolean;
+  formDetailsError?: boolean;
+  onRetryFormDetails?: () => void;
   readOnly: boolean;
   available: boolean;
   onGoToBasics: () => void;
@@ -45,13 +48,19 @@ export function WorkflowFormSettings({
   formik,
   forms,
   formDefinitionId,
+  formDetailsLoading = false,
+  formDetailsError = false,
+  onRetryFormDetails,
   readOnly,
   available,
   onGoToBasics,
 }: Props) {
   const json = formik.values.configurationJson;
   const policy = readAdmissionFormStagePolicy(json);
-  const error = getAdmissionFormStageConfigurationError(json, forms);
+  const error =
+    formDetailsLoading || formDetailsError
+      ? undefined
+      : getAdmissionFormStageConfigurationError(json, forms);
   const unreadable = Boolean(readStageConfiguration(json)?.form !== undefined && !policy);
   const disabled = readOnly || !available || unreadable;
   const selectedForm = forms.find((form) => form.id === formDefinitionId);
@@ -138,6 +147,9 @@ export function WorkflowFormSettings({
           <FormStageVerificationSettings
             policy={policy}
             form={selectedForm}
+            sectionsLoading={formDetailsLoading}
+            sectionsError={formDetailsError}
+            onRetrySections={onRetryFormDetails}
             disabled={disabled}
             onChange={update}
           />

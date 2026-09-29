@@ -22,6 +22,7 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
   useEffect(() => setReason(''), [check.key, student.id]);
 
   const normalizedReason = reason.trim();
+  const isApproval = check.key === 'approval_review';
 
   const handleWaive = async () => {
     if (!normalizedReason) return;
@@ -31,10 +32,11 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
         id: student.id,
         stepKey: check.key,
         concurrencyStamp: student.concurrencyStamp,
-        status: 4,
-        waiverReason: normalizedReason,
+        status: isApproval ? 2 : 4,
+        detail: isApproval ? normalizedReason : undefined,
+        waiverReason: isApproval ? undefined : normalizedReason,
       }).unwrap();
-      shikshaMitraToast.success({ message: `${check.label} waived with an audit reason.` });
+      shikshaMitraToast.success({ message: isApproval ? 'Onboarding approval recorded.' : `${check.label} waived with an audit reason.` });
       onClose();
     } catch (error) {
       const problem = parseApiProblemDetail(error);
@@ -49,7 +51,7 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
     <CustomDialog
       open
       handleClose={onClose}
-      title="Review onboarding exception"
+      title={isApproval ? 'Approve onboarding' : 'Review onboarding exception'}
       maxWidth="sm"
       disableClose={updateState.isLoading}
       hasUnsavedChanges={Boolean(reason)}
@@ -59,8 +61,7 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
           <Summary label="Student" value={student.studentName} />
           <Summary label="Requirement" value={check.label} />
           <Alert severity="warning" variant="outlined">
-            Waiving this requirement allows activation to continue without resolving the current
-            blocker. The reason is retained in the onboarding audit history.
+            {isApproval ? 'Review the student records and record your approval note. Approval does not bypass placement, identifiers, documents or Finance checks.' : 'Waiving this requirement allows activation to continue without resolving the current blocker. The reason is retained in the onboarding audit history.'}
           </Alert>
           <TextField
             required
@@ -68,7 +69,7 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
             multiline
             minRows={3}
             size="small"
-            label="Waiver reason"
+            label={isApproval ? 'Approval note' : 'Waiver reason'}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             helperText="Explain why this student can proceed without the requirement."
@@ -86,7 +87,7 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
           disabled={!normalizedReason || updateState.isLoading}
           onClick={handleWaive}
         >
-          {updateState.isLoading ? 'Saving…' : 'Waive requirement'}
+          {updateState.isLoading ? 'Saving…' : isApproval ? 'Approve onboarding' : 'Waive requirement'}
         </Button>
       </DialogActions>
     </CustomDialog>

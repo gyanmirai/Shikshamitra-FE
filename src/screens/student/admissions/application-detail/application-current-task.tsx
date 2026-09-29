@@ -82,17 +82,12 @@ export function ApplicationCurrentTask({
         </Box>
         <Button
           size="small"
-          variant="contained"
-          color="inherit"
+          variant="outlined"
           startIcon={<Iconify icon="mdi:file-document-outline" />}
           onClick={onReviewForm}
           sx={{
             display: { xs: 'none', md: 'inline-flex' },
-            minHeight: 44,
             flexShrink: 0,
-            bgcolor: 'common.black',
-            color: 'common.white',
-            '&:hover': { bgcolor: 'grey.800' },
           }}
         >
           Review application form

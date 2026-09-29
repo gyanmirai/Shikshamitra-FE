@@ -84,6 +84,18 @@ async function chooseProcess(user: ReturnType<typeof userEvent.setup>, name: str
 
 // Real MUI transitions and keyboard entry need a bounded allowance on busy Windows hosts.
 describe('assessment stage editor interactions', { timeout: 15000 }, () => {
+
+  it('lets an assessment become the entry stage', async () => {
+    const { user, onSave } = setup();
+    await user.click(screen.getByRole('tab', { name: 'Settings' }));
+    await user.click(screen.getByRole('button', { name: 'Journey position (advanced)' }));
+    await user.click(screen.getByRole('switch', { name: 'Applicants start here' }));
+    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ isEntryStage: true }))
+    );
+  });
+
   it('leaves basic legacy assessment configuration untouched when saving unrelated stage details', async () => {
     const original = '{"integration":{"rubric":"existing"}}';
     const { user, onSave } = setup(original);

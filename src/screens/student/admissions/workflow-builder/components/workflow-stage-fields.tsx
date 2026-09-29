@@ -34,6 +34,9 @@ type Props = {
   stages: AdmissionWorkflowStage[];
   transitions?: AdmissionWorkflowTransition[];
   formDefinitionId: string;
+  formDetailsLoading?: boolean;
+  formDetailsError?: boolean;
+  onRetryFormDetails?: () => void;
   readOnly: boolean;
 };
 

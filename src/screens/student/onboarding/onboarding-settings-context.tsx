@@ -106,12 +106,14 @@ export function OnboardingSettingsProvider({
   children,
   initialSettings = defaultOnboardingSettings,
   initialOverrides = {},
+  initialScope = defaultOnboardingConfigurationScope,
   onPersist,
   onRemoveOverride,
 }: {
   children: ReactNode;
   initialSettings?: OnboardingSettingsConfiguration;
   initialOverrides?: Record<string, OnboardingSettingsConfiguration>;
+  initialScope?: OnboardingConfigurationScope;
   onPersist?: (
     scope: OnboardingConfigurationScope,
     settings: OnboardingSettingsConfiguration
@@ -119,7 +121,7 @@ export function OnboardingSettingsProvider({
   onRemoveOverride?: (scope: OnboardingConfigurationScope) => Promise<void>;
 }) {
   const [inheritedSettings] = useState(() => cloneInitialSettings(initialSettings));
-  const [scope, setActiveScope] = useState(defaultOnboardingConfigurationScope);
+  const [scope, setActiveScope] = useState(initialScope);
   const [overrides, setOverrides] = useState<Record<string, OnboardingSettingsConfiguration>>(() =>
     Object.fromEntries(
       Object.entries(initialOverrides).map(([key, settings]) => [key, cloneInitialSettings(settings)])

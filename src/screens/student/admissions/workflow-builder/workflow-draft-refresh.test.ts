@@ -58,3 +58,27 @@ it('retains validation when the server changes only governance status and concur
   expect(result.current.loadedStamp).toBe('validated-stamp');
   expect(result.current.validation).toEqual(validation);
 });
+
+it('keeps exactly one entry when another stage is selected', () => {
+  const assessment = {
+    ...original.stages[0],
+    id: 'assessment',
+    code: 'ENTRANCE_EXAM',
+    name: 'Entrance Exam',
+    stageType: 2,
+    displayOrder: 1,
+    isEntryStage: false,
+  };
+  const workflow = { ...original, stages: [...original.stages, assessment] };
+  const { result } = renderHook(() => useWorkflowBuilderDraft(workflow, null));
+
+  act(() => result.current.saveStage({ ...assessment, isEntryStage: true }));
+  expect(result.current.stages.filter((stage) => stage.isEntryStage).map((stage) => stage.id)).toEqual([
+    'assessment',
+  ]);
+
+  act(() => result.current.saveStage({ ...original.stages[0], isEntryStage: true }));
+  expect(result.current.stages.filter((stage) => stage.isEntryStage).map((stage) => stage.id)).toEqual([
+    'form',
+  ]);
+});

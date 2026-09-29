@@ -17,10 +17,7 @@ export function FieldPropertiesHeader({
   const fieldType = FIELD_TYPES.find(([, value]) => value === field.fieldType)?.[0] ?? 'Field';
   return (
     <Box sx={{ p: 2, flexShrink: 0 }}>
-      <Typography component="h3" variant="h6">
-        Field settings
-      </Typography>
-      <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mt: 1.5 }}>
+      <Stack direction="row" alignItems="center" spacing={1.25}>
         <Box
           sx={{
             width: 36,

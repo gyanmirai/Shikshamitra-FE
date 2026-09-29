@@ -20,7 +20,9 @@ export function useFormBuilderCommands(
 ) {
   const isStepper = formik.values.layoutType === 1;
   const steps = getAdmissionFormStepGroups(formik.values.sections);
-  const systemFieldsQuery = useGetAdmissionFormSystemFieldsQuery();
+  const systemFieldsQuery = useGetAdmissionFormSystemFieldsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
   const systemFields = systemFieldsQuery.data ?? [];
   const addCanvasUnit = () => {
     const id = crypto.randomUUID();

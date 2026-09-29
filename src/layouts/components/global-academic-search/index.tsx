@@ -141,7 +141,8 @@ const GlobalAcademicSearch = () => {
     [currentBoard, currentMedium, currentYear, options]
   );
   const pathname = usePathname();
-  const isShowOnlyYearModule = ['/dashboard', '/finance', '/library', '/calendar', '/hr'].some(
+  const isStudentModule = pathname === '/student' || pathname.startsWith('/student/');
+  const isShowOnlyYearModule = ['/dashboard', '/finance', '/library', '/calendar', '/hr', '/student'].some(
     (route) => pathname.startsWith(route)
   );
   const hasAcademicSelection = isShowOnlyYearModule
@@ -325,7 +326,9 @@ const GlobalAcademicSearch = () => {
           {ConfirmDialog}
           <CustomTooltip
             arrow
-            title={!hasAcademicSelection ? 'Select Academic Year, Board and Medium' : undefined}
+            title={!hasAcademicSelection
+              ? isStudentModule ? 'Select academic year' : 'Select Academic Year, Board and Medium'
+              : undefined}
             placement="bottom"
           >
             <AnimatedWrapper error={!hasAcademicSelection} sx={{ minWidth: 0, width: '100%' }}>
@@ -346,7 +349,8 @@ const GlobalAcademicSearch = () => {
                   size="small"
                   onChange={async (event, newValue) => {
                     const confirmed = await showConfirm({
-                      title: 'Change Academic Year, Board and Medium',
+                      title: isStudentModule ? 'Change academic year' : 'Change Academic Year, Board and Medium',
+                      confirmText: isStudentModule ? 'Change year' : undefined,
                       message: !currentYear?.name
                         ? `Are you sure you want to set academic year ${newValue?.academicYear?.name}?`
                         : `Are you sure you want to change academic year from  ${currentYear?.name || ''} to ${newValue?.academicYear?.name} ?`,

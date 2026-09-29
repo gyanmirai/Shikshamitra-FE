@@ -21,6 +21,7 @@ type Props = {
   open: boolean;
   targetLabel?: string;
   systemFields: AdmissionFormSystemFieldMetadata[];
+  usedBindings?: readonly string[];
   loading: boolean;
   error: boolean;
   onRetry: () => void;
@@ -36,6 +37,7 @@ export function FormBuilderFieldLibraryDrawer({
   open,
   targetLabel,
   systemFields,
+  usedBindings,
   loading,
   error,
   onRetry,
@@ -91,6 +93,7 @@ export function FormBuilderFieldLibraryDrawer({
           <Box sx={{ flex: 1, minHeight: 0 }}>
             <FormBuilderPalette
               systemFields={systemFields}
+              usedBindings={usedBindings}
               targetLabel={targetLabel}
               onAddField={onAddField}
             />

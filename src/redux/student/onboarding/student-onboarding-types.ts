@@ -1,4 +1,4 @@
-export type StudentOnboardingStatus = 0 | 1 | 2 | 3 | 4 | 5;
+export type StudentOnboardingStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export type StudentOnboardingStepStatus = 0 | 1 | 2 | 3 | 4 | 5;
 export type StudentIdentifierType = 0 | 1 | 2 | 3 | 4;
 export type StudentOnboardingServiceHandoffStatus = 0 | 1 | 2 | 3 | 4;
@@ -60,6 +60,16 @@ export type StudentOnboardingEvent = {
 };
 
 export type StudentOnboardingCase = {
+  admissionRoute?: string;
+  capturedStudentFields?: Array<{ key: string; label: string; value: string }>;
+
+  feeAssignmentConfirmed?: boolean | null;
+  firstPaymentConfirmed?: boolean | null;
+  financeReadinessDetail?: string | null;
+  studentAccountRequired?: boolean;
+  guardianAccountRequired?: boolean;
+  studentAccountStatus?: StudentOnboardingServiceHandoffStatus | null;
+  guardianAccountStatus?: StudentOnboardingServiceHandoffStatus | null;
   id: string;
   documentUploadsEnabled: boolean;
   concurrencyStamp: string;
@@ -73,7 +83,9 @@ export type StudentOnboardingCase = {
   academicYearId: string;
   academicYearName: string;
   intendedBoardId: string;
+  intendedBoardName?: string;
   intendedMediumId: string;
+  intendedMediumName?: string;
   intendedStageId: string;
   intendedStandardId: string;
   intendedStandardName: string;

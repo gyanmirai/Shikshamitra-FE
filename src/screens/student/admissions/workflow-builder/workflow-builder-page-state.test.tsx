@@ -7,7 +7,7 @@ describe('WorkflowBuilderPageState', () => {
   it('keeps the workflow context visible while the builder loads', () => {
     render(<WorkflowBuilderPageState state="loading" />);
 
-    expect(screen.getByRole('heading', { name: 'Admission Process' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Admission Stage' })).toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Loading workflow builder' })).toBeInTheDocument();
   });
 
@@ -15,7 +15,7 @@ describe('WorkflowBuilderPageState', () => {
     const onRetry = vi.fn();
     render(<WorkflowBuilderPageState state="error" onRetry={onRetry} />);
 
-    expect(screen.getByRole('heading', { name: 'Admission Process' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Admission Stage' })).toBeInTheDocument();
     expect(screen.getByText('Unable to load this enrollment data.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));

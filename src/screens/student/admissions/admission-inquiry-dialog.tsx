@@ -122,7 +122,7 @@ function AdmissionInquiryDrawerContent({ onClose }: Omit<Props, 'open'>) {
           controller.boards.length === 0 && (
             <Alert severity="warning">
               No open, ready admission offering is available. Configure and activate an offering in
-              Admission Setup before creating an inquiry.
+              Admission Offering settings before creating an inquiry.
             </Alert>
           )}
 

@@ -15,7 +15,7 @@ type Props = {
 
 export function WorkflowStageForm({ formik, forms, formDefinitionId, readOnly }: Props) {
   const showError = Boolean(formik.touched.configurationJson || formik.submitCount > 0);
-  const hasError = Boolean(showError && formik.errors.configurationJson);
+  const hasError = Boolean(showError && formik.errors.configurationJson && !formDefinitionId);
 
   return (
     <ShakingTextField error={hasError}>
@@ -35,7 +35,7 @@ export function WorkflowStageForm({ formik, forms, formDefinitionId, readOnly }:
         }
         error={hasError}
         helperText={
-          (showError && formik.errors.configurationJson) ||
+          (hasError && formik.errors.configurationJson) ||
           (forms.length === 0
             ? 'Publish a form before attaching it to this stage.'
             : formDefinitionId
