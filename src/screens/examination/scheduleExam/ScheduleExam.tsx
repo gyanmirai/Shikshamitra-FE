@@ -56,6 +56,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
 
   // Boolean hook to control delete confirmation dialog
   const deleteDialog = useBoolean();
+  const insightsDrawer = useBoolean();
   // Redux dispatch hook for state management
   const dispatch = useDispatch();
   // Boolean hook to control time view dialog
@@ -329,6 +330,9 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
               onServerPagination={(page, pageSize) => {
                 setExamPagination({ page, pageSize });
               }}
+              insightsOpen={insightsDrawer.value}
+              onOpenInsights={insightsDrawer.onTrue}
+              onCloseInsights={insightsDrawer.onFalse}
             />
           </Box>
         )}

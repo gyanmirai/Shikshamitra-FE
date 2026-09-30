@@ -175,21 +175,17 @@ const CustomStepLabel = styled(StepLabel)(({ theme, error, isdisabledlabel }: an
 const QontoConnector = styled(StepConnector)(({ theme }) => ({
   '&.Mui-disabled': { cursor: 'pointer !important' },
   [`&.${stepConnectorClasses.alternativeLabel}`]: {
-    top: 10,
-    left: 'calc(-50% + 16px)',
-    right: 'calc(50% + 16px)',
-  },
-  [`&.${stepConnectorClasses.active}`]: {
-    [`& .${stepConnectorClasses.line}`]: { borderColor: theme.palette.primary.main },
-  },
-  [`&.${stepConnectorClasses.completed}`]: {
-    [`& .${stepConnectorClasses.line}`]: { borderColor: theme.palette.primary.main },
+    top: 20.5,
+    left: '-50%',
+    right: '50%',
   },
   [`& .${stepConnectorClasses.line}`]: {
-    borderColor: '#eaeaf0',
+    borderColor: `var(--step-connector-color, ${theme.palette.grey[400]})`,
     borderTopWidth: 3,
     borderRadius: 1,
-    ...theme.applyStyles('dark', { borderColor: theme.vars.palette.grey[800] }),
+    ...theme.applyStyles('dark', {
+      borderColor: `var(--step-connector-color, ${theme.palette.grey[600]})`,
+    }),
   },
 }));
 
@@ -203,8 +199,9 @@ const ModernStepIcon = (props: StepIconProps) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 24,
-        height: 24,
+        width: 28,
+        height: 28,
+        flexShrink: 0,
       }}
     >
       <Box
@@ -226,20 +223,19 @@ const ModernStepIcon = (props: StepIconProps) => {
       <Box
         sx={{
           zIndex: 1,
-          width: 24,
-          height: 24,
+          width: 28,
+          height: 28,
+          flexShrink: 0,
+          boxSizing: 'border-box',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           borderRadius: '50%',
           border: '2px solid',
-          bgcolor: (theme) =>
-            completed || active ? theme.palette.primary.main : 'rgba(0, 0, 0, 0)',
+          bgcolor: completed || active ? 'primary.main' : 'background.default',
           borderColor: completed || active ? 'primary.main' : 'grey.400',
-          color: (theme) => (completed || active ? '#fff' : theme.palette.text.secondary),
-          transform: active ? 'scale(1.1)' : 'scale(1)',
-          transition:
-            'background-color 300ms ease-out, border-color 300ms ease-out, transform 300ms ease-out',
+          color: completed || active ? 'common.white' : 'text.primary',
+          transition: 'background-color 300ms ease-out, border-color 300ms ease-out',
           '@media (prefers-reduced-motion: reduce)': { transition: 'none' },
         }}
       >
@@ -490,6 +486,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             }
           : {
               p: isMobile ? 1 : 0,
+              pt: 1,
               '& .MuiStepLabel-label': {
                 display: 'block',
                 fontSize: isMobile ? '10px' : '12px',
@@ -519,7 +516,12 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             key={label}
             id={`step-label-${index}`}
             completed={hasExplicitCompletedSteps ? completedSteps.includes(index) : undefined}
-            sx={{ cursor: isClickable ? 'pointer' : 'no-drop' }}
+            sx={{
+              cursor: isClickable ? 'pointer' : 'no-drop',
+              ...(!isVertical && index > 0 && index <= activeStep && {
+                '--step-connector-color': (theme) => theme.palette.primary.main,
+              }),
+            }}
           >
             <StepButton
               aria-label={`Step ${index + 1}: ${label}`}
@@ -529,6 +531,8 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
                 m: 0,
                 p: 1,
                 minHeight: 44,
+                position: 'relative',
+                zIndex: 1,
                 '&.Mui-focusVisible': {
                   outline: '2px solid',
                   outlineColor: 'primary.main',
@@ -553,7 +557,6 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
               <CustomStepLabel
                 error={errors[index]}
                 sx={{
-                  '& span': { fontSize: '12px', mt: '2px !important' },
                   '& .MuiStepLabel-iconContainer': { display: 'block' },
                 }}
                 // @ts-ignore

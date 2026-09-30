@@ -106,7 +106,8 @@ export default function GradeScaleDetailsDrawer({
     );
   }, [simMarks, marksInput, gradeScale?.gradingScale]);
 
-  if (!gradeScale) return null;
+  // Keep the Drawer mounted so its first open uses MUI's slide transition.
+  if (!gradeScale) return <Drawer anchor="right" open={false} onClose={onClose} />;
 
   return (
     <Drawer

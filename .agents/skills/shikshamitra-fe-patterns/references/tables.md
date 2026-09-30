@@ -28,7 +28,7 @@ A standard table region should contain:
 5. Pagination and density controls when required.
 
 - The table must remain the primary content area below the page-level context.
-- The table region must not repeat the page title, breadcrumb, summary cards,
+- The table region must not repeat the page title, breadcrumb, insights metrics,
   domain filters, or page-level primary action.
 - Keep the table content focused on records and the actions available for each
   record.
@@ -71,7 +71,7 @@ A standard table region should contain:
 - Avoid columns that show no useful decision-making information.
 - Badges, labels, progress indicators, and status colors must have the same
   meaning wherever the same concept appears.
-- Do not repeat summary metrics from the page header as unnecessary table
+- Do not repeat summary metrics from the insights drawer as unnecessary table
   columns unless the row-level value is different and useful.
 - Keep column content aligned consistently by type: text left, numbers and
   dates aligned predictably, and actions aligned to the right.
@@ -103,6 +103,9 @@ consistently in every module.
 - Every icon-only action must have a clear accessible name and row context.
 - Disabled actions must explain their unavailable state when the reason is not
   obvious.
+- An action that cannot be performed must be disabled and shown in a neutral
+  grey state, including its icon and label. Do not retain its normal semantic
+  color, such as red for Delete, while it is disabled.
 - Destructive actions must be visually and behaviorally distinct and require
   the appropriate confirmation.
 - The action menu must open in a predictable direction and remain usable near

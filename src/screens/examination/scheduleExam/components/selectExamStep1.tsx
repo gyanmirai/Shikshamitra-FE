@@ -306,11 +306,6 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
         <SectionCard
           title="Exam Setup"
           paperProps={{ sx: cardStyle }}
-          headerContent={
-            <Typography variant="body2" color="text.secondary">
-              Define exam identity, scope, defaults, and planning strategy.
-            </Typography>
-          }
         >
           <motion.div
             variants={formContainerVariants}
@@ -419,7 +414,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       helperText={
                         formik.touched.className && formik.errors.className
                           ? formik.errors.className
-                          : 'Select the class for this exam'
+                          : undefined
                       }
                       helperTextProps={{
                         sx: {
@@ -480,7 +475,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                           ? Array.isArray(formik.errors.divisions)
                             ? formik.errors.divisions.join(', ')
                             : formik.errors.divisions
-                          : 'Select one or more divisions (choose “All” to include all)'
+                          : undefined
                       }
                       helperTextProps={{
                         sx: {
@@ -634,7 +629,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       helperText={
                         formik.touched.examName && formik.errors.examName
                           ? formik.errors.examName
-                          : 'Use a clear name; punctuation such as hyphens is allowed (maximum 100 characters)'
+                          : undefined
                       }
                       FormHelperTextProps={{
                         sx: {
@@ -693,7 +688,7 @@ const SelectExam = (props: FormikProps<IExamFormValues>) => {
                       helperText={
                         formik.touched.gradingScaleId && formik.errors.gradingScaleId
                           ? formik.errors.gradingScaleId
-                          : 'Select overall exam grading scale'
+                          : undefined
                       }
                       helperTextProps={{
                         sx: {

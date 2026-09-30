@@ -145,11 +145,15 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
           <Box
             component="button"
             type="button"
-            onClick={() => onViewUsage(row as ISubject)}
+            disabled={!canView}
+            onClick={(event) => {
+              event.stopPropagation();
+              onViewUsage(row as ISubject);
+            }}
             style={{
               border: 0,
               background: 'transparent',
-              cursor: 'pointer',
+              cursor: canView ? 'pointer' : 'default',
               padding: 0,
               font: 'inherit',
             }}
@@ -159,7 +163,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
               sx={{
                 color: value ? 'primary.main' : 'text.secondary',
                 fontWeight: value ? 600 : 400,
-                '&:hover': value ? { textDecoration: 'underline' } : {},
+                '&:hover': canView && value ? { textDecoration: 'underline' } : {},
               }}
             >
               {value ? `Used in ${value} classes` : 'Unused'}
@@ -226,9 +230,7 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
           const isArchived = getSubjectMasterStatusLabel(subject.status) === 'Archived';
           const actions = getSettingSubjectTableActions(subject, isArchived, {
             canAdd,
-            canView,
             canDelete,
-            onViewUsage,
             onEdit,
             onArchive,
             onRestore,
@@ -286,6 +288,27 @@ const SettingSubjectTable: React.FC<ISubjectTableProps> = ({
         }
         columns={columns}
         data={subjects}
+        handleRowClick={canView ? (row) => onViewUsage(row as ISubject) : undefined}
+        rowProps={(row) => ({
+          tabIndex: canView ? 0 : -1,
+          'aria-label': canView ? `View subject ${row.name}` : undefined,
+          onKeyDown: (event) => {
+            if (
+              canView &&
+              event.target === event.currentTarget &&
+              (event.key === 'Enter' || event.key === ' ')
+            ) {
+              event.preventDefault();
+              onViewUsage(row as ISubject);
+            }
+          },
+          sx: {
+            cursor: canView ? 'pointer' : 'default',
+            '&:focus-visible': canView
+              ? { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: -2 }
+              : undefined,
+          },
+        })}
       />
     </Box>
   );

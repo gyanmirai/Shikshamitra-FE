@@ -1,8 +1,47 @@
 import { it, vi, expect, describe } from 'vitest';
 
-import { submitAssignmentRubricEvaluation } from './submitAssignmentRubricEvaluation';
+import {
+  saveAssignmentRubricAndFeedback,
+  submitAssignmentRubricEvaluation,
+} from './submitAssignmentRubricEvaluation';
 
 describe('submitAssignmentRubricEvaluation', () => {
+  it('saves teacher feedback only after rubric scoring succeeds', async () => {
+    const order: string[] = [];
+    await expect(
+      saveAssignmentRubricAndFeedback({
+        saveRubric: async () => {
+          order.push('rubric');
+          return true;
+        },
+        saveFeedback: async () => {
+          order.push('feedback');
+        },
+        feedbackChanged: true,
+      })
+    ).resolves.toBe(true);
+    expect(order).toEqual(['rubric', 'feedback']);
+  });
+
+  it('does not save teacher feedback when rubric scoring fails or text is unchanged', async () => {
+    const saveFeedback = vi.fn(async () => {});
+    await expect(
+      saveAssignmentRubricAndFeedback({
+        saveRubric: async () => false,
+        saveFeedback,
+        feedbackChanged: true,
+      })
+    ).resolves.toBe(false);
+    await expect(
+      saveAssignmentRubricAndFeedback({
+        saveRubric: async () => true,
+        saveFeedback,
+        feedbackChanged: false,
+      })
+    ).resolves.toBe(true);
+    expect(saveFeedback).not.toHaveBeenCalled();
+  });
+
   it('saves before advancing to the next student and keeps the dialog open', async () => {
     let finishSave: (saved: boolean) => void = () => {};
     const save = vi.fn(

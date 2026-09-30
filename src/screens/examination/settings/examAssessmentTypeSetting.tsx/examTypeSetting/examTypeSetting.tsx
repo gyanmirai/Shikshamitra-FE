@@ -2,6 +2,7 @@
 
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
+import type { AcademicInsightMetric } from 'src/screens/academic/components/academic-insights';
 
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
@@ -20,10 +21,10 @@ import { academicPermissions } from 'src/constants/academic-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import examTypeTableData from 'src/json/academic/examination/examTypeTableData.json';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   examinationTypeApi,
   useGetExaminationTypesQuery,
@@ -57,6 +58,7 @@ const ExamTypeSettings = () => {
   );
   const addExamTypeDialog = useBoolean(false);
   const archiveDialog = useBoolean(false);
+  const insightsDrawer = useBoolean();
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
 
@@ -113,7 +115,31 @@ const ExamTypeSettings = () => {
     (t: any) =>
       t.status === 0 || t.status === 'Active' || t.status === 2 || t.status === 'SystemDefault'
   ).length;
-  const usedTypes = examTypeList.filter((t: any) => t.usageCount > 0).length;
+  const usedTypes = examTypeList.filter((t: any) => Number(t.usageCount ?? 0) > 0).length;
+  const unusedTypes = totalTypes - usedTypes;
+  const insightMetrics = useMemo<AcademicInsightMetric[]>(
+    () => [
+      {
+        id: 'total-types',
+        label: 'Total exam types',
+        value: totalTypes,
+        icon: 'solar:documents-bold-duotone',
+      },
+      {
+        id: 'active-types',
+        label: 'Active types',
+        value: activeTypes,
+        icon: 'solar:check-circle-bold-duotone',
+      },
+      {
+        id: 'used-types',
+        label: 'Used types',
+        value: usedTypes,
+        icon: 'solar:chart-square-bold-duotone',
+      },
+    ],
+    [totalTypes, activeTypes, usedTypes]
+  );
 
   const existingNames = useMemo(
     () => new Set<string>(examTypeList.map((t: any) => t.examType.trim().toLowerCase())),
@@ -167,41 +193,30 @@ const ExamTypeSettings = () => {
           { name: 'Exam Types' },
         ]}
         action={
-          canAdd ? (
+          <Box display="flex" gap={1} flexWrap="wrap" justifyContent="flex-end">
             <Button
-              sx={{ width: '160px' }}
-              startIcon={<Iconify icon="mdi:plus" />}
-              onClick={addExamTypeDialog.onTrue}
-              variant="contained"
               size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+              onClick={insightsDrawer.onTrue}
+              disabled={!(currentMedium as Medium)?.id}
             >
-              Exam Types
+              View all insights
             </Button>
-          ) : null
+            {canAdd && (
+              <Button
+                sx={{ width: '160px' }}
+                startIcon={<Iconify icon="mdi:plus" />}
+                onClick={addExamTypeDialog.onTrue}
+                variant="contained"
+                size="small"
+              >
+                Exam Types
+              </Button>
+            )}
+          </Box>
         }
-      />
-
-      <TimetableSettingsSummaryCards
-        cards={[
-          {
-            label: 'Total Exam Types',
-            value: totalTypes,
-            icon: 'solar:documents-bold-duotone',
-            color: 'primary',
-          },
-          {
-            label: 'Active Types',
-            value: activeTypes,
-            icon: 'solar:check-circle-bold-duotone',
-            color: 'success',
-          },
-          {
-            label: 'Used Types',
-            value: usedTypes,
-            icon: 'solar:chart-square-bold-duotone',
-            color: 'info',
-          },
-        ]}
       />
 
       <CustomizableTable
@@ -378,6 +393,27 @@ const ExamTypeSettings = () => {
         data={examTypeList}
       />
 
+      <AcademicInsights
+        title="Exam type insights"
+        description="Exam type status and usage for the selected academic medium."
+        metrics={insightMetrics}
+        chart={
+          totalTypes > 0
+            ? {
+                title: 'Exam type usage',
+                description: 'Number of exam types used in exams and not yet used.',
+                categories: ['Used', 'Unused'],
+                values: [usedTypes, unusedTypes],
+                seriesName: 'Exam types',
+              }
+            : undefined
+        }
+        isLoading={isLoading || isFetching}
+        open={insightsDrawer.value}
+        onClose={insightsDrawer.onFalse}
+        hideTrigger
+      />
+
       <CustomDialog
         maxWidth="sm"
         title={
@@ -418,6 +454,7 @@ const ExamTypeSettings = () => {
 
       <ConfirmDialog
         open={confirmDeleteDialog.value}
+        disableBackdropClick
         onClose={() => {
           confirmDeleteDialog.onFalse();
           setTimeout(() => {
@@ -478,6 +515,7 @@ const ExamTypeSettings = () => {
 
       <ConfirmDialog
         open={archiveDialog.value}
+        disableBackdropClick
         onClose={() => {
           archiveDialog.onFalse();
           setSelectedExamType(null);
