@@ -47,10 +47,18 @@ export function FormBuilderSections({
   const selection = useFormBuilderSelection(formik.values.sections);
   const [canvasMode, setCanvasMode] = useState<'design' | 'preview'>('design');
   const [showFullStructure, setShowFullStructure] = useState(false);
+  const [newStepId, setNewStepId] = useState<string | null>(null);
   const [mobilePanel, setMobilePanel] = useState<'fields' | 'form'>('form');
   const [sidePanel, setSidePanel] = useState<'settings' | 'outline' | null>(null);
   const sectionLibrary = useBoolean();
   const commands = useFormBuilderCommands(formik, selection.selectedSectionId, selection.select);
+  const addStep = (afterStepId?: string) => {
+    const stepId = commands.addCanvasUnit(afterStepId);
+    setNewStepId(stepId ?? null);
+    setShowFullStructure(true);
+    setCanvasMode('design');
+    setMobilePanel('form');
+  };
   const selectCanvasField = (sectionId: string, fieldId: string | null) => {
     selection.select(sectionId, fieldId);
     if (fieldId) setSidePanel('settings');
@@ -60,7 +68,8 @@ export function FormBuilderSections({
     setMobilePanel('fields');
   };
   const { selectedSection } = selection;
-  const selectedStep = getAdmissionFormStepGroups(formik.values.sections).find((step) =>
+  const steps = getAdmissionFormStepGroups(formik.values.sections);
+  const selectedStep = steps.find((step) =>
     step.sections.some(({ section }) => section.id === selectedSection?.id)
   );
   const sensors = useSensors(
@@ -133,7 +142,7 @@ export function FormBuilderSections({
                   <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
                     <Typography variant="body2" color="text.secondary">
                       {showFullStructure
-                        ? `${formik.values.sections.length} sections`
+                        ? `${formik.values.layoutType === 1 ? `${steps.length} ${steps.length === 1 ? 'step' : 'steps'} · ` : ''}${formik.values.sections.length} sections`
                         : `${selectedSection?.fields.length ?? 0} ${(selectedSection?.fields.length ?? 0) === 1 ? 'field' : 'fields'}`}
                     </Typography>
                     <FormValidationPanel
@@ -188,6 +197,16 @@ export function FormBuilderSections({
                       >
                         Add section
                       </Button>
+                      {formik.values.layoutType === 1 && (
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<Iconify icon="mdi:plus" />}
+                          onClick={() => addStep(selectedStep?.id)}
+                        >
+                          Add next step
+                        </Button>
+                      )}
                       <Button
                         size="small"
                         variant="outlined"
@@ -243,7 +262,10 @@ export function FormBuilderSections({
                         size="small"
                         variant="contained"
                         startIcon={<Iconify icon="mdi:plus" />}
-                        onClick={commands.addCanvasUnit}
+                        onClick={() => {
+                          if (formik.values.layoutType === 1) addStep();
+                          else commands.addCanvasUnit();
+                        }}
                         sx={{
                           bgcolor: 'common.black',
                           color: 'common.white',
@@ -265,6 +287,9 @@ export function FormBuilderSections({
                     showFullStructure={showFullStructure}
                     onSelect={selectCanvasField}
                     onShowFullStructureChange={setShowFullStructure}
+                    newStepId={newStepId}
+                    onAddStep={addStep}
+                    onNewStepReady={setNewStepId}
                   />
                 ) : (
                   <FormBuilderLivePreview form={formik.values} />

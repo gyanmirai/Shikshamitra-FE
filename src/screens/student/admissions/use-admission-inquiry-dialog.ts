@@ -8,13 +8,16 @@ import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { DEFAULT_INQUIRY_POLICY, readAdmissionInquiryPolicy } from 'src/redux/student/admissions/admission-inquiry-policy';
-import { useGetAdmissionIntakeProfilesQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 import { useGetAdmissionWorkflowQuery } from 'src/redux/student/admissions/admission-workflows-api';
+import { useGetAdmissionIntakeProfilesQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 import {
   type AdmissionFormField,
   useGetAdmissionFormQuery,
 } from 'src/redux/student/admissions/admission-forms-api';
+import {
+  DEFAULT_INQUIRY_POLICY,
+  readAdmissionInquiryPolicy,
+} from 'src/redux/student/admissions/admission-inquiry-policy';
 import {
   useGetAdmissionOfferingQuery,
   type AdmissionOfferingListItem,
@@ -92,27 +95,47 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     () => getAdmissionInquiryAcademicOptions(offeringChoices, formik.values),
     [formik.values, offeringChoices]
   );
-  const { data: offeringDetail } = useGetAdmissionOfferingQuery(formik.values.offeringId, {
+  const offeringQuery = useGetAdmissionOfferingQuery(formik.values.offeringId, {
     skip: !formik.values.offeringId,
     refetchOnMountOrArgChange: true,
   });
+  const offeringDetail = offeringQuery.currentData;
   const intakeProfiles = useGetAdmissionIntakeProfilesQuery(undefined, {
     skip: !offeringDetail?.inquiryIntakeProfileId,
   });
-  const { data: form, isFetching: formLoading } = useGetAdmissionFormQuery(
-    offeringDetail?.inquiryFormDefinitionId ?? '',
-    { skip: !offeringDetail?.inquiryFormDefinitionId }
-  );
-  const { data: workflow, isFetching: workflowLoading } = useGetAdmissionWorkflowQuery(
-    offeringDetail?.workflowDefinitionId ?? '',
-    { skip: !offeringDetail?.workflowDefinitionId }
-  );
-  const sections = formik.values.offeringId ? getAdmissionInquirySections(form) : [];
-  const fields: AdmissionFormField[] = formik.values.offeringId
-    ? getAdmissionInquiryFields(form)
-    : [];
+  const formQuery = useGetAdmissionFormQuery(offeringDetail?.inquiryFormDefinitionId ?? '', {
+    skip: !offeringDetail?.inquiryFormDefinitionId,
+  });
+  const workflowQuery = useGetAdmissionWorkflowQuery(offeringDetail?.workflowDefinitionId ?? '', {
+    skip: !offeringDetail?.workflowDefinitionId,
+  });
+  const form = formQuery.currentData;
+  const workflow = workflowQuery.currentData;
+  const workflowLoading = workflowQuery.isFetching;
+  const runtimeError =
+    offeringQuery.isError || formQuery.isError || workflowQuery.isError || intakeProfiles.isError;
+  const runtimeLoading =
+    Boolean(formik.values.offeringId) &&
+    !runtimeError &&
+    (offeringQuery.isFetching ||
+      !offeringDetail ||
+      formQuery.isFetching ||
+      Boolean(offeringDetail.inquiryFormDefinitionId && !form) ||
+      workflowQuery.isFetching ||
+      Boolean(offeringDetail.workflowDefinitionId && !workflow) ||
+      intakeProfiles.isFetching);
+  const sections =
+    formik.values.offeringId && !runtimeLoading && !runtimeError
+      ? getAdmissionInquirySections(form)
+      : [];
+  const fields: AdmissionFormField[] =
+    formik.values.offeringId && !runtimeLoading && !runtimeError
+      ? getAdmissionInquiryFields(form)
+      : [];
   const inquiryStage = workflow?.stages.find((stage) => stage.stageType === 0);
-  const profile = intakeProfiles.data?.find((item) => item.id === offeringDetail?.inquiryIntakeProfileId);
+  const profile = intakeProfiles.data?.find(
+    (item) => item.id === offeringDetail?.inquiryIntakeProfileId
+  );
   const policy = profile
     ? { ...DEFAULT_INQUIRY_POLICY, ...JSON.parse(profile.configurationJson) }
     : readAdmissionInquiryPolicy(inquiryStage?.configurationJson);
@@ -155,8 +178,13 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
 
         if (active) {
           setOfferingChoices(
-            Array.from(new Map(items.filter((offering) => offering.entryMode !== 1)
-              .map((offering) => [offering.id, offering])).values())
+            Array.from(
+              new Map(
+                items
+                  .filter((offering) => offering.entryMode !== 1)
+                  .map((offering) => [offering.id, offering])
+              ).values()
+            )
           );
         }
       } catch {
@@ -247,13 +275,22 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     mediums: academicOptions.mediums,
     standards: academicOptions.standards,
     offerings: academicOptions.offerings,
+    selectedOffering,
     classCapacity:
       offeringDetail?.id === formik.values.offeringId ? offeringDetail.classCapacity : null,
     offeringsLoading,
     offeringsError,
     retryOfferings: () => setOfferingsReload((current) => current + 1),
-    formLoading,
-    workflowLoading,
+    formLoading: formQuery.isFetching,
+    workflowLoading: workflowQuery.isFetching,
+    runtimeLoading,
+    runtimeError,
+    retryRuntime: () => {
+      if (offeringQuery.isError) offeringQuery.refetch();
+      if (formQuery.isError) formQuery.refetch();
+      if (workflowQuery.isError) workflowQuery.refetch();
+      if (intakeProfiles.isError) intakeProfiles.refetch();
+    },
     policy,
     allowedSources,
     canAutoAcknowledge,

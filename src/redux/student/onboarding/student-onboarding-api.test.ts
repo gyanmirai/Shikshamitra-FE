@@ -52,6 +52,22 @@ afterEach(() => {
 });
 
 describe('student onboarding API', () => {
+  it('loads active campus choices from the onboarding settings boundary', async () => {
+    const campuses = [{ id: 'campus-north', code: 'N', name: 'North Campus' }];
+    let requestPath = '';
+    mswServer.use(http.get('*/api/student/onboarding/settings/campuses', ({ request }) => {
+      requestPath = new URL(request.url).pathname;
+      return HttpResponse.json({ data: campuses });
+    }));
+
+    const query = store.dispatch(
+      studentOnboardingApi.endpoints.getAvailableOnboardingCampuses.initiate()
+    );
+    expect(await query.unwrap()).toEqual(campuses);
+    expect(requestPath).toBe('/api/student/onboarding/settings/campuses');
+    query.unsubscribe();
+  });
+
   it('loads the server-paged worklist with operational filters', async () => {
     let requestUrl = '';
 
@@ -193,7 +209,11 @@ describe('student onboarding API', () => {
             attemptCount: 2,
           },
         })
-      )
+      ),
+      http.post('*/api/student/onboarding/case-1/service-consent/confirm', async ({ request }) => {
+        commandBodies.consent = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ data: onboardingCase });
+      })
     );
 
     const { endpoints } = studentOnboardingApi;
@@ -223,12 +243,19 @@ describe('student onboarding API', () => {
         })
       )
       .unwrap();
+    await store.dispatch(endpoints.confirmStudentOnboardingServiceConsent.initiate({
+      id: 'case-1', concurrencyStamp: 'case-stamp-3', evidenceReference: 'Signed form CONSENT-001',
+    })).unwrap();
 
     expect(commandBodies).toEqual({
       owner: { concurrencyStamp: 'case-stamp-1', userId: 'user-1' },
       cancel: {
         concurrencyStamp: 'case-stamp-2',
         reason: 'Family withdrew before activation.',
+      },
+      consent: {
+        concurrencyStamp: 'case-stamp-3',
+        evidenceReference: 'Signed form CONSENT-001',
       },
     });
     expect(handoff).toMatchObject({ id: 'handoff-1', status: 0, attemptCount: 2 });

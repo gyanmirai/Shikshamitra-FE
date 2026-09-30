@@ -19,10 +19,10 @@ import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
+import { Box, Tab, Card, Stack, Typography } from '@mui/material';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Tab, Card, Stack, Typography } from '@mui/material';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetAdmissionCyclesQuery } from 'src/redux/student/admissions/admission-cycles-api';
 import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import {
@@ -34,8 +34,13 @@ import {
 import { getAdmissionInquiryAccess } from './inquiry-access';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
+import { INQUIRY_STATUS_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
-import { AdmissionInquiryManagementDrawer } from './inquiry-management/admission-inquiry-management-drawer';
+import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
+import {
+  AdmissionAcademicFilters,
+  useAdmissionAcademicFilters,
+} from './admission-academic-filters';
 import { AdmissionInquiryAssignmentDialog } from './inquiry-management/admission-inquiry-assignment-dialog';
 import { AdmissionInquiryCommunicationDialog } from './inquiry-management/admission-inquiry-communication-dialog';
 import {
@@ -43,7 +48,6 @@ import {
   AdmissionInquiryFilters,
   UNASSIGNED_INQUIRIES_FILTER,
 } from './inquiry-management/admission-inquiry-filters';
-import { INQUIRY_STATUS_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
 import {
   isAdmissionInquiryEnumFilter,
   buildAdmissionInquiryListFilters,
@@ -96,6 +100,7 @@ const parseWorkQueue = (value: string | null): '' | AdmissionInquiryWorkQueue =>
 };
 
 export default function AdmissionInquiryPipelineScreen() {
+  const academic = useAdmissionAcademicFilters();
   const router = useRouter();
   const searchParams = useSearchParams();
   const routeQuery = searchParams.toString();
@@ -205,6 +210,10 @@ export default function AdmissionInquiryPipelineScreen() {
   });
   const sharedFilters: AdmissionInquiryListInput = {
     ...tableListFilters,
+    academicYearId: academic.academicYearId,
+    boardId: academic.boardId || undefined,
+    mediumId: academic.mediumId || undefined,
+    standardId: academic.standardId || undefined,
     admissionCycleId: cycleId || undefined,
     admissionOfferingId: offeringId || undefined,
     source: source === '' ? undefined : source,
@@ -221,14 +230,19 @@ export default function AdmissionInquiryPipelineScreen() {
     sorting,
   };
   const otherGroup: PipelineGroup = group === 'active' ? 'handoff' : 'active';
-  const { currentData, isLoading, isFetching, isError, refetch } =
-    useGetAdmissionInquiriesQuery(queryInput);
-  const { currentData: otherGroupData } = useGetAdmissionInquiriesQuery({
-    ...sharedFilters,
-    pipelineGroup: otherGroup,
-    skipCount: 0,
-    maxResultCount: 1,
-  });
+  const { currentData, isLoading, isFetching, isError, refetch } = useGetAdmissionInquiriesQuery(
+    queryInput,
+    { skip: !academic.academicYearId }
+  );
+  const { currentData: otherGroupData } = useGetAdmissionInquiriesQuery(
+    {
+      ...sharedFilters,
+      pipelineGroup: otherGroup,
+      skipCount: 0,
+      maxResultCount: 1,
+    },
+    { skip: !academic.academicYearId }
+  );
   const groupCounts: Record<PipelineGroup, number> = {
     active: group === 'active' ? (currentData?.totalCount ?? 0) : (otherGroupData?.totalCount ?? 0),
     handoff:
@@ -288,6 +302,17 @@ export default function AdmissionInquiryPipelineScreen() {
   };
 
   const openInquiry = useCallback((inquiry: AdmissionInquiry) => setSelectedInquiry(inquiry), []);
+  const openEditInquiry = useCallback(
+    (inquiry: AdmissionInquiry) => {
+      const next = new URLSearchParams();
+      next.set(
+        'returnTo',
+        `${studentPaths.enrollment.pipeline}${routeQuery ? `?${routeQuery}` : ''}`
+      );
+      router.push(`${studentPaths.enrollment.inquiryEdit(inquiry.id)}?${next.toString()}`);
+    },
+    [routeQuery, router]
+  );
   const openApplicant360 = useCallback(
     (inquiry: AdmissionInquiry) => {
       if (!inquiry.applicantId) return;
@@ -317,7 +342,7 @@ export default function AdmissionInquiryPipelineScreen() {
         value: offering.id,
       })),
       onOpenApplicant360: openApplicant360,
-      onManage: openInquiry,
+      onManage: openEditInquiry,
       onAssign: setAssignmentInquiry,
       onCommunicate: setCommunicationInquiry,
       onMarkContacted: (inquiry) => {
@@ -357,9 +382,19 @@ export default function AdmissionInquiryPipelineScreen() {
     markContacted,
     markingContacted,
     openApplicant360,
-    openInquiry,
+    openEditInquiry,
     visibleOfferings,
   ]);
+
+  if (selectedInquiry) {
+    return (
+      <AdmissionInquiryManagementPage
+        inquiry={selectedInquiry}
+        origin="pipeline"
+        onClose={() => setSelectedInquiry(null)}
+      />
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
@@ -377,6 +412,18 @@ export default function AdmissionInquiryPipelineScreen() {
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Inquiry Pipeline' },
         ]}
+      />
+
+      <AdmissionAcademicFilters
+        boardId={academic.boardId}
+        mediumId={academic.mediumId}
+        standardId={academic.standardId}
+        onClear={academic.clear}
+        onChange={(key, value) => {
+          setPage(0);
+          setOfferingId('');
+          academic.update(key, value);
+        }}
       />
 
       <AdmissionInquiryFilters
@@ -426,10 +473,6 @@ export default function AdmissionInquiryPipelineScreen() {
         </CustomTabs>
       </Card>
 
-      <AdmissionInquiryManagementDrawer
-        inquiry={selectedInquiry}
-        onClose={() => setSelectedInquiry(null)}
-      />
       <AdmissionInquiryAssignmentDialog
         inquiry={assignmentInquiry}
         counsellors={assignmentCounsellors}

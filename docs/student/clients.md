@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-18
+updated_on: 2026-09-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -33,7 +33,7 @@ The backend owns lifecycle, dependency, permission, institution-timezone, and co
 
 ### Student Onboarding
 
-`src/redux/student/onboarding/student-onboarding-api.ts` owns the durable post-admission worklist contract. It covers server-paged cases, filter options, analytics, detail, live placement capacity, identifier series, readiness refresh, owner and step updates, placement reservation, identifier preparation, activation preview and activation, cancellation, service handoffs, policies, identifier-series settings, historical reconciliation, and onboarding documents. The client unwraps the shared `Result<T>` response at the API boundary and invalidates case, list, analytics, and related operational tags after commands.
+`src/redux/student/onboarding/student-onboarding-api.ts` owns the durable post-admission worklist contract. It covers server-paged cases, filter options, analytics, detail, live placement capacity, identifier series, readiness refresh, owner and step updates, placement reservation, identifier preparation, activation preview and activation, cancellation, service handoffs and consent confirmation, policies, identifier-series settings, historical reconciliation, and onboarding documents. The client unwraps the shared `Result<T>` response at the API boundary and invalidates case, list, analytics, and related operational tags after commands.
 
 `student-onboarding-types.ts` mirrors the backend numeric lifecycle enums and DTOs. Do not reuse the generic Student Records lookup as the onboarding source of truth: admission finalization returns `onboardingCaseId`, while the onboarding case owns preparation until activation creates the operational enrollment.
 

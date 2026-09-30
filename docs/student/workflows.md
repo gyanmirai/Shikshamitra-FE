@@ -3,7 +3,7 @@ module: student
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-09-19
+updated_on: 2026-09-29
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -90,13 +90,14 @@ Selecting the RTE track in Offering configuration switches entry to Registration
 Configure the academic structure in Institute Setup before authoring onboarding rules. Board, Medium, School Level, Class, and Division are separate dimensions; a board selection never implies a medium or school level.
 
 1. Select the academic year in the Student header. In **Readiness & Access**, add a named route rule. The removed Saved Defaults menu is not a prerequisite.
-2. Select Board, its related Medium, then one or more Secondary/Higher Secondary levels and related Standards. Parent changes clear invalid descendants. All three **Numbering & Placement** editors use the same selector; Saved GR & Seat Settings is removed.
+2. Select Board, its related Medium, then one or more enabled school levels and related Standards. DDVS currently enables Secondary and Higher Secondary; another school's choices come from its own hierarchy and onboarding availability. Parent changes clear invalid descendants. All three **Numbering & Placement** editors use the same selector; Saved GR & Seat Settings is removed.
 3. Save the scoped readiness and numbering rules. School/year overrides persist; narrower rules win and equal-priority overlap is rejected. Historical broad defaults remain readable.
 4. Finalize the accepted application and open its onboarding case. Prepare actual documents, placement, GR/roll and required approval. Refresh readiness; each mutation uses current concurrency.
 5. Activate only after a fresh backend eligibility check. This creates enrollment and enters Provisioning, not Completed.
 6. In the student drawer, assign a published fee structure through the existing Finance drawer, then open the standard Finance collections page. Select the academic year and find and verify the student manually before collecting the first installment; no custom Finance filter is installed. Refresh onboarding completion afterward; partial or unconfirmed payments do not satisfy the handoff.
 7. Authorized staff verify saved contacts and create/link required student and guardian accounts. Owners use Forgot password for first password setup; onboarding does not email credentials automatically.
-8. Check completion to re-read Finance and account links. Completion requires all required handoffs. Future installments may remain due. Bulk refresh/activation calls real per-case commands and reports individual results; failed rows can be retried without repeating successes.
+8. If a legacy onboarding policy requires service consent, save the signed consent in school records, then use **Confirm consent** on its handoff and enter the saved record reference. This is an audited staff confirmation, not a consent-collection form.
+9. Check completion to re-read Finance and account links. Completion requires all required handoffs. Future installments may remain due. Bulk refresh/activation calls real per-case commands and reports individual results; failed rows can be retried without repeating successes.
 
 Backend case commands own capacity, identifier uniqueness, approval, concurrency and audit history. Production workflow-preview rows, policy-preview drawers, fake successful handoff retries, and unsupported automatic placement/renumbering/notification controls are removed. Placement and Roll preparation are explicit staff actions; changing division clears the Roll reservation for re-preparation. Legacy configuration fields remain readable for compatibility but do not represent a batch scheduler or notification service.
 

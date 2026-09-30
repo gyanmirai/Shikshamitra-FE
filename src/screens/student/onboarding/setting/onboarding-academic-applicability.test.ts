@@ -2,8 +2,10 @@ import type { Board } from 'src/types/school';
 
 import { it, expect, describe } from 'vitest';
 
+import { filterOnboardingBoardsBySchoolLevels } from './use-onboarding-academic-structure';
 import {
   academicTargetsOverlap,
+  isAcademicApplicabilityMatch,
   getAcademicApplicabilityScore,
   createAllAcademicApplicability,
 } from '../onboarding-settings-model';
@@ -42,12 +44,12 @@ const academicBoards = [
 
 describe('Student Onboarding academic applicability', () => {
 
-  it('offers only configured CBSE and GSEB boards', () => {
+  it('offers only boards configured in the selected school hierarchy', () => {
     const boards = [...academicBoards, { id: 'board-icse', name: 'ICSE', educationMediums: [] }] as Board[];
-    expect(buildOnboardingAcademicStructureOptions(boards).boards.map(board => board.name)).toEqual(['GSEB']);
+    expect(buildOnboardingAcademicStructureOptions(boards).boards.map(board => board.name)).toEqual(['GSEB', 'ICSE']);
   });
 
-  it('only offers secondary levels and preserves multiple selected standards', () => {
+  it('offers each configured school level and preserves multiple selected standards', () => {
     const boards = structuredClone(academicBoards);
     boards[0].educationMediums[0].educationMediumStages.push({
       id: 'stage-higher', name: 'Higher Secondary', standards: [
@@ -59,8 +61,8 @@ describe('Student Onboarding academic applicability', () => {
       id: 'stage-primary', name: 'Primary', standards: [{ id: 'standard-1', name: 'Class 1', divisions: [] }],
     } as any);
     const options = buildOnboardingAcademicStructureOptions(boards);
-    expect(options.stages.map(s => s.label)).toEqual(['Secondary', 'Higher Secondary']);
-    expect(options.standards.map(s => s.id)).not.toContain('standard-1');
+    expect(options.stages.map(s => s.label)).toEqual(['Secondary', 'Higher Secondary', 'Primary']);
+    expect(options.standards.map(s => s.id)).toContain('standard-1');
     const value = normalizeSingleAcademicApplicability({
       ...createAllAcademicApplicability(), boardMode: 'selected', boardIds: ['board-gseb'],
       mediumMode: 'selected', academicMediumIds: ['medium-gujarati'],
@@ -70,6 +72,25 @@ describe('Student Onboarding academic applicability', () => {
     expect(value.academicMediumStageIds).toHaveLength(2);
     expect(value.standardIds).toHaveLength(3);
     expect(getSingleAcademicPathValidationError(value)).toBeNull();
+  });
+  it('narrows authored rules to a school’s selected levels without changing board definitions', () => {
+    const boards = structuredClone(academicBoards);
+    boards[0].educationMediums[0].educationMediumStages.push({
+      id: 'stage-primary', name: 'Primary', standards: [{ id: 'standard-1', name: 'Class 1', divisions: [] }],
+    } as any);
+    expect(buildOnboardingAcademicStructureOptions(
+      filterOnboardingBoardsBySchoolLevels(boards, ['Secondary'])
+    ).stages.map((stage) => stage.label)).toEqual(['Secondary']);
+    expect(buildOnboardingAcademicStructureOptions(
+      filterOnboardingBoardsBySchoolLevels(boards, null)
+    ).stages.map((stage) => stage.label)).toEqual(['Secondary', 'Primary']);
+  });
+  it('interprets a configured school-level prefix consistently regardless of casing', () => {
+    const boards = structuredClone(academicBoards);
+    boards[0].educationMediums[0].educationMediumStages[0].name = 'gseb - GUJARATI - Secondary';
+
+    const visible = filterOnboardingBoardsBySchoolLevels(boards, ['secondary']);
+    expect(buildOnboardingAcademicStructureOptions(visible).stages[0].label).toBe('Secondary');
   });
   it('uses concise dependent labels and qualified divisions', () => {
     const options = buildOnboardingAcademicStructureOptions(academicBoards);
@@ -167,5 +188,19 @@ describe('Student Onboarding academic applicability', () => {
     expect(getAcademicApplicabilityScore(fallback)).not.toBe(getAcademicApplicabilityScore(gseb));
     expect(academicTargetsOverlap(gseb, sameGseb)).toBe(true);
     expect(getAcademicApplicabilityScore(gseb)).toBe(getAcademicApplicabilityScore(sameGseb));
+  });
+
+  it('treats legacy rules as all-campus and isolates selected campuses', () => {
+    const all = createAllAcademicApplicability();
+    const campusA = { ...all, campusMode: 'selected' as const, campusIds: ['campus-a'] };
+    const campusB = { ...all, campusMode: 'selected' as const, campusIds: ['campus-b'] };
+
+    expect(isAcademicApplicabilityMatch(all, { campusId: 'campus-b' })).toBe(true);
+    expect(isAcademicApplicabilityMatch(campusA, { campusId: 'campus-a' })).toBe(true);
+    expect(isAcademicApplicabilityMatch(campusA, { campusId: 'campus-b' })).toBe(false);
+    expect(academicTargetsOverlap(campusA, campusB)).toBe(false);
+    expect(getAcademicApplicabilityScore(campusA)).toBe(32);
+    expect(getAcademicApplicabilitySummary(campusA, academicBoards,
+      [{ id: 'campus-a', name: 'North Campus', code: 'N' }])).toContain('Campus: North Campus');
   });
 });

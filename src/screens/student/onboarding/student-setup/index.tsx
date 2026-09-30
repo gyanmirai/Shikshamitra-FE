@@ -9,14 +9,14 @@ import Link from 'next/link';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
-import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { usePathname, useSearchParams } from 'next/navigation';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   Box,
   Menu,
@@ -63,7 +63,7 @@ import {
   filterStudentsForSetupView,
 } from './student-setup-view';
 
-import type { StudentAssignmentType } from './student-assignment-dialog';
+import type { StudentAssignmentType } from './student-onboarding-operation-dialog';
 
 const studentSetupTooltip = (
   <Box sx={{ p: 1.5, maxWidth: 340 }}>
@@ -95,46 +95,67 @@ const ALL_STANDARDS = '__all__';
 
 function StudentSetupFilters({
   options,
+  selectedBoardId,
+  selectedMediumId,
   selectedStandardId,
+  selectedDivisionId,
   overdueOnly,
   unassignedOnly,
+  onBoardChange,
+  onMediumChange,
   onStandardChange,
+  onDivisionChange,
   onOverdueOnlyChange,
   onUnassignedOnlyChange,
 }: {
   options?: StudentOnboardingFilterOptions;
+  selectedBoardId: string;
+  selectedMediumId: string;
   selectedStandardId: string;
+  selectedDivisionId: string;
   overdueOnly: boolean;
   unassignedOnly: boolean;
+  onBoardChange: (value: string) => void;
+  onMediumChange: (value: string) => void;
   onStandardChange: (value: string) => void;
+  onDivisionChange: (value: string) => void;
   onOverdueOnlyChange: (value: boolean) => void;
   onUnassignedOnlyChange: (value: boolean) => void;
 }) {
-  const standards = [{ id: ALL_STANDARDS, name: 'All classes' }, ...(options?.standards ?? [])];
+  const mediums = (options?.mediums ?? []).filter((item) => item.parentId === selectedBoardId);
+  const standards = (options?.standards ?? []).filter((item) => item.parentId === selectedMediumId);
+  const divisions = (options?.divisions ?? []).filter((item) => item.parentId === selectedStandardId);
 
   return (
-    <Paper variant="outlined" sx={{ p: 1.25, flexShrink: 0 }}>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            md: 'minmax(220px, 1fr) minmax(0, 2fr)',
-          },
-          gap: 1.25,
-          alignItems: 'center',
-        }}
-      >
+    <Paper variant="outlined" sx={{ p: 1, flexShrink: 0, borderRadius: 2 }}>
+      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1}>
         <CustomSelect
-          options={standards}
+          fullWidth options={[{ id: ALL_STANDARDS, name: 'All boards' }, ...(options?.boards ?? [])]}
+          label="Board" value={selectedBoardId} onChange={(value) => onBoardChange(String(value))}
+          labelKey="name" valueKey="id"
+        />
+        <CustomSelect
+          fullWidth options={[{ id: ALL_STANDARDS, name: 'All mediums' }, ...mediums]}
+          label="Medium" value={selectedMediumId} onChange={(value) => onMediumChange(String(value))}
+          labelKey="name" valueKey="id" disabled={selectedBoardId === ALL_STANDARDS}
+        />
+        <CustomSelect
+          fullWidth
+          options={[{ id: ALL_STANDARDS, name: 'All classes' }, ...standards]}
           label="Class"
           value={selectedStandardId}
           onChange={(value) => onStandardChange(value as string)}
           labelKey="name"
           valueKey="id"
           isSearch
+          disabled={selectedMediumId === ALL_STANDARDS}
         />
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 0, sm: 2 }}>
+        <CustomSelect
+          fullWidth options={[{ id: ALL_STANDARDS, name: 'All divisions' }, ...divisions]}
+          label="Division" value={selectedDivisionId} onChange={(value) => onDivisionChange(String(value))}
+          labelKey="name" valueKey="id" disabled={selectedStandardId === ALL_STANDARDS}
+        />
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
           <FormControlLabel
             control={
               <Checkbox
@@ -154,7 +175,7 @@ function StudentSetupFilters({
             label="Unassigned owner only"
           />
         </Stack>
-      </Box>
+      </Stack>
     </Paper>
   );
 }
@@ -675,6 +696,7 @@ function StudentSetupAssignmentBar({
 }
 
 export default function StudentSetupScreen() {
+  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -693,7 +715,10 @@ export default function StudentSetupScreen() {
   } | null>(null);
   const [moreActionsAnchor, setMoreActionsAnchor] = useState<HTMLElement | null>(null);
   const [showFilterAlert, setShowFilterAlert] = useState(true);
-  const [selectedStandardId, setSelectedStandardId] = useState(ALL_STANDARDS);
+  const selectedBoardId = searchParams.get('board') ?? ALL_STANDARDS;
+  const selectedMediumId = searchParams.get('medium') ?? ALL_STANDARDS;
+  const selectedStandardId = searchParams.get('class') ?? ALL_STANDARDS;
+  const selectedDivisionId = searchParams.get('division') ?? ALL_STANDARDS;
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [unassignedOnly, setUnassignedOnly] = useState(false);
   const [tablePage, setTablePage] = useState(1);
@@ -702,10 +727,26 @@ export default function StudentSetupScreen() {
   const [refreshReadiness, refreshReadinessState] = useRefreshStudentOnboardingReadinessMutation();
   const [activateOnboarding, activateOnboardingState] = useActivateStudentOnboardingMutation();
 
+  const changeAcademicFilter = useCallback((key: 'board' | 'medium' | 'class' | 'division', value: string) => {
+    const next = new URLSearchParams(searchParams.toString());
+    if (value === ALL_STANDARDS) next.delete(key);
+    else next.set(key, value);
+    if (key === 'board') ['medium', 'class', 'division'].forEach((item) => next.delete(item));
+    if (key === 'medium') ['class', 'division'].forEach((item) => next.delete(item));
+    if (key === 'class') next.delete('division');
+    setTablePage(1);
+    setSelectedStudentIds([]);
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
   const queryArgs = useMemo(
     () => ({
       academicYearId: currentYear?.id || '',
+      boardId: selectedBoardId === ALL_STANDARDS ? undefined : selectedBoardId,
+      mediumId: selectedMediumId === ALL_STANDARDS ? undefined : selectedMediumId,
       standardId: selectedStandardId === ALL_STANDARDS ? undefined : selectedStandardId,
+      divisionId: selectedDivisionId === ALL_STANDARDS ? undefined : selectedDivisionId,
       overdueOnly: overdueOnly || undefined,
       unassignedOnly: unassignedOnly || undefined,
       search: searchTerm.trim() || undefined,
@@ -715,6 +756,9 @@ export default function StudentSetupScreen() {
     }),
     [
       currentYear?.id,
+      selectedBoardId,
+      selectedMediumId,
+      selectedDivisionId,
       overdueOnly,
       rowsPerPage,
       searchTerm,
@@ -727,12 +771,27 @@ export default function StudentSetupScreen() {
   const onboardingQuery = useGetStudentOnboardingCasesQuery(queryArgs, {
     skip: !currentYear?.id,
   });
-  const filterOptionsQuery = useGetStudentOnboardingFilterOptionsQuery(undefined, {
+  const filterOptionsQuery = useGetStudentOnboardingFilterOptionsQuery(currentYear?.id ?? '', {
     skip: !currentYear?.id,
   });
+  useEffect(() => {
+    const options = filterOptionsQuery.currentData;
+    if (!options) return;
+    if (selectedBoardId !== ALL_STANDARDS && !options.boards?.some((item) => item.id === selectedBoardId))
+      changeAcademicFilter('board', ALL_STANDARDS);
+    else if (selectedMediumId !== ALL_STANDARDS && !options.mediums?.some((item) =>
+      item.id === selectedMediumId && item.parentId === selectedBoardId))
+      changeAcademicFilter('medium', ALL_STANDARDS);
+    else if (selectedStandardId !== ALL_STANDARDS && !options.standards?.some((item) =>
+      item.id === selectedStandardId && item.parentId === selectedMediumId))
+      changeAcademicFilter('class', ALL_STANDARDS);
+    else if (selectedDivisionId !== ALL_STANDARDS && !options.divisions?.some((item) =>
+      item.id === selectedDivisionId && item.parentId === selectedStandardId))
+      changeAcademicFilter('division', ALL_STANDARDS);
+  }, [changeAcademicFilter, filterOptionsQuery.currentData, selectedBoardId, selectedMediumId, selectedStandardId, selectedDivisionId]);
   const liveRows = useMemo(
-    () => (onboardingQuery.data?.items ?? []).map(mapOnboardingCaseToItem),
-    [onboardingQuery.data?.items]
+    () => (onboardingQuery.currentData?.items ?? []).map(mapOnboardingCaseToItem),
+    [onboardingQuery.currentData?.items]
   );
   const sourceRows = liveRows;
   const displayedRows = useMemo(
@@ -929,13 +988,16 @@ export default function StudentSetupScreen() {
       >
         <StudentSetupFilters
             options={filterOptionsQuery.data}
+            selectedBoardId={selectedBoardId}
+            selectedMediumId={selectedMediumId}
             selectedStandardId={selectedStandardId}
+            selectedDivisionId={selectedDivisionId}
             overdueOnly={overdueOnly}
             unassignedOnly={unassignedOnly}
-            onStandardChange={(value) => {
-              setSelectedStandardId(value);
-              setTablePage(1);
-            }}
+            onBoardChange={(value) => changeAcademicFilter('board', value)}
+            onMediumChange={(value) => changeAcademicFilter('medium', value)}
+            onStandardChange={(value) => changeAcademicFilter('class', value)}
+            onDivisionChange={(value) => changeAcademicFilter('division', value)}
             onOverdueOnlyChange={(value) => {
               setOverdueOnly(value);
               setTablePage(1);
@@ -1106,7 +1168,7 @@ export default function StudentSetupScreen() {
               someStudentsSelected={someStudentsSelected}
               onToggleAll={toggleAll}
               totalCount={
-                onboardingQuery.data?.totalCount ?? 0
+                onboardingQuery.currentData?.totalCount ?? 0
               }
               page={tablePage}
               rowsPerPage={rowsPerPage}

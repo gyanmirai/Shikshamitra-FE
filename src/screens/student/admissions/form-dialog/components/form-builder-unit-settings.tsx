@@ -20,6 +20,7 @@ type Props = {
   onNameChange: (value: string) => void;
   onCodeChange: (value: string) => void;
   onVisibilityChange: (value: string) => void;
+  focusName?: boolean;
 };
 
 export function FormBuilderUnitSettings({
@@ -35,6 +36,7 @@ export function FormBuilderUnitSettings({
   onNameChange,
   onCodeChange,
   onVisibilityChange,
+  focusName = false,
 }: Props) {
   const advanced = useBoolean();
   return (
@@ -43,6 +45,7 @@ export function FormBuilderUnitSettings({
         fullWidth
         size="small"
         label={`${unit} name *`}
+        autoFocus={focusName}
         value={name}
         error={Boolean(nameError)}
         onBlur={onNameBlur}

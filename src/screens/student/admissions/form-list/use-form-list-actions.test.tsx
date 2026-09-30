@@ -6,8 +6,11 @@ import { act, waitFor, renderHook } from '@testing-library/react';
 import { useFormListActions } from './use-form-list-actions';
 
 const query = vi.hoisted(() => ({ data: null as AdmissionForm | null, isError: false }));
+const approval = vi.hoisted(() => ({ validate: vi.fn(), request: vi.fn() }));
+const toast = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn() }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: toast }));
 vi.mock('react-redux', () => ({
   useSelector: (selector: (state: unknown) => unknown) =>
     selector({ auth: { permissions: [], user: { sub: 'test-user', role: 'admin' } } }),
@@ -24,16 +27,50 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => {
     usePublishAdmissionFormMutation: mutation,
     useArchiveAdmissionFormMutation: mutation,
     useApproveAdmissionFormMutation: mutation,
-    useValidateAdmissionFormMutation: mutation,
+    useValidateAdmissionFormMutation: () => [approval.validate, { isLoading: false }],
     useCreateAdmissionFormVersionMutation: mutation,
-    useRequestAdmissionFormApprovalMutation: mutation,
+    useRequestAdmissionFormApprovalMutation: () => [approval.request, { isLoading: false }],
   };
 });
 
 describe('useFormListActions editor mode', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     query.data = null;
     query.isError = false;
+  });
+
+  it('shows form validation issues before sending an approval request', async () => {
+    approval.validate.mockReturnValue({
+      unwrap: () =>
+        Promise.resolve({ isValid: false, errors: ['Admissions.FormStepperRequiresTwoSteps'] }),
+    });
+    const { result } = renderHook(() => useFormListActions());
+
+    await act(async () => {
+      await result.current.requestApproval({ id: 'draft', concurrencyStamp: 'current' } as AdmissionForm);
+    });
+
+    expect(approval.validate).toHaveBeenCalledWith('draft');
+    expect(approval.request).not.toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith({
+      message: 'Add a second step or change the form layout to Single page before requesting approval.',
+    });
+  });
+
+  it('requests approval when server validation passes', async () => {
+    approval.validate.mockReturnValue({
+      unwrap: () => Promise.resolve({ isValid: true, errors: [] }),
+    });
+    approval.request.mockReturnValue({ unwrap: () => Promise.resolve({}) });
+    const { result } = renderHook(() => useFormListActions());
+
+    await act(async () => {
+      await result.current.requestApproval({ id: 'draft', concurrencyStamp: 'current' } as AdmissionForm);
+    });
+
+    expect(approval.request).toHaveBeenCalledWith({ id: 'draft', concurrencyStamp: 'current' });
+    expect(toast.success).toHaveBeenCalledWith({ message: 'Approval requested' });
   });
 
   it('opens Create with a fresh form after Edit, even if the old query data remains', async () => {

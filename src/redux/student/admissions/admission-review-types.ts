@@ -95,6 +95,10 @@ export type ReviewQueueItem = ReviewStageKey & {
   isStale: boolean;
 };
 export type ReviewQueueInput = {
+  academicYearId?: string;
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
   overdueOnly?: boolean;
   assignedToMe?: boolean;
   skipCount: number;

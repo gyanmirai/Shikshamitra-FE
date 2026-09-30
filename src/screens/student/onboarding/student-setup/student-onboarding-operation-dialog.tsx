@@ -23,7 +23,8 @@ import {
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import type { StudentOnboardingItem } from './student-onboarding-model';
-import type { StudentAssignmentType } from './student-assignment-dialog';
+
+export type StudentAssignmentType = 'division' | 'gr-number' | 'roll-number';
 
 type StudentOnboardingOperationDialogProps = {
   assignmentType: StudentAssignmentType | null;

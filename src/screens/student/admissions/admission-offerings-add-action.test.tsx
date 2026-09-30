@@ -16,8 +16,8 @@ vi.mock('src/components/custom-breadcrumbs', () => ({
 }));
 vi.mock('./admission-offering-filters', () => ({ AdmissionOfferingFilters: () => null }));
 vi.mock('./admission-offering-table', () => ({ AdmissionOfferingTable: () => null }));
-vi.mock('./admission-offering-details-dialog', () => ({
-  AdmissionOfferingDetailsDialog: () => null,
+vi.mock('./admission-offering-details-drawer', () => ({
+  AdmissionOfferingDetailsDrawer: () => null,
 }));
 vi.mock('./bulk-admission-offering-dialog', () => ({
   BulkAdmissionOfferingDialog: () => <div>Bulk offering drawer</div>,

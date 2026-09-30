@@ -17,7 +17,6 @@ import { studentPaths } from 'src/constants/student-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useRouter, usePathname, useSearchParams } from 'src/routes/hooks';
-import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import {
   Box,
   Tab,
@@ -37,6 +36,7 @@ import {
 } from '@mui/material';
 
 import { useOnboardingSettings } from '../onboarding-settings-context';
+import { useOnboardingAcademicStructure } from './use-onboarding-academic-structure';
 import { OnboardingSettingsBreadcrumbInfo } from './onboarding-settings-breadcrumb-info';
 import {
   formatGrNumber,
@@ -500,7 +500,7 @@ function SettingsPageHeader({ title, description }: { title: string; description
 }
 
 export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolean }) {
-  const filters = useFinanceAcademicFilters();
+  const filters = useOnboardingAcademicStructure();
   const { settings, scope, saveGrNumberConfiguration } = useOnboardingSettings();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingConfigurationId, setEditingConfigurationId] = useState<string | null>(null);
@@ -572,7 +572,7 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
       isFilter: false,
       render: (_value: string, row: IData) => {
         const configuration = configurations.find((item) => item.id === String(row.id));
-        return configuration ? getAcademicApplicabilitySummary(configuration, filters.boards) : '—';
+        return configuration ? getAcademicApplicabilitySummary(configuration, filters.allBoards, filters.campuses) : '—';
       },
     },
     {
@@ -703,6 +703,9 @@ export function GrNumberSettingsScreen({ embedded = false }: { embedded?: boolea
             <SingleAcademicPathFields
               value={formik.values}
               boards={filters.boards}
+              campuses={filters.campuses}
+              campusesLoading={filters.campusesLoading}
+              campusesError={filters.campusesError}
               showErrors={formik.submitCount > 0}
               onChange={(applicability) => {
                 formik.setValues({ ...formik.values, ...applicability }, false);
@@ -977,7 +980,7 @@ const hasRollConfigurationOverlap = (
   );
 
 export function RollNumberSettingsScreen({ embedded = false }: { embedded?: boolean }) {
-  const filters = useFinanceAcademicFilters();
+  const filters = useOnboardingAcademicStructure();
   const { settings, saveRollNumberConfiguration } = useOnboardingSettings();
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingConfigurationId, setEditingConfigurationId] = useState<string | null>(null);
@@ -1068,7 +1071,7 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
       isFilter: false,
       render: (_value: unknown, row: IData) => {
         const configuration = configurations.find((item) => item.id === String(row.id));
-        return configuration ? getAcademicApplicabilitySummary(configuration, filters.boards) : '—';
+        return configuration ? getAcademicApplicabilitySummary(configuration, filters.allBoards, filters.campuses) : '—';
       },
     },
     {
@@ -1172,6 +1175,9 @@ export function RollNumberSettingsScreen({ embedded = false }: { embedded?: bool
             <SingleAcademicPathFields
               value={formik.values}
               boards={filters.boards}
+              campuses={filters.campuses}
+              campusesLoading={filters.campusesLoading}
+              campusesError={filters.campusesError}
               showErrors={formik.submitCount > 0}
               onChange={(applicability) => {
                 formik.setValues({ ...formik.values, ...applicability }, false);
@@ -1343,7 +1349,7 @@ const hasDivisionConfigurationOverlap = (
   );
 
 export function DivisionChangesSettingsPanel() {
-  const filters = useFinanceAcademicFilters();
+  const filters = useOnboardingAcademicStructure();
   const { settings, saveDivisionChangeConfiguration } = useOnboardingSettings();
   const { configurations } = settings.divisionChange;
   const [baseline, setBaseline] = useState<DivisionChangeConfiguration>(
@@ -1437,7 +1443,7 @@ export function DivisionChangesSettingsPanel() {
   };
   const tableData = configurations.map((configuration) => ({
     ...configuration,
-    academicCoverage: getAcademicApplicabilitySummary(configuration, filters.boards),
+    academicCoverage: getAcademicApplicabilitySummary(configuration, filters.allBoards, filters.campuses),
     assignmentMethod: 'Manual placement',
     capacity: 'Live capacity; full divisions blocked',
     approval: configuration.requireApproval ? 'Required for changes' : 'Readiness rule applies',
@@ -1557,6 +1563,9 @@ export function DivisionChangesSettingsPanel() {
             <SingleAcademicPathFields
               value={draft}
               boards={filters.boards}
+              campuses={filters.campuses}
+              campusesLoading={filters.campusesLoading}
+              campusesError={filters.campusesError}
               showErrors={Boolean(validationError && validationError.startsWith('Select one'))}
               onChange={(applicability) => {
                 setDraft((current) => ({ ...current, ...applicability }));

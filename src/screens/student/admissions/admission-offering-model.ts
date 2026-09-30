@@ -39,7 +39,11 @@ export const availabilityLabels = [
 
 export const availabilityColors = ['warning', 'info', 'success', 'default', 'default'] as const;
 export const admissionTrackLabels = ['General', 'RTE', 'Management', 'Staff'] as const;
-export const admissionEntryModeLabels = ['Inquiry first', 'Direct registration', 'Inquiry or direct'] as const;
+export const admissionEntryModeLabels = [
+  'Inquiry first',
+  'Direct registration',
+  'Inquiry or direct',
+] as const;
 
 export const getOfferingInitialValues = (
   offering?: {
@@ -94,9 +98,37 @@ export const toOfferingWriteInput = (
 export const getAdmissionApiError = (error: unknown, fallback: string): string => {
   if (typeof error !== 'object' || error === null) return fallback;
   const response = error as {
-    data?: { error?: { code?: string; message?: string; details?: string }; detail?: string };
+    data?: {
+      errorCode?: string;
+      error?: {
+        code?: string;
+        message?: string;
+        details?: string;
+        data?: { ValidationMessages?: unknown; ValidationErrors?: unknown };
+      };
+      data?: { ValidationMessages?: unknown; ValidationErrors?: unknown };
+      detail?: string;
+    };
   };
-  const code = response.data?.error?.code ?? '';
+  const code = response.data?.errorCode ?? response.data?.error?.code ?? '';
+  if (code === 'Admissions.Offering.ConfigurationIncomplete') {
+    const validationData = response.data?.data ?? response.data?.error?.data;
+    const messages = Array.isArray(validationData?.ValidationMessages)
+      ? [
+          ...new Set(
+            validationData.ValidationMessages.filter(
+              (item): item is string => typeof item === 'string' && Boolean(item.trim())
+            )
+          ),
+        ]
+      : [];
+    if (messages.length) return messages.join(' ');
+
+    const codes = validationData?.ValidationErrors;
+    if (Array.isArray(codes) && codes.includes('CounsellorAssignmentProfileInvalid')) {
+      return 'The counsellor assignment profile needs an active counsellor with access to this class. If a fallback manager is set, they also need access. Update the profile or staff access, then try again.';
+    }
+  }
   const messages: Record<string, string> = {
     'Admissions.OfferingDuplicate':
       'An offering already exists for this cycle, class, and admission track.',

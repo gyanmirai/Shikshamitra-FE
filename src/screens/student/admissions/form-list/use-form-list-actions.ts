@@ -194,14 +194,14 @@ export function useFormListActions() {
         : Promise.resolve(false),
     publishing: publishState.isLoading,
     requestApproval: (form: AdmissionForm) =>
-      run(
-        () =>
-          requestApproval({
-            id: form.id,
-            concurrencyStamp: form.concurrencyStamp ?? '',
-          }).unwrap(),
-        'Approval requested'
-      ),
+      run(async () => {
+        const result = await validate(form.id).unwrap();
+        if (!result.isValid) throw new Error(formatAdmissionFormValidationErrors(result.errors));
+        await requestApproval({
+          id: form.id,
+          concurrencyStamp: form.concurrencyStamp ?? '',
+        }).unwrap();
+      }, 'Approval requested'),
     approving: approveState.isLoading,
     approve: (form: AdmissionForm, comment?: string) =>
       run(

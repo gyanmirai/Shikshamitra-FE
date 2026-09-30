@@ -193,7 +193,7 @@ export function getAdmissionFormInitialValues(
     code: editing?.code ?? '',
     description: editing?.description ?? '',
     concurrencyStamp: editing?.concurrencyStamp,
-    layoutType: editing?.layoutType ?? 1,
+    layoutType: editing?.layoutType ?? 0,
     purpose: editing?.purpose ?? purpose,
     fieldsPerRow: editing?.fieldsPerRow ?? 1,
     defaultLanguage: editing?.defaultLanguage ?? 'en',

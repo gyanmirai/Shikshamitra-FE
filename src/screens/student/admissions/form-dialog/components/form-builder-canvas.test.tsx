@@ -33,6 +33,9 @@ function renderCanvas(onlyBank = false) {
                 showFullStructure={false}
                 onSelect={() => undefined}
                 onShowFullStructureChange={() => undefined}
+                newStepId={null}
+                onAddStep={() => undefined}
+                onNewStepReady={() => undefined}
               />
               <output data-testid="section-codes">
                 {formik.values.sections.map((section) => section.code).join(',')}
@@ -68,9 +71,11 @@ describe('FormBuilderCanvas section deletion', () => {
 
     expect(screen.getByTestId('section-codes').textContent).toBe('');
     expect(screen.getByText(/This draft has no sections/i)).toBeVisible();
-    await expect(admissionFormSchema.validate({
-      ...getSystemAdmissionFormTemplate('student-registration'),
-      sections: [],
-    })).rejects.toThrow('Add at least one section');
+    await expect(
+      admissionFormSchema.validate({
+        ...getSystemAdmissionFormTemplate('student-registration'),
+        sections: [],
+      })
+    ).rejects.toThrow('Add at least one section');
   });
 });
