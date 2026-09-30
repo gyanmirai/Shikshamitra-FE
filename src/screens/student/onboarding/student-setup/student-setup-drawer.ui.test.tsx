@@ -2,7 +2,7 @@ import { it, vi, expect, describe } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 import StudentSetupDrawer from './student-setup-drawer';
-import { studentOnboardingPreviewData } from './student-onboarding-preview-data';
+import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 
 const mocks = vi.hoisted(() => ({
   activationPreview: {
@@ -41,10 +41,10 @@ vi.mock('./student-onboarding-fees', () => ({ default: () => null }));
 vi.mock('./student-onboarding-portal-accounts', () => ({ default: () => null }));
 vi.mock('./student-onboarding-case-operations', () => ({ default: () => null }));
 
-const student = studentOnboardingPreviewData[0];
+const student = studentOnboardingTestData[0];
 
 describe('Student Setup drawer readiness UI', () => {
-  it('shows the focused onboarding sections and keeps preview actions disabled', () => {
+  it('shows the focused onboarding sections and keeps unlinked record actions disabled', () => {
     const onAssignDivision = vi.fn();
     const onAssignGrNumber = vi.fn();
     const onAssignRollNumber = vi.fn();
@@ -78,7 +78,7 @@ describe('Student Setup drawer readiness UI', () => {
     expect(onAssignRollNumber).toHaveBeenCalledOnce();
 
     expect(screen.getByRole('button', { name: 'Refresh Readiness' })).toBeDisabled();
-    expect(screen.getByText(/preview changes are not persisted/i)).toBeInTheDocument();
+    expect(screen.getByText(/no onboarding case, so activation is unavailable/i)).toBeInTheDocument();
   });
 
   it('does not render a drawer when no student is selected', () => {

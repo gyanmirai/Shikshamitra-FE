@@ -3,6 +3,7 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
+import { useRef, useEffect } from 'react';
 import Button from '@mui/material/Button';
 import Collapse from '@mui/material/Collapse';
 import { Iconify } from 'src/components/iconify';
@@ -22,6 +23,9 @@ type Props = {
   selectedFieldId: string | null;
   onSelectSection: (sectionId: string) => void;
   onSelectField: (sectionId: string, fieldId: string) => void;
+  newlyAdded: boolean;
+  onAddStep: () => void;
+  onNewStepReady: (stepId: string | null) => void;
 };
 
 export function FormBuilderStep({
@@ -32,8 +36,18 @@ export function FormBuilderStep({
   selectedFieldId,
   onSelectSection,
   onSelectField,
+  newlyAdded,
+  onAddStep,
+  onNewStepReady,
 }: Props) {
-  const settings = useBoolean();
+  const settings = useBoolean(newlyAdded);
+  const stepRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (newlyAdded) {
+      stepRef.current?.scrollIntoView?.({ block: 'start' });
+      onNewStepReady(null);
+    }
+  }, [newlyAdded, onNewStepReady]);
   const updateStep = (updates: Partial<CreateUpdateAdmissionForm['sections'][number]>) =>
     formik.setFieldValue(
       'sections',
@@ -71,13 +85,14 @@ export function FormBuilderStep({
     );
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 2, overflow: 'visible' }}>
+    <Card ref={stepRef} variant="outlined" sx={{ borderRadius: 2, overflow: 'visible' }}>
       <FormBuilderStepHeader
         step={step}
         stepIndex={stepIndex}
         settingsOpen={settings.value}
         onToggleSettings={settings.onToggle}
         onDelete={deleteStep}
+        onAddStep={onAddStep}
       />
       <Collapse in={settings.value}>
         <FormBuilderUnitSettings
@@ -86,6 +101,7 @@ export function FormBuilderStep({
           name={step.name}
           code={step.code}
           visibilityRule={step.visibilityRuleJson}
+          focusName={newlyAdded}
           onNameChange={(stepName) => updateStep({ stepId: step.id, stepName })}
           onCodeChange={(stepCode) => updateStep({ stepId: step.id, stepCode })}
           onVisibilityChange={(value) =>

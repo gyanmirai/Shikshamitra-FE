@@ -59,34 +59,19 @@ import { AdmissionCycleConfigurationDialog } from './admission-cycle-configurati
 import {
   canEditCycle,
   windowLabels,
+  windowColors,
   canCloseCycle,
   canDeleteCycle,
   canReopenCycle,
   canArchiveCycle,
   canPublishCycle,
+  lifecycleColors,
   lifecycleLabels,
   cycleScheduleSummary,
 } from './admission-cycle-model';
 
 import type { CycleGuardedAction } from './admission-cycle-action-dialog';
 import type { CycleConfigurationMode } from './admission-cycle-configuration-dialog';
-
-const lifecycleColors: Record<AdmissionCycleStatus, 'default' | 'success' | 'warning' | 'error'> = {
-  0: 'default',
-  1: 'success',
-  2: 'warning',
-  3: 'error',
-};
-const windowColors: Record<
-  AdmissionCycleWindowStatus,
-  'default' | 'success' | 'warning' | 'error'
-> = {
-  0: 'default',
-  1: 'success',
-  2: 'warning',
-  3: 'warning',
-  4: 'error',
-};
 
 const getAcademicYearSortValue = (year: AcademicYear): number => {
   const startDate = dayjs(year.startDate);
@@ -324,18 +309,39 @@ export default function AdmissionCyclesScreen() {
     },
     {
       id: 'windowStatus',
-      label: <><Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Window</Box><Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Statuses</Box></>,
+      label: (
+        <>
+          <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+            Window
+          </Box>
+          <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+            Statuses
+          </Box>
+        </>
+      ),
       minWidth: 110,
       sticky: true,
       stickyPosition: 'right',
       render: (value, row) => {
         const lifecycle = Number((row as AdmissionCycle).status) as AdmissionCycleStatus;
         const windowStatus = Number(value) as AdmissionCycleWindowStatus;
-        const windowLabel = <Label color={windowColors[windowStatus]}>{windowLabels[windowStatus]}</Label>;
+        const windowLabel = (
+          <Label color={windowColors[windowStatus]}>{windowLabels[windowStatus]}</Label>
+        );
         return (
           <>
-            <CustomTooltip title={`Lifecycle: ${lifecycleLabels[lifecycle]} · Window: ${windowLabels[windowStatus]}`} arrow>
-              <Box sx={{ display: { xs: 'flex', sm: 'none' }, flexDirection: 'column', alignItems: 'flex-start', gap: 0.5 }}>
+            <CustomTooltip
+              title={`Lifecycle: ${lifecycleLabels[lifecycle]} · Window: ${windowLabels[windowStatus]}`}
+              arrow
+            >
+              <Box
+                sx={{
+                  display: { xs: 'flex', sm: 'none' },
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  gap: 0.5,
+                }}
+              >
                 <Label color={lifecycleColors[lifecycle]}>{lifecycleLabels[lifecycle]}</Label>
                 {windowLabel}
               </Box>
@@ -365,7 +371,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'edit',
-                  label: `Edit ${cycle.name}`,
+                  label: `Edit`,
                   icon: 'solar:pen-bold',
                   disabled: !canEditCycle(cycle),
                   onClick: () => {
@@ -379,7 +385,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'delete',
-                  label: `Delete ${cycle.name}`,
+                  label: `Delete`,
                   icon: 'solar:trash-bin-trash-bold',
                   color: canDeleteCycle(cycle) ? 'error.main' : 'text.disabled',
                   disabled: !canDeleteCycle(cycle),
@@ -394,7 +400,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'capacity',
-                  label: `Capacity & reservations for ${cycle.name}`,
+                  label: `Capacity & reservations `,
                   icon: 'mdi:seat-outline',
                   onClick: () => setCapacityCycle(cycle),
                 },
@@ -404,7 +410,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'publish',
-                  label: `Validate & publish ${cycle.name}`,
+                  label: `Validate & publish`,
                   icon: GlobalIcons.publish,
                   onClick: () => openGuardedAction('publish', cycle),
                 },
@@ -414,7 +420,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'reopen',
-                  label: `Reopen ${cycle.name}`,
+                  label: `Reopen`,
                   icon: 'mdi:lock-open-outline',
                   onClick: () => openGuardedAction('reopen', cycle),
                 },
@@ -424,7 +430,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'window',
-                  label: `Revise window for ${cycle.name}`,
+                  label: `Revise window `,
                   icon: GlobalIcons.calendar,
                   onClick: () => openConfiguration('window', cycle),
                 },
@@ -434,7 +440,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'schedule',
-                  label: `Schedule actions for ${cycle.name}`,
+                  label: `Schedule actions `,
                   icon: GlobalIcons.clock,
                   onClick: () => openConfiguration('schedule', cycle),
                 },
@@ -444,7 +450,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'clone',
-                  label: `Clone ${cycle.name} as draft`,
+                  label: `Clone as draft`,
                   icon: GlobalIcons.copy,
                   onClick: () => openConfiguration('clone', cycle),
                 },
@@ -454,7 +460,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'close',
-                  label: `Close ${cycle.name}`,
+                  label: `Close`,
                   icon: GlobalIcons.lockIcon,
                   onClick: () => openGuardedAction('close', cycle),
                 },
@@ -464,7 +470,7 @@ export default function AdmissionCyclesScreen() {
             ? [
                 {
                   id: 'archive',
-                  label: `Archive ${cycle.name}`,
+                  label: `Archive`,
                   icon: GlobalIcons.archive,
                   onClick: () => openGuardedAction('archive', cycle),
                 },
@@ -474,9 +480,12 @@ export default function AdmissionCyclesScreen() {
         return (
           <AdaptiveThreeDotsActions
             placement="right-top"
-            moreLabel={`More actions for ${cycle.name}`}
+            moreLabel={`More actions `}
             mobileDirectActionLimit={0}
-            sx={{ gap: 0, '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } } }}
+            sx={{
+              gap: 0,
+              '& .MuiIconButton-root': { width: { xs: 44, sm: 30 }, height: { xs: 44, sm: 30 } },
+            }}
             actions={actions}
           />
         );

@@ -27,6 +27,7 @@ type OnboardingSettingsContextValue = {
   isInherited: boolean;
   setScope: (scope: OnboardingConfigurationScope) => void;
   resetToInherited: () => Promise<void> | void;
+  setAvailableSchoolLevels: (schoolLevelNames: string[] | null) => Promise<void> | void;
   applyReadinessAccess: (rules: ReadinessAccessRules) => Promise<void> | void;
   applyOnboardingProfile: (profile: OnboardingProfile) => Promise<void> | void;
   saveGrNumberConfiguration: (configuration: GrNumberConfiguration) => Promise<void> | void;
@@ -44,6 +45,11 @@ const cloneInitialSettings = (
   settings: OnboardingSettingsConfiguration
 ): OnboardingSettingsConfiguration => ({
   ...settings,
+  academicAvailability: {
+    schoolLevelNames: settings.academicAvailability?.schoolLevelNames
+      ? [...settings.academicAvailability.schoolLevelNames]
+      : null,
+  },
   readinessAccess: {
     ...settings.readinessAccess,
     approvalTriggers: [...settings.readinessAccess.approvalTriggers],
@@ -54,6 +60,7 @@ const cloneInitialSettings = (
     admissionRoutes: [...profile.admissionRoutes],
     applicability: {
       ...profile.applicability,
+      campusIds: [...(profile.applicability.campusIds ?? [])],
       boardIds: [...profile.applicability.boardIds],
       academicMediumIds: [...profile.applicability.academicMediumIds],
       academicMediumStageIds: [...profile.applicability.academicMediumStageIds],
@@ -70,6 +77,7 @@ const cloneInitialSettings = (
     ...settings.grNumber,
     configurations: settings.grNumber.configurations.map((configuration) => ({
       ...configuration,
+      campusIds: [...(configuration.campusIds ?? [])],
       boardIds: [...configuration.boardIds],
       academicMediumIds: [...configuration.academicMediumIds],
       academicMediumStageIds: [...configuration.academicMediumStageIds],
@@ -82,6 +90,7 @@ const cloneInitialSettings = (
     ...settings.rollNumber,
     configurations: settings.rollNumber.configurations.map((configuration) => ({
       ...configuration,
+      campusIds: [...(configuration.campusIds ?? [])],
       boardIds: [...configuration.boardIds],
       academicMediumIds: [...configuration.academicMediumIds],
       academicMediumStageIds: [...configuration.academicMediumStageIds],
@@ -93,6 +102,7 @@ const cloneInitialSettings = (
   divisionChange: {
     configurations: settings.divisionChange.configurations.map((configuration) => ({
       ...configuration,
+      campusIds: [...(configuration.campusIds ?? [])],
       boardIds: [...configuration.boardIds],
       academicMediumIds: [...configuration.academicMediumIds],
       academicMediumStageIds: [...configuration.academicMediumStageIds],
@@ -199,6 +209,14 @@ export function OnboardingSettingsProvider({
       })),
     [updateSettings]
   );
+  const setAvailableSchoolLevels = useCallback(
+    (schoolLevelNames: string[] | null) =>
+      updateSettings((current) => ({
+        ...current,
+        academicAvailability: { schoolLevelNames: schoolLevelNames ? [...schoolLevelNames] : null },
+      })),
+    [updateSettings]
+  );
   const applyOnboardingProfile = useCallback(
     (updatedProfile: OnboardingProfile) =>
       updateSettings((current) => ({
@@ -209,6 +227,7 @@ export function OnboardingSettingsProvider({
             admissionRoutes: [...updatedProfile.admissionRoutes],
             applicability: {
               ...updatedProfile.applicability,
+              campusIds: [...(updatedProfile.applicability.campusIds ?? [])],
               boardIds: [...updatedProfile.applicability.boardIds],
               academicMediumIds: [...updatedProfile.applicability.academicMediumIds],
               academicMediumStageIds: [...updatedProfile.applicability.academicMediumStageIds],
@@ -304,6 +323,7 @@ export function OnboardingSettingsProvider({
       isInherited,
       setScope,
       resetToInherited,
+      setAvailableSchoolLevels,
       applyReadinessAccess,
       applyOnboardingProfile,
       saveGrNumberConfiguration,
@@ -319,6 +339,7 @@ export function OnboardingSettingsProvider({
       isInherited,
       setScope,
       resetToInherited,
+      setAvailableSchoolLevels,
       applyReadinessAccess,
       applyOnboardingProfile,
       saveGrNumberConfiguration,

@@ -2,7 +2,8 @@ const VALIDATION_MESSAGES: Record<string, string> = {
   'Admissions.FormNoSections': 'Add at least one section.',
   'Admissions.FormDuplicateSectionCode': 'Each section needs a unique code.',
   'Admissions.FormInvalidSectionCode': 'Use a valid code for every section.',
-  'Admissions.FormStepperRequiresTwoSteps': 'A step-by-step form needs at least two steps.',
+  'Admissions.FormStepperRequiresTwoSteps':
+    'Add a second step or change the form layout to Single page before requesting approval.',
   'Admissions.FormInvalidStepCode': 'Use a valid code for every step.',
   'Admissions.FormDuplicateStepCode': 'Each step needs a unique code.',
   'Admissions.FormNoFields': 'Add at least one field.',

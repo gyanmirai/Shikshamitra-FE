@@ -1,9 +1,10 @@
 'use client';
 
 import type { Board } from 'src/types/school';
+import type { StudentOnboardingCampus } from 'src/redux/student/onboarding/student-onboarding-api';
 
 import { useMemo } from 'react';
-import { Box } from '@mui/material';
+import { Box, Alert } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 
@@ -31,6 +32,14 @@ export type OnboardingAcademicStructureOptions = {
   divisions: AcademicStructureOption[];
 };
 
+export function getOnboardingSchoolLevelName(
+  boardName: string, mediumName: string, stageName: string
+): string {
+  const prefix = `${boardName} - ${mediumName} - `;
+  return (stageName.toLowerCase().startsWith(prefix.toLowerCase())
+    ? stageName.slice(prefix.length) : stageName).trim();
+}
+
 export const buildOnboardingAcademicStructureOptions = (
   boards: Board[]
 ): OnboardingAcademicStructureOptions => {
@@ -41,7 +50,6 @@ export const buildOnboardingAcademicStructureOptions = (
   const divisions: AcademicStructureOption[] = [];
 
   boards.forEach((board) => {
-    if (!['CBSE', 'GSEB'].includes(board.name.trim().toUpperCase())) return;
     boardOptions.push({ id: board.id, name: board.name, label: board.name, boardId: board.id });
     (board.educationMediums ?? []).forEach((medium) => {
       mediums.push({
@@ -52,8 +60,7 @@ export const buildOnboardingAcademicStructureOptions = (
         academicMediumId: medium.id,
       });
       (medium.educationMediumStages ?? []).forEach((stage) => {
-        const levelName = stage.name.replace(`${board.name} - ${medium.name} - `, '').trim();
-        if (!['secondary', 'higher secondary'].includes(levelName.toLowerCase())) return;
+        const levelName = getOnboardingSchoolLevelName(board.name, medium.name, stage.name);
         stages.push({
           id: stage.id,
           name: stage.name,
@@ -197,6 +204,8 @@ export const normalizeSingleAcademicApplicability = (
 };
 
 export const createEmptySingleAcademicApplicability = (): AcademicApplicableRule => ({
+  campusMode: 'all',
+  campusIds: [],
   boardMode: 'selected',
   boardIds: [],
   mediumMode: 'selected',
@@ -211,6 +220,7 @@ export const createEmptySingleAcademicApplicability = (): AcademicApplicableRule
 });
 
 export const getSingleAcademicPathValidationError = (value: AcademicApplicableRule) => {
+  if (value.campusMode === 'selected' && !value.campusIds?.length) return 'Select at least one Campus.';
   if (value.boardMode !== 'selected' || value.boardIds.length !== 1) return 'Select one Board.';
   if (value.mediumMode !== 'selected' || value.academicMediumIds.length !== 1) {
     return 'Select one Medium.';
@@ -243,9 +253,16 @@ const summarizeDimension = (
   return `${names.length} ${singularLabel}${names.length === 1 ? '' : 's'}`;
 };
 
-export const getAcademicApplicabilitySummary = (value: AcademicApplicableRule, boards: Board[]) => {
+export const getAcademicApplicabilitySummary = (
+  value: AcademicApplicableRule,
+  boards: Board[],
+  campuses: StudentOnboardingCampus[] = []
+) => {
   const options = buildOnboardingAcademicStructureOptions(boards);
+  const campusIds = value.campusMode === 'selected' ? value.campusIds ?? [] : [];
+  const campusNames = campusIds.map((id) => campuses.find((campus) => campus.id === id)?.name ?? 'Unavailable campus');
   return [
+    ...(campusIds.length ? [`Campus: ${campusNames.join(', ')}`] : []),
     summarizeDimension(value.boardMode, value.boardIds, options.boards, 'All Boards', 'Board'),
     summarizeDimension(
       value.mediumMode,
@@ -280,10 +297,14 @@ export const getAcademicApplicabilitySummary = (value: AcademicApplicableRule, b
 
 /** Preserve hierarchy IDs while showing concise labels in dependent selectors. */
 export function AcademicApplicabilityFields({
-  value, boards, onChange, showErrors = false,
+  value, boards, campuses = [], campusesLoading = false, campusesError = false,
+  onChange, showErrors = false,
 }: {
   value: AcademicApplicableRule;
   boards: Board[];
+  campuses?: StudentOnboardingCampus[];
+  campusesLoading?: boolean;
+  campusesError?: boolean;
   onChange: (value: AcademicApplicableRule) => void;
   showErrors?: boolean;
 }) {
@@ -313,6 +334,23 @@ export function AcademicApplicabilityFields({
   );
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }, gap: 1 }}>
+      {(campuses.length > 0 || campusesLoading || campusesError || value.campusMode === 'selected') ? (
+        <Box sx={{ gridColumn: '1 / -1' }}>
+          <CustomSelect
+            size="small"
+            label="Campuses (optional)"
+            multiple
+            value={value.campusMode === 'selected' ? value.campusIds ?? [] : []}
+            options={campuses.map((campus) => ({ value: campus.id, label: campus.name }))}
+            disabled={campusesLoading || campusesError || !campuses.length}
+            helperText={campusesLoading ? 'Loading campuses…' : 'Leave empty to cover all campuses.'}
+            onChange={(ids) => update({
+              campusMode: ids.length ? 'selected' : 'all', campusIds: ids.map(String),
+            })}
+          />
+          {campusesError ? <Alert severity="error">Campus choices could not be loaded. Retry this page before applying a campus-specific rule.</Alert> : null}
+        </Box>
+      ) : null}
       <ShakingTextField error={showErrors && !boardId}>
         <CustomSelect size="small" required label="Board" value={boardId}
           options={selectOptions(options.boards)} disabled={!options.boards.length}

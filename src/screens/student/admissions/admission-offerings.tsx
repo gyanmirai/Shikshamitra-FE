@@ -14,7 +14,7 @@ import { AdmissionOfferingFilters } from './admission-offering-filters';
 import { useAdmissionOfferingsScreen } from './use-admission-offerings-screen';
 import { BulkAdmissionOfferingDialog } from './bulk-admission-offering-dialog';
 import { AdmissionOfferingActionImpact } from './admission-offering-action-impact';
-import { AdmissionOfferingDetailsDialog } from './admission-offering-details-dialog';
+import { AdmissionOfferingDetailsDrawer } from './admission-offering-details-drawer';
 
 export default function AdmissionOfferingsScreen() {
   const screen = useAdmissionOfferingsScreen();
@@ -166,7 +166,7 @@ export default function AdmissionOfferingsScreen() {
       {screen.cycle && screen.bulkOpen && (
         <BulkAdmissionOfferingDialog open cycle={screen.cycle} onClose={screen.closeBulk} />
       )}
-      <AdmissionOfferingDetailsDialog
+      <AdmissionOfferingDetailsDrawer
         open={screen.detailsOpen}
         offering={screen.selected}
         canManage={screen.permissions.edit}

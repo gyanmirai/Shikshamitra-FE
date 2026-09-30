@@ -1,6 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import { studentOnboardingPreviewData } from './student-onboarding-preview-data';
+import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 import {
   getDefaultTaskScope,
   parseStudentSetupView,
@@ -20,24 +20,24 @@ describe('Student Setup task views', () => {
   });
 
   it('shows only students without committed GR numbers in the pending GR view', () => {
-    const rows = filterStudentsForSetupView(studentOnboardingPreviewData, 'gr-number', 'pending');
+    const rows = filterStudentsForSetupView(studentOnboardingTestData, 'gr-number', 'pending');
 
     expect(rows).toHaveLength(4);
     expect(rows.every((student) => student.grNo == null)).toBe(true);
-    expect(getPendingStudentCount(studentOnboardingPreviewData, 'gr-number')).toBe(4);
+    expect(getPendingStudentCount(studentOnboardingTestData, 'gr-number')).toBe(4);
   });
 
   it('shows only students without roll numbers in the pending roll view', () => {
-    const rows = filterStudentsForSetupView(studentOnboardingPreviewData, 'roll-number', 'pending');
+    const rows = filterStudentsForSetupView(studentOnboardingTestData, 'roll-number', 'pending');
 
     expect(rows.map((student) => student.studentName)).toEqual(['Aanya Sharma', 'Arjun Desai']);
-    expect(getPendingStudentCount(studentOnboardingPreviewData, 'roll-number')).toBe(2);
+    expect(getPendingStudentCount(studentOnboardingTestData, 'roll-number')).toBe(2);
   });
 
   it('keeps all students available for division changes by default', () => {
     expect(
-      filterStudentsForSetupView(studentOnboardingPreviewData, 'division', 'all')
-    ).toHaveLength(studentOnboardingPreviewData.length);
-    expect(getPendingStudentCount(studentOnboardingPreviewData, 'division')).toBe(0);
+      filterStudentsForSetupView(studentOnboardingTestData, 'division', 'all')
+    ).toHaveLength(studentOnboardingTestData.length);
+    expect(getPendingStudentCount(studentOnboardingTestData, 'division')).toBe(0);
   });
 });

@@ -19,6 +19,8 @@ export const studentPaths = {
   enrollment: {
     root: '/student/admissions',
     inquiries: '/student/admissions/inquiries',
+    inquiryNew: '/student/admissions/inquiries/new',
+    inquiryEdit: (id: string) => `/student/admissions/inquiries/${encodeURIComponent(id)}/edit`,
     pipeline: '/student/admissions/pipeline',
     applications: '/student/admissions/applications',
     assessments: '/student/admissions/assessments',

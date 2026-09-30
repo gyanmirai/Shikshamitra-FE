@@ -28,6 +28,8 @@ export type StudentPortalAccount = {
   email: string; emailConfirmed: boolean; isActive: boolean;
 };
 
+export type StudentOnboardingCampus = { id: string; code: string; name: string };
+
 const unwrap = <T>(response: Result<T> | T): T =>
   response && typeof response === 'object' && 'data' in response && response.data !== undefined
     ? response.data
@@ -71,12 +73,18 @@ export const studentOnboardingApi = api.injectEndpoints({
         })) ?? []),
       ],
     }),
-    getStudentOnboardingFilterOptions: builder.query<StudentOnboardingFilterOptions, void>({
-      query: () => '/student/onboarding/filter-options',
+    getStudentOnboardingFilterOptions: builder.query<StudentOnboardingFilterOptions, string>({
+      query: (academicYearId) => ({ url: '/student/onboarding/filter-options', params: { academicYearId } }),
       transformResponse: (
         response: Result<StudentOnboardingFilterOptions> | StudentOnboardingFilterOptions
       ) => unwrap(response),
       providesTags: [{ type: studentOnboardingType.onboardingFilterOptions, id: 'LIST' }],
+    }),
+    getAvailableOnboardingCampuses: builder.query<StudentOnboardingCampus[], void>({
+      query: () => '/student/onboarding/settings/campuses',
+      transformResponse: (response: Result<StudentOnboardingCampus[]> | StudentOnboardingCampus[]) =>
+        unwrap(response),
+      providesTags: [{ type: studentOnboardingType.onboardingFilterOptions, id: 'CAMPUSES' }],
     }),
     getStudentOnboardingAnalytics: builder.query<StudentOnboardingAnalytics, void>({
       query: () => '/student/onboarding/analytics',
@@ -266,6 +274,19 @@ export const studentOnboardingApi = api.injectEndpoints({
         { type: studentOnboardingType.onboardingServiceHandoffs, id },
         { type: studentOnboardingType.onboardingCaseDetail, id },
       ],
+    }),
+    confirmStudentOnboardingServiceConsent: builder.mutation<
+      StudentOnboardingCase,
+      { id: string; concurrencyStamp: string; evidenceReference: string }
+    >({
+      query: ({ id, concurrencyStamp, evidenceReference }) => ({
+        url: `/student/onboarding/${id}/service-consent/confirm`,
+        method: 'POST',
+        body: { concurrencyStamp, evidenceReference },
+      }),
+      transformResponse: (response: Result<StudentOnboardingCase> | StudentOnboardingCase) =>
+        unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
     }),
     getStudentOnboardingPolicies: builder.query<StudentOnboardingPolicy[], string>({
       query: (academicYearId) => ({
@@ -457,6 +478,7 @@ export const {
   useProvisionStudentPortalAccountMutation,
   useGetStudentOnboardingCasesQuery,
   useGetStudentOnboardingFilterOptionsQuery,
+  useGetAvailableOnboardingCampusesQuery,
   useGetStudentOnboardingAnalyticsQuery,
   useGetStudentOnboardingCaseQuery,
   useGetStudentOnboardingPlacementOptionsQuery,
@@ -472,6 +494,7 @@ export const {
   useCancelStudentOnboardingMutation,
   useGetStudentOnboardingServiceHandoffsQuery,
   useRetryStudentOnboardingServiceHandoffMutation,
+  useConfirmStudentOnboardingServiceConsentMutation,
   useGetStudentOnboardingPoliciesQuery,
   useCreateStudentOnboardingPolicyMutation,
   useUpdateStudentOnboardingPolicyMutation,

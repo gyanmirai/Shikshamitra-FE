@@ -15,6 +15,12 @@ describe('admission form validation messages', () => {
     );
   });
 
+  it('explains how to make a one-step draft eligible for approval', () => {
+    expect(formatAdmissionFormValidationError('Admissions.FormStepperRequiresTwoSteps')).toBe(
+      'Add a second step or change the form layout to Single page before requesting approval.'
+    );
+  });
+
   it('summarizes long validation results', () => {
     expect(
       formatAdmissionFormValidationErrors([

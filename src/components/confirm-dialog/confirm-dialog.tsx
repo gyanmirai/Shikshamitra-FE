@@ -33,6 +33,7 @@ export function ConfirmDialog({
   onClose,
   icon = 'error',
   disableBackdropClick = false,
+  disableCancel = false,
   ...other
 }: ConfirmDialogProps) {
   const theme = useTheme();
@@ -72,6 +73,7 @@ export function ConfirmDialog({
           startIcon={<Iconify icon={GlobalIcons.cancel} />}
           color="inherit"
           onClick={onClose}
+          disabled={disableCancel}
           size="small"
         >
           Cancel

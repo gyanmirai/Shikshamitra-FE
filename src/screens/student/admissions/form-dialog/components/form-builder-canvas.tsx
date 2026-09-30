@@ -16,6 +16,9 @@ type Props = {
   showFullStructure: boolean;
   onSelect: (sectionId: string, fieldId: string | null) => void;
   onShowFullStructureChange: (show: boolean) => void;
+  newStepId: string | null;
+  onAddStep: (afterStepId: string) => void;
+  onNewStepReady: (stepId: string | null) => void;
 };
 
 export function FormBuilderCanvas({
@@ -25,6 +28,9 @@ export function FormBuilderCanvas({
   showFullStructure,
   onSelect,
   onShowFullStructureChange,
+  newStepId,
+  onAddStep,
+  onNewStepReady,
 }: Props) {
   const isStepper = formik.values.layoutType === 1;
   const steps = getAdmissionFormStepGroups(formik.values.sections);
@@ -49,8 +55,8 @@ export function FormBuilderCanvas({
             {!formik.values.sections.length
               ? 'This draft has no sections. Add a section to continue building the form.'
               : focused
-              ? 'Select a field to edit its settings. Drag fields to change their order.'
-              : 'Select a section in the outline or below to focus its fields.'}
+                ? 'Select a field to edit its settings. Drag fields to change their order.'
+                : 'Select a section in the outline or below to focus its fields.'}
           </Typography>
           {focused && selectedSection ? (
             <SortableContext
@@ -80,6 +86,9 @@ export function FormBuilderCanvas({
                 selectedFieldId={selectedFieldId}
                 onSelectSection={selectSection}
                 onSelectField={selectField}
+                newlyAdded={step.id === newStepId}
+                onAddStep={() => onAddStep(step.id)}
+                onNewStepReady={onNewStepReady}
               />
             ))
           ) : (

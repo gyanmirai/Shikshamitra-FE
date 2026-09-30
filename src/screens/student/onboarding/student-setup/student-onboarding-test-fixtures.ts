@@ -4,7 +4,7 @@ const activity = (id: string, title: string, detail: string) => [
   { id, title, detail, occurredAt: 'Today, 10:30 AM' },
 ];
 
-export const studentOnboardingPreviewData: StudentOnboardingItem[] = [
+export const studentOnboardingTestData: StudentOnboardingItem[] = [
   {
     id: 'preview-001',
     studentId: null,
@@ -86,7 +86,7 @@ export const studentOnboardingPreviewData: StudentOnboardingItem[] = [
       'Admission completed and handed to Student Onboarding.'
     ),
     updatedAt: 'Today, 10:30 AM',
-    source: 'preview',
+    source: 'student-records',
   },
   {
     id: 'preview-002',
@@ -169,7 +169,7 @@ export const studentOnboardingPreviewData: StudentOnboardingItem[] = [
       'Onboarding setup was submitted for approval.'
     ),
     updatedAt: 'Today, 9:15 AM',
-    source: 'preview',
+    source: 'student-records',
   },
   {
     id: 'preview-003',
@@ -252,7 +252,7 @@ export const studentOnboardingPreviewData: StudentOnboardingItem[] = [
       'Authorized staff approved the activation request.'
     ),
     updatedAt: 'Yesterday, 4:40 PM',
-    source: 'preview',
+    source: 'student-records',
   },
   {
     id: 'preview-004',
@@ -335,7 +335,7 @@ export const studentOnboardingPreviewData: StudentOnboardingItem[] = [
       'The selected division reached capacity.'
     ),
     updatedAt: 'Yesterday, 2:05 PM',
-    source: 'preview',
+    source: 'student-records',
   },
   {
     id: 'preview-005',
@@ -418,6 +418,6 @@ export const studentOnboardingPreviewData: StudentOnboardingItem[] = [
       'Student record and access setup completed.'
     ),
     updatedAt: '24 Jun 2026',
-    source: 'preview',
+    source: 'student-records',
   },
 ];

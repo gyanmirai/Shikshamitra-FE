@@ -50,7 +50,7 @@ const actionLabels: Record<CycleGuardedAction, string> = {
   close: 'Close cycle',
   reopen: 'Reopen cycle',
   archive: 'Archive',
-  delete: 'Delete draft',
+  delete: 'Delete',
 };
 
 export function AdmissionCycleActionDialog({
@@ -106,13 +106,27 @@ export function AdmissionCycleActionDialog({
     <ConfirmDialog
       open
       onClose={busy ? () => undefined : onClose}
-      icon={action === 'publish' || action === 'reopen' ? 'info' : 'warning'}
+      disableBackdropClick
+      disableEscapeKeyDown={busy}
+      disableCancel={busy}
+      icon={action === 'delete' ? 'error' : action === 'publish' || action === 'reopen' ? 'info' : 'warning'}
       title={titles[action]}
       content={
         <Stack spacing={1.5}>
-          <Typography variant="body2">
-            <strong>{cycle.name}</strong> ({cycle.code})
-          </Typography>
+          {action === 'delete' ? (
+            <>
+              <Typography variant="body2">
+                Are you sure you want to delete the admission cycle &lsquo;{cycle.name} ({cycle.code})&rsquo;?
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                This action cannot be undone.
+              </Typography>
+            </>
+          ) : (
+            <Typography variant="body2">
+              <strong>{cycle.name}</strong> ({cycle.code})
+            </Typography>
+          )}
 
           {action === 'publish' && (
             <>
@@ -138,7 +152,7 @@ export function AdmissionCycleActionDialog({
             </>
           )}
 
-          {action !== 'publish' && (
+          {action !== 'publish' && action !== 'delete' && (
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
               <Box>
                 <Typography variant="caption" color="text.secondary">
@@ -187,12 +201,6 @@ export function AdmissionCycleActionDialog({
               Only an unused draft with no offerings or applications can be deleted.
             </Alert>
           )}
-          {action === 'delete' && !cannotDelete && (
-            <Alert severity="error">
-              This cannot be undone. Use Archive for historical cycles.
-            </Alert>
-          )}
-
           {action === 'reopen' && (
             <DatePicker
               label="New applications close date"

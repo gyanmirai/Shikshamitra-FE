@@ -1,6 +1,6 @@
 import { it, expect, describe } from 'vitest';
 
-import { studentOnboardingPreviewData } from './student-onboarding-preview-data';
+import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
 import { getReadinessSummary, applyReadinessAccessRules } from './student-onboarding-model';
 import {
   defaultOnboardingSettings,
@@ -17,7 +17,7 @@ import {
 
 describe('Student Setup applied onboarding settings', () => {
   it('removes optional document, identifier, and account checks from readiness', () => {
-    const configuredStudent = applyReadinessAccessRules(studentOnboardingPreviewData[0], {
+    const configuredStudent = applyReadinessAccessRules(studentOnboardingTestData[0], {
       ...defaultReadinessAccessRules,
       requireDocuments: false,
       requireIdentifiers: false,
@@ -44,7 +44,7 @@ describe('Student Setup applied onboarding settings', () => {
   it('keeps unavailable connected-mode facts explicit when their checks are required', () => {
     const configuredStudent = applyReadinessAccessRules(
       {
-        ...studentOnboardingPreviewData[0],
+        ...studentOnboardingTestData[0],
         readinessItems: [
           {
             key: 'documents',
@@ -87,7 +87,7 @@ describe('Student Setup applied onboarding settings', () => {
     expect(freshRules.requireDocuments).toBe(false);
     expect(transferRules.requireDocuments).toBe(true);
     expect(
-      applyReadinessAccessRules(studentOnboardingPreviewData[0], freshRules).readinessItems.find(
+      applyReadinessAccessRules(studentOnboardingTestData[0], freshRules).readinessItems.find(
         (check) => check.key === 'documents'
       )?.status
     ).toBe('not-required');
@@ -149,6 +149,21 @@ describe('Student Setup applied onboarding settings', () => {
 
     expect(isStudentApprovalRequired(midYearRules, 'Mid-year admission')).toBe(true);
     expect(isStudentApprovalRequired(returningRules, 'Returning student')).toBe(false);
+  });
+
+  it('resolves a school-defined admission route regardless of casing', () => {
+    const source = defaultOnboardingSettings.onboardingProfiles[0];
+    const settings = {
+      ...defaultOnboardingSettings,
+      onboardingProfiles: [...defaultOnboardingSettings.onboardingProfiles, {
+        ...source,
+        id: 'scholarship-intake',
+        admissionRoutes: ['Scholarship intake'],
+        rules: { ...source.rules, requireDocuments: false },
+      }],
+    };
+
+    expect(getEffectiveReadinessRules(settings, 'SCHOLARSHIP INTAKE').requireDocuments).toBe(false);
   });
 
   it('resolves Roll rules from exact Class to Board override to All Boards fallback', () => {
