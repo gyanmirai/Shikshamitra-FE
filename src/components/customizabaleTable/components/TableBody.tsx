@@ -120,6 +120,11 @@ export const TableBody = ({
                   <TableCell
                     key={column.id}
                     align={column.align}
+                    onClick={
+                      column.id === 'action' || column.id === 'actions'
+                        ? (event) => event.stopPropagation()
+                        : undefined
+                    }
                     sx={{
                       verticalAlign: 'middle',
                       // fontSize: '14px',

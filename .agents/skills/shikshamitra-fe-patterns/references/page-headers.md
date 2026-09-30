@@ -19,7 +19,7 @@ A standard page header may contain:
 1. Page title and useful supporting description.
 2. Breadcrumb navigation.
 3. Context selectors or domain filters.
-4. Summary information when it supports a decision.
+4. A `View all insights` action when useful summary information supports a decision.
 5. Status tabs when users need to move between lifecycle states.
 6. One clear primary page action.
 
@@ -126,20 +126,28 @@ The standard arrangement is:
 
 ## 6. Summary metrics
 
-- Summary cards or metric strips may be used when their values help the user
-  understand the page or choose a next action.
+- On list and table pages, keep the table as the primary content: do not show
+  summary cards or metric strips above it. Put useful summary metrics in a
+  right-side insights drawer opened by a `View all insights` secondary action
+  in the page-level action group.
+- Scope the drawer title and metrics to the current page and selected context,
+  such as class, exam, academic year, board, medium, and active filters.
+- Keep status tabs and their counts visible when they are needed to navigate
+  record states; they are not a replacement for the insights drawer.
+- Omit the insights action when the page has no meaningful, reliable summary
+  data. Do not create decorative metrics to populate a drawer.
 - Every metric must show real, current data with a precise label, such as
   `Draft exams`, `Published`, `Needs attention`, or `Completed`.
 - Never show placeholder zeroes, stale values, or decorative metrics merely to
-  fill the header.
+  fill the drawer.
 - The metric value and label must have a clear relationship to the selected
   page scope and active filters.
 - Use the system semantic color that matches the meaning: neutral for counts,
   success for completed/ready, warning for attention, and error only for a
   genuine problem.
 - Do not use a different color for every metric without a semantic reason.
-- When the metric group becomes too large, use a compact expandable summary
-  control instead of shrinking cards until their labels become unclear.
+- Keep metric labels and values readable in the drawer, including at narrow
+  viewport widths.
 - Changing a filter must refresh or clearly scope the displayed metrics; never
   leave the user guessing whether the values changed.
 
@@ -163,7 +171,9 @@ Before approving a page header, verify:
 
 - The heading, breadcrumb, and navigation label use consistent terminology.
 - The information icon appears only when it provides useful context.
-- Summary metrics show real data and respond to the selected scope.
+- List and table pages expose useful summaries through `View all insights`,
+  without a row of summary cards above the table.
+- Insights metrics show real data and respond to the selected scope.
 - Metric labels are specific and not duplicated unnecessarily.
 - Status tabs and counts match the content shown below.
 - Filters have clear labels, predictable placement, and correct date formats.

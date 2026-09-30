@@ -11,6 +11,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
 import { Box, TextField, Autocomplete } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
+import { useGetAssignmentSubmissionsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/AssignmentAssessmentAndFeedbackApi';
 import { useGetAssignmentsQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 import {
   AssignmentStatus,
@@ -20,6 +22,7 @@ import {
 import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 
 import { StudentSubmissions } from '../assignmentCreation/studentSubmission/studentSubmission';
+import { dedupeEvaluationRows, getEvaluationSummary } from './evaluationWorkspaceUi';
 import { SubjectAssignmentStatus } from '../../curriculum-management/subjectAssignment/enum/subjectType';
 
 import type { MarksFeedbackTabProps } from './index';
@@ -43,6 +46,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
   // const [assignmentType, setAssignmentType] = useState('');
   // State to store selected assignment title
   const [assignmentTitle, setAssignmentTitle] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all');
 
   // Get current board, medium and medium setter from global state
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -114,6 +118,27 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           AssignmentEvaluationMethod.Marks,
       })) || [];
 
+  const {
+    data: assignmentSubmissions,
+    isLoading: areInsightsLoading,
+    isFetching: areInsightsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAssignmentSubmissionsQuery,
+    params: {
+      academicMediumId: (medium as Medium)?.id,
+      ClassId: classes,
+      DivisionId: division,
+      SubjectId: subject,
+      AssignmentId: selectedAssignment?.id,
+    },
+    options: { skip: !selectedAssignment?.id || !classes || !division || !subject },
+  });
+  const insightsSummary = getEvaluationSummary(
+    dedupeEvaluationRows(assignmentSubmissions?.data || []),
+    assignmentSubmissions?.summary
+  );
+
   // Dialog control for bulk grade assignment
 
   return (
@@ -128,6 +153,8 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
           p: 1,
           gap: 1,
           mb: 1,
+          alignItems: 'center',
+          flexWrap: 'wrap',
         }}
       >
         {' '}
@@ -201,6 +228,7 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
             onChange={(event, newValue) => {
               setAssignmentTitle(newValue?.id || '');
               setSelectedAssignment(newValue || null);
+              setActiveFilter('all');
             }}
             loading={isAssignmentDataLoading || isAssignmentDataFetching}
             disabled={!subject}
@@ -216,12 +244,80 @@ const AssignmentMarksAndFeedback = (props: MarksFeedbackTabProps) => {
             )}
           />
         </CustomTooltip>
+        {assignmentTitle && (
+          <AcademicInsights
+            title="Assignment evaluation insights"
+            description={`Submission and feedback for ${selectedAssignment?.title || 'the selected assignment'}.`}
+            isLoading={areInsightsLoading || areInsightsFetching}
+            buttonSx={{ ml: 'auto', mb: 0 }}
+            chart={{
+              title: 'Evaluation status overview',
+              description: 'Students by evaluation status for the selected assignment.',
+              categories: ['Needs review', 'Reviewed', 'Not submitted'],
+              values: [
+                insightsSummary.needsReview,
+                insightsSummary.reviewed,
+                insightsSummary.notSubmitted,
+              ],
+              seriesName: 'Students',
+            }}
+            metrics={[
+              {
+                id: 'students',
+                label: 'Students',
+                value: insightsSummary.totalStudents,
+                icon: 'solar:users-group-rounded-bold',
+                selected: activeFilter === 'all',
+                onClick: () => setActiveFilter('all'),
+              },
+              {
+                id: 'submitted',
+                label: 'Submitted',
+                value: insightsSummary.submitted,
+                icon: 'solar:inbox-in-bold',
+                selected: activeFilter === 'submitted',
+                onClick: () => setActiveFilter('submitted'),
+              },
+              {
+                id: 'needs-review',
+                label: 'Needs review',
+                value: insightsSummary.needsReview,
+                icon: 'solar:clipboard-check-bold',
+                selected: activeFilter === 'needsReview',
+                onClick: () => setActiveFilter('needsReview'),
+              },
+              {
+                id: 'reviewed',
+                label: 'Reviewed',
+                value: insightsSummary.reviewed,
+                icon: 'solar:check-circle-bold',
+                selected: activeFilter === 'reviewed',
+                onClick: () => setActiveFilter('reviewed'),
+              },
+              {
+                id: 'not-submitted',
+                label: 'Not submitted',
+                value: insightsSummary.notSubmitted,
+                icon: 'solar:clock-circle-bold',
+                selected: activeFilter === 'notSubmitted',
+                onClick: () => setActiveFilter('notSubmitted'),
+              },
+              {
+                id: 'average-marks',
+                label: 'Average marks',
+                value: insightsSummary.averageMarks ?? '-',
+                icon: 'solar:chart-2-bold',
+              },
+            ]}
+          />
+        )}
       </Box>
       {assignmentTitle ? (
         <StudentSubmissions
           selectedClass={classes}
           selectedDivision={division}
           selectedSubject={subject}
+          activeFilter={activeFilter}
           selectedAssignment={selectedAssignment}
           selectedStudents={[]}
           handleBulkUpdate={() => {}}

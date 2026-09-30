@@ -368,9 +368,6 @@ const NewExamForm = ({ onClose, editData }: INewExamFormProps) => {
           opacity: '1 !important',
         },
         ...theme.applyStyles('dark', {
-          '& .MuiStepConnector-line': {
-            borderColor: `${theme.vars.palette.grey[600]} !important`,
-          },
           '& .loading-overlay': {
             backgroundColor: 'rgba(33, 43, 54, 0.9) !important',
           },

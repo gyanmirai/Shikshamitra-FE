@@ -329,7 +329,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
     <Grid container spacing={1.5}>
       {/* Template Section */}
       {!data && !viewOnly && (
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12 }} sx={{ mb: 1 }}>
           <Box
             p={2}
             border="1px dashed"
@@ -471,7 +471,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
 
   const renderGradeRanges = () => (
     <Box display="flex" flexDirection="column">
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography variant="h6">Configured Grade Ranges</Typography>
         {!viewOnly && (
           <Button
@@ -490,7 +490,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
         </Alert>
       )}
 
-      <Box sx={{ overflowX: 'auto', pt: 1, pb: 1 }}>
+      <Box sx={{ overflowX: 'auto', pt: 1.5, pb: 2 }}>
         {formik.values.gradingScale?.map((scale: IGradingScale, index: number) => {
           const touchedRange = (
             formik.touched.gradingScale as FormikTouched<IGradingScale>[] | undefined
@@ -515,7 +515,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
           return (
             <Grid
               container
-              spacing={1}
+              spacing={1.5}
               key={index}
               mb={2.5}
               alignItems="center"
@@ -842,7 +842,7 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <CustomStepperWithFormik
-        scrollbarHeight="400px"
+        scrollbarHeight={activeStep === 1 ? 'min(400px, calc(100dvh - 280px))' : 'auto'}
         initialValues={formik.initialValues}
         formikInstance={formik}
         steps={GRADE_SCALE_STEPS}
@@ -855,6 +855,9 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
         saveAndNextButtonProps={{
           loading: isAddLoading || isUpdateLoading,
         }}
+        completedSteps={Array.from({ length: maxReachedStep }, (_, index) => index).filter(
+          (index) => index !== activeStep
+        )}
         isStepClickable={(stepIndex) => stepIndex <= maxReachedStep}
         onStepClick={(stepIndex) => {
           if (stepIndex !== activeStep && stepIndex <= maxReachedStep) {
@@ -864,7 +867,13 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
         handleBack={handleBack}
         handleNext={handleNext}
         renderItem={({ activeStep: step }) => (
-          <Box sx={{ p: { xs: 1.5, md: 2 } }}>
+          <Box
+            sx={{
+              px: { xs: 1.5, md: 2 },
+              pt: { xs: 2, md: 2.5 },
+              pb: { xs: 1.5, md: 2 },
+            }}
+          >
             {step === 0 && renderBasicDetails()}
             {step === 1 && renderGradeRanges()}
             {step === 2 && renderSimulator()}

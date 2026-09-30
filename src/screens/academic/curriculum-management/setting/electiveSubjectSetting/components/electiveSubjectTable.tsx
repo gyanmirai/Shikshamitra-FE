@@ -237,11 +237,15 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
           <Box
             component="button"
             type="button"
-            onClick={() => onViewUsage(row as IElectiveSubject)}
+            disabled={!canView}
+            onClick={(event) => {
+              event.stopPropagation();
+              onViewUsage(row as IElectiveSubject);
+            }}
             style={{
               border: 0,
               background: 'transparent',
-              cursor: 'pointer',
+              cursor: canView ? 'pointer' : 'default',
               padding: 0,
               font: 'inherit',
             }}
@@ -251,7 +255,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
               sx={{
                 color: value ? 'primary.main' : 'text.secondary',
                 fontWeight: value ? 600 : 400,
-                '&:hover': value ? { textDecoration: 'underline' } : {},
+                '&:hover': canView && value ? { textDecoration: 'underline' } : {},
               }}
             >
               {value ? `Used in ${value} classes` : 'Unused'}
@@ -306,9 +310,7 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
           const isArchived = getStatusLabel(group.status) === 'Archived';
           const actions = getElectiveSubjectTableActions(group, isArchived, {
             canAdd,
-            canView,
             canDelete,
-            onViewUsage,
             onEdit,
             onArchive,
             onRestore,
@@ -376,6 +378,27 @@ const ElectiveSubjectTable: React.FC<IElectiveSubjectTableProps> = ({
         }
         columns={columns}
         data={groups}
+        handleRowClick={canView ? (row) => onViewUsage(row as IElectiveSubject) : undefined}
+        rowProps={(row) => ({
+          tabIndex: canView ? 0 : -1,
+          'aria-label': canView ? `View elective group ${row.name}` : undefined,
+          onKeyDown: (event) => {
+            if (
+              canView &&
+              event.target === event.currentTarget &&
+              (event.key === 'Enter' || event.key === ' ')
+            ) {
+              event.preventDefault();
+              onViewUsage(row as IElectiveSubject);
+            }
+          },
+          sx: {
+            cursor: canView ? 'pointer' : 'default',
+            '&:focus-visible': canView
+              ? { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: -2 }
+              : undefined,
+          },
+        })}
       />
     </Box>
   );

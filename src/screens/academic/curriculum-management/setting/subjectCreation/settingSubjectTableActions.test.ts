@@ -14,9 +14,7 @@ const subject: ISubject = {
 function createOptions() {
   return {
     canAdd: true,
-    canView: true,
     canDelete: true,
-    onViewUsage: vi.fn(),
     onEdit: vi.fn(),
     onArchive: vi.fn(),
     onRestore: vi.fn(),
@@ -25,16 +23,16 @@ function createOptions() {
 }
 
 describe('getSettingSubjectTableActions', () => {
-  it('orders the fourth active-subject action after the first three direct actions', () => {
+  it('keeps the three active-subject actions direct', () => {
     const actions = getSettingSubjectTableActions(subject, false, createOptions());
 
-    expect(actions.map((action) => action.id)).toEqual(['view-usage', 'edit', 'archive', 'delete']);
+    expect(actions.map((action) => action.id)).toEqual(['edit', 'archive', 'delete']);
   });
 
-  it('returns only view and restore for an archived subject', () => {
+  it('returns only restore for an archived subject', () => {
     const actions = getSettingSubjectTableActions(subject, true, createOptions());
 
-    expect(actions.map((action) => action.id)).toEqual(['view-usage', 'restore']);
+    expect(actions.map((action) => action.id)).toEqual(['restore']);
   });
 
   it('keeps delete visible but disabled when the subject is in use', () => {

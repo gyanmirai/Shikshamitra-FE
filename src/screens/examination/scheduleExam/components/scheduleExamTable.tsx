@@ -21,6 +21,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { examScheduledStatus } from 'src/enums/exam-scheduled-status';
@@ -34,7 +35,7 @@ import {
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
 
 import { EXAM_STATUS_META } from '../scheduleExamStatus';
-import ScheduleExamKpiStrip from './ScheduleExamKpiStrip';
+import { buildScheduleExamInsightMetrics } from './scheduleExamInsightMetrics';
 import { formatExamDateRange } from '../schedule-exam-date-range';
 import ScheduleExamPreviewDrawer from './ScheduleExamPreviewDrawer';
 import { getScheduleExamPrimaryAction } from '../schedule-exam-primary-action';
@@ -105,6 +106,9 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
   rowsPerPage,
   totalCount,
   onServerPagination,
+  insightsOpen = false,
+  onOpenInsights,
+  onCloseInsights,
 }) => {
   const publishExamDialog = useBoolean();
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
@@ -333,16 +337,16 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     onStatusChange?.(newValue as number);
   };
 
-  const handleKpiClick = (label: string) => {
-    const statusByCard: Record<string, examScheduledStatus> = {
-      'Draft Exams': examScheduledStatus.Pending,
-      Published: examScheduledStatus.Published,
-      'Upcoming 7 Days': examScheduledStatus.Published,
-      'Unassigned Rooms': examScheduledStatus.Pending,
-      'Needs Attention': examScheduledStatus.Pending,
-      Completed: examScheduledStatus.Completed,
+  const handleInsightClick = (id: string) => {
+    const statusByMetric: Record<string, examScheduledStatus> = {
+      'draft-exams': examScheduledStatus.Pending,
+      'published-exams': examScheduledStatus.Published,
+      'upcoming-exams': examScheduledStatus.Published,
+      'unassigned-rooms': examScheduledStatus.Pending,
+      'needs-attention': examScheduledStatus.Pending,
+      'completed-exams': examScheduledStatus.Completed,
     };
-    const status = statusByCard[label];
+    const status = statusByMetric[id];
     if (status === undefined) return;
     tabs.setValue(status);
     onStatusChange?.(status);
@@ -358,19 +362,34 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     }));
   }, [getExams?.data?.items]);
 
+  const insightMetrics = buildScheduleExamInsightMetrics({
+    summary:
+      activeStatus === examScheduledStatus.Completed
+        ? { ...getExams?.data, completedCount: totalCount }
+        : getExams?.data,
+    rows: tableData,
+  }).map((metric) => ({
+    ...metric,
+    onClick: () => handleInsightClick(metric.id),
+  }));
+
+  const classLabel = classOptions.find((option) => option.value === selectedClass)?.label ?? 'All Classes';
+  const dateLabel =
+    dateRange[0]?.isValid() && dateRange[1]?.isValid()
+      ? `${dateRange[0].format('DD MMM YYYY')} – ${dateRange[1].format('DD MMM YYYY')}`
+      : 'All dates';
+
+  const statusChart = {
+    title: 'Exam status overview',
+    description: 'Scheduled exams by status for the selected class and date range.',
+    categories: TABS.map((tab) => tab.label),
+    values: TABS.map((tab) => tab.count),
+    seriesName: 'Exams',
+  };
+
   return (
     <>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 1 }}>
-        <ScheduleExamKpiStrip
-          summary={
-            activeStatus === examScheduledStatus.Completed
-              ? { ...getExams?.data, completedCount: totalCount }
-              : getExams?.data
-          }
-          rows={tableData}
-          publishedCount={publishedCount}
-          onCardClick={handleKpiClick}
-        />
         <Paper
           elevation={0}
           sx={{
@@ -383,7 +402,7 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
             borderRadius: 1,
             border: '1px solid',
             borderColor: 'divider',
-            flexWrap: { xs: 'wrap', lg: 'nowrap' },
+            flexWrap: 'wrap',
           }}
         >
           <Tabs
@@ -408,56 +427,82 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
           <Stack
             direction="row"
-            spacing={1.5}
             alignItems="center"
             sx={{
-              flexShrink: 0,
+              maxWidth: '100%',
+              flex: '0 1 auto',
               flexWrap: 'wrap',
               gap: 1.5,
               ml: 'auto',
             }}
           >
-            <Box sx={{ minWidth: { xs: 130, sm: 160 } }}>
-              <CustomSelect
-                label="Class"
-                options={classOptions}
-                labelKey="label"
-                valueKey="value"
-                value={selectedClass || 'all'}
-                onChange={(val) => {
-                  onClassChange?.(String(val));
-                }}
-                formControlProps={{ fullWidth: true, size: 'small', sx: { maxWidth: 'unset' } }}
-              />
-            </Box>
+            <Stack direction="row" alignItems="center" sx={{ flexWrap: 'wrap', gap: 1.5 }}>
+              <Box sx={{ minWidth: { xs: 130, sm: 160 } }}>
+                <CustomSelect
+                  label="Class"
+                  options={classOptions}
+                  labelKey="label"
+                  valueKey="value"
+                  value={selectedClass || 'all'}
+                  onChange={(val) => {
+                    onClassChange?.(String(val));
+                  }}
+                  formControlProps={{ fullWidth: true, size: 'small', sx: { maxWidth: 'unset' } }}
+                />
+              </Box>
 
-            <Box sx={{ minWidth: { xs: 190, sm: 230 } }}>
-              <CustomDateRangePicker
-                label="Date Range"
-                value={dateRange}
-                dateFormat="DD-MM-YYYY"
-                onChange={(value) => {
-                  onDateRangeChange?.(value);
-                }}
-              />
-            </Box>
+              <Box sx={{ minWidth: { xs: 190, sm: 230 } }}>
+                <CustomDateRangePicker
+                  label="Date Range"
+                  value={dateRange}
+                  dateFormat="DD-MM-YYYY"
+                  onChange={(value) => {
+                    onDateRangeChange?.(value);
+                  }}
+                />
+              </Box>
+            </Stack>
 
-            {isScheduleExamButton && canAdd && (
+            <Stack direction="row" alignItems="center" sx={{ flexWrap: 'wrap', gap: 1.5 }}>
               <Button
                 size="small"
-                startIcon={<Add />}
-                variant="contained"
-                onClick={() => {
-                  setOpenDialog?.(true);
-                }}
-                sx={{ px: 3, whiteSpace: 'nowrap', flexShrink: 0 }}
+                variant="outlined"
+                color="inherit"
+                startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+                onClick={onOpenInsights}
+                disabled={!medium?.id}
+                sx={{ width: 160, whiteSpace: 'nowrap', flexShrink: 0 }}
               >
-                Schedule Exam
+                View all insights
               </Button>
-            )}
+
+              {isScheduleExamButton && canAdd && (
+                <Button
+                  size="small"
+                  startIcon={<Add />}
+                  variant="contained"
+                  onClick={() => {
+                    setOpenDialog?.(true);
+                  }}
+                  sx={{ width: 160, whiteSpace: 'nowrap', flexShrink: 0 }}
+                >
+                  Schedule Exam
+                </Button>
+              )}
+            </Stack>
           </Stack>
         </Paper>
       </Box>
+      <AcademicInsights
+        title="Schedule exam insights"
+        description={`Exam status and planning for ${classLabel} · ${dateLabel}.`}
+        metrics={insightMetrics}
+        chart={statusChart}
+        isLoading={getExams?.isLoading || getExams?.isFetching}
+        open={insightsOpen}
+        onClose={onCloseInsights}
+        hideTrigger
+      />
       {isAction ? (
         <CustomizableTable
           tableId="schedule-exam-table"

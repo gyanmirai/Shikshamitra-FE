@@ -17,9 +17,7 @@ const group: IElectiveSubject = {
 function createOptions() {
   return {
     canAdd: true,
-    canView: true,
     canDelete: true,
-    onViewUsage: vi.fn(),
     onEdit: vi.fn(),
     onArchive: vi.fn(),
     onRestore: vi.fn(),
@@ -28,16 +26,16 @@ function createOptions() {
 }
 
 describe('getElectiveSubjectTableActions', () => {
-  it('orders delete as the fourth action for an active elective group', () => {
+  it('keeps the three active elective-group actions direct', () => {
     const actions = getElectiveSubjectTableActions(group, false, createOptions());
 
-    expect(actions.map((action) => action.id)).toEqual(['view-usage', 'edit', 'archive', 'delete']);
+    expect(actions.map((action) => action.id)).toEqual(['edit', 'archive', 'delete']);
   });
 
-  it('returns only view and restore for an archived elective group', () => {
+  it('returns only restore for an archived elective group', () => {
     const actions = getElectiveSubjectTableActions(group, true, createOptions());
 
-    expect(actions.map((action) => action.id)).toEqual(['view-usage', 'restore']);
+    expect(actions.map((action) => action.id)).toEqual(['restore']);
   });
 
   it('keeps delete visible but disabled when the elective group is in use', () => {

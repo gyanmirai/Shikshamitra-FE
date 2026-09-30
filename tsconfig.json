@@ -1,10 +1,10 @@
 {
   "compilerOptions": {
     "skipLibCheck": true,
-    "ignoreDeprecations": "5.0",
-    "baseUrl": ".",
-    "target": "es5",
-    "downlevelIteration": true,
+    "paths": {
+      "*": ["./*"]
+    },
+    "target": "es2015",
     "lib": [
       "dom",
       "esnext",
