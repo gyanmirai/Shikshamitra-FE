@@ -80,7 +80,7 @@ describe('AssignmentRubricEvaluationContent', () => {
     expect(props.onSubmit).toHaveBeenCalledWith(true);
   });
 
-  it('uses the expanded rubric layout for a read-only view', () => {
+  it('keeps the compact rubric layout for a read-only view', () => {
     render(
       <AssignmentRubricEvaluationContent
         {...props}
@@ -88,7 +88,7 @@ describe('AssignmentRubricEvaluationContent', () => {
         isEditMode={false}
       />
     );
-    expect(screen.getByText(/compact: false/)).toBeInTheDocument();
+    expect(screen.getByText(/compact: true/)).toBeInTheDocument();
     expect(screen.getByText('Helpful feedback')).toBeInTheDocument();
   });
 

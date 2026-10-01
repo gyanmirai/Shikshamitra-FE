@@ -2,11 +2,10 @@ import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type { Division } from 'src/types/school';
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { MeetingRoom, ClassOutlined } from '@mui/icons-material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Chip, Grid, Divider, Typography } from '@mui/material';
+import { Box, Chip, Grid, Paper, Divider, Typography } from '@mui/material';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 
 import { ExamReviewInfoItem } from './ExamReviewInfoItem';
@@ -73,34 +72,27 @@ const RoomAllocationReview = ({
   return (
     <ExamReviewAccordion
       title="Room Allocation"
-      description="Designated rooms for each subject and division"
       icon="fluent:conference-room-24-filled"
       onEdit={onEdit}
-      detailsPadding={2}
     >
-      <Grid container spacing={1}>
-        {activeReviewSubjects.map((entry, index, arr) => {
+      <Grid container spacing={2} alignItems="stretch">
+        {activeReviewSubjects.map((entry) => {
           const { subjectId, subjectName, electiveGroupName, divisionMap } = entry;
+          const divisionCount = Object.keys(divisionMap).length;
 
           return (
-            <React.Fragment key={subjectId}>
-              <Grid size={{ xs: 12 }}>
-                <Box display="flex" alignItems="center" gap={1} mb={2}>
-                  <Typography variant="subtitle1" color="text.primary">
+            <Grid key={subjectId} size={{ xs: 12, lg: activeReviewSubjects.length === 1 ? 12 : 6 }}>
+              <Paper variant="outlined" sx={{ height: '100%', p: 2, borderRadius: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                  <Typography variant="body2" fontWeight={700}>
                     {subjectName}
                   </Typography>
                   {electiveGroupName && (
-                    <Chip
-                      label={electiveGroupName}
-                      size="small"
-                      color="default"
-                      variant="outlined"
-                      sx={{ fontSize: '0.7rem', height: 20 }}
-                    />
+                    <Chip label={electiveGroupName} size="small" variant="outlined" />
                   )}
                 </Box>
-
-                <Grid container spacing={1}>
+                <Divider sx={{ my: 1.5 }} />
+                <Grid container columnSpacing={2} rowSpacing={2}>
                   {Object.entries(divisionMap).map(([divisionName, divisionData]) => {
                     if (!divisionData.roomIds || divisionData.roomIds.length === 0) return null;
 
@@ -109,20 +101,26 @@ const RoomAllocationReview = ({
                       divisionName;
 
                     return (
-                      <Grid size={{ xs: 12, md: 6 }} key={`${subjectName}-${divisionName}`}>
+                      <Grid
+                        size={{ xs: 12, sm: divisionCount === 1 ? 12 : 6 }}
+                        key={`${subjectId}-${divisionName}`}
+                      >
                         <ExamReviewInfoItem
-                          icon={<ClassOutlined />}
                           label={`Division ${divisionLabel}`}
                           value={
-                            <Box display="flex" flexWrap="wrap" gap={1}>
+                            <Box display="flex" flexWrap="wrap" gap={0.75}>
                               {divisionData.roomIds.map((roomId: string) => (
                                 <Chip
                                   key={roomId}
                                   label={String(roomLabelById.get(roomId) ?? roomId)}
                                   size="small"
                                   variant="outlined"
-                                  icon={<MeetingRoom style={{ fontSize: '1rem' }} />}
-                                  sx={{ borderRadius: 1 }}
+                                  sx={{
+                                    maxWidth: '100%',
+                                    height: 'auto',
+                                    minHeight: 24,
+                                    '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 },
+                                  }}
                                 />
                               ))}
                             </Box>
@@ -132,13 +130,8 @@ const RoomAllocationReview = ({
                     );
                   })}
                 </Grid>
-              </Grid>
-              {index < arr.length - 1 && (
-                <Grid size={{ xs: 12 }}>
-                  <Divider sx={{ borderStyle: 'dashed' }} />
-                </Grid>
-              )}
-            </React.Fragment>
+              </Paper>
+            </Grid>
           );
         })}
       </Grid>

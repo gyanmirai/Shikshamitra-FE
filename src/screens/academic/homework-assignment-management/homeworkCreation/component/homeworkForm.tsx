@@ -872,6 +872,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     }}
                     primaryText="Upload Reference File"
                     secondaryText="Supports PDF, DOCX, IMG (Max 5MB)"
+                    dragProps={{ sx: { flexDirection: 'column', gap: 1 } }}
                   />
                 </Grid>
               </SectionCard>

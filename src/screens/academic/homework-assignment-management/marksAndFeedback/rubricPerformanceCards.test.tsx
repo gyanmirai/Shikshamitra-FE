@@ -71,4 +71,30 @@ describe('RubricPerformanceCards', () => {
 
     expect(onMarksChange).toHaveBeenCalledWith('accuracy', '4');
   });
+
+  it('shows the recorded level without allowing changes in review mode', () => {
+    const onMarksChange = vi.fn();
+
+    render(
+      <RubricPerformanceCards
+        rubric={rubric}
+        values={{ accuracy: { marks: '4', comments: 'Excellent work' } }}
+        onMarksChange={onMarksChange}
+        onCommentsChange={vi.fn()}
+        readOnly
+        compact
+      />
+    );
+
+    expect(screen.getByText('Recorded score')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Accuracy: Excellent, 4 points' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(screen.getByRole('button', { name: 'Accuracy: Good, 3 points' })).toBeDisabled();
+    expect(screen.getByRole('textbox', { name: 'Accuracy feedback (optional)' })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Accuracy: Good, 3 points' }));
+    expect(onMarksChange).not.toHaveBeenCalled();
+  });
 });

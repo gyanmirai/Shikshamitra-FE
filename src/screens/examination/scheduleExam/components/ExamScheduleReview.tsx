@@ -1,10 +1,9 @@
 import type { FormikProps } from 'formik';
 
-import React from 'react';
 import dayjs from 'dayjs';
-import { Box, Chip, Grid, Typography } from '@mui/material';
-import CustomizableTable from 'src/components/customizabaleTable';
+import { Box, Chip, Grid, Paper, Divider, Typography } from '@mui/material';
 
+import { ExamReviewInfoItem } from './ExamReviewInfoItem';
 import { ExamReviewAccordion } from './ExamReviewAccordion';
 
 import type { IExamFormValues } from '../type';
@@ -62,87 +61,76 @@ const ExamScheduleReview = ({
   return (
     <ExamReviewAccordion
       title="Subject Schedule"
-      description="Exam schedule details for each subject"
       icon="solar:calendar-bold-duotone"
       onEdit={onEdit}
     >
-      <Grid size={12}>
-        <CustomizableTable
-          tableId="exam-schedule-view"
-          columns={[
-            {
-              id: 'subjectName',
-              label: 'Subject',
-              align: 'left',
-              render: (_value: any, row: any) => (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                  <Box sx={{ width: 4, height: 18, borderRadius: 1, bgcolor: row.subjectColor }} />
-                  <Box>
-                    <Typography variant="caption" display="block">
-                      {row.subjectName}
-                      {row.subjectCode ? ` (${row.subjectCode})` : ''}
+      {reviewRows.length === 0 ? (
+        <Typography variant="body2" color="text.secondary">
+          No subjects scheduled yet.
+        </Typography>
+      ) : (
+        <Grid container spacing={2} alignItems="stretch">
+          {reviewRows.map((row, index) => {
+            const totalMarks =
+              row.totalMarks !== '' && row.totalMarks != null ? row.totalMarks : '-';
+            const passingMarks =
+              row.passingMarks !== '' && row.passingMarks != null ? row.passingMarks : '-';
+
+            return (
+              <Grid
+                key={`${row.subjectId || row.subjectName}-${index}`}
+                size={{ xs: 12, lg: reviewRows.length === 1 ? 12 : 6 }}
+              >
+                <Paper variant="outlined" sx={{ height: '100%', p: 2, borderRadius: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+                    <Typography variant="body2" fontWeight={700}>
+                      {row.subjectName || '-'}
                     </Typography>
+                    {row.subjectCode && (
+                      <Typography variant="caption" color="text.secondary">
+                        {row.subjectCode}
+                      </Typography>
+                    )}
                     {row.electiveGroupName && (
-                      <Chip
-                        label={row.electiveGroupName}
-                        size="small"
-                        color="warning"
-                        variant="soft"
-                        sx={{ fontSize: '0.62rem', height: 16, mt: 0.25 }}
-                      />
+                      <Chip label={row.electiveGroupName} size="small" variant="outlined" />
                     )}
                   </Box>
-                </Box>
-              ),
-            },
-            {
-              id: 'examDate',
-              label: 'Date',
-              filterType: 'date',
-              align: 'left',
-              render: (value: any) => (value ? dayjs(value).format('DD-MM-YYYY') : '-'),
-            },
-            {
-              id: 'startTime',
-              label: 'Start Time',
-              align: 'left',
-              render: (value: any) => (value ? dayjs(value).format('hh:mm A') : '-'),
-            },
-            {
-              id: 'endTime',
-              label: 'End Time',
-              align: 'left',
-              render: (value: any) => (value ? dayjs(value).format('hh:mm A') : '-'),
-            },
-            {
-              id: 'totalMarks',
-              label: 'Total Marks',
-              filterType: 'number',
-              align: 'left',
-              render: (value: any) => (value != null && value !== '' ? value : '-'),
-            },
-            {
-              id: 'passingMarks',
-              label: 'Passing Marks',
-              filterType: 'number',
-              align: 'left',
-              render: (value: any) => (value != null && value !== '' ? value : '-'),
-            },
-            {
-              id: 'notes',
-              label: 'Notes',
-              align: 'left',
-              render: (value: any) => value || '-',
-            },
-          ]}
-          data={reviewRows}
-          isFilter={false}
-          isPagination={false}
-          isScrollbar={false}
-          isSearch={false}
-          isShowedDense={false}
-        />
-      </Grid>
+                  <Divider sx={{ my: 1.5 }} />
+                  <Grid container columnSpacing={2} rowSpacing={2}>
+                    <Grid size={{ xs: 6, md: reviewRows.length === 1 ? 3 : 6 }}>
+                      <ExamReviewInfoItem
+                        label="Date"
+                        value={row.examDate ? dayjs(row.examDate).format('D MMM YYYY') : '-'}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 6, md: reviewRows.length === 1 ? 3 : 6 }}>
+                      <ExamReviewInfoItem
+                        label="Time"
+                        value={
+                          row.startTime && row.endTime
+                            ? `${dayjs(row.startTime).format('h:mm A')} – ${dayjs(row.endTime).format('h:mm A')}`
+                            : '-'
+                        }
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 6, md: reviewRows.length === 1 ? 3 : 6 }}>
+                      <ExamReviewInfoItem label="Total Marks" value={totalMarks} />
+                    </Grid>
+                    <Grid size={{ xs: 6, md: reviewRows.length === 1 ? 3 : 6 }}>
+                      <ExamReviewInfoItem label="Passing Marks" value={passingMarks} />
+                    </Grid>
+                    {row.notes && (
+                      <Grid size={{ xs: 12 }}>
+                        <ExamReviewInfoItem label="Notes" value={row.notes} />
+                      </Grid>
+                    )}
+                  </Grid>
+                </Paper>
+              </Grid>
+            );
+          })}
+        </Grid>
+      )}
     </ExamReviewAccordion>
   );
 };

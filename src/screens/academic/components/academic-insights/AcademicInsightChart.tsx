@@ -2,7 +2,7 @@
 
 import { useTheme } from '@mui/material/styles';
 import { Chart, useChart } from 'src/components/chart';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, Stack, Typography } from '@mui/material';
 
 import type { AcademicInsightChart as AcademicInsightChartConfig } from './types';
 
@@ -62,11 +62,42 @@ export function AcademicInsightChart({ config }: Props) {
           options={options}
         />
       </Box>
-      <Typography variant="caption" color="text.secondary">
-        {config.categories
-          .map((category, index) => `${category}: ${config.values[index]}${suffix}`)
-          .join(' · ')}
-      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          columnGap: 0.75,
+          rowGap: 0.25,
+          mt: 1.5,
+          pt: 1.25,
+          pb: 0.5,
+          borderTop: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        {config.categories.map((category, index) => (
+          <Stack key={`${category}-${index}`} direction="row" alignItems="center" spacing={0.75}>
+            <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.5 }}>
+              {category}:{' '}
+              <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>
+                {config.values[index]}
+                {suffix}
+              </Box>
+            </Typography>
+            {index < config.categories.length - 1 && (
+              <Typography
+                component="span"
+                variant="caption"
+                color="text.disabled"
+                aria-hidden="true"
+              >
+                |
+              </Typography>
+            )}
+          </Stack>
+        ))}
+      </Box>
     </Paper>
   );
 }
