@@ -1,7 +1,6 @@
 import { BankAccountType, type IBankAccount } from './type';
 
 export const getBankAccountInitialValues = (editData?: IBankAccount | null) => ({
-  code: editData?.code || '',
   bankName: editData?.bankName || '',
   branchName: editData?.branchName || '',
   branchAddress: editData?.branchAddress || '',

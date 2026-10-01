@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-24
+updated_on: 2026-10-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -29,6 +29,7 @@ Use this table to find the first integration file.
 | Adjustments             | `src/redux/finance/adjustments/adjustmentApi.ts`                                                                              |
 | Audit Trail             | `src/redux/finance/audit/financeAuditApi.ts`                                                                                  |
 | Reconciliation          | `src/redux/finance/reconciliation.ts`                                                                                         |
+| Accounts Activity       | `src/redux/finance/accountsActivityApi.ts`                                                                                     |
 | Receipt Book            | `src/redux/finance/receiptBookApi.ts`                                                                                         |
 | Fee collection          | `src/redux/feeCollection/**`                                                                                                  |
 | Late-fee waiver queue   | `src/redux/feeCollection/lateFeeWaiver.ts`                                                                                    |
@@ -40,6 +41,8 @@ Use this table to find the first integration file.
 | Categories and settings | `src/redux/finance/*Category*`, `src/redux/feeCategory/**`, and `src/redux/feeHeadManage/**`                                  |
 
 Fee-head module options are defined by the numeric `FeeHeadModule` enum in `src/redux/feeHeadModule/feeHeadModuleApi.ts`. Fee-category and fee-head clients send the selected number, or `null` when no module is selected, so create and edit forms use the same value type as backend responses. Both Fee Head entry surfaces load active Income Categories for the selected academic year and send the required `incomeCategoryId`. Lists and details show the category together with its server-resolved default Income Account Head; used Fee Heads keep this selector locked.
+
+Collections owns academic filter state in `FeeCollection/index.tsx` and passes it to its table. `useFinanceAcademicFilters` subscribes to standards by medium and uses `currentData`, so changing class/division or returning from a student view does not force another standards request or reuse another medium's options. Selecting a division preserves the class; changing a class clears only its division, and changing board, medium, or academic year clears both. Refreshing the same valid academic year preserves selections. The collection request and visible paginator switch to page 1 together when academic filters change, avoiding a request for the old page in the new scope.
 
 Payment Term create/update requests send `status` as `Draft` or `Active`. The client does not collect or send a version-effective date; when `Active` is submitted, the backend derives the next valid activation date inside the board period and publishes that version in the same unit of work. Board list responses provide `startDate` and `endDate`, which are the UI and API validation boundaries for installment periods. Payment-term responses use named enum values; the API client also normalizes legacy numeric enum responses at the boundary so form controls and derived bill-generation dates receive one stable string contract.
 
@@ -65,6 +68,12 @@ It uses current query data so switching academic years cannot reuse another year
 `src/screens/security/role/permission-catalogue.ts` organizes every server-defined Accounts action in the retained role editor without a Finance-specific action list.
 The [Security workflow](../security/workflows.md) explains complete subtree operations and why removing direct user grants does not remove inherited role access.
 Account Head forms and contracts omit code, currency, direct-posting/control toggles, and effective dates. Both category forms omit code and effective dates; the server owns legacy category metadata. A category's default-head selector is enabled for permitted creation and unused-category editing. Used categories retain the server mapping lock and show an explanation. These changes require the matching backend release and migration described in the [backend API guide](../../../Shikshamitra-BE/docs/modules/finance/api.md).
+
+Income and Expense Category forms accept an empty tag list while still requiring a matching default Account Head. The Bank Account form does not ask for an internal code; the backend generates it on create and preserves it on update. It still requires real bank details and an Asset Account Head. A blank optional UPI ID passes frontend validation. No Accounts Settings form asks the user to select a fee policy.
+
+Fee Collections owns the existing seven payment-method choices, and Income/Expense use the same `src/enums/finance-payment-method.ts` labels. Accounts Settings has no Payment Modes client. The former Draft Postings client still names unimplemented `/account-postings` endpoints; its menu route is hidden and its direct page now explains that posting cannot be finalised. Posting Automation's hardcoded Save action has likewise been removed. These are deliberate unavailable states until the backend journal/mapping contracts in the [delivery plan](../../../Shikshamitra-BE/docs/modules/finance/references/accounts-frontend-backend-delivery.md) ship.
+
+Income and Expense entry forms now treat category tags as optional and limit amount input to two decimal places. They send category ID, not a caller-resolved Account Head ID; the backend validates the category-to-head mapping. Their former attachment control called an Academic Curriculum upload API without an Income/Expense evidence link, so it is unavailable until Finance provides a scoped document contract. The existing Income/Expense routes remain legacy transaction CRUD, not posted journals.
 
 Focused coverage: `src/hooks/useAccountHeadOptions.test.ts`, `src/screens/finance/settings/account-settings-forms.test.ts`, `src/screens/security/role/permission-catalogue.test.ts`, and `src/screens/security/role/permission-node.test.tsx`.
 

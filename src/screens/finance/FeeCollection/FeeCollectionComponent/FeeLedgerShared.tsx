@@ -16,6 +16,7 @@ import {
 } from 'src/enums/fee-collection-type';
 
 import FeeWaiverToggle from './FeeWaiverToggle';
+import { roundUpToRupee } from './preview/paymentAllocationUtils';
 
 // ─── Constants & Helpers ───────────────────────────────────────────────────────
 
@@ -124,7 +125,8 @@ export interface FeeRowProps {
   subtitle?: string;
   total: number;
   scheduledTotal?: number;
-	prorationPolicyVersionId?: string | null;
+  prorationPolicyName?: string | null;
+  prorationPolicyVersionNumber?: number | null;
   prorationExplanation?: string | null;
   paid: number;
   due: number;
@@ -152,7 +154,8 @@ export const FeeRow = ({
   subtitle,
   total,
   scheduledTotal,
-	prorationPolicyVersionId,
+  prorationPolicyName,
+  prorationPolicyVersionNumber,
   prorationExplanation,
   paid,
   due,
@@ -298,11 +301,11 @@ export const FeeRow = ({
                 <Typography variant="caption" fontWeight={700} display="block">
                   Proration
                 </Typography>
-				{prorationPolicyVersionId && (
-				  <Typography variant="caption" display="block">
-					Policy version: {prorationPolicyVersionId}
-				  </Typography>
-				)}
+                {prorationPolicyName && prorationPolicyVersionNumber != null && (
+                  <Typography variant="caption" display="block">
+                    Policy: {prorationPolicyName}, v{prorationPolicyVersionNumber}
+                  </Typography>
+                )}
                 {scheduledTotal !== undefined && scheduledTotal !== total && (
                   <Typography variant="caption" display="block">
                     Scheduled: {formatNumber(scheduledTotal, 'INR')} · Charged:{' '}
@@ -372,7 +375,7 @@ export const FeeRow = ({
           fontWeight: 600,
         }}
       >
-        {formatNumber(due, 'INR')}
+        {formatNumber(roundUpToRupee(due), 'INR')}
       </Typography>
 
       {/* LATE FEE */}
@@ -595,7 +598,7 @@ export const GroupHeader = ({
             color="error.main"
             sx={{ fontSize: '0.72rem', fontVariantNumeric: 'tabular-nums' }}
           >
-            Due: ₹{formatNumber(totalDue)}
+            Due: ₹{formatNumber(roundUpToRupee(totalDue))}
           </Typography>
         </Box>
       )}

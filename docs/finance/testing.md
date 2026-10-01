@@ -3,7 +3,7 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-09-21
+updated_on: 2026-10-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -36,6 +36,12 @@ Use these commands as the first validation set.
 | Concession document constraints   | `npm run test -- src/screens/finance/Concession/Components/concessionDocumentUpload.test.ts`                                                              |
 | Concession request types and UI   | `npm run ts` plus focused ESLint on `src/screens/finance/Concession`, `src/screens/finance/ConcessionAdmin`, and `src/redux/finance/ConcessionManagement` |
 | TypeScript impact                 | `npm run ts`                                                                                                                                              |
+| Collections class/division filters | `npm run test -- src/screens/finance/hooks/useFinanceAcademicFilters.test.tsx src/screens/finance/FeeCollection/Components/FeeCollectionTable.filters.test.tsx` |
+| Ledger status, charge filters and counts | `npm run test -- src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx src/screens/finance/FeeCollection/FeeCollectionComponent/feeLedgerStatus.test.ts` |
+| Policy default controls and lifecycle | `npm run test -- src/screens/finance/policies/components/DefaultPolicyToggle.test.tsx src/screens/finance/policies/components/PolicyDefaultLifecycle.test.tsx` |
+| Fee Structure default lookups | `npm run test -- src/screens/finance/settings/FeeStructure/hooks/useFeeStructureLookups.test.tsx src/screens/finance/settings/FeeStructure/feeStructureModel.test.ts` |
+| Collections additional charges | `npm run test -- src/redux/feeCollection/feeCollection.charges.test.ts src/screens/finance/FeeCollection/Components/FeeCollectionTable.charges.test.tsx src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx` |
+| Payment Term date entry            | `npm run test -- src/components/custom-date-range-picker/custom-date-range-picker.test.tsx src/screens/finance/settings/PaymentTerm/Components/sections/InstallmentSection.test.tsx src/screens/finance/settings/PaymentTerm/Components/PaymentTermValidationSchema.test.ts` |
 
 ## Add coverage when needed
 
@@ -51,6 +57,25 @@ Add or update tests when a change affects these areas.
 | Route-level behavior                      | Playwright test before release sign-off        |
 
 Charge release evidence must cover the selected academic year in every query/cache key, exact action permissions plus server `availableActions`, explicit AllInScope versus selected-student audience, preview/stale/idempotent command behavior, server paging, collection refresh, and absence of placeholder correction actions. The complete matrix is in [Charge Management frontend flow](./references/charge-management-frontend-flow.md).
+
+## Collections additional charges
+
+For the additional-charge regression, verify server charge totals in the grid, fresh fee-plus-charge **Overall Outstanding**, empty late-fee allocations on fee-only collection, and unpaid charges remaining selectable after the parent installment is paid.
+The cache tests cover subscribed grid, collection ledger, and details refresh after payment and waiver.
+On Windows, run each focused test file separately with `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run <test-path> --pool=threads` if worker startup times out during a combined run.
+Finish UI verification with the Codex in-app browser: collect principal alone, reopen collection, select **All Charges**, then confirm charge payment and waiver update the grid and outstanding balance.
+
+## Policy defaults and ledger browser checks
+
+Use the in-app browser with the isolated fixtures under `e2e/fixtures/fee-structure` and
+`e2e/fixtures/fee-collection-late-fees`; each uses a separate dependency cache.
+Verify default Collection, Proration and Refund selections on a new structure, a manual
+replacement, saved nondefault version pins, and an intentionally empty saved Refund selection.
+In collection, compare All, Pending, Paid, Overdue, Partial Pending and In Reconciliation in both
+grouping views, including charge-only results, zero matches, source month/head filters, matching
+entry counts, and preserved selections while changing filters.
+These fixtures use synthetic responses and make no backend financial writes; backend due-date,
+default uniqueness and state-transition rules require their independent regression suites.
 
 ## Student fee assignment
 

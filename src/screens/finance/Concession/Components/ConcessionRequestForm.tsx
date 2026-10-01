@@ -22,8 +22,8 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useGetStudentsByScopeQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
@@ -265,6 +265,13 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   );
   const theme = useTheme();
   const [selectedAssignmentId, setSelectedAssignmentId] = useState('');
+  // List filters may refresh while the request is being edited.
+  const [openingScope] = useState(() => ({
+    defaultBoardId,
+    defaultMediumId,
+    defaultStandardId,
+    defaultDivisionId,
+  }));
 
   const [boards, setBoards] = useState<any[]>([]);
   const [mediums, setMediums] = useState<any[]>([]);
@@ -296,14 +303,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
 
-  const [
-    getStudents,
-    { data: StudentsData, isLoading: studentLoading, isFetching: studentFetching },
-  ] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
-  });
-
   const [createConcessionRequest, { isLoading: createLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useCreateConcessionRequestMutation,
@@ -323,14 +322,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
 
   // -- Derived lists ---------------------------------------------------------
 
-  const studentOptions = useMemo(
-    () =>
-      StudentsData?.items?.map((item: any) => ({
-        ...item,
-        name: `${item.firstName}${item.middleName ? ` ${item.middleName}` : ''} ${item.lastName}`,
-      })) || [],
-    [StudentsData?.items]
-  );
   const commandKeys = useRef<Record<string, string>>({});
   const getCommandKey = useCallback((action: string) => {
     commandKeys.current[action] ||= window.crypto.randomUUID();
@@ -345,20 +336,17 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   const initialValues = useMemo(
     () =>
       buildInitialValues(concessionData?.data, {
-        boardId: defaultBoardId,
-        mediumId: defaultMediumId,
-        standardId: defaultStandardId,
-        divisionId: defaultDivisionId,
+        boardId: openingScope.defaultBoardId,
+        mediumId: openingScope.defaultMediumId,
+        standardId: openingScope.defaultStandardId,
+        divisionId: openingScope.defaultDivisionId,
         studentId: student?.studentId,
         studentName: student?.studentName,
         concessionTypeId: student?.concessionTypeId,
       }),
     [
       concessionData,
-      defaultBoardId,
-      defaultMediumId,
-      defaultStandardId,
-      defaultDivisionId,
+      openingScope,
       student?.studentId,
       student?.studentName,
       student?.concessionTypeId,
@@ -462,6 +450,28 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
   }, [currentYear?.id]); // Log formik values on every change for debugging
 
   const { values, touched, errors, setFieldValue, setFieldTouched } = formik;
+  const { currentData: studentsData, isLoading: studentLoading, isFetching: studentFetching, isError: studentsError } =
+    useGetStudentsByScopeQuery(
+      {
+        academicYearId: currentYear?.id || '',
+        boardId: values.boardId,
+        educationMediumId: values.mediumId,
+        classIds: [values.standardId],
+        divisionIds: [values.divisionId],
+      },
+      {
+        skip:
+          !currentYear?.id ||
+          !values.boardId ||
+          !values.mediumId ||
+          !values.standardId ||
+          !values.divisionId,
+      }
+    );
+  const studentOptions = useMemo(
+    () => studentsData?.map((item) => ({ ...item, name: item.studentName })) || [],
+    [studentsData]
+  );
 
   // -- Fee structure ---------------------------------------------------------
 
@@ -806,12 +816,6 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
     setAllDivisions(classes?.find((cls: any) => cls.id === values.standardId)?.divisions || []);
   }, [values.standardId, classes]);
 
-  useEffect(() => {
-    if (values.divisionId) {
-      getStudents(values.divisionId);
-    }
-  }, [getStudents, values.divisionId]);
-
   // -- Render ----------------------------------------------------------------
 
   if (isLoadingConcession || isFetchingConcession) {
@@ -1017,14 +1021,15 @@ const ConcessionRequestForm: React.FC<IConcessionFormProps> = ({
                         <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
                           <Autocomplete
                             loading={studentLoading || studentFetching}
-                            noOptionsText="No Student Found"
+                            noOptionsText={studentsError ? 'Unable to load students' : 'No Student Found'}
                             fullWidth
                             disabled={isEditMode || !values.divisionId}
                             options={studentOptions}
                             value={
-                              studentOptions.find((s: any) => s.studentId === values.studentId) ||
-                              null
+                              studentOptions.find((s) => s.studentId === values.studentId) ||
+                              (isEditMode && values.studentId ? { studentId: values.studentId, name: values.studentName } : null)
                             }
+                            isOptionEqualToValue={(option, value) => option.studentId === value.studentId}
                             onChange={(_e, value: any) => {
                               setSelectedAssignmentId('');
                               setFieldValue('studentId', value?.studentId || '');

@@ -10,7 +10,7 @@ import type {
 
 import * as Yup from 'yup';
 import { Iconify } from 'src/components/iconify';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
@@ -40,6 +40,8 @@ import {
 
 import AssignmentReview from './AssignmentReview';
 import AssignmentStudentInputs from './AssignmentStudentInputs';
+import AssignmentPolicies from './AssignmentPolicies';
+import AssignedPolicyEditor from './AssignedPolicyEditor';
 
 interface Student {
   studentId: string;
@@ -51,7 +53,7 @@ interface AssignmentValues {
   requests: AssignmentRequest[];
 }
 const initialValues: AssignmentValues = { structureId: '', requests: [] };
-const steps = ['Structure', 'Heads and service', 'Review', 'Results'];
+const steps = ['Structure', 'Heads and service', 'Policies', 'Review', 'Results'];
 
 // Observe the shared Formik values without creating another form-state owner.
 function AssignmentDirtyState({ dirty }: { dirty: boolean }) {
@@ -79,16 +81,23 @@ export default function AssignmentWorkflow({
   const { permissions } = useSelector((state: RootState) => state.auth);
   const canAssign = hasGrantedPermission(
     permissions,
-    `${financePermissions.fees.structureAssign  }.Add`
+    `${financePermissions.fees.structureAssign}.Add`
   );
   const canOverrideAmount = hasGrantedPermission(
     permissions,
-    `${financePermissions.fees.structureAssign  }.OverrideAmount`
+    `${financePermissions.fees.structureAssign}.OverrideAmount`
   );
   const canOverrideDates = hasGrantedPermission(
     permissions,
     financePermissions.policies.prorationPolicyActions.overrideChargePeriod
   );
+  const canOverridePolicies = hasGrantedPermission(
+    permissions,
+    `${financePermissions.fees.structureAssign}.OverridePolicies`
+  );
+  const dispatch = useDispatch();
+  const [editingPolicies, setEditingPolicies] = useState(false);
+  const setPolicyDirty = useCallback((dirty: boolean) => dispatch(setIsChanges(dirty)), [dispatch]);
   const viewing = students.length === 1 && !!students[0].isFeeStructureAssigned;
   const candidates = useAssignmentCandidatesQuery(
     { studentId: students[0]?.studentId, academicYearId },
@@ -151,7 +160,7 @@ export default function AssignmentWorkflow({
           : await previewBulk({ items }).unwrap();
       if (ticket === generation.current) {
         setPreview(result);
-        setActiveStep(2);
+        setActiveStep(3);
       }
     } catch (e) {
       if (ticket === generation.current) setError(assignmentError(e));
@@ -186,7 +195,7 @@ export default function AssignmentWorkflow({
         results: [...(previous?.results.filter((r) => r.result) ?? []), ...result.results],
       }));
       setPreview(undefined);
-      setActiveStep(3);
+      setActiveStep(4);
     } catch (e) {
       setError(assignmentError(e));
     }
@@ -225,9 +234,32 @@ export default function AssignmentWorkflow({
                   {warning}
                 </Alert>
               ))}
-              {assigned.data?.assignment && (
+              {assigned.data?.assignment && !editingPolicies && (
                 <AssignmentReview data={assigned.data.assignment} committed />
               )}
+              {assigned.data &&
+                canOverridePolicies &&
+                (editingPolicies ? (
+                  <AssignedPolicyEditor
+                    data={assigned.data}
+                    onCancel={() => setEditingPolicies(false)}
+                    onSaved={() => {
+                      setEditingPolicies(false);
+                      assigned.refetch();
+                    }}
+                    onBusyChange={onBusyChange}
+                    onDirtyChange={setPolicyDirty}
+                  />
+                ) : (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Iconify icon="mdi:pencil-outline" />}
+                    onClick={() => setEditingPolicies(true)}
+                  >
+                    Edit assigned policies
+                  </Button>
+                ))}
               <Alert severity="info">
                 Assigned obligations are preserved. Service changes, transfers and revision adoption
                 require a separate reviewed financial correction.
@@ -264,19 +296,19 @@ export default function AssignmentWorkflow({
         showSaveButton={false}
         isStepClickable={() => false}
         completedSteps={
-          complete ? [0, 1, 2, 3] : activeStep >= 2 ? [0, 1] : activeStep === 1 ? [0] : []
+          complete ? [0, 1, 2, 3, 4] : Array.from({ length: activeStep }, (_, i) => i)
         }
         backButtonProps={{ disabled: complete, startIcon: <Iconify icon="mdi:arrow-left" /> }}
         handleBack={() => {
           invalidate();
-          setActiveStep(activeStep === 3 ? 1 : Math.max(0, activeStep - 1));
+          setActiveStep(activeStep === 4 ? 1 : Math.max(0, activeStep - 1));
         }}
         nextButtonLabel={
-          activeStep === 0
+          activeStep <= 1
             ? 'Next'
-            : activeStep === 1
+            : activeStep === 2
               ? 'Preview assignments'
-              : `Confirm assignment (${  selectedPreviewItems.length  })`
+              : `Confirm assignment (${selectedPreviewItems.length})`
         }
         finalButtonLabel={complete ? 'Close' : 'Review remaining students'}
         saveAndNextButtonProps={{
@@ -285,15 +317,15 @@ export default function AssignmentWorkflow({
           disabled:
             busy ||
             (activeStep === 0 && (candidates.isLoading || candidates.isError)) ||
-            (activeStep === 2 && selectedPreviewItems.length === 0),
+            (activeStep === 3 && selectedPreviewItems.length === 0),
           startIcon: (
             <Iconify
               icon={
-                activeStep === 0
+                activeStep <= 1
                   ? 'mdi:arrow-right'
-                  : activeStep === 1
+                  : activeStep === 2
                     ? 'mdi:eye-outline'
-                    : activeStep === 2
+                    : activeStep === 3
                       ? 'mdi:check'
                       : complete
                         ? 'mdi:close'
@@ -305,11 +337,11 @@ export default function AssignmentWorkflow({
         }}
         handleNext={async (_last, values: AssignmentValues, _formik, setLoading) => {
           if (operation.current || busy) return;
-          if (activeStep === 0) {
-            setActiveStep(1);
+          if (activeStep <= 1) {
+            setActiveStep(activeStep + 1);
             return;
           }
-          if (activeStep === 3) {
+          if (activeStep === 4) {
             if (complete) onClose();
             else {
               invalidate();
@@ -320,8 +352,25 @@ export default function AssignmentWorkflow({
           operation.current = true;
           setLoading(true);
           try {
-            if (activeStep === 1) await runPreview(values);
-            else await runCommit(values);
+            if (activeStep === 2) {
+              const missingReason = values.requests.some((r) => {
+                const candidate = candidates.data?.find((c) => c.id === values.structureId);
+                return (
+                  !committedIds.has(r.studentId) &&
+                  r.policies?.some(
+                    (p) =>
+                      p.versionId !==
+                      (candidate?.policies?.find((d) => d.family === p.family)?.versionId ?? null)
+                  ) &&
+                  !r.policyOverrideReason?.trim()
+                );
+              });
+              if (missingReason) {
+                setError('Enter a policy override reason for each student whose policies changed.');
+                return;
+              }
+              await runPreview(values);
+            } else await runCommit(values);
           } finally {
             operation.current = false;
             setLoading(false);
@@ -368,7 +417,7 @@ export default function AssignmentWorkflow({
                     onBlur={formik.handleBlur}
                     options={(candidates.data ?? []).map((c) => ({
                       value: c.id,
-                      label: `${c.name  } · revision ${  c.revisionNumber}`,
+                      label: `${c.name} · revision ${c.revisionNumber}`,
                     }))}
                     noOptionsMessage="No eligible published structure for this enrollment and year"
                     onChange={(value) => {
@@ -409,8 +458,8 @@ export default function AssignmentWorkflow({
                     >
                       <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" />}>
                         <Typography variant="subtitle2">
-                          {student.studentName || `Student ${  index + 1}`}
-                          {outcome ? ` · ${  outcome.outcome}` : ''}
+                          {student.studentName || `Student ${index + 1}`}
+                          {outcome ? ` · ${outcome.outcome}` : ''}
                         </Typography>
                       </AccordionSummary>
                       <AccordionDetails>
@@ -437,16 +486,38 @@ export default function AssignmentWorkflow({
                                   disabled={busy}
                                 />
                               )}
+                              {activeStep === 2 && candidate && request && (
+                                <AssignmentPolicies
+                                  studentId={request.studentId}
+                                  academicYearId={academicYearId}
+                                  defaults={candidate.policies ?? []}
+                                  selections={request.policies ?? []}
+                                  reason={request.policyOverrideReason ?? ''}
+                                  canOverride={canOverridePolicies}
+                                  disabled={busy}
+                                  onChange={(policies, policyOverrideReason) => {
+                                    invalidate();
+                                    formik.setFieldValue(
+                                      'requests',
+                                      values.requests.map((r) =>
+                                        r.studentId === request.studentId
+                                          ? { ...r, policies, policyOverrideReason }
+                                          : r
+                                      )
+                                    );
+                                  }}
+                                />
+                              )}
                               {outcome?.errorMessage && (
                                 <Alert severity="error">{outcome.errorMessage}</Alert>
                               )}
                               {studentPreview?.errorMessage && (
                                 <Alert severity="error">{studentPreview.errorMessage}</Alert>
                               )}
-                              {activeStep === 2 && studentPreview?.preview && (
+                              {activeStep === 3 && studentPreview?.preview && (
                                 <AssignmentReview data={studentPreview.preview} />
                               )}
-                              {activeStep === 3 && !outcome && (
+                              {activeStep === 4 && !outcome && (
                                 <Alert severity="warning">
                                   This student has not been assigned. Review the remaining students
                                   and preview again.
@@ -460,7 +531,7 @@ export default function AssignmentWorkflow({
                   );
                 })}
               {error && <Alert severity="error">{error}</Alert>}
-              {activeStep === 3 && (
+              {activeStep === 4 && (
                 <Alert severity={complete ? 'success' : 'warning'}>
                   {committedIds.size} committed or already assigned;{' '}
                   {students.length - committedIds.size} need attention. Successful assignments are

@@ -817,7 +817,15 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                           policy.status === 'Archived'
                             ? 'mdi:archive-arrow-up-outline'
                             : 'mdi:archive-outline',
-                        disabled: policy.status !== 'Archived' && policy.isUsedInDownstream,
+                        disabled:
+                          policy.status !== 'Archived' &&
+                          (policy.isDefault || policy.isUsedInDownstream),
+                        tooltip:
+                          policy.status !== 'Archived' && policy.isDefault
+                            ? 'Designate another Active policy as Default before archiving this policy.'
+                            : policy.status !== 'Archived' && policy.isUsedInDownstream
+                              ? 'This policy is used by fee structures or assignments and cannot be archived.'
+                              : undefined,
                         onClick: async () => {
                           const isRestoring = policy.status === 'Archived';
                           try {

@@ -37,4 +37,44 @@ describe('DefaultPolicyToggle', () => {
     fireEvent.click(screen.getByText('Default Refund Policy'));
     expect(onChange).toHaveBeenCalledWith(true);
   });
+
+  it.each(['Concession', 'Collection', 'Refund', 'Proration'])(
+    'protects the persisted %s default until a replacement is designated',
+    (policyLabel) => {
+      const onChange = vi.fn();
+      render(
+        <DefaultPolicyToggle
+          policyLabel={policyLabel}
+          status="Active"
+          checked
+          currentDefault
+          onChange={onChange}
+        />
+      );
+      expect(screen.getByRole('switch')).toBeDisabled();
+      expect(screen.getByRole('switch')).toBeChecked();
+      fireEvent.click(screen.getByText(`Default ${policyLabel} Policy`));
+      expect(onChange).not.toHaveBeenCalled();
+      expect(screen.getByText(/Designate another Active policy/)).toBeVisible();
+    }
+  );
+
+  it('handles the native switch once and allows undoing an unsaved default selection', () => {
+    const onChange = vi.fn();
+    const { rerender } = render(
+      <DefaultPolicyToggle
+        policyLabel="Collection"
+        status="Active"
+        checked={false}
+        onChange={onChange}
+      />
+    );
+    fireEvent.click(screen.getByRole('switch'));
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(true);
+    rerender(
+      <DefaultPolicyToggle policyLabel="Collection" status="Active" checked onChange={onChange} />
+    );
+    fireEvent.click(screen.getByRole('switch'));
+    expect(onChange).toHaveBeenLastCalledWith(false);
+  });
 });

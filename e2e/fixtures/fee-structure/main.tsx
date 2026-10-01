@@ -9,7 +9,7 @@ import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
 import FeeStructureWorkspaceCard from 'src/screens/finance/settings/FeeStructure/Components/FeeStructureWorkspaceCard';
 import 'simplebar-react/dist/simplebar.min.css';
-import { readyFixture } from './mock-api';
+import { readyFixture, pinnedPolicyFixture } from './mock-api';
 
 const store = configureStore({ reducer: (state = { confirmPopup: { isChanges: true } }) => state });
 function ThemeControls() {
@@ -27,6 +27,7 @@ function ThemeControls() {
 }
 function Fixture() {
   const [configured, setConfigured] = React.useState(false);
+  const [pinned, setPinned] = React.useState(false);
   return (
     <Provider store={store}>
       <ThemeProvider theme={createTheme(defaultSettings)}>
@@ -43,12 +44,29 @@ function Fixture() {
             <Typography color="text.secondary" sx={{ mb: 3 }}>
               Class 5 · Primary · CBSE / English · 2026–27
             </Typography>
-            <Button size="small" onClick={() => setConfigured(!configured)} sx={{ mb: 2 }}>
+            <Button
+              size="small"
+              onClick={() => {
+                setConfigured(!configured);
+                setPinned(false);
+              }}
+              sx={{ mb: 2 }}
+            >
               {configured ? 'Load empty draft fixture' : 'Load configured draft fixture'}
+            </Button>
+            <Button
+              size="small"
+              onClick={() => {
+                setConfigured(true);
+                setPinned(true);
+              }}
+              sx={{ mb: 2 }}
+            >
+              Load saved policy overrides fixture
             </Button>
             <ThemeControls />
             <FeeStructureWorkspaceCard
-              key={String(configured)}
+              key={`${configured}-${pinned}`}
               index={0}
               initialData={{
                 name: '',
@@ -56,7 +74,7 @@ function Fixture() {
                 feeStructureMetaDataId: 'metadata',
                 feeHeads: [],
                 status: 1,
-                record: configured ? readyFixture : undefined,
+                record: configured ? (pinned ? pinnedPolicyFixture : readyFixture) : undefined,
               }}
             />
           </Box>

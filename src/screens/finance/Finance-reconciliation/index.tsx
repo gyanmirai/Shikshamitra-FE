@@ -8,23 +8,18 @@ import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
 import { DatePicker } from '@mui/x-date-pickers';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Tab, Card, Tabs } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import React, { useMemo, useState, useCallback } from 'react';
 import { useNewSearchParam } from 'src/hooks/use-search-param';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { Box, Tab, Card, Tabs, Button, Typography } from '@mui/material';
 import { ReconciliationStatusType } from 'src/enums/reconciliation-status-type';
-import {
-  useGetReconciliationByHeadQuery,
-  useGetReconciliationTabCountsQuery,
-} from 'src/redux/finance/reconciliation';
+import { useGetReconciliationTabCountsQuery } from 'src/redux/finance/reconciliation';
 
 import UpiTable from './Component/UpiTable';
-import HeadSelector from '../components/HeadSelector';
 import DebitCardTable from './Component/DebitCardTable';
 import CreditCardTable from './Component/CreditCardTable';
 import DemandDraftTable from './Component/DemandDraftTable';
@@ -69,12 +64,6 @@ const reconciliationTabConfig = [
     color: 'error' as LabelColor,
     component: (props: any) => <UpiTable {...props} />,
   },
-  {
-    label: 'In-Transit',
-    value: 99, // Custom value for In-Transit
-    color: 'default' as LabelColor,
-    component: (props: any) => <div>In-Transit Table Placeholder</div>,
-  },
 ];
 
 const FinanceReconciliation = () => {
@@ -83,7 +72,6 @@ const FinanceReconciliation = () => {
   const [activeTab, setActiveTab] = useState(ReconciliationStatusType.Cheque);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
-  const [selectedBankHead, setSelectedBankHead] = useState<string>('');
 
   // Sync activeTab with URL params on initial load and when searchParams change
   React.useEffect(() => {
@@ -153,21 +141,6 @@ const FinanceReconciliation = () => {
       }) as Record<number, { pending: number; approved: number; rejected: number }>,
     [tabCounts]
   );
-
-  // Fetch head-based reconciliation data
-  const { data: headReconciliationData } = useGetReconciliationByHeadQuery(
-    {
-      headId: selectedBankHead,
-      academicYearId: currentYear?.id ?? '',
-      month: selectedMonth,
-      year: selectedYear,
-    },
-    { skip: !selectedBankHead }
-  );
-
-  const bookBalance = headReconciliationData?.bookBalance ?? 0;
-  const reconciledBalance = headReconciliationData?.reconciledBalance ?? 0;
-  const difference = bookBalance - reconciledBalance;
 
   // Tabs config with stats
   const TABS = useMemo(
@@ -247,16 +220,15 @@ const FinanceReconciliation = () => {
       month: date ? date.month() + 1 : dayjs().month() + 1,
       year: date ? date.year() : dayjs().year(),
       paymentMethod: activeTab,
-      headId: selectedBankHead,
     }),
-    [date, activeTab, currentYear?.id, selectedBankHead]
+    [date, activeTab, currentYear?.id]
   );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
-        heading="Reconciliation"
-        description="This section helps you compare recorded transactions with bank statements to ensure financial records match, quickly identify matched, unmatched, and discrepant transactions."
+        heading="Verify pending receipts"
+        description="Confirm or reject provisional payment receipts using the instrument evidence. Bank statement matching is a separate Accounts process."
         links={[
           { name: 'Finance', href: '/finance/dashboard/' },
           { name: 'Accounts', href: '/finance/reconciliation' },
@@ -279,25 +251,6 @@ const FinanceReconciliation = () => {
               onChange={(newDate) => setDate(newDate)}
               sx={{ maxWidth: '240px', width: '100%' }}
             />
-            <Box width={240}>
-              <HeadSelector
-                headType="Asset"
-                label="Bank Account Head"
-                value={selectedBankHead}
-                onChange={(val: any) => setSelectedBankHead(val)}
-              />
-            </Box>
-            {selectedBankHead && (
-              <Button
-                variant="outlined"
-                color="primary"
-                onClick={() => {
-                  shikshaMitraToast.info({ message: 'Create posting from statement logic here' });
-                }}
-              >
-                + Add Bank Charge/Interest
-              </Button>
-            )}
           </Box>
           <Tabs
             value={activeTab}
@@ -348,53 +301,6 @@ const FinanceReconciliation = () => {
           </Tabs>
         </Box>
 
-        {/* Summary Cards */}
-        {selectedBankHead && (
-          <Box display="flex" gap={2} mt={2}>
-            <Card
-              sx={{
-                p: 2,
-                flex: 1,
-                bgcolor: 'primary.lighter',
-                borderColor: 'primary.main',
-                border: 1,
-              }}
-            >
-              <Typography variant="subtitle2" color="text.secondary">
-                Book Balance
-              </Typography>
-              <Typography variant="h6">₹{bookBalance.toLocaleString()}</Typography>
-            </Card>
-            <Card
-              sx={{
-                p: 2,
-                flex: 1,
-                bgcolor: 'success.lighter',
-                borderColor: 'success.main',
-                border: 1,
-              }}
-            >
-              <Typography variant="subtitle2" color="text.secondary">
-                Reconciled Balance
-              </Typography>
-              <Typography variant="h6">₹{reconciledBalance.toLocaleString()}</Typography>
-            </Card>
-            <Card
-              sx={{
-                p: 2,
-                flex: 1,
-                bgcolor: difference === 0 ? 'info.lighter' : 'error.lighter',
-                borderColor: difference === 0 ? 'info.main' : 'error.main',
-                border: 1,
-              }}
-            >
-              <Typography variant="subtitle2" color="text.secondary">
-                Difference
-              </Typography>
-              <Typography variant="h6">₹{Math.abs(difference).toLocaleString()}</Typography>
-            </Card>
-          </Box>
-        )}
       </Card>
       <Box sx={{ height: '100%', flex: 1, overflow: 'hidden' }}>
         {currentActiveComponent?.component && (

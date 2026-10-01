@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { LoadingButton } from '@mui/lab';
+import Link from 'next/link';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -13,7 +14,7 @@ import CustomDialog from 'src/components/customDialog';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
-import { Box, Tab, Tabs, Button, Typography } from '@mui/material';
+import { Box, Tab, Tabs, Button, Typography, Stack } from '@mui/material';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
@@ -31,6 +32,7 @@ import type { IAccountHead } from './Components/type';
 const AccountHeadMaster: React.FC = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const access = useAccountSettingPermissions('AccountHead');
+  const postingSetupAccess = useAccountSettingPermissions('PostingSetup');
 
   const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
   const [headTypeFilter, setHeadTypeFilter] = useState<string>('All');
@@ -115,7 +117,9 @@ const AccountHeadMaster: React.FC = () => {
           { name: 'Settings' },
           { name: 'Account Heads' },
         ]}
-        action={
+        action={<Stack direction="row" spacing={1}>
+          {postingSetupAccess.canView && <Button component={Link} href="/finance/settings/posting-automation"
+            size="small" variant="outlined">Posting setup</Button>}
           <Button
             disabled={!access.canAdd}
             onClick={() => addDialog.onTrue()}
@@ -126,7 +130,7 @@ const AccountHeadMaster: React.FC = () => {
           >
             Account Head
           </Button>
-        }
+        </Stack>}
         sx={{ px: 1 }}
       />
 

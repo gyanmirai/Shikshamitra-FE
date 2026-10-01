@@ -5,8 +5,9 @@ import type { RootState } from 'src/redux/store';
 import { isNaN } from 'lodash';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { Box, Alert, Typography } from '@mui/material';
+import { Box, Alert, Button, Typography } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import { useGetAdjustmentEligibilityQuery } from 'src/redux/finance/adjustments/adjustmentApi';
@@ -58,6 +59,7 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   );
 
   const eligibility = isAdj ? adjustmentEligibility.data : refundEligibility.data;
+  const eligibilityError = isAdj ? adjustmentEligibility.error : refundEligibility.error;
   const isLoading = isAdj ? adjustmentEligibility.isLoading : refundEligibility.isLoading;
   const isFetching = isAdj ? adjustmentEligibility.isFetching : refundEligibility.isFetching;
   const refetchEligibility = isAdj ? adjustmentEligibility.refetch : refundEligibility.refetch;
@@ -402,6 +404,21 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
 
   if (!studentId) return null;
   if (isLoading || isFetching) return <RefundTableSkeleton />;
+  if (eligibilityError) {
+    const { detail } = parseApiProblemDetail(eligibilityError);
+    const message = detail === 'Something went wrong'
+      ? 'Unable to check refund eligibility. Please try again.'
+      : detail;
+    return (
+      <Alert
+        severity="error"
+        sx={{ borderRadius: 3 }}
+        action={<Button color="inherit" size="small" onClick={() => refetchEligibility()}>Retry</Button>}
+      >
+        {message}
+      </Alert>
+    );
+  }
 
   const feeHeadsWithPayments = feeHeads
     .map((fh) => ({

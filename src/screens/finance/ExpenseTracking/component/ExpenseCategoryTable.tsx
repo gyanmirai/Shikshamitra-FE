@@ -5,15 +5,16 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
 import { Box, Typography } from '@mui/material';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import type { IExpenseFormValues } from './type';
 
 interface IExpenseCategoryTableProps {
   data: IExpenseFormValues[];
   addExpenseCategory: { onTrue: () => void };
+  canAdd?: boolean;
   setEditData: (data: IExpenseFormValues | null) => void;
   onEdit?: (row: IExpenseFormValues) => void;
   onDelete?: (row: IExpenseFormValues) => void;
@@ -24,6 +25,7 @@ interface IExpenseCategoryTableProps {
 const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
   data,
   addExpenseCategory,
+  canAdd = false,
   setEditData,
   onEdit,
   onDelete,
@@ -91,7 +93,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         align: 'left',
         minWidth: '150px',
       },
-      {
+      ...(onEdit || onDelete ? [{
         id: 'actions',
         label: 'Actions',
         align: 'left',
@@ -99,26 +101,26 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         isFilter: false,
         sticky: true,
         minWidth: 100,
-        render: (value, row) => (
+        render: (_value: unknown, row: unknown) => (
           <AdaptiveThreeDotsActions
             actions={[
-              {
+              ...(onEdit ? [{
                 id: 'edit',
                 label: 'Edit',
                 icon: 'solar:pen-bold',
-                onClick: () => onEdit?.(row as IExpenseFormValues),
-              },
-              {
+                onClick: () => onEdit(row as IExpenseFormValues),
+              }] : []),
+              ...(onDelete ? [{
                 id: 'delete',
                 label: 'Delete',
                 icon: 'solar:trash-bin-trash-bold',
-                onClick: () => onDelete?.(row as IExpenseFormValues),
+                onClick: () => onDelete(row as IExpenseFormValues),
                 color: 'error.main',
-              },
+              }] : []),
             ]}
           />
         ),
-      },
+      } as IColumn] : []),
     ],
     [onDelete, onEdit] // Added dependencies to ensure closures are updated
   );
@@ -130,7 +132,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       noDataText={
         <>
           No Expense data found
-          <Box
+          {canAdd && <Box
             onClick={() => {
               addExpenseCategory.onTrue();
               setEditData(null);
@@ -146,7 +148,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
             }}
           >
             Add Expense
-          </Box>
+          </Box>}
         </>
       }
       columns={columns}

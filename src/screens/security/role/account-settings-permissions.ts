@@ -3,7 +3,7 @@ import { PERMISSIONS, type PermissionType } from './utils';
 import type { PermissionGrant } from './permission-grants';
 
 const ACCOUNT_SETTING_ROOT =
-  /^Finance\.Accounts\.Settings\.(AccountHead|IncomeCategory|ExpenseCategory|BankAccount)(\.View)?$/;
+  /^Finance\.Accounts\.Settings\.(AccountHead|IncomeCategory|ExpenseCategory|BankAccount|PostingSetup)(\.View)?$/;
 const FINANCE_CONFIGURATION_ROOT =
   /^Finance\.(Settings\.FeeStructure|Policies\.(ConcessionPolicy|RefundPolicy|CollectionPolicy|ProrationPolicy))(\.View)?$/;
 export const isFinanceConfigurationPermission = (name: string = '') =>
@@ -62,10 +62,7 @@ const isStudentPermission = (name: NodePermissionName) =>
     STUDENT_PERMISSION_PREFIXES.some((prefix) => permissionName.startsWith(prefix))
   );
 
-const getConfiguredPermissionNames = (
-  name: NodePermissionName,
-  permissions: PermissionGrant[]
-) => {
+const getConfiguredPermissionNames = (name: NodePermissionName, permissions: PermissionGrant[]) => {
   const names = getPermissionNames(name);
   if (Array.isArray(name)) {
     return names.filter((permissionName) =>
@@ -113,10 +110,15 @@ export const getNodeActionPermissionNamesForAction = (
       if (action === 'View') return STUDENT_VIEW_ACTIONS.has(configuredAction);
       if (action === 'Delete') return STUDENT_DELETE_ACTIONS.has(configuredAction);
       return (
-        !STUDENT_VIEW_ACTIONS.has(configuredAction) &&
-        !STUDENT_DELETE_ACTIONS.has(configuredAction)
+        !STUDENT_VIEW_ACTIONS.has(configuredAction) && !STUDENT_DELETE_ACTIONS.has(configuredAction)
       );
     });
+  }
+
+  if (permissionBase === 'Finance.Fees.StructureAssign' && action === 'Add') {
+    return configuredNames.filter((permissionName) =>
+      ['Add', 'OverridePolicies'].some((suffix) => permissionName === `${permissionBase}.${suffix}`)
+    );
   }
 
   const permissionName = `${permissionBase}.${action}`;
@@ -137,8 +139,8 @@ export const getAffectedNodePermissionNames = (
     return affectedNames;
 
   if (isGranted && (action === 'Add' || action === 'Delete')) {
-    getNodeActionPermissionNamesForAction(node.permissionName, 'View', permissions).forEach((name) =>
-      affectedNames.add(name)
+    getNodeActionPermissionNamesForAction(node.permissionName, 'View', permissions).forEach(
+      (name) => affectedNames.add(name)
     );
   }
   if (isGranted && action === 'Delete' && !isFinanceConfigurationPermission(permissionBase)) {
@@ -168,13 +170,13 @@ export const getNodePermissionActions = (
     ? ACCOUNT_SETTING_ACTIONS
     : Array.from(
         new Set(
-          getConfiguredPermissionNames(name, permissions).map(
-            (permissionName) => getPermissionAction(permissionName)
+          getConfiguredPermissionNames(name, permissions).map((permissionName) =>
+            getPermissionAction(permissionName)
           )
         )
       );
-  return actions.filter((action) =>
-    getNodeActionPermissionNamesForAction(name, action, permissions).length > 0
+  return actions.filter(
+    (action) => getNodeActionPermissionNamesForAction(name, action, permissions).length > 0
   );
 };
 
@@ -203,14 +205,18 @@ export const getNodeRevocationPermissionNames = (
 ): string[] => {
   const children = node?.permissionChildren ?? node?.children ?? [];
   if (children.length) {
-    return Array.from(new Set(children.flatMap((child: any) =>
-      getNodeRevocationPermissionNames(child, permissions)
-    )));
+    return Array.from(
+      new Set(
+        children.flatMap((child: any) => getNodeRevocationPermissionNames(child, permissions))
+      )
+    );
   }
   if (isStatutorySchemePermission(getActionPermissionBase(node.permissionName))) {
-    return permissions.filter(({ name }) =>
-      name === STATUTORY_SCHEME_ROOT || name.startsWith(`${STATUTORY_SCHEME_ROOT}.`)
-    ).map(({ name }) => name);
+    return permissions
+      .filter(
+        ({ name }) => name === STATUTORY_SCHEME_ROOT || name.startsWith(`${STATUTORY_SCHEME_ROOT}.`)
+      )
+      .map(({ name }) => name);
   }
   return getNodeActionPermissionNames(node, permissions);
 };

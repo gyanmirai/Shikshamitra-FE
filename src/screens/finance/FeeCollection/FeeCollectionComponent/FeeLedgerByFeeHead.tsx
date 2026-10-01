@@ -168,7 +168,8 @@ const FeeHeadGroup = ({
                 }
                 total={item.total}
                 scheduledTotal={item.scheduledTotal}
-                prorationPolicyVersionId={item.prorationPolicyVersionId}
+                prorationPolicyName={item.prorationPolicyName}
+                prorationPolicyVersionNumber={item.prorationPolicyVersionNumber}
                 prorationExplanation={item.prorationExplanation}
                 paid={item.paid}
                 due={item.due}

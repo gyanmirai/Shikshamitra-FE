@@ -6,7 +6,6 @@ import dayjs from 'dayjs';
 import React from 'react';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { shikshaMitraToast } from 'src/components/toast';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetFeeRefundByIdQuery } from 'src/redux/finance/RefundManagement/feeRefundManage';
@@ -104,11 +103,6 @@ const RefundProcessForm: React.FC<IRefundProcessFormProps> = ({ open, onClose, s
   const isLoading = refundLoading || refundFetching;
   const displayStudent = refundDetail ? mapDtoToStudentFeeData(refundDetail) : student;
 
-  const handleSubmit = () => {
-    shikshaMitraToast.success({ message: 'Remarks submitted successfully' });
-    onClose(null, true);
-  };
-
   return (
     <>
       <DialogScrollContent>
@@ -126,16 +120,6 @@ const RefundProcessForm: React.FC<IRefundProcessFormProps> = ({ open, onClose, s
           }}
         >
           Cancel
-        </Button>
-        <Button
-          variant="soft"
-          color="success"
-          onClick={handleSubmit}
-          size="small"
-          disabled={isLoading}
-          startIcon={<Iconify icon={GlobalIcons.submit} />}
-        >
-          Generate Receipt
         </Button>
       </DialogActions>
     </>

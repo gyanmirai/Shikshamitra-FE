@@ -15,11 +15,13 @@ import {
 } from 'src/enums/fee-collection-type';
 
 import type { IStudentFee } from './type';
+import type { StudentInfo } from 'src/redux/feeCollection/feeCollection';
 
 export const StudentFeeSummaryCard: React.FC<{
   student: IStudentFee | null;
+  studentInfo?: StudentInfo;
   showHeader?: boolean;
-}> = ({ student, showHeader = true }) => {
+}> = ({ student, studentInfo, showHeader = true }) => {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
 
@@ -146,8 +148,10 @@ export const StudentFeeSummaryCard: React.FC<{
                       variant="caption"
                       sx={{ color: 'text.secondary', fontWeight: 600, display: 'block', mb: 0.6 }}
                     >
-                      Grade: {`${student.className || '10'}-${student.division || 'A'}`} • Roll:{' '}
-                      {student.rollNumber || '01'}
+                      Class/Div: {[studentInfo?.standardName, studentInfo?.divisionName]
+                        .filter(Boolean)
+                        .join('-') || '—'}{' '}
+                      • Roll: {studentInfo?.rollNo || '—'}
                     </Typography>
                     <Label
                       color={FeeCollectionStatusTypeColors[student.status] || 'default'}

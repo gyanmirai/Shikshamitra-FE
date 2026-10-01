@@ -13,34 +13,65 @@ import {
 describe('Statutory Schemes permission groups', () => {
   const root = 'HR.PayrollManagement.Settings.StatutorySchemes';
   const node = { permissionName: `${root}.View` };
-  const edits = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map((action) => `${root}.${action}`);
+  const edits = ['Edit', 'Activate', 'ManageEnrollment', 'ApproveOverride'].map(
+    (action) => `${root}.${action}`
+  );
   const catalog = [`${root}.View`, ...edits].map((name) => ({ name, isGranted: true }));
 
   it('uses three existing controls and maps Edit to all four defined write permissions', () => {
-    expect(getNodePermissionActions(node.permissionName, catalog)).toEqual(['View', 'Edit', 'Delete']);
-    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Edit', catalog)).toEqual(edits);
-    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'View', catalog)).toEqual([`${root}.View`]);
-    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Delete', catalog)).toEqual([]);
+    expect(getNodePermissionActions(node.permissionName, catalog)).toEqual([
+      'View',
+      'Edit',
+      'Delete',
+    ]);
+    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Edit', catalog)).toEqual(
+      edits
+    );
+    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'View', catalog)).toEqual([
+      `${root}.View`,
+    ]);
+    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Delete', catalog)).toEqual(
+      []
+    );
     expect(getNodeActionPermissionNames(node, catalog)).toEqual(catalog.map(({ name }) => name));
   });
 
   it('keeps View and Edit independent and never invents missing actions', () => {
-    expect(getAffectedNodePermissionNames(node, 'View', false, catalog)).toEqual(new Set([`${root}.View`]));
+    expect(getAffectedNodePermissionNames(node, 'View', false, catalog)).toEqual(
+      new Set([`${root}.View`])
+    );
     expect(getAffectedNodePermissionNames(node, 'Edit', true, catalog)).toEqual(new Set(edits));
     expect(getAffectedNodePermissionNames(node, 'Edit', false, catalog)).toEqual(new Set(edits));
-    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Edit', catalog.slice(0, 1))).toEqual([]);
+    expect(
+      getNodeActionPermissionNamesForAction(node.permissionName, 'Edit', catalog.slice(0, 1))
+    ).toEqual([]);
     const withDelete = [...catalog, { name: `${root}.Delete`, isGranted: false }];
-    expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Delete', withDelete)).toEqual([`${root}.Delete`]);
+    expect(
+      getNodeActionPermissionNamesForAction(node.permissionName, 'Delete', withDelete)
+    ).toEqual([`${root}.Delete`]);
   });
 
   it('revokes every feature grant including unrepresented actions, without granting unknown rights', () => {
     const extra = [root, `${root}.FutureAction`, `${root}.Nested.Action`, `${root}.Add`];
-    const outside = [`${root}Other.Edit`, 'HR.PayrollManagement.Settings.PFRule.View', 'ShikshaMitra.Module.HR.PayrollManagement'];
-    const complete = [...catalog, ...extra.concat(outside).map((name) => ({ name, isGranted: true }))];
-    expect(getNodeRevocationPermissionNames(node, complete)).toEqual([...catalog.map(({ name }) => name), ...extra]);
+    const outside = [
+      `${root}Other.Edit`,
+      'HR.PayrollManagement.Settings.PFRule.View',
+      'ShikshaMitra.Module.HR.PayrollManagement',
+    ];
+    const complete = [
+      ...catalog,
+      ...extra.concat(outside).map((name) => ({ name, isGranted: true })),
+    ];
+    expect(getNodeRevocationPermissionNames(node, complete)).toEqual([
+      ...catalog.map(({ name }) => name),
+      ...extra,
+    ]);
     expect(getNodeActionPermissionNames(node, complete)).toEqual(catalog.map(({ name }) => name));
     expect(getNodeActionPermissionNamesForAction(node.permissionName, 'Add', complete)).toEqual([]);
-    expect(getNodeRevocationPermissionNames({ children: [node, node] }, complete)).toEqual([...catalog.map(({ name }) => name), ...extra]);
+    expect(getNodeRevocationPermissionNames({ children: [node, node] }, complete)).toEqual([
+      ...catalog.map(({ name }) => name),
+      ...extra,
+    ]);
   });
 });
 
@@ -84,6 +115,18 @@ describe.each(['AccountHead', 'IncomeCategory', 'ExpenseCategory', 'BankAccount'
   }
 );
 
+it('shows only the exact posting setup grants supplied by the server', () => {
+  const base = 'Finance.Accounts.Settings.PostingSetup';
+  const catalog = ['View', 'Edit'].map((action) => ({
+    name: `${base}.${action}`, isGranted: false,
+  }));
+  expect(getNodePermissionActions(`${base}.View`, catalog)).toEqual(['View', 'Edit']);
+  expect(getAffectedNodePermissionNames({ permissionName: `${base}.View` }, 'Edit', true, catalog))
+    .toEqual(new Set([`${base}.Edit`]));
+  expect(getAffectedNodePermissionNames({ permissionName: `${base}.View` }, 'View', false, catalog))
+    .toEqual(new Set([`${base}.View`]));
+});
+
 it('does not invent actions missing from the permission catalog', () => {
   expect(getActionPermissionBase('Finance.Settings.FeeCategory')).toBe(
     'Finance.Settings.FeeCategory'
@@ -93,7 +136,16 @@ it('does not invent actions missing from the permission catalog', () => {
 
 it('exposes every server-defined generic action, including disabled grants', () => {
   const base = 'Finance.Fees.Concession';
-  const actions = ['View', 'Add', 'Edit', 'Submit', 'UploadDocument', 'Approve', 'Reject', 'Reverse'];
+  const actions = [
+    'View',
+    'Add',
+    'Edit',
+    'Submit',
+    'UploadDocument',
+    'Approve',
+    'Reject',
+    'Reverse',
+  ];
   const catalog = actions.map((action) => ({
     name: `${base}.${action}`,
     isGranted: ['View', 'Add', 'Approve', 'Reject'].includes(action),
@@ -126,6 +178,22 @@ it('groups specialized Student Admissions actions behind View, Add, and Delete',
       (action) => `${base}.${action}`
     )
   );
+});
+
+it('includes assignment policy overrides in the existing assignment Add control', () => {
+  const base = 'Finance.Fees.StructureAssign';
+  const actions = ['View', 'Add', 'Delete', 'OverridePolicies'];
+  const catalog = actions.map((action) => ({ name: `${base}.${action}`, isGranted: false }));
+  expect(getNodeActionPermissionNamesForAction(`${base}.View`, 'Add', catalog)).toEqual([
+    `${base}.Add`,
+    `${base}.OverridePolicies`,
+  ]);
+  expect(getNodeActionPermissionNamesForAction(`${base}.View`, 'View', catalog)).toEqual([
+    `${base}.View`,
+  ]);
+  expect(getNodeActionPermissionNamesForAction(`${base}.View`, 'Delete', catalog)).toEqual([
+    `${base}.Delete`,
+  ]);
 });
 
 it('grants the Student View group when Add is enabled', () => {

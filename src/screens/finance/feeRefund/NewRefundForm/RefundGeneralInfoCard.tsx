@@ -5,8 +5,8 @@ import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { Grid, TextField, Autocomplete } from '@mui/material';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { useGetStudentsByScopeQuery } from 'src/redux/student';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetStudentsByDivisionQuery } from 'src/redux/student';
 import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 
 import type { RefundFormik } from './types';
@@ -32,21 +32,25 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
     currentQueryAndMutation: useLazyGetClassByMediumQuery,
   });
 
-  const [
-    getStudents,
-    { data: studentsData, isLoading: studentLoading, isFetching: studentFetching },
-  ] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetStudentsByDivisionQuery,
-  });
+  const { currentData: studentsData, isLoading: studentLoading, isFetching: studentFetching, isError: studentsError } =
+    useGetStudentsByScopeQuery(
+      {
+        academicYearId: currentYear?.id || '',
+        boardId: values.boardId,
+        educationMediumId: values.mediumId,
+        classIds: [values.standardId],
+        divisionIds: [values.divisionId],
+      },
+      { skip: !currentYear?.id || !values.boardId || !values.mediumId || !values.standardId || !values.divisionId }
+    );
 
   const studentOptions = useMemo(
     () =>
-      studentsData?.items?.map((item: any) => ({
+      studentsData?.map((item) => ({
         ...item,
-        name: `${item.firstName}${item.middleName ? ` ${item.middleName}` : ''} ${item.lastName}`,
+        name: item.studentName,
       })) || [],
-    [studentsData?.items]
+    [studentsData]
   );
 
   // ── Side effects ──────────────────────────────────────────────────────────
@@ -80,10 +84,6 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
   useEffect(() => {
     setAllDivisions(classes?.find((cls: any) => cls.id === values.standardId)?.divisions || []);
   }, [values.standardId, classes]);
-
-  useEffect(() => {
-    if (values.divisionId) getStudents(values.divisionId);
-  }, [values.divisionId, getStudents]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -207,11 +207,13 @@ const RefundGeneralInfoCard: React.FC<RefundGeneralInfoCardProps> = ({
         <ShakingTextField error={!!(touched.studentId && errors.studentId)}>
           <Autocomplete
             loading={studentLoading || studentFetching}
-            noOptionsText={values.divisionId ? 'No Student Found' : 'Select a division first'}
+            noOptionsText={studentsError ? 'Unable to load students' : values.divisionId ? 'No Student Found' : 'Select a division first'}
             fullWidth
             disabled={disabled || !values.divisionId}
             options={studentOptions}
-            value={studentOptions.find((s: any) => s.studentId === values.studentId) || null}
+            value={studentOptions.find((s) => s.studentId === values.studentId) ||
+              (disabled && values.studentId ? { studentId: values.studentId, name: values.studentName } : null)}
+            isOptionEqualToValue={(option, value) => option.studentId === value.studentId}
             onChange={(_e, value: any) => {
               setFieldValue('studentId', value?.studentId || '');
               setFieldTouched('studentId', false);

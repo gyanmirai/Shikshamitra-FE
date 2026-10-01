@@ -559,7 +559,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
     () =>
       (incomeCategoryData?.items ?? []).map((category: any) => ({
         id: category.id,
-        displayName: `${category.code ? `${category.code} — ` : ''}${category.name} → ${
+        displayName: `${category.name} → ${
           category.defaultAccountHeadName || 'No account head'
         }`,
       })),

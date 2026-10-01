@@ -9,6 +9,7 @@ import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type
 import ByMonthView from './FeeLedgerByMonth';
 import ByFeeHeadView from './FeeLedgerByFeeHead';
 import { FeeRow, toPeriod, ColHeader } from './FeeLedgerShared';
+import { roundUpToRupee, safeRoundingDifference } from './preview/paymentAllocationUtils';
 
 import type { FeeLedgerTab } from './FeeLedgerFilterBar';
 import type {
@@ -101,9 +102,12 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
             total={charge.total ?? charge.amount}
             paid={charge.paid ?? 0}
             due={charge.amount}
+            reconciliationAmount={charge.reconciliationAmount}
             chargeId={charge.chargeId}
             waiverSourceType={charge.sourceType}
-            onWaiverApplied={isSelected && !isDisabled ? () => onToggleCharge(charge.chargeId) : undefined}
+            onWaiverApplied={
+              isSelected && !isDisabled ? () => onToggleCharge(charge.chargeId) : undefined
+            }
             status={charge.status as FeeCollectionStatusType}
             isSelected={isSelected}
             isDisabled={isDisabled}
@@ -127,6 +131,7 @@ export interface FeeLedgerListProps {
   onSelectionChange: (items: SelectedItem[]) => void;
   onChargesChange: (chargeIds: string[]) => void;
   year?: number;
+  hasActiveFilters?: boolean;
 }
 
 const FeeLedgerList = ({
@@ -135,6 +140,7 @@ const FeeLedgerList = ({
   selectedItems,
   charges,
   chargesData,
+  hasActiveFilters = false,
   onSelectionChange,
   onChargesChange,
   year = new Date().getFullYear(),
@@ -173,9 +179,19 @@ const FeeLedgerList = ({
         )
       );
     } else {
+      const roundedDue = roundUpToRupee(due);
       onSelectionChange([
         ...selectedItems,
-        { dueFeeId, feeHeadId, period, dueAmount: due, lateFeeAmount, installmentLabel },
+        {
+          dueFeeId,
+          feeHeadId,
+          period,
+          dueAmount: roundedDue,
+          originalDueAmount: due,
+          roundingAdjustment: safeRoundingDifference(due, roundedDue),
+          lateFeeAmount,
+          installmentLabel,
+        },
       ]);
     }
   };
@@ -203,14 +219,19 @@ const FeeLedgerList = ({
     } else {
       const toAdd = selectableItems
         .filter((i) => !isItemSelected(selectedItems, i.feeHeadId, period, i.dueFeeId))
-        .map((i) => ({
-          dueFeeId: i.dueFeeId,
-          feeHeadId: i.feeHeadId,
-          period,
-          dueAmount: i.due,
-          lateFeeAmount: i.lateFeeAmount,
-          installmentLabel: i.installmentLabel,
-        }));
+        .map((i) => {
+          const roundedDue = roundUpToRupee(i.due);
+          return {
+            dueFeeId: i.dueFeeId,
+            feeHeadId: i.feeHeadId,
+            period,
+            dueAmount: roundedDue,
+            originalDueAmount: i.due,
+            roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
+            lateFeeAmount: i.lateFeeAmount,
+            installmentLabel: i.installmentLabel,
+          };
+        });
       onSelectionChange([...selectedItems, ...toAdd]);
     }
   };
@@ -244,14 +265,19 @@ const FeeLedgerList = ({
           const period = getPeriod(i);
           return !isItemSelected(selectedItems, group.feeHeadId, period, i.dueFeeId);
         })
-        .map((i) => ({
-          dueFeeId: i.dueFeeId,
-          feeHeadId: group.feeHeadId,
-          period: getPeriod(i),
-          dueAmount: i.due,
-          lateFeeAmount: i.lateFeeAmount,
-          installmentLabel: i.installmentLabel,
-        }));
+        .map((i) => {
+          const roundedDue = roundUpToRupee(i.due);
+          return {
+            dueFeeId: i.dueFeeId,
+            feeHeadId: group.feeHeadId,
+            period: getPeriod(i),
+            dueAmount: roundedDue,
+            originalDueAmount: i.due,
+            roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
+            lateFeeAmount: i.lateFeeAmount,
+            installmentLabel: i.installmentLabel,
+          };
+        });
       onSelectionChange([...selectedItems, ...toAdd]);
     }
   };
@@ -284,10 +310,12 @@ const FeeLedgerList = ({
           sx={{ width: 40, height: 40, color: 'text.disabled', mb: 1.5 }}
         />
         <Typography variant="body2" color="text.secondary" fontWeight={500}>
-          No fee records found
+          {hasActiveFilters ? 'No entries found for selected filters' : 'No fee records found'}
         </Typography>
         <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: 'block' }}>
-          Records will appear here once available
+          {hasActiveFilters
+            ? 'Change the month, fee head or status to see other entries'
+            : 'Records will appear here once available'}
         </Typography>
       </Box>
     );
@@ -322,7 +350,6 @@ const FeeLedgerList = ({
           onToggleGroup={toggleFeeHeadGroup}
         />
       )}
-
     </Box>
   );
 };

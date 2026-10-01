@@ -16,6 +16,7 @@ type UseDateRangeReturn = {
   // Actions
   onChangeStartDate: (date: Dayjs | null) => void;
   onChangeEndDate: (date: Dayjs | null) => void;
+  onInputChange: (range: DateRange) => void;
   onCalendarSelect: (date: Dayjs) => void;
   onHoverDate: (date: Dayjs | null) => void;
 
@@ -107,6 +108,15 @@ export function useDateRange(props: DateRangePickerProps): UseDateRangeReturn {
     setOpenState(false);
   }, [onAcceptProp, onChange, internalRange, onCloseProp]);
 
+  const onInputChange = useCallback(
+    (range: DateRange) => {
+      setCommittedRange(range);
+      setInternalRange(range);
+      onChange?.(range);
+    },
+    [onChange]
+  );
+
   // Update onClose to revert interactions
   const onClose = useCallback(() => {
     setInternalRange(committedRange); // Revert to last committed
@@ -161,6 +171,7 @@ export function useDateRange(props: DateRangePickerProps): UseDateRangeReturn {
     hoverDate,
     onChangeStartDate,
     onChangeEndDate,
+    onInputChange,
     onCalendarSelect,
     onHoverDate: setHoverDate,
     open,

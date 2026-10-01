@@ -56,6 +56,7 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     'Enter a change reason before updating an Active concession policy.',
   'Finance:ConcessionPolicy:010022': 'Only an Active concession policy can be the default.',
   'Finance:RefundPolicy:010028': 'Only an Active refund policy can be the default.',
+  'Finance:FeeRefund:010010': "No refund policy is assigned to this student's fee structure. Assign a refund policy before creating a refund request.",
   'Finance:ProrationPolicy:010025': 'Only an Active proration policy can be the default.',
   'Finance:PaymentTerm:000039':
     'These template options cannot produce a valid schedule for the selected board period. Review the installment count and date rules, then try again.',

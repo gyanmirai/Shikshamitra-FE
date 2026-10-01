@@ -2,27 +2,23 @@
 
 import React from 'react';
 import { Label } from 'src/components/label';
-import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import {
   Box,
   Grid,
-  Card,
   Stack,
   Select,
-  Switch,
   MenuItem,
   TextField,
   InputLabel,
   Typography,
   FormControl,
   FormHelperText,
-  FormControlLabel,
 } from '@mui/material';
 
 import { SectionCard } from './CollectionCommon';
+import DefaultPolicyToggle from '../DefaultPolicyToggle';
 
 interface CollectionGeneralSectionProps {
   formik: any;
@@ -35,9 +31,6 @@ export default function CollectionGeneralSection({
   otherDefaultPolicyName,
   activeEdit = false,
 }: CollectionGeneralSectionProps) {
-  const isDefaultSelected = Boolean(formik.values.isDefault);
-  const isDefaultDisabled = formik.values.status !== 'Active';
-
   return (
     <SectionCard
       title="General Information"
@@ -89,7 +82,7 @@ export default function CollectionGeneralSection({
                   </Box>
                 )}
               >
-                <MenuItem value="Draft">
+                <MenuItem value="Draft" disabled={Boolean(formik.initialValues.isDefault)}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Label color="warning" sx={{ height: 20 }}>
                       Draft
@@ -168,77 +161,14 @@ export default function CollectionGeneralSection({
         )}
 
         <Grid size={{ xs: 12 }}>
-          <Card
-            variant="outlined"
-            sx={{
-              p: 2,
-              display: 'flex',
-              alignItems: 'center',
-              borderRadius: 1.5,
-              bgcolor: (theme) =>
-                isDefaultSelected
-                  ? alpha(theme.palette.primary.main, 0.05)
-                  : alpha(theme.palette.background.default, 0.4),
-              borderColor: (theme) =>
-                isDefaultSelected ? alpha(theme.palette.primary.main, 0.4) : theme.palette.divider,
-              boxShadow: (theme) =>
-                isDefaultSelected
-                  ? `0 0 0 1px ${alpha(theme.palette.primary.main, 0.2)}`
-                  : 'none',
-              transition: 'all 0.2s ease',
-              cursor: isDefaultDisabled ? 'not-allowed' : 'pointer',
-              opacity: isDefaultDisabled ? 0.6 : 1,
-              '&:hover': {
-                borderColor: (theme) =>
-                  isDefaultDisabled
-                    ? theme.palette.divider
-                    : isDefaultSelected
-                      ? 'primary.main'
-                      : alpha(theme.palette.text.primary, 0.2),
-              },
-            }}
-            onClick={() => {
-              if (!isDefaultDisabled) formik.setFieldValue('isDefault', !isDefaultSelected);
-            }}
-          >
-            <FormControlLabel
-              sx={{ m: 0, width: '100%', pointerEvents: 'none' }}
-              control={
-                <Switch
-                  size="small"
-                  checked={isDefaultSelected}
-                  disabled={isDefaultDisabled}
-                  color="primary"
-                  sx={{ mr: 1 }}
-                />
-              }
-              label={
-                <Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-                      Default Collection Policy
-                    </Typography>
-                    {isDefaultSelected && (
-                      <Label color="primary" sx={{ height: 18, fontSize: '0.65rem' }}>
-                        Default Selected
-                      </Label>
-                    )}
-                  </Stack>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
-                    {isDefaultDisabled
-                      ? 'Only an Active policy can be selected as the default.'
-                      : 'Use this policy as the academic-year default. Selecting it replaces the current default.'}
-                  </Typography>
-                </Box>
-              }
-            />
-          </Card>
-          {isDefaultSelected && otherDefaultPolicyName && (
-            <FormHelperText sx={{ mx: 1.75, mt: 0.75, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-              <Iconify icon={GlobalIcons.alertIcon} width={14} height={14} />
-              {`"${otherDefaultPolicyName}" is currently the default and will be replaced when you save.`}
-            </FormHelperText>
-          )}
+          <DefaultPolicyToggle
+            policyLabel="Collection"
+            status={formik.values.status}
+            checked={Boolean(formik.values.isDefault)}
+            currentDefault={Boolean(formik.initialValues.isDefault)}
+            onChange={(checked) => formik.setFieldValue('isDefault', checked)}
+            otherDefaultPolicyName={otherDefaultPolicyName}
+          />
         </Grid>
       </Grid>
     </SectionCard>

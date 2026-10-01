@@ -29,6 +29,7 @@ import FeeHeadRefundTable from './FeeHeadRefundTable';
 import {
   refundPaymentMethodsConfig,
   getInitialRefundPaymentDetails,
+  isRefundRequestField,
 } from './refundPaymentDetailsConfig';
 
 import type { RefundFormik } from './types';
@@ -199,7 +200,7 @@ export default function FeeRefundDetailsForm({
               refundPaymentMethodsConfig[
                 formik.values.refundMethod as keyof typeof refundPaymentMethodsConfig
               ]
-                ?.filter((field: IPaymentFieldConfig) => field.name !== 'amount')
+                ?.filter((field: IPaymentFieldConfig) => isRefundRequestField(field.name))
                 .map((field: IPaymentFieldConfig) => {
                   const fieldPath = `paymentDetails.${field.name}`;
                   const value = getIn(formik.values, fieldPath);

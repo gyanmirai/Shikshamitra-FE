@@ -56,11 +56,6 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
   const columns: IColumn[] = useMemo(
     () => [
       {
-        id: 'code',
-        label: 'Code',
-        minWidth: 90,
-      },
-      {
         id: 'bankName',
         label: 'Bank Name',
         minWidth: 120,

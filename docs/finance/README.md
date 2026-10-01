@@ -30,6 +30,7 @@ Follow this order when changing Finance frontend behavior:
 | 7 | [Refund Policy frontend flow](./references/refund-policy-frontend-flow.md) | Follow the target staff journey, screen behavior, client wiring, permission gates, settlement actions, and browser acceptance flow |
 | 8 | [Proration Policy frontend flow](./references/proration-policy-frontend-flow.md) | Review the current prototype and implement the typed policy, attachment, assignment preview, demand explanation, and cross-module UI flow |
 | 9 | [Charge Management frontend flow](./references/charge-management-frontend-flow.md) | Review the active routes, current collection handoff, missing permissions/contracts, target workspace, and browser acceptance flow |
+| 10 | [Integrated Accounts screen flow](./references/accounts-integrated-screen-flow.md) | Follow the target fields, actions, permissions, states, client changes, and school walkthrough for automatic Fees-to-Accounts posting |
 
 ## Ownership boundary
 

@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-09-24
+updated_on: 2026-10-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,6 +17,17 @@ Existing backend operations that share one permission identifier remain one capa
 
 # Trace Finance frontend workflows
 
+## Accounts source activity
+
+`/finance/accounts/activity` shows final fee and charge receipts alongside
+confirmed refund subledger entries for the selected academic year. The table
+keeps collection/refund tabs, search and server pagination. It requires
+`Finance.Accounts.Activity.View`; source navigation requires the corresponding
+Fees view grant. “Not posted” means these source actions have no General
+Accounts journal. This screen does not update account balances or reports.
+The backend contract is in
+[Accounts source activity](../../../Shikshamitra-BE/docs/modules/finance/references/accounts-source-activity.md).
+
 ## Late-fee charge in Fee Collection
 
 A positive late fee returned by the collect-form API is shown at the top of the Fee Ledger in
@@ -24,8 +35,24 @@ the Additional Charges list as a **System generated** charge. The waiver action 
 that charge row. Selecting and collecting it sends a `lateFeePayments` allocation using its
 `sourceId` (`DueFeeId`), while ordinary charges continue to use `chargePayments`.
 
+Collections renders the server's `totalCharges` and `pendingCharges`, including system-generated late fees.
+Paying only fee installments sends no late-fee allocations; unpaid Additional Charges remain visible and selectable individually or through **All Charges** when collection is reopened.
+The checkout's **Overall Outstanding** uses the current collect-form `summary.pendingFee` plus its charge `pendingAmount` values, so a stale Collections row cannot hide unpaid charges.
+Payment and waiver mutations invalidate the Collections and fee-details tags, refreshing subscribed grid, ledger, and details queries together.
+
 The fee-head/month ledger does not show or select the same late fee a second time. These generated
 rows are collection-only and do not appear on the Charge Management screen.
+
+Month, Fee Head, and Status filters apply to both fee installments and Additional Charges in
+both ledger views. The entry badge counts the matching installments and charge rows; a filter
+with no matches shows an explicit empty state. Charges keep their own collection status, so a
+Pending system late fee does not appear under Paid, Overdue, or Partial Pending merely because
+its source installment has that status. Generated late fees follow the source installment's
+month and fee head; manual charges have no installment month or fee head and appear only when
+those filters are All. Filtering preserves the collector's existing selections.
+
+Fee-line status and overdue classification come from the backend; see the
+[Finance product rules](../../../Shikshamitra-BE/docs/modules/finance/product.md).
 
 TL;DR: trace Finance workflows from the menu route to the App Router page, then screen folder, client, mapper, and backend contract.
 Use this page to pick the first files for common Finance changes.
@@ -45,6 +72,8 @@ The current workspace creates and reviews charge batches, while Fee Collection c
 ## Trace collection and receipt changes
 
 Fee collection and receipt flows span Finance and shared fee client folders.
+
+The Collections status column renders the API's `NoFeeAssigned` status as a neutral **No Fee Assigned** badge and includes it in the status column filter. The [backend product rules](../../../Shikshamitra-BE/docs/modules/finance/product.md) own classification and export semantics. The badge and filter option regression is covered by `src/screens/finance/FeeCollection/Components/FeeCollectionTable.test.tsx`.
 
 | Workflow            | Inspect first                                                                          |
 | ------------------- | -------------------------------------------------------------------------------------- |
@@ -108,7 +137,7 @@ Before manually entering installment rows, a user may choose **Apply Template** 
 
 1. The drawer exposes the same editable lifecycle as HR Attendance Policy: `Draft` or `Active`. Archive remains a separate guarded action.
 2. Saving as `Draft` keeps the schedule unassignable. Saving as `Active` atomically publishes an immutable version; the backend derives its activation date inside the selected board period.
-3. Every installment period and due date must be inside the selected board's own start/end dates, which may be narrower than the academic year. Dates are entered as `DD/MM/YYYY`.
+3. Every installment period and due date must be inside the selected board's own start/end dates, which may be narrower than the academic year. The installment range accepts typing or pasting `DD/MM/YYYY - DD/MM/YYYY`, with strict calendar-date, date-order, and board-period validation. Invalid or incomplete input clears the stored range and blocks saving until corrected. The calendar button remains available and initially opens at the selected range or, for an empty range, the board's start month. Payment Due Date and specific Invoice Date support keyboard entry as `DD/MM/YYYY`; calculated Invoice Dates remain read-only. Empty single-date calendars start at the installment start date, or the board start date when no installment start has been entered. Values retain the existing date-only API contract.
 4. Fee Structure lists published and superseded versions of active terms and stores the explicitly selected version ID. Existing pins never upgrade automatically; see [the active workspace flow](./references/fee-structure-workspace.md).
 5. Student fee assignment creates immutable DueFee schedule snapshots for the full year.
 6. Only one Active Payment Term may be selected as the default for each Education Board in an academic year. Draft and Archived terms cannot be defaults. Selecting a new Active default clears the previous default for the same board in the same transaction, while other boards retain their defaults. A filtered unique database index enforces the invariant, and the workspace board selector scopes the list to one board.
@@ -118,6 +147,16 @@ Before manually entering installment rows, a user may choose **Apply Template** 
 10. Collection shows an installment only when its server-calculated bill generation date has arrived. If a structure is assigned late, all dates already reached are available immediately.
 
 The four bill-generation rules are: installment start date, X days before due date, due date, and a specific per-installment date. The frontend previews calculated dates, but the backend remains authoritative.
+
+### Fee Structure policy defaults
+
+When a new Fee Structure opens, the Policies form loads the academic year's Active Collection, Refund, and Proration policies. It fills an untouched empty selection with that type's Default before the Policies tab is opened. Staff can choose a different policy; saved structures keep their explicit selections, including intentionally absent optional policies.
+
+All four policy editors use the same Default control. A current Default explains why it cannot
+be cleared or moved to Draft, and the archive action requires staff to designate a replacement
+first. Default selection uses the policy's current immutable version; manual choices and explicit
+clears are retained when lookups refresh. The backend owns the
+[default invariant](../../../Shikshamitra-BE/docs/modules/finance/product.md).
 
 ### Collection Policy history and audit
 

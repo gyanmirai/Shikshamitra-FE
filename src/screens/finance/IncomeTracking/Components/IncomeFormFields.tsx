@@ -115,7 +115,7 @@ const IncomeFormFields: React.FC<IncomeFormFieldsProps> = ({
                 error={!!(formik.touched.categoryTags && formik.errors.categoryTags)}
               >
                 <CustomSelect
-                  label="Income Category Tags *"
+                  label="Income Category Tags (optional)"
                   options={tags || []}
                   labelKey="name"
                   valueKey="id"

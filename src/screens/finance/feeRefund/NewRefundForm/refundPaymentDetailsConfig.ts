@@ -294,10 +294,20 @@ export const refundPaymentMethodsConfig: IPaymentMethodsConfig = {
   ],
 };
 
+// The request captures the beneficiary. Instrument numbers, school account and
+// payout date belong to the Record payment step after approval.
+const payoutOnlyFields = new Set([
+  'amount', 'refundDate', 'issueDate', 'chequeNumber', 'ddNumber',
+  'transactionId', 'sourceBankAccount', 'bankName', 'branchName',
+]);
+
+export const isRefundRequestField = (name: string) => !payoutOnlyFields.has(name);
+
 export const getInitialRefundPaymentDetails = (method?: string) => {
   if (!method || !(method in refundPaymentMethodsConfig)) return {};
 
-  return refundPaymentMethodsConfig[method as keyof typeof refundPaymentMethodsConfig].reduce(
+  return refundPaymentMethodsConfig[method as keyof typeof refundPaymentMethodsConfig]
+    .filter((field) => isRefundRequestField(field.name)).reduce(
     (acc, field) => {
       if (field.type === 'date') {
         acc[field.name] = field.isDefaultToday ? dayjs() : '';

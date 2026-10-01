@@ -2,15 +2,15 @@ import type { RootState } from 'src/redux/store';
 import type { Board, Medium } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 
 export const ALL_CLASS_OPTION = { id: 'All Classes', name: 'All Classes' };
 export const ALL_DIVISION_OPTION = { id: 'All Divisions', name: 'All Divisions' };
 
 export interface FinanceAcademicFilterPayload {
-	academicYearId: string;
+  academicYearId: string;
   boardId: string;
   educationMediumId: string;
   standardId?: string;
@@ -45,6 +45,7 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   const [selectedMedium, setSelectedMediumState] = useState('');
   const [selectedStandardId, setSelectedStandardIdState] = useState('All Classes');
   const [selectedDivisionId, setSelectedDivisionIdState] = useState('All Divisions');
+  const initializedYearId = useRef<string | null>(null);
 
   const boards = useMemo<Board[]>(() => currentYear?.boards ?? [], [currentYear?.boards]);
 
@@ -54,14 +55,16 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
     return (board as Board)?.educationMediums ?? [];
   }, [boards, selectedBoard]);
 
-  const [getClassByMedium, { data: classes = [], isLoading: classesLoading }] = useQueryAndMutation(
-    {
-      type: 'mutation',
-      currentQueryAndMutation: useLazyGetClassByMediumQuery,
-    }
-  );
+  const isReady = Boolean(currentYear?.id && selectedBoard && selectedMedium);
 
-	const isReady = Boolean(currentYear?.id && selectedBoard && selectedMedium);
+  // Subscribe by medium so class/division changes and table remounts reuse the
+  // same reference data. currentData excludes options belonging to a previous medium.
+  const { currentData: classes = [], isFetching: classesLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassByMediumQuery,
+    params: selectedMedium,
+    options: { skip: !isReady, refetchOnMountOrArgChange: false },
+  });
 
   const divisions = useMemo(() => {
     if (!selectedStandardId || selectedStandardId === 'All Classes') return [];
@@ -111,26 +114,28 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
   }, []);
 
   useEffect(() => {
-    if (!currentYear?.boards?.length) return;
-    const firstBoard = currentYear.boards[0];
-    const firstMedium = firstBoard?.educationMediums?.[0]?.id ?? '';
-    setSelectedBoardState(firstBoard?.id ?? '');
-    setSelectedMediumState(firstMedium);
-    resetClassAndDivision();
-  }, [currentYear?.id, currentYear?.boards, resetClassAndDivision]);
+    if (!currentYear?.id || !boards.length) return;
+    const yearChanged = initializedYearId.current !== currentYear.id;
+    initializedYearId.current = currentYear.id;
+    const board = boards.find((item) => item.id === selectedBoard);
 
-  useEffect(() => {
-    if (selectedMedium) {
-      getClassByMedium(selectedMedium);
+    if (yearChanged || !board) {
+      const firstBoard = boards[0];
+      setSelectedBoardState(firstBoard.id);
+      setSelectedMediumState(firstBoard.educationMediums?.[0]?.id ?? '');
+      resetClassAndDivision();
+    } else if (!board.educationMediums?.some((medium) => medium.id === selectedMedium)) {
+      setSelectedMediumState(board.educationMediums?.[0]?.id ?? '');
+      resetClassAndDivision();
     }
-  }, [selectedMedium, getClassByMedium]);
+  }, [currentYear?.id, boards, selectedBoard, selectedMedium, resetClassAndDivision]);
 
   const filterPayload = useMemo<FinanceAcademicFilterPayload | null>(() => {
     if (!isReady) return null;
 
-		const payload: FinanceAcademicFilterPayload = {
-			academicYearId: currentYear!.id,
-			boardId: selectedBoard,
+    const payload: FinanceAcademicFilterPayload = {
+      academicYearId: currentYear!.id,
+      boardId: selectedBoard,
       educationMediumId: selectedMedium,
     };
 
@@ -145,7 +150,7 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
     }
 
     return payload;
-	}, [isReady, currentYear, selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
+  }, [isReady, currentYear, selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
 
   return {
     boards,

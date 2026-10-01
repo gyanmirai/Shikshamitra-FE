@@ -7,6 +7,7 @@ import { FeeMonth } from 'src/enums/fee-collection-type';
 import { Box, Chip, Button, Divider, Tooltip } from '@mui/material';
 
 import { toPeriod } from './FeeLedgerShared';
+import { roundUpToRupee, safeRoundingDifference } from './preview/paymentAllocationUtils';
 
 import type { IFeeCharge, SelectedItem, FeeLedgerData } from '../Components/type';
 
@@ -73,16 +74,19 @@ const QuickActionToolbar = ({
       const period = toPeriod(FeeMonth[g.month] as string, currentYear);
       g.items
         .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
-        .forEach((i) =>
+        .forEach((i) => {
+          const roundedDue = roundUpToRupee(i.due);
           items.push({
             dueFeeId: i.dueFeeId,
             feeHeadId: i.feeHeadId,
             period,
-            dueAmount: i.due,
+            dueAmount: roundedDue,
+            originalDueAmount: i.due,
+            roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
             lateFeeAmount: i.lateFeeAmount,
             installmentLabel: i.installmentLabel,
-          })
-        );
+          });
+        });
     });
     onSelectionChange(items);
     const allCharges = chargesData
@@ -96,14 +100,19 @@ const QuickActionToolbar = ({
     const period = toPeriod(FeeMonth[currentMonthGroup.month] as string, currentYear);
     const items: SelectedItem[] = currentMonthGroup.items
       .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
-      .map((i) => ({
-        dueFeeId: i.dueFeeId,
-        feeHeadId: i.feeHeadId,
-        period,
-        dueAmount: i.due,
-        lateFeeAmount: i.lateFeeAmount,
-        installmentLabel: i.installmentLabel,
-      }));
+      .map((i) => {
+        const roundedDue = roundUpToRupee(i.due);
+        return {
+          dueFeeId: i.dueFeeId,
+          feeHeadId: i.feeHeadId,
+          period,
+          dueAmount: roundedDue,
+          originalDueAmount: i.due,
+          roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
+          lateFeeAmount: i.lateFeeAmount,
+          installmentLabel: i.installmentLabel,
+        };
+      });
     onSelectionChange(items);
     onChargesChange([]);
   };
@@ -121,16 +130,19 @@ const QuickActionToolbar = ({
       const period = toPeriod(FeeMonth[g.month] as string, currentYear);
       g.items
         .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
-        .forEach((i) =>
+        .forEach((i) => {
+          const roundedDue = roundUpToRupee(i.due);
           items.push({
             dueFeeId: i.dueFeeId,
             feeHeadId: i.feeHeadId,
             period,
-            dueAmount: i.due,
+            dueAmount: roundedDue,
+            originalDueAmount: i.due,
+            roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
             lateFeeAmount: i.lateFeeAmount,
             installmentLabel: i.installmentLabel,
-          })
-        );
+          });
+        });
     });
     onSelectionChange(items);
   };

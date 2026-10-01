@@ -114,7 +114,7 @@ const ExpenseFormFields = ({
                 error={!!(formik.touched.categoryTags && formik.errors.categoryTags)}
               >
                 <CustomSelect
-                  label="Expense Category Tags *"
+                  label="Expense Category Tags (optional)"
                   options={tags}
                   labelKey="name"
                   valueKey="id"

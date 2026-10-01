@@ -13,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 
+import { roundUpToRupee } from './paymentAllocationUtils';
 import type { IFeeCharge, SelectedItem } from '../../Components/type';
 
 interface Props {
@@ -37,7 +38,7 @@ const FeeItemsPreviewTable = ({
   feeHeadMap,
 }: Props) => {
   const itemsTotal = useMemo(
-    () => selectedItems.reduce((s, i) => s + i.dueAmount, 0),
+    () => selectedItems.reduce((s, i) => s + roundUpToRupee(i.dueAmount), 0),
     [selectedItems]
   );
 
@@ -80,6 +81,7 @@ const FeeItemsPreviewTable = ({
             {selectedItems.map((item, idx) => {
               const feeHeadName = feeHeadMap[item.feeHeadId] ?? item.feeHeadId;
               const periodLabel = dayjs(`${item.period}-01`).format('MMM YYYY');
+              const roundedAmount = roundUpToRupee(item.dueAmount);
               return (
                 <TableRow key={`${item.feeHeadId}-${item.period}-${idx}`} hover>
                   <TableCell sx={cellSx}>
@@ -90,10 +92,10 @@ const FeeItemsPreviewTable = ({
                       {periodLabel}
                     </Typography>
                   </TableCell>
-                  <TableCell sx={cellSx}>₹{formatNumber(item.dueAmount)}</TableCell>
+                  <TableCell sx={cellSx}>₹{formatNumber(roundedAmount)}</TableCell>
                   <TableCell sx={{ ...cellSx, color: 'text.secondary' }}>₹0</TableCell>
                   <TableCell sx={{ ...cellSx, color: 'success.main', fontWeight: 600 }}>
-                    ₹{formatNumber(item.dueAmount)}
+                    ₹{formatNumber(roundedAmount)}
                   </TableCell>
                   <TableCell sx={{ ...cellSx, color: 'warning.main' }}>₹0</TableCell>
                 </TableRow>

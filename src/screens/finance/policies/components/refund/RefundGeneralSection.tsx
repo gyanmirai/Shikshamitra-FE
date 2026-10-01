@@ -109,7 +109,7 @@ export default function RefundGeneralSection({
                   </Box>
                 )}
               >
-                <MenuItem value="Draft">
+                <MenuItem value="Draft" disabled={Boolean(formik.initialValues.isDefault)}>
                   <Stack direction="row" spacing={1} alignItems="center">
                     <Label color="warning" sx={{ height: 20 }}>
                       Draft
@@ -160,6 +160,7 @@ export default function RefundGeneralSection({
             policyLabel="Refund"
             status={values.status}
             checked={Boolean(values.isDefault)}
+            currentDefault={Boolean(formik.initialValues.isDefault)}
             onChange={(checked) => formik.setFieldValue('isDefault', checked)}
           />
         </Grid>

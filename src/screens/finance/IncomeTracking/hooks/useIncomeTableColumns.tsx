@@ -2,8 +2,8 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useMemo } from 'react';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
 import type { IIncomeRecord } from '../types';
 
@@ -68,7 +68,7 @@ export const useIncomeTableColumns = ({
         align: 'left',
         minWidth: '150px',
       },
-      {
+      ...(onEdit || onDelete ? [{
         id: 'actions',
         label: 'Actions',
         align: 'left',
@@ -76,26 +76,26 @@ export const useIncomeTableColumns = ({
         isFilter: false,
         sticky: true,
         minWidth: 50,
-        render: (_value, row) => (
+        render: (_value: unknown, row: unknown) => (
           <AdaptiveThreeDotsActions
             actions={[
-              {
+              ...(onEdit ? [{
                 id: 'edit',
                 label: 'Edit',
                 icon: 'solar:pen-bold',
-                onClick: () => onEdit?.(row as IIncomeRecord),
-              },
-              {
+                onClick: () => onEdit(row as IIncomeRecord),
+              }] : []),
+              ...(onDelete ? [{
                 id: 'delete',
                 label: 'Delete',
                 icon: 'solar:trash-bin-trash-bold',
-                onClick: () => onDelete?.(row as IIncomeRecord),
+                onClick: () => onDelete(row as IIncomeRecord),
                 color: 'error.main',
-              },
+              }] : []),
             ]}
           />
         ),
-      },
+      } as IColumn] : []),
       /**
        * Memoization Justification:
        * Columns configuration is stable unless handlers change.

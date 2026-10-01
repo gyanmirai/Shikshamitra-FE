@@ -42,7 +42,11 @@ export interface FeeCollectionSummaryItem {
   paidFees: number;
   pendingFees: number;
   overdueFees: number;
-  status: 'Pending' | 'Paid' | 'Overdue';
+  totalCharges: number;
+  pendingCharges: number;
+  totalConcessionAmount: number;
+  isFeeStructureAssigned: boolean;
+  status: FeeCollectionStatusType;
 }
 
 export interface PagedResult<T> {
@@ -103,6 +107,8 @@ export interface FeeLedgerLine {
   scheduledTotal?: number;
   prorationPolicyId?: string | null;
   prorationPolicyVersionId?: string | null;
+  prorationPolicyName?: string | null;
+  prorationPolicyVersionNumber?: number | null;
   prorationFactor?: number | null;
   prorationRuleType?: string | null;
   prorationRoundingMode?: string | null;

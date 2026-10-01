@@ -3,7 +3,7 @@ module: finance
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-09-24
+updated_on: 2026-10-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -38,6 +38,8 @@ Use this table for visible Finance navigation.
 | Concession Type      | `/finance/settings/concession-type`         | `src/constants/finance-menu.ts` |
 | Charge Category      | `/finance/settings/chargeCategory`          | `src/constants/finance-menu.ts` |
 | Reconciliation       | `/finance/reconciliation`                   | `src/constants/finance-menu.ts` |
+| Income & Expenses     | `/finance/income-and-expense`               | `src/constants/finance-menu.ts` |
+| Old Accounts Activity | `/finance/accounts/activity`                | Redirects to Income & Expenses |
 | Income Tracking      | `/finance/income-tracking`                  | `src/constants/finance-menu.ts` |
 | Expense Tracking     | `/finance/expenseTracking`                  | `src/constants/finance-menu.ts` |
 | Income Category      | `/finance/settings/incomeCategories`        | `src/constants/finance-menu.ts` |
@@ -69,6 +71,10 @@ These routes or path constants exist but should not be treated as active menu na
 | ----------------------- | -------------------------------------------------------------------------------- |
 | Receipt Book menu child | Commented in `finance-menu.ts`, although a page folder exists                    |
 | Budgeting path          | `financePaths.budgeting` exists, but active navigation needs source confirmation |
+| Draft Postings           | Removed from Accounts menu; the direct route explains that no posting API exists |
+| Posting Automation       | Removed from Accounts Settings; the direct route has no fake Save action         |
+
+Accounts Settings does not contain a Payment Modes item. Fee Collections owns the current payment-method choices. The proposed Accounts implementation is tracked in [Accounts frontend/backend delivery](../../../Shikshamitra-BE/docs/modules/finance/references/accounts-frontend-backend-delivery.md).
 
 ## Student fee assignment
 
