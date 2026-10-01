@@ -31,6 +31,7 @@ export const financePaths = {
   // Accounts
   accounts: {
     root: '/finance/accounts',
+    activity: '/finance/accounts/activity',
     draftPostings: '/finance/draft-postings',
     reconciliation: '/finance/reconciliation',
     incomeAndExpense: '/finance/income-and-expense',
@@ -181,6 +182,7 @@ export const financePermissions = {
   },
   accounts: {
     root: `${defaultModulePermissionName}${defaultFinancePermissionName}Accounts`,
+    activity: `${defaultFinancePermissionName}Accounts.Activity.View`,
     draftPostings: `${defaultFinancePermissionName}Accounts.Reconciliation`,
     reconciliation: `${defaultFinancePermissionName}Accounts.Reconciliation`,
     reconciliationAdd: `${defaultFinancePermissionName}Accounts.Reconciliation.Add`,
@@ -461,6 +463,13 @@ const financeModule = {
           permissionName: financePermissions.accounts.root,
           icon: menuIconView('mdi:bank-outline'),
           children: [
+            {
+              title: 'Activity',
+              path: financePaths.accounts.activity,
+              _action: 'accounts-activity',
+              permissionName: financePermissions.accounts.activity,
+              icon: menuIconView('mdi:timeline-text-outline'),
+            },
             {
               title: 'Reconciliation',
               path: financePaths.accounts.reconciliation,

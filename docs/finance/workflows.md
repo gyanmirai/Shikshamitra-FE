@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-09-29
+updated_on: 2026-10-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,6 +16,17 @@ The backend [security standard](https://github.com/gyanmirai/Shikshamitra-BE/blo
 Existing backend operations that share one permission identifier remain one capability until a separately approved domain change.
 
 # Trace Finance frontend workflows
+
+## Accounts source activity
+
+`/finance/accounts/activity` shows final fee and charge receipts alongside
+confirmed refund subledger entries for the selected academic year. The table
+keeps collection/refund tabs, search and server pagination. It requires
+`Finance.Accounts.Activity.View`; source navigation requires the corresponding
+Fees view grant. “Not posted” means these source actions have no General
+Accounts journal. This screen does not update account balances or reports.
+The backend contract is in
+[Accounts source activity](../../../Shikshamitra-BE/docs/modules/finance/references/accounts-source-activity.md).
 
 ## Late-fee charge in Fee Collection
 

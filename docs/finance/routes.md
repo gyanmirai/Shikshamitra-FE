@@ -3,7 +3,7 @@ module: finance
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-09-24
+updated_on: 2026-10-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -38,6 +38,7 @@ Use this table for visible Finance navigation.
 | Concession Type      | `/finance/settings/concession-type`         | `src/constants/finance-menu.ts` |
 | Charge Category      | `/finance/settings/chargeCategory`          | `src/constants/finance-menu.ts` |
 | Reconciliation       | `/finance/reconciliation`                   | `src/constants/finance-menu.ts` |
+| Accounts Activity     | `/finance/accounts/activity`                | `src/constants/finance-menu.ts` |
 | Income Tracking      | `/finance/income-tracking`                  | `src/constants/finance-menu.ts` |
 | Expense Tracking     | `/finance/expenseTracking`                  | `src/constants/finance-menu.ts` |
 | Income Category      | `/finance/settings/incomeCategories`        | `src/constants/finance-menu.ts` |

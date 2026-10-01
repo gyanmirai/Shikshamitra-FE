@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-24
+updated_on: 2026-10-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -29,6 +29,7 @@ Use this table to find the first integration file.
 | Adjustments             | `src/redux/finance/adjustments/adjustmentApi.ts`                                                                              |
 | Audit Trail             | `src/redux/finance/audit/financeAuditApi.ts`                                                                                  |
 | Reconciliation          | `src/redux/finance/reconciliation.ts`                                                                                         |
+| Accounts Activity       | `src/redux/finance/accountsActivityApi.ts`                                                                                     |
 | Receipt Book            | `src/redux/finance/receiptBookApi.ts`                                                                                         |
 | Fee collection          | `src/redux/feeCollection/**`                                                                                                  |
 | Late-fee waiver queue   | `src/redux/feeCollection/lateFeeWaiver.ts`                                                                                    |
