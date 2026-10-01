@@ -17,7 +17,6 @@ describe('ExamReviewAccordion', () => {
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <ExamReviewAccordion
           title="Basic Details"
-          description="Exam configuration and schedule info"
           icon="healthicons:i-exam-multiple-choice"
           onEdit={onEdit}
         >
@@ -33,6 +32,11 @@ describe('ExamReviewAccordion', () => {
     expect(accordionToggle).not.toContainElement(editButton);
 
     fireEvent.click(editButton);
+    expect(onEdit).toHaveBeenCalledOnce();
+
+    expect(accordionToggle).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(accordionToggle!);
+    expect(accordionToggle).toHaveAttribute('aria-expanded', 'false');
     expect(onEdit).toHaveBeenCalledOnce();
   });
 });

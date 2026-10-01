@@ -44,7 +44,11 @@ const RubricEvaluationPanel = React.forwardRef<
             </Typography>
             {compact ? (
               <CustomTooltip
-                title="Select a performance level and add focused feedback for every criterion."
+                title={
+                  props.readOnly
+                    ? 'Review the recorded performance level and feedback for every criterion.'
+                    : 'Select a performance level and add focused feedback for every criterion.'
+                }
                 placement="right"
                 arrow
               >
