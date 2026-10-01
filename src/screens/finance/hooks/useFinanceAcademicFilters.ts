@@ -4,13 +4,13 @@ import type { Board, Medium } from 'src/types/school';
 import { useSelector } from 'react-redux';
 import { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
+import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 
 export const ALL_CLASS_OPTION = { id: 'All Classes', name: 'All Classes' };
 export const ALL_DIVISION_OPTION = { id: 'All Divisions', name: 'All Divisions' };
 
 export interface FinanceAcademicFilterPayload {
-	academicYearId: string;
+  academicYearId: string;
   boardId: string;
   educationMediumId: string;
   standardId?: string;
@@ -55,14 +55,16 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
     return (board as Board)?.educationMediums ?? [];
   }, [boards, selectedBoard]);
 
-  const [getClassByMedium, { data: classes = [], isLoading: classesLoading }] = useQueryAndMutation(
-    {
-      type: 'mutation',
-      currentQueryAndMutation: useLazyGetClassByMediumQuery,
-    }
-  );
+  const isReady = Boolean(currentYear?.id && selectedBoard && selectedMedium);
 
-	const isReady = Boolean(currentYear?.id && selectedBoard && selectedMedium);
+  // Subscribe by medium so class/division changes and table remounts reuse the
+  // same reference data. currentData excludes options belonging to a previous medium.
+  const { currentData: classes = [], isFetching: classesLoading } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetClassByMediumQuery,
+    params: selectedMedium,
+    options: { skip: !isReady, refetchOnMountOrArgChange: false },
+  });
 
   const divisions = useMemo(() => {
     if (!selectedStandardId || selectedStandardId === 'All Classes') return [];
@@ -128,18 +130,12 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
     }
   }, [currentYear?.id, boards, selectedBoard, selectedMedium, resetClassAndDivision]);
 
-  useEffect(() => {
-    if (selectedMedium) {
-      getClassByMedium(selectedMedium);
-    }
-  }, [selectedMedium, getClassByMedium]);
-
   const filterPayload = useMemo<FinanceAcademicFilterPayload | null>(() => {
     if (!isReady) return null;
 
-		const payload: FinanceAcademicFilterPayload = {
-			academicYearId: currentYear!.id,
-			boardId: selectedBoard,
+    const payload: FinanceAcademicFilterPayload = {
+      academicYearId: currentYear!.id,
+      boardId: selectedBoard,
       educationMediumId: selectedMedium,
     };
 
@@ -154,7 +150,7 @@ export function useFinanceAcademicFilters(): UseFinanceAcademicFiltersResult {
     }
 
     return payload;
-	}, [isReady, currentYear, selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
+  }, [isReady, currentYear, selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
 
   return {
     boards,

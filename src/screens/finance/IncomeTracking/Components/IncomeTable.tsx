@@ -9,6 +9,7 @@ import type { IIncomeRecord } from '../types';
 interface IIncomeTableProps {
   data: IIncomeRecord[];
   addIncome: { onTrue: () => void };
+  canAdd?: boolean;
   isLoading: true;
   setEditData: (data: IIncomeRecord | null) => void;
   onEdit?: (row: IIncomeRecord) => void;
@@ -19,6 +20,7 @@ interface IIncomeTableProps {
 const IncomeTable: React.FC<IIncomeTableProps> = ({
   data,
   addIncome,
+  canAdd = false,
   isLoading,
   setEditData,
   onEdit,
@@ -38,7 +40,7 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
       noDataText={
         <>
           No Income data found
-          <Box
+          {canAdd && <Box
             onClick={() => {
               addIncome.onTrue();
               setEditData(null);
@@ -54,7 +56,7 @@ const IncomeTable: React.FC<IIncomeTableProps> = ({
             }}
           >
             Add Income
-          </Box>
+          </Box>}
         </>
       }
       columns={columns}

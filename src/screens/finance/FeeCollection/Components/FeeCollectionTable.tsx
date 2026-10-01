@@ -14,7 +14,6 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetFeeCollectionListQuery } from 'src/redux/feeCollection/feeCollection';
-import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
@@ -34,8 +33,6 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   academicFilters,
 }) => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const localFilters = useFinanceAcademicFilters();
-  const filters = academicFilters || localFilters;
   const {
     boards,
     mediums,
@@ -53,17 +50,38 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
     setSelectedStandardId,
     setSelectedDivisionId,
     classesLoading,
-  } = filters;
+  } = academicFilters;
+
+  const filterKey = JSON.stringify([
+    currentYear?.id,
+    selectedBoard,
+    selectedMedium,
+    selectedStandardId,
+    selectedDivisionId,
+  ]);
 
   const [feeCollectionParams, setFeeCollectionParams] = useState({
     page: 1,
     pageSize: 10,
     search: '',
+    filterKey,
   });
 
-  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
-    setFeeCollectionParams((pre) => ({ ...pre, page, pageSize: rowsPerPage }));
-  }, []);
+  // Reset the request offset immediately when the academic scope changes,
+  // before the effect synchronizes pagination state.
+  const page = feeCollectionParams.filterKey === filterKey ? feeCollectionParams.page : 1;
+
+  const handleServerPagination = useCallback(
+    (nextPage: number, rowsPerPage: number) => {
+      setFeeCollectionParams((pre) => ({
+        ...pre,
+        page: nextPage,
+        pageSize: rowsPerPage,
+        filterKey,
+      }));
+    },
+    [filterKey]
+  );
 
   const handleServerSearch = useCallback((search: string) => {
     setFeeCollectionParams((pre) => ({ ...pre, page: 1, search }));
@@ -85,7 +103,7 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
       DivisionId:
         filterPayload?.divisionId === 'All Divisions' ? undefined : filterPayload?.divisionId,
       MaxResultCount: feeCollectionParams.pageSize,
-      SkipCount: (feeCollectionParams.page - 1) * feeCollectionParams.pageSize,
+      SkipCount: (page - 1) * feeCollectionParams.pageSize,
       Search: feeCollectionParams.search || undefined,
     },
     options: {
@@ -94,8 +112,10 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
   });
 
   useEffect(() => {
-    setFeeCollectionParams((prev) => ({ ...prev, page: 1 }));
-  }, [selectedBoard, selectedMedium, selectedStandardId, selectedDivisionId]);
+    setFeeCollectionParams((prev) =>
+      prev.filterKey === filterKey ? prev : { ...prev, page: 1, filterKey }
+    );
+  }, [filterKey]);
 
   const tableData = useMemo(
     () =>
@@ -146,6 +166,8 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
           noDataText={<>Fee Collection Data Not Found </>}
           isLoading={feeCollectionLoading || feeCollectionFetching}
           serverSidePagination
+          page={page - 1}
+          rowsPerPage={feeCollectionParams.pageSize}
           totalCount={feeCollectionData?.totalCount ?? 0}
           onServerPagination={handleServerPagination}
           serverSideSearch
@@ -266,11 +288,14 @@ const FeeCollectionTable: React.FC<IFeeTableProps> = ({
               align: 'left',
               isFilter: true,
               filterType: 'enum',
-              enumOptions: FeeCollectionStatusOptions,
+              enumOptions: [
+                ...FeeCollectionStatusOptions,
+                { label: 'No Fee Assigned', value: FeeCollectionStatusType.NoFeeAssigned },
+              ],
               sticky: true,
-              width: 100,
-              minWidth: 84,
-              maxWidth: 130,
+              width: 150,
+              minWidth: 140,
+              maxWidth: 180,
               render(value) {
                 const statusValue = value as FeeCollectionStatusType;
                 const color = FeeCollectionStatusTypeColors[statusValue] as LabelColor;

@@ -1,10 +1,18 @@
 import type { Dayjs } from 'dayjs';
 import type { InputProps } from '@mui/material';
 
+import dayjs from 'dayjs';
+import { useRef, useState, useEffect } from 'react';
 import Stack from '@mui/material/Stack';
+import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import { Iconify } from 'src/components/iconify';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import InputAdornment from '@mui/material/InputAdornment';
+
+import type { DateRange } from './types';
+
+dayjs.extend(customParseFormat);
 
 // ----------------------------------------------------------------------
 
@@ -12,6 +20,9 @@ type RangeFieldProps = {
   startDate: Dayjs | null;
   endDate: Dayjs | null;
   onOpen: (event: React.MouseEvent<HTMLElement>) => void;
+  onChange?: (range: DateRange) => void;
+  validateDate?: (date: Dayjs | null) => string | null;
+  allowManualInput?: boolean;
   singleInput?: boolean;
   label?: string;
   startLabel?: string;
@@ -30,6 +41,9 @@ export function RangeField({
   startDate,
   endDate,
   onOpen,
+  onChange,
+  validateDate,
+  allowManualInput = false,
   singleInput,
   label,
   startLabel = 'Start date',
@@ -46,40 +60,93 @@ export function RangeField({
   // Format values
   const startStr = startDate ? startDate.format(dateFormat) : '';
   const endStr = endDate ? endDate.format(dateFormat) : '';
+  const formattedRange =
+    startStr && endStr ? `${startStr} - ${endStr}` : startStr ? `${startStr} - ` : '';
+  const rangeKey = `${startStr}|${endStr}`;
+  const lastInputRange = useRef(rangeKey);
+  const [inputText, setInputText] = useState(formattedRange);
+  const [inputError, setInputError] = useState<string | null>(null);
+  const editable = allowManualInput && singleInput && !readOnly;
 
-  const handleMouseDown = (event: React.MouseEvent<HTMLElement>) => {
-    // Prevent focus if readOnly/picker mode
-    if (!readOnly) {
-      event.preventDefault();
-      onOpen(event);
+  // Own changes must preserve a partially typed draft; calendar/template changes replace it.
+  useEffect(() => {
+    if (rangeKey !== lastInputRange.current) {
+      lastInputRange.current = rangeKey;
+      setInputText(formattedRange);
+      setInputError(null);
     }
+  }, [rangeKey, formattedRange]);
+
+  const parseInput = (text: string): { range: DateRange; error: string | null } => {
+    if (!text.trim()) return { range: [null, null], error: null };
+    const parts = text.trim().split(/\s+[-–]\s+/);
+    const start = dayjs(parts[0], dateFormat, true);
+    const end = dayjs(parts[1] ?? '', dateFormat, true);
+    if (parts.length !== 2 || !start.isValid() || !end.isValid()) {
+      return { range: [null, null], error: `Enter dates as ${dateFormat} - ${dateFormat}` };
+    }
+    if (end.isBefore(start, 'day')) {
+      return { range: [null, null], error: 'End date must be on or after start date' };
+    }
+    const validationError = validateDate?.(start) || validateDate?.(end) || null;
+    return { range: validationError ? [null, null] : [start, end], error: validationError };
+  };
+
+  const handleInputChange = (text: string) => {
+    setInputText(text);
+    const parsed = parseInput(text);
+    lastInputRange.current = parsed.range.map((date) => date?.format(dateFormat) ?? '').join('|');
+    setInputError(parsed.error);
+    // Clear invalid drafts from the form so an earlier valid range cannot be saved silently.
+    onChange?.(parsed.range);
   };
 
   if (singleInput) {
-    const value = startStr && endStr ? `${startStr} - ${endStr}` : startStr ? `${startStr} - ` : '';
-
     return (
       <TextField
         fullWidth
         label={label || 'Date Range'}
-        value={value}
+        value={editable ? inputText : formattedRange}
         placeholder={placeholder || 'DD/MM/YYYY - DD/MM/YYYY'}
-        onClick={onOpen}
+        onClick={!editable && !readOnly ? onOpen : undefined}
+        onChange={editable ? (event) => handleInputChange(event.target.value) : undefined}
+        onBlur={editable ? () => setInputError(parseInput(inputText).error) : undefined}
+        onKeyDown={
+          editable
+            ? (event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault();
+                  setInputError(parseInput(inputText).error);
+                }
+              }
+            : undefined
+        }
         size="small"
         slotProps={{
           input: {
-            readOnly: true,
+            readOnly: !editable,
             endAdornment: (
               <InputAdornment position="end">
-                <Iconify icon="eva:calendar-fill" sx={{ color: 'text.disabled' }} />
+                {editable ? (
+                  <IconButton
+                    aria-label={`Open calendar for ${label || 'Date Range'}`}
+                    size="small"
+                    disabled={disabled}
+                    onClick={onOpen}
+                  >
+                    <Iconify icon="mdi:calendar" />
+                  </IconButton>
+                ) : (
+                  <Iconify icon="eva:calendar-fill" sx={{ color: 'text.disabled' }} />
+                )}
               </InputAdornment>
             ),
             ...InputProps,
           },
         }}
         disabled={disabled}
-        error={error}
-        helperText={helperText}
+        error={error || Boolean(editable && inputError)}
+        helperText={(editable && inputError) || helperText}
         sx={sx}
       />
     );

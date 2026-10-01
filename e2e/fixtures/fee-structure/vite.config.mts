@@ -4,6 +4,7 @@ const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
 export default defineConfig({
   root: here,
+  cacheDir: `${repo}/node_modules/.vite/fee-structure`,
   publicDir: `${repo}/public`,
   resolve: {
     alias: [

@@ -1,12 +1,17 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import IncomeTable from './Components/IncomeTable';
@@ -18,6 +23,9 @@ interface IncomeTrackingProps {
 }
 
 const IncomeTracking = ({ embedded = false }: IncomeTrackingProps) => {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canAdd = hasGrantedPermission(permissions, `${financePermissions.accounts.income}.Add`);
+  const canDelete = hasGrantedPermission(permissions, `${financePermissions.accounts.income}.Delete`);
   const {
     selectedIncome,
     setSelectedIncome,
@@ -44,7 +52,7 @@ const IncomeTracking = ({ embedded = false }: IncomeTrackingProps) => {
             { name: 'Accounts', href: '/finance/income-tracking' },
             { name: 'Income Tracking' },
           ]}
-          action={
+          action={canAdd ?
             <Button
               onClick={() => addIncomeDialog.onTrue()}
               size="small"
@@ -53,12 +61,12 @@ const IncomeTracking = ({ embedded = false }: IncomeTrackingProps) => {
               sx={{ px: '32px' }}
             >
               Income
-            </Button>
+            </Button> : undefined
           }
         />
       )}
 
-      {embedded && !addIncomeDialog.value && (
+      {embedded && canAdd && !addIncomeDialog.value && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           <Button
             onClick={() => addIncomeDialog.onTrue()}
@@ -75,16 +83,17 @@ const IncomeTracking = ({ embedded = false }: IncomeTrackingProps) => {
       <IncomeTable
         data={incomeData?.items || []}
         addIncome={addIncomeDialog}
+        canAdd={canAdd}
         isLoading={fetchingIncomeData || loadingIncomeData}
         setEditData={setSelectedIncome}
-        onEdit={(data) => {
+        onEdit={canAdd ? (data) => {
           addIncomeDialog.onTrue();
           setSelectedIncome(data);
-        }}
-        onDelete={(data) => {
+        } : undefined}
+        onDelete={canDelete ? (data) => {
           deleteIncomeDialog.onTrue();
           setSelectedIncome(data);
-        }}
+        } : undefined}
         // onView={(data) => {
         //   viewIncomeDialog.onTrue();
         //   setSelectedIncome(data);

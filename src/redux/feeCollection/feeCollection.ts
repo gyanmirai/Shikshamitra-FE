@@ -42,7 +42,11 @@ export interface FeeCollectionSummaryItem {
   paidFees: number;
   pendingFees: number;
   overdueFees: number;
-  status: 'Pending' | 'Paid' | 'Overdue';
+  totalCharges: number;
+  pendingCharges: number;
+  totalConcessionAmount: number;
+  isFeeStructureAssigned: boolean;
+  status: FeeCollectionStatusType;
 }
 
 export interface PagedResult<T> {

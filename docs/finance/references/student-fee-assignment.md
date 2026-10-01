@@ -3,7 +3,7 @@ module: finance
 domain: student-fee-assignment
 content_type: Reference
 status: canonical
-updated_on: 2026-09-10
+updated_on: 2026-10-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,13 +17,14 @@ The `/finance/fee-structure-assign` route lists assignment status for the select
 1. Select academic context and students. Selection clears when context, search or page changes. Assigned students open a read view; inactive students cannot be selected for creation.
 2. Open the themed assignment drawer with the shared `DrawerHeader`. Select a published structure revision, then choose Next.
 3. Review each student's mandatory heads and select optional heads separately. Configure supported verified transport dates or authorized manual service dates. Amount overrides are permission-gated and require a reason.
-4. Preview. Each student receives an independent result/error. Review head totals, dates, preserved installment percentages, payment-term versions and policy treatment.
-5. Confirm successful previews. The server returns canonical results and the client preserves successful students when retrying failed items.
-6. Read assigned obligations with current paid/outstanding balances. A different revision or service correction cannot silently overwrite history.
+4. Review **Policies** for each student: Concession, Refund, Collection and Proration default to the structure's pinned selections. With `Finance.Fees.StructureAssign.OverridePolicies`, choose current active versions for the selected year or clear an optional policy. Collection remains required. Changes require a reason; Restore fee structure defaults clears student overrides.
+5. Preview. Each student receives an independent result/error. Review head totals, dates, preserved installment percentages, payment-term versions and policy treatment.
+6. Confirm successful previews. The server returns canonical results and the client preserves successful students when retrying failed items.
+7. Open **View assignment** to see all four policy families, their names/versions and override reason. **Edit assigned policies** requires `.OverridePolicies`, saves with a concurrency stamp and invalidates assignment and collection/detail caches. Existing dues and receipts remain unchanged. Proration changes do not recalculate existing obligations.
 
 The compact academic filter card follows `DESIGN.md` with `Paper`, `p: 1` and `spacing={1}`. Board, medium, class and division fill the row on desktop and stack on mobile. The shared table fills the remaining height; its controlled page index is zero-based while its server callback is one-based.
 
-`CustomStepperWithFormik` owns the form values across Structure, Heads and service, Review and Results. Each step renders its own content. Back preserves values and invalidates the previous preview; another preview is required before confirmation. There is no draft-save action. Small themed buttons have leading Iconify icons, and the stepper owns scrolling and its action footer.
+`CustomStepperWithFormik` owns the form values across Structure, Heads and service, Policies, Review and Results. Each step renders its own content. Back preserves values and invalidates the previous preview; another preview is required before confirmation. There is no draft-save action. Small themed buttons have leading Iconify icons, and the stepper owns scrolling and its action footer.
 
 Changing any input invalidates the previous preview. Late preview responses are discarded. Failed commits retain an actionable error; identical network retries use the backend's saved result. Results offers Review remaining students after partial success and Close when all students succeed. The drawer blocks closing during requests and uses the shared `ConfirmDialog` before discarding unassigned changes. Successful assignments remain intact.
 
@@ -38,9 +39,11 @@ Changing any input invalidates the previous preview. Late preview responses are 
 | `Components/AssignmentWorkflow.tsx` | Shared single/bulk review, dirty state, stale-response protection, canonical outcomes and retry handling |
 | `Components/AssignmentStudentInputs.tsx` | Optional heads, permitted amount/date inputs and verified transport record picker |
 | `Components/AssignmentReview.tsx` | Human-readable immutable evidence, totals, policies and balances |
+| `Components/AssignmentPolicies.tsx` | Per-student policy defaults, version selection, restore and reason |
+| `Components/AssignedPolicyEditor.tsx` | Concurrent policy edits with reason, busy/dirty guards and unchanged obligations |
 | `Components/StudentFeeStructureAssignmentForm.tsx` / `BulkFeeStructureAssignmentForm.tsx` | Compatibility wrappers for existing collection/profile entry points |
 
-The flow makes no concession-policy lookup or eligibility request. It does not fabricate verified service dates or expose technical UUIDs as picker labels. Legacy views label missing evidence instead of displaying a reconstructed price or percentage.
+The flow reads policy choices through the scoped assignment endpoint. Selecting a Concession policy records a preference for separate concession processing and does not award a concession or run eligibility. Fee structures created by the current editor have no Concession attachment, so their initial Concession selection is empty. Historical attachments are shown when present. Policy permissions are exposed through the existing assignment Add control; deployed roles need the new exact permission grant before overriding or editing policies. The flow does not fabricate verified service dates or expose technical UUIDs as picker labels. Legacy views label missing evidence instead of displaying a reconstructed price or percentage.
 
 ## Checks
 

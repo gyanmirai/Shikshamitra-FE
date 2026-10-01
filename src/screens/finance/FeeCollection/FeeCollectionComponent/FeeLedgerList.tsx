@@ -102,9 +102,12 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
             total={charge.total ?? charge.amount}
             paid={charge.paid ?? 0}
             due={charge.amount}
+            reconciliationAmount={charge.reconciliationAmount}
             chargeId={charge.chargeId}
             waiverSourceType={charge.sourceType}
-            onWaiverApplied={isSelected && !isDisabled ? () => onToggleCharge(charge.chargeId) : undefined}
+            onWaiverApplied={
+              isSelected && !isDisabled ? () => onToggleCharge(charge.chargeId) : undefined
+            }
             status={charge.status as FeeCollectionStatusType}
             isSelected={isSelected}
             isDisabled={isDisabled}
@@ -128,6 +131,7 @@ export interface FeeLedgerListProps {
   onSelectionChange: (items: SelectedItem[]) => void;
   onChargesChange: (chargeIds: string[]) => void;
   year?: number;
+  hasActiveFilters?: boolean;
 }
 
 const FeeLedgerList = ({
@@ -136,6 +140,7 @@ const FeeLedgerList = ({
   selectedItems,
   charges,
   chargesData,
+  hasActiveFilters = false,
   onSelectionChange,
   onChargesChange,
   year = new Date().getFullYear(),
@@ -305,10 +310,12 @@ const FeeLedgerList = ({
           sx={{ width: 40, height: 40, color: 'text.disabled', mb: 1.5 }}
         />
         <Typography variant="body2" color="text.secondary" fontWeight={500}>
-          No fee records found
+          {hasActiveFilters ? 'No entries found for selected filters' : 'No fee records found'}
         </Typography>
         <Typography variant="caption" color="text.disabled" sx={{ mt: 0.5, display: 'block' }}>
-          Records will appear here once available
+          {hasActiveFilters
+            ? 'Change the month, fee head or status to see other entries'
+            : 'Records will appear here once available'}
         </Typography>
       </Box>
     );
@@ -343,7 +350,6 @@ const FeeLedgerList = ({
           onToggleGroup={toggleFeeHeadGroup}
         />
       )}
-
     </Box>
   );
 };

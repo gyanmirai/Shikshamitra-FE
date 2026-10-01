@@ -1,7 +1,14 @@
 import { it, vi, expect } from 'vitest';
 import { waitFor, renderHook } from '@testing-library/react';
+import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
+import { useGetProrationPoliciesQuery } from 'src/redux/finance/prorationPolicy';
+import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
+import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import { useGetStructureContextQuery } from 'src/redux/finance/feeStructureWorkspace';
+import { useGetPaymentTermsQuery, useGetPaymentTermByIdQuery } from 'src/redux/finance/paymentTerm';
 
-import { useCatalog } from './useFeeStructureLookups';
+import useFeeStructureLookups, { useCatalog } from './useFeeStructureLookups';
+import { defaultPolicy } from '../feeStructureModel';
 
 vi.mock('src/redux/customQueryAndMutation', () => ({
   default: ({ currentQueryAndMutation, params, options }: any) =>
@@ -78,4 +85,60 @@ it('keeps loaded options available after a failed refresh but does not initializ
   expect(result.current.error).toBe(true);
   expect(result.current.ready).toBe(false);
   expect(result.current.items).toEqual(data.items);
+});
+
+it('loads all three policy defaults for a new structure before opening its Policies tab', async () => {
+  const context = {
+    academicYearId: 'year',
+    boardId: 'board',
+    permissions: {
+      collectionRead: true,
+      prorationRead: true,
+      refundRead: true,
+      termsRead: true,
+      headsRead: true,
+    },
+  };
+  vi.mocked(useGetStructureContextQuery).mockReturnValue({ currentData: context } as any);
+  vi.mocked(useGetActiveFeeHeadsQuery).mockReturnValue({ currentData: [] } as any);
+  vi.mocked(useGetPaymentTermByIdQuery).mockReturnValue({} as any);
+  const terms = { items: [], totalCount: 0 };
+  vi.mocked(useGetPaymentTermsQuery).mockReturnValue({
+    currentData: terms,
+    isFetching: false,
+  } as any);
+  const queries = {
+    collection: useGetCollectionPoliciesQuery,
+    proration: useGetProrationPoliciesQuery,
+    refund: useGetRefundPoliciesQuery,
+  };
+  Object.entries(queries).forEach(([family, query]) => {
+    const data = {
+      totalCount: 2,
+      items: [false, true].map((isDefault) => ({
+        id: `${family}-${isDefault ? 'default' : 'alternate'}`,
+        policyName: `${family} policy`,
+        currentVersionId: `${family}-version`,
+        currentVersionNumber: 1,
+        isAttachable: true,
+        isDefault,
+      })),
+    };
+    vi.mocked(query).mockReturnValue({ currentData: data, isFetching: false } as any);
+  });
+  const { result } = renderHook(() =>
+    useFeeStructureLookups({ feeStructureMetadataId: 'metadata', standardId: 'class' }, true)
+  );
+  await waitFor(() => expect(result.current.catalogs.refund.ready).toBe(true));
+  (['collection', 'proration', 'refund'] as const).forEach((family) => {
+    expect(defaultPolicy(result.current.settings!, family)).toMatchObject({
+      id: `${family}-default`,
+      versionId: `${family}-version`,
+      isDefault: true,
+    });
+    expect(queries[family]).toHaveBeenCalledWith(
+      expect.objectContaining({ academicYearId: 'year', status: 'Active' }),
+      expect.objectContaining({ skip: false })
+    );
+  });
 });

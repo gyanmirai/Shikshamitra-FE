@@ -1324,6 +1324,7 @@ const formik = useFormik({
 - Use `PaginatedSearchSelect` for remote option lists; connect selection and validation to Formik and preserve loading, empty, and error states from the fetch contract.
 - Use the Standard address components for country, state, and city fields; keep dependent values synchronized and clear state/city when their parent selection changes.
 - Use `CustomDateRangePicker` for general date-range input; map its `[startDate, endDate]` value into Formik and validate the range, required endpoints, and min/max constraints with Yup.
+- Single-input `CustomDateRangePicker` consumers may opt into keyboard entry with `allowManualInput`. It strictly parses the configured `dateFormat`, validates date order and picker constraints, and emits `[null, null]` for incomplete or invalid drafts. Keep required-range validation in the owning form. The calendar icon remains a keyboard-accessible button. Use `referenceDate` to choose the initial calendar month when the range is empty; selected ranges take precedence.
 - Use `AcademicDatePicker`, `AcademicDateTimePicker`, or `AcademicWeekDatePicker` only in the academic module when academic calendar rules, blocked days, or academic context must be enforced.
 - Do not use `AcademicDatePicker` in non-academic modules; use the general date picker appropriate to the workflow.
 - Convert picker values to the API contract at submit time using the established date serializer; do not send display-formatted strings accidentally.

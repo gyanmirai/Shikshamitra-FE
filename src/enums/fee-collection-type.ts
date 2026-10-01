@@ -38,6 +38,7 @@ export enum FeeCollectionStatusType {
   Partial = 4,
   InReconciliation = 5,
   Waived = 6,
+  NoFeeAssigned = 7,
 }
 
 export const FeeCollectionStatusOptions = [
@@ -75,14 +76,18 @@ export const FeeCollectionStatusTypeColors: Record<FeeCollectionStatusType, Labe
   [FeeCollectionStatusType.Partial]: 'info',
   [FeeCollectionStatusType.InReconciliation]: 'primary',
   [FeeCollectionStatusType.Waived]: 'default',
+  [FeeCollectionStatusType.NoFeeAssigned]: 'default',
 };
 
 export const feeInstallmentStatusLabel = (status: FeeCollectionStatusType): string => {
+  if (status === FeeCollectionStatusType.NoFeeAssigned) return 'No Fee Assigned';
   if (status === FeeCollectionStatusType.Partial) return 'Partial Pending';
+  if (status === FeeCollectionStatusType.InReconciliation) return 'In Reconciliation';
   return FeeCollectionStatusType[status] ?? 'Pending';
 };
 
 export const chargeCollectionStatusLabel = (status: FeeCollectionStatusType): string => {
   if (status === FeeCollectionStatusType.Partial) return 'Partial Paid';
+  if (status === FeeCollectionStatusType.InReconciliation) return 'In Reconciliation';
   return FeeCollectionStatusType[status] ?? 'Pending';
 };

@@ -117,7 +117,11 @@ export default function ConcessionGeneralSection({
                 }}
               >
                 {STATUS_OPTIONS.map((o) => (
-                  <MenuItem key={o.value} value={o.value}>
+                  <MenuItem
+                    key={o.value}
+                    value={o.value}
+                    disabled={o.value !== 'Active' && Boolean(formik.initialValues.isDefault)}
+                  >
                     <Stack direction="row" spacing={1} alignItems="center">
                       <Chip
                         label={o.label}
@@ -167,6 +171,7 @@ export default function ConcessionGeneralSection({
             policyLabel="Concession"
             status={formik.values.status}
             checked={Boolean(formik.values.isDefault)}
+            currentDefault={Boolean(formik.initialValues.isDefault)}
             onChange={(checked) => formik.setFieldValue('isDefault', checked)}
           />
         </Grid>

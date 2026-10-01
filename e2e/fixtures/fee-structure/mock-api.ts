@@ -52,19 +52,34 @@ const settings = {
       installments,
     },
   ],
-  policies: ['collection', 'concession', 'refund', 'proration'].map((family) => ({
-    id: family,
-    versionId: `${family}-v1`,
-    family,
-    name: `${family[0].toUpperCase()}${family.slice(1)} Policy`,
-    versionNumber: 1,
-    isCurrent: true,
-    isDefault: true,
-  })),
+  policies: ['collection', 'concession', 'refund', 'proration'].flatMap((family) =>
+    [true, false].map((isDefault) => ({
+      id: isDefault ? family : `${family}-alternate`,
+      versionId: isDefault ? `${family}-v1` : `${family}-alternate-v2`,
+      family,
+      name: `${family[0].toUpperCase()}${family.slice(1)} ${isDefault ? 'Policy' : 'Alternate Policy'}`,
+      versionNumber: isDefault ? 1 : 2,
+      isCurrent: true,
+      isDefault,
+    }))
+  ),
   permissions: Object.fromEntries(
-    ['add', 'edit', 'delete', 'publish', 'collection', 'concession', 'refund', 'proration', 'collectionRead', 'concessionRead', 'refundRead', 'prorationRead', 'headsRead', 'termsRead'].map(
-      (key) => [key, true]
-    )
+    [
+      'add',
+      'edit',
+      'delete',
+      'publish',
+      'collection',
+      'concession',
+      'refund',
+      'proration',
+      'collectionRead',
+      'concessionRead',
+      'refundRead',
+      'prorationRead',
+      'headsRead',
+      'termsRead',
+    ].map((key) => [key, true])
   ),
 };
 export const readyFixture = {
@@ -105,6 +120,15 @@ export const readyFixture = {
     },
   ],
 };
+export const pinnedPolicyFixture = {
+  ...readyFixture,
+  collectionPolicyId: 'collection-alternate',
+  collectionPolicyVersionId: 'collection-alternate-v2',
+  refundPolicyId: null,
+  refundPolicyVersionId: null,
+  prorationPolicyId: 'proration-alternate',
+  prorationPolicyVersionId: 'proration-alternate-v2',
+};
 let saved: any = readyFixture;
 const preview = (candidate: any) => {
   const errors = [
@@ -138,7 +162,9 @@ const preview = (candidate: any) => {
         installments: installments.map((line) => ({ ...line, calculatedAmount: head.amount / 2 })),
       })),
     policyLabels: Object.fromEntries(
-      settings.policies.map((policy) => [policy.family, `${policy.name} · v1`])
+      settings.policies
+        .filter((policy) => policy.id === candidate[`${policy.family}PolicyId`])
+        .map((policy) => [policy.family, `${policy.name} · v${policy.versionNumber}`])
     ),
   };
 };
@@ -185,19 +211,34 @@ export default function useFixtureApi({ type, currentQueryAndMutation: action }:
 }
 
 const policyCatalogItems = settings.policies.map((policy) => ({
-  id: policy.id, currentVersionId: policy.versionId,
+  id: policy.id,
+  currentVersionId: policy.versionId,
   description: 'Policy coverage in the isolated component verification fixture.',
-  enableLateFee: true, enableWaiver: true,
-  lateFeeApplyOnFeeHeads: ['tuition'], waiverApplyOnFeeHeads: ['tuition'],
-  feeHeadScope: 'SelectedFeeHeads', applicableFeeHeadIds: ['tuition'],
+  enableLateFee: true,
+  enableWaiver: true,
+  lateFeeApplyOnFeeHeads: ['tuition'],
+  waiverApplyOnFeeHeads: ['tuition'],
+  feeHeadScope: 'SelectedFeeHeads',
+  applicableFeeHeadIds: ['tuition'],
   feeHeadRules: [{ feeHeadId: 'tuition', ruleType: 'Daily', roundingMode: 'Currency' }],
 }));
-const catalog = { items: policyCatalogItems, ready: true, loading: false, error: false, retry: () => {} };
+const catalog = {
+  items: policyCatalogItems,
+  ready: true,
+  loading: false,
+  error: false,
+  retry: () => {},
+};
 export function useFixtureLookups(_scope: any, _enabled: any, scheduleLine: any) {
-  return { settings, context: { isLoading: false, isFetching: false, isError: false, refetch: () => {} },
-    heads: { isFetching: false, isError: false, refetch: () => {} }, terms: catalog,
+  return {
+    settings,
+    context: { isLoading: false, isFetching: false, isError: false, refetch: () => {} },
+    heads: { isFetching: false, isError: false, refetch: () => {} },
+    terms: catalog,
     catalogs: { collection: catalog, concession: catalog, refund: catalog, proration: catalog },
-    scheduleTerm: settings.terms.find((term) => term.versionId === scheduleLine?.paymentTermVersionId),
+    scheduleTerm: settings.terms.find(
+      (term) => term.versionId === scheduleLine?.paymentTermVersionId
+    ),
     termDetail: { isFetching: false, isError: false },
   };
 }

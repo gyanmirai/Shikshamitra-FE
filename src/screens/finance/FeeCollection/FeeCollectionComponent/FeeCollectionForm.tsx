@@ -33,7 +33,7 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
-import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
+import { FeeMonth } from 'src/enums/fee-collection-type';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 import { useSensor, DndContext, useSensors, closestCenter, PointerSensor } from '@dnd-kit/core';
@@ -63,6 +63,7 @@ import {
 } from '@mui/material';
 
 import FeeLedgerList from './FeeLedgerList';
+import { normalizeLedgerStatus } from './feeLedgerStatus';
 import { toPeriod } from './FeeLedgerShared';
 import UnifiedReceiptDisplay from './UnifiedReceiptDisplay';
 import {
@@ -299,35 +300,7 @@ const normalizeMonth = (month: string | number): FeeMonth =>
     ? month
     : ((FeeMonth[month as keyof typeof FeeMonth] as unknown as FeeMonth) ?? 0);
 
-const normalizeStatus = (
-  status: FeeLedgerLine['status'],
-  paid: number,
-  due: number
-): FeeCollectionStatusType => {
-  if (typeof status === 'number' && FeeCollectionStatusType[status] !== undefined) {
-    return status as FeeCollectionStatusType;
-  }
-
-  if (typeof status === 'string') {
-    const statusEnum = FeeCollectionStatusType[status as keyof typeof FeeCollectionStatusType];
-    if (typeof statusEnum === 'number') {
-      return statusEnum;
-    }
-  }
-
-  if (due <= 0) {
-    return FeeCollectionStatusType.Paid;
-  }
-
-  if (paid > 0 && due > 0) {
-    return FeeCollectionStatusType.Partial;
-  }
-
-  return FeeCollectionStatusType.Pending;
-};
-
-const isChargeSelectable = (charge: IFeeCharge): boolean =>
-  charge.amount > 0;
+const isChargeSelectable = (charge: IFeeCharge): boolean => charge.amount > 0;
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
@@ -479,7 +452,7 @@ const FeeCollectComponentForm = ({
           lateFeeExplanation: item.lateFeeExplanation,
           lateFeeWaivedAmount: item.lateFeeWaivedAmount,
           canWaive: item.canWaive,
-          status: normalizeStatus(item.status, item.paid, item.due),
+          status: normalizeLedgerStatus(item.status, item.paid, item.due),
         })),
       })) as FeeLedgerData['monthWise'],
       feeHeadWise: Object.values(
@@ -509,7 +482,7 @@ const FeeCollectComponentForm = ({
               lateFeeExplanation: item.lateFeeExplanation,
               lateFeeWaivedAmount: item.lateFeeWaivedAmount,
               canWaive: item.canWaive,
-              status: normalizeStatus(item.status, item.paid, item.due),
+              status: normalizeLedgerStatus(item.status, item.paid, item.due),
             }))
           )
           .reduce((acc: Record<string, any>, line) => {
@@ -558,6 +531,9 @@ const FeeCollectComponentForm = ({
 
   // ── Apply frontend filters to ledger data ──────────────────────────────────
   const filteredLedgerData: FeeLedgerData = useMemo(() => {
+    if (filters.month === 'All' && filters.feeHead === 'All' && filters.status === 'All') {
+      return ledgerData;
+    }
     let { monthWise, feeHeadWise } = ledgerData;
 
     if (filters.month && filters.month !== 'All') {
@@ -607,7 +583,17 @@ const FeeCollectComponentForm = ({
         .filter((fh: any) => fh.items.length > 0);
     }
 
-    return { monthWise, feeHeadWise };
+    return {
+      monthWise: monthWise.map((group) => ({
+        ...group,
+        totalDue: group.items.reduce((sum, item) => sum + item.due, 0),
+      })),
+      feeHeadWise: feeHeadWise.map((group) => ({
+        ...group,
+        months: group.items.length,
+        totalDue: group.items.reduce((sum, item) => sum + item.due, 0),
+      })),
+    };
   }, [ledgerData, filters]);
 
   const chargesData: IFeeCharge[] = useMemo(
@@ -625,10 +611,42 @@ const FeeCollectComponentForm = ({
         canWaive: c.canWaive,
         explanation: c.explanation,
         reconciliationAmount: c.reconciliationAmount,
-        status: c.status,
+        status: normalizeLedgerStatus(c.status, c.paidAmount, c.pendingAmount),
       })),
     [formData]
   );
+
+  // Filtering changes the visible ledger, while payment totals retain selected hidden items.
+  const filteredChargesData = useMemo(() => {
+    const sourcePeriods = new Map(
+      ledgerData.monthWise.flatMap((group) =>
+        group.items.map(
+          (item) =>
+            [
+              item.dueFeeId,
+              {
+                month: group.month,
+                year: group.year,
+                feeHeadId: item.feeHeadId,
+              },
+            ] as const
+        )
+      )
+    );
+    return chargesData.filter((charge) => {
+      if (filters.status !== 'All' && charge.status !== Number(filters.status)) return false;
+      if (filters.month === 'All' && filters.feeHead === 'All') return true;
+      const source =
+        charge.sourceType === 'LateFee' ? sourcePeriods.get(charge.sourceId) : undefined;
+      if (!source) return false;
+      if (filters.feeHead !== 'All' && source.feeHeadId !== filters.feeHead) return false;
+      if (filters.month !== 'All') {
+        const [month, year] = filters.month.split('-');
+        if (String(source.month) !== month || (year && String(source.year) !== year)) return false;
+      }
+      return true;
+    });
+  }, [chargesData, ledgerData, filters.status, filters.month, filters.feeHead]);
 
   const bankAccountOptions = useMemo(
     () =>
@@ -739,6 +757,12 @@ const FeeCollectComponentForm = ({
   }, [formik.values.selectedItems, formik.values.charges, chargesData]);
 
   const finalAmount = subtotal;
+  const overallOutstanding =
+    (formData?.summary?.pendingFee ?? 0) +
+    (formData?.charges ?? []).reduce(
+      (sum: number, charge: ChargeDetail) => sum + charge.pendingAmount,
+      0
+    );
 
   const resolveAllocatedDueFeeId = (row: AllocatedFeeRow): string => {
     if (row.dueFeeId) return row.dueFeeId;
@@ -1047,8 +1071,10 @@ const FeeCollectComponentForm = ({
   };
 
   const entryCount = useMemo(
-    () => (filteredLedgerData.monthWise ?? []).reduce((s, g) => s + g.items.length, 0),
-    [filteredLedgerData]
+    () =>
+      (filteredLedgerData.monthWise ?? []).reduce((s, g) => s + g.items.length, 0) +
+      filteredChargesData.length,
+    [filteredLedgerData, filteredChargesData]
   );
 
   const orderedFilteredPeriods = useMemo(() => {
@@ -1129,7 +1155,7 @@ const FeeCollectComponentForm = ({
   ]);
 
   const allSelectableChargeIds = useMemo(() => {
-    const selectableCharges = (chargesData ?? [])
+    const selectableCharges = filteredChargesData
       .filter((charge) => isChargeSelectable(charge))
       .map((charge) => charge.chargeId);
 
@@ -1138,7 +1164,7 @@ const FeeCollectComponentForm = ({
     }
 
     return selectionFilters.allCharges ? selectableCharges : [];
-  }, [chargesData, hasSelectionFilters, selectionFilters.allCharges]);
+  }, [filteredChargesData, hasSelectionFilters, selectionFilters.allCharges]);
 
   const totalSelectableCount = allSelectableItems.length + allSelectableChargeIds.length;
 
@@ -1457,7 +1483,10 @@ const FeeCollectComponentForm = ({
                   activeTab={filters.activeTab}
                   selectedItems={formik.values.selectedItems}
                   charges={formik.values.charges}
-                  chargesData={chargesData}
+                  chargesData={filteredChargesData}
+                  hasActiveFilters={
+                    filters.status !== 'All' || filters.month !== 'All' || filters.feeHead !== 'All'
+                  }
                   onSelectionChange={handleSelectionChange}
                   onChargesChange={handleChargesChange}
                   year={currentYear?.year ?? new Date().getFullYear()}
@@ -1586,7 +1615,9 @@ const FeeCollectComponentForm = ({
                                   id={`${item.feeHeadId}-${item.period}`}
                                   label={feeHeadMap[item.feeHeadId] ?? item.feeHeadId}
                                   sub={dayjs(`${item.period}-01`).format('MMM YYYY')}
-                                  amount={roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0)}
+                                  amount={
+                                    roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0)
+                                  }
                                   onRemove={() => {
                                     formik.setFieldValue(
                                       'selectedItems',
@@ -2102,7 +2133,7 @@ const FeeCollectComponentForm = ({
                             fontWeight={600}
                             sx={{ fontVariantNumeric: 'tabular-nums' }}
                           >
-                            ₹ {formatNumber(student?.pendingFees ?? 0)}
+                            ₹ {formatNumber(overallOutstanding)}
                           </Typography>
                         </Box>
                       </Box>

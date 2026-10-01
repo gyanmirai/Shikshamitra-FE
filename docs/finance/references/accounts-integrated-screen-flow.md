@@ -3,7 +3,7 @@ module: finance
 domain: accounts-integrated-screen-flow
 content_type: Conceptual
 status: active
-updated_on: 2026-09-30
+updated_on: 2026-10-01
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,7 +11,13 @@ audience: humans-and-agents
 # Present the integrated Fees and Accounts flow
 
 TL;DR: keep staff in the existing business screen, show the server-calculated financial impact, and link the automatic Accounts entry after confirmation.
-This is the active frontend target contract; new tabs, lifecycle actions and accounting clients described here are not shipped.
+This is the active frontend target contract. The Income & Expenses source register now
+shows accepted Fees activity and legacy manual entries under exact view permissions;
+the old Accounts Activity route redirects to it. Rows marked `Not posted` have no
+General Accounts journal. The manual Other income and School expenses tabs still
+use their legacy editable records. Live journals, period controls and bank-statement
+matching described below are not shipped, and the current reconciliation screen
+is limited to verifying provisional receipts.
 The [backend end-to-end contract](../../../../Shikshamitra-BE/docs/modules/finance/references/accounts-integrated-end-to-end-flow.md) owns accounting equations, API proposals, permission definitions, migration and complete school examples.
 Use [routes](../routes.md), [clients](../clients.md) and the current [Finance menu](../../../src/constants/finance-menu.ts) for actual navigation and client ownership.
 

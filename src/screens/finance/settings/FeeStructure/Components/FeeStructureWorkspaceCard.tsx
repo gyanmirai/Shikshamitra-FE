@@ -205,9 +205,10 @@ export default function FeeStructureWorkspaceCard({
     const defaults = families.flatMap(({ key }) => {
       if (!catalogs[key].ready || defaultsHandled.current.has(key) || !settings.permissions[key])
         return [];
-      defaultsHandled.current.add(key);
       const policy = defaultPolicy(settings, key);
-      return policy ? [policy] : [];
+      if (!policy) return [];
+      defaultsHandled.current.add(key);
+      return [policy];
     });
     if (defaults.length)
       setCandidate((old) =>

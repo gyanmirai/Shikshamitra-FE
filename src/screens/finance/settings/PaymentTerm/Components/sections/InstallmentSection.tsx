@@ -234,6 +234,8 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
                     title="Select Installment Start–End Date"
                     value={[parseDateOnly(inst.startDate), parseDateOnly(inst.endDate)]}
                     dateFormat="DD/MM/YYYY"
+                    allowManualInput
+                    referenceDate={parseDateOnly(board?.startDate) ?? undefined}
                     minDate={parseDateOnly(board?.startDate) ?? undefined}
                     maxDate={parseDateOnly(board?.endDate) ?? undefined}
                     onChange={([startDate, endDate]) => {
@@ -270,6 +272,11 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
                     <DatePicker
                       label={usesSpecificDate ? 'Invoice Date *' : 'Invoice Date'}
                       format="DD/MM/YYYY"
+                      referenceDate={
+                        parseDateOnly(inst.startDate) ??
+                        parseDateOnly(board?.startDate) ??
+                        undefined
+                      }
                       value={getBillGenerationDate(inst)}
                       onChange={(date) =>
                         formik.setFieldValue(`${prefix}.demandDate`, toDateOnly(date) || null)
@@ -296,6 +303,9 @@ export function InstallmentSection({ formik, onAdd, onRemove, board }: Installme
                   <DatePicker
                     label="Payment Due Date *"
                     format="DD/MM/YYYY"
+                    referenceDate={
+                      parseDateOnly(inst.startDate) ?? parseDateOnly(board?.startDate) ?? undefined
+                    }
                     value={parseDateOnly(inst.dueDate)}
                     minDate={parseDateOnly(board?.startDate) ?? undefined}
                     maxDate={parseDateOnly(board?.endDate) ?? undefined}

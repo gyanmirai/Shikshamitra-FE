@@ -1,12 +1,17 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Add } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import ExpenseCategoryForm from './component/ExpenseCategoryForm';
@@ -18,6 +23,9 @@ interface FinanceExpenseTrackingProps {
 }
 
 const FinanceExpenseTracking = ({ embedded = false }: FinanceExpenseTrackingProps) => {
+  const { permissions } = useSelector((state: RootState) => state.auth);
+  const canAdd = hasGrantedPermission(permissions, `${financePermissions.accounts.expense}.Add`);
+  const canDelete = hasGrantedPermission(permissions, `${financePermissions.accounts.expense}.Delete`);
   const {
     selectedExpense,
     setSelectedExpense,
@@ -43,7 +51,7 @@ const FinanceExpenseTracking = ({ embedded = false }: FinanceExpenseTrackingProp
             { name: 'Accounts', href: '/finance/expenseTracking' },
             { name: 'Expense Tracking' },
           ]}
-          action={
+          action={canAdd ?
             <Button
               onClick={() => addExpenseDialog.onTrue()}
               size="small"
@@ -52,12 +60,12 @@ const FinanceExpenseTracking = ({ embedded = false }: FinanceExpenseTrackingProp
               sx={{ px: '32px' }}
             >
               Expense
-            </Button>
+            </Button> : undefined
           }
         />
       )}
 
-      {embedded && !addExpenseDialog.value && (
+      {embedded && canAdd && !addExpenseDialog.value && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
           <Button
             onClick={() => addExpenseDialog.onTrue()}
@@ -74,10 +82,11 @@ const FinanceExpenseTracking = ({ embedded = false }: FinanceExpenseTrackingProp
       <ExpenseCategoryTable
         data={expenseDetailedData?.items || []}
         addExpenseCategory={addExpenseDialog}
+        canAdd={canAdd}
         setEditData={setSelectedExpense}
         isLoading={isFetchingDetails || isLoadingDetails}
-        onEdit={handleEdit}
-        onDelete={handleDeleteClick}
+        onEdit={canAdd ? handleEdit : undefined}
+        onDelete={canDelete ? handleDeleteClick : undefined}
         // onView={handleViewClick}
       />
 

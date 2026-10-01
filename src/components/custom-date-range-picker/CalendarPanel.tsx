@@ -15,6 +15,7 @@ import { CustomRangeDay } from './CustomRangeDay';
 type CalendarPanelProps = {
   calendars?: 1 | 2 | 3;
   startDate: Dayjs | null;
+  referenceDate?: Dayjs;
   endDate: Dayjs | null;
   hoverDate: Dayjs | null;
 
@@ -31,6 +32,7 @@ type CalendarPanelProps = {
 export function CalendarPanel({
   calendars = 1,
   startDate,
+  referenceDate,
   endDate,
   hoverDate,
   onCalendarSelect,
@@ -45,7 +47,7 @@ export function CalendarPanel({
   // Base month is the month shown in the first calendar
   // Default to the selected start or the nearest valid month in the allowed range.
   const [baseMonth, setBaseMonth] = useState<Dayjs>(() => {
-    let initialMonth = startDate || dayjs();
+    let initialMonth = startDate || referenceDate || dayjs();
 
     if (minDate && initialMonth.isBefore(minDate, 'month')) {
       initialMonth = minDate;

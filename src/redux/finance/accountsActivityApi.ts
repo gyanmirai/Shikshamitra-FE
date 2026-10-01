@@ -3,9 +3,10 @@ import { financeModuleApi } from './financeModuleApi';
 export type AccountsActivityRow = {
   id: string;
   sourceId: string;
-  studentId: string;
+  studentId: string | null;
   studentName: string;
-  source: 'Collection' | 'Refund';
+  categoryName: string;
+  source: 'Collection' | 'Refund' | 'Income' | 'Expense';
   reference: string;
   sourceStatus: string;
   accountingStatus: string;
@@ -27,7 +28,7 @@ export const accountsActivityApi = financeModuleApi.injectEndpoints({
       AccountsActivityPage,
       { academicYearId: string; source?: string; search?: string; page: number; pageSize: number }
     >({
-      query: (params) => ({ url: '/accounts/activity', method: 'GET', params }),
+      query: (params) => ({ url: '/accounts/register', method: 'GET', params }),
     }),
   }),
 });

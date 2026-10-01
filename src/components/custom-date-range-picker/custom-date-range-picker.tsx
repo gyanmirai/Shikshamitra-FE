@@ -46,6 +46,8 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
     error: errorProp,
     helperText,
     dateFormat,
+    allowManualInput,
+    referenceDate,
     name,
     required,
     //
@@ -64,6 +66,7 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
     inputs,
     onChangeStartDate,
     onChangeEndDate,
+    onInputChange,
     onCalendarSelect,
     onHoverDate,
     hoverDate,
@@ -125,6 +128,7 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
         <CalendarPanel
           calendars={calendars}
           startDate={startDate}
+          referenceDate={referenceDate}
           endDate={endDate}
           hoverDate={hoverDate}
           onCalendarSelect={onCalendarSelect}
@@ -153,7 +157,11 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
             <Button
               variant="contained"
               onClick={onAccept}
-              disabled={!startDate || !endDate} // Disable if not fully selected? Or allow single dates? Usually range requires both.
+              disabled={
+                !startDate ||
+                !endDate ||
+                Boolean(validation.validateDate(startDate) || validation.validateDate(endDate))
+              }
             >
               Apply
             </Button>
@@ -186,6 +194,9 @@ export function CustomDateRangePicker(props: DateRangePickerProps) {
         error={errorProp}
         helperText={helperText}
         dateFormat={dateFormat}
+        allowManualInput={allowManualInput}
+        onChange={onInputChange}
+        validateDate={validation.validateDate}
       />
 
       {/* Picker Modal/Popover */}

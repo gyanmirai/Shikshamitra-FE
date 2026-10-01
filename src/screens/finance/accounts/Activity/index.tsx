@@ -1,40 +1,46 @@
 'use client';
 
-import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AccountsActivityRow } from 'src/redux/finance/accountsActivityApi';
 
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Alert, Box, Button, Chip, Tab, Typography } from '@mui/material';
-import { CustomTabs } from 'src/components/custom-tabs';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import CustomizableTable from 'src/components/customizabaleTable';
-import { financePermissions, financePaths } from 'src/constants/finance-menu';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { fCurrency } from 'src/utils/format-number';
 import { fDateTime } from 'src/utils/format-time';
+import { fCurrency } from 'src/utils/format-number';
+import { CustomTabs } from 'src/components/custom-tabs';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import CustomizableTable from 'src/components/customizabaleTable';
+import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Tab, Chip, Alert, Button, Typography } from '@mui/material';
+import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import { useGetAccountsActivityQuery } from 'src/redux/finance/accountsActivityApi';
 
-type SourceFilter = 'all' | 'collection' | 'refund';
+type SourceFilter = 'all' | 'collection' | 'refund' | 'income' | 'expense';
 
-export default function AccountsActivity() {
+export default function AccountsActivity({ embedded = false }: { embedded?: boolean }) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
-  const canView = hasGrantedPermission(permissions, financePermissions.accounts.activity);
+  const canViewFees = hasGrantedPermission(permissions, financePermissions.accounts.activity);
+  const canViewIncome = hasGrantedPermission(permissions, `${financePermissions.accounts.income}.View`);
+  const canViewExpense = hasGrantedPermission(permissions, `${financePermissions.accounts.expense}.View`);
+  const canView = canViewFees || canViewIncome || canViewExpense;
   const [source, setSource] = useState<SourceFilter>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
+  const effectiveSource = (((source === 'collection' || source === 'refund') && !canViewFees) ||
+    (source === 'income' && !canViewIncome) || (source === 'expense' && !canViewExpense))
+    ? 'all' : source;
   const activity = useGetAccountsActivityQuery(
     {
       academicYearId: currentYear?.id || '',
-      source: source === 'all' ? undefined : source,
+      source: effectiveSource === 'all' ? undefined : effectiveSource,
       search: search || undefined,
       page,
       pageSize,
     },
-    { skip: !canView || !currentYear?.id }
+    { skip: !canView || !currentYear?.id, refetchOnMountOrArgChange: true }
   );
 
   const columns: IColumn[] = useMemo(
@@ -47,6 +53,7 @@ export default function AccountsActivity() {
         render: (value: string) => <Typography variant="body2">{value || 'Student'}</Typography>,
       },
       { id: 'source', label: 'Source', minWidth: 110 },
+      { id: 'categoryName', label: 'Category', minWidth: 140 },
       {
         id: 'amount',
         label: 'Amount',
@@ -84,17 +91,18 @@ export default function AccountsActivity() {
         render: (_value, row) => {
           const item = row as AccountsActivityRow;
           if (!item.canOpenSource) return null;
+          const destination = item.source === 'Refund' ? 'Refunds' :
+            item.source === 'Collection' ? 'Receipts' :
+            item.source === 'Income' ? 'Other income' : 'School expenses';
           return (
             <Button
               size="small"
-              href={
-                item.source === 'Refund'
-                  ? financePaths.feeRefund
-                  : financePaths.fees.invoicesAndReceipts
-              }
-              aria-label={`Open ${item.source.toLowerCase()} source ${item.reference}`}
+              href={item.source === 'Refund' ? financePaths.feeRefund :
+                item.source === 'Collection' ? financePaths.fees.invoicesAndReceipts :
+                item.source === 'Income' ? financePaths.incomeTracking : financePaths.expenseTracking}
+              aria-label={`Open ${destination} for ${item.reference}`}
             >
-              Open source
+              Open {destination}
             </Button>
           );
         },
@@ -105,40 +113,42 @@ export default function AccountsActivity() {
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-      <CustomBreadcrumbs
-        heading="Accounts activity"
-        description="Accepted fee collections and confirmed refunds, linked to their Fees records."
-        links={[{ name: 'Finance', href: financePaths.dashboard }, { name: 'Accounts' }, { name: 'Activity' }]}
-      />
+      {!embedded && <CustomBreadcrumbs
+        heading="Income & expenses"
+        description="Fee collections, confirmed refunds, and manual school entries in one register."
+        links={[{ name: 'Finance', href: financePaths.dashboard }, { name: 'Accounts' }, { name: 'Income & expenses' }]}
+      />}
       {!canView ? (
-        <Alert severity="error">You do not have permission to view Accounts activity.</Alert>
+        <Alert severity="error">You do not have permission to view Income & Expenses.</Alert>
       ) : !currentYear?.id ? (
         <Alert severity="info">Select an academic year to view activity.</Alert>
       ) : (
         <>
           <Alert severity="info">
-            These are completed Fees actions. “Not posted” means no General Accounts journal has
-            been created; this list does not affect account balances or reports.
+            This register shows completed Fees actions and legacy manual entries. “Not posted” means
+            no General Accounts journal has been created. These rows are not ledger balances.
           </Alert>
           <CustomTabs
-            value={source}
+            value={effectiveSource}
             onChange={(_event, value: SourceFilter) => {
               setSource(value);
               setPage(1);
             }}
           >
             <Tab value="all" label="All" />
-            <Tab value="collection" label="Collections" />
-            <Tab value="refund" label="Refunds" />
+            {canViewFees && <Tab value="collection" label="Collections" />}
+            {canViewFees && <Tab value="refund" label="Refunds" />}
+            {canViewIncome && <Tab value="income" label="Other income" />}
+            {canViewExpense && <Tab value="expense" label="Expenses" />}
           </CustomTabs>
           {activity.isError && (
             <Alert severity="error" action={<Button onClick={() => activity.refetch()}>Retry</Button>}>
-              Accounts activity could not be loaded.
+              Income & Expenses could not be loaded.
             </Alert>
           )}
           <Box sx={{ flex: 1, minHeight: 0 }}>
             <CustomizableTable
-              tableId="accounts-activity-table"
+              tableId="accounts-income-expense-register"
               exportLabel="Export current page"
               columns={columns}
               data={activity.data?.items || []}
@@ -157,7 +167,7 @@ export default function AccountsActivity() {
                 setSearch(value);
                 setPage(1);
               }}
-              noDataText="No accepted collections or confirmed refunds found."
+              noDataText="No completed collections, refunds, or manual entries found."
             />
           </Box>
         </>

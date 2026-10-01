@@ -1,11 +1,11 @@
 import type { RootState } from 'src/redux/store';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { Box, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import CustomDialog from 'src/components/customDialog';
@@ -16,12 +16,9 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { financePermissions } from 'src/constants/finance-menu';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { Box, Switch, Typography } from '@mui/material';
+import { useGetReconciliationListQuery } from 'src/redux/finance/reconciliation';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useDownloadReceiptPdfMutation } from 'src/redux/feeCollection/feeCollection';
-import {
-  useMatchTransactionMutation,
-  useGetReconciliationListQuery,
-} from 'src/redux/finance/reconciliation';
 import {
   PamentMethodsStatusColor,
   PaymentMethodsStatusType,
@@ -69,11 +66,6 @@ const BankTransferTable = ({
       errorMessage: 'Unable to load receipt',
       success: false,
     },
-  });
-
-  const [matchTransaction] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useMatchTransactionMutation,
   });
 
   const bankTransferData = useMemo(
@@ -225,33 +217,6 @@ const BankTransferTable = ({
         },
       },
       {
-        id: 'matched',
-        label: 'Matched',
-        width: 100,
-        minWidth: 80,
-        maxWidth: 120,
-        align: 'center',
-        render(value, row: any) {
-          return (
-            <Switch
-              size="small"
-              checked={row.matched}
-              onChange={async (e) => {
-                try {
-                  await matchTransaction({
-                    id: row.id,
-                    body: { matched: e.target.checked },
-                  });
-                  shikshaMitraToast.success({ message: 'Transaction match status updated.' });
-                } catch {
-                  // error handled by hook
-                }
-              }}
-            />
-          );
-        },
-      },
-      {
         id: 'action',
         label: 'Actions',
         isSort: false,
@@ -335,7 +300,7 @@ const BankTransferTable = ({
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [canApproveReject, downloadReceiptPdf, matchTransaction]
+    [canApproveReject, downloadReceiptPdf]
   );
 
   // Cleanup blob URLs on unmount

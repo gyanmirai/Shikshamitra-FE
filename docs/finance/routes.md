@@ -38,7 +38,8 @@ Use this table for visible Finance navigation.
 | Concession Type      | `/finance/settings/concession-type`         | `src/constants/finance-menu.ts` |
 | Charge Category      | `/finance/settings/chargeCategory`          | `src/constants/finance-menu.ts` |
 | Reconciliation       | `/finance/reconciliation`                   | `src/constants/finance-menu.ts` |
-| Accounts Activity     | `/finance/accounts/activity`                | `src/constants/finance-menu.ts` |
+| Income & Expenses     | `/finance/income-and-expense`               | `src/constants/finance-menu.ts` |
+| Old Accounts Activity | `/finance/accounts/activity`                | Redirects to Income & Expenses |
 | Income Tracking      | `/finance/income-tracking`                  | `src/constants/finance-menu.ts` |
 | Expense Tracking     | `/finance/expenseTracking`                  | `src/constants/finance-menu.ts` |
 | Income Category      | `/finance/settings/incomeCategories`        | `src/constants/finance-menu.ts` |
