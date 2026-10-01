@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Box, Typography } from '@mui/material';
+import CustomAccordion from 'src/components/custom-accordian';
 
 import type { LessonPlanRow } from '../lessonPlanData';
 
@@ -40,6 +42,8 @@ const ContextItem = ({
 );
 
 export function TeacherDiaryPlanContext({ plan }: Props) {
+  const [expanded, setExpanded] = useState(false);
+
   return (
     <Box
       component="section"
@@ -47,30 +51,34 @@ export function TeacherDiaryPlanContext({ plan }: Props) {
       sx={{
         mx: 3,
         mt: 2,
-        p: 2,
         border: '1px solid',
         borderColor: 'divider',
         borderRadius: 1.5,
         bgcolor: 'background.paper',
       }}
     >
-      <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>
-        Lesson information
-      </Typography>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
-          columnGap: 3,
-          rowGap: 1.5,
-        }}
-      >
-        <ContextItem label="Class" value={`${plan.className}-${plan.divisionName}`} />
-        <ContextItem label="Subject" value={plan.subjectName} />
-        <ContextItem label="Planned coverage" value={`${plan.plannedCompletionPercentage}%`} />
-        <ContextItem label="Chapter" value={plan.chapterName} />
-        <ContextItem label="Planned topic" value={plan.topic} wide />
-      </Box>
+      <CustomAccordion
+        title={`Lesson information — ${plan.className}-${plan.divisionName} | ${plan.subjectName}`}
+        expanded={expanded}
+        onChange={() => setExpanded((current) => !current)}
+        content={
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, minmax(0, 1fr))' },
+              columnGap: 3,
+              rowGap: 1.5,
+              p: 1,
+            }}
+          >
+            <ContextItem label="Class" value={`${plan.className}-${plan.divisionName}`} />
+            <ContextItem label="Subject" value={plan.subjectName} />
+            <ContextItem label="Planned coverage" value={`${plan.plannedCompletionPercentage}%`} />
+            <ContextItem label="Chapter" value={plan.chapterName} />
+            <ContextItem label="Planned topic" value={plan.topic} wide />
+          </Box>
+        }
+      />
     </Box>
   );
 }

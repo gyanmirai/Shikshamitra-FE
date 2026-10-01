@@ -62,6 +62,7 @@ import TeachingKpiCards from './components/TeachingKpiCards';
 import SubmitDiaryModal from './components/SubmitDiaryModal';
 import AddLessonPlanModal from './components/AddLessonPlanModal';
 import { reconcileTimelineSlots } from './reconcileTimelineSlots';
+import { toPlanStatus, toDiaryStatus } from './lessonPlanStatuses';
 import { canRoleReviewLessonPlans } from './lessonPlanReviewAccess';
 import { getLessonPlanTableActions } from './lessonPlanTableActions';
 import { useReviewQueueQuery } from './hooks/use-review-queue-query';
@@ -149,15 +150,6 @@ const QUICK_FILTER_LABELS: Record<string, string> = {
   my_reviews: 'My Reviews',
 };
 
-const PLAN_STATUS_BY_VALUE: PlanStatus[] = [
-  'Draft',
-  'Submitted',
-  'Approved',
-  'Rejected',
-  'NeedsChanges',
-];
-const DIARY_STATUS_BY_VALUE: DiaryStatus[] = ['Draft', 'Submitted'];
-
 const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const isGuidLike = (value: unknown) => typeof value === 'string' && GUID_PATTERN.test(value);
 
@@ -224,18 +216,6 @@ const readRoleNames = (employee: any, user: any): string[] => {
     .flatMap((value) => (Array.isArray(value) ? value : [value]))
     .filter((value): value is string => typeof value === 'string' && Boolean(value.trim()))
     .map((value) => value.trim().toLowerCase());
-};
-
-const toPlanStatus = (value: unknown): PlanStatus =>
-  typeof value === 'number'
-    ? (PLAN_STATUS_BY_VALUE[value] ?? 'Draft')
-    : (value as PlanStatus) || 'Draft';
-
-const toDiaryStatus = (value: unknown, hasDiary = true): DiaryStatus => {
-  if (!hasDiary) return 'NotSubmitted';
-  return typeof value === 'number'
-    ? (DIARY_STATUS_BY_VALUE[value] ?? 'Draft')
-    : (value as DiaryStatus) || 'Draft';
 };
 
 const allClassOptions = [{ value: 'all', label: 'All Classes' }, ...classOptions];
@@ -475,6 +455,7 @@ const LessonPlanScreen = () => {
     isLoading: isTimelineLoading,
     isFetching: isTimelineFetching,
     isUninitialized: isTimelineUninitialized,
+    isError: isTimelineError,
     refetch: refetchTimeline,
   } = useGetLessonPlanTimelineQuery(
     {
@@ -1921,6 +1902,8 @@ const LessonPlanScreen = () => {
               }}
               slots={isReconciledTimelineBusy ? [] : reconciledTimelineSlots}
               isLoading={isReconciledTimelineBusy}
+              hasError={isTimelineError}
+              onRetry={() => refetchTimeline()}
               onAddLesson={(date, prefill) => {
                 setEditPlan(null);
                 setPrefillDate(date ?? null);

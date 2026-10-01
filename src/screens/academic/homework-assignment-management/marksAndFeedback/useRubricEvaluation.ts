@@ -3,6 +3,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useAddRubricMutation,
+  RubricEvaluationStatus,
   usePublishRubricMutation,
   useUpsertRubricEvaluationMutation,
   useSubmitRubricEvaluationMutation,
@@ -42,6 +43,7 @@ export const useRubricEvaluation = (props: RubricEvaluationPanelProps) => {
     submissionId,
   });
   const { activeRubric, currentEvaluation } = evaluationQueries;
+  const isLocked = currentEvaluation?.status === RubricEvaluationStatus.Approved;
   const [criterionValues, setCriterionValues] = React.useState<CriterionEvaluationValues>({});
   const [remarks, setRemarks] = React.useState('');
   const [addRubric, { isLoading: isCreating }] = useAddRubricMutation();
@@ -94,6 +96,8 @@ export const useRubricEvaluation = (props: RubricEvaluationPanelProps) => {
       shikshaMitraToast.error({ message: 'Wait for this student’s rubric evaluation to load.' });
       return false;
     }
+    if (isLocked) return true;
+    if (props.readOnly) return false;
     const invalidCriterion = validateCriterionValues(activeRubric, criterionValues);
     if (invalidCriterion) {
       shikshaMitraToast.error({
@@ -135,6 +139,7 @@ export const useRubricEvaluation = (props: RubricEvaluationPanelProps) => {
 
   return {
     activeRubric,
+    isLocked,
     criterionValues,
     remarks,
     setRemarks,

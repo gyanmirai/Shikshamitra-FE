@@ -5,7 +5,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Stack, Paper, Button, Typography } from '@mui/material';
+import { Box, Card, Alert, Stack, Paper, Button, Typography } from '@mui/material';
 
 import { TimelineTrack } from './timeline/TimelineTrack';
 import { TimelineSkeleton } from './timeline/TimelineSkeleton';
@@ -19,6 +19,8 @@ type Props = {
   onChangeDate: (date: Dayjs) => void;
   slots: any[];
   isLoading: boolean;
+  hasError?: boolean;
+  onRetry?: () => void;
   onAddLesson: (date: Dayjs, prefill?: any) => void;
   onEditLesson: (plan: any) => void;
   onViewDetails: (plan: any) => void;
@@ -40,6 +42,8 @@ const DailyTimelineTab = ({
   onChangeDate,
   slots = [],
   isLoading,
+  hasError = false,
+  onRetry,
   onAddLesson,
   onEditLesson,
   onViewDetails,
@@ -73,6 +77,19 @@ const DailyTimelineTab = ({
     {/* ── 3. Main Timeline Area (Cards with Direct Actions, No Attention Banner) ── */}
     {isLoading ? (
       <TimelineSkeleton />
+    ) : hasError ? (
+      <Alert
+        severity="error"
+        action={
+          onRetry && (
+            <Button color="inherit" onClick={onRetry}>
+              Retry
+            </Button>
+          )
+        }
+      >
+        Failed to load lesson details. Please try again.
+      </Alert>
     ) : slots.length === 0 ? (
       /* Empty State */
       <Paper
