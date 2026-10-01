@@ -24,6 +24,7 @@ import { getAdmissionApplicationStatusLabel } from './application-status';
 import { withAdmissionCounsellorFilter } from './admission-application-filters';
 import AdmissionDirectRegistrationDialog from './admission-direct-registration-dialog';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
+import { AdmissionAcademicFilters, useAdmissionAcademicFilters } from './admission-academic-filters';
 
 type AdmissionApplicationsView = 'applications' | 'pipeline';
 
@@ -32,6 +33,7 @@ export default function AdmissionApplicationsScreen({
 }: {
   view?: AdmissionApplicationsView;
 }) {
+  const academic = useAdmissionAcademicFilters();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [stageSearch, setStageSearch] = useState('');
@@ -43,14 +45,18 @@ export default function AdmissionApplicationsScreen({
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canStart = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
   const counsellors = useGetAdmissionApplicationCounsellorsQuery({});
-  const { data, isLoading, isError, refetch } = useGetAdmissionApplicationsQuery({
+  const { currentData: data, isLoading, isError, refetch } = useGetAdmissionApplicationsQuery({
+    academicYearId: academic.academicYearId,
+    boardId: academic.boardId || undefined,
+    mediumId: academic.mediumId || undefined,
+    standardId: academic.standardId || undefined,
     maxResultCount: 100,
     skipCount: 0,
     search: search || undefined,
     status: status === '' ? undefined : (Number(status) as AdmissionApplication['status']),
     currentStageSearch: stageSearch || undefined,
     assignedCounsellorId: counsellorId || undefined,
-  });
+  }, { skip: !academic.academicYearId });
   const columns: IColumn[] = [
     {
       id: 'applicationNumber',
@@ -120,7 +126,13 @@ export default function AdmissionApplicationsScreen({
             </Button>
           ) : undefined
         }
-        sx={{ mb: 3 }}
+      />
+      <AdmissionAcademicFilters
+        boardId={academic.boardId}
+        mediumId={academic.mediumId}
+        standardId={academic.standardId}
+        onClear={academic.clear}
+        onChange={academic.update}
       />
       <AdmissionDirectRegistrationDialog
         open={directRegistrationOpen}

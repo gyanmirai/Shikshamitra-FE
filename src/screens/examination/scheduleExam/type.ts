@@ -112,6 +112,9 @@ export interface IScheduledExamTableProps {
   rowsPerPage?: number;
   totalCount?: number;
   onServerPagination?: (page: number, rowsPerPage: number) => void;
+  insightsOpen?: boolean;
+  onOpenInsights?: () => void;
+  onCloseInsights?: () => void;
 }
 
 export interface INewExamFormProps {

@@ -26,20 +26,28 @@ import { AssessmentSessionTable } from './assessments/assessment-session-table';
 import { AssessmentSessionDialog } from './assessments/assessment-session-dialog';
 import { useAssessmentPermissions } from './assessments/use-assessment-permissions';
 import { CancelAssessmentSessionDialog } from './assessments/cancel-assessment-session-dialog';
+import { AdmissionAcademicFilters, useAdmissionAcademicFilters } from './admission-academic-filters';
 
 export default function AdmissionAssessmentsScreen() {
+  const academic = useAdmissionAcademicFilters();
   const permissions = useAssessmentPermissions();
   const scopes = useGetAssessmentScopesQuery();
   const { scopeKey, setScope } = useAssessmentScope();
   const [editing, setEditing] = useState<AssessmentSession | null | undefined>(undefined);
   const [cancelling, setCancelling] = useState<AssessmentSession | null>(null);
-  const scope = scopes.data?.find((item) => assessmentScopeKey(item) === scopeKey);
+  const visibleScopes = (scopes.data ?? []).filter((item) =>
+    !!academic.academicYearId && item.academicYearId === academic.academicYearId &&
+    (!academic.boardId || item.boardId === academic.boardId) &&
+    (!academic.mediumId || item.mediumId === academic.mediumId) &&
+    (!academic.standardId || item.standardId === academic.standardId)
+  );
+  const visibleScope = visibleScopes.find((item) => assessmentScopeKey(item) === scopeKey);
   const sessions = useGetAssessmentSessionsQuery(
     {
-      admissionOfferingId: scope?.admissionOfferingId ?? '',
-      workflowStageDefinitionId: scope?.workflowStageDefinitionId ?? '',
+      admissionOfferingId: visibleScope?.admissionOfferingId ?? '',
+      workflowStageDefinitionId: visibleScope?.workflowStageDefinitionId ?? '',
     },
-    { skip: !scope?.schedulingEnabled }
+    { skip: !visibleScope?.schedulingEnabled }
   );
   const [create] = useCreateAssessmentSessionMutation();
   const [update] = useUpdateAssessmentSessionMutation();
@@ -65,7 +73,7 @@ export default function AdmissionAssessmentsScreen() {
             <Button
               variant="contained"
               startIcon={<Iconify icon="mdi:plus" />}
-              disabled={!scope?.schedulingEnabled || scopes.isFetching || scopes.isError}
+              disabled={!visibleScope?.schedulingEnabled || scopes.isFetching || scopes.isError}
               onClick={() => setEditing(null)}
             >
               Create session
@@ -73,53 +81,61 @@ export default function AdmissionAssessmentsScreen() {
           )
         }
       />
+      <AdmissionAcademicFilters
+        boardId={academic.boardId}
+        mediumId={academic.mediumId}
+        standardId={academic.standardId}
+        onClear={academic.clear}
+        onChange={academic.update}
+      />
       {scopes.isError ? (
         <AdmissionQueryError onRetry={scopes.refetch} />
       ) : (
         <CustomSelect
           label="Offering and assessment stage"
-          value={scopeKey}
+          value={visibleScope ? scopeKey : ''}
           isLoading={scopes.isLoading}
           onChange={(value) => setScope(String(value))}
-          options={(scopes.data ?? []).map((item) => ({
+          options={visibleScopes.map((item) => ({
             value: assessmentScopeKey(item),
             label: `${item.offeringName} · ${item.stageName} · Workflow v${item.workflowVersion}`,
           }))}
           noOptionsMessage="No assessment stages enabled for your offerings."
         />
       )}
-      {!scopes.isLoading && !scopes.isError && !scopes.data?.length && (
+      {!scopes.isLoading && !scopes.isError && !visibleScopes.length && (
         <Alert severity="info">
-          Enable assessment management in a workflow stage and assign its published workflow to an
-          offering to start.
+          {academic.boardId || academic.mediumId || academic.standardId
+            ? 'No assessment stages match these academic filters.'
+            : 'Enable assessment management in a workflow stage and assign its published workflow to an offering to start.'}
         </Alert>
       )}
-      {scope && !scope.schedulingEnabled && (
+      {visibleScope && !visibleScope.schedulingEnabled && (
         <Alert severity="info">
           This stage records results without scheduled sessions. Start the assessment from an
           applicant&apos;s application.
         </Alert>
       )}
-      {sessions.isError && scope?.schedulingEnabled && (
+      {sessions.isError && visibleScope?.schedulingEnabled && (
         <AdmissionQueryError onRetry={sessions.refetch} />
       )}
-      {scope?.schedulingEnabled && (
+      {visibleScope?.schedulingEnabled && (
         <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           <AssessmentSessionTable
             sessions={sessions.currentData ?? []}
             loading={sessions.isFetching}
-            canManage={permissions.manageSessions && scope.schedulingEnabled}
+            canManage={permissions.manageSessions && visibleScope.schedulingEnabled}
             onEdit={setEditing}
             onCancel={setCancelling}
           />
         </Box>
       )}
-      {!scope && !!scopes.data?.length && (
+      {!visibleScope && !!visibleScopes.length && (
         <Alert severity="info">Choose an offering and assessment stage to view its sessions.</Alert>
       )}
-      {editing !== undefined && scope && (
+      {editing !== undefined && visibleScope && (
         <AssessmentSessionDialog
-          scope={scope}
+          scope={visibleScope}
           session={editing}
           onSave={save}
           onClose={() => setEditing(undefined)}

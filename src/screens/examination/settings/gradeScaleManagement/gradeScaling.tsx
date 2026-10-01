@@ -1,5 +1,6 @@
 'use client';
 
+import type { AcademicInsightMetric } from 'src/screens/academic/components/academic-insights';
 import type { Medium } from 'src/types/school';
 import type { RootState } from 'src/redux/store';
 
@@ -20,9 +21,9 @@ import CustomizableTable from 'src/components/customizabaleTable';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { academicPaths, academicPermissions } from 'src/constants/academic-menu';
-import { TimetableSettingsSummaryCards } from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
 import {
   gradeScalingApi,
   useGetGradeScalingsQuery,
@@ -58,6 +59,7 @@ const GradingScale = () => {
   const deleteConfirmDialog = useBoolean();
   const archiveDialog = useBoolean();
   const restoreDialog = useBoolean();
+  const insightsDrawer = useBoolean();
 
   const addGradeScalingDialog = useBoolean(false);
 
@@ -120,41 +122,41 @@ const GradingScale = () => {
     (s: any) =>
       s.status === 0 || s.status === 'Active' || s.status === 2 || s.status === 'SystemDefault'
   ).length;
-  const usedScales = scalesList.filter((s: any) => s.usageCount > 0).length;
-  const unusedScales = scalesList.filter((s: any) => !s.usageCount || s.usageCount === 0).length;
+  const usedScales = scalesList.filter((s: any) => Number(s.usageCount ?? 0) > 0).length;
+  const unusedScales = totalScales - usedScales;
   const defaultScale = scalesList.find((s: any) => s.isDefault)?.name || 'None';
 
-  const summaryCards = useMemo(
+  const insightMetrics = useMemo<AcademicInsightMetric[]>(
     () => [
       {
-        label: 'Total Scales',
+        id: 'total-scales',
+        label: 'Total scales',
         value: totalScales,
         icon: 'mdi:scale-balance',
-        color: 'primary' as const,
       },
       {
-        label: 'Active Scales',
+        id: 'active-scales',
+        label: 'Active scales',
         value: activeScales,
         icon: 'mdi:check-circle-outline',
-        color: 'success' as const,
       },
       {
-        label: 'Used Scales',
+        id: 'used-scales',
+        label: 'Used scales',
         value: usedScales,
         icon: 'mdi:database-check',
-        color: 'info' as const,
       },
       {
-        label: 'Unused Scales',
+        id: 'unused-scales',
+        label: 'Unused scales',
         value: unusedScales,
         icon: 'mdi:alert-circle-outline',
-        color: 'warning' as const,
       },
       {
-        label: 'Default Scale',
+        id: 'default-scale',
+        label: 'Default scale',
         value: defaultScale,
         icon: 'mdi:star-outline',
-        color: 'info' as const,
       },
     ],
     [totalScales, activeScales, usedScales, unusedScales, defaultScale]
@@ -197,24 +199,31 @@ const GradingScale = () => {
           { name: 'Grade Scaling' },
         ]}
         action={
-          canAdd ? (
+          <Box display="flex" gap={1} flexWrap="wrap" justifyContent="flex-end">
             <Button
-              sx={{ width: '160px' }}
-              startIcon={<Iconify icon="mdi:plus" />}
-              variant="contained"
-              onClick={addGradeScalingDialog.onTrue}
               size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+              onClick={insightsDrawer.onTrue}
+              disabled={!(currentMedium as Medium)?.id}
             >
-              Grade Scale
+              View all insights
             </Button>
-          ) : null
+            {canAdd && (
+              <Button
+                sx={{ width: '160px' }}
+                startIcon={<Iconify icon="mdi:plus" />}
+                variant="contained"
+                onClick={addGradeScalingDialog.onTrue}
+                size="small"
+              >
+                Grade Scale
+              </Button>
+            )}
+          </Box>
         }
       />
-
-      {/* ------------------------------------------------------------------- */}
-      {/* Summary cards                                                        */}
-      {/* ------------------------------------------------------------------- */}
-      <TimetableSettingsSummaryCards cards={summaryCards} />
 
       {/* ------------------------------------------------------------------- */}
       {/* Table                                                                */}
@@ -340,15 +349,10 @@ const GradingScale = () => {
               return (
                 <GradeScaleRowActions
                   scale={row as IGrade}
-                  canView={canView}
                   canAdd={canAdd}
                   canDelete={canDelete}
                   isArchiveLoading={isArchiveLoading}
                   isRestoreLoading={isRestoreLoading}
-                  onView={() => {
-                    viewDialog.onTrue();
-                    setSelectedGrade(row as IGrade);
-                  }}
                   onEdit={() => {
                     setSelectedGrade(row as IGrade);
                     addGradeScalingDialog.onTrue();
@@ -371,6 +375,56 @@ const GradingScale = () => {
           },
         ]}
         data={scalesList}
+        handleRowClick={
+          canView
+            ? (row) => {
+                setSelectedGrade(row as IGrade);
+                viewDialog.onTrue();
+              }
+            : undefined
+        }
+        rowProps={(row) => ({
+          tabIndex: canView ? 0 : -1,
+          'aria-label': canView ? `View grade scale ${row.name}` : undefined,
+          onKeyDown: (event) => {
+            if (
+              canView &&
+              event.target === event.currentTarget &&
+              (event.key === 'Enter' || event.key === ' ')
+            ) {
+              event.preventDefault();
+              setSelectedGrade(row as IGrade);
+              viewDialog.onTrue();
+            }
+          },
+          sx: {
+            cursor: canView ? 'pointer' : 'default',
+            '&:focus-visible': canView
+              ? { outline: '2px solid', outlineColor: 'primary.main', outlineOffset: -2 }
+              : undefined,
+          },
+        })}
+      />
+
+      <AcademicInsights
+        title="Grade scaling insights"
+        description="Grade scale status and usage for the selected academic medium."
+        metrics={insightMetrics}
+        chart={
+          totalScales > 0
+            ? {
+                title: 'Grade scale usage',
+                description: 'Number of grade scales used in exams and not yet used.',
+                categories: ['Used', 'Unused'],
+                values: [usedScales, unusedScales],
+                seriesName: 'Grade scales',
+              }
+            : undefined
+        }
+        isLoading={isLoading || isFetching}
+        open={insightsDrawer.value}
+        onClose={insightsDrawer.onFalse}
+        hideTrigger
       />
 
       {/* ------------------------------------------------------------------- */}
@@ -425,6 +479,7 @@ const GradingScale = () => {
       {/* ------------------------------------------------------------------- */}
       <ConfirmDialog
         open={deleteConfirmDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedGrade(null);
           deleteConfirmDialog.onFalse();
@@ -481,6 +536,7 @@ const GradingScale = () => {
 
       <ConfirmDialog
         open={archiveDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedGrade(null);
           archiveDialog.onFalse();
@@ -524,6 +580,7 @@ const GradingScale = () => {
       {/* ----------------------------------------------------------------- */}
       <ConfirmDialog
         open={restoreDialog.value}
+        disableBackdropClick
         onClose={() => {
           setSelectedGrade(null);
           restoreDialog.onFalse();

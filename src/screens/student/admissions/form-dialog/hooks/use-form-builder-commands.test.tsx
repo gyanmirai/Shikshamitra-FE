@@ -6,6 +6,7 @@ import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { render, screen } from '@testing-library/react';
 
+import { getAdmissionFormStepGroups } from '../form-step-groups';
 import { useFormBuilderCommands } from './use-form-builder-commands';
 import { getSystemAdmissionFormTemplate } from '../admission-form-template-catalog';
 
@@ -21,13 +22,20 @@ function Commands({
   selectedSectionId: string | null;
 }) {
   const commands = useFormBuilderCommands(formik, selectedSectionId, () => undefined);
+  const steps = getAdmissionFormStepGroups(formik.values.sections);
   return (
     <>
       <button type="button" onClick={commands.addSection}>
         Add section
       </button>
+      <button type="button" onClick={() => commands.addCanvasUnit(steps[0]?.id)}>
+        Add next step
+      </button>
       <output data-testid="sections">
         {JSON.stringify(formik.values.sections.map(({ code, stepId }) => ({ code, stepId })))}
+      </output>
+      <output data-testid="steps">
+        {JSON.stringify(steps.map(({ id, name, code }) => ({ id, name, code })))}
       </output>
     </>
   );
@@ -74,5 +82,25 @@ describe('useFormBuilderCommands', () => {
     expect(sections).toHaveLength(1);
     expect(sections[0].code).toBe('SECTION_1');
     expect(sections[0].stepId).toBeTruthy();
+  });
+
+  it('inserts a new step immediately after the chosen step', async () => {
+    const user = userEvent.setup();
+    renderCommands();
+    const before = JSON.parse(screen.getByTestId('steps').textContent || '[]') as {
+      id: string;
+      name: string;
+      code: string;
+    }[];
+
+    await user.click(screen.getByRole('button', { name: 'Add next step' }));
+
+    const after = JSON.parse(screen.getByTestId('steps').textContent || '[]') as typeof before;
+    expect(after).toHaveLength(before.length + 1);
+    expect(after[0]).toEqual(before[0]);
+    expect(after[1].id).not.toBe(before[0].id);
+    expect(after[1].name).toBe('Step 2');
+    expect(after[1].code).toMatch(/^STEP_/);
+    expect(after.slice(2).map(({ id }) => id)).toEqual(before.slice(1).map(({ id }) => id));
   });
 });

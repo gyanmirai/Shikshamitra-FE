@@ -24,9 +24,12 @@ import {
   useAssignStudentOnboardingOwnerMutation,
   useGetStudentOnboardingServiceHandoffsQuery,
   useRetryStudentOnboardingServiceHandoffMutation,
+  useConfirmStudentOnboardingServiceConsentMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
-import type { StudentOnboardingItem } from './student-onboarding-model';
+import { useOnboardingSettings } from '../onboarding-settings-context';
+import { isAcademicApplicabilityMatch } from '../onboarding-settings-model';
+import { type StudentOnboardingItem, getStudentAcademicPathContext } from './student-onboarding-model';
 
 type UserOption = {
   id: string;
@@ -47,6 +50,13 @@ const handoffStatusMeta: Record<
   4: { label: 'Cancelled', color: 'default' },
 };
 
+const handoffLabels: Record<string, string> = {
+  'finance-first-payment': 'Fee assignment and first payment',
+  'student-account': 'Student portal account',
+  'guardian-account': 'Guardian portal account',
+  'service-consent': 'Service consent',
+};
+
 type StudentOnboardingCaseOperationsProps = {
   student: StudentOnboardingItem;
   canManage: boolean;
@@ -61,6 +71,7 @@ export default function StudentOnboardingCaseOperations({
   onCancelled,
 }: StudentOnboardingCaseOperationsProps) {
   const isClosed = Boolean(student.studentEnrollmentId) || student.backendStatus === 4 || student.backendStatus === 5;
+  const { settings } = useOnboardingSettings();
   const [setRoute, routeState] = useSetStudentOnboardingRouteMutation();
   const [route, setRouteDraft] = useState(student.admissionRoute);
   const usersQuery = useGetUsersQuery(undefined, { skip: !canManage || isClosed });
@@ -70,21 +81,38 @@ export default function StudentOnboardingCaseOperations({
   const [assignOwner, assignOwnerState] = useAssignStudentOnboardingOwnerMutation();
   const [cancelOnboarding, cancelState] = useCancelStudentOnboardingMutation();
   const [retryHandoff, retryState] = useRetryStudentOnboardingServiceHandoffMutation();
+  const [confirmConsent, consentState] = useConfirmStudentOnboardingServiceConsentMutation();
   const [ownerId, setOwnerId] = useState(student.assignedToUserId ?? '');
   const [cancelOpen, setCancelOpen] = useState(false);
   const [cancellationReason, setCancellationReason] = useState('');
+  const [consentOpen, setConsentOpen] = useState(false);
+  const [consentReference, setConsentReference] = useState('');
+  const consentEditable = canManage && Boolean(student.studentEnrollmentId) &&
+    student.backendStatus !== 4 && student.backendStatus !== 5;
   const userResponse = usersQuery.data as
     { items?: UserOption[]; data?: { items?: UserOption[] } } | undefined;
   const users = useMemo(
     () => userResponse?.items ?? userResponse?.data?.items ?? [],
     [userResponse]
   );
+  const routeOptions = useMemo(() => Array.from(new Set([
+    'Fresh admission', 'Transfer student', 'Mid-year admission', 'Returning student',
+    ...settings.onboardingProfiles
+      .filter((profile) => isAcademicApplicabilityMatch(
+        profile.applicability, getStudentAcademicPathContext(student)
+      ))
+      .flatMap((profile) => profile.admissionRoutes),
+    student.admissionRoute,
+  ])).filter(Boolean).map((name) => ({ label: name, value: name })),
+  [settings.onboardingProfiles, student]);
 
   useEffect(() => {
     setRouteDraft(student.admissionRoute);
     setOwnerId(student.assignedToUserId ?? '');
     setCancelOpen(false);
     setCancellationReason('');
+    setConsentOpen(false);
+    setConsentReference('');
   }, [student.assignedToUserId, student.admissionRoute, student.id]);
 
   const saveOwner = async () => {
@@ -123,11 +151,25 @@ export default function StudentOnboardingCaseOperations({
     }
   };
 
+  const saveConsent = async () => {
+    const evidenceReference = consentReference.trim();
+    if (evidenceReference.length < 3 || evidenceReference.length > 200 || !student.concurrencyStamp) return;
+    try {
+      await confirmConsent({ id: student.id, concurrencyStamp: student.concurrencyStamp,
+        evidenceReference }).unwrap();
+      shikshaMitraToast.success({ message: 'Service consent recorded. Onboarding readiness was rechecked.' });
+      setConsentOpen(false);
+      setConsentReference('');
+    } catch {
+      shikshaMitraToast.error({ message: 'Service consent could not be recorded. Reload the case and retry.' });
+    }
+  };
+
   return (
     <Stack spacing={1.5}>
       <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
         <CustomSelect label="Admission route" size="small" value={route}
-          options={['Fresh admission', 'Transfer student', 'Mid-year admission', 'Returning student'].map(name => ({ label: name, value: name }))}
+          options={routeOptions}
           disabled={!canManage || isClosed || routeState.isLoading}
           onChange={value => setRouteDraft(String(value))} />
         <Button size="small" variant="outlined" startIcon={<Iconify icon="mdi:content-save-outline" />}
@@ -214,7 +256,7 @@ export default function StudentOnboardingCaseOperations({
               >
                 <Stack spacing={0.25} sx={{ minWidth: 0 }}>
                   <Typography variant="body2" fontWeight={600}>
-                    {handoff.serviceKey}
+                    {handoffLabels[handoff.serviceKey] ?? handoff.serviceKey.replaceAll('-', ' ')}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     {handoff.lastError ||
@@ -223,6 +265,12 @@ export default function StudentOnboardingCaseOperations({
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Label color={meta.color}>{meta.label}</Label>
+                  {handoff.serviceKey === 'service-consent' && handoff.status !== 2 && handoff.status !== 4 && consentEditable ? (
+                    <Button size="small" variant="outlined" disabled={consentState.isLoading || !student.concurrencyStamp}
+                      onClick={() => setConsentOpen(true)}>
+                      Confirm consent
+                    </Button>
+                  ) : null}
                   {handoff.status === 3 && canManage && ['finance-first-payment', 'student-account', 'guardian-account'].includes(handoff.serviceKey) ? (
                     <Button
                       size="small"
@@ -248,6 +296,35 @@ export default function StudentOnboardingCaseOperations({
           })}
         </Stack>
       ) : null}
+
+      <CustomDialog
+        open={consentOpen}
+        handleClose={() => { if (!consentState.isLoading) setConsentOpen(false); }}
+        title="Confirm service consent"
+        maxWidth="sm"
+      >
+        <DialogScrollContent dividers>
+          <Stack spacing={1.5}>
+            <Alert severity="info" variant="outlined">
+              Confirm only after the required consent has been saved in the school’s records.
+              This action records your confirmation; it does not collect consent from the family.
+            </Alert>
+            <TextField fullWidth required size="small" label="Consent record reference"
+              value={consentReference} onChange={(event) => setConsentReference(event.target.value)}
+              disabled={consentState.isLoading} inputProps={{ maxLength: 200 }}
+              helperText="Enter the signed form ID or saved file reference, without personal details." />
+          </Stack>
+        </DialogScrollContent>
+        <DialogActions sx={{ px: 2, pb: 2 }}>
+          <Button color="inherit" disabled={consentState.isLoading} onClick={() => setConsentOpen(false)}>
+            Cancel
+          </Button>
+          <Button variant="contained" disabled={consentState.isLoading || consentReference.trim().length < 3}
+            onClick={saveConsent}>
+            {consentState.isLoading ? 'Recording…' : 'Record confirmation'}
+          </Button>
+        </DialogActions>
+      </CustomDialog>
 
       <CustomDialog
         open={cancelOpen}

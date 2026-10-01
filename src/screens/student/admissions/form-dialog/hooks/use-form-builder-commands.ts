@@ -24,29 +24,60 @@ export function useFormBuilderCommands(
     refetchOnMountOrArgChange: true,
   });
   const systemFields = systemFieldsQuery.data ?? [];
-  const addCanvasUnit = () => {
+  const addCanvasUnit = (afterStepId?: string) => {
     const id = crypto.randomUUID();
     const sectionNumber = nextSectionNumber(formik.values.sections);
     const stepId = isStepper ? crypto.randomUUID() : undefined;
-    const stepOrder = Math.max(-1, ...steps.map((step) => step.displayOrder)) + 1;
-    formik.setFieldValue('sections', [
-      ...formik.values.sections,
-      {
-        id,
-        code: `SECTION_${sectionNumber}`,
-        name: `Section ${isStepper ? 1 : sectionNumber}`,
-        displayOrder: formik.values.sections.length,
-        stepId,
-        stepCode: stepId ? `STEP_${nextStepNumber(formik.values.sections)}` : undefined,
-        stepName: stepId ? `Step ${stepOrder + 1}` : undefined,
-        stepDisplayOrder: stepId ? stepOrder : undefined,
-        isRepeatable: false,
-        minEntries: 1,
-        maxEntries: 1,
-        fields: [],
-      },
-    ]);
+    const afterStepIndex = isStepper ? steps.findIndex((step) => step.id === afterStepId) : -1;
+    const stepOrder =
+      afterStepIndex >= 0
+        ? afterStepIndex + 1
+        : Math.max(-1, ...steps.map((step) => step.displayOrder)) + 1;
+    const sections = formik.values.sections.map((section) => {
+      if (afterStepIndex < 0) return section;
+      const currentStepIndex = steps.findIndex(
+        (step) => step.id === (section.stepId ?? section.id)
+      );
+      const nextStepIndex = currentStepIndex >= stepOrder ? currentStepIndex + 1 : currentStepIndex;
+      return {
+        ...section,
+        stepDisplayOrder: nextStepIndex,
+        stepName:
+          section.stepName === `Step ${currentStepIndex + 1}`
+            ? `Step ${nextStepIndex + 1}`
+            : section.stepName,
+      };
+    });
+    const newSection = {
+      id,
+      code: `SECTION_${sectionNumber}`,
+      name: `Section ${isStepper ? 1 : sectionNumber}`,
+      displayOrder: sections.length,
+      stepId,
+      stepCode: stepId ? `STEP_${nextStepNumber(formik.values.sections)}` : undefined,
+      stepName: stepId
+        ? `Step ${afterStepIndex >= 0 ? stepOrder + 1 : steps.length + 1}`
+        : undefined,
+      stepDisplayOrder: stepId ? stepOrder : undefined,
+      isRepeatable: false,
+      minEntries: 1,
+      maxEntries: 1,
+      fields: [],
+    };
+    if (afterStepIndex >= 0) {
+      const lastSectionIndex = sections.findLastIndex(
+        (section) => (section.stepId ?? section.id) === afterStepId
+      );
+      sections.splice(lastSectionIndex + 1, 0, newSection);
+      formik.setFieldValue(
+        'sections',
+        sections.map((section, index) => ({ ...section, displayOrder: index }))
+      );
+    } else {
+      formik.setFieldValue('sections', [...sections, newSection]);
+    }
     onSelect(id, null);
+    return stepId;
   };
   const addSection = () => {
     const selected = formik.values.sections.find((section) => section.id === selectedSectionId);
@@ -55,7 +86,9 @@ export function useFormBuilderCommands(
       return;
     }
     const number = nextSectionNumber(formik.values.sections);
-    const step = steps.find((item) => item.sections.some(({ section }) => section.id === selected.id));
+    const step = steps.find((item) =>
+      item.sections.some(({ section }) => section.id === selected.id)
+    );
     const id = crypto.randomUUID();
     formik.setFieldValue('sections', [
       ...formik.values.sections,

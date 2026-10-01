@@ -42,6 +42,10 @@ export type AdmissionInquiry = {
   isOverdue: boolean;
 };
 export type AdmissionInquiryListInput = {
+	academicYearId?: string;
+	boardId?: string;
+	mediumId?: string;
+	standardId?: string;
   admissionCycleId?: string;
   admissionOfferingId?: string;
   inquiryNumber?: string;

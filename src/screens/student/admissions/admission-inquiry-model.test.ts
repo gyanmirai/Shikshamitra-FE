@@ -14,6 +14,7 @@ import {
   buildAdmissionInquiryPayload,
   type AdmissionInquiryFormValues,
   getAdmissionInquiryAcademicOptions,
+  getAdmissionInquiryPreferredClassError,
 } from './admission-inquiry-model';
 
 const field = (
@@ -48,6 +49,7 @@ const values: AdmissionInquiryFormValues = {
   standardId: 'standard-1',
   offeringId: 'offering-1',
   source: 0,
+  sourceDetail: '',
   sendAcknowledgement: true,
   fields: {
     FIRST_NAME: 'Aanya',
@@ -129,6 +131,28 @@ describe('admission inquiry model', () => {
     expect(errors.fields).toEqual({ GENDER: 'GENDER is required' });
   });
 
+  it('requires a preferred class to match the selected offering', () => {
+    const preferredClass = field('PREFERRED_CLASS', 'Preference.Class');
+    const mismatch = { ...values, fields: { ...values.fields, PREFERRED_CLASS: 'Class 2' } };
+    const message =
+      'Preferred class must match the selected offering (Class 1). Choose a matching offering or change the preferred class.';
+
+    expect(getAdmissionInquiryPreferredClassError(mismatch, [preferredClass], offering)).toEqual({
+      fieldCode: 'PREFERRED_CLASS',
+      message,
+    });
+    expect(validateAdmissionInquiry(mismatch, [preferredClass], null, offering)).toMatchObject({
+      fields: { PREFERRED_CLASS: message },
+    });
+    expect(
+      getAdmissionInquiryPreferredClassError(
+        { ...mismatch, fields: { ...mismatch.fields, PREFERRED_CLASS: '1' } },
+        [preferredClass],
+        offering
+      )
+    ).toBeNull();
+  });
+
   it('sends a trimmed duplicate override only when a separate family is requested', () => {
     const payload = buildAdmissionInquiryPayload(
       values,
@@ -190,18 +214,42 @@ describe('admission inquiry model', () => {
     });
   });
 
-  it('keeps source policy validation without collecting source details', () => {
+  it('requires and sends source details when the saved policy requires them', () => {
     const policy = {
       ...DEFAULT_INQUIRY_POLICY,
       allowedSources: [0, 3],
       requireSourceDetailFor: [3],
     };
 
+    expect(validateAdmissionInquiry({ ...values, source: 3 }, fields, policy, offering)).toMatchObject({
+      sourceDetail: 'Source details are required for this source',
+    });
     expect(
-      validateAdmissionInquiry({ ...values, source: 3 }, fields, policy, offering)
+      validateAdmissionInquiry(
+        { ...values, source: 3, sourceDetail: 'September open house' },
+        fields,
+        policy,
+        offering
+      )
     ).not.toHaveProperty('sourceDetail');
+    expect(
+      buildAdmissionInquiryPayload(
+        { ...values, source: 3, sourceDetail: '  September open house  ' },
+        fields,
+        offering
+      ).sourceDetail
+    ).toBe('September open house');
     expect(validateAdmissionInquiry({ ...values, source: 4 }, fields, policy)).toMatchObject({
       source: 'Choose a source allowed by this admission workflow',
+    });
+  });
+
+  it('requires source details for QR-code and school-fair inquiries', () => {
+    expect(validateAdmissionInquiry({ ...values, source: 10 }, fields, null, offering)).toMatchObject({
+      sourceDetail: 'Source details are required for this source',
+    });
+    expect(validateAdmissionInquiry({ ...values, source: 11 }, fields, null, offering)).toMatchObject({
+      sourceDetail: 'Source details are required for this source',
     });
   });
 

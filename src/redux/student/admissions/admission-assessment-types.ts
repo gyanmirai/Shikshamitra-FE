@@ -2,6 +2,10 @@ import type { AdmissionAssessmentPolicy } from './admission-assessment-policy';
 
 export type AssessmentScope = {
   admissionOfferingId: string;
+  academicYearId?: string;
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
   offeringName: string;
   workflowStageDefinitionId: string;
   stageName: string;

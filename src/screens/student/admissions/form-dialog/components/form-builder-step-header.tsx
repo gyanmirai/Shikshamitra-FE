@@ -14,6 +14,7 @@ type Props = {
   settingsOpen: boolean;
   onToggleSettings: () => void;
   onDelete: () => void;
+  onAddStep: () => void;
 };
 
 export function FormBuilderStepHeader({
@@ -22,9 +23,17 @@ export function FormBuilderStepHeader({
   settingsOpen,
   onToggleSettings,
   onDelete,
+  onAddStep,
 }: Props) {
   return (
-    <Stack direction="row" alignItems="center" spacing={1} sx={{ px: 1.5, py: 1 }}>
+    <Stack
+      direction="row"
+      alignItems="center"
+      spacing={1}
+      useFlexGap
+      flexWrap="wrap"
+      sx={{ px: 1.5, py: 1 }}
+    >
       <Box
         sx={{
           width: 32,
@@ -50,6 +59,15 @@ export function FormBuilderStepHeader({
           {step.visibilityRuleJson ? ' · Conditional' : ''}
         </Typography>
       </Box>
+      <Button
+        size="small"
+        color="inherit"
+        startIcon={<Iconify icon="mdi:plus" width={18} />}
+        onClick={onAddStep}
+        sx={{ minHeight: 44, flexShrink: 0 }}
+      >
+        Add next step
+      </Button>
       <Button
         size="small"
         color="inherit"

@@ -71,6 +71,8 @@ export type BoardApplicableRule = {
 };
 
 export type AcademicApplicableRule = BoardApplicableRule & {
+  campusMode?: AcademicApplicabilityMode;
+  campusIds?: string[];
   mediumMode: AcademicApplicabilityMode;
   academicMediumIds: string[];
   stageMode: AcademicApplicabilityMode;
@@ -83,6 +85,7 @@ export type AcademicApplicableRule = BoardApplicableRule & {
 };
 
 export type AcademicPathContext = {
+  campusId?: string | null;
   boardId?: string | null;
   academicMediumId?: string | null;
   academicMediumStageId?: string | null;
@@ -193,6 +196,7 @@ export type NumberingRules<TConfiguration> = {
 };
 
 export type OnboardingSettingsConfiguration = {
+  academicAvailability?: { schoolLevelNames: string[] | null };
   readinessAccess: ReadinessAccessRules;
   onboardingProfiles: OnboardingProfile[];
   grNumber: NumberingRules<GrNumberConfiguration>;
@@ -218,7 +222,7 @@ export const defaultReadinessAccessRules: ReadinessAccessRules = {
   ...defaultOnboardingRules,
   ...defaultAccountRules,
   approvalMode: 'always',
-  approvalTriggers: ['manual-identifier', 'division-change', 'capacity-override'],
+  approvalTriggers: ['manual-identifier', 'division-change'],
   checks: [
     {
       key: 'admission',
@@ -259,6 +263,8 @@ export const defaultReadinessAccessRules: ReadinessAccessRules = {
 };
 
 export const createAllAcademicApplicability = (): AcademicApplicableRule => ({
+  campusMode: 'all',
+  campusIds: [],
   boardMode: 'all',
   boardIds: [],
   mediumMode: 'all',
@@ -304,7 +310,7 @@ export const defaultOnboardingProfiles: OnboardingProfile[] = [
     rules: {
       ...cloneReadinessRules(defaultReadinessAccessRules),
       approvalMode: 'conditional',
-      approvalTriggers: ['mid-year-admission', 'capacity-override', 'manual-identifier'],
+      approvalTriggers: ['mid-year-admission', 'manual-identifier'],
     },
   },
   {
@@ -390,6 +396,7 @@ export const defaultDivisionChangeConfiguration: DivisionChangeConfiguration = {
 };
 
 export const defaultOnboardingSettings: OnboardingSettingsConfiguration = {
+  academicAvailability: { schoolLevelNames: null },
   readinessAccess: defaultReadinessAccessRules,
   onboardingProfiles: defaultOnboardingProfiles,
   grNumber: {
@@ -463,6 +470,7 @@ export const isAcademicApplicabilityMatch = (
 ) => {
   const standardApplicability = getStandardApplicability(configuration);
   return (
+    isSelectedValueApplicable(configuration.campusMode ?? 'all', configuration.campusIds ?? [], context.campusId) &&
     isSelectedValueApplicable(configuration.boardMode, configuration.boardIds, context.boardId) &&
     isSelectedValueApplicable(
       configuration.mediumMode,
@@ -492,6 +500,7 @@ export const getAcademicApplicabilityScore = (
 ) => {
   const standardApplicability = getStandardApplicability(configuration);
   return (
+    (configuration.campusMode === 'selected' ? 32 : 0) +
     (configuration.boardMode === 'selected' ? 16 : 0) +
     (configuration.mediumMode === 'selected' ? 8 : 0) +
     (configuration.stageMode === 'selected' ? 4 : 0) +
@@ -524,6 +533,8 @@ export const academicTargetsOverlap = (
   const firstStandard = getStandardApplicability(first);
   const secondStandard = getStandardApplicability(second);
   return (
+    selectedTargetsOverlap(first.campusMode ?? 'all', first.campusIds ?? [],
+      second.campusMode ?? 'all', second.campusIds ?? []) &&
     selectedTargetsOverlap(first.boardMode, first.boardIds, second.boardMode, second.boardIds) &&
     selectedTargetsOverlap(
       first.mediumMode,
@@ -554,6 +565,7 @@ export const academicTargetsOverlap = (
 
 export const getAcademicApplicabilityValidationError = (configuration: AcademicApplicableRule) => {
   const requirements: Array<[AcademicApplicabilityMode, string[], string]> = [
+    [configuration.campusMode ?? 'all', configuration.campusIds ?? [], 'Campus'],
     [configuration.boardMode, configuration.boardIds, 'Board'],
     [configuration.mediumMode, configuration.academicMediumIds, 'Medium'],
     [configuration.stageMode, configuration.academicMediumStageIds, 'School Level'],
@@ -629,7 +641,9 @@ export const findOnboardingProfile = (
   profiles
     .filter(
       (profile) =>
-        profile.admissionRoutes.includes(admissionRoute) &&
+        profile.admissionRoutes.some((route) =>
+          route.toLocaleLowerCase() === admissionRoute.toLocaleLowerCase()
+        ) &&
         isAcademicApplicabilityMatch(profile.applicability, context)
     )
     .sort((first, second) =>

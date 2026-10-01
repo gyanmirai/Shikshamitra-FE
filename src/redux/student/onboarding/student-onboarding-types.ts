@@ -7,6 +7,9 @@ export type StudentOnboardingListInput = {
   search?: string;
   status?: StudentOnboardingStatus;
   academicYearId?: string;
+  boardId?: string;
+  mediumId?: string;
+  divisionId?: string;
   standardId?: string;
   assignedToUserId?: string;
   overdueOnly?: boolean;
@@ -19,11 +22,15 @@ export type StudentOnboardingListInput = {
 export type StudentOnboardingFilterOption = {
   id: string;
   name: string;
+  parentId?: string | null;
 };
 
 export type StudentOnboardingFilterOptions = {
   academicYears: StudentOnboardingFilterOption[];
+  boards: StudentOnboardingFilterOption[];
+  mediums: StudentOnboardingFilterOption[];
   standards: StudentOnboardingFilterOption[];
+  divisions: StudentOnboardingFilterOption[];
 };
 
 export type StudentOnboardingAnalytics = {
@@ -80,6 +87,7 @@ export type StudentOnboardingCase = {
   studentName: string;
   offeringId: string;
   offeringCode: string;
+  campusId?: string | null;
   academicYearId: string;
   academicYearName: string;
   intendedBoardId: string;

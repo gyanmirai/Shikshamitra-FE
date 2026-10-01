@@ -6,9 +6,7 @@ import type { IElectiveSubject } from '../type';
 
 type ElectiveGroupActionOptions = {
   canAdd: boolean;
-  canView: boolean;
   canDelete: boolean;
-  onViewUsage: (group: IElectiveSubject) => void;
   onEdit: (group: IElectiveSubject) => void;
   onArchive: (group: IElectiveSubject) => void;
   onRestore: (group: IElectiveSubject) => void;
@@ -21,15 +19,6 @@ export function getElectiveSubjectTableActions(
   options: ElectiveGroupActionOptions
 ): AdaptiveThreeDotsAction[] {
   const actions: AdaptiveThreeDotsAction[] = [];
-
-  if (options.canView) {
-    actions.push({
-      id: 'view-usage',
-      label: 'View usage',
-      icon: GlobalIcons.eye,
-      onClick: () => options.onViewUsage(group),
-    });
-  }
 
   if (isArchived) {
     actions.push({

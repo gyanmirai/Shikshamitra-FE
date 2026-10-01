@@ -4,12 +4,10 @@ import type { IGrade } from './type';
 
 type Props = {
   scale: IGrade;
-  canView: boolean;
   canAdd: boolean;
   canDelete: boolean;
   isArchiveLoading: boolean;
   isRestoreLoading: boolean;
-  onView: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onArchive: () => void;
@@ -18,12 +16,10 @@ type Props = {
 
 export function GradeScaleRowActions({
   scale,
-  canView,
   canAdd,
   canDelete,
   isArchiveLoading,
   isRestoreLoading,
-  onView,
   onEdit,
   onDelete,
   onArchive,
@@ -42,16 +38,6 @@ export function GradeScaleRowActions({
         },
       ]
     : [
-        ...(canView
-          ? [
-              {
-                id: 'view',
-                label: `View ${scale.name}`,
-                icon: 'solar:eye-bold',
-                onClick: onView,
-              },
-            ]
-          : []),
         ...(canAdd
           ? [
               {

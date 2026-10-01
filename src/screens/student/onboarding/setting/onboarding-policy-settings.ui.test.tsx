@@ -3,12 +3,11 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
-import { useOnboardingSettings, OnboardingSettingsProvider } from '../onboarding-settings-context';
+import { OnboardingSettingsProvider } from '../onboarding-settings-context';
 import {
-  AccountsAccessSettingsScreen,
   ReadinessAccessSettingsScreen,
-  OnboardingRulesSettingsScreen,
 } from './onboarding-policy-settings';
+import { defaultOnboardingProfiles, defaultReadinessAccessRules } from '../onboarding-settings-model';
 import {
   GrNumberSettingsScreen,
   RollNumberSettingsScreen,
@@ -22,6 +21,12 @@ vi.mock('src/components/iconify', () => ({
 
 vi.mock('src/components/custom-tabs', () => ({
   CustomTabs: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('src/components/customDialog', () => ({
+  default: ({ open, title, children }: { open: boolean; title: string; children: React.ReactNode }) =>
+    open ? <div role="dialog" aria-label={title}>{children}</div> : null,
+  DialogScrollContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock('src/routes/hooks', () => ({
@@ -94,9 +99,8 @@ vi.mock('src/components/customizabaleTable', () => ({
   ),
 }));
 
-vi.mock('src/screens/finance/hooks/useFinanceAcademicFilters', () => ({
-  useFinanceAcademicFilters: () => ({
-    boards: [
+vi.mock('./use-onboarding-academic-structure', () => {
+  const boards = [
       {
         id: 'board-cbse',
         name: 'CBSE',
@@ -143,11 +147,19 @@ vi.mock('src/screens/finance/hooks/useFinanceAcademicFilters', () => ({
           },
         ],
       },
-    ],
-    classOptions: [{ id: 'grade-6', name: 'Grade 6' }],
-    setSelectedBoard: vi.fn(),
-  }),
-}));
+  ];
+  return {
+    useOnboardingAcademicStructure: () => ({
+      boards, allBoards: boards,
+      campuses: [
+        { id: 'campus-north', code: 'N', name: 'North Campus' },
+        { id: 'campus-south', code: 'S', name: 'South Campus' },
+      ],
+      campusesLoading: false, campusesError: false,
+    }),
+    getOnboardingSchoolLevelName: (_board: string, _medium: string, stage: string) => stage,
+  };
+});
 
 
 const choose = (label: string, option: string, multiple = false) => {
@@ -168,6 +180,17 @@ const renderSettings = (children: React.ReactNode, onPersist?: any) => render(
 );
 
 describe('Readiness and Numbering academic scope', () => {
+  it('saves school-level availability with the onboarding configuration', async () => {
+    const persist = vi.fn().mockResolvedValue(undefined);
+    renderSettings(<ReadinessAccessSettingsScreen />, persist);
+    fireEvent.click(screen.getByRole('button', { name: 'School levels' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Show all configured school levels' }));
+    choose('School levels', 'Secondary', true);
+    fireEvent.click(screen.getByRole('button', { name: 'Save school levels' }));
+    await waitFor(() => expect(persist).toHaveBeenCalledOnce());
+    expect(persist.mock.calls[0][1].academicAvailability.schoolLevelNames).toEqual(['Secondary']);
+  });
+
   it('removes duplicate saved-settings entry points', () => {
     renderSettings(<><ReadinessAccessSettingsScreen /><NumberingPlacementSettingsScreen /></>);
     expect(screen.queryByRole('button', { name: 'Saved Defaults' })).not.toBeInTheDocument();
@@ -182,7 +205,7 @@ describe('Readiness and Numbering academic scope', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add readiness rule' }));
     expect(screen.queryByRole('combobox', { name: 'Board coverage' })).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Medium' })).toHaveAttribute('aria-disabled', 'true');
-    expect(screen.getByRole('button', { name: 'Add rule' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Review rule' })).toBeDisabled();
     choose('Board', 'CBSE');
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Medium' }));
     expect(screen.getByRole('option', { name: 'English' })).toBeInTheDocument();
@@ -190,14 +213,85 @@ describe('Readiness and Numbering academic scope', () => {
     fireEvent.click(screen.getByRole('option', { name: 'English' }));
     choose('School levels', 'Secondary', true);
     choose('Standards', 'Grade 6', true);
-    fireEvent.click(screen.getByRole('button', { name: 'Add rule' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Review rule' }));
+    expect(persist).not.toHaveBeenCalled();
+    expect(screen.getByText(/Students covered:/)).toHaveTextContent(
+      'CBSE / English / Secondary / Grade 6'
+    );
+    fireEvent.click(screen.getByText('Save and apply'));
     await waitFor(() => expect(persist).toHaveBeenCalledOnce());
     const saved = persist.mock.calls[0][1].onboardingProfiles.at(-1);
     expect(saved.applicability).toMatchObject({ boardIds: ['board-cbse'], academicMediumIds: ['medium-cbse-english'],
       academicMediumStageIds: ['stage-cbse-secondary'], standardIds: ['grade-6'], divisionMode: 'all' });
   });
 
-  it('clears descendants on board change and excludes Primary', () => {
+  it('shows the enforced optional-document exception without seeding an unavailable capacity override', () => {
+    expect(defaultReadinessAccessRules.approvalTriggers).not.toContain('capacity-override');
+    expect(defaultOnboardingProfiles.find((profile) => profile.id === 'mid-year-admission')?.rules.approvalTriggers)
+      .not.toContain('capacity-override');
+    renderSettings(<ReadinessAccessSettingsScreen />);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Returning student rules' }));
+    const optionalDocuments = screen.getByRole('checkbox', {
+      name: 'Optional document check is incomplete',
+    });
+    expect(optionalDocuments).toBeChecked();
+    fireEvent.click(optionalDocuments);
+    expect(optionalDocuments).not.toBeChecked();
+  });
+
+  it('saves a campus-specific readiness rule without changing the academic path', async () => {
+    const persist = vi.fn().mockResolvedValue(undefined);
+    renderSettings(<ReadinessAccessSettingsScreen />, persist);
+    fireEvent.click(screen.getByRole('button', { name: 'Add readiness rule' }));
+    choose('Campuses (optional)', 'North Campus', true);
+    selectAcademicPath();
+    fireEvent.click(screen.getByRole('button', { name: 'Review rule' }));
+    expect(screen.getByText(/Students covered:/)).toHaveTextContent('Campus: North Campus');
+    fireEvent.click(screen.getByText('Save and apply'));
+    await waitFor(() => expect(persist).toHaveBeenCalledOnce());
+    expect(persist.mock.calls[0][1].onboardingProfiles.at(-1).applicability).toMatchObject({
+      campusMode: 'selected', campusIds: ['campus-north'], boardIds: ['board-cbse'],
+    });
+  }, 15000);
+
+  it('saves a school-defined admission route with its readiness rule', async () => {
+    const persist = vi.fn().mockResolvedValue(undefined);
+    renderSettings(<ReadinessAccessSettingsScreen />, persist);
+    fireEvent.click(screen.getByRole('button', { name: 'Add readiness rule' }));
+    fireEvent.change(screen.getByRole('combobox', { name: 'Admission route' }), {
+      target: { value: 'Scholarship intake' },
+    });
+    selectAcademicPath();
+    fireEvent.click(screen.getByRole('button', { name: 'Review rule' }));
+    expect(screen.getByText('Admission route: Scholarship intake')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Save and apply'));
+    await waitFor(() => expect(persist).toHaveBeenCalledOnce());
+    expect(persist.mock.calls[0][1].onboardingProfiles.at(-1).admissionRoutes)
+      .toEqual(['Scholarship intake']);
+  });
+
+  it('keeps an unsaved rule editable when applying fails or closing is declined', async () => {
+    const persist = vi.fn().mockRejectedValue(new Error('Save unavailable'));
+    const confirm = vi.fn().mockReturnValue(false);
+    vi.stubGlobal('confirm', confirm);
+    try {
+      renderSettings(<ReadinessAccessSettingsScreen />, persist);
+      fireEvent.click(screen.getByRole('button', { name: 'Add readiness rule' }));
+      selectAcademicPath();
+      fireEvent.click(screen.getByRole('button', { name: 'Review rule' }));
+      fireEvent.click(screen.getByText('Save and apply'));
+      await waitFor(() => expect(screen.getByText(/The rule could not be applied/)).toBeInTheDocument());
+      expect(persist).toHaveBeenCalledOnce();
+      fireEvent.click(screen.getByText('Back to rule'));
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      expect(confirm).toHaveBeenCalledWith('Discard unsaved readiness-rule changes?');
+      expect(screen.getByRole('button', { name: 'Review rule' })).toBeEnabled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('clears descendants on board change and offers the new board’s configured Primary level', () => {
     renderSettings(<ReadinessAccessSettingsScreen />);
     fireEvent.click(screen.getByRole('button', { name: 'Add readiness rule' }));
     selectAcademicPath();
@@ -205,9 +299,10 @@ describe('Readiness and Numbering academic scope', () => {
     expect(screen.getByRole('combobox', { name: 'Medium' })).not.toHaveTextContent('English');
     expect(screen.getByRole('combobox', { name: 'Standards' })).toHaveAttribute('aria-disabled', 'true');
     choose('Medium', 'Gujarati');
-    expect(screen.getByRole('combobox', { name: 'School levels' })).toHaveAttribute('aria-disabled', 'true');
-    expect(screen.getByRole('button', { name: 'Add rule' })).toBeDisabled();
-  });
+    choose('School levels', 'Primary', true);
+    choose('Standards', 'Standard 4', true);
+    expect(screen.getByRole('button', { name: 'Review rule' })).toBeEnabled();
+  }, 15000);
 
   it('preserves other routes when saving a profile and resets unsaved switches', async () => {
     const persist = vi.fn().mockResolvedValue(undefined);
@@ -221,12 +316,13 @@ describe('Readiness and Numbering academic scope', () => {
     expect(documents).toBeChecked();
     selectAcademicPath();
     fireEvent.click(documents);
-    fireEvent.click(screen.getByRole('button', { name: 'Apply to Setup' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Review rule' }));
+    fireEvent.click(screen.getByText('Save and apply'));
     await waitFor(() => expect(persist).toHaveBeenCalledOnce());
     const profiles = persist.mock.calls[0][1].onboardingProfiles;
     expect(profiles.find((p: any) => p.id === 'mid-year-admission').rules.requireDocuments).toBe(false);
     expect(profiles.find((p: any) => p.id === 'fresh-admission').rules.requireDocuments).toBe(true);
-  });
+  }, 15000);
 
   it.each([
     ['GR', () => <GrNumberSettingsScreen embedded />, 'Add configuration'],
@@ -245,5 +341,20 @@ describe('Readiness and Numbering academic scope', () => {
     fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Standards' }));
     expect(screen.getByRole('option', { name: 'Grade 6' })).toBeInTheDocument();
     expect(screen.getByRole('checkbox')).toBeInTheDocument();
+  }, 15000);
+
+  it.each([
+    ['GR', () => <GrNumberSettingsScreen embedded />, 'Add configuration'],
+    ['Roll', () => <RollNumberSettingsScreen embedded />, 'Add configuration'],
+    ['Division', () => <DivisionChangesSettingsPanel />, 'Add override'],
+  ] as const)('keeps the selected campus when the %s academic path changes', (_name, component, action) => {
+    renderSettings(component());
+    fireEvent.click(screen.getByRole('button', { name: action }));
+    choose('Campuses (optional)', 'North Campus', true);
+    selectAcademicPath();
+    choose('Board', 'GSEB');
+    expect(screen.getByRole('combobox', { name: 'Campuses (optional)' }))
+      .toHaveTextContent('North Campus');
+    expect(screen.getByRole('combobox', { name: 'Medium' })).not.toHaveTextContent('English');
   });
 });

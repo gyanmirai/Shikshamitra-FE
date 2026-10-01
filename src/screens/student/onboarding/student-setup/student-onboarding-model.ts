@@ -57,6 +57,7 @@ export type StudentOnboardingItem = {
   ownerName: string;
   assignedToUserId?: string | null;
   boardId?: string | null;
+  campusId?: string | null;
   boardName: string;
   academicMediumId?: string | null;
   mediumName: string;
@@ -79,7 +80,7 @@ export type StudentOnboardingItem = {
   readinessItems: OnboardingChecklistItem[];
   activity: OnboardingActivityItem[];
   updatedAt: string;
-  source: 'onboarding-case' | 'student-records' | 'preview';
+  source: 'onboarding-case' | 'student-records';
   concurrencyStamp?: string | null;
   backendStatus?: StudentOnboardingCase['status'];
   primaryBlocker?: string | null;
@@ -92,6 +93,7 @@ export type StudentOnboardingItem = {
 export const getStudentAcademicPathContext = (
   student: StudentOnboardingItem
 ): AcademicPathContext => ({
+  campusId: student.campusId,
   boardId: student.boardId,
   academicMediumId: student.academicMediumId,
   academicMediumStageId: student.academicMediumStageId,
@@ -347,6 +349,7 @@ export const mapOnboardingCaseToItem = (
     ownerName: onboardingCase.assignedToUserName || 'Not assigned',
     assignedToUserId: onboardingCase.assignedToUserId ?? null,
     boardId: onboardingCase.intendedBoardId,
+    campusId: onboardingCase.campusId ?? null,
     boardName: onboardingCase.intendedBoardName || 'Not available',
     academicMediumId: onboardingCase.intendedMediumId,
     mediumName: onboardingCase.intendedMediumName || 'Not available',

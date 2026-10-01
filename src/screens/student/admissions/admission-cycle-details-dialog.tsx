@@ -1,17 +1,18 @@
 'use client';
 
 import dayjs from 'dayjs';
+import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Box, Chip, Alert, Stack, Button, Divider, Typography, DialogActions, CircularProgress } from '@mui/material';
+import { Box, Alert, Stack, Button, Divider, Typography, DialogActions, CircularProgress } from '@mui/material';
 import {
   type AdmissionCycle,
   useGetAdmissionCycleImpactQuery,
   useGetAdmissionCycleHistoryQuery,
 } from 'src/redux/student/admissions/admission-cycles-api';
 
-import { windowLabels, lifecycleLabels } from './admission-cycle-model';
+import { windowLabels, windowColors, lifecycleLabels, lifecycleColors } from './admission-cycle-model';
 
 type Props = { cycle: AdmissionCycle | null; onClose: () => void };
 
@@ -32,32 +33,30 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
   ];
 
   return (
-    <CustomDialog open handleClose={onClose} title="Admission Cycle Details" maxWidth="sm">
+    <CustomDialog open handleClose={onClose} title="Admission Cycle Details" maxWidth="sm" hasForm={false}>
       <DialogScrollContent>
         <Stack spacing={2}>
-          <Box>
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <Typography variant="h6">{cycle.name}</Typography>
-              <Chip size="small" label={cycle.code} variant="outlined" />
-              <Chip size="small" label={lifecycleLabels[cycle.status]} />
-              <Chip
-                size="small"
-                color={cycle.isAcceptingApplications ? 'success' : 'default'}
-                label={windowLabels[cycle.windowStatus]}
-              />
+          <Stack spacing={0.75}>
+            <Typography variant="h6">{cycle.name}</Typography>
+            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+              <Typography variant="caption" color="text.secondary">{cycle.code}</Typography>
+              <Label color={lifecycleColors[cycle.status]}>{lifecycleLabels[cycle.status]}</Label>
+              <Label color={windowColors[cycle.windowStatus]}>{windowLabels[cycle.windowStatus]}</Label>
             </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography variant="body2" color="text.secondary">
               {cycle.academicYearName || 'Academic year'} · {dayjs(cycle.startDate).format('DD MMM YYYY')}–
               {dayjs(cycle.endDate).format('DD MMM YYYY')}
             </Typography>
-            {cycle.description && <Typography sx={{ mt: 1 }}>{cycle.description}</Typography>}
-          </Box>
+            {cycle.description && (
+              <Typography variant="body2" color="text.secondary">{cycle.description}</Typography>
+            )}
+          </Stack>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, gap: 1 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(4, minmax(0, 1fr))' }, columnGap: 2, rowGap: 1.5, py: 0.5 }}>
             {metrics.map(([label, value]) => (
-              <Box key={String(label)} sx={{ p: 1.25, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+              <Box key={String(label)} sx={{ minWidth: 0 }}>
+                <Typography variant="h6" fontWeight={700}>{impactLoading ? '—' : value}</Typography>
                 <Typography variant="caption" color="text.secondary">{label}</Typography>
-                <Typography variant="h6">{impactLoading ? '—' : value}</Typography>
               </Box>
             ))}
           </Box>
@@ -77,9 +76,37 @@ export function AdmissionCycleDetailsDialog({ cycle, onClose }: Props) {
           {!historyLoading && !isError && !history.length && (
             <Typography variant="body2" color="text.secondary">No history is available yet.</Typography>
           )}
-          <Stack spacing={1.5}>
-            {history.map((item) => (
-              <Box key={item.id} sx={{ pl: 1.5, borderLeft: 2, borderColor: 'divider' }}>
+          <Stack spacing={0}>
+            {history.map((item, index) => (
+              <Box
+                key={item.id}
+                sx={{
+                  position: 'relative',
+                  pl: 2.5,
+                  pb: index === history.length - 1 ? 0 : 2,
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 4,
+                    left: 0,
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    bgcolor: 'text.disabled',
+                  },
+                  ...(index < history.length - 1 && {
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 16,
+                      bottom: 0,
+                      left: '3.5px',
+                      width: '1px',
+                      bgcolor: 'divider',
+                    },
+                  }),
+                }}
+              >
                 <Typography variant="body2" fontWeight={600}>{item.description}</Typography>
                 <Typography variant="caption" color="text.secondary">
                   {dayjs(item.occurredAt).format('DD MMM YYYY, hh:mm A')}

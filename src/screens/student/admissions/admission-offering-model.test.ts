@@ -227,4 +227,41 @@ describe('Admission Offering form rules', () => {
       )
     ).toBe('This offering was changed by another user. Refresh and try again.');
   });
+
+  it('explains an invalid counsellor assignment from the offering API response', () => {
+    expect(
+      getAdmissionApiError(
+        {
+          data: {
+            errorCode: 'Admissions.Offering.ConfigurationIncomplete',
+            detail: 'One or more business rules were violated.',
+            data: {
+              ValidationErrors: [
+                'CounsellorAssignmentProfileInvalid',
+                'CounsellorAssignmentProfileInvalid',
+              ],
+            },
+          },
+        },
+        'Unable to save the offering.'
+      )
+    ).toContain('active counsellor with access to this class');
+
+    expect(
+      getAdmissionApiError(
+        {
+          data: {
+            errorCode: 'Admissions.Offering.ConfigurationIncomplete',
+            data: {
+              ValidationMessages: [
+                'Select an active counsellor who has access to this class in the assignment profile.',
+                'The fallback manager in the assignment profile must be active and have access to this class.',
+              ],
+            },
+          },
+        },
+        'Unable to activate the offering.'
+      )
+    ).toContain('fallback manager');
+  });
 });

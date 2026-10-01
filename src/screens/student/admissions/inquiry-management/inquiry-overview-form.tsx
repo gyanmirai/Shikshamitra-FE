@@ -1,12 +1,13 @@
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
-import { useEffect, useState } from 'react';
-import { Stack, MenuItem, TextField, Typography } from '@mui/material';
-import { LoadingButton } from 'src/components/loading-button';
+import { useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingButton } from 'src/components/loading-button';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import { useUpdateAdmissionInquiryMutation } from 'src/redux/student/admissions/admission-inquiries-api';
 
+import { useAdmissionUnsavedChanges } from '../use-admission-unsaved-changes';
 import {
   admissionInquirySourceOptions,
   admissionInquiryLanguageOptions,
@@ -15,9 +16,13 @@ import {
 export function InquiryOverviewForm({
   inquiry,
   readOnly,
+  onCancel,
+  title = 'Overview',
 }: {
   inquiry: AdmissionInquiry;
   readOnly: boolean;
+  onCancel?: () => void;
+  title?: string;
 }) {
   const [current, setCurrent] = useState(inquiry);
   const [applicantName, setApplicantName] = useState(inquiry.applicantName);
@@ -48,6 +53,7 @@ export function InquiryOverviewForm({
     source !== current.source ||
     sourceDetail.trim() !== (current.sourceDetail ?? '') ||
     preferredLanguageCode !== (current.preferredLanguageCode || 'en');
+  useAdmissionUnsavedChanges(!readOnly, dirty);
 
   const save = async () => {
     if (!applicantName.trim() || !validPhone) return;
@@ -75,7 +81,9 @@ export function InquiryOverviewForm({
 
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle1">Overview</Typography>
+      <Typography variant="subtitle1" component="h2">
+        {title}
+      </Typography>
       <TextField
         fullWidth
         required
@@ -95,9 +103,7 @@ export function InquiryOverviewForm({
           value={phone}
           disabled={readOnly}
           error={Boolean(phone && !validPhone)}
-          helperText={
-            phone && !validPhone ? 'Enter a valid 10-digit Indian mobile number.' : ' '
-          }
+          helperText={phone && !validPhone ? 'Enter a valid 10-digit Indian mobile number.' : ' '}
           onChange={(event) => setPhone(event.target.value.replace(/\D/g, '').slice(0, 10))}
           slotProps={{ htmlInput: { maxLength: 10, inputMode: 'numeric' } }}
         />
@@ -154,15 +160,30 @@ export function InquiryOverviewForm({
         slotProps={{ htmlInput: { maxLength: 512 } }}
       />
       {!readOnly && (
-        <LoadingButton
-          variant="outlined"
-          loading={updateState.isLoading}
-          disabled={!dirty || !applicantName.trim() || phone.replace(/\D/g, '').length < 7}
-          onClick={save}
-          sx={{ alignSelf: 'flex-start' }}
-        >
-          Save changes
-        </LoadingButton>
+        <Stack direction="row" spacing={1} justifyContent={onCancel ? 'flex-end' : 'flex-start'}>
+          {onCancel && (
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={updateState.isLoading}
+              onClick={() => {
+                if (dirty && !window.confirm('Discard unsaved inquiry changes?')) return;
+                onCancel();
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+          <LoadingButton
+            size="small"
+            variant={onCancel ? 'contained' : 'outlined'}
+            loading={updateState.isLoading}
+            disabled={!dirty || !applicantName.trim() || !validPhone}
+            onClick={save}
+          >
+            Save changes
+          </LoadingButton>
+        </Stack>
       )}
     </Stack>
   );

@@ -21,6 +21,24 @@ export const windowLabels: Record<AdmissionCycleWindowStatus, string> = {
   4: 'Archived',
 };
 
+export const lifecycleColors: Record<AdmissionCycleStatus, 'default' | 'success' | 'warning' | 'error'> = {
+  0: 'default',
+  1: 'success',
+  2: 'warning',
+  3: 'error',
+};
+
+export const windowColors: Record<
+  AdmissionCycleWindowStatus,
+  'default' | 'success' | 'warning' | 'error'
+> = {
+  0: 'default',
+  1: 'success',
+  2: 'warning',
+  3: 'warning',
+  4: 'error',
+};
+
 export const normalizeCycleCode = (value: string): string =>
   value.toUpperCase().replace(/[^A-Z0-9_-]/g, '');
 

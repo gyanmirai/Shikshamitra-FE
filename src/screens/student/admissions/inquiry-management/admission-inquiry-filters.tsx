@@ -101,7 +101,7 @@ export function AdmissionInquiryFilters(props: Props) {
             sm: 'repeat(2, minmax(0, 1fr))',
             lg:
               !showSearch && !showStatus
-                ? 'repeat(5, minmax(0, 1fr)) auto'
+                ? 'repeat(3, minmax(0, 1fr))'
                 : 'repeat(4, minmax(0, 1fr))',
             xl: `${showSearch ? 'minmax(220px, 1.5fr) ' : ''}repeat(${showStatus ? 6 : 5}, minmax(140px, 1fr)) auto`,
           },

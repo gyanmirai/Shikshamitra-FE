@@ -270,11 +270,9 @@ export default function StudentSetupDrawer({
               variant="outlined"
               onClose={() => setShowAlert(false)}
             >
-              {activeStudent.source === 'preview'
-                ? 'Frontend preview data is active. The layout and workflow are ready, but actions are not persisted.'
-                : activeStudent.source === 'onboarding-case'
-                  ? 'This is a live onboarding case. Readiness refresh and activation actions are persisted and protected by backend permissions.'
-                  : 'This compatibility view uses Student Records. Admission readiness, approvals and account state require the Onboarding API.'}
+              {activeStudent.source === 'onboarding-case'
+                ? 'This is a live onboarding case. Readiness refresh and activation actions are persisted and protected by backend permissions.'
+                : 'This compatibility view uses Student Records. Admission readiness, approvals and account state require the Onboarding API.'}
             </Alert>
           ) : null}
 
@@ -316,11 +314,9 @@ export default function StudentSetupDrawer({
                 ['Owner', activeStudent.ownerName],
                 [
                   'Source',
-                  activeStudent.source === 'preview'
-                    ? 'Frontend preview'
-                    : activeStudent.source === 'onboarding-case'
-                      ? 'Student Onboarding service'
-                      : 'Student Records',
+                  activeStudent.source === 'onboarding-case'
+                    ? 'Student Onboarding service'
+                    : 'Student Records',
                 ],
               ]}
             />
@@ -360,7 +356,7 @@ export default function StudentSetupDrawer({
           {activeStudent.source === 'onboarding-case' && (
             <SectionCard icon="mdi:cash-check" title="Fee assignment & first payment"
               description="Finance confirms the saved assignment and first installment. No manual paid checkbox.">
-              <StudentOnboardingFees caseId={activeStudent.id} />
+              <StudentOnboardingFees caseId={activeStudent.id} canManage={canManage} />
             </SectionCard>
           )}
 
@@ -589,15 +585,13 @@ export default function StudentSetupDrawer({
         sx={{ px: 2, py: 1.25, flexShrink: 0, bgcolor: 'background.paper' }}
       >
         <Typography variant="caption" color="text.secondary" sx={{ flex: 1 }}>
-          {activeStudent.source === 'preview'
-            ? 'This action is disabled because preview changes are not persisted.'
-            : activeStudent.source === 'onboarding-case'
-              ? activeStudent.backendStatus === 4
-                ? 'Onboarding is complete. Open Student Records for the operational profile.'
-                : activeStudent.backendStatus === 5
-                  ? 'Cancelled cases are retained for audit and cannot be activated.'
-                  : 'The service revalidates concurrency and blockers before saving this action.'
-              : 'Connect the Onboarding activation contract to enable this action.'}
+          {activeStudent.source === 'onboarding-case'
+            ? activeStudent.backendStatus === 4
+              ? 'Onboarding is complete. Open Student Records for the operational profile.'
+              : activeStudent.backendStatus === 5
+                ? 'Cancelled cases are retained for audit and cannot be activated.'
+                : 'The service revalidates concurrency and blockers before saving this action.'
+            : 'This record has no onboarding case, so activation is unavailable.'}
         </Typography>
         <Stack direction="row" justifyContent="flex-end" gap={1} sx={{ flexShrink: 0 }}>
           <Button variant="outlined" size="small" onClick={onClose}>

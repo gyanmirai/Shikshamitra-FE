@@ -35,7 +35,6 @@ beforeEach(async () => {
   await new Promise<void>((resolve) => {
     loadIcons(
       [
-        'carbon:view-filled',
         'solar:pen-bold',
         'solar:trash-bin-trash-bold',
         'solar:archive-bold',
@@ -51,7 +50,6 @@ beforeEach(async () => {
 function renderActions(overrides = {}) {
   const onRowClick = vi.fn();
   const callbacks = {
-    onView: vi.fn(),
     onEdit: vi.fn(),
     onDelete: vi.fn(),
     onArchive: vi.fn(),
@@ -65,7 +63,6 @@ function renderActions(overrides = {}) {
             <TableCell>
               <GradeScaleRowActions
                 scale={scale}
-                canView
                 canAdd
                 canDelete
                 isArchiveLoading={false}
@@ -84,7 +81,6 @@ function renderActions(overrides = {}) {
 
 describe('grade scale row actions', () => {
   it.each([
-    ['View MAIN GRADE SCALE', 'onView'],
     ['Edit MAIN GRADE SCALE', 'onEdit'],
     ['Delete MAIN GRADE SCALE', 'onDelete'],
     ['Archive grade scale MAIN GRADE SCALE', 'onArchive'],
@@ -95,6 +91,11 @@ describe('grade scale row actions', () => {
     expect(onRowClick).not.toHaveBeenCalled();
   });
 
+  it('shows three direct actions without a more-actions button', () => {
+    renderActions();
+    expect(screen.getAllByRole('button')).toHaveLength(3);
+  });
+
   it('offers restore for archived scales', () => {
     const { callbacks } = renderActions({ scale: { ...scale, status: 'Archived' } });
     expect(screen.getAllByRole('button')).toHaveLength(1);
@@ -103,7 +104,7 @@ describe('grade scale row actions', () => {
   });
 
   it('preserves permission restrictions', () => {
-    renderActions({ canView: false, canAdd: false, canDelete: false });
+    renderActions({ canAdd: false, canDelete: false });
     expect(screen.getAllByRole('button')).toHaveLength(1);
     expect(
       screen.getByRole('button', { name: 'Archive grade scale MAIN GRADE SCALE' })

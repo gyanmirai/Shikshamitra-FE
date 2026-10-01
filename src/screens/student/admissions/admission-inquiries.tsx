@@ -28,10 +28,13 @@ import {
 import { getAdmissionInquiryAccess } from './inquiry-access';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
-import AdmissionInquiryDialog from './admission-inquiry-dialog';
 import { AdmissionUnmatchedInquiryDrawer } from './admission-unmatched-inquiry-drawer';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
-import { AdmissionInquiryManagementDrawer } from './inquiry-management/admission-inquiry-management-drawer';
+import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
+import {
+  AdmissionAcademicFilters,
+  useAdmissionAcademicFilters,
+} from './admission-academic-filters';
 import { AdmissionInquiryAssignmentDialog } from './inquiry-management/admission-inquiry-assignment-dialog';
 import { AdmissionInquiryCommunicationDialog } from './inquiry-management/admission-inquiry-communication-dialog';
 import { AdmissionInquiryBulkAssignmentDialog } from './inquiry-management/admission-inquiry-bulk-assignment-dialog';
@@ -44,6 +47,7 @@ import {
 } from './inquiry-management/admission-inquiry-table-filters';
 
 export default function AdmissionInquiriesScreen() {
+  const academic = useAdmissionAcademicFilters();
   const router = useRouter();
   const searchParams = useSearchParams();
   const linkedInquiryId = searchParams.get('inquiryId') ?? '';
@@ -62,7 +66,6 @@ export default function AdmissionInquiriesScreen() {
   const [sorts, setSorts] = useState<
     Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
   >([]);
-  const createDialog = useBoolean();
   const unmatchedDialog = useBoolean();
 
   useEffect(() => {
@@ -94,12 +97,24 @@ export default function AdmissionInquiriesScreen() {
     canManage && hasGrantedPermission(permissions, 'Communication.Campaigns.Add');
   const canSendCommunication = hasGrantedPermission(permissions, 'Communication.Campaigns.Send');
   const listFilters = buildAdmissionInquiryListFilters(tableFilters, search, currentUserId);
-  const { data, isLoading, isError, refetch } = useGetAdmissionInquiriesQuery({
-    ...listFilters,
-    maxResultCount: rowsPerPage,
-    skipCount: page * rowsPerPage,
-    sorting: sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : undefined,
-  });
+  const {
+    currentData: data,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAdmissionInquiriesQuery(
+    {
+      ...listFilters,
+      academicYearId: academic.academicYearId,
+      boardId: academic.boardId || undefined,
+      mediumId: academic.mediumId || undefined,
+      standardId: academic.standardId || undefined,
+      maxResultCount: rowsPerPage,
+      skipCount: page * rowsPerPage,
+      sorting: sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : undefined,
+    },
+    { skip: !academic.academicYearId }
+  );
   const { data: linkedInquiry } = useGetAdmissionInquiryQuery(linkedInquiryId, {
     skip: !linkedInquiryId,
   });
@@ -120,6 +135,10 @@ export default function AdmissionInquiriesScreen() {
   const [exportInquiries, exportState] = useLazyExportAdmissionInquiriesQuery();
   const exportFilters = {
     ...listFilters,
+    academicYearId: academic.academicYearId,
+    boardId: academic.boardId || undefined,
+    mediumId: academic.mediumId || undefined,
+    standardId: academic.standardId || undefined,
     sorting: sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : undefined,
   };
 
@@ -130,6 +149,20 @@ export default function AdmissionInquiriesScreen() {
       const next = new URLSearchParams(searchParams.toString());
       next.set('inquiryId', inquiry.id);
       router.push(`${studentPaths.enrollment.inquiries}?${next.toString()}`);
+    },
+    [router, searchParams]
+  );
+
+  const openEditInquiry = useCallback(
+    (inquiry: AdmissionInquiry) => {
+      const next = new URLSearchParams();
+      const listQuery = new URLSearchParams(searchParams.toString());
+      listQuery.delete('inquiryId');
+      next.set(
+        'returnTo',
+        `${studentPaths.enrollment.inquiries}${listQuery.size ? `?${listQuery.toString()}` : ''}`
+      );
+      router.push(`${studentPaths.enrollment.inquiryEdit(inquiry.id)}?${next.toString()}`);
     },
     [router, searchParams]
   );
@@ -226,7 +259,7 @@ export default function AdmissionInquiriesScreen() {
         value: offering.id,
       })),
       onOpenApplicant360: openApplicant360,
-      onManage: openInquiry,
+      onManage: openEditInquiry,
       onAssign: setAssignmentInquiry,
       onCommunicate: setCommunicationInquiry,
       onMarkContacted: (inquiry) => {
@@ -260,9 +293,32 @@ export default function AdmissionInquiriesScreen() {
     markingContacted,
     offerings?.items,
     openApplicant360,
-    openInquiry,
+    openEditInquiry,
     selectedIds,
   ]);
+  const activeInquiry =
+    selectedInquiry ??
+    (linkedInquiryId && linkedInquiryId !== dismissedInquiryId ? linkedInquiry : null) ??
+    null;
+  if (activeInquiry) {
+    return (
+      <AdmissionInquiryManagementPage
+        inquiry={activeInquiry}
+        onClose={() => {
+          setDismissedInquiryId(activeInquiry.id);
+          setSelectedInquiry(null);
+          const next = new URLSearchParams(searchParams.toString());
+          next.delete('inquiryId');
+          const query = next.toString();
+          router.push(
+            query
+              ? `${studentPaths.enrollment.inquiries}?${query}`
+              : studentPaths.enrollment.inquiries
+          );
+        }}
+      />
+    );
+  }
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
@@ -285,7 +341,7 @@ export default function AdmissionInquiriesScreen() {
               aria-label="Export all inquiries"
               size="small"
               variant="outlined"
-              disabled={exportState.isFetching}
+              disabled={exportState.isFetching || !academic.academicYearId}
               startIcon={<Iconify icon="mdi:file-export-outline" />}
               onClick={downloadExport}
               sx={{
@@ -299,8 +355,12 @@ export default function AdmissionInquiriesScreen() {
               </Box>
             </Button>
             {canManage && (
-              <Button size="small" variant="outlined" startIcon={<Iconify icon="mdi:help-circle-outline" />}
-                onClick={unmatchedDialog.onTrue}>
+              <Button
+                size="small"
+                variant="outlined"
+                startIcon={<Iconify icon="mdi:help-circle-outline" />}
+                onClick={unmatchedDialog.onTrue}
+              >
                 Offering unknown
               </Button>
             )}
@@ -310,7 +370,13 @@ export default function AdmissionInquiriesScreen() {
                 size="small"
                 variant="contained"
                 startIcon={<Iconify icon="mdi:plus" />}
-                onClick={createDialog.onTrue}
+                onClick={() =>
+                  router.push(
+                    searchParams.toString()
+                      ? `${studentPaths.enrollment.inquiryNew}?${searchParams.toString()}`
+                      : studentPaths.enrollment.inquiryNew
+                  )
+                }
                 sx={{
                   minWidth: { xs: 40, sm: 64 },
                   px: { xs: 1, sm: 1.5 },
@@ -325,26 +391,20 @@ export default function AdmissionInquiriesScreen() {
           </Stack>
         }
       />
-      <AdmissionInquiryDialog open={createDialog.value} onClose={createDialog.onFalse} />
-      <AdmissionUnmatchedInquiryDrawer open={unmatchedDialog.value} onClose={unmatchedDialog.onFalse} />
-      <AdmissionInquiryManagementDrawer
-        inquiry={
-          selectedInquiry ??
-          (linkedInquiryId && linkedInquiryId !== dismissedInquiryId ? linkedInquiry : null) ??
-          null
-        }
-        onClose={() => {
-          setDismissedInquiryId(selectedInquiry?.id ?? linkedInquiryId);
-          setSelectedInquiry(null);
-          const next = new URLSearchParams(searchParams.toString());
-          next.delete('inquiryId');
-          const query = next.toString();
-          router.push(
-            query
-              ? `${studentPaths.enrollment.inquiries}?${query}`
-              : studentPaths.enrollment.inquiries
-          );
+      <AdmissionAcademicFilters
+        boardId={academic.boardId}
+        mediumId={academic.mediumId}
+        standardId={academic.standardId}
+        onClear={academic.clear}
+        onChange={(key, value) => {
+          setPage(0);
+          setSelectedIds([]);
+          academic.update(key, value);
         }}
+      />
+      <AdmissionUnmatchedInquiryDrawer
+        open={unmatchedDialog.value}
+        onClose={unmatchedDialog.onFalse}
       />
       <AdmissionInquiryAssignmentDialog
         inquiry={assignmentInquiry}

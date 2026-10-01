@@ -11,6 +11,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
 import { Box, Stack, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
@@ -35,16 +36,17 @@ import {
   FeedbackStatusChip,
   EvaluationStatusChip,
   filterEvaluationRows,
-  getEvaluationSummary,
   dedupeEvaluationRows,
   EvaluationActionButton,
-  EvaluationSummaryCards,
   isRowEvaluationDisabled,
 } from 'src/screens/academic/homework-assignment-management/marksAndFeedback/evaluationWorkspaceUi';
 
 import AssignGrade from './assignMarksForm';
 import AssignmentRubricEvaluationContent from './assignmentRubricEvaluationContent';
-import { submitAssignmentRubricEvaluation } from './submitAssignmentRubricEvaluation';
+import {
+  saveAssignmentRubricAndFeedback,
+  submitAssignmentRubricEvaluation,
+} from './submitAssignmentRubricEvaluation';
 
 import type { IStudentSubmissionsProps } from '../type';
 import type { TStudentGrade } from '../../homeworkCreation/type';
@@ -54,6 +56,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   selectedClass,
   selectedDivision,
   selectedSubject,
+  activeFilter = 'all',
 }) => {
   const resolveTotalMarks = React.useCallback(
     (row: any): number => {
@@ -88,7 +91,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   );
 
   const [selectedStudents] = useState<any[]>([]);
-  const [activeFilter, setActiveFilter] = useState('all');
   const {
     data: assignmentSubmissions,
     isLoading: isSubmissionsLoading,
@@ -104,7 +106,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       AssignmentId: selectedAssignment?.id,
     },
   });
-  const [ensureSubmissionFeedback] = useQueryAndMutation({
+  const [updateSubmissionFeedback] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateSubmissionFeedbackMutation,
   });
@@ -114,6 +116,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const rubricEvaluationRef = React.useRef<RubricEvaluationPanelRef | null>(null);
   const rubricSaveInFlightRef = React.useRef(false);
   const [isRubricSaving, setIsRubricSaving] = useState(false);
+  const [rubricFeedback, setRubricFeedback] = useState('');
 
   // Dialog control for sending instant notifications
   const sendInstantNotificationDialogValue = useBoolean();
@@ -145,11 +148,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
         id: row.studentId || row.id,
       })),
     [filteredData]
-  );
-
-  const summary = React.useMemo(
-    () => getEvaluationSummary(normalizedData, assignmentSubmissions?.summary),
-    [assignmentSubmissions?.summary, normalizedData]
   );
 
   const selectedIndex = React.useMemo(
@@ -198,7 +196,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     }
 
     try {
-      const response = await ensureSubmissionFeedback({
+      const response = await updateSubmissionFeedback({
         assignmentId: selectedAssignment.id,
         studentId: selectedStudent.studentId,
         academicMediumId: (medium as any)?.id,
@@ -227,6 +225,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     (direction: 1 | -1) => {
       const nextRow = filteredData[selectedIndex + direction];
       if (nextRow) {
+        setRubricFeedback(nextRow.feedback || '');
         setSelectedStudent({
           ...(nextRow as TStudentGrade),
           totalMarks: resolveTotalMarks(nextRow),
@@ -237,6 +236,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   );
 
   const openRubricStudent = (row: TStudentGrade) => {
+    setRubricFeedback(row.feedback || '');
     setSelectedStudent({ ...row, totalMarks: resolveTotalMarks(row) });
   };
 
@@ -247,6 +247,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     const resetState = () => {
       setTimeout(() => {
         setSelectedStudent(null);
+        setRubricFeedback('');
         dispatch(setIsChanges(false));
       }, 300); // Delay can be adjusted (200ms is typical for smooth UX)
     };
@@ -273,6 +274,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const openStudentForEdit = React.useCallback(
     (row: any) => {
       setIsEditMode(true);
+      setRubricFeedback(row.feedback || '');
       setSelectedStudent({
         ...(row as TStudentGrade),
         id: row.submissionId ?? row.id,
@@ -286,6 +288,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
   const openStudentForView = React.useCallback(
     (row: any) => {
       setIsEditMode(false);
+      setRubricFeedback(row.feedback || '');
       setSelectedStudent({
         ...(row as TStudentGrade),
         id: row.submissionId ?? row.id,
@@ -298,7 +301,9 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   const handleRubricSubmit = async (advance: boolean) => {
     const rubricPanel = rubricEvaluationRef.current;
-    if (rubricSaveInFlightRef.current || !rubricPanel) return;
+    const assignmentId = selectedAssignment?.id;
+    const studentId = selectedStudent?.studentId;
+    if (rubricSaveInFlightRef.current || !rubricPanel || !assignmentId || !studentId) return;
     const nextStudent = advance ? nextRubricRow : null;
     if (advance && !nextStudent) return;
 
@@ -307,7 +312,19 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
     try {
       if (
         await submitAssignmentRubricEvaluation({
-          save: () => rubricPanel.save(),
+          save: () =>
+            saveAssignmentRubricAndFeedback({
+              saveRubric: () => rubricPanel.save(),
+              feedbackChanged: rubricFeedback !== (selectedStudent?.feedback || ''),
+              saveFeedback: async () => {
+                await updateSubmissionFeedback({
+                  assignmentId,
+                  studentId,
+                  academicMediumId: (medium as any)?.id,
+                  body: { feedback: rubricFeedback, status: 4 },
+                }).unwrap();
+              },
+            }),
           advance,
           nextStudent,
           onAdvance: openRubricStudent,
@@ -316,6 +333,10 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
       ) {
         shikshaMitraToast.success({ message: 'Rubric evaluation submitted successfully.' });
       }
+    } catch (error) {
+      shikshaMitraToast.error({
+        message: parseApiProblemDetail(error).detail || 'Failed to save assignment feedback.',
+      });
     } finally {
       rubricSaveInFlightRef.current = false;
       setIsRubricSaving(false);
@@ -344,13 +365,6 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
 
   return (
     <>
-      <Stack spacing={1}>
-        <EvaluationSummaryCards
-          summary={summary}
-          activeFilter={activeFilter}
-          onFilterChange={setActiveFilter}
-        />
-      </Stack>
       <Box>
         <CustomizableTable
           onSendNotification={handlerSendNotification}
@@ -565,6 +579,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
           viewSubmissionDialog.onFalse();
           setTimeout(() => {
             setSelectedStudent(null);
+            setRubricFeedback('');
           }, 300);
         }}
         title={
@@ -573,7 +588,9 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               {!isEditMode
                 ? 'View Assignment Submission & Feedback'
                 : usesRubric
-                  ? 'Rubric Evaluation'
+                  ? selectedStudent?.feedback
+                    ? 'Edit Feedback'
+                    : 'Add Feedback'
                   : `${selectedStudent?.marks || selectedStudent?.feedback ? 'Edit' : 'Add'} ${requiresMarks ? 'Feedback & Marks' : 'Feedback'}`}
             </Typography>
             <CustomTooltip
@@ -600,7 +617,7 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
             </CustomTooltip>
           </Box>
         }
-        maxWidth={usesRubric ? 'lg' : 'md'}
+        maxWidth="md"
         paperProps={{ sx: { maxHeight: '90vh' } }}
         hasForm={false}
       >
@@ -615,6 +632,11 @@ export const StudentSubmissions: React.FC<IStudentSubmissionsProps> = ({
               subjectId={selectedSubject}
               assignmentId={selectedAssignment.id}
               assignmentTitle={selectedAssignment.title}
+              submissionType={Number(
+                selectedStudent.submissionType ?? selectedAssignment.submissionType
+              )}
+              feedback={rubricFeedback}
+              onFeedbackChange={setRubricFeedback}
               ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
               rubricRef={rubricEvaluationRef}
               isEditMode={isEditMode}

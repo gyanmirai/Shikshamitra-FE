@@ -101,7 +101,7 @@ const ThreeDotsActions = ({
             >
               <Iconify
                 icon="solar:trash-bin-trash-bold"
-                color={disableDeleteIcon ? 'default' : 'error.main'}
+                color={disableDeleteIcon ? 'action.disabled' : 'error.main'}
                 sx={{ height: '16px', width: '16px', cursor: 'pointer' }}
               />
             </IconButton>
@@ -123,7 +123,12 @@ const ThreeDotsActions = ({
             >
               <Iconify
                 icon={action.icon}
-                sx={{ height: '16px', width: '16px', color: action.color, cursor: 'pointer' }}
+                sx={{
+                  height: '16px',
+                  width: '16px',
+                  color: action.disabled ? 'action.disabled' : action.color,
+                  cursor: action.disabled ? 'default' : 'pointer',
+                }}
               />
             </IconButton>
           </span>

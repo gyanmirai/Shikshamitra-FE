@@ -186,7 +186,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
               {
                 id: 'assign',
                 label: `${inquiry.assignedCounsellorId ? 'Reassign' : 'Assign'} counsellor for ${inquiry.applicantName}`,
-                icon: 'mdi:account-arrow-right-outline',
+                icon: 'mdi:account-arrow-right',
                 onClick: () => options.onAssign(inquiry),
               },
             ];
@@ -220,7 +220,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
             showThreeDots={plan.overflow.length > 0}
             viewIcon="mdi:account-circle-outline"
             viewLabel={`Open Applicant 360 for ${inquiry.applicantName}`}
-            editLabel={`Manage inquiry ${reference}`}
+            editLabel={`Edit inquiry ${reference}`}
             moreLabel={`More actions for ${reference}`}
             handleViewClick={() => options.onOpenApplicant360(inquiry)}
             handleEditClick={() => options.onManage(inquiry)}

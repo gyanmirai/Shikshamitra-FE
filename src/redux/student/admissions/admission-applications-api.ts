@@ -63,6 +63,10 @@ export type AdmissionApplication = {
   submittedAt?: string | null;
 };
 export type AdmissionApplicationListInput = {
+	academicYearId?: string;
+	boardId?: string;
+	mediumId?: string;
+	standardId?: string;
   status?: AdmissionApplicationStatus;
   search?: string;
   skipCount?: number;

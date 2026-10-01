@@ -14,8 +14,10 @@ export function AcademicInsightChart({ config }: Props) {
   const theme = useTheme();
   const suffix = config.valueSuffix ?? '';
   const chartHeight = Math.min(500, Math.max(300, config.categories.length * 58 + 130));
+  const maxValue = config.max ?? Math.max(0, ...config.values);
+  const tickAmount = Math.min(5, Math.max(2, Math.ceil(maxValue) + 1));
   const options = useChart({
-    chart: { toolbar: { show: false } },
+    chart: { toolbar: { show: false }, height: chartHeight },
     colors: [
       theme.palette.primary.main,
       theme.palette.info.main,
@@ -26,6 +28,7 @@ export function AcademicInsightChart({ config }: Props) {
     yaxis: {
       min: 0,
       max: config.max,
+      tickAmount,
       labels: { formatter: (value: number) => `${Math.round(value)}${suffix}` },
     },
     dataLabels: {

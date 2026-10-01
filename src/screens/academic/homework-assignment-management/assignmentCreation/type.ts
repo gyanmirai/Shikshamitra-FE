@@ -11,8 +11,10 @@ import type {
 import type { TStudentGrade, DivisionHomeworkMeta } from '../homeworkCreation/type';
 import type { TeacherProfile } from '../../curriculum-management/subjectAssignment/component/type';
 
-export interface IAssignment
-  extends Omit<AssignmentV2Dto, 'attachment' | 'createdBy' | 'divisionSchedules'> {
+export interface IAssignment extends Omit<
+  AssignmentV2Dto,
+  'attachment' | 'createdBy' | 'divisionSchedules'
+> {
   className?: string;
   classId?: string;
   divisions?: DivisionHomeworkMeta[];
@@ -62,6 +64,7 @@ export interface IStudentSubmissionsProps {
   selectedClass: string;
   selectedDivision: string;
   selectedSubject: string;
+  activeFilter?: string;
   selectedStudents?: TStudentGrade[];
   selectedAssignment?: IAssignment | null;
   handleBulkUpdate?: (data: TStudentGrade[]) => void;

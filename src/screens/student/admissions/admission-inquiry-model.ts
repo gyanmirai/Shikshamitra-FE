@@ -1,15 +1,15 @@
 import type { AdmissionInquiryPolicy } from 'src/redux/student/admissions/admission-inquiry-policy';
 import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 import type {
-  AdmissionInquirySource,
-  CreateAdmissionInquiry,
-  DuplicateMatch,
-} from 'src/redux/student/admissions/admission-inquiries-api';
-import type {
   AdmissionForm,
   AdmissionFormField,
   AdmissionFormSection,
 } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  DuplicateMatch,
+  AdmissionInquirySource,
+  CreateAdmissionInquiry,
+} from 'src/redux/student/admissions/admission-inquiries-api';
 
 import * as Yup from 'yup';
 
@@ -21,6 +21,7 @@ export type AdmissionInquiryFormValues = {
   standardId: string;
   offeringId: string;
   source: AdmissionInquirySource;
+  sourceDetail: string;
   sendAcknowledgement: boolean;
   fields: Record<string, string>;
 };
@@ -67,6 +68,7 @@ export const initialAdmissionInquiryValues: AdmissionInquiryFormValues = {
   standardId: '',
   offeringId: '',
   source: 0,
+  sourceDetail: '',
   sendAcknowledgement: true,
   fields: {},
 };
@@ -76,7 +78,8 @@ export const admissionInquirySchema = Yup.object({
   mediumId: Yup.string().required('Medium is required'),
   standardId: Yup.string().required('Class is required'),
   offeringId: Yup.string().required('Offering is required'),
-  source: Yup.number().integer().min(0).max(9).required('Source is required'),
+  source: Yup.number().integer().min(0).max(12).required('Source is required'),
+  sourceDetail: Yup.string().max(128, 'Source details must be 128 characters or fewer'),
   sendAcknowledgement: Yup.boolean().required(),
   fields: Yup.object().required(),
 });
@@ -312,7 +315,7 @@ export function buildAdmissionInquiryPayload(
     email: guardianEmail || null,
     preferredLanguageCode: 'en',
     source: values.source,
-    sourceDetail: null,
+    sourceDetail: values.sourceDetail.trim() || null,
     guardianFirstName,
     guardianLastName: boundValue(values, fields, 'Guardian.LastName', 'guardianLastName') || null,
     guardianPhone,
@@ -355,6 +358,10 @@ export function validateAdmissionInquiry(
     fieldErrors[guardianPhoneField.code] =
       'Guardian mobile number must be a valid 10-digit Indian mobile number.';
   }
+  const preferredClassError = getAdmissionInquiryPreferredClassError(values, fields, offering);
+  if (preferredClassError) {
+    fieldErrors[preferredClassError.fieldCode] = preferredClassError.message;
+  }
   return {
     ...(!values.boardId ? { boardId: 'Board is required' } : {}),
     ...(!values.mediumId ? { mediumId: 'Medium is required' } : {}),
@@ -370,7 +377,42 @@ export function validateAdmissionInquiry(
     ...(policy?.allowedSources.length && !policy.allowedSources.includes(values.source)
       ? { source: 'Choose a source allowed by this admission workflow' }
       : {}),
+    ...((policy?.requireSourceDetailFor.includes(values.source) ||
+      values.source === 10 ||
+      values.source === 11) &&
+    !values.sourceDetail.trim()
+      ? { sourceDetail: 'Source details are required for this source' }
+      : {}),
     ...(Object.keys(fieldErrors).length ? { fields: fieldErrors } : {}),
+  };
+}
+
+export function getAdmissionInquiryPreferredClassError(
+  values: AdmissionInquiryFormValues,
+  fields: AdmissionFormField[],
+  offering?: AdmissionOfferingListItem
+) {
+  if (!offering) return null;
+  const field = fields.find(
+    (item) =>
+      equalsIgnoreCase(item.bindingKey, 'Preference.Class') ||
+      /^preferred[\s_-]*class$/i.test(item.code) ||
+      /^preferred[\s_-]*class$/i.test(item.label)
+  );
+  const preferredClass = field ? fieldValue(values, field.code) : '';
+  if (!field || !preferredClass) return null;
+
+  const normalizeClass = (value: string) =>
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/^(class|grade|standard|std)\s*/i, '')
+      .replace(/[^a-z0-9]/g, '');
+  if (normalizeClass(preferredClass) === normalizeClass(offering.standardName)) return null;
+
+  return {
+    fieldCode: field.code,
+    message: `Preferred class must match the selected offering (${offering.standardName}). Choose a matching offering or change the preferred class.`,
   };
 }
 

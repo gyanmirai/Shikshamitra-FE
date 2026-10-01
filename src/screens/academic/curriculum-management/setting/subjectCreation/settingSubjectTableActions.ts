@@ -6,9 +6,7 @@ import type { ISubject } from './type';
 
 type SubjectTableActionOptions = {
   canAdd: boolean;
-  canView: boolean;
   canDelete: boolean;
-  onViewUsage: (subject: ISubject) => void;
   onEdit: (subject: ISubject) => void;
   onArchive: (subject: ISubject) => void;
   onRestore: (subject: ISubject) => void;
@@ -21,15 +19,6 @@ export function getSettingSubjectTableActions(
   options: SubjectTableActionOptions
 ): AdaptiveThreeDotsAction[] {
   const actions: AdaptiveThreeDotsAction[] = [];
-
-  if (options.canView) {
-    actions.push({
-      id: 'view-usage',
-      label: 'View usage',
-      icon: GlobalIcons.eye,
-      onClick: () => options.onViewUsage(subject),
-    });
-  }
 
   if (isArchived) {
     if (options.canAdd) {

@@ -15,6 +15,7 @@ describe('admission form field codes', () => {
     const form = getBlankAdmissionFormInitialValues(0);
 
     expect(form.purpose).toBe(0);
+    expect(form.layoutType).toBe(0);
     expect(form.sections).toHaveLength(1);
     expect(form.sections[0].fields).toEqual([]);
   });
