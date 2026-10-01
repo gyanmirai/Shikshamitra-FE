@@ -9,6 +9,7 @@ import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type
 import ByMonthView from './FeeLedgerByMonth';
 import ByFeeHeadView from './FeeLedgerByFeeHead';
 import { FeeRow, toPeriod, ColHeader } from './FeeLedgerShared';
+import { roundUpToRupee, safeRoundingDifference } from './preview/paymentAllocationUtils';
 
 import type { FeeLedgerTab } from './FeeLedgerFilterBar';
 import type {
@@ -173,9 +174,19 @@ const FeeLedgerList = ({
         )
       );
     } else {
+      const roundedDue = roundUpToRupee(due);
       onSelectionChange([
         ...selectedItems,
-        { dueFeeId, feeHeadId, period, dueAmount: due, lateFeeAmount, installmentLabel },
+        {
+          dueFeeId,
+          feeHeadId,
+          period,
+          dueAmount: roundedDue,
+          originalDueAmount: due,
+          roundingAdjustment: safeRoundingDifference(due, roundedDue),
+          lateFeeAmount,
+          installmentLabel,
+        },
       ]);
     }
   };
@@ -203,14 +214,19 @@ const FeeLedgerList = ({
     } else {
       const toAdd = selectableItems
         .filter((i) => !isItemSelected(selectedItems, i.feeHeadId, period, i.dueFeeId))
-        .map((i) => ({
-          dueFeeId: i.dueFeeId,
-          feeHeadId: i.feeHeadId,
-          period,
-          dueAmount: i.due,
-          lateFeeAmount: i.lateFeeAmount,
-          installmentLabel: i.installmentLabel,
-        }));
+        .map((i) => {
+          const roundedDue = roundUpToRupee(i.due);
+          return {
+            dueFeeId: i.dueFeeId,
+            feeHeadId: i.feeHeadId,
+            period,
+            dueAmount: roundedDue,
+            originalDueAmount: i.due,
+            roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
+            lateFeeAmount: i.lateFeeAmount,
+            installmentLabel: i.installmentLabel,
+          };
+        });
       onSelectionChange([...selectedItems, ...toAdd]);
     }
   };
@@ -244,14 +260,19 @@ const FeeLedgerList = ({
           const period = getPeriod(i);
           return !isItemSelected(selectedItems, group.feeHeadId, period, i.dueFeeId);
         })
-        .map((i) => ({
-          dueFeeId: i.dueFeeId,
-          feeHeadId: group.feeHeadId,
-          period: getPeriod(i),
-          dueAmount: i.due,
-          lateFeeAmount: i.lateFeeAmount,
-          installmentLabel: i.installmentLabel,
-        }));
+        .map((i) => {
+          const roundedDue = roundUpToRupee(i.due);
+          return {
+            dueFeeId: i.dueFeeId,
+            feeHeadId: group.feeHeadId,
+            period: getPeriod(i),
+            dueAmount: roundedDue,
+            originalDueAmount: i.due,
+            roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
+            lateFeeAmount: i.lateFeeAmount,
+            installmentLabel: i.installmentLabel,
+          };
+        });
       onSelectionChange([...selectedItems, ...toAdd]);
     }
   };

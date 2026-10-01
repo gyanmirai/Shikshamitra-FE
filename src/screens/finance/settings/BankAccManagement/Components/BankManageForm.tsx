@@ -86,7 +86,6 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
     try {
       // Transform form data to API format
       const payload = {
-        code: values.code,
         bankName: values.bankName,
         branchName: values.branchName,
         branchAddress: values.branchAddress || '',
@@ -139,7 +138,6 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
       accountNumber: 'accountDetails',
       purpose: 'accountDetails',
       accountHeadId: 'accountDetails',
-      code: 'bankDetails',
       effectiveFrom: 'bankDetails',
       effectiveTo: 'bankDetails',
       ifscCode: 'paymentInfo',
@@ -185,22 +183,8 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
           </AccordionSummary>
           <AccordionDetails>
             <Grid container spacing={2}>
-              <Grid size={{ xs: 12, md: 4 }}>
-                <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Code *"
-                    name="code"
-                    value={formik.values.code}
-                    onChange={formik.handleChange}
-                    error={Boolean(formik.touched.code && formik.errors.code)}
-                    helperText={formik.touched.code && formik.errors.code}
-                  />
-                </ShakingTextField>
-              </Grid>
               {/* Bank Name */}
-              <Grid size={{ xs: 12, md: 8 }}>
+              <Grid size={{ xs: 12 }}>
                 <ShakingTextField
                   error={formik.touched.bankName && Boolean(formik.errors.bankName)}
                 >

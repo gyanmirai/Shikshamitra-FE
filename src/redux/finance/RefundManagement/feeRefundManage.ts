@@ -31,12 +31,17 @@ export interface FeeRefundRequestDto {
   standardId: string;
   divisionId: string;
   status: number;
+  workflowVersion: number;
+  replacesRefundRequestId?: string | null;
+  replacedByRefundRequestId?: string | null;
   voucherNumber: string;
   totalAmount: number;
   calculatedAmount: number;
   approvedAmount: number;
   processedAmount: number;
   reversedAmount: number;
+  refundSubledgerNetAmount?: number | null;
+  isRefundSubledgerBalanced?: boolean | null;
   studentFeeStructureId?: string;
   refundPolicyId?: string;
   refundPolicyVersionId?: string;
@@ -174,15 +179,38 @@ export interface FeeRefundSettlementDto {
   settlementDate: string;
   externalReference?: string;
   failureReason?: string;
+  bankAccountId?: string;
+  evidenceReference?: string;
+  verifiedByUserId?: string;
+  verifiedAt?: string;
+}
+
+export interface RecordRefundPayoutInput {
+  idempotencyKey: string;
+  method: string;
+  amount: number;
+  paymentDate: string;
+  bankAccountId?: string;
+  externalReference?: string;
+  evidenceReference: string;
+}
+
+export interface ResolveRefundPayoutInput {
+  idempotencyKey: string;
+  evidenceReference: string;
+  reason?: string;
 }
 
 export interface GetFeeRefundsInput {
+  academicYearId?: string;
   studentId?: string;
   /** Filter to students enrolled in a specific academic medium. */
   academicMediumId?: string;
   standardId?: string;
   divisionId?: string;
   status?: number;
+  legacyHistory?: boolean;
+  workflowVersion?: number;
   search?: string;
   skipCount?: number;
   maxResultCount?: number;
@@ -198,6 +226,8 @@ export interface UpdateFeeRefundInput {
   id: string;
   body: IFeeRefundApiPayload;
 }
+
+type FeeRefundCreationPayload = IFeeRefundApiPayload & { idempotencyKey: string };
 
 // ─── API slice ────────────────────────────────────────────────────────────────
 
@@ -231,16 +261,16 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       }),
     }),
 
-    createFeeRefund: builder.mutation<FeeRefundRequestDto, IFeeRefundApiPayload>({
+    createFeeRefund: builder.mutation<FeeRefundRequestDto, FeeRefundCreationPayload>({
       query: (body) => ({
         url: '/fee-refunds',
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeRefund],
+      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails],
     }),
 
-    previewFeeRefund: builder.mutation<FeeRefundPreviewDto, IFeeRefundApiPayload>({
+    previewFeeRefund: builder.mutation<FeeRefundPreviewDto, FeeRefundCreationPayload>({
       query: (body) => ({ url: '/fee-refunds/preview', method: 'POST', body }),
     }),
 
@@ -260,7 +290,7 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body: { notes },
       }),
-      invalidatesTags: [financeModuleType.feeRefund],
+      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails],
     }),
 
     rejectFeeRefund: builder.mutation<FeeRefundRequestDto, { id: string; notes: string }>({
@@ -333,11 +363,33 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         financeModuleType.draftPosting,
       ],
     }),
+    recordRefundPayout: builder.mutation<FeeRefundRequestDto, { id: string; body: RecordRefundPayoutInput }>({
+      query: ({ id, body }) => ({ url: `/fee-refunds/${id}/payout`, method: 'POST', body }),
+      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails],
+    }),
+    confirmRefundPayout: builder.mutation<FeeRefundRequestDto, { id: string; payoutId: string; body: ResolveRefundPayoutInput }>({
+      query: ({ id, payoutId, body }) => ({ url: `/fee-refunds/${id}/payout/${payoutId}/confirm`, method: 'POST', body }),
+      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails,
+        financeModuleType.feeCollection, financeModuleType.accountPosting],
+    }),
+    failRefundPayout: builder.mutation<FeeRefundRequestDto, { id: string; payoutId: string; body: ResolveRefundPayoutInput }>({
+      query: ({ id, payoutId, body }) => ({ url: `/fee-refunds/${id}/payout/${payoutId}/fail`, method: 'POST', body }),
+      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails],
+    }),
+    returnRefundPayout: builder.mutation<FeeRefundRequestDto, { id: string; settlementId: string; reason: string; evidenceReference: string }>({
+      query: ({ id, ...body }) => ({ url: `/fee-refunds/${id}/payout/return`, method: 'POST', body }),
+      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails,
+        financeModuleType.feeCollection, financeModuleType.accountPosting],
+    }),
   }),
   overrideExisting: false,
 });
 
 export const {
+  useRecordRefundPayoutMutation,
+  useConfirmRefundPayoutMutation,
+  useFailRefundPayoutMutation,
+  useReturnRefundPayoutMutation,
   useGetFeeRefundsQuery,
   useLazyGetFeeRefundsQuery,
   useGetFeeRefundByIdQuery,

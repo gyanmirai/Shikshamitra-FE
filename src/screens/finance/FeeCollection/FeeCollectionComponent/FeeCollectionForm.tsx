@@ -65,7 +65,11 @@ import {
 import FeeLedgerList from './FeeLedgerList';
 import { toPeriod } from './FeeLedgerShared';
 import UnifiedReceiptDisplay from './UnifiedReceiptDisplay';
-import { allocatePayment } from './preview/paymentAllocationUtils';
+import {
+  allocatePayment,
+  roundUpToRupee,
+  safeRoundingDifference,
+} from './preview/paymentAllocationUtils';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import FeeCollectionOutcomePanel from './FeeCollectionOutcomePanel';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
@@ -659,7 +663,7 @@ const FeeCollectComponentForm = ({
     validate: (values) => {
       const errors: any = {};
       const itemsTotal = values.selectedItems.reduce(
-        (s, i) => s + i.dueAmount + (i.lateFeeAmount ?? 0),
+        (s, i) => s + roundUpToRupee(i.dueAmount) + (i.lateFeeAmount ?? 0),
         0
       );
       const chargesTotal = (chargesData ?? [])
@@ -725,7 +729,7 @@ const FeeCollectComponentForm = ({
   // ── Derived amounts ────────────────────────────────────────────────────────
   const subtotal = useMemo(() => {
     const itemsTotal = formik.values.selectedItems.reduce(
-      (s, i) => s + i.dueAmount + (i.lateFeeAmount ?? 0),
+      (s, i) => s + roundUpToRupee(i.dueAmount) + (i.lateFeeAmount ?? 0),
       0
     );
     const chargesTotal = (chargesData ?? [])
@@ -1101,11 +1105,14 @@ const FeeCollectComponentForm = ({
             return;
           }
 
+          const roundedDue = roundUpToRupee(i.due);
           items.push({
             dueFeeId: i.dueFeeId,
             feeHeadId: i.feeHeadId,
             period,
-            dueAmount: i.due,
+            dueAmount: roundedDue,
+            originalDueAmount: i.due,
+            roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
             lateFeeAmount: i.lateFeeAmount,
             installmentLabel: i.installmentLabel,
           });
@@ -1579,7 +1586,7 @@ const FeeCollectComponentForm = ({
                                   id={`${item.feeHeadId}-${item.period}`}
                                   label={feeHeadMap[item.feeHeadId] ?? item.feeHeadId}
                                   sub={dayjs(`${item.period}-01`).format('MMM YYYY')}
-                                  amount={item.dueAmount + (item.lateFeeAmount ?? 0)}
+                                  amount={roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0)}
                                   onRemove={() => {
                                     formik.setFieldValue(
                                       'selectedItems',

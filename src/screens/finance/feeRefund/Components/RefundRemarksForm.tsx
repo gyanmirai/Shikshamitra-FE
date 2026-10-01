@@ -213,6 +213,32 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
               </Box>
             </Card>
 
+            {dto?.workflowVersion === 1 && (
+              <Card variant="outlined" sx={{ borderRadius: 2, p: 2, mb: 2 }}>
+                <Typography variant="subtitle2" fontWeight={700} mb={1}>Refund timeline</Typography>
+                <Stack spacing={0.75}>
+                  <Typography variant="body2">Requested · {dto.submittedAt
+                    ? new Date(dto.submittedAt).toLocaleString('en-IN') : 'Date unavailable'}</Typography>
+                  {dto.status !== 0 && dto.status !== 3 &&
+                    <Typography variant="body2">Approved · Full amount reserved</Typography>}
+                  {dto.settlements?.map((payout) => <React.Fragment key={payout.id}>
+                    <Typography variant="body2">Payment recorded · {payout.method} · {new Date(payout.settlementDate).toLocaleString('en-IN')}</Typography>
+                    {payout.verifiedAt && <Typography variant="body2">Outcome verified · {new Date(payout.verifiedAt).toLocaleString('en-IN')}</Typography>}
+                  </React.Fragment>)}
+                  {dto.status === 2 && dto.settlements?.some((payout) => payout.status === 0) &&
+                    <Typography variant="body2" color="info.main">Awaiting payment verification</Typography>}
+                  {dto.failureReason && <Typography variant="body2" color="error.main">Failed · {dto.failureReason}</Typography>}
+                  {dto.status === 3 && dto.approverNotes && <Typography variant="body2" color="error.main">Rejected · {dto.approverNotes}</Typography>}
+                  {dto.replacesRefundRequestId && <Typography variant="body2">Replaces refund {dto.replacesRefundRequestId}</Typography>}
+                  {dto.replacedByRefundRequestId && <Typography variant="body2">Replaced by refund {dto.replacedByRefundRequestId}</Typography>}
+                  {dto.isRefundSubledgerBalanced !== null && dto.isRefundSubledgerBalanced !== undefined &&
+                    <Typography variant="body2" color={dto.isRefundSubledgerBalanced ? 'text.secondary' : 'error.main'}>
+                      Refund subledger · {formatCurrency(dto.refundSubledgerNetAmount ?? 0)} · {dto.isRefundSubledgerBalanced ? 'Balanced' : 'Needs review'}
+                    </Typography>}
+                </Stack>
+              </Card>
+            )}
+
             {/* Fee Head Refund Table */}
             {dto?.feeHeads && dto.feeHeads.length > 0 && (
               <>

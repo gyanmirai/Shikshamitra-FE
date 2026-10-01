@@ -11,5 +11,4 @@ export const getInitialExpenseData = (editData: IExpenseFormValues | null): IExp
   paymentMethod: editData?.paymentMethod !== undefined ? editData.paymentMethod : '',
   paymentDate: editData?.paymentDate ? dayjs(editData.paymentDate) : null,
   notes: editData?.notes ?? '',
-  document: null,
 });

@@ -16,6 +16,7 @@ import {
 } from 'src/enums/fee-collection-type';
 
 import FeeWaiverToggle from './FeeWaiverToggle';
+import { roundUpToRupee } from './preview/paymentAllocationUtils';
 
 // ─── Constants & Helpers ───────────────────────────────────────────────────────
 
@@ -374,7 +375,7 @@ export const FeeRow = ({
           fontWeight: 600,
         }}
       >
-        {formatNumber(due, 'INR')}
+        {formatNumber(roundUpToRupee(due), 'INR')}
       </Typography>
 
       {/* LATE FEE */}
@@ -597,7 +598,7 @@ export const GroupHeader = ({
             color="error.main"
             sx={{ fontSize: '0.72rem', fontVariantNumeric: 'tabular-nums' }}
           >
-            Due: ₹{formatNumber(totalDue)}
+            Due: ₹{formatNumber(roundUpToRupee(totalDue))}
           </Typography>
         </Box>
       )}

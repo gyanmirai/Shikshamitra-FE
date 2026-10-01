@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Card, Divider, Typography } from '@mui/material';
 
+import { roundUpToRupee } from './paymentAllocationUtils';
 import type { IFeeCharge, SelectedItem } from '../../Components/type';
 
 interface Props {
@@ -49,7 +50,7 @@ const FeeChargesSummary = ({
   paidAmount,
 }: Props) => {
   const itemsTotal = useMemo(
-    () => selectedItems.reduce((s, i) => s + i.dueAmount, 0),
+    () => selectedItems.reduce((s, i) => s + roundUpToRupee(i.dueAmount), 0),
     [selectedItems]
   );
 

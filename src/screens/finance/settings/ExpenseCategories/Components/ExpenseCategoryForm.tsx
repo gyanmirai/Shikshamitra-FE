@@ -195,7 +195,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
               <TextField
                 fullWidth
                 size="small"
-                label="Tags *"
+                label="Tags (optional)"
                 value={tag}
                 onChange={(e) => setTag(e.target.value)}
                 onKeyDown={handleKeyDown}

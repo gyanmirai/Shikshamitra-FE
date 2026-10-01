@@ -8,6 +8,7 @@ import { FeeMonth } from 'src/enums/fee-collection-type';
 import { Box, Chip, Button, Typography } from '@mui/material';
 
 import { toPeriod } from './FeeLedgerShared';
+import { roundUpToRupee, safeRoundingDifference } from './preview/paymentAllocationUtils';
 
 import type { IFeeCharge, IStudentFee, SelectedItem, FeeLedgerData } from '../Components/type';
 
@@ -69,7 +70,7 @@ const SmartRecommendationPanel = ({
       s +
       g.items
         .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
-        .reduce((ss, i) => ss + i.due + (i.lateFeeAmount ?? 0), 0),
+        .reduce((ss, i) => ss + roundUpToRupee(i.due) + (i.lateFeeAmount ?? 0), 0),
     0
   );
 
@@ -92,7 +93,7 @@ const SmartRecommendationPanel = ({
       s +
       g.items
         .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
-        .reduce((ss, i) => ss + i.due + (i.lateFeeAmount ?? 0), 0),
+        .reduce((ss, i) => ss + roundUpToRupee(i.due) + (i.lateFeeAmount ?? 0), 0),
     0
   );
 
@@ -116,16 +117,19 @@ const SmartRecommendationPanel = ({
           const period = toPeriod(FeeMonth[g.month] as string, currentYear);
           g.items
             .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
-            .forEach((i) =>
+            .forEach((i) => {
+              const roundedDue = roundUpToRupee(i.due);
               items.push({
                 dueFeeId: i.dueFeeId,
                 feeHeadId: i.feeHeadId,
                 period,
-                dueAmount: i.due,
+                dueAmount: roundedDue,
+                originalDueAmount: i.due,
+                roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
                 lateFeeAmount: i.lateFeeAmount,
                 installmentLabel: i.installmentLabel,
-              })
-            );
+              });
+            });
         });
         onSelectionChange(items);
       },
@@ -148,16 +152,19 @@ const SmartRecommendationPanel = ({
           const period = toPeriod(FeeMonth[g.month] as string, currentYear);
           g.items
             .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
-            .forEach((i) =>
+            .forEach((i) => {
+              const roundedDue = roundUpToRupee(i.due);
               items.push({
                 dueFeeId: i.dueFeeId,
                 feeHeadId: i.feeHeadId,
                 period,
-                dueAmount: i.due,
+                dueAmount: roundedDue,
+                originalDueAmount: i.due,
+                roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
                 lateFeeAmount: i.lateFeeAmount,
                 installmentLabel: i.installmentLabel,
-              })
-            );
+              });
+            });
         });
         onSelectionChange(items);
       },

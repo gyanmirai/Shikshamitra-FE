@@ -4,10 +4,7 @@ import * as Yup from 'yup';
 export const getExpenseFormSchema = (currentYear: any) =>
   Yup.object().shape({
     categoryId: Yup.string().required('Expense Category is required'),
-    categoryTags: Yup.array()
-      .of(Yup.string())
-      .min(1, 'At least one expense category tag is required')
-      .required('Expense category tags are required'),
+    categoryTags: Yup.array().of(Yup.string()),
     name: Yup.string()
       .min(1, 'Expense name must be at least 1 character')
       .max(255, 'Expense name cannot exceed 255 characters')
@@ -15,7 +12,11 @@ export const getExpenseFormSchema = (currentYear: any) =>
     amount: Yup.number()
       .required('Amount is required')
       .typeError('Amount must be a number')
-      .min(0.01, 'Amount must be at least 0.01'),
+      .min(0.01, 'Amount must be at least 0.01')
+      .max(999999999999.99, 'Amount is too large')
+      .test('paise', 'Use no more than two decimal places', (value) =>
+        value == null || /^\d+(\.\d{1,2})?$/.test(String(value))
+      ),
     paymentMethod: Yup.number()
       .required('Payment Method is required')
       .typeError('Payment Method is required'),

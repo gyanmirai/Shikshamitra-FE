@@ -8,14 +8,15 @@ export const getIncomeFormSchema = (currentYear: any) =>
       .min(1, 'Income name must be at least 1 character')
       .max(255, 'Income name cannot exceed 255 characters')
       .required('Income name is required'),
-    categoryTags: Yup.array()
-      .of(Yup.string())
-      .min(1, 'At least one income category tag is required')
-      .required('Income category tags are required'),
+    categoryTags: Yup.array().of(Yup.string()),
     amount: Yup.number()
       .required('Amount is required')
       .typeError('Amount must be a number')
-      .min(0.01, 'Amount must be at least 0.01'),
+      .min(0.01, 'Amount must be at least 0.01')
+      .max(999999999999.99, 'Amount is too large')
+      .test('paise', 'Use no more than two decimal places', (value) =>
+        value == null || /^\d+(\.\d{1,2})?$/.test(String(value))
+      ),
     paymentMethod: Yup.number()
       .required('Payment method is required')
       .typeError('Payment method is required'),

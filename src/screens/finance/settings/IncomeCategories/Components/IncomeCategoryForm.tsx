@@ -203,7 +203,7 @@ const IncomeCategoryForm: React.FC<IIncomeCategoryFormProps> = ({ open, onClose,
               <TextField
                 fullWidth
                 size="small"
-                label="Tags *"
+                label="Tags (optional)"
                 value={tag}
                 onChange={(e) => {
                   setTag(e.target.value);

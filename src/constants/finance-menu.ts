@@ -107,6 +107,8 @@ export const financePermissions = {
       approve: `${defaultFinancePermissionName}Fees.Refund.Approve`,
       reject: `${defaultFinancePermissionName}Fees.Refund.Reject`,
       process: `${defaultFinancePermissionName}Fees.Refund.Process`,
+      verifyPayout: `${defaultFinancePermissionName}Fees.Refund.VerifyPayout`,
+      failPayout: `${defaultFinancePermissionName}Fees.Refund.FailPayout`,
       retryProcessing: `${defaultFinancePermissionName}Fees.Refund.RetryProcessing`,
       reverse: `${defaultFinancePermissionName}Fees.Refund.Reverse`,
       viewSensitivePaymentDetails: `${defaultFinancePermissionName}Fees.Refund.ViewSensitivePaymentDetails`,
@@ -460,13 +462,6 @@ const financeModule = {
           icon: menuIconView('mdi:bank-outline'),
           children: [
             {
-              title: 'Draft Postings',
-              path: financePaths.accounts.draftPostings,
-              _action: 'draft-postings',
-              permissionName: financePermissions.accounts.draftPostings,
-              icon: menuIconView('mdi:clipboard-text-clock-outline'),
-            },
-            {
               title: 'Reconciliation',
               path: financePaths.accounts.reconciliation,
               _action: 'reconciliation',
@@ -535,15 +530,6 @@ const financeModule = {
                   shortcutKeyName: 'Alt+F+3+S+3',
                   permissionName: financePermissions.accounts.settings.bankAccount,
                   icon: menuIconView('mdi:bank-outline'),
-                },
-                {
-                  title: 'Posting Automation',
-                  path: financePaths.accounts.settings.postingAutomation,
-                  _action: 'posting-automation',
-                  shortcutKey: 'Alt+F+3+S+4',
-                  shortcutKeyName: 'Alt+F+3+S+4',
-                  permissionName: financePermissions.accounts.settings.postingAutomation,
-                  icon: menuIconView('mdi:robot-outline'),
                 },
               ],
             },

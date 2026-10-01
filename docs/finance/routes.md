@@ -69,6 +69,10 @@ These routes or path constants exist but should not be treated as active menu na
 | ----------------------- | -------------------------------------------------------------------------------- |
 | Receipt Book menu child | Commented in `finance-menu.ts`, although a page folder exists                    |
 | Budgeting path          | `financePaths.budgeting` exists, but active navigation needs source confirmation |
+| Draft Postings           | Removed from Accounts menu; the direct route explains that no posting API exists |
+| Posting Automation       | Removed from Accounts Settings; the direct route has no fake Save action         |
+
+Accounts Settings does not contain a Payment Modes item. Fee Collections owns the current payment-method choices. The proposed Accounts implementation is tracked in [Accounts frontend/backend delivery](../../../Shikshamitra-BE/docs/modules/finance/references/accounts-frontend-backend-delivery.md).
 
 ## Student fee assignment
 

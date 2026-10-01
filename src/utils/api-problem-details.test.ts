@@ -3,6 +3,21 @@ import { it, expect, describe } from 'vitest';
 import { parseApiProblemDetail } from './api-problem-details';
 
 describe('parseApiProblemDetail', () => {
+  it('identifies an unassigned refund policy from the eligibility error code', () => {
+    const parsed = parseApiProblemDetail({
+      status: 400,
+      data: {
+        title: 'Business rule violated',
+        detail: 'One or more business rules were violated.',
+        errorCode: 'Finance:FeeRefund:010010',
+      },
+    });
+
+    expect(parsed.detail).toBe(
+      "No refund policy is assigned to this student's fee structure. Assign a refund policy before creating a refund request."
+    );
+  });
+
   it('shows the Income Category dependency reason from problem details', () => {
     const parsed = parseApiProblemDetail({
       status: 400,

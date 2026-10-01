@@ -1,11 +1,6 @@
 import * as Yup from 'yup';
 
 export const bankAccountValidationSchema = Yup.object().shape({
-  code: Yup.string()
-    .trim()
-    .matches(/^[A-Za-z0-9._-]+$/, 'Use letters, numbers, dot, dash or underscore')
-    .max(32)
-    .required('Code is required'),
   bankName: Yup.string().trim().required('Bank Name is required'),
 
   branchName: Yup.string().trim().required('Branch Name is required'),
@@ -29,6 +24,7 @@ export const bankAccountValidationSchema = Yup.object().shape({
 
   upiId: Yup.string()
     .trim()
+    .transform((value) => (value === '' ? null : value))
     .matches(/^[\w.-]+@[\w.-]+$/, 'Invalid UPI ID. Example: prerna123@paytm')
     .nullable(),
 

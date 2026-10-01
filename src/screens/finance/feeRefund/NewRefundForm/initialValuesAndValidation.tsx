@@ -7,6 +7,7 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import {
   refundPaymentMethodsConfig,
   getInitialRefundPaymentDetails,
+  isRefundRequestField,
 } from './refundPaymentDetailsConfig';
 
 import type { IPaymentFieldConfig } from '../../FeeCollection/Components/type';
@@ -65,6 +66,8 @@ export interface IFeeHeadRefundItem {
 
 /** Shape sent to POST /api/fee-refunds and PUT /api/fee-refunds/{id} */
 export interface IFeeRefundApiPayload {
+  idempotencyKey?: string;
+  replacesRefundRequestId?: string;
   studentId: string;
   academicYearId: string;
   originalReceiptId: string;
@@ -211,7 +214,7 @@ export const buildRefundValidationSchema = (currentYear: ICurrentYear) =>
           refundPaymentMethodsConfig[refundMethod as keyof typeof refundPaymentMethodsConfig]
             // 'amount' is filtered from the refund UI (captured via the fee-head table instead),
             // so skip its validation here to avoid an invisible required-field blocker.
-            .filter((field) => field.name !== 'amount')
+            .filter((field) => isRefundRequestField(field.name))
             .map((field) => [field.name, buildFieldValidation(field, currentYear, context?.parent)])
         )
       );

@@ -8,7 +8,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
 import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
-import { useUploadCurriculumFileMutation } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   useAddIncomeTrackingMutation,
   useUpdateIncomeTrackingMutation,
@@ -51,30 +50,8 @@ export const useIncomeForm = (
     currentQueryAndMutation: useUpdateIncomeTrackingMutation,
   });
 
-  const [uploadCurriculumFile, { isLoading: uploadLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUploadCurriculumFileMutation,
-  });
-
   const initialValues = useMemo(() => getInitialIncomeData(editData), [editData]);
   const validationSchema = useMemo(() => getIncomeFormSchema(currentYear), [currentYear]);
-
-  // File upload handler
-  const handleFileUpload = async (files: (File | string)[]) => {
-    try {
-      const formData = new FormData();
-      formData.append('FileName', (files[0] as File)?.name);
-      formData.append('File', files[0] as File);
-      const response = await uploadCurriculumFile(formData).unwrap();
-      return response.data;
-    } catch (error) {
-      console.error('File upload failed:', error);
-      shikshaMitraToast.error({
-        message: 'Failed to upload document',
-      });
-      throw error;
-    }
-  };
 
   const formik = useFormik({
     initialValues,
@@ -82,23 +59,15 @@ export const useIncomeForm = (
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
-        // Find account head from selected category
-        const selectedCategory = (incomeOptionsData?.items || incomeOptionsData || []).find(
-          (c: any) => c.id === values.categoryId
-        );
-        const accountHeadId = selectedCategory?.accountHeadId || null;
-
         // Payload matches the API contract exactly
         const payload = {
           categoryId: values.categoryId,
-          accountHeadId, // Auto-resolved head for posting
           name: values.name,
           categoryTags: values.categoryTags || [],
           amount: values.amount,
           paymentMethod: values.paymentMethod, // integer enum
           paymentDate: dateConvertor(values.paymentDate?.format(dateFormat) || '') || '',
           notes: values.notes || null,
-          ...(values.document && { document: values.document }),
         };
 
         if (editData?.id) {
@@ -142,8 +111,6 @@ export const useIncomeForm = (
     currentYear,
     addLoading,
     updateLoading,
-    uploadLoading,
     incomeOptionsLoading,
-    handleFileUpload,
   };
 };

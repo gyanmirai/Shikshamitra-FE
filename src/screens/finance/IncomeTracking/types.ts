@@ -24,7 +24,6 @@ export interface IIncomeFormValues {
   paymentMethod: number | '';
   paymentDate: Dayjs | null;
   notes: string;
-  document?: string | null;
 }
 
 export interface IIncomeTrackingFormProps {

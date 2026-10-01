@@ -184,6 +184,8 @@ export interface MonthWiseFeeItem {
   prorationExplanation?: string | null;
   paid: number;
   due: number;
+  collectionAmount?: number;
+  roundingAmount?: number;
   reconciliationAmount?: number;
   concessionAmount?: number;
   refundAmount?: number;
@@ -216,6 +218,8 @@ export interface FeeHeadWiseFeeItem {
   prorationExplanation?: string | null;
   paid: number;
   due: number;
+  collectionAmount?: number;
+  roundingAmount?: number;
   reconciliationAmount?: number;
   concessionAmount?: number;
   refundAmount?: number;
@@ -246,7 +250,12 @@ export interface SelectedItem {
   dueFeeId?: string; // DueFee id for allocation payload; resolved via dueFeeIdMap when absent
   feeHeadId: string;
   period: string; // e.g. "2026-04"
+  /** Payable/collection amount rounded UP to the next whole rupee. */
   dueAmount: number;
+  /** Financially accurate original outstanding decimal amount. */
+  originalDueAmount?: number;
+  /** Identifiable Rounding Adjustment / Round Off difference (dueAmount - originalDueAmount). */
+  roundingAdjustment?: number;
   /** Net late fee currently collectible after approved waivers. */
   lateFeeAmount?: number;
   installmentLabel?: string;

@@ -37,6 +37,10 @@ export interface IStudentFeeData {
   _approvedAmount?: number;
   _settlementId?: string;
   _refundMethod?: string;
+  _voucherNumber?: string;
+  _receiptNumber?: string;
+  _payoutPending?: boolean;
+  _workflowVersion?: number;
 }
 
 export interface IStudentFeeTableProps {
