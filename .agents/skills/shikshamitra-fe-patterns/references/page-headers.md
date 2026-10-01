@@ -151,6 +151,33 @@ The standard arrangement is:
 - Changing a filter must refresh or clearly scope the displayed metrics; never
   leave the user guessing whether the values changed.
 
+### View all insights drawer
+
+When a page offers `View all insights`, the secondary action opens a right-side
+drawer without replacing the table or losing the current page context. Follow
+the shared drawer behavior in [sidebars.md](sidebars.md) for responsive width,
+internal scrolling, focus, and closing.
+
+- Align a concise, page-scoped title, one meaningful icon, an information
+  tooltip, and the close action in the drawer header. Put brief explanatory
+  context in the tooltip rather than a long subtitle that crowds the header.
+- Show a labelled metric comparison chart only when the values are comparable.
+  Use current data, readable axes and data labels, and a short wrapping
+  `Label: value | Label: value` summary beneath the chart. Do not turn
+  non-numeric values into misleading zero bars.
+- Follow the chart with a `Key metrics` section when the individual values help
+  users understand the current scope. Use compact, balanced cards with the
+  value prominent, the label directly below it, meaningful icons, consistent
+  padding, and no forced empty space.
+- Add a focused attention or next-step note only when it conveys a real
+  condition. Do not repeat the same counts in prose or add a generic panel
+  merely to fill the drawer.
+- Keep chart, metric cards, and any attention note tied to the selected year,
+  board, medium, class, filters, and visible records as applicable. Show an
+  honest loading or unavailable state rather than placeholder zeroes.
+- If a metric card changes the table filter, make it an accessible button with
+  a clear selected state; otherwise present it as read-only information.
+
 ## 7. Status tabs and counts
 
 - Status tabs are appropriate when users commonly move between meaningful
@@ -174,6 +201,8 @@ Before approving a page header, verify:
 - List and table pages expose useful summaries through `View all insights`,
   without a row of summary cards above the table.
 - Insights metrics show real data and respond to the selected scope.
+- `View all insights` opens a readable, responsive drawer with a useful
+  comparison, compact metrics, and an attention note only when warranted.
 - Metric labels are specific and not duplicated unnecessarily.
 - Status tabs and counts match the content shown below.
 - Filters have clear labels, predictable placement, and correct date formats.

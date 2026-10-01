@@ -20,7 +20,7 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
       <Grid container spacing={1} aria-label="Loading academic insight metrics">
         {Array.from({ length: 4 }).map((_, index) => (
           <Grid key={index} size={{ xs: 6 }}>
-            <Skeleton variant="rounded" height={98} sx={{ borderRadius: 1.5 }} />
+            <Skeleton variant="rounded" height={76} sx={{ borderRadius: 1.5 }} />
           </Grid>
         ))}
       </Grid>
@@ -34,7 +34,7 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
         const tone = METRIC_TONES[index % METRIC_TONES.length];
 
         return (
-          <Grid key={metric.id} size={{ xs: 6 }}>
+          <Grid key={metric.id} size={{ xs: 6 }} sx={{ display: 'flex' }}>
             <Paper
               component={interactive ? 'button' : 'div'}
               type={interactive ? 'button' : undefined}
@@ -43,7 +43,7 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
               onClick={interactive ? () => onMetricClick(metric) : undefined}
               sx={{
                 width: 1,
-                minHeight: 98,
+                height: '100%',
                 p: 1.5,
                 borderRadius: 1.5,
                 borderColor: metric.selected ? `${tone}.main` : 'divider',
@@ -63,11 +63,19 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
               <Box
                 sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}
               >
-                <Box>
-                  <Typography variant="h5" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                <Box sx={{ minWidth: 0, pr: 1 }}>
+                  <Typography
+                    variant="h6"
+                    fontWeight={700}
+                    sx={{
+                      fontVariantNumeric: 'tabular-nums',
+                      lineHeight: 1.25,
+                      overflowWrap: 'anywhere',
+                    }}
+                  >
                     {metric.value}
                   </Typography>
-                  <Typography variant="body2" fontWeight={600} sx={{ mt: 0.5 }}>
+                  <Typography variant="body2" fontWeight={600} sx={{ mt: 0.5, lineHeight: 1.35 }}>
                     {metric.label}
                   </Typography>
                 </Box>
@@ -75,6 +83,7 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
                   sx={{
                     width: 34,
                     height: 34,
+                    flexShrink: 0,
                     display: 'grid',
                     placeItems: 'center',
                     borderRadius: 1.25,

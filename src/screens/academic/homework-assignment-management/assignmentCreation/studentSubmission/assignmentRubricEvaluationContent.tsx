@@ -167,7 +167,7 @@ export default function AssignmentRubricEvaluationContent({
             studentRow={student}
             ensureSubmissionId={ensureSubmissionId}
             readOnly={!isEditMode}
-            compactLayout={isEditMode}
+            compactLayout
           />
           <Card sx={{ p: 0, overflow: 'hidden', boxShadow: 'var(--shadows-10)' }}>
             <Box

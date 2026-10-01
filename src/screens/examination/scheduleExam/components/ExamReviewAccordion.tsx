@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
-  Stack,
   Button,
   Accordion,
   Typography,
@@ -13,115 +12,79 @@ import {
 
 interface ExamReviewAccordionProps {
   title: string;
-  description: string;
   icon: string;
   children: ReactNode;
   onEdit?: () => void;
   status?: ReactNode;
-  detailsPadding?: number;
 }
 
 export function ExamReviewAccordion({
   title,
-  description,
   icon,
   children,
   onEdit,
   status,
-  detailsPadding = 2,
 }: ExamReviewAccordionProps) {
-  const hasHeaderActions = Boolean(onEdit || status);
-
   return (
     <Accordion
       defaultExpanded
       disableGutters
       elevation={0}
       sx={{
-        position: 'relative',
-        borderRadius: 2,
         boxShadow: 'none',
-        border: '1px solid',
-        borderColor: 'divider',
-        overflow: 'hidden',
-        mb: 2,
+        bgcolor: 'transparent',
+        mb: 3,
         '&:before': { display: 'none' },
       }}
     >
-      <AccordionSummary
-        expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
-        sx={{
-          px: 2,
-          py: 1,
-          pr: hasHeaderActions ? { xs: 18, sm: 24 } : 2,
-          bgcolor: 'background.paper',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          '& .MuiAccordionSummary-content': { my: 0.5, alignItems: 'center' },
-        }}
-      >
-        <Box display="flex" alignItems="center" gap={1} minWidth={0}>
-          <Box
-            sx={{
-              width: 36,
-              height: 36,
-              borderRadius: 1.25,
-              bgcolor: 'action.hover',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Iconify icon={icon} width={20} color="text.secondary" />
-          </Box>
-
-          <Box minWidth={0}>
-            <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-              {title}
-            </Typography>
-            <Typography
-              variant="body2"
-              sx={{ color: 'text.secondary', mt: 0.5, display: { xs: 'none', sm: 'block' } }}
-            >
-              {description}
-            </Typography>
-          </Box>
-        </Box>
-      </AccordionSummary>
-
-      {hasHeaderActions && (
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={1}
-          sx={{ position: 'absolute', top: 10, right: 48, zIndex: 1 }}
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <AccordionSummary
+          expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
+          sx={{
+            flex: 1,
+            minWidth: 0,
+            px: 0,
+            py: 0,
+            '& .MuiAccordionSummary-content': { my: 0.5, minWidth: 0 },
+          }}
         >
-          {onEdit && (
-            <Button
-              size="small"
-              variant="outlined"
-              aria-label={`Edit ${title}`}
-              startIcon={<Iconify icon="eva:edit-2-fill" width={16} />}
-              onClick={onEdit}
+          <Box
+            sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1, minWidth: 0 }}
+          >
+            <Box
               sx={{
-                minWidth: { xs: 44, sm: 64 },
-                height: 44,
-                px: { xs: 1, sm: 1.5 },
-                fontSize: '0.75rem',
-                '& .MuiButton-startIcon': { mx: { xs: 0, sm: undefined } },
+                width: 32,
+                height: 32,
+                borderRadius: 1,
+                bgcolor: 'action.hover',
+                color: 'text.secondary',
+                display: 'grid',
+                placeItems: 'center',
+                flexShrink: 0,
               }}
             >
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                Edit
-              </Box>
-            </Button>
-          )}
-          {status}
-        </Stack>
-      )}
+              <Iconify icon={icon} width={18} />
+            </Box>
+            <Typography variant="subtitle1" fontWeight={700}>
+              {title}
+            </Typography>
+            {status}
+          </Box>
+        </AccordionSummary>
+        {onEdit && (
+          <Button
+            size="small"
+            variant="outlined"
+            aria-label={`Edit ${title}`}
+            onClick={onEdit}
+            sx={{ flexShrink: 0, minWidth: 56 }}
+          >
+            Edit
+          </Button>
+        )}
+      </Box>
 
-      <AccordionDetails sx={{ p: detailsPadding }}>{children}</AccordionDetails>
+      <AccordionDetails sx={{ px: 0, pt: 1.5, pb: 0 }}>{children}</AccordionDetails>
     </Accordion>
   );
 }

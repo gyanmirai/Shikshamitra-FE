@@ -38,7 +38,7 @@ export function SubmissionTypeCard({
         width: '100%',
         height: '100%',
         borderRadius: 2,
-        border: `2px solid ${selected ? theme.palette.primary.main : alpha(theme.palette.divider, 0.12)}`,
+        border: `2px solid ${selected ? theme.palette.primary.main : theme.palette.divider}`,
         bgcolor: selected ? alpha(theme.palette.primary.main, 0.04) : 'background.paper',
         boxShadow: selected
           ? `0 8px 16px -4px ${alpha(theme.palette.primary.main, 0.12)}, 0 0 0 3px ${alpha(theme.palette.primary.main, 0.08)}`

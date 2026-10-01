@@ -7,7 +7,7 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { AcademicInsights } from './AcademicInsights';
 
 describe('AcademicInsights', () => {
-  it('opens the full insights drawer from the shared trigger', () => {
+  it('opens the full insights drawer and explains its purpose in the header tooltip', async () => {
     render(
       <ThemeProvider theme={createTheme(defaultSettings)}>
         <AcademicInsights
@@ -33,5 +33,8 @@ describe('AcademicInsights', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Total subjects')).toBeInTheDocument();
     expect(screen.getByText('7')).toBeInTheDocument();
+
+    fireEvent.mouseOver(screen.getByRole('button', { name: 'About Subject allocation insights' }));
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Current subject readiness.');
   });
 });

@@ -30,7 +30,7 @@ const RubricScoreSelector = ({
       color="text.secondary"
       sx={{ mb: 1 }}
     >
-      Select a score
+      {readOnly ? 'Recorded score' : 'Select a score'}
     </Typography>
     <ToggleButtonGroup
       fullWidth
@@ -63,6 +63,15 @@ const RubricScoreSelector = ({
         },
         '& .MuiToggleButton-root.Mui-selected:hover': {
           bgcolor: compact ? 'primary.lighter' : 'action.selected',
+        },
+        '& .MuiToggleButton-root.Mui-disabled': {
+          opacity: 1,
+          color: 'text.secondary',
+        },
+        '& .MuiToggleButton-root.Mui-disabled.Mui-selected': {
+          color: compact ? 'primary.darker' : 'text.primary',
+          bgcolor: compact ? 'primary.lighter' : 'action.selected',
+          borderColor: compact ? 'primary.main !important' : 'text.primary !important',
         },
       }}
     >
