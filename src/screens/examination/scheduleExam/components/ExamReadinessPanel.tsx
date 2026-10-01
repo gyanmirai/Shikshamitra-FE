@@ -1,15 +1,6 @@
-import { Iconify } from 'src/components/iconify';
-import {
-  Box,
-  Chip,
-  Stack,
-  Button,
-  Accordion,
-  Typography,
-  AccordionSummary,
-  AccordionDetails,
-} from '@mui/material';
+import { Box, Chip, Stack, Paper, Button, Divider, Typography } from '@mui/material';
 
+import { ExamReviewAccordion } from './ExamReviewAccordion';
 import { getReadinessSummary, buildExamPlanningIssues } from './scheduleExamPlanningUtils';
 
 import type { IExamFormValues } from '../type';
@@ -24,77 +15,32 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
   const readiness = getReadinessSummary(issues);
 
   return (
-    <Accordion
-      defaultExpanded
-      disableGutters
-      elevation={0}
-      sx={{
-        mb: 2,
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-        bgcolor: 'background.paper',
-        boxShadow: 'none',
-        overflow: 'hidden',
-        '&:before': { display: 'none' },
-      }}
+    <ExamReviewAccordion
+      title="Readiness check"
+      icon={
+        readiness.isReady
+          ? 'solar:verified-check-bold-duotone'
+          : 'solar:danger-triangle-bold-duotone'
+      }
+      status={
+        <Chip
+          size="small"
+          label={readiness.isReady ? 'Ready' : `${readiness.blocking.length} blocking`}
+          color={readiness.isReady ? 'success' : 'warning'}
+          variant="soft"
+        />
+      }
     >
-      <AccordionSummary
-        expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
-        sx={{
-          px: 2,
-          py: 1,
-          bgcolor: 'action.hover',
-          color: 'text.primary',
-          '& .MuiAccordionSummary-content': {
-            my: 0,
-            alignItems: 'center',
-          },
-          '& .MuiAccordionSummary-expandIconWrapper': {
-            color: 'inherit',
-          },
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
-          <Iconify
-            icon={
-              readiness.isReady
-                ? 'solar:verified-check-bold-duotone'
-                : 'solar:danger-triangle-bold-duotone'
-            }
-            width={24}
-            color={readiness.isReady ? 'success.main' : 'warning.main'}
-          />
-          <Box>
-            <Typography variant="subtitle1" fontWeight={800}>
-              {readiness.isReady
-                ? 'Exam ready for save'
-                : `${readiness.blocking.length} blocking issue${readiness.blocking.length > 1 ? 's' : ''} before publish`}
-            </Typography>
-            {readiness.warnings.length > 0 && (
-              <Typography variant="body2">
-                {readiness.warnings.length} warning{readiness.warnings.length > 1 ? 's' : ''} to
-                review
-              </Typography>
-            )}
-          </Box>
-        </Stack>
-      </AccordionSummary>
-
-      <AccordionDetails sx={{ p: issues.length > 0 ? 2 : 1, bgcolor: 'background.paper' }}>
+      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         {issues.length > 0 ? (
-          <Stack spacing={1}>
+          <Stack spacing={1.5} divider={<Divider flexItem />}>
             {issues.map((issue) => (
               <Box
                 key={issue.id}
                 sx={{
-                  p: 1.25,
-                  borderRadius: 1,
-                  border: '1px solid',
-                  borderColor: 'divider',
                   display: 'flex',
-                  alignItems: 'center',
-                  gap: 1,
+                  alignItems: 'flex-start',
+                  gap: 1.5,
                 }}
               >
                 <Chip
@@ -117,10 +63,8 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
                   <Button
                     size="small"
                     variant="text"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEditStep(issue.step);
-                    }}
+                    onClick={() => onEditStep(issue.step)}
+                    sx={{ ml: 'auto', flexShrink: 0 }}
                   >
                     Fix
                   </Button>
@@ -133,8 +77,8 @@ const ExamReadinessPanel = ({ values, onEditStep }: ExamReadinessPanelProps) => 
             All required details are complete.
           </Typography>
         )}
-      </AccordionDetails>
-    </Accordion>
+      </Paper>
+    </ExamReviewAccordion>
   );
 };
 

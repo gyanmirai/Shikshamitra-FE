@@ -3,6 +3,7 @@
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Paper, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
 
 import { AcademicInsightChart } from './AcademicInsightChart';
@@ -59,7 +60,7 @@ export function AcademicInsights({
           },
         }}
       >
-        <Stack direction="row" alignItems="flex-start" spacing={1.5} sx={{ p: 2.5, pb: 2 }}>
+        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ p: 2.5, py: 2 }}>
           <Box
             sx={{
               width: 40,
@@ -76,10 +77,14 @@ export function AcademicInsights({
             <Iconify icon="solar:chart-square-outline" width={22} />
           </Box>
           <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6">{title}</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
-              {description}
-            </Typography>
+            <Stack direction="row" alignItems="center" spacing={0.5}>
+              <Typography variant="h6">{title}</Typography>
+              <CustomTooltip title={description} placement="right" arrow>
+                <IconButton size="small" aria-label={`About ${title}`}>
+                  <Iconify icon="lucide:info" width={18} color="info.main" />
+                </IconButton>
+              </CustomTooltip>
+            </Stack>
           </Box>
           <IconButton aria-label="Close insights" onClick={closeDrawer}>
             <Iconify icon="mingcute:close-line" />
@@ -93,7 +98,11 @@ export function AcademicInsights({
             {!isLoading && chart && <AcademicInsightChart config={chart} />}
 
             <Box>
-              <Typography variant="overline" color="text.secondary">
+              <Typography
+                variant="overline"
+                color="text.secondary"
+                sx={{ display: 'block', mb: 1 }}
+              >
                 Key metrics
               </Typography>
               <AcademicInsightMetricGrid

@@ -3,16 +3,8 @@ import type { Division } from 'src/types/school';
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
-import { Box, Grid, Chip } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import {
-  Class,
-  School,
-  Article,
-  Subject,
-  Description,
-  CastForEducation,
-} from '@mui/icons-material';
+import { Box, Grid, Chip, Paper, Divider, Typography } from '@mui/material';
 
 import { ExamReviewInfoItem } from './ExamReviewInfoItem';
 import { ExamReviewAccordion } from './ExamReviewAccordion';
@@ -46,104 +38,104 @@ const ExamBasicReview = ({
   return (
     <ExamReviewAccordion
       title="Basic Details"
-      description="Exam configuration and schedule info"
       icon="healthicons:i-exam-multiple-choice"
       onEdit={onEdit}
       status={statusLabel}
     >
-      <Grid container spacing={1.5}>
-        {/* Exam Name */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <ExamReviewInfoItem
-            icon={<Description />}
-            label="Exam Name"
-            value={values.examName || '-'}
-          />
+      <Grid container spacing={2} alignItems="stretch">
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper variant="outlined" sx={{ height: '100%', p: 2, borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Iconify
+                icon="mdi:clipboard-text-outline"
+                width={20}
+                sx={{ color: 'text.secondary' }}
+              />
+              <Typography variant="subtitle2" fontWeight={700}>
+                Exam setup
+              </Typography>
+            </Box>
+            <Divider sx={{ my: 1.5 }} />
+            <Grid container columnSpacing={2} rowSpacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ExamReviewInfoItem label="Exam Name" value={values.examName || '-'} />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ExamReviewInfoItem
+                  label="Exam Type"
+                  value={values.examTypeName || values.examType || '-'}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ExamReviewInfoItem label="Grading Scale" value={gradingScaleName} />
+              </Grid>
+              {values.description && (
+                <Grid size={{ xs: 12 }}>
+                  <ExamReviewInfoItem label="Description" value={values.description} />
+                </Grid>
+              )}
+            </Grid>
+          </Paper>
         </Grid>
 
-        {/* Exam Type */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <ExamReviewInfoItem
-            icon={<Article />}
-            label="Exam Type"
-            value={values.examTypeName || values.examType || '-'}
-          />
+        <Grid size={{ xs: 12, md: 6 }}>
+          <Paper variant="outlined" sx={{ height: '100%', p: 2, borderRadius: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Iconify icon="mdi:school-outline" width={20} sx={{ color: 'text.secondary' }} />
+              <Typography variant="subtitle2" fontWeight={700}>
+                Class & subjects
+              </Typography>
+            </Box>
+            <Divider sx={{ my: 1.5 }} />
+            <Grid container columnSpacing={2} rowSpacing={2}>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ExamReviewInfoItem label="Class" value={className || '-'} />
+              </Grid>
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ExamReviewInfoItem
+                  label="Divisions"
+                  value={
+                    divisions.length > 0 ? (
+                      <Box display="flex" flexWrap="wrap" gap={0.75}>
+                        {divisions.map((division: Division) => (
+                          <Chip
+                            key={division.id}
+                            label={division.name}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                    ) : (
+                      '-'
+                    )
+                  }
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <ExamReviewInfoItem
+                  label="Subjects"
+                  value={
+                    values.subjects.length > 0 ? (
+                      <Box display="flex" flexWrap="wrap" gap={0.75}>
+                        {values.subjects.map((subject) => (
+                          <Chip
+                            key={subject.subjectId}
+                            label={subject.subjectName}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                    ) : (
+                      '-'
+                    )
+                  }
+                />
+              </Grid>
+            </Grid>
+          </Paper>
         </Grid>
-
-        {/* Class */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <ExamReviewInfoItem icon={<Class />} label="Class" value={className || '-'} />
-        </Grid>
-
-        {/* Division (List) */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <ExamReviewInfoItem
-            icon={<School />}
-            label="Division"
-            value={
-              divisions.length > 0 ? (
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {divisions.map((division: Division) => (
-                    <Chip
-                      key={division.id}
-                      label={division.name}
-                      size="small"
-                      variant="outlined"
-                      sx={{ fontSize: '0.75rem', height: 24 }}
-                    />
-                  ))}
-                </Box>
-              ) : (
-                '-'
-              )
-            }
-          />
-        </Grid>
-
-        {/* Grading Scale */}
-        <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <ExamReviewInfoItem
-            icon={<Iconify icon="solar:ranking-bold-duotone" />}
-            label="Grading Scale"
-            value={gradingScaleName}
-          />
-        </Grid>
-
-        {/* Subjects (List) */}
-        <Grid size={{ xs: 12, md: 4 }}>
-          <ExamReviewInfoItem
-            icon={<Subject />}
-            label="Subjects"
-            value={
-              values.subjects.length > 0 ? (
-                <Box display="flex" flexWrap="wrap" gap={1}>
-                  {values.subjects.map((subject) => (
-                    <Chip
-                      key={subject.subjectId}
-                      label={subject.subjectName}
-                      size="small"
-                      variant="outlined"
-                      sx={{ fontSize: '0.75rem', height: 24 }}
-                    />
-                  ))}
-                </Box>
-              ) : (
-                '-'
-              )
-            }
-          />
-        </Grid>
-
-        {/* Description */}
-        {values.description && (
-          <Grid size={{ xs: 12, md: 6 }}>
-            <ExamReviewInfoItem
-              icon={<CastForEducation />} // Or another suitable icon
-              label="Description"
-              value={values.description}
-            />
-          </Grid>
-        )}
       </Grid>
     </ExamReviewAccordion>
   );

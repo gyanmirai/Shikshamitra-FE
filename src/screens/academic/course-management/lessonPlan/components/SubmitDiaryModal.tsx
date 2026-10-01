@@ -433,10 +433,16 @@ const SubmitDiaryModal = ({
             Evidence: isEvidenceComplete,
           }}
           onChange={setTab}
+          disabled={loading}
         />
 
         <DialogScrollContent onSubmit={() => handleSave(true)}>
-          <Stack spacing={1}>
+          <Stack
+            spacing={1}
+            role="tabpanel"
+            id={`diary-panel-${tab}`}
+            aria-labelledby={`diary-step-${tab}`}
+          >
             {error && (
               <Alert severity="error" icon={<Iconify icon="mdi:alert-circle-outline" />}>
                 {error}

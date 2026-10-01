@@ -39,9 +39,9 @@ import {
 } from '@mui/material';
 
 import { assignGradeValidationSchema } from './validationSchema';
-import { document } from '../../assignmentCreation/studentSubmission/assignMarksForm';
 
 import type { IAssignGradeProps } from '../type';
+import type { RubricEvaluationState } from '../../marksAndFeedback/rubricEvaluationTypes';
 
 const FEEDBACK_MAX_LENGTH = 500;
 
@@ -75,6 +75,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
   const submitAndNextRef = useRef(false);
   const submissionInFlightRef = useRef(false);
   const rubricEvaluationRef = useRef<RubricEvaluationPanelRef | null>(null);
+  const [rubricState, setRubricState] = useState<RubricEvaluationState | null>(null);
+  const currentRubricState = rubricState?.studentId === data?.studentId ? rubricState : null;
+  const isEvaluationLocked = Boolean(hasRubricAssessment && currentRubricState?.isLocked);
+  const isEvaluationUnavailable = Boolean(
+    hasRubricAssessment &&
+    (!currentRubricState || currentRubricState.isLoading || currentRubricState.hasError)
+  );
   const [isRubricSaving, setIsRubricSaving] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
@@ -94,7 +101,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     },
     validationSchema: assignGradeValidationSchema,
     async onSubmit(values) {
-      if (submissionInFlightRef.current || !isEdit) return;
+      if (submissionInFlightRef.current || !isEdit || isEvaluationUnavailable) return;
+      if (isEvaluationLocked || rubricEvaluationRef.current?.isLocked) return;
 
       submissionInFlightRef.current = true;
       setIsSubmitting(true);
@@ -143,8 +151,16 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     window.open(doc.url, '_blank');
   };
 
+  const submittedDocument: IDocument = {
+    id: data?.id || '',
+    name: data?.originalFileName || 'Submitted document',
+    type: data?.originalFileName?.split('.').pop() || 'txt',
+    url: data?.submittedDocumentUrl || '',
+    size: '',
+  };
+
   const handleTemplateSelect = (template: string) => {
-    if (!isEdit) return;
+    if (!isEdit || isEvaluationLocked || isEvaluationUnavailable) return;
     formik.setFieldValue('feedback', template);
     setTemplateMenuOpen(false);
   };
@@ -165,48 +181,29 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
     Boolean(data?.submittedContent?.trim() && !data?.submittedDocumentUrl);
 
   const submissionSection = (
-    <Grid size={{ xs: 12, md: isEdit ? 4 : 12 }} sx={{ display: 'flex', '& > *': { flex: 1 } }}>
+    <Grid size={{ xs: 12, md: 4 }} sx={{ display: 'flex', '& > *': { flex: 1 } }}>
       <Card
-        variant={isEdit ? 'outlined' : undefined}
+        variant="outlined"
         sx={{
-          p: isEdit ? 2 : 0,
-          borderRadius: isEdit ? 2 : undefined,
+          p: 2,
+          borderRadius: 2,
           overflow: 'hidden',
-          boxShadow: isEdit ? 'none' : 'var(--shadows-10)',
-          display: isEdit ? 'flex' : undefined,
-          alignItems: isEdit ? 'center' : undefined,
+          boxShadow: 'none',
+          display: 'flex',
+          alignItems: 'center',
         }}
       >
-        {!isEdit && (
-          <Box
-            sx={{
-              px: 2,
-              py: 1.25,
-              bgcolor: 'background.neutral',
-              borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-            }}
-          >
-            <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Iconify icon="solar:document-text-bold" width={20} sx={{ color: 'info.main' }} />
-              Student Submission
-            </Typography>
-          </Box>
-        )}
         <Box
           sx={{
-            p: isEdit ? 0 : 2,
-            maxHeight: isEdit ? 180 : undefined,
-            overflowY: isEdit ? 'auto' : undefined,
-            width: isEdit ? '100%' : undefined,
+            maxHeight: 180,
+            overflowY: 'auto',
+            width: '100%',
           }}
         >
           {isInPersonSubmission ? (
             <Box
               sx={{
-                p: isEdit ? 0 : 2.5,
                 borderRadius: 1,
-                bgcolor: isEdit ? 'transparent' : 'background.neutral',
-                border: isEdit ? 0 : (theme) => `1px solid ${theme.palette.divider}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 2,
@@ -231,21 +228,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                 <Typography variant="subtitle2" fontWeight={600}>
                   In-Person / Physical Submission
                 </Typography>
-                {!isEdit ? (
-                  <Typography variant="caption" color="text.secondary">
-                    This homework task is reviewed and evaluated physically in class (e.g. notebook
-                    inspection, viva, or physical demonstration).
-                  </Typography>
-                ) : null}
               </Box>
             </Box>
           ) : isNoSubmissionRequired ? (
             <Box
               sx={{
-                p: isEdit ? 0 : 2.5,
                 borderRadius: 1,
-                bgcolor: isEdit ? 'transparent' : 'background.neutral',
-                border: isEdit ? 0 : (theme) => `1px solid ${theme.palette.divider}`,
                 display: 'flex',
                 alignItems: 'center',
                 gap: 2,
@@ -270,18 +258,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                 <Typography variant="subtitle2" fontWeight={600}>
                   No Submission Required
                 </Typography>
-                {!isEdit ? (
-                  <Typography variant="caption" color="text.secondary">
-                    This homework task was assigned for self-study / practice and does not require
-                    online submission.
-                  </Typography>
-                ) : null}
               </Box>
             </Box>
           ) : isOnlineTextSubmission && data?.submittedContent?.trim() ? (
             <Card
-              variant={isEdit ? undefined : 'outlined'}
-              sx={{ p: isEdit ? 0 : 2, bgcolor: 'background.paper', boxShadow: 'none' }}
+              sx={{ bgcolor: 'background.paper', boxShadow: 'none' }}
             >
               <Typography
                 variant="caption"
@@ -296,14 +277,12 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             </Card>
           ) : data?.submittedDocumentUrl ? (
             <Card
-              variant={isEdit ? undefined : 'outlined'}
               sx={{
-                p: isEdit ? 0 : 1.5,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                flexWrap: isEdit ? 'wrap' : 'nowrap',
-                gap: isEdit ? 1 : 0,
+                flexWrap: 'wrap',
+                gap: 1,
                 bgcolor: 'background.paper',
                 boxShadow: 'none',
                 '&:hover': {
@@ -317,15 +296,15 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                   alignItems: 'center',
                   gap: 1.5,
                   minWidth: 0,
-                  flex: isEdit ? '1 1 160px' : undefined,
+                  flex: '1 1 160px',
                 }}
               >
-                {getFileIconByType(data.originalFileName ?? document.type ?? 'txt', 36)}
+                {getFileIconByType(submittedDocument.name, 36)}
                 <Box sx={{ minWidth: 0 }}>
                   <Typography
                     variant="subtitle2"
                     noWrap
-                    sx={{ maxWidth: isEdit ? '100%' : 280, fontWeight: 600 }}
+                    sx={{ maxWidth: '100%', fontWeight: 600 }}
                   >
                     {data.originalFileName || 'Submitted document'}
                   </Typography>
@@ -337,17 +316,11 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                 </Box>
               </Box>
 
-              <Stack direction="row" spacing={1} flexShrink={0} sx={{ ml: isEdit ? 'auto' : 0 }}>
+              <Stack direction="row" spacing={1} flexShrink={0} sx={{ ml: 'auto' }}>
                 <Tooltip title="Preview File">
                   <IconButton
                     size="small"
-                    onClick={() =>
-                      handleDownload({
-                        ...document,
-                        name: data.originalFileName || document.name,
-                        url: data.submittedDocumentUrl!,
-                      })
-                    }
+                    onClick={() => handleDownload(submittedDocument)}
                     sx={{ color: 'text.secondary' }}
                   >
                     <Iconify icon={GlobalIcons.eye} width={20} />
@@ -356,13 +329,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                 <Tooltip title="Download File">
                   <IconButton
                     size="small"
-                    onClick={() =>
-                      handleDownload({
-                        ...document,
-                        name: data.originalFileName || document.name,
-                        url: data.submittedDocumentUrl!,
-                      })
-                    }
+                    onClick={() => handleDownload(submittedDocument)}
                     sx={{ color: 'text.secondary' }}
                   >
                     <Iconify icon={GlobalIcons.download} width={20} />
@@ -373,11 +340,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
           ) : (
             <Box
               sx={{
-                p: isEdit ? 0 : 3,
                 textAlign: 'center',
-                bgcolor: isEdit ? 'transparent' : 'background.neutral',
                 borderRadius: 1,
-                border: isEdit ? 0 : (theme) => `1px dashed ${theme.palette.divider}`,
               }}
             >
               <Iconify
@@ -401,7 +365,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
         <Grid container spacing={1.5}>
           {/* Student Profile Section */}
           <Grid
-            size={{ xs: 12, md: isEdit ? 4 : 12 }}
+            size={{ xs: 12, md: 4 }}
             sx={{ display: 'flex', '& > *': { flex: 1 } }}
           >
             <StudentFeedbackContext studentName={data?.studentName} rollNumber={data?.rollNumber} />
@@ -409,17 +373,17 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
 
           {/* Homework Context Section */}
           <Grid
-            size={{ xs: 12, md: isEdit ? 4 : 12 }}
+            size={{ xs: 12, md: 4 }}
             sx={{ display: 'flex', '& > *': { flex: 1 } }}
           >
             <HomeworkFeedbackContext
               title={selectedHomework?.title}
               description={selectedHomework?.description}
-              compact={isEdit}
+              compact
             />
           </Grid>
 
-          {isEdit && submissionSection}
+          {submissionSection}
 
           {/* Rubric Evaluation Panel */}
           {data &&
@@ -429,9 +393,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             hasRubricAssessment && (
               <Grid size={{ xs: 12 }}>
                 <RubricEvaluationPanel
+                  key={data.studentId}
                   ref={rubricEvaluationRef}
                   mode="homework"
-                  compactLayout={isEdit}
+                  compactLayout
                   standardId={selectedClass}
                   subjectId={selectedSubject}
                   taskId={selectedHomework.id}
@@ -439,11 +404,10 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                   studentRow={data}
                   ensureSubmissionId={isSelectedInPerson ? ensureInPersonSubmissionId : undefined}
                   readOnly={!isEdit}
+                  onStateChange={setRubricState}
                 />
               </Grid>
             )}
-
-          {!isEdit && submissionSection}
 
           {/* Feedback Section */}
           <Grid size={{ xs: 12 }} sx={{ display: 'flex', '& > *': { flex: 1 } }}>
@@ -482,6 +446,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                       size="small"
                       variant="outlined"
                       color="inherit"
+                      disabled={isEvaluationLocked || isEvaluationUnavailable || isSubmitting}
                       endIcon={
                         <Iconify
                           icon={
@@ -541,6 +506,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
                         error={formik.touched.feedback && Boolean(formik.errors.feedback)}
                         helperText={formik.touched.feedback && formik.errors.feedback}
                         inputProps={{ maxLength: FEEDBACK_MAX_LENGTH }}
+                        disabled={isEvaluationLocked || isEvaluationUnavailable || isSubmitting}
                       />
                     </ShakingTextField>
                     <Typography
@@ -607,7 +573,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             variant="outlined"
             color="inherit"
             onClick={onPrevious}
-            disabled={!hasPrevious}
+            disabled={!hasPrevious || isSubmitting}
             size="small"
             startIcon={<Iconify icon="solar:alt-arrow-left-bold" />}
           >
@@ -617,7 +583,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             variant="outlined"
             color="inherit"
             onClick={onNext}
-            disabled={!hasNext}
+            disabled={!hasNext || isSubmitting}
             size="small"
             endIcon={<Iconify icon="solar:alt-arrow-right-bold" />}
           >
@@ -641,9 +607,19 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
             <LoadingButton
               variant="outlined"
               size="small"
-              disabled={!hasNext || isSubmitting || isUpdateLoading || isRubricSaving}
+              disabled={
+                !hasNext ||
+                isSubmitting ||
+                isUpdateLoading ||
+                isRubricSaving ||
+                isEvaluationUnavailable
+              }
               loading={isSubmitting || isUpdateLoading || isRubricSaving}
               onClick={(e: any) => {
+                if (isEvaluationLocked) {
+                  onNext?.();
+                  return;
+                }
                 submitAndNextRef.current = true;
                 formik.handleSubmit(e);
               }}
@@ -655,7 +631,13 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({
               variant="contained"
               size="small"
               loading={isSubmitting || isUpdateLoading || isRubricSaving}
-              disabled={isSubmitting || isUpdateLoading || isRubricSaving}
+              disabled={
+                isSubmitting ||
+                isUpdateLoading ||
+                isRubricSaving ||
+                isEvaluationLocked ||
+                isEvaluationUnavailable
+              }
               onClick={(e: any) => {
                 submitAndNextRef.current = false;
                 formik.handleSubmit(e);

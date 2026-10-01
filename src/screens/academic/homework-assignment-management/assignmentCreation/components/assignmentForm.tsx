@@ -15,7 +15,6 @@ import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomSelect from 'src/components/custom-select';
-import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -32,6 +31,7 @@ import { useGetAssignmentTypesQuery } from 'src/redux/academicAPI/HomeworkAssign
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { serializeAssignmentFormData } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-serialization';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   AssignmentStatus,
   evaluationUsesMarks,
@@ -53,10 +53,6 @@ import {
   Autocomplete,
 } from '@mui/material';
 import {
-  useGetSubjectAssignmentsQuery,
-  useUploadCurriculumFileMutation,
-} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
-import {
   RubricStatus,
   RubricWorkType,
   useGetRubricsQuery,
@@ -70,6 +66,8 @@ import {
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/LearningTasksApi/assignment-api';
 
 import { SubmissionTypeCard } from '../../components/SubmissionTypeCard';
+import { ReferenceFileUpload } from '../../components/ReferenceFileUpload';
+import { useReferenceFileUpload } from '../../hooks/useReferenceFileUpload';
 import {
   getAssignmentInitialValues,
   hasAssignmentTypeOverrides,
@@ -107,10 +105,6 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
     submitModeRef.current = 'draft';
   }, [editData?.id]);
 
-  const [uploadCurriculumFile] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUploadCurriculumFileMutation,
-  });
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [previewFileState, setPreviewFileState] = useState<any>(null);
 
@@ -203,6 +197,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
   );
 
   const saveAssignment = async (values: AssignmentFormValues) => {
+    if (referenceUpload.isBlocked()) return;
     if (!medium?.id) {
       shikshaMitraToast.error({ message: 'Select an academic medium before saving.' });
       return;
@@ -276,6 +271,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
     enableReinitialize: true,
     validationSchema: assignmentValidationSchema(currentYear, Boolean(editData)),
     onSubmit: async (values) => {
+      if (referenceUpload.isBlocked()) return;
       const selectedType = activeAssignmentTypes.find(
         (assignmentType) => assignmentType.id === values.assignmentTypeId
       );
@@ -288,6 +284,14 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
       await saveAssignment(values);
     },
   });
+
+  const referenceUpload = useReferenceFileUpload(
+    async (file) => {
+      await formik.setFieldValue('attachment', file);
+      await formik.setFieldValue('removeAttachment', !file && Boolean(editData?.attachment));
+    },
+    formik.isSubmitting
+  );
 
   const divisionSelectionError =
     formik.touched.divisions &&
@@ -854,7 +858,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
-                  <FileUploader
+                  <ReferenceFileUpload
                     value={
                       typeof formik.values.attachment === 'string'
                         ? {
@@ -864,39 +868,8 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                         }
                         : (formik.values.attachment ?? undefined)
                     }
-                    multiple={false}
-                    showVisibleDocumentCount={1}
-                    onChange={async (value) => {
-                      const file = Array.isArray(value) ? value[0] : value;
-                      if (file instanceof File) {
-                        try {
-                          const formData = new FormData();
-                          formData.append('File', file);
-                          const response = await uploadCurriculumFile(formData).unwrap();
-                          if (response.data) {
-                            const uploadedFile = {
-                              name: file.name,
-                              size: file.size,
-                              type: file.type,
-                              url: response.data,
-                              filePath: response.data,
-                            };
-                            formik.setFieldValue('attachment', uploadedFile);
-                            formik.setFieldValue('removeAttachment', false);
-                            shikshaMitraToast.success({ message: 'File uploaded successfully' });
-                          }
-                        } catch (e) {
-                          console.error(e);
-                          shikshaMitraToast.error({ message: 'Upload failed' });
-                        }
-                      } else if (file) {
-                        formik.setFieldValue('attachment', file);
-                        formik.setFieldValue('removeAttachment', false);
-                      } else {
-                        formik.setFieldValue('attachment', null);
-                        formik.setFieldValue('removeAttachment', Boolean(editData?.attachment));
-                      }
-                    }}
+                    upload={referenceUpload}
+                    disabled={formik.isSubmitting}
                     onPreview={(file) => {
                       setPreviewFileState(file);
                       const url =
@@ -907,6 +880,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                     }}
                     primaryText="Upload Reference File"
                     secondaryText="Supports PDF, PNG, JPG/JPEG (Max 5MB)"
+                    dragProps={{ sx: { flexDirection: 'column', gap: 1 } }}
                   />
                 </Grid>
               </SectionCard>
@@ -1181,6 +1155,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
             Cancel
           </Button>
           <LoadingButton
+            disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
             size="small"
             variant="contained"
             loading={isAddLoading || isUpdateLoading || isPublishLoading || isRubricCopyLoading}
@@ -1201,6 +1176,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           </LoadingButton>
           {!editData && (
             <LoadingButton
+              disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
               type="button"
               variant="contained"
               size="small"
@@ -1310,6 +1286,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           }
           action={
             <LoadingButton
+              disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
               type="button"
               size="small"
               loading={isAddLoading || isUpdateLoading || isPublishLoading || isRubricCopyLoading}

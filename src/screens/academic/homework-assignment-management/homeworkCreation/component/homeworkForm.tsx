@@ -15,7 +15,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
-import FileUploader from 'src/components/custom-upload';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -30,6 +29,7 @@ import { AcademicDateTimePicker as DateTimePicker } from 'src/components/academi
 import { useGetHomeworkTypesQuery } from 'src/redux/academicAPI/HomeworkAssignmentApi/Settings/HomeworkTypesApi';
 import { SubjectAssignmentStatus } from 'src/screens/academic/curriculum-management/subjectAssignment/enum/subjectType';
 import { useGetChaptersByStandardQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/Chapter-management-api';
+import { useGetSubjectAssignmentsQuery } from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   Box,
   Grid,
@@ -44,10 +44,6 @@ import {
   FormControl,
   Autocomplete,
 } from '@mui/material';
-import {
-  useGetSubjectAssignmentsQuery,
-  useUploadCurriculumFileMutation,
-} from 'src/redux/academicAPI/CurriculumManagementApi/Subject-AssignmentApi.ts/subject-assignment-api';
 import {
   RubricStatus,
   RubricWorkType,
@@ -65,7 +61,9 @@ import { getHomeworkInitialValues } from './homeworkInitialValues';
 import { serializeHomeworkFormData } from './homework-serialization';
 import { homeworkValidationSchema } from './homeworkValidationSchema';
 import { SubmissionTypeCard } from '../../components/SubmissionTypeCard';
+import { ReferenceFileUpload } from '../../components/ReferenceFileUpload';
 import HomeworkTypeForm from '../../setting/homeworkType/homeworkTypeForm';
+import { useReferenceFileUpload } from '../../hooks/useReferenceFileUpload';
 import { useHomeworkRubricTemplateSelection } from '../hooks/useHomeworkRubricTemplateSelection';
 
 import type { IHomeWorkCreationFormProps } from '../type';
@@ -84,10 +82,6 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
   editData,
   onClose,
 }) => {
-  const [uploadCurriculumFile] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUploadCurriculumFileMutation,
-  });
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [previewFileState, setPreviewFileState] = useState<any>(null);
   const [createRubricFromTemplate, { isLoading: isRubricCopyLoading }] =
@@ -175,6 +169,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     validateOnChange: true,
     validationSchema: homeworkValidationSchema(currentYear),
     onSubmit: async (values) => {
+      if (referenceUpload.isBlocked()) return;
       try {
         const activeClassId = values.classId || values.class;
 
@@ -281,6 +276,13 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       }
     },
   });
+
+  const referenceUpload = useReferenceFileUpload(
+    async (file) => {
+      await formik.setFieldValue('attachments', file ? [file] : []);
+    },
+    formik.isSubmitting
+  );
 
   const divisionSelectionError =
     formik.touched.divisions &&
@@ -831,37 +833,10 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 </Grid>
 
                 <Grid size={{ xs: 12 }}>
-                  <FileUploader
-                    value={formik.values.attachments as any}
-                    multiple={false}
-                    showVisibleDocumentCount={1}
-                    onChange={async (value) => {
-                      const file = Array.isArray(value) ? value[0] : value;
-                      if (file instanceof File) {
-                        try {
-                          const formData = new FormData();
-                          formData.append('File', file);
-                          const response = await uploadCurriculumFile(formData).unwrap();
-                          if (response.data) {
-                            const uploadedFile = {
-                              name: file.name,
-                              size: file.size,
-                              type: file.type,
-                              url: response.data,
-                            };
-                            formik.setFieldValue('attachments', [uploadedFile]);
-                            shikshaMitraToast.success({ message: 'File uploaded successfully' });
-                          }
-                        } catch (e) {
-                          console.error(e);
-                          shikshaMitraToast.error({ message: 'Upload failed' });
-                        }
-                      } else if (file) {
-                        formik.setFieldValue('attachments', [file]);
-                      } else {
-                        formik.setFieldValue('attachments', []);
-                      }
-                    }}
+                  <ReferenceFileUpload
+                    value={formik.values.attachments?.[0]}
+                    upload={referenceUpload}
+                    disabled={formik.isSubmitting}
                     onPreview={(file) => {
                       setPreviewFileState(file);
                       const url =
@@ -872,6 +847,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                     }}
                     primaryText="Upload Reference File"
                     secondaryText="Supports PDF, DOCX, IMG (Max 5MB)"
+                    dragProps={{ sx: { flexDirection: 'column', gap: 1 } }}
                   />
                 </Grid>
               </SectionCard>
@@ -1141,6 +1117,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             Cancel
           </Button>
           <LoadingButton
+            disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
             type="button"
             variant="contained"
             size="small"
@@ -1161,6 +1138,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           </LoadingButton>
           {!editData && (
             <LoadingButton
+              disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
               type="button"
               variant="contained"
               size="small"

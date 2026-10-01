@@ -21,6 +21,7 @@ import {
 import { LessonReviewComment } from '../LessonReviewComment';
 import { InlineLessonPlanForm } from './InlineLessonPlanForm';
 import { canEditLessonPlan } from '../../lessonPlanEditability';
+import { toPlanStatus, toDiaryStatus } from '../../lessonPlanStatuses';
 import {
   getLessonStatusConfig,
   isSlotCurrentlyActive,
@@ -79,8 +80,9 @@ export const TimelineLessonItem: React.FC<Props> = ({
   const normalizedPlan = hasPlan
     ? {
         ...plan,
-        status: plan.status || plan.planStatus || statusConfig.label,
-        planStatus: plan.planStatus || plan.status || statusConfig.label,
+        status: toPlanStatus(plan.status ?? plan.planStatus),
+        planStatus: toPlanStatus(plan.planStatus ?? plan.status),
+        diaryStatus: toDiaryStatus(plan.diaryStatus, Boolean(plan.teacherDiaryId)),
         className: plan.className || plan.standardName || slot.standardName,
         divisionName: plan.divisionName || slot.divisionName,
         subjectName: plan.subjectName || slot.subjectName,

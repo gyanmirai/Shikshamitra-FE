@@ -9,6 +9,7 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -738,13 +739,18 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
   const renderSimulator = () => (
     <Grid container spacing={1}>
       <Grid size={{ xs: 12 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Grade Scaling Simulator
-        </Typography>
-        <Typography variant="body2" color="text.secondary" paragraph>
-          Verify your grade scaling by entering sample student marks to see how the system
-          calculates grades.
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1.5 }}>
+          <Typography variant="subtitle1">Grade Scaling Simulator</Typography>
+          <CustomTooltip
+            arrow
+            placement="right"
+            title="Verify your grade scaling by entering sample student marks to see how the system calculates grades."
+          >
+            <IconButton size="small" aria-label="About grade scaling simulator">
+              <Iconify icon="lucide:info" sx={{ width: 18, height: 18, color: 'info.main' }} />
+            </IconButton>
+          </CustomTooltip>
+        </Box>
         <TextField
           fullWidth
           label="Sample Obtained Marks"
@@ -872,6 +878,8 @@ const GradeForm: React.FC<IGradeFormProps> = ({ onClose, data, viewOnly = false 
               px: { xs: 1.5, md: 2 },
               pt: { xs: 2, md: 2.5 },
               pb: { xs: 1.5, md: 2 },
+              borderTop: '1px solid',
+              borderColor: 'divider',
             }}
           >
             {step === 0 && renderBasicDetails()}

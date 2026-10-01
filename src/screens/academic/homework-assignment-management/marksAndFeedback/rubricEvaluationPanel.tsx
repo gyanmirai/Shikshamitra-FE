@@ -4,19 +4,10 @@ import React from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import {
-  Box,
-  Card,
-  Chip,
-  Paper,
-  Stack,
-  Divider,
-  TextField,
-  Typography,
-  IconButton,
-} from '@mui/material';
+import { Box, Card, Chip, Alert, Stack, Divider, Typography, IconButton } from '@mui/material';
 import { RubricStatus } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
+import RubricScoreSummary from './rubricScoreSummary';
 import { useRubricEvaluation } from './useRubricEvaluation';
 import RubricCriterionScoring from './rubricCriterionScoring';
 import RubricEvaluationErrorAlert from './rubricEvaluationErrorAlert';
@@ -31,8 +22,26 @@ const RubricEvaluationPanel = React.forwardRef<
 >((props, ref) => {
   const evaluation = useRubricEvaluation(props);
   const compact = props.compactLayout ?? false;
+  const readOnly =
+    props.readOnly || evaluation.isLocked || evaluation.isLoading || evaluation.hasEvaluationError;
+  const { onStateChange, studentRow } = props;
 
-  React.useImperativeHandle(ref, () => ({ save: evaluation.save }));
+  React.useEffect(() => {
+    onStateChange?.({
+      studentId: studentRow?.studentId,
+      isLocked: evaluation.isLocked,
+      isLoading: evaluation.isLoading,
+      hasError: evaluation.hasEvaluationError,
+    });
+  }, [
+    onStateChange,
+    studentRow?.studentId,
+    evaluation.isLocked,
+    evaluation.isLoading,
+    evaluation.hasEvaluationError,
+  ]);
+
+  React.useImperativeHandle(ref, () => ({ save: evaluation.save, isLocked: evaluation.isLocked }));
 
   return (
     <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
@@ -44,7 +53,11 @@ const RubricEvaluationPanel = React.forwardRef<
             </Typography>
             {compact ? (
               <CustomTooltip
-                title="Select a performance level and add focused feedback for every criterion."
+                title={
+                  props.readOnly
+                    ? 'Review the recorded performance level and feedback for every criterion.'
+                    : 'Select a performance level and add focused feedback for every criterion.'
+                }
                 placement="right"
                 arrow
               >
@@ -73,6 +86,20 @@ const RubricEvaluationPanel = React.forwardRef<
 
       <Divider sx={{ my: 1.5 }} />
 
+      {evaluation.isLocked ? (
+        <Alert severity="info" sx={{ mb: 1.5 }}>
+          This evaluation is approved and locked. You can review the feedback and move to the next
+          student.
+        </Alert>
+      ) : null}
+
+      {evaluation.hasEvaluationError ? (
+        <RubricEvaluationErrorAlert
+          isLoading={evaluation.isLoading}
+          onRetry={evaluation.retryEvaluation}
+        />
+      ) : null}
+
       {!evaluation.activeRubric ? (
         <Stack spacing={1}>
           <Typography variant="body2" color="text.secondary">
@@ -82,6 +109,7 @@ const RubricEvaluationPanel = React.forwardRef<
             size="small"
             variant="outlined"
             loading={evaluation.isCreating || evaluation.isPublishing || evaluation.isLoading}
+            disabled={readOnly}
             startIcon={<Iconify icon="material-symbols-light:rubric-rounded" />}
             onClick={evaluation.createDefaultRubric}
           >
@@ -90,12 +118,6 @@ const RubricEvaluationPanel = React.forwardRef<
         </Stack>
       ) : (
         <Stack spacing={1.5}>
-          {evaluation.hasEvaluationError ? (
-            <RubricEvaluationErrorAlert
-              isLoading={evaluation.isLoading}
-              onRetry={evaluation.retryEvaluation}
-            />
-          ) : null}
           {evaluation.isLoading ? (
             <Typography variant="body2" color="text.secondary">
               Loading scoring model...
@@ -106,67 +128,19 @@ const RubricEvaluationPanel = React.forwardRef<
               values={evaluation.criterionValues}
               onMarksChange={evaluation.setCriterionMarks}
               onCommentsChange={evaluation.setCriterionComments}
-              readOnly={props.readOnly}
+              readOnly={readOnly}
               compact={compact}
             />
           )}
 
-          <Paper
-            component="section"
-            aria-labelledby="rubric-score-summary"
-            variant="outlined"
-            sx={{ p: 2, borderRadius: 2, bgcolor: 'background.neutral' }}
-          >
-            <Stack spacing={1.5}>
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                justifyContent="space-between"
-                alignItems={{ xs: 'flex-start', sm: 'center' }}
-                spacing={0.5}
-              >
-                <Box>
-                  <Typography id="rubric-score-summary" component="h3" variant="subtitle2">
-                    Score summary
-                  </Typography>
-                  {!compact ? (
-                    <Typography variant="caption" color="text.secondary">
-                      Updates automatically as criteria are scored.
-                    </Typography>
-                  ) : null}
-                </Box>
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontVariantNumeric: 'tabular-nums',
-                    color: compact ? 'primary.main' : 'text.primary',
-                  }}
-                >
-                  {evaluation.totalMarks}
-                  <Typography component="span" variant="body2" color="text.secondary">
-                    {' '}
-                    / {evaluation.activeRubric.totalMarks}
-                  </Typography>
-                </Typography>
-              </Stack>
-
-              <Divider />
-
-              <TextField
-                fullWidth
-                size="small"
-                label="Overall rubric feedback (optional)"
-                value={evaluation.remarks}
-                onChange={(event) => evaluation.setRemarks(event.target.value)}
-                placeholder="Summarize the student's overall performance"
-                multiline
-                rows={3}
-                disabled={props.readOnly}
-                helperText={
-                  compact ? undefined : 'This note applies to the complete rubric assessment.'
-                }
-              />
-            </Stack>
-          </Paper>
+          <RubricScoreSummary
+            totalMarks={evaluation.totalMarks}
+            maxMarks={evaluation.activeRubric.totalMarks}
+            remarks={evaluation.remarks}
+            onRemarksChange={evaluation.setRemarks}
+            readOnly={readOnly}
+            compact={compact}
+          />
         </Stack>
       )}
     </Card>
