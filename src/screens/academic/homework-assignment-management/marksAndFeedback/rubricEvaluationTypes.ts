@@ -15,10 +15,19 @@ export type RubricEvaluationPanelProps = {
   studentRow?: RubricStudentRow;
   ensureSubmissionId?: () => Promise<string | null>;
   readOnly?: boolean;
+  onStateChange?: (state: RubricEvaluationState) => void;
+};
+
+export type RubricEvaluationState = {
+  studentId?: string;
+  isLocked: boolean;
+  isLoading: boolean;
+  hasError: boolean;
 };
 
 export type RubricEvaluationPanelRef = {
   save: () => Promise<boolean>;
+  isLocked?: boolean;
 };
 
 export type CriterionEvaluationValue = {

@@ -5,7 +5,6 @@ import type { RootState } from 'src/redux/store';
 import * as Yup from 'yup';
 import { getIn, useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import React, { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
@@ -33,11 +32,11 @@ import {
   usePublishRubricMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
+import { RubricBasicInformation } from './components/RubricBasicInformation';
 import { RubricCriterionActions } from './components/RubricCriterionActions';
+import { RubricFormSection as SectionPaper } from './components/RubricFormSection';
 import {
   CRITERION_BANK,
-  RUBRIC_WORK_TYPE_OPTIONS,
-  RUBRIC_VISIBILITY_OPTIONS,
   DEFAULT_PERFORMANCE_LEVELS,
   RUBRIC_SCORING_MODEL_LABELS,
   RUBRIC_SCORING_MODEL_OPTIONS,
@@ -69,7 +68,6 @@ const basicInformationSchema = Yup.object({
   appliesToWorkType: Yup.number()
     .typeError('Applies to is required')
     .required('Applies to is required'),
-  visibility: Yup.number().typeError('Visibility is required').required('Visibility is required'),
 });
 
 const scoringModelSchema = Yup.object({
@@ -158,7 +156,6 @@ const buildInitialValues = (
       ? ''
       : editData.appliesToWorkType,
   scoringModel: editData?.scoringModel ?? RubricScoringModel.PointsBased,
-  visibility: editData?.visibility ?? RubricVisibility.Institution,
   evaluationInstructions: editData?.evaluationInstructions || '',
   studentInstructions: editData?.studentInstructions || '',
   tags: editData?.tags?.join(', ') || '',
@@ -205,68 +202,6 @@ const getFormikError = (formik: any, path: string) =>
 
 const hasFormikError = (formik: any, path: string) => Boolean(getFormikError(formik, path));
 
-const SectionPaper = ({
-  title,
-  caption,
-  icon,
-  children,
-  action,
-}: {
-  title: string;
-  caption?: string;
-  icon: string;
-  children: React.ReactNode;
-  action?: React.ReactNode;
-}) => (
-  <Paper
-    variant="outlined"
-    sx={{
-      p: { xs: 1.5, md: 2 },
-      borderRadius: 1.5,
-      bgcolor: 'background.paper',
-      borderColor: 'divider',
-      boxShadow: 'var(--shadows-2)',
-    }}
-  >
-    <Stack spacing={1.5}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        gap={1}
-      >
-        <Stack direction="row" spacing={1.25} alignItems="center">
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'primary.main',
-              bgcolor: (theme) => varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
-            }}
-          >
-            <Iconify icon={icon} width={18} height={18} />
-          </Box>
-          <Stack spacing={0.2}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              {title}
-            </Typography>
-            {caption ? (
-              <Typography variant="caption" color="text.secondary">
-                {caption}
-              </Typography>
-            ) : null}
-          </Stack>
-        </Stack>
-        {action}
-      </Stack>
-      {children}
-    </Stack>
-  </Paper>
-);
 
 const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
@@ -325,7 +260,8 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
         isTemplate: true,
         appliesToWorkType: Number(values.appliesToWorkType),
         scoringModel: values.scoringModel,
-        visibility: values.visibility,
+        // Keep existing scopes on edit; new templates belong to the institution.
+        visibility: editData?.visibility ?? RubricVisibility.Institution,
         title: values.title.trim(),
         description: values.description.trim() || null,
         evaluationInstructions: values.evaluationInstructions.trim() || null,
@@ -393,118 +329,6 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
     formik.setFieldValue(`performanceLevels[${index}].${field}`, value);
   };
 
-  const renderBasicInformation = (formik: any) => (
-    <Stack spacing={1.5}>
-      <SectionPaper
-        icon="solar:document-text-bold-duotone"
-        title="Template Identity"
-        caption="Name the rubric and define where teachers can use it."
-      >
-        <Grid container spacing={1.25}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              name="title"
-              label="Rubric Name *"
-              value={formik.values.title}
-              onBlur={formik.handleBlur}
-              onChange={formik.handleChange}
-              error={hasFormikError(formik, 'title')}
-              helperText={
-                getFormikError(formik, 'title') || ''
-              }
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <CustomSelect
-              label="Applies To *"
-              options={RUBRIC_WORK_TYPE_OPTIONS}
-              labelKey="label"
-              valueKey="value"
-              value={formik.values.appliesToWorkType}
-              onBlur={() => formik.setFieldTouched('appliesToWorkType', true)}
-              onChange={(value) => formik.setFieldValue('appliesToWorkType', value)}
-              error={hasFormikError(formik, 'appliesToWorkType')}
-              helperText={getFormikError(formik, 'appliesToWorkType')}
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 3 }}>
-            <CustomSelect
-              label="Visibility *"
-              options={RUBRIC_VISIBILITY_OPTIONS}
-              labelKey="label"
-              valueKey="value"
-              value={formik.values.visibility}
-              onBlur={() => formik.setFieldTouched('visibility', true)}
-              onChange={(value) => formik.setFieldValue('visibility', Number(value))}
-              error={hasFormikError(formik, 'visibility')}
-              helperText={getFormikError(formik, 'visibility')}
-              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              size="small"
-              name="description"
-              label="Description"
-              multiline
-              rows={2}
-              value={formik.values.description}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-        </Grid>
-      </SectionPaper>
-
-      <SectionPaper
-        icon="solar:user-speak-bold-duotone"
-        title="Guidance"
-        caption="Optional instructions that appear with the rubric during evaluation."
-      >
-        <Grid container spacing={1.25}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              name="evaluationInstructions"
-              label="Teacher Evaluation Instructions"
-              multiline
-              rows={3}
-              value={formik.values.evaluationInstructions}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              size="small"
-              name="studentInstructions"
-              label="Student-Facing Instructions"
-              multiline
-              rows={3}
-              value={formik.values.studentInstructions}
-              onChange={formik.handleChange}
-            />
-          </Grid>
-          <Grid size={{ xs: 12 }}>
-            <TextField
-              fullWidth
-              size="small"
-              name="tags"
-              label="Tags"
-              placeholder="project, creativity, grade 8"
-              value={formik.values.tags}
-              onChange={formik.handleChange}
-              helperText="Separate tags with commas."
-            />
-          </Grid>
-        </Grid>
-      </SectionPaper>
-    </Stack>
-  );
 
   const renderScoringModel = (formik: any) => {
     const totalScore = formik.values.criteria.reduce(
@@ -973,7 +797,7 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
 
           {/* Step content */}
           <Box sx={{ p: { xs: 1.5, md: 2 } }}>
-            {step === 0 ? renderBasicInformation(formik) : null}
+            {step === 0 ? <RubricBasicInformation formik={formik} /> : null}
             {step === 1 ? (
               <Stack spacing={1.5}>
                 {renderScoringModel(formik)}

@@ -4,10 +4,10 @@ import { vi, it, expect, describe } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, within } from '@testing-library/react';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import globalStateReducer from 'src/redux/globalState/globalSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import confirmPopupReducer from 'src/redux/confirmPopup/confirmPopupSlice';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 
@@ -77,6 +77,12 @@ describe('SubmitDiaryModal presentation', () => {
     renderModal();
 
     const context = screen.getByLabelText('Lesson information');
+    const toggle = within(context).getByRole('button', { name: /Lesson information/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(toggle).toHaveTextContent('LKG-A | Hindi');
+    expect(screen.getByLabelText(/Actual Topic Covered/)).toBeVisible();
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(within(context).getByText('LKG-A')).toBeVisible();
     expect(within(context).getByText('Hindi')).toBeVisible();
     expect(within(context).getByText('Swar Varnamala Recognition')).toBeVisible();
@@ -91,17 +97,18 @@ describe('SubmitDiaryModal presentation', () => {
   it('exposes the diary steps as accessible tabs', () => {
     renderModal();
 
-    expect(screen.getByRole('tab', { name: /Teaching/ })).toHaveAttribute(
-      'aria-selected',
-      'true'
-    );
+    expect(screen.getByRole('tab', { name: /Teaching/ })).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', { name: /Reflection/ })).toHaveAttribute(
       'aria-selected',
       'false'
     );
-    expect(screen.getByRole('tab', { name: /Evidence/ })).toHaveAttribute(
-      'aria-selected',
-      'false'
-    );
+    expect(screen.getByRole('tab', { name: /Evidence/ })).toHaveAttribute('aria-selected', 'false');
+    fireEvent.change(screen.getByLabelText(/Actual Topic Covered/), {
+      target: { value: 'Updated classroom coverage' },
+    });
+    fireEvent.click(screen.getByRole('tab', { name: /Reflection/ }));
+    expect(screen.getByRole('tabpanel', { name: 'Reflection' })).toBeVisible();
+    fireEvent.click(screen.getByRole('tab', { name: /Teaching/ }));
+    expect(screen.getByLabelText(/Actual Topic Covered/)).toHaveValue('Updated classroom coverage');
   });
 });

@@ -260,6 +260,8 @@ const FileUploader = <T extends boolean = true>({
     if (isDisabled) return;
     if (e.target.files?.length) {
       handleFiles(multiple ? (Array.from(e.target.files) as any) : e.target.files[0]);
+      // Permit selecting the same file again after removal, rejection, or a failed upload.
+      e.target.value = '';
     }
   };
 
@@ -416,6 +418,8 @@ const FileUploader = <T extends boolean = true>({
           role="button"
           tabIndex={isDisabled ? -1 : 0}
           aria-label={primaryText}
+          aria-disabled={isDisabled}
+          aria-busy={isUploading}
           sx={{
             border: (theme) =>
               `1px dashed ${error ? theme.palette.error.main : theme.vars.palette.grey[400]}`,
@@ -451,10 +455,11 @@ const FileUploader = <T extends boolean = true>({
           {isUploading ? (
             <>
               <CircularProgress
+                aria-label="Uploading document"
                 size={value && (Array.isArray(value) ? value.length > 0 : value) ? 22 : 28}
                 sx={{ color: 'primary.main' }}
               />
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+              <Typography role="status" variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
                 Uploading document...
               </Typography>
             </>

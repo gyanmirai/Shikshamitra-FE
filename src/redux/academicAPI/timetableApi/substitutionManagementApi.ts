@@ -394,6 +394,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
       }),
     }),
     getSuggestedTeachers: builder.query<ApiSuggestedTeacher[], string>({
+      keepUnusedDataFor: 0,
       query: (id) => ({
         url: `academics/timetable/substitutions/${id}/suggested-teachers`,
         method: 'GET',
@@ -401,6 +402,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
       providesTags: [academicType.substitutionSuggestions],
     }),
     getSuggestedTeachersByContext: builder.query<ApiSuggestedTeacher[], QueryParams>({
+      keepUnusedDataFor: 0,
       query: (params) => ({
         url: 'academics/timetable/substitutions/suggested-teachers',
         method: 'GET',
@@ -429,6 +431,7 @@ export const substitutionManagementApi = academicApi.injectEndpoints({
         academicType.substitutionAvailability,
         academicType.substitutionDashboard,
         academicType.substitutionAffectedLectures,
+        academicType.substitutionSuggestions,
       ],
     }),
     getAffectedLectures: builder.query<ApiAffectedLectureResult, QueryParams>({

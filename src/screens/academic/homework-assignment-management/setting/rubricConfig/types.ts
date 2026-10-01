@@ -1,9 +1,8 @@
 import type {
   RubricStatus,
   RubricWorkType,
-  RubricVisibility,
-  AssessmentRubricDto,
   RubricScoringModel,
+  AssessmentRubricDto,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 export type RubricCriterionFormValue = {
@@ -28,7 +27,6 @@ export type RubricConfigFormValues = {
   description: string;
   appliesToWorkType: '' | RubricWorkType;
   scoringModel: RubricScoringModel;
-  visibility: RubricVisibility;
   evaluationInstructions: string;
   studentInstructions: string;
   tags: string;

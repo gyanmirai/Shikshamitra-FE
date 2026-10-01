@@ -35,6 +35,7 @@ describe('RubricEvaluationPanel', () => {
     retryEvaluation.mockReset();
     vi.mocked(useRubricEvaluation).mockReturnValue({
       activeRubric: rubric,
+      isLocked: false,
       criterionValues: {},
       remarks: '',
       setRemarks: vi.fn(),

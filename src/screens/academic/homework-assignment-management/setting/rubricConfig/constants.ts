@@ -72,22 +72,6 @@ export const RUBRIC_SCORING_MODEL_OPTIONS = [
   },
 ];
 
-export const RUBRIC_VISIBILITY_OPTIONS = [
-  { value: RubricVisibility.Private, label: RUBRIC_VISIBILITY_LABELS[RubricVisibility.Private] },
-  {
-    value: RubricVisibility.SelectedTeachers,
-    label: RUBRIC_VISIBILITY_LABELS[RubricVisibility.SelectedTeachers],
-  },
-  {
-    value: RubricVisibility.Department,
-    label: RUBRIC_VISIBILITY_LABELS[RubricVisibility.Department],
-  },
-  {
-    value: RubricVisibility.Institution,
-    label: RUBRIC_VISIBILITY_LABELS[RubricVisibility.Institution],
-  },
-];
-
 export const DEFAULT_PERFORMANCE_LEVELS = [
   { level: 4, label: 'Excellent', score: 4, description: '', studentLabel: 'Excellent' },
   { level: 3, label: 'Good', score: 3, description: '', studentLabel: 'Good' },

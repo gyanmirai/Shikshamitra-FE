@@ -44,15 +44,20 @@ export const useRubricEvaluationQueries = ({
       ? assignmentQuery.data
       : homeworkQuery.data?.find((item) => item.studentSubmissionId === submissionId);
   const hasEvaluationError =
-    mode === 'assignment'
+    rubricsQuery.isError ||
+    (mode === 'assignment'
       ? assignmentQuery.isError && !isMissingEvaluationResponse(assignmentQuery.error)
-      : homeworkQuery.isError;
+      : homeworkQuery.isError);
 
   return {
     activeRubric,
     currentEvaluation,
     hasEvaluationError,
-    retryEvaluation: mode === 'assignment' ? assignmentQuery.refetch : homeworkQuery.refetch,
+    retryEvaluation: rubricsQuery.isError
+      ? rubricsQuery.refetch
+      : mode === 'assignment'
+        ? assignmentQuery.refetch
+        : homeworkQuery.refetch,
     isLoading: rubricsQuery.isFetching || assignmentQuery.isFetching || homeworkQuery.isFetching,
   };
 };
