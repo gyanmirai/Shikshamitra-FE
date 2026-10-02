@@ -50,7 +50,11 @@ export function ExistingPlanCard({
     >
       <CardContent sx={{ '&:last-child': { pb: 2 } }}>
         <Stack spacing={1.25}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            spacing={1.5}
+            alignItems={{ sm: 'center' }}
+          >
             <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle1">{plan.name}</Typography>
               <Typography variant="body2" color="text.secondary">
@@ -66,6 +70,7 @@ export function ExistingPlanCard({
           </Stack>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Button
+              size="small"
               variant="outlined"
               disabled={!canEdit || isExaminationPublished}
               onClick={onOpen}
@@ -73,21 +78,22 @@ export function ExistingPlanCard({
               {plan.allocatedStudents > 0 ? 'Edit seating' : 'Configure seating'}
             </Button>
             {!isExaminationPublished && (
-              <Button variant="text" disabled={!canEdit} onClick={onEdit}>
+              <Button size="small" variant="text" disabled={!canEdit} onClick={onEdit}>
                 Edit subjects
               </Button>
             )}
             {!isExaminationPublished && canDelete && (
-              <Button color="error" variant="text" disabled={deleteDisabled} onClick={onDelete}>
+              <Button
+                size="small"
+                color="error"
+                variant="text"
+                disabled={deleteDisabled}
+                onClick={onDelete}
+              >
                 Delete empty plan
               </Button>
             )}
           </Stack>
-          {deleteDisabled && !isExaminationPublished && canDelete && (
-            <Typography variant="caption" color="text.secondary">
-              Use “Reset all draft seating” to remove plans that already contain seat assignments.
-            </Typography>
-          )}
         </Stack>
       </CardContent>
     </Card>

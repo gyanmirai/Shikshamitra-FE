@@ -2,13 +2,15 @@ import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
 import { useSelector } from 'react-redux';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { academicPermissions } from 'src/constants/academic-menu';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetSeatAllocationTableDataQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
 
 import { toSeatingPlanListRows } from '../utils/mappers';
+import { buildSeatingPlanListUrl } from '../utils/seating-plan-navigation';
 
 import type { SeatingPlanListRow } from '../types';
 
@@ -28,8 +30,8 @@ export function useSeatingPlanList() {
     permissions,
     `${academicPermissions.examination.seatAllocation}.Add`
   );
-  const [selectedClassId, setSelectedClassId] = useState('');
-  const [activeSummaryFilter, setActiveSummaryFilter] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [previewRow, setPreviewRow] = useState<SeatingPlanListRow | null>(null);
 
   /**
@@ -45,13 +47,21 @@ export function useSeatingPlanList() {
     [currentMedium]
   );
 
-  useEffect(() => {
-    setSelectedClassId((current) =>
-      classes.some((standard: Standards) => standard.id === current)
-        ? current
-        : classes[0]?.id || ''
-    );
-  }, [classes]);
+  const requestedClassId = searchParams.get('standardId');
+  const selectedClassId = classes.some((standard: Standards) => standard.id === requestedClassId)
+    ? requestedClassId || ''
+    : classes[0]?.id || '';
+  const requestedStatus = searchParams.get('status');
+  const activeSummaryFilter =
+    requestedStatus && Object.hasOwn(SUMMARY_FILTER_PREDICATES, requestedStatus)
+      ? requestedStatus
+      : null;
+  const setSelectedClassId = (value: string) => {
+    router.replace(buildSeatingPlanListUrl(value), { scroll: false });
+  };
+  const setActiveSummaryFilter = (value: string | null) => {
+    router.replace(buildSeatingPlanListUrl(selectedClassId, value), { scroll: false });
+  };
 
   const {
     data: seatAllocationData,

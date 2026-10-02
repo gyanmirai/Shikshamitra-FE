@@ -1,8 +1,7 @@
-import Stack from '@mui/material/Stack';
 import { Iconify } from 'src/components/iconify';
-import Typography from '@mui/material/Typography';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import type { AllocationMode, GuidedStepProps } from '../types';
 
@@ -15,41 +14,28 @@ export function AllocationModeStep({ workflow }: GuidedStepProps) {
   };
 
   return (
-    <Stack spacing={1}>
-      <Stack spacing={0.5}>
-        <Typography variant="h6">Choose how to arrange students</Typography>
-        <Typography color="text.secondary">
-          Start automatically or work directly on the classroom layout. Both options remain a
-          draft until Review.
-        </Typography>
-      </Stack>
+    <FormSectionCard
+      icon="mdi:auto-fix"
+      title="Arrangement method"
+      descriptionTooltip="Automatic generates a seating proposal from your allocation rules. Manual lets you arrange students directly on the classroom layout. Both methods remain a draft until you review and apply the seating."
+    >
       <ToggleButtonGroup
+        size="small"
         exclusive
         fullWidth
         value={mode}
         onChange={selectMode}
         aria-label="Seating allocation method"
-        sx={{ maxWidth: 720 }}
       >
-        <ToggleButton value="automatic" sx={{ minHeight: 64, gap: 1 }}>
-          <Iconify icon="mdi:auto-fix" width={22} />
-          <Stack alignItems="flex-start">
-            <Typography variant="subtitle2">Automatic</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Generate a complete proposal from rules
-            </Typography>
-          </Stack>
+        <ToggleButton value="automatic" sx={{ gap: 1 }}>
+          <Iconify icon="mdi:auto-fix" width={18} />
+          Automatic
         </ToggleButton>
-        <ToggleButton value="manual" sx={{ minHeight: 64, gap: 1 }}>
-          <Iconify icon="mdi:cursor-move" width={22} />
-          <Stack alignItems="flex-start">
-            <Typography variant="subtitle2">Manual classroom</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Drag, select, move and swap students
-            </Typography>
-          </Stack>
+        <ToggleButton value="manual" sx={{ gap: 1 }}>
+          <Iconify icon="mdi:cursor-move" width={18} />
+          Manual
         </ToggleButton>
       </ToggleButtonGroup>
-    </Stack>
+    </FormSectionCard>
   );
 }

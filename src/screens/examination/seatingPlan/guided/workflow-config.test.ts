@@ -40,7 +40,7 @@ describe('guided seating workflow configuration', () => {
     expect(getNextLabel(1, true, false, true, false, 'manual')).toBe('Review manual seating');
     expect(getNextLabel(2, false, false, true, false)).toBe('Generate preview');
     expect(getNextLabel(2, true, false, true, false)).toBe('Apply seating & validate');
-    expect(getNextLabel(2, true, true, true, false)).toBe('Save plan & return to subjects');
+    expect(getNextLabel(2, true, true, true, false)).toBe('Save plan & return to list');
     expect(getNextLabel(0, false, false, false, false, 'automatic', true)).toBe(
       'Review examination & publish'
     );
@@ -137,6 +137,14 @@ describe('guided seating workflow configuration', () => {
         workspace: { readiness: { isReadyToPublish: true } } as SeatingPlanWorkspaceDto,
       })
     ).toBe(false);
+    const publishWithWarnings = {
+      ...base,
+      activeStep: 3,
+      workspace: { readiness: { isReadyToPublish: true } } as SeatingPlanWorkspaceDto,
+      warningCount: 4,
+    };
+    expect(getNextDisabled(publishWithWarnings)).toBe(true);
+    expect(getNextDisabled({ ...publishWithWarnings, warningsAcknowledged: true })).toBe(false);
   });
 
   it('blocks applying an empty generated preview', () => {

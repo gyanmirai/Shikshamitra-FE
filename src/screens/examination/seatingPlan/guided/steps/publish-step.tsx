@@ -3,10 +3,14 @@
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
 import Checkbox from '@mui/material/Checkbox';
+import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import FormControlLabel from '@mui/material/FormControlLabel';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { PublishedReceipt } from './published-receipt';
+import { PublicationWarnings } from './publication-warnings';
+import { ExaminationReadinessCard } from './examination-readiness-card';
 
 import type { GuidedStepProps } from '../types';
 
@@ -17,80 +21,64 @@ export function PublishStep({ workspace, workflow }: GuidedStepProps) {
   const { readiness } = workflow;
 
   return (
-    <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 }, maxWidth: 920 }}>
-      <Stack spacing={0.75}>
-        <Typography variant="h5">Review the complete examination seating</Typography>
-        <Typography color="text.secondary">
-          This is the only publish action. It validates and locks every plan together so the
-          examination can never be left partially published.
-        </Typography>
-      </Stack>
+    <Stack spacing={1.5} sx={{ p: 2 }}>
+      <ExaminationReadinessCard workflow={workflow} />
+      <FormSectionCard
+        icon="mdi:clipboard-check-outline"
+        title="Plans to publish"
+        descriptionTooltip="All subjects must belong to a plan, and every plan must have complete, validated seating. All plans are published together for this examination."
+      >
+        <Stack spacing={1}>
+          {workspace.plans.map((plan) => (
+            <Alert
+              key={plan.seatingPlanId}
+              severity={plan.pendingStudents === 0 ? 'success' : 'warning'}
+              variant="outlined"
+            >
+              <Typography variant="subtitle2">{plan.name}</Typography>
+              {plan.subjects.map((subject) => subject.subjectName).join(', ')} ·{' '}
+              {plan.allocatedStudents} of {plan.totalStudents} students seated
+            </Alert>
+          ))}
+        </Stack>
+      </FormSectionCard>
+      <FormSectionCard
+        icon="mdi:lock-outline"
+        title="Publish examination"
+        descriptionTooltip="Review any warnings before publishing. Publishing runs final validation and locks the seating plans. Corrections after publication require a new examination revision."
+      >
+        <Stack spacing={1}>
+          <PublicationWarnings warnings={readiness.warnings} />
 
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-        <Metric label="Subjects planned" value={`${readiness.plannedSubjectCount}/${readiness.totalSubjectCount}`} />
-        <Metric label="Plans ready" value={`${readiness.readyPlanCount}/${readiness.totalPlanCount}`} />
-        <Metric
-          label="Seats assigned"
-          value={`${readiness.allocatedStudentSeats}/${readiness.totalStudentSeats}`}
-        />
-      </Stack>
-
-      {workspace.plans.map((plan) => (
-        <Alert
-          key={plan.seatingPlanId}
-          severity={plan.pendingStudents === 0 ? 'success' : 'warning'}
-          variant="outlined"
-        >
-          <Typography variant="subtitle2">{plan.name}</Typography>
-          {plan.subjects.map((subject) => subject.subjectName).join(', ')} ·{' '}
-          {plan.allocatedStudents} of {plan.totalStudents} students seated
-        </Alert>
-      ))}
-
-      {readiness.blockers.map((issue) => (
-        <Alert key={`${issue.code}-${issue.seatingPlanId ?? ''}`} severity="error">
-          {issue.message}
-        </Alert>
-      ))}
-      {readiness.warnings.map((warning) => (
-        <Alert key={`${warning.code}-${warning.seatingPlanId ?? ''}`} severity="warning">
-          {warning.message}
-        </Alert>
-      ))}
-
-      {readiness.warnings.length > 0 && (
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={workflow.formik.values.acknowledgeWarnings}
-              onChange={(_, checked) =>
-                workflow.formik.setFieldValue('acknowledgeWarnings', checked)
+          {readiness.warnings.length > 0 && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  size="small"
+                  checked={workflow.formik.values.acknowledgeWarnings}
+                  onChange={(_, checked) =>
+                    workflow.formik.setFieldValue('acknowledgeWarnings', checked)
+                  }
+                />
               }
+              label={`I reviewed all ${readiness.warnings.length} warning${readiness.warnings.length === 1 ? '' : 's'}.`}
             />
-          }
-          label={`I reviewed ${readiness.warnings.length} warning${readiness.warnings.length === 1 ? '' : 's'} for all plans.`}
-        />
-      )}
+          )}
 
-      <Alert severity={readiness.isReadyToPublish ? 'warning' : 'error'}>
-        {readiness.isReadyToPublish
-          ? 'After publishing, room choices, subject groups and seat assignments cannot be changed. Corrections require a new examination revision.'
-          : 'Publishing is blocked until every scheduled subject belongs to one valid, fully seated plan.'}
-      </Alert>
-    </Stack>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <Stack
-      spacing={0.25}
-      sx={{ flex: 1, minWidth: 150, p: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}
-    >
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="h6">{value}</Typography>
+          {readiness.isReadyToPublish ? (
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Iconify icon="mdi:lock-outline" width={16} sx={{ color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary">
+                Publishing locks all plans. Corrections require a new examination revision.
+              </Typography>
+            </Stack>
+          ) : (
+            <Alert severity="error">
+              Complete all subjects and seating plans before publishing.
+            </Alert>
+          )}
+        </Stack>
+      </FormSectionCard>
     </Stack>
   );
 }
