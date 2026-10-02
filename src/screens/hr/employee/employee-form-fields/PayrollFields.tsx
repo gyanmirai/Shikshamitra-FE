@@ -41,6 +41,7 @@ import { RenderPfRules } from './RenderPfRules';
 import PayrollComponentDialog from './PayrollComponentDialog';
 import { CardActions, SectionCard } from './InformationFields';
 import PayrollTempComponentDialog from './PayrollTempComponentDialog';
+import { EmployeeEsiDetails } from '../../payroll/setting/employee-esi-details';
 import {
   isSalaryComponentFixed,
   formatApplicableMonthLabel,
@@ -1055,6 +1056,15 @@ const RenderPayrollFields = (props: any) => {
           </ShakingTextField>
         </Grid>
         <FieldGroupHeader title="Statutory Details" />
+        {values.employeeId && (
+          <Grid size={{ xs: 12 }}>
+            <EmployeeEsiDetails
+              employeeId={values.employeeId}
+              employeeName={[values.firstName, values.lastName].filter(Boolean).join(' ') || 'Employee'}
+              employeeIdentifier={values.employeeIdentifier || ''}
+            />
+          </Grid>
+        )}
         <Grid size={{ xs: 12, sm: 4 }}>
           <RenderPfRules
             disabled={!isEditable.value}

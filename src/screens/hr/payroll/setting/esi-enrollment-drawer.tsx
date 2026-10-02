@@ -7,8 +7,9 @@ import type {
 } from 'src/redux/hr/statutory-scheme-api';
 
 import { Close } from '@mui/icons-material';
-import { useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import {
   useGetEsiOverridesQuery,
   useGetEsiEnrollmentQuery,
@@ -34,7 +35,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { formatEsiCurrency, enrollmentStatusLabel } from './esi-statutory-utils';
+import { formatEsiCurrency } from './esi-statutory-utils';
 
 type EnrollmentForm = Omit<EsiEnrollment, 'id' | 'employeeId' | 'schemeCode'>;
 
@@ -60,13 +61,16 @@ const overrideLabels: Record<EsiStatutoryOverride['overrideType'], string> = {
 };
 
 type EsiEnrollmentDrawerProps = {
-  employee: EsiEmployeeImpact | null;
+  employee:
+    | (Pick<EsiEmployeeImpact, 'employeeId' | 'employeeName' | 'employeeIdentifier'> &
+        Partial<EsiEmployeeImpact>)
+    | null;
   open: boolean;
   canManageEnrollment: boolean;
   canApproveOverride: boolean;
   onClose: () => void;
   onSaved: () => Promise<unknown>;
-  onAddOverride: () => void;
+  onAddOverride?: () => void;
 };
 
 export function EsiEnrollmentDrawer({
@@ -81,16 +85,33 @@ export function EsiEnrollmentDrawer({
   const employeeId = employee?.employeeId || '';
   const enrollmentQuery = useGetEsiEnrollmentQuery(employeeId, { skip: !employeeId || !open });
   const overridesQuery = useGetEsiOverridesQuery(employeeId, {
-    skip: !employeeId || !open,
+    skip: !employeeId || !open || !onAddOverride,
   });
-  const enrollmentData = enrollmentQuery.data;
+  const enrollmentData = enrollmentQuery.currentData;
   const [updateEnrollment, updateState] = useUpdateEsiEnrollmentMutation();
   const [form, setForm] = useState<EnrollmentForm>(EMPTY_FORM);
+  const initializedEmployee = useRef('');
+  const baseline = useRef<EnrollmentForm>(EMPTY_FORM);
+  const [saving, setSaving] = useState(false);
+  const busy = saving || updateState.isLoading || (!enrollmentData && enrollmentQuery.isFetching);
+  const dirty =
+    open &&
+    initializedEmployee.current === employeeId &&
+    JSON.stringify(form) !== JSON.stringify(baseline.current);
+  const { requestNavigation, confirmation } = useUnsavedNavigation(dirty);
+  const close = () => {
+    if (!busy) requestNavigation(onClose);
+  };
 
   useEffect(() => {
-    if (!enrollmentData) return;
+    if (!open) {
+      initializedEmployee.current = '';
+      return;
+    }
+    if (!enrollmentData || initializedEmployee.current === employeeId) return;
+    initializedEmployee.current = employeeId;
     const data = enrollmentData;
-    setForm({
+    const initial: EnrollmentForm = {
       status: data.status,
       wageCeilingCategory: data.wageCeilingCategory,
       insuranceNumber: data.insuranceNumber || '',
@@ -102,32 +123,30 @@ export function EsiEnrollmentDrawer({
       employerShareReliefFrom: data.employerShareReliefFrom?.slice(0, 10) || '',
       employerShareReliefTo: data.employerShareReliefTo?.slice(0, 10) || '',
       disabilityEvidenceReference: data.disabilityEvidenceReference || '',
-    });
-  }, [enrollmentData]);
+    };
+    baseline.current = initial;
+    setForm(initial);
+  }, [employeeId, enrollmentData, open]);
 
-  const isCovered = form.status === 'Covered';
+  const isCovered = form.status !== 'RegistrationPending';
   const isRegistrationPending = form.status === 'RegistrationPending';
-  const isExited = form.status === 'Exited';
-  const showCoverageFields = isCovered || isRegistrationPending;
+  const showCoverageFields = true;
   const showPwdRelief = form.wageCeilingCategory === 'PersonWithDisability';
   const reliefInvalid =
     form.employerShareReliefEligible &&
     (!form.employerShareReliefFrom || !form.disabilityEvidenceReference?.trim());
-  const formInvalid =
-    (isCovered && (!form.insuranceNumber?.trim() || !form.coveredFrom)) ||
-    (isExited && !form.coveredTo) ||
-    reliefInvalid;
+  const formInvalid = (isCovered && !form.insuranceNumber?.trim()) || reliefInvalid;
 
   const save = async () => {
-    if (!employee || formInvalid) return;
-    const hidesCoverage = form.status === 'NotCovered' || form.status === 'PendingReview';
+    if (!employee || formInvalid || busy) return;
+    setSaving(true);
     try {
       await updateEnrollment({
         employeeId: employee.employeeId,
         body: {
           ...form,
-          insuranceNumber: hidesCoverage ? null : form.insuranceNumber?.trim() || null,
-          coveredFrom: hidesCoverage ? null : form.coveredFrom || null,
+          insuranceNumber: form.insuranceNumber?.trim() || null,
+          coveredFrom: form.coveredFrom || null,
           coveredTo: form.coveredTo || null,
           contributionPeriodEnd: isCovered ? form.contributionPeriodEnd || null : null,
           statusReason: form.statusReason?.trim() || null,
@@ -147,12 +166,21 @@ export function EsiEnrollmentDrawer({
         },
       }).unwrap();
       shikshaMitraToast.success({ message: 'ESI enrollment saved.' });
-      await onSaved();
+      baseline.current = form;
       onClose();
+      try {
+        await onSaved();
+      } catch {
+        shikshaMitraToast.error({
+          message: 'Enrollment saved. Refresh the employee details to see the latest status.',
+        });
+      }
     } catch {
       shikshaMitraToast.error({
         message: 'The enrollment could not be saved. Review the highlighted fields and try again.',
       });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -160,7 +188,7 @@ export function EsiEnrollmentDrawer({
     <Drawer
       anchor="right"
       open={open}
-      onClose={updateState.isLoading ? undefined : onClose}
+      onClose={close}
       slotProps={{
         paper: {
           sx: { width: { xs: '100%', sm: 520 }, maxWidth: '100vw' },
@@ -181,14 +209,16 @@ export function EsiEnrollmentDrawer({
           }}
         >
           <Box minWidth={0}>
-            <Typography variant="h6">Employee ESI details</Typography>
+            <Typography variant="h6">Employee ESIC details</Typography>
             <Typography variant="body2" color="text.secondary" noWrap>
-              {employee?.employeeName} · {employee?.employeeIdentifier || 'No employee code'}
+              {employee?.employeeName}
+              {employee?.employeeIdentifier ? ` · ${employee.employeeIdentifier}` : ''}
             </Typography>
           </Box>
           <IconButton
-            aria-label="Close employee ESI details"
-            onClick={onClose}
+            aria-label="Close employee ESIC details"
+            disabled={busy}
+            onClick={close}
             sx={{ width: 44, height: 44 }}
           >
             <Close />
@@ -196,36 +226,38 @@ export function EsiEnrollmentDrawer({
         </Box>
 
         <Box sx={{ p: 2.5, display: 'grid', gap: 2.5, overflowY: 'auto' }}>
-          <Box>
-            <Typography variant="subtitle1" gutterBottom>
-              Contribution details
-            </Typography>
-            <Grid container spacing={1.25}>
-              {[
-                ['Coverage', employee?.coverageDecisionLabel || 'Not available'],
-                ['ESI wages', formatEsiCurrency(employee?.statutoryWages || 0)],
-                ['Employee deduction', formatEsiCurrency(employee?.employeeContribution || 0)],
-                ['Employer contribution', formatEsiCurrency(employee?.employerContribution || 0)],
-              ].map(([label, value]) => (
-                <Grid key={label} size={{ xs: 6 }}>
-                  <Typography variant="caption" color="text.secondary">
-                    {label}
-                  </Typography>
-                  <Typography variant="body2" fontWeight={600}>
-                    {value}
-                  </Typography>
-                </Grid>
-              ))}
-            </Grid>
-          </Box>
+          {employee?.statutoryWages !== undefined && (
+            <Box>
+              <Typography variant="subtitle1" gutterBottom>
+                Contribution details
+              </Typography>
+              <Grid container spacing={1.25}>
+                {[
+                  ['Coverage', employee?.coverageDecisionLabel || 'Not available'],
+                  ['ESI wages', formatEsiCurrency(employee?.statutoryWages || 0)],
+                  ['Employee deduction', formatEsiCurrency(employee?.employeeContribution || 0)],
+                  ['Employer contribution', formatEsiCurrency(employee?.employerContribution || 0)],
+                ].map(([label, value]) => (
+                  <Grid key={label} size={{ xs: 6 }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {label}
+                    </Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {value}
+                    </Typography>
+                  </Grid>
+                ))}
+              </Grid>
+            </Box>
+          )}
 
-          <Divider />
+          {employee?.statutoryWages !== undefined && <Divider />}
 
           <Box>
             <Typography variant="subtitle1" gutterBottom>
               Enrollment
             </Typography>
-            {enrollmentQuery.isFetching ? (
+            {!enrollmentData && enrollmentQuery.isFetching ? (
               <Box display="grid" gap={1}>
                 <Skeleton height={56} />
                 <Skeleton height={56} />
@@ -240,39 +272,27 @@ export function EsiEnrollmentDrawer({
                 Enrollment details could not be loaded.
               </Alert>
             ) : null}
-            {enrollmentQuery.data && !enrollmentQuery.isFetching ? (
+            {enrollmentData ? (
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth disabled={!canManageEnrollment}>
-                    <InputLabel>Enrollment status</InputLabel>
-                    <Select
-                      label="Enrollment status"
-                      value={form.status}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          status: event.target.value as EsiEnrollment['status'],
-                        }))
-                      }
-                    >
-                      {(
-                        [
-                          'PendingReview',
-                          'RegistrationPending',
-                          'Covered',
-                          'NotCovered',
-                          'Exited',
-                        ] as EsiEnrollment['status'][]
-                      ).map((status) => (
-                        <MenuItem key={status} value={status}>
-                          {enrollmentStatusLabel(status)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <FormControlLabel
+                    label="Registration pending"
+                    control={
+                      <Switch
+                        disabled={!canManageEnrollment || busy}
+                        checked={isRegistrationPending}
+                        onChange={(_, checked) =>
+                          setForm((current) => ({
+                            ...current,
+                            status: checked ? 'RegistrationPending' : 'PendingReview',
+                          }))
+                        }
+                      />
+                    }
+                  />
                 </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth disabled={!canManageEnrollment}>
+                  <FormControl fullWidth size="small" disabled={!canManageEnrollment || busy}>
                     <InputLabel>Wage ceiling category</InputLabel>
                     <Select
                       label="Wage ceiling category"
@@ -301,78 +321,25 @@ export function EsiEnrollmentDrawer({
                 </Grid>
 
                 {showCoverageFields ? (
-                  <>
-                    <Grid size={{ xs: 12 }}>
-                      <TextField
-                        fullWidth
-                        required={isCovered}
-                        disabled={!canManageEnrollment}
-                        label="ESI insurance number"
-                        value={form.insuranceNumber}
-                        error={isCovered && !form.insuranceNumber?.trim()}
-                        helperText={
-                          isRegistrationPending
-                            ? 'Optional while registration is pending.'
-                            : 'Required for covered employees.'
-                        }
-                        onChange={(event) =>
-                          setForm((current) => ({
-                            ...current,
-                            insuranceNumber: event.target.value,
-                          }))
-                        }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6 }}>
-                      <TextField
-                        fullWidth
-                        required={isCovered}
-                        disabled={!canManageEnrollment}
-                        type="date"
-                        label="Covered from"
-                        value={form.coveredFrom}
-                        error={isCovered && !form.coveredFrom}
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        onChange={(event) =>
-                          setForm((current) => ({ ...current, coveredFrom: event.target.value }))
-                        }
-                      />
-                    </Grid>
-                    {isCovered ? (
-                      <Grid size={{ xs: 12, sm: 6 }}>
-                        <TextField
-                          fullWidth
-                          disabled={!canManageEnrollment}
-                          type="date"
-                          label="Contribution period ends"
-                          value={form.contributionPeriodEnd}
-                          slotProps={{ inputLabel: { shrink: true } }}
-                          helperText="Use when coverage continues above the wage ceiling."
-                          onChange={(event) =>
-                            setForm((current) => ({
-                              ...current,
-                              contributionPeriodEnd: event.target.value,
-                            }))
-                          }
-                        />
-                      </Grid>
-                    ) : null}
-                  </>
-                ) : null}
-
-                {isExited ? (
                   <Grid size={{ xs: 12 }}>
                     <TextField
                       fullWidth
-                      required
-                      disabled={!canManageEnrollment}
-                      type="date"
-                      label="Coverage ended"
-                      value={form.coveredTo}
-                      error={!form.coveredTo}
-                      slotProps={{ inputLabel: { shrink: true } }}
+                      required={isCovered}
+                      disabled={!canManageEnrollment || busy}
+                      label="ESIC insurance number"
+                      size="small"
+                      value={form.insuranceNumber}
+                      error={isCovered && !form.insuranceNumber?.trim()}
+                      helperText={
+                        isRegistrationPending
+                          ? 'Required before activation or covered payroll finalization.'
+                          : undefined
+                      }
                       onChange={(event) =>
-                        setForm((current) => ({ ...current, coveredTo: event.target.value }))
+                        setForm((current) => ({
+                          ...current,
+                          insuranceNumber: event.target.value,
+                        }))
                       }
                     />
                   </Grid>
@@ -382,7 +349,7 @@ export function EsiEnrollmentDrawer({
                   <>
                     <Grid size={{ xs: 12 }}>
                       <FormControlLabel
-                        disabled={!canManageEnrollment}
+                        disabled={!canManageEnrollment || busy}
                         control={
                           <Switch
                             checked={form.employerShareReliefEligible}
@@ -403,7 +370,7 @@ export function EsiEnrollmentDrawer({
                           <TextField
                             fullWidth
                             required
-                            disabled={!canManageEnrollment}
+                            disabled={!canManageEnrollment || busy}
                             type="date"
                             label="Relief from"
                             value={form.employerShareReliefFrom}
@@ -420,7 +387,7 @@ export function EsiEnrollmentDrawer({
                         <Grid size={{ xs: 12, sm: 6 }}>
                           <TextField
                             fullWidth
-                            disabled={!canManageEnrollment}
+                            disabled={!canManageEnrollment || busy}
                             type="date"
                             label="Relief to"
                             value={form.employerShareReliefTo}
@@ -437,7 +404,7 @@ export function EsiEnrollmentDrawer({
                           <TextField
                             fullWidth
                             required
-                            disabled={!canManageEnrollment}
+                            disabled={!canManageEnrollment || busy}
                             label="Disability evidence reference"
                             value={form.disabilityEvidenceReference}
                             error={!form.disabilityEvidenceReference?.trim()}
@@ -459,8 +426,8 @@ export function EsiEnrollmentDrawer({
                     fullWidth
                     multiline
                     minRows={2}
-                    disabled={!canManageEnrollment}
-                    label={isExited ? 'Exit reason' : 'Status reason'}
+                    disabled={!canManageEnrollment || busy}
+                    label="Notes"
                     value={form.statusReason}
                     onChange={(event) =>
                       setForm((current) => ({ ...current, statusReason: event.target.value }))
@@ -471,44 +438,54 @@ export function EsiEnrollmentDrawer({
             ) : null}
           </Box>
 
-          <Divider />
-          <Box>
-            <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
-              <Typography variant="subtitle1">Audited overrides</Typography>
-              {canApproveOverride ? (
-                <Button onClick={onAddOverride} sx={{ minHeight: 44 }}>
-                  Add override
-                </Button>
-              ) : null}
-            </Box>
-            {overridesQuery.isFetching ? <Skeleton height={72} /> : null}
-            {overridesQuery.isError ? (
-              <Alert severity="error">Override history could not be loaded.</Alert>
-            ) : null}
-            {!overridesQuery.isFetching && !overridesQuery.data?.length ? (
-              <Typography variant="body2" color="text.secondary">
-                No audited overrides for this employee.
-              </Typography>
-            ) : null}
-            <Box display="grid" gap={1} mt={1}>
-              {(overridesQuery.data || []).map((item) => (
-                <Box
-                  key={item.id}
-                  sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, p: 1.5 }}
-                >
-                  <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
-                    <Chip size="small" label={overrideLabels[item.overrideType]} />
-                    <Typography variant="caption" color="text.secondary">
-                      {item.effectiveFrom.slice(0, 10)} to {item.effectiveTo.slice(0, 10)}
-                    </Typography>
-                  </Box>
-                  <Typography variant="body2" mt={0.75}>
-                    {item.reason}
-                  </Typography>
+          {onAddOverride && (
+            <>
+              <Divider />
+              <Box>
+                <Box display="flex" justifyContent="space-between" alignItems="center" gap={2}>
+                  <Typography variant="subtitle1">Audited overrides</Typography>
+                  {canApproveOverride ? (
+                    <Button
+                      onClick={() => requestNavigation(onAddOverride)}
+                      disabled={busy}
+                      size="small"
+                    >
+                      Add override
+                    </Button>
+                  ) : null}
                 </Box>
-              ))}
-            </Box>
-          </Box>
+                {overridesQuery.isFetching ? <Skeleton height={72} /> : null}
+                {overridesQuery.isError ? (
+                  <Alert severity="error">Override history could not be loaded.</Alert>
+                ) : null}
+                {!overridesQuery.isFetching &&
+                !overridesQuery.isError &&
+                !overridesQuery.data?.length ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No audited overrides for this employee.
+                  </Typography>
+                ) : null}
+                <Box display="grid" gap={1} mt={1}>
+                  {(overridesQuery.data || []).map((item) => (
+                    <Box
+                      key={item.id}
+                      sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, p: 1.5 }}
+                    >
+                      <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
+                        <Chip size="small" label={overrideLabels[item.overrideType]} />
+                        <Typography variant="caption" color="text.secondary">
+                          {item.effectiveFrom.slice(0, 10)} to {item.effectiveTo.slice(0, 10)}
+                        </Typography>
+                      </Box>
+                      <Typography variant="body2" mt={0.75}>
+                        {item.reason}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+            </>
+          )}
         </Box>
 
         {canManageEnrollment ? (
@@ -527,19 +504,21 @@ export function EsiEnrollmentDrawer({
               bottom: 0,
             }}
           >
-            <Button onClick={onClose} disabled={updateState.isLoading}>
+            <Button size="small" onClick={close} disabled={busy}>
               Cancel
             </Button>
             <Button
               variant="contained"
+              size="small"
               onClick={save}
-              disabled={formInvalid || updateState.isLoading || !enrollmentQuery.data}
+              disabled={formInvalid || busy || !enrollmentData || enrollmentQuery.isError}
             >
               {updateState.isLoading ? 'Saving…' : 'Save enrollment'}
             </Button>
           </Box>
         ) : null}
       </Box>
+      {confirmation}
     </Drawer>
   );
 }

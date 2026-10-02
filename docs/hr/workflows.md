@@ -134,22 +134,36 @@ Frontend workflows must respect backend data ownership:
 
 Do not add a route to docs as active navigation until `src/constants/hr-menus.ts` exposes it.
 If a page exists but menu access is commented or unclear, mark the workflow as partial.
-The Payroll onboarding step and dedicated Payroll Structure screen reuse the same compensation builder.
+The Payroll onboarding step links to the dedicated salary setup screen.
+Salary setup saves amounts and template provenance in the compensation revision, without copying partial salary metadata into the separate bank-details or one-time-component form.
+Full-month gross is agreed through salary setup; earned gross is calculated by payroll using payable days and the configured salary-day basis.
+After saving an employee as inactive, HR can open **ESIC details** directly from the Payroll onboarding step or salary setup before saving salary or activating the employee.
+The action reuses the enrollment drawer and requires Statutory Schemes View; its fields and Save action additionally require ManageEnrollment.
+The onboarding drawer omits unavailable contribution totals and the settings-only override history.
+Saving registration refreshes activation readiness and clears the previous salary calculation without resetting salary inputs.
+An insurance-number activation blocker directs HR to complete ESIC details; registration pending does not enable activation.
+Enrollment failures and background refreshes preserve the open draft.
 Salary templates explain that ESI is system-managed and link to the statutory setup workflow.
-The ESI workflow uses three URL-backed recurring work areas named Overview, Employees, and Settings, while preserving the `view=advanced` URL value.
-Legacy `tab=applicability|wages|employees|review` links normalize to setup readiness, earning classifications, Employees, and monthly impact respectively.
-Overview combines readiness tasks, the effective rate strip, unfiltered monthly totals, human-readable blockers, and fingerprinted activation review.
-Employees automatically loads the current-month preview with server-backed search, filters, sorting, and pagination, then opens contribution, enrollment, and override details in a responsive drawer.
-Settings shows only earning classifications needing attention by default and saves changed classifications for one effective payroll month.
-Workspace navigation and reloads warn about unsaved changes; application-wide browser-history protection remains an acceptance gap.
+ESIC uses one compact Formik settings form with a calculation switch, conditional school registration fields, and standard Save/Cancel actions.
+The server persists an ESIC-on baseline for new schools with unknown legal registration facts left empty.
+The scope text reads "Applies to current and future unlocked payroll."
+Save is direct, without an impact preview, confirmation, month picker, or scheduling controls.
+Errors and background refreshes preserve the draft and original concurrency token.
+Rules, earning classifications, and change history remain collapsed.
+Employee attention items appear only when relevant.
+An optional shared employee table uses server-backed paging, search, and sorting.
+Employee details open in the existing drawer, where HR supplies registration facts and supported exceptions.
+Navigation and reload guards protect unsaved edits.
 Compensation-revision blockers link directly to Payroll Structure with an `employeeId` query parameter that preselects the employee.
 Authorized users can add dated, reasoned ESI exceptions from an employee impact row and review the immutable exception history before approval.
 PwD enrollment review can record a government-funded employer-share relief period only after the PwD category, start date, and disability evidence are supplied.
 The impact preview distinguishes employee, employer, and government ESI funding.
-Run Payroll shows ESI wages, coverage decision, rule version, insurance number, contribution period, employee deduction, employer contribution, and government contribution.
-Users select a template, choose Gross, Take-home, or Employer Cost, select the protection policy and effective month, enter the quoted monthly amount, select PF applicability and rule, calculate, and review earnings, employee deductions, employer contributions, ESI, target variance, and the formula trace.
+Payslips show earned gross, employee deductions, and net pay.
+Employer contributions remain in school cost reporting and audit evidence.
+Off mode omits ESI amounts and presentation, including empty ESI payslip rows.
+Users select a template, choose Monthly salary or Monthly cost to school (CTC), select the effective month, enter the quoted monthly amount, select PF applicability and rule, calculate, and review earnings, employee deductions, employer contributions, ESI, target variance, and the formula trace.
 New employees remain Inactive after direct creation or application finalization and show Payroll setup required.
-Salary setup preselects the school default template, the template basis and protection policy, the joining month, and the template PF defaults.
+Salary setup preselects the school default template, the template salary basis, the joining month, and the template PF defaults.
 Users calculate and save salary directly as an effective immutable revision without a draft or approval queue.
 A later save creates another revision, supersedes the previous effective revision for the same month, and keeps future-effective revisions scheduled.
 After salary is ready, users with Employee Edit permission activate the employee as a separate action.
@@ -187,8 +201,9 @@ Sample Calculation shows the sample earning and deduction breakdown, employer co
 The sample does not establish universal employee eligibility.
 Basic Information explains that the new version applies to future salary setups while existing employees remain pinned to their saved version.
 Template formulas override component-master formulas only when the template generates an employee salary structure.
-Template versions define a default quote basis, protection policy, PF applicability, and PF rule.
-Protection policy includes selection-specific guidance and a Compare policies dialog explaining salary basis, protected amounts, and amounts that may vary.
+Template versions define a default salary basis, PF applicability, and PF rule.
+New templates default to Monthly cost to school (CTC); the backend derives the corresponding protection target.
+One salary-basis selector determines the target and amount label; the backend derives the protection policy.
 Viewing or closing this help preserves the draft and preview, including in read-only mode.
 Fixed and percentage formulas keep an editable empty numeric value, while remainder and statutory formulas explicitly show that their value is calculated automatically.
 
@@ -197,7 +212,22 @@ Fixed and percentage formulas keep an editable empty numeric value, while remain
 Earning and deduction settings offer Gross Salary in the percentage calculation-base selector under System values.
 The selected base and fixed or variable value behavior survive save and reopen.
 New template rows inherit the master calculation base and configured percentage.
-Salary structure generation labels the resolved value Full-month gross and supports Gross, Take-home, and Employer Cost / CTC inputs.
+Salary structure generation labels the resolved value Full-month gross and supports Monthly salary and Monthly cost to school (CTC) inputs.
 Run Payroll and payslips distinguish Full-month gross, attendance-adjusted Gross Salary, Additional earnings, Total earnings, deductions, and net pay.
 Gross Salary is a read-only summary, separate from the regular earning lines that allocate it.
 The backend calculation contract and policy behavior are documented in [HR backend workflows](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/workflows.md#built-in-gross-salary).
+
+## ESIC editing and stale payroll
+
+ESIC exceptions use Start month and End month fields and apply to complete payroll months.
+The employee ESIC drawer uses one guarded handler for Cancel, close, Escape and backdrop dismissal.
+Dirty forms offer Keep editing or Discard changes; ordinary saving stays confirmation-free.
+Blocking loading and saving prevent competing dismissal, while failures and background refreshes preserve edits.
+A successful save remains successful if the subsequent refresh fails.
+
+Employee salary setup uses form-shaped skeletons while preserving the surrounding navigation and action layout.
+Background refreshes retain the existing form.
+Superseded payroll previews remain non-actionable and require recalculation and review through the existing payroll workflow.
+Payroll readiness displays Needs attention when the server reports an ESIC or compensation blocker, and Needs recalculation for stale results.
+Readiness labels and monetary totals wrap without truncation on narrow screens.
+The disclosure uses a labelled keyboard-accessible button with its expanded state exposed.

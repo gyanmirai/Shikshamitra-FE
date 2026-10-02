@@ -2,433 +2,461 @@
 
 import type { RootState } from 'src/redux/store';
 import type { EsiEmployeeImpact } from 'src/redux/hr/statutory-scheme-api';
+import type {
+  EsiConfigurationDraft,
+  EsiConfigurationSettings,
+} from 'src/redux/hr/esi-configuration-api';
 
-import Link from 'next/link';
+import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
+import { ExpandMore } from '@mui/icons-material';
+import { useRef, useState, useEffect } from 'react';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
-import { Refresh, VerifiedUser } from '@mui/icons-material';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
-  Box,
-  Tab,
-  Tabs,
-  Chip,
-  Alert,
-  Button,
-  Skeleton,
-  TextField,
-  Typography,
-} from '@mui/material';
+  useGetEsiConfigurationQuery,
+  useSaveEsiConfigurationMutation,
+} from 'src/redux/hr/esi-configuration-api';
 import {
   useGetEsiRuleQuery,
-  useActivateEsiMutation,
   usePreviewEsiImpactQuery,
-  useGetEsiEstablishmentQuery,
   useGetEsiComponentTreatmentsQuery,
 } from 'src/redux/hr/statutory-scheme-api';
+import {
+  Box,
+  Grid,
+  Stack,
+  Alert,
+  Button,
+  Switch,
+  Skeleton,
+  MenuItem,
+  TextField,
+  Accordion,
+  Typography,
+  FormControlLabel,
+  AccordionSummary,
+  AccordionDetails,
+} from '@mui/material';
 
 import EsiOverrideDialog from './esi-override-dialog';
 import { EsiEnrollmentDrawer } from './esi-enrollment-drawer';
-import { EsiActivationDialog } from './esi-activation-dialog';
-import { EsiStatutoryOverview } from './esi-statutory-overview';
-import { EsiStatutoryAdvanced } from './esi-statutory-advanced';
-import { EsiStatutoryEmployees } from './esi-statutory-employees';
 import { useEsiUnsavedNavigation } from './esi-unsaved-navigation';
+import { EsiConfigurationEmployees } from './esi-configuration-employees';
+import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
+import { toApiMonth, formatEsiCurrency, formatPayrollMonth } from './esi-statutory-utils';
 import {
-  toApiMonth,
-  formatPreviewTime,
-  getPayrollMonthEnd,
-  getLegacyEsiTabHash,
-  buildEsiWorkspaceHref,
-  parseEsiWorkspaceQuery,
-} from './esi-statutory-utils';
-
-const statusLabels: Record<string, string> = {
-  Draft: 'Setup needed',
-  Ready: 'Ready for review',
-  Active: 'Active',
-  Suspended: 'Suspended',
-};
-
-const viewLabels = {
-  overview: 'Overview',
-  employees: 'Employees',
-  advanced: 'Settings',
-} as const;
+  configurationValues,
+  configurationPayload,
+  validateConfiguration,
+} from './esi-configuration-form';
 
 export const isStalePreviewError = (error: unknown) =>
   parseApiProblemDetail(error).errorCode === 'ESI_PREVIEW_STALE';
 
 export default function EsiStatutorySettings() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const query = useMemo(
-    () => parseEsiWorkspaceQuery(new URLSearchParams(searchParams.toString())),
-    [searchParams]
-  );
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canEdit = hasGrantedPermission(
+  const canView = hasGrantedPermission(
     permissions,
-    hrPermissions.payroll.settings.statutorySchemeActions.edit
+    hrPermissions.payroll.settings.statutorySchemes
   );
-  const canActivate = hasGrantedPermission(
-    permissions,
-    hrPermissions.payroll.settings.statutorySchemeActions.activate
-  );
-  const canManageEnrollment = hasGrantedPermission(
-    permissions,
-    hrPermissions.payroll.settings.statutorySchemeActions.manageEnrollment
-  );
-  const canApproveOverride = hasGrantedPermission(
-    permissions,
-    hrPermissions.payroll.settings.statutorySchemeActions.approveOverride
-  );
-  const [selectedEmployee, setSelectedEmployee] = useState<EsiEmployeeImpact | null>(null);
-  const [overrideEmployee, setOverrideEmployee] = useState<EsiEmployeeImpact | null>(null);
-  const [activationOpen, setActivationOpen] = useState(false);
-  const [hasUnsavedAdvancedChanges, setHasUnsavedAdvancedChanges] = useState(false);
-  const { requestNavigation, confirmation } = useEsiUnsavedNavigation(
-    hasUnsavedAdvancedChanges,
-    router.push
-  );
-
-  const ruleQuery = useGetEsiRuleQuery(getPayrollMonthEnd(query.month));
-  const establishmentQuery = useGetEsiEstablishmentQuery();
-  const treatmentsQuery = useGetEsiComponentTreatmentsQuery(`${query.month}-01`);
-  const previewRequest = useMemo(
-    () => ({
-      monthYear: toApiMonth(query.month),
-      search: query.search || undefined,
-      coverage: query.coverage,
-      readiness: query.readiness,
-      enrollmentStatuses: query.enrollmentStatuses,
-      page: query.page,
-      pageSize: query.pageSize,
-      sortBy: query.sortBy,
-      sortDirection: query.sortDirection,
-    }),
-    [query]
-  );
-  const previewQuery = usePreviewEsiImpactQuery(previewRequest, {
-    refetchOnMountOrArgChange: true,
-  });
-  const [activate, activationState] = useActivateEsiMutation();
-
-  const hrefFor = useCallback(
-    (updates: Record<string, string | number | null>) =>
-      buildEsiWorkspaceHref(new URLSearchParams(searchParams.toString()), updates),
-    [searchParams]
-  );
-
-  const updateQuery = useCallback(
-    (updates: Record<string, string | number | null>) => {
-      router.replace(hrefFor(updates), { scroll: false });
-    },
-    [hrefFor, router]
-  );
-
-  useEffect(() => {
-    const hasLegacyTab = searchParams.has('tab');
-    const hasValidView = ['overview', 'employees', 'advanced'].includes(
-      searchParams.get('view') || ''
+  const query = useGetEsiConfigurationQuery(undefined, { skip: !canView });
+  if (!canView) return <Alert severity="info">You do not have access to ESIC settings.</Alert>;
+  if (query.data?.current) return <ConfigurationForm settings={query.data} />;
+  if (query.isError || query.data)
+    return (
+      <Alert
+        severity="error"
+        action={
+          <Button size="small" onClick={() => query.refetch()}>
+            Retry
+          </Button>
+        }
+      >
+        ESIC settings could not be loaded.
+      </Alert>
     );
-    if (hasLegacyTab || !hasValidView || !searchParams.has('month')) {
-      router.replace(
-        `${hrefFor({ view: query.view, month: query.month })}${getLegacyEsiTabHash(searchParams.get('tab'))}`,
-        { scroll: false }
-      );
-    }
-  }, [hrefFor, query.month, query.view, router, searchParams]);
-
-  const goToResolution = () => {
-    requestNavigation(() => {
-    const firstIssue = previewQuery.data?.summary.blockingIssues[0];
-    if (
-      firstIssue?.resolutionTarget === 'employeeEnrollment' ||
-      firstIssue?.resolutionTarget === 'compensationRevision'
-    ) {
-      router.push(hrefFor({ view: 'employees', readiness: 'needsAttention', page: 0 }));
-      return;
-    }
-    const hash =
-      firstIssue?.resolutionTarget === 'establishment'
-        ? '#establishment'
-        : '#earning-classifications';
-    router.push(`${hrefFor({ view: 'advanced' })}${hash}`);
-    });
-  };
-
-  const handlePrimaryAction = () => {
-    const reviewOnly =
-      establishmentQuery.data?.status === 'Active' ||
-      (previewQuery.data?.summary.canActivate && !canActivate);
-    if (reviewOnly) {
-      if (query.view === 'overview') {
-        document
-          .getElementById('monthly-impact')
-          ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        requestNavigation(() => router.push(`${hrefFor({ view: 'overview', page: 0 })}#monthly-impact`));
-      }
-      return;
-    }
-    if (previewQuery.data?.summary.canActivate && canActivate) {
-      setActivationOpen(true);
-      return;
-    }
-    goToResolution();
-  };
-
-  const activateScheme = async () => {
-    const preview = previewQuery.data;
-    if (!preview?.summary.canActivate) return;
-    try {
-      await activate({
-        monthYear: toApiMonth(query.month),
-        previewFingerprint: preview.previewFingerprint,
-      }).unwrap();
-      setActivationOpen(false);
-      shikshaMitraToast.success({ message: 'ESI is active for payroll.' });
-      await Promise.all([establishmentQuery.refetch(), previewQuery.refetch()]);
-    } catch (error) {
-      setActivationOpen(false);
-      if (isStalePreviewError(error)) {
-        await previewQuery.refetch();
-        shikshaMitraToast.info({
-          message: 'The payroll impact changed. Review the refreshed totals before activating ESI.',
-        });
-        return;
-      }
-      shikshaMitraToast.error({
-        message: 'ESI could not be activated. Refresh the impact and resolve every blocker.',
-      });
-    }
-  };
-
-  const status = establishmentQuery.data?.status || 'Draft';
-  const primaryActionLabel =
-    status === 'Active' || (previewQuery.data?.summary.canActivate && !canActivate)
-      ? 'Review current month'
-      : previewQuery.data?.summary.canActivate && canActivate
-        ? 'Review and activate'
-        : 'Resolve setup issues';
-  const coreError = ruleQuery.isError || establishmentQuery.isError;
-  const coreLoading = ruleQuery.isLoading || establishmentQuery.isLoading;
-
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pb: 4, minWidth: 0 }}>
-      <Box
-        sx={{
-          border: 1,
-          borderColor: 'divider',
-          borderRadius: 2,
-          bgcolor: 'background.paper',
-          overflow: 'hidden',
+    <Stack spacing={2} aria-busy="true" aria-label="Loading ESIC settings">
+      <SectionCard
+        title="ESIC"
+        paperProps={{
+          sx: { boxShadow: 'none', transition: 'none', '&:hover': { boxShadow: 'none' } },
         }}
       >
-        <Box
-          sx={{
-            display: 'flex',
-            alignItems: { xs: 'stretch', md: 'center' },
-            justifyContent: 'space-between',
-            flexDirection: { xs: 'column', md: 'row' },
-            flexWrap: 'wrap',
-            gap: 2,
-            p: { xs: 2, md: 2.5 },
-          }}
-        >
-          <Box minWidth={0}>
-            <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
-              <VerifiedUser color="primary" />
-              <Typography variant="h5">Employee State Insurance</Typography>
-              <Chip
-                size="small"
-                color={status === 'Active' ? 'success' : status === 'Ready' ? 'info' : 'warning'}
-                label={coreLoading ? 'Checking' : coreError ? 'Unavailable' : statusLabels[status]}
-              />
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Recurring setup, employee coverage, and monthly payroll impact in one workspace.
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: { xs: 'stretch', sm: 'center' },
-              flexDirection: { xs: 'column', sm: 'row' },
-              flexShrink: 0,
-              gap: 1.25,
+        <Grid size={12}>
+          <Skeleton width={190} height={36} />
+        </Grid>
+        {[0, 1].map((key) => (
+          <Grid key={key} size={{ xs: 12, sm: 6 }}>
+            <Skeleton variant="rounded" height={40} />
+          </Grid>
+        ))}
+      </SectionCard>
+      {[0, 1, 2].map((key) => (
+        <Skeleton key={key} height={44} />
+      ))}
+      <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Button size="small" disabled>
+          Cancel
+        </Button>
+        <Button size="small" variant="contained" disabled>
+          Save
+        </Button>
+      </Stack>
+    </Stack>
+  );
+}
+
+function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings }) {
+  const router = useRouter();
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const actions = hrPermissions.payroll.settings.statutorySchemeActions;
+  const canEdit =
+    settings.hasSchoolWideScope &&
+    hasGrantedPermission(permissions, actions.edit) &&
+    hasGrantedPermission(permissions, actions.activate);
+  const canManageEnrollment = hasGrantedPermission(permissions, actions.manageEnrollment);
+  const canApproveOverride = hasGrantedPermission(permissions, actions.approveOverride);
+  const [save, saveState] = useSaveEsiConfigurationMutation();
+  const [error, setError] = useState('');
+  const [employee, setEmployee] = useState<EsiEmployeeImpact | null>(null);
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [employees, setEmployees] = useState<'all' | 'needsAttention' | null>(null);
+  const request = useRef<{ signature: string; key: string } | null>(null);
+  const form = useFormik<EsiConfigurationDraft>({
+    initialValues: configurationValues(settings),
+    validate: validateConfiguration,
+    onSubmit: async (values) => {
+      if (!canEdit) return;
+      setError('');
+      const payload = configurationPayload(values);
+      const signature = JSON.stringify(payload);
+      if (request.current?.signature !== signature)
+        request.current = { signature, key: crypto.randomUUID() };
+      try {
+        const result = await save({ ...payload, idempotencyKey: request.current.key }).unwrap();
+        form.resetForm({ values: configurationValues(result) });
+        request.current = null;
+        shikshaMitraToast.success({ message: 'ESIC settings saved.' });
+      } catch (failure) {
+        setError(
+          isStalePreviewError(failure)
+            ? 'Settings changed. Cancel your edits to load the latest settings before saving.'
+            : 'ESIC settings could not be saved. Your changes are preserved. Try again.'
+        );
+      }
+    },
+  });
+  const busy = saveState.isLoading;
+  const navigation = useEsiUnsavedNavigation(form.dirty, router.push);
+  useEffect(() => {
+    if (!form.dirty && !busy) form.resetForm({ values: configurationValues(settings) });
+    // Keep the original concurrency token while a user has unsaved changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settings]);
+  useEffect(() => {
+    if (!form.dirty) return undefined;
+    const guard = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', guard);
+    return () => window.removeEventListener('beforeunload', guard);
+  }, [form.dirty]);
+  const month = settings.suggestedEffectiveMonth;
+  const effectiveOn = `${month}-01`;
+  const rules = useGetEsiRuleQuery(effectiveOn, { skip: !form.values.enabled });
+  const treatments = useGetEsiComponentTreatmentsQuery(effectiveOn, { skip: !form.values.enabled });
+  const attention = usePreviewEsiImpactQuery(
+    { monthYear: toApiMonth(month), pageSize: 10 },
+    { skip: !settings.current?.enabled }
+  );
+  const refreshPreview = async () => {
+    if (settings.current?.enabled) await attention.refetch();
+  };
+  const field = (name: 'registrationNumber' | 'coveredSince') => ({
+    name,
+    value: form.values[name] ?? '',
+    onChange: form.handleChange,
+    onBlur: form.handleBlur,
+    error: Boolean(form.touched[name] && form.errors[name]),
+    helperText: form.touched[name] ? form.errors[name] : undefined,
+    disabled: !canEdit || busy,
+    fullWidth: true,
+    size: 'small' as const,
+  });
+  return (
+    <>
+      <Box component="form" onSubmit={form.handleSubmit} noValidate>
+        <Stack spacing={2}>
+          {error && <Alert severity="error">{error}</Alert>}
+          <SectionCard
+            title="ESIC"
+            paperProps={{
+              sx: { boxShadow: 'none', transition: 'none', '&:hover': { boxShadow: 'none' } },
             }}
           >
+            <Grid size={12}>
+              <FormControlLabel
+                label="Calculate ESIC in payroll"
+                control={
+                  <Switch
+                    name="enabled"
+                    checked={form.values.enabled}
+                    onChange={form.handleChange}
+                    disabled={!canEdit || busy}
+                  />
+                }
+              />
+            </Grid>
+            {form.values.enabled && (
+              <>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField label="ESIC registration number" {...field('registrationNumber')} />
+                </Grid>
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <TextField
+                    label="Coverage start date"
+                    type="date"
+                    slotProps={{ inputLabel: { shrink: true } }}
+                    {...field('coveredSince')}
+                  />
+                </Grid>
+              </>
+            )}
+            <Grid size={12}>
+              <Typography variant="body2" color="text.secondary">
+                Applies to current and future unlocked payroll.
+              </Typography>
+            </Grid>
+            {!form.values.enabled && (
+              <Grid size={12}>
+                <Typography variant="caption" color="text.secondary">
+                  Turning off platform calculation does not establish a statutory exemption.
+                </Typography>
+              </Grid>
+            )}
+          </SectionCard>
+          {form.values.enabled && (
+            <>
+              <Accordion disableGutters>
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant="subtitle2">How ESIC is calculated</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  {rules.isError ? (
+                    <Alert
+                      severity="error"
+                      action={
+                        <Button size="small" onClick={() => rules.refetch()}>
+                          Retry
+                        </Button>
+                      }
+                    >
+                      Statutory rules could not be loaded.
+                    </Alert>
+                  ) : rules.data ? (
+                    <Typography variant="body2">
+                      Employee: {rules.data.employeePercentage}%. Employer:{' '}
+                      {rules.data.employerPercentage}%. Monthly eligibility ceiling:{' '}
+                      {formatEsiCurrency(rules.data.standardWageCeiling)}; persons with disability:{' '}
+                      {formatEsiCurrency(rules.data.disabilityWageCeiling)}. Eligibility and
+                      contribution-period continuity are determined from employee facts and payroll
+                      history. Each share is rounded up to the next rupee. Employees with average
+                      daily wages up to{' '}
+                      {formatEsiCurrency(rules.data.employeeShareDailyWageExemption)} are exempt
+                      from the employee share; the employer share still applies.
+                    </Typography>
+                  ) : (
+                    <Skeleton />
+                  )}
+                </AccordionDetails>
+              </Accordion>
+              <Accordion disableGutters>
+                <AccordionSummary expandIcon={<ExpandMore />}>
+                  <Typography variant="subtitle2">Earning classifications</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Stack spacing={2}>
+                    <Typography variant="body2" color="text.secondary">
+                      Known earnings use statutory defaults. Review custom earnings before applying
+                      ESIC.
+                    </Typography>
+                    {treatments.isError && (
+                      <Alert
+                        severity="error"
+                        action={
+                          <Button size="small" onClick={() => treatments.refetch()}>
+                            Retry
+                          </Button>
+                        }
+                      >
+                        Earning classifications could not be loaded.
+                      </Alert>
+                    )}
+                    {treatments.data?.map((item) => (
+                      <TextField
+                        key={item.componentId}
+                        label={item.componentName}
+                        size="small"
+                        select
+                        fullWidth
+                        disabled={!canEdit || busy}
+                        value={
+                          form.values.treatments.find((x) => x.componentId === item.componentId)
+                            ?.treatment ?? item.treatment
+                        }
+                        onChange={(event) =>
+                          form.setFieldValue('treatments', [
+                            ...form.values.treatments.filter(
+                              (x) => x.componentId !== item.componentId
+                            ),
+                            { componentId: item.componentId, treatment: event.target.value },
+                          ])
+                        }
+                      >
+                        {[
+                          'Unclassified',
+                          'Included',
+                          'SpecifiedExclusion',
+                          'OtherExclusion',
+                          'InKind',
+                        ].map((treatment) => (
+                          <MenuItem key={treatment} value={treatment}>
+                            {
+                              {
+                                Unclassified: 'Needs review',
+                                Included: 'Included in ESI wages',
+                                SpecifiedExclusion: 'Specified exclusion',
+                                OtherExclusion: 'Other exclusion',
+                                InKind: 'In-kind benefit',
+                              }[treatment]
+                            }
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    ))}
+                  </Stack>
+                </AccordionDetails>
+              </Accordion>
+            </>
+          )}
+
+          {settings.history.length > 0 && (
+            <Accordion disableGutters>
+              <AccordionSummary expandIcon={<ExpandMore />}>
+                <Typography variant="subtitle2">Change history</Typography>
+              </AccordionSummary>
+              <AccordionDetails>
+                <Stack spacing={1}>
+                  {settings.history.map((version) => (
+                    <Typography key={version.id} variant="body2">
+                      {version.effectiveMonth === '1900-01'
+                        ? 'School default'
+                        : formatPayrollMonth(version.effectiveMonth)}
+                      : ESIC {version.enabled ? 'on' : 'off'}
+                      {version.isCancelled ? ' (superseded)' : ''}
+                    </Typography>
+                  ))}
+                </Stack>
+              </AccordionDetails>
+            </Accordion>
+          )}
+          {settings.current?.enabled && (
             <Box>
-              <Typography variant="caption" color="text.secondary" display="block">
-                Last preview
-              </Typography>
-              <Typography variant="body2">
-                {formatPreviewTime(previewQuery.data?.generatedAtUtc)}
-              </Typography>
+              <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+                {(attention.data?.summary.employeesNeedingAttention ?? 0) > 0 && (
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      setEmployees(employees === 'needsAttention' ? null : 'needsAttention')
+                    }
+                  >
+                    Employees needing attention ({attention.data?.summary.employeesNeedingAttention}
+                    )
+                  </Button>
+                )}
+                <Button
+                  size="small"
+                  onClick={() => setEmployees(employees === 'all' ? null : 'all')}
+                >
+                  View employees
+                </Button>
+              </Stack>
+              {attention.isError && (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button size="small" onClick={() => attention.refetch()}>
+                      Retry
+                    </Button>
+                  }
+                >
+                  Employee details could not be loaded.
+                </Alert>
+              )}
+              {employees && (
+                <EsiConfigurationEmployees
+                  key={employees}
+                  month={month}
+                  readiness={employees}
+                  canManageEnrollment={canManageEnrollment}
+                  canApproveOverride={canApproveOverride}
+                  onOpenEmployee={setEmployee}
+                />
+              )}
             </Box>
-            <TextField
-              size="small"
-              type="month"
-              label="Payroll month"
-              value={query.month}
-              slotProps={{ inputLabel: { shrink: true } }}
-              onChange={(event) => {
-                const month = event.target.value;
-                requestNavigation(() => updateQuery({ month, page: 0, search: null }));
-              }}
-              sx={{ minWidth: 170 }}
-            />
-            <Button
-              variant="contained"
-              onClick={handlePrimaryAction}
-              disabled={coreLoading || coreError || previewQuery.isFetching || previewQuery.isError}
-              sx={{ minHeight: 44, whiteSpace: 'nowrap' }}
+          )}
+          {canEdit && (
+            <Stack
+              direction="row"
+              justifyContent="flex-end"
+              spacing={1}
+              sx={{ position: 'sticky', bottom: 0, py: 2, bgcolor: 'background.paper', zIndex: 1 }}
             >
-              {primaryActionLabel}
-            </Button>
-          </Box>
-        </Box>
-
-        <Tabs
-          value={query.view}
-          variant="scrollable"
-          allowScrollButtonsMobile
-          aria-label="ESI workspace views"
-          sx={{ borderTop: 1, borderColor: 'divider', px: 1 }}
-        >
-          {Object.entries(viewLabels).map(([view, label]) => (
-            <Tab
-              key={view}
-              component={Link}
-              href={hrefFor({ view, page: view === 'employees' ? query.page : 0 })}
-              value={view}
-              label={label}
-              id={`esi-tab-${view}`}
-              aria-controls={`esi-panel-${view}`}
-              sx={{ minHeight: 48 }}
-            />
-          ))}
-        </Tabs>
+              <Button
+                size="small"
+                disabled={busy}
+                onClick={() =>
+                  navigation.requestNavigation(() => {
+                    form.resetForm({ values: configurationValues(settings) });
+                    setError('');
+                    request.current = null;
+                  })
+                }
+              >
+                Cancel
+              </Button>
+              <Button size="small" type="submit" variant="contained" disabled={busy || !form.dirty}>
+                {busy ? 'Saving...' : 'Save'}
+              </Button>
+            </Stack>
+          )}
+        </Stack>
       </Box>
-
-      {coreError ? (
-        <Alert
-          severity="error"
-          action={
-            <Button
-              onClick={() => {
-                ruleQuery.refetch();
-                establishmentQuery.refetch();
-              }}
-            >
-              Retry
-            </Button>
-          }
-        >
-          Core ESI settings could not be loaded. Navigation remains available while you retry.
-        </Alert>
-      ) : null}
-
-      {coreLoading ? (
-        <Box display="grid" gap={1.5}>
-          <Skeleton variant="rounded" height={92} />
-          <Skeleton variant="rounded" height={220} />
-        </Box>
-      ) : null}
-
-      <Box role="tabpanel" id={`esi-panel-${query.view}`} aria-labelledby={`esi-tab-${query.view}`} sx={{ minWidth: 0 }}>
-      {!coreLoading && query.view === 'overview' ? (
-        <EsiStatutoryOverview
-          month={query.month}
-          rule={ruleQuery.data}
-          establishment={establishmentQuery.data}
-          establishmentUnavailable={establishmentQuery.isError}
-          treatments={treatmentsQuery.data}
-          isTreatmentsLoading={treatmentsQuery.isFetching}
-          treatmentsError={treatmentsQuery.isError}
-          preview={previewQuery.data}
-          isPreviewLoading={previewQuery.isFetching}
-          previewError={previewQuery.isError}
-          hrefFor={hrefFor}
-          onRetryPreview={() => previewQuery.refetch()}
-        />
-      ) : null}
-
-      {!coreLoading && query.view === 'employees' ? (
-        <EsiStatutoryEmployees
-          query={query}
-          preview={previewQuery.data}
-          isLoading={previewQuery.isFetching}
-          isError={previewQuery.isError}
-          canManageEnrollment={canManageEnrollment}
-          canApproveOverride={canApproveOverride}
-          onRetry={() => previewQuery.refetch()}
-          onQueryChange={updateQuery}
-          onOpenEmployee={setSelectedEmployee}
-        />
-      ) : null}
-
-      {!coreLoading && query.view === 'advanced' ? (
-        <EsiStatutoryAdvanced
-          month={query.month}
-          rule={ruleQuery.data}
-          establishment={establishmentQuery.data}
-          treatments={treatmentsQuery.data}
-          isTreatmentsLoading={treatmentsQuery.isFetching}
-          treatmentsError={treatmentsQuery.isError}
-          canEdit={canEdit}
-          onRetryTreatments={() => treatmentsQuery.refetch()}
-          onDirtyChange={setHasUnsavedAdvancedChanges}
-        />
-      ) : null}
-
-      </Box>
-      {previewQuery.isFetching && previewQuery.data ? (
-        <Box sx={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1200 }}>
-          <Chip icon={<Refresh />} label="Refreshing ESI impact…" color="info" />
-        </Box>
-      ) : null}
-
       <EsiEnrollmentDrawer
-        employee={selectedEmployee}
-        open={Boolean(selectedEmployee)}
+        employee={employee}
+        open={Boolean(employee) && !overrideOpen}
         canManageEnrollment={canManageEnrollment}
         canApproveOverride={canApproveOverride}
-        onClose={() => setSelectedEmployee(null)}
-        onSaved={() => previewQuery.refetch()}
-        onAddOverride={() => {
-          setOverrideEmployee(selectedEmployee);
-          setSelectedEmployee(null);
-        }}
+        onClose={() => setEmployee(null)}
+        onSaved={refreshPreview}
+        onAddOverride={() => setOverrideOpen(true)}
       />
-
-      <EsiOverrideDialog
-        employee={overrideEmployee}
-        month={query.month}
-        open={Boolean(overrideEmployee)}
-        onClose={() => setOverrideEmployee(null)}
-        onSaved={async () => {
-          await previewQuery.refetch();
-        }}
-      />
-
-      {activationOpen && previewQuery.data ? (
-        <EsiActivationDialog
-          open
-          month={query.month}
-          summary={previewQuery.data.summary}
-          isActivating={activationState.isLoading}
-          onClose={() => setActivationOpen(false)}
-          onConfirm={activateScheme}
+      {canApproveOverride && (
+        <EsiOverrideDialog
+          employee={employee}
+          month={month}
+          open={overrideOpen}
+          onClose={() => setOverrideOpen(false)}
+          onSaved={refreshPreview}
         />
-      ) : null}
-      {confirmation}
-    </Box>
+      )}
+      {navigation.confirmation}
+    </>
   );
 }

@@ -2,7 +2,6 @@ import type { FormikProps } from 'formik';
 import type { SalaryTemplateRule } from 'src/redux/hr/salary-template-api';
 
 import { getIn } from 'formik';
-import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import {
@@ -64,7 +63,6 @@ export default function SalaryTemplateRules({
   const rules = formik.values.rules.filter((rule) => rule.lineKind === lineKind);
   const usedRoles = new Set(formik.values.rules.map((rule) => rule.semanticType));
   const earning = lineKind === 'EARNING';
-  const accentColor = earning ? 'success' : 'warning';
   const setRules = (value: SalaryTemplateRule[]) =>
     formik.setFieldValue('rules', normalizeRuleOrder(value));
   const update = (rule: SalaryTemplateRule) =>
@@ -101,9 +99,8 @@ export default function SalaryTemplateRules({
             '& > :first-child': {
               flexShrink: 0,
               borderBottomStyle: 'solid',
-              borderBottomWidth: 2,
-              borderBottomColor: (theme) =>
-                varAlpha(theme.vars.palette[accentColor].mainChannel, 0.4),
+              borderBottomWidth: 1,
+              borderBottomColor: 'divider',
             },
             borderColor: 'divider',
             bgcolor: 'background.paper',

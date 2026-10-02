@@ -1,4 +1,5 @@
 import type { Dayjs } from 'dayjs';
+import type { SalaryBasis } from 'src/redux/hr/salary-template-api';
 
 export interface IPersonalInformationResponse {
   id: string;
@@ -112,7 +113,7 @@ export interface ISalaryDetails {
   basicSalary?: number;
   punchId: string;
   totalWorkingHourPerMonth: number;
-  quotedSalaryBasis?: string | null;
+  quotedSalaryBasis?: SalaryBasis | null;
   quotedMonthlyAmount?: number | null;
   sourceSalaryTemplateId?: string | null;
   sourceSalaryTemplateVersionId?: string | null;

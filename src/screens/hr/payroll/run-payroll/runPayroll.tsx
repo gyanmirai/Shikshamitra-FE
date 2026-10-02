@@ -199,9 +199,9 @@ const ISSUE_LABELS: Record<
     color: 'error',
   },
   COMPENSATION_TARGET_VARIANCE: {
-    label: 'Protected compensation target differs after payroll calculation',
-    severity: 'WARNING',
-    color: 'warning',
+    label: 'Resolve the protected budget difference in compensation configuration',
+    severity: 'CRITICAL',
+    color: 'error',
   },
 };
 
@@ -252,14 +252,17 @@ const RunPayroll = () => {
     hrPermissions.payroll.runPayrollViewAudit
   );
   const month = dayjs(searchParams.get('month') || undefined);
-  const setMonth = useCallback((value: Dayjs | null) => {
-    if (!value?.isValid()) return;
-    const next = new URLSearchParams(searchParams.toString());
-    next.set('month', value.format('YYYY-MM'));
-    next.delete('previewRunId');
-    next.delete('page');
-    router.replace(`${pathname}?${next}`, { scroll: false });
-  }, [pathname, router, searchParams]);
+  const setMonth = useCallback(
+    (value: Dayjs | null) => {
+      if (!value?.isValid()) return;
+      const next = new URLSearchParams(searchParams.toString());
+      next.set('month', value.format('YYYY-MM'));
+      next.delete('previewRunId');
+      next.delete('page');
+      router.replace(`${pathname}?${next}`, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
   const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<string[]>([]);
   const [activeRow, setActiveRow] = useState<PayrollRow | null>(null);
   const [lockConfirmOpen, setLockConfirmOpen] = useState(false);
@@ -284,7 +287,7 @@ const RunPayroll = () => {
   const previewIsGenerated = preview.data?.isGenerated || false;
   const previewBusy = preview.busy;
   const isDataForSelectedMonth = Boolean(preview.data);
-  const {loadPreview} = preview;
+  const { loadPreview } = preview;
 
   const [markReviewed, { isLoading: markLoading }] = useQueryAndMutation({
     type: 'mutation',
@@ -517,10 +520,10 @@ const RunPayroll = () => {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-
   const runReviewMutation = useCallback(
     async (mutation: any, employeeIds: string[], fallbackMessage: string) => {
-      if (!selectedMonthKey || !academicYearId || employeeIds.length === 0 || !preview.isCurrent) return;
+      if (!selectedMonthKey || !academicYearId || employeeIds.length === 0 || !preview.isCurrent)
+        return;
       try {
         const res = await mutation({
           month: selectedMonthKey,
@@ -902,67 +905,71 @@ const RunPayroll = () => {
 
   const readinessBusy = preview.busy || preview.fetching;
   // The server owns row ordering. Sorting only the loaded page would be misleading.
-  const pagedColumns = useMemo(() => columns.map((column) => ({ ...column, isSort: false })), [columns]);
+  const pagedColumns = useMemo(
+    () => columns.map((column) => ({ ...column, isSort: false })),
+    [columns]
+  );
   const hasPreviewForSelectedMonth = isDataForSelectedMonth && tableData.length > 0;
   const stats = {
     total: previewReadiness?.employeeCount || 0,
-    pending: Math.max(0, (previewReadiness?.employeeCount || 0) - (previewReadiness?.lockedCount || 0) - (previewReadiness?.reviewedCount || 0)),
+    pending: Math.max(
+      0,
+      (previewReadiness?.employeeCount || 0) -
+        (previewReadiness?.lockedCount || 0) -
+        (previewReadiness?.reviewedCount || 0)
+    ),
     reviewed: previewReadiness?.reviewedCount || 0,
     locked: previewReadiness?.lockedCount || 0,
     net: previewReadiness?.netPayTotal || 0,
   };
   const monthStatus = previewError
     ? { label: 'Cannot load', color: 'error' as const }
-    : previewIsGenerated || (stats.total > 0 && stats.locked === stats.total)
-      ? { label: 'Already locked', color: 'success' as const }
-      : previewReadiness?.policyConfigurationIssueCount
-        ? { label: 'Needs payroll setup', color: 'error' as const }
-        : previewReadiness?.missingAttendanceCount
-          ? { label: 'Needs attendance', color: 'warning' as const }
-          : previewReadiness
-            ? { label: 'Ready to review', color: 'success' as const }
-            : { label: 'Select month', color: 'default' as const };
+    : hasPreviewForSelectedMonth && !preview.isCurrent
+      ? { label: 'Needs recalculation', color: 'warning' as const }
+      : previewIsGenerated || (stats.total > 0 && stats.locked === stats.total)
+        ? { label: 'Already locked', color: 'success' as const }
+        : previewReadiness?.policyConfigurationIssueCount
+          ? { label: 'Needs payroll setup', color: 'error' as const }
+          : previewReadiness?.missingAttendanceCount
+            ? { label: 'Needs attendance', color: 'warning' as const }
+            : previewReadiness?.blockingIssues?.length
+              ? { label: 'Needs attention', color: 'warning' as const }
+              : previewReadiness
+                ? { label: 'Ready to review', color: 'success' as const }
+                : { label: 'Select month', color: 'default' as const };
   const totalForProgress = stats.total || Number(previewReadiness?.employeeCount || 0);
   const readinessMetrics = [
     {
       label: 'Employees',
       value: readinessBusy && !previewReadiness ? '...' : stats.total || '-',
-      icon: 'solar:users-group-rounded-linear',
     },
     {
       label: 'Preview rows',
       value: readinessBusy && !previewReadiness ? '...' : (previewReadiness?.snapshotCount ?? '-'),
-      icon: 'solar:document-text-linear',
     },
     {
       label: 'Attendance gaps',
       value: previewReadiness?.missingAttendanceCount ?? '-',
-      icon: 'solar:calendar-remove-linear',
     },
     {
       label: 'Salary setup gaps',
       value: previewReadiness?.missingSalaryStructureCount ?? '-',
-      icon: 'solar:wallet-money-linear',
     },
     {
       label: 'Policy issues',
       value: previewReadiness?.policyConfigurationIssueCount ?? '-',
-      icon: 'solar:shield-warning-linear',
     },
     {
       label: 'Reviewed',
       value: totalForProgress ? `${stats.reviewed}/${totalForProgress}` : '-',
-      icon: 'solar:check-circle-linear',
     },
     {
       label: 'Locked',
       value: totalForProgress ? `${stats.locked}/${totalForProgress}` : '-',
-      icon: 'solar:lock-keyhole-linear',
     },
     {
       label: 'Net preview',
       value: hasPreviewForSelectedMonth ? formatCurrency(stats.net) : '-',
-      icon: 'solar:wallet-money-linear',
     },
   ];
   const previewButtonIcon = isDataForSelectedMonth ? 'solar:refresh-linear' : 'solar:rocket-bold';
@@ -1061,7 +1068,7 @@ const RunPayroll = () => {
           disabled={!month || !academicYearId}
           startIcon={<Iconify icon={previewButtonIcon} />}
           onClick={() => loadPreview(true)}
-          sx={{ width: { xs: '100%', sm: 'auto' } }}
+          sx={{ alignSelf: { xs: 'flex-start', sm: 'center' } }}
         >
           {previewButtonLabel}
         </LoadingButton>
@@ -1076,17 +1083,18 @@ const RunPayroll = () => {
           flexDirection: 'column',
         }}
       >
-        <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflow: { xs: 'visible', md: 'hidden' } }}>
+        <Stack
+          spacing={1}
+          sx={{ flex: 1, minHeight: 0, overflow: { xs: 'visible', md: 'hidden' } }}
+        >
           <Card variant="outlined" sx={{ p: 0, flexShrink: 0 }}>
             <Stack
-              direction={{ xs: 'column', md: 'row' }}
-              alignItems={{ xs: 'stretch', md: 'center' }}
+              direction="row"
+              alignItems="center"
               justifyContent="space-between"
               spacing={1}
-              onClick={() => setReadinessOpen((prev) => !prev)}
               sx={{
                 p: 1.25,
-                cursor: 'pointer',
                 transition: 'background-color 0.2s',
               }}
             >
@@ -1112,10 +1120,18 @@ const RunPayroll = () => {
                       loadPreview(false);
                     }}
                   >
-                    Retry preview load
+                    Retry
                   </LoadingButton>
                 ) : null}
-                <IconButton size="small">
+                <IconButton
+                  size="small"
+                  aria-label={
+                    readinessOpen ? 'Collapse payroll readiness' : 'Expand payroll readiness'
+                  }
+                  aria-expanded={readinessOpen}
+                  aria-controls="payroll-readiness-details"
+                  onClick={() => setReadinessOpen((prev) => !prev)}
+                >
                   <Iconify
                     icon={
                       readinessOpen ? 'solar:alt-arrow-up-linear' : 'solar:alt-arrow-down-linear'
@@ -1125,7 +1141,7 @@ const RunPayroll = () => {
                 </IconButton>
               </Stack>
             </Stack>
-            <Collapse in={readinessOpen} timeout={800} unmountOnExit>
+            <Collapse id="payroll-readiness-details" in={readinessOpen} unmountOnExit>
               <Box sx={{ px: 1.25, pb: 1.25 }}>
                 <Stack spacing={1}>
                   {previewError ? (
@@ -1135,13 +1151,13 @@ const RunPayroll = () => {
                         ? dayjs(`${selectedMonthKey}-01`).format('MMMM YYYY')
                         : selectedMonthKey}
                       . {previewError.errorCode ? `Error code: ${previewError.errorCode}. ` : ''}
-                      Use Retry preview load after checking attendance and payroll policy setup.
+                      Retry to load the payroll preview again.
                     </Alert>
                   ) : null}
 
                   <Grid container spacing={0.75}>
-                    {readinessMetrics.map(({ label, value, icon }) => (
-                      <Grid key={label} size={{ xs: 6, sm: 3, lg: 1.5 }}>
+                    {readinessMetrics.map(({ label, value }) => (
+                      <Grid key={label} size={{ xs: 6, sm: 3 }}>
                         <Box
                           sx={{
                             height: '100%',
@@ -1157,26 +1173,15 @@ const RunPayroll = () => {
                             minWidth: 0,
                           }}
                         >
-                          <Box
-                            sx={{
-                              width: 30,
-                              height: 30,
-                              borderRadius: 1,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                              color: 'primary.main',
-                              bgcolor: 'primary.lighter',
-                            }}
-                          >
-                            <Iconify icon={icon} width={18} />
-                          </Box>
                           <Box sx={{ minWidth: 0 }}>
-                            <Typography variant="caption" color="text.secondary" noWrap>
+                            <Typography variant="caption" color="text.secondary">
                               {label}
                             </Typography>
-                            <Typography variant="subtitle2" fontWeight={700} noWrap>
+                            <Typography
+                              variant="subtitle2"
+                              fontWeight={700}
+                              sx={{ overflowWrap: 'anywhere' }}
+                            >
                               {value}
                             </Typography>
                           </Box>
@@ -1189,9 +1194,11 @@ const RunPayroll = () => {
             </Collapse>
           </Card>
 
-          {(preview.busy || (preview.data && !preview.isCurrent)) ? (
+          {preview.busy || (preview.data && !preview.isCurrent) ? (
             <Alert severity={preview.busy ? 'info' : 'warning'} aria-live="polite">
-              {preview.busy ? 'Calculating payroll in the background. You can leave this page and return later.' : 'These results are outdated. Refresh and review the updated payroll before locking.'}
+              {preview.busy
+                ? 'Calculating payroll in the background. You can leave this page and return later.'
+                : 'These results are outdated. Refresh and review the updated payroll before locking.'}
             </Alert>
           ) : null}
           <Card
