@@ -20,7 +20,6 @@ import {
   type AdmissionInquiry,
   useGetAdmissionInquiryQuery,
   useGetAdmissionInquiriesQuery,
-  useLazyExportAdmissionInquiriesQuery,
   useMarkAdmissionInquiryContactedMutation,
   useGetAdmissionInquiryAssignableCounsellorsQuery,
 } from 'src/redux/student/admissions/admission-inquiries-api';
@@ -132,15 +131,6 @@ export default function AdmissionInquiriesScreen() {
   );
   const [markContacted, { isLoading: markingContacted }] =
     useMarkAdmissionInquiryContactedMutation();
-  const [exportInquiries, exportState] = useLazyExportAdmissionInquiriesQuery();
-  const exportFilters = {
-    ...listFilters,
-    academicYearId: academic.academicYearId,
-    boardId: academic.boardId || undefined,
-    mediumId: academic.mediumId || undefined,
-    standardId: academic.standardId || undefined,
-    sorting: sorts[0] ? `${sorts[0].column} ${sorts[0].direction}` : undefined,
-  };
 
   const openInquiry = useCallback(
     (inquiry: AdmissionInquiry) => {
@@ -177,23 +167,6 @@ export default function AdmissionInquiriesScreen() {
     [router]
   );
 
-  const downloadExport = async () => {
-    try {
-      const blob = await exportInquiries(exportFilters).unwrap();
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `admission-inquiries-${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      shikshaMitraToast.error({
-        message: parseApiProblemDetail(error).detail || 'Unable to export admission inquiries.',
-      });
-    }
-  };
   const columns = useMemo(() => {
     const rows = data?.items ?? [];
     const visibleIds = rows.map((row) => row.id);
@@ -218,6 +191,7 @@ export default function AdmissionInquiriesScreen() {
       width: 52,
       sticky: true,
       stickyPosition: 'left',
+      stickyOnMobile: false,
       isSort: false,
       isFilter: false,
       excludeFromExport: true,
@@ -336,24 +310,7 @@ export default function AdmissionInquiriesScreen() {
           { name: 'Inquiries' },
         ]}
         action={
-          <Stack direction="row" spacing={1}>
-            <Button
-              aria-label="Export all inquiries"
-              size="small"
-              variant="outlined"
-              disabled={exportState.isFetching || !academic.academicYearId}
-              startIcon={<Iconify icon="mdi:file-export-outline" />}
-              onClick={downloadExport}
-              sx={{
-                minWidth: { xs: 40, sm: 64 },
-                px: { xs: 1, sm: 1.5 },
-                '& .MuiButton-startIcon': { mr: { xs: 0, sm: 1 } },
-              }}
-            >
-              <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                {exportState.isFetching ? 'Exporting…' : 'Export all'}
-              </Box>
-            </Button>
+          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
             {canManage && (
               <Button
                 size="small"
@@ -439,12 +396,12 @@ export default function AdmissionInquiriesScreen() {
               alignItems={{ xs: 'stretch', sm: 'center' }}
               sx={{ px: 1, py: 0.75, border: 1, borderColor: 'divider', borderRadius: 1 }}
             >
-              <Typography variant="body2" sx={{ flex: 1 }}>
+              <Typography variant="body2" role="status" aria-live="polite" sx={{ flex: 1 }}>
                 {selectedIds.length} selected
                 {selectedIds.length === 100 ? ' · maximum bulk size reached' : ''}
               </Typography>
-              <Button size="small" onClick={() => setSelectedIds([])}>
-                Clear
+              <Button size="small" variant="outlined" onClick={() => setSelectedIds([])}>
+                Clear selection
               </Button>
               <Button
                 size="small"
@@ -503,6 +460,7 @@ export default function AdmissionInquiriesScreen() {
                   role: 'link',
                   'aria-label': `Open ${formatAdmissionReference(inquiry.inquiryNumber)}`,
                   onKeyDown: (event) => {
+                    if (event.target !== event.currentTarget) return;
                     if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
                       openInquiry(inquiry);
@@ -511,7 +469,11 @@ export default function AdmissionInquiriesScreen() {
                   sx: { cursor: 'pointer' },
                 };
               }}
-              searchFieldProps={{ placeholder: 'Search inquiries' }}
+              searchFieldProps={{
+                placeholder: 'Search by applicant, inquiry no. or phone',
+                inputProps: { 'aria-label': 'Search admission inquiries' },
+              }}
+              noDataText="No admission inquiries have been added yet"
             />
           </Box>
         </>

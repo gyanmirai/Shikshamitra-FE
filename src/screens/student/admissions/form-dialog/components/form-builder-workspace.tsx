@@ -66,8 +66,11 @@ export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, child
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: '300px minmax(0, 1fr)' },
-          gap: 1.5,
+          gridTemplateColumns: {
+            xs: 'minmax(0, 1fr)',
+            lg: 'minmax(300px, 340px) minmax(0, 1fr)',
+          },
+          gap: 1,
           flex: 1,
           minHeight: 0,
           minWidth: 0,

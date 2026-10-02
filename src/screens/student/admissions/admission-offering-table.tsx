@@ -22,8 +22,18 @@ type Props = AdmissionOfferingActionProps & {
 };
 
 export function AdmissionOfferingTable(props: Props) {
-  const { rows, loading, totalCount, page, rowsPerPage, search, onSearch, onSort, onPagination, onView } =
-    props;
+  const {
+    rows,
+    loading,
+    totalCount,
+    page,
+    rowsPerPage,
+    search,
+    onSearch,
+    onSort,
+    onPagination,
+    onView,
+  } = props;
   return (
     <CustomizableTable
       tableId="admission-offerings"
@@ -35,7 +45,10 @@ export function AdmissionOfferingTable(props: Props) {
         tabIndex: 0,
         sx: { cursor: 'pointer' },
         onKeyDown: (event) => {
-          if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+          if (
+            event.target === event.currentTarget &&
+            (event.key === 'Enter' || event.key === ' ')
+          ) {
             event.preventDefault();
             onView(row as AdmissionOfferingListItem);
           }
@@ -61,8 +74,7 @@ export function AdmissionOfferingTable(props: Props) {
       tableContainerProps={{ sx: { height: 1 } }}
       noDataText={
         <Box component="span" sx={{ color: 'text.secondary' }}>
-          No admission offering has been configured. Create one to define which classes accept
-          applications.
+          No admission offering has been configured.
         </Box>
       }
     />

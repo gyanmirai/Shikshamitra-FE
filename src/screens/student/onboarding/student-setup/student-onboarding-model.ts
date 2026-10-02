@@ -69,6 +69,7 @@ export type StudentOnboardingItem = {
   grNo?: string | number | null;
   grPreview?: string | null;
   rollNo?: number | null;
+  rollAssignmentMode?: 'manual' | 'automatic' | 'both';
   rollNumberLocked?: boolean;
   preferredDivisionName?: string | null;
   divisionPlacementOptions?: DivisionPlacementOption[];
@@ -325,6 +326,11 @@ const onboardingStepStatus: Record<StudentOnboardingStepStatus, OnboardingCheckS
   5: 'not-required',
 };
 
+const systemStepFallbackDetails: Record<string, string> = {
+  approval_review: 'Review the current requirements and record an approval note.',
+  final_readiness: 'This is completed automatically when activation validates every required check.',
+};
+
 export const mapOnboardingCaseToItem = (
   onboardingCase: StudentOnboardingCase
 ): StudentOnboardingItem => {
@@ -361,6 +367,7 @@ export const mapOnboardingCaseToItem = (
     grNo: onboardingCase.grNumber ?? null,
     grPreview: null,
     rollNo: onboardingCase.rollNumber ?? null,
+    rollAssignmentMode: onboardingCase.rollAssignmentMode,
     rollNumberLocked: onboardingCase.status === 4,
     status: onboardingCaseStage[onboardingCase.status],
     documentsPassed: documentPassed ? 1 : 0,
@@ -372,7 +379,9 @@ export const mapOnboardingCaseToItem = (
       label: step.label,
       detail:
         step.detail ||
-        (step.waiverReason ? `Waived: ${step.waiverReason}` : 'No additional detail available.'),
+        (step.waiverReason
+          ? `Waived: ${step.waiverReason}`
+          : systemStepFallbackDetails[step.key] || 'No additional detail available.'),
       status: onboardingStepStatus[step.status],
       blocking: step.key !== 'final_readiness' && step.required && ![2, 4, 5].includes(step.status),
       owner: onboardingCase.assignedToUserName || 'Student Onboarding',

@@ -43,7 +43,9 @@ export function FormBuilderSectionHeader({
       sx={{
         px: 0.5,
         py: 0.5,
-        bgcolor: selected ? 'action.selected' : 'background.neutral',
+        bgcolor: 'background.paper',
+        borderBottom: 1,
+        borderColor: 'divider',
         borderRadius: 'inherit',
       }}
     >
@@ -77,11 +79,6 @@ export function FormBuilderSectionHeader({
         <Box sx={{ minWidth: 0 }}>
           <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
             {name}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {section.fields.length} {section.fields.length === 1 ? 'field' : 'fields'}
-            {selected ? ' · Adding fields here' : ' · Select to add fields'}
-            {section.visibilityRuleJson ? ' · Conditional' : ''}
           </Typography>
         </Box>
       </ButtonBase>

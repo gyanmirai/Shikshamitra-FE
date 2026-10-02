@@ -37,8 +37,6 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
   {
     id: 'standard',
     name: 'Standard admission',
-    description:
-      'A balanced application-to-decision journey with form, documents, and staff review.',
     bestFor: 'Most K–12 schools and regular fresh admissions',
     icon: 'mdi:school-outline',
     recommended: true,
@@ -68,11 +66,12 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
         description: 'Approve, waitlist, or reject the application and close the journey.',
       },
     ],
+    description: '',
   },
   {
     id: 'simple',
     name: 'Simple direct admission',
-    description: 'A short form-to-decision journey without inquiry qualification or assessment.',
+
     bestFor: 'Small schools, pre-primary intake, transfers, and straightforward admissions',
     icon: 'mdi:lightning-bolt-outline',
     stages: [
@@ -95,11 +94,11 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
         description: 'Approve, waitlist, or reject the application and close the journey.',
       },
     ],
+    description: '',
   },
   {
     id: 'assessment',
     name: 'Assessment-based admission',
-    description: 'Adds eligibility checks and an entrance assessment before final staff review.',
     bestFor: 'Schools using entrance tests, interactions, interviews, or merit screening',
     icon: 'mdi:clipboard-text-outline',
     stages: [
@@ -140,11 +139,12 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
         description: 'Approve, waitlist, or reject the application and close the journey.',
       },
     ],
+    description: '',
   },
   {
     id: 'selective',
     name: 'Selective admission with offer',
-    description: 'A comprehensive journey with application fee, screening, decision, and offer.',
+
     bestFor: 'Large, private, residential, or highly selective schools',
     icon: 'mdi:email-seal-outline',
     stages: [
@@ -197,6 +197,7 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
         description: 'Issue the approved offer and record the family response.',
       },
     ],
+    description: '',
   },
 ] as const;
 
@@ -205,10 +206,10 @@ export const STANDARD_ADMISSION_JOURNEY = ADMISSION_WORKFLOW_TEMPLATES[0].stages
 export const EMPTY_WORKFLOW_STARTER = {
   id: 'empty',
   name: 'Blank workflow',
-  description: 'Start without stages and design every route yourself.',
   bestFor: 'Schools with a fully custom process',
   icon: 'mdi:pencil-outline',
   stages: [],
+  description: '',
 } as const;
 
 export const ADMISSION_WORKFLOW_STARTERS = [

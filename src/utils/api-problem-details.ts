@@ -10,10 +10,6 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
     "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again.",
   'Admissions.WorkflowConcurrencyConflict':
     'This workflow changed after the list was loaded. Refresh the latest version, review it, and try again.',
-  'Admissions.FormMakerCheckerRequired':
-    'A different authorized user must review this form. The user who requested approval cannot approve or reject the same form.',
-  'Admissions.FormAdminOverrideReasonRequired':
-    'Enter a reason to use the administrator self-review override.',
   'Admissions.Application.EnrollmentDivisionFull':
     'The selected division has no seats available. Choose another division or assign one later.',
   'Admissions.Application.EnrollmentDivisionInvalid':

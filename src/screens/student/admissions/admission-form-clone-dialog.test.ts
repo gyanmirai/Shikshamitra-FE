@@ -5,7 +5,7 @@ import { it, expect, describe } from 'vitest';
 import { getAdmissionFormCloneInitialValues } from './admission-form-clone-dialog';
 
 describe('admission form clone values', () => {
-  it('creates an explicit editable draft identity', () => {
+  it('requests a new generated identity for an independent cloned draft', () => {
     const form = {
       name: 'Registration form',
       code: 'REGISTRATION_FORM',
@@ -14,16 +14,15 @@ describe('admission form clone values', () => {
 
     expect(getAdmissionFormCloneInitialValues(form)).toEqual({
       name: 'Registration form copy',
-      code: 'REGISTRATION_FORM_COPY',
+      code: '',
       description: 'Full application',
     });
   });
 
-  it('keeps generated codes within the backend limit', () => {
+  it('does not derive a clone code from the source code', () => {
     const form = { name: 'Long form', code: 'A'.repeat(64) } as AdmissionForm;
     const generatedCode = getAdmissionFormCloneInitialValues(form).code;
-    expect(generatedCode).toHaveLength(64);
-    expect(generatedCode).toMatch(/_COPY$/);
+    expect(generatedCode).toBe('');
     expect(generatedCode).not.toBe(form.code);
   });
 });

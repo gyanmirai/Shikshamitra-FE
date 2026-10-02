@@ -52,10 +52,10 @@ export const bulkOfferingInitialValues: BulkOfferingValues = {
 export const bulkOfferingSelectionSchema = Yup.object({
   boardId: Yup.string().required('Board is required'),
   mediumId: Yup.string().required('Medium is required'),
-  stageId: Yup.string().required('School level is required'),
+  stageId: Yup.string().required('Select a class with a school level'),
   standardIds: Yup.array()
     .of(Yup.string().required())
-    .min(1, 'Select at least one standard')
+    .min(1, 'Select at least one class')
     .required(),
 });
 
@@ -64,10 +64,10 @@ export const bulkOfferingSchema = Yup.object({
   entryMode: Yup.number().oneOf([0, 1, 2]).required(),
   boardId: Yup.string().required('Board is required'),
   mediumId: Yup.string().required('Medium is required'),
-  stageId: Yup.string().required('Stage is required'),
+  stageId: Yup.string().required('Select a class with a school level'),
   standardIds: Yup.array()
     .of(Yup.string().required())
-    .min(1, 'Select at least one standard')
+    .min(1, 'Select at least one class')
     .required(),
   codePrefix: Yup.string().trim().required('Code prefix is required'),
   useCycleDates: Yup.boolean().required(),
@@ -118,6 +118,20 @@ const codeSuffix = (standard: Standards) =>
     .toUpperCase()
     .replace(/[^A-Z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+
+export const selectBulkClasses = (selectedIds: string[], standards: Standards[]) => {
+  const firstClass = standards.find((item) => item.id === selectedIds[0]);
+  const stageId = firstClass?.educationMediumStageId ?? '';
+
+  return {
+    stageId,
+    standardIds: stageId
+      ? selectedIds.filter((id) =>
+          standards.some((item) => item.id === id && item.educationMediumStageId === stageId)
+        )
+      : [],
+  };
+};
 
 export const toBulkOfferingInput = (
   values: BulkOfferingValues,

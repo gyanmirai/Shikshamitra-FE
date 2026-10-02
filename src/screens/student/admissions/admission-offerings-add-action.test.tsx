@@ -14,7 +14,14 @@ vi.mock('./use-admission-offerings-screen', () => ({
 vi.mock('src/components/custom-breadcrumbs', () => ({
   CustomBreadcrumbs: ({ action }: { action: ReactNode }) => <header>{action}</header>,
 }));
-vi.mock('./admission-offering-filters', () => ({ AdmissionOfferingFilters: () => null }));
+vi.mock('./admission-offering-filters', () => ({
+  AdmissionOfferingFilters: ({ filterAction }: { filterAction: ReactNode }) => (
+    <section aria-label="Offering context filters">{filterAction}</section>
+  ),
+}));
+vi.mock('./admission-offering-more-filters', () => ({
+  AdmissionOfferingMoreFilters: () => <button type="button">Filters</button>,
+}));
 vi.mock('./admission-offering-table', () => ({ AdmissionOfferingTable: () => null }));
 vi.mock('./admission-offering-details-drawer', () => ({
   AdmissionOfferingDetailsDrawer: () => null,
@@ -102,7 +109,11 @@ describe('Admission Offerings add action', () => {
     render(<AdmissionOfferingsScreen />);
 
     expect(screen.queryByRole('button', { name: 'Bulk create' })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Add offering' }));
+    expect(screen.getByRole('banner').querySelector('button')?.textContent).toBe('Add Offering');
+    expect(screen.getByRole('region', { name: 'Offering context filters' })).toHaveTextContent(
+      'Filters'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Add Offering' }));
     expect(openBulk).toHaveBeenCalledOnce();
   });
 

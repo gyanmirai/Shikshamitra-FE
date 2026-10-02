@@ -18,6 +18,11 @@ vi.mock('react-redux', () => ({
 vi.mock('../admission-applicant-notes', () => ({
   default: () => <div>Notes editor</div>,
 }));
+vi.mock('../fee-selection/admission-fee-selection-panel', () => ({
+  default: ({ applicationId }: { applicationId: string }) => (
+    <div>Fee selection for {applicationId}</div>
+  ),
+}));
 
 vi.mock('./admission-applicant-start-card', () => ({
   AdmissionApplicantStartCard: () => <div>Start application controls</div>,
@@ -102,6 +107,7 @@ describe('AdmissionApplicantApplicationsCard', () => {
     renderCard({ ...baseData, applications: [application] });
 
     expect(screen.getByText('Admission journey')).toBeInTheDocument();
+    expect(screen.getByText('Fee selection for application-1')).toBeInTheDocument();
     expect(screen.getAllByText('Review and verify').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Current step').length).toBeGreaterThan(0);
     expect(screen.getByText('Required before finalization.')).toBeInTheDocument();

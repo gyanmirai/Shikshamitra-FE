@@ -1,16 +1,16 @@
 import type { LabelColor } from 'src/components/label';
 import type { IColumn } from 'src/components/customizabaleTable/types';
+import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import NextLink from 'next/link';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
+import { Stack, Typography } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
-import ThreeDotsActions from 'src/components/three-dots-actions';
-import { Stack, MenuItem, MenuList, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
-import { UNASSIGNED_INQUIRIES_FILTER } from './admission-inquiry-filters';
 import { formatAdmissionReference } from '../admission-reference';
+import { UNASSIGNED_INQUIRIES_FILTER } from './admission-inquiry-filters';
 import {
   inquirySourceLabel,
   inquiryStatusLabel,
@@ -45,21 +45,50 @@ const statusColors: Record<number, LabelColor> = {
   8: 'warning',
 };
 
-type InquiryActionId = 'applicant360' | 'manage' | 'assign' | 'communicate' | 'markContacted';
-
-export function getAdmissionInquiryActionPlan(inquiry: AdmissionInquiry, options: Options) {
-  const available: InquiryActionId[] = [
-    ...(inquiry.applicantId ? (['applicant360'] as const) : []),
-    ...(options.canManage ? (['manage'] as const) : []),
-    ...(options.canAssign && inquiry.admissionOfferingId ? (['assign'] as const) : []),
-    ...(options.canCommunicate ? (['communicate'] as const) : []),
-    ...(options.canManage && inquiry.status === 0 ? (['markContacted'] as const) : []),
-  ];
-
-  return {
-    direct: available.slice(0, 3),
-    overflow: available.slice(3),
-  };
+export function getAdmissionInquiryActions(
+  inquiry: AdmissionInquiry,
+  options: Options
+): AdaptiveThreeDotsAction[] {
+  const actions: AdaptiveThreeDotsAction[] = [];
+  const reference = formatAdmissionReference(inquiry.inquiryNumber);
+  if (inquiry.applicantId)
+    actions.push({
+      id: 'applicant360',
+      label: `Open Applicant 360 for ${inquiry.applicantName}`,
+      icon: 'mdi:account-circle-outline',
+      onClick: () => options.onOpenApplicant360(inquiry),
+    });
+  if (options.canManage)
+    actions.push({
+      id: 'manage',
+      label: `Edit inquiry ${reference}`,
+      icon: 'solar:pen-bold',
+      onClick: () => options.onManage(inquiry),
+    });
+  if (options.canAssign && inquiry.admissionOfferingId)
+    actions.push({
+      id: 'assign',
+      label: `${inquiry.assignedCounsellorId ? 'Reassign' : 'Assign'} counsellor for ${inquiry.applicantName}`,
+      icon: 'mdi:account-arrow-right-outline',
+      onClick: () => options.onAssign(inquiry),
+    });
+  if (options.canCommunicate)
+    actions.push({
+      id: 'communicate',
+      label: `Compose communication for ${inquiry.applicantName}`,
+      icon: 'mdi:message-text-outline',
+      onClick: () => options.onCommunicate(inquiry),
+    });
+  if (options.canManage && inquiry.status === 0)
+    actions.push({
+      id: 'markContacted',
+      label: `Mark ${inquiry.applicantName} contacted`,
+      icon: 'mdi:phone-check-outline',
+      disabled: options.isMarkingContacted,
+      tooltip: options.isMarkingContacted ? 'Updating contact status…' : undefined,
+      onClick: () => options.onMarkContacted(inquiry),
+    });
+  return actions;
 }
 
 export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
@@ -71,6 +100,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       filterType: 'string',
       sticky: true,
       stickyPosition: 'left',
+      stickyOnMobile: false,
       render: (value) => formatAdmissionReference(String(value)),
     },
     {
@@ -79,6 +109,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       minWidth: 220,
       sticky: true,
       stickyPosition: 'left',
+      stickyOnMobile: false,
       render: (value, row) => {
         const inquiry = row as AdmissionInquiry;
         return inquiry.applicantId ? (
@@ -113,8 +144,20 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
         );
       },
     },
-    { id: 'normalizedPhone', label: 'Phone', minWidth: 140, filterType: 'string' },
-    { id: 'email', label: 'Email', minWidth: 220, filterType: 'string' },
+    {
+      id: 'normalizedPhone',
+      label: 'Phone',
+      minWidth: 140,
+      filterType: 'string',
+      render: (value) => (value ? String(value) : '—'),
+    },
+    {
+      id: 'email',
+      label: 'Email',
+      minWidth: 220,
+      filterType: 'string',
+      render: (value) => (value ? String(value) : '—'),
+    },
     {
       id: 'assignedCounsellorId',
       label: 'Counsellor',
@@ -159,6 +202,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       enumOptions: INQUIRY_STATUS_OPTIONS,
       sticky: true,
       stickyPosition: 'right',
+      stickyOnMobile: false,
       render: (value) => (
         <Label color={statusColors[Number(value)]}>{inquiryStatusLabel(value)}</Label>
       ),
@@ -169,6 +213,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       width: 152,
       minWidth: 152,
       maxWidth: 152,
+      align: 'right',
       sticky: true,
       stickyPosition: 'right',
       isSort: false,
@@ -176,93 +221,22 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       excludeFromExport: true,
       render: (_, row) => {
         const inquiry = row as AdmissionInquiry;
-        const plan = getAdmissionInquiryActionPlan(inquiry, options);
-        if (plan.direct.length === 0 && plan.overflow.length === 0) return null;
         const reference = formatAdmissionReference(inquiry.inquiryNumber);
-        const directActions = plan.direct.flatMap((action) => {
-          if (action === 'applicant360' || action === 'manage') return [];
-          if (action === 'assign') {
-            return [
-              {
-                id: 'assign',
-                label: `${inquiry.assignedCounsellorId ? 'Reassign' : 'Assign'} counsellor for ${inquiry.applicantName}`,
-                icon: 'mdi:account-arrow-right',
-                onClick: () => options.onAssign(inquiry),
-              },
-            ];
-          }
-          if (action === 'communicate') {
-            return [
-              {
-                id: 'communicate',
-                label: `Compose communication for ${inquiry.applicantName}`,
-                icon: 'mdi:message-text-outline',
-                onClick: () => options.onCommunicate(inquiry),
-              },
-            ];
-          }
-          return [
-            {
-              id: 'mark-contacted',
-              label: `Mark ${inquiry.applicantName} contacted`,
-              icon: 'mdi:phone-check-outline',
-              disabled: options.isMarkingContacted,
-              onClick: () => options.onMarkContacted(inquiry),
-            },
-          ];
-        });
 
         return (
-          <ThreeDotsActions
+          <AdaptiveThreeDotsActions
             placement="right-top"
-            showViewIcon={plan.direct.includes('applicant360')}
-            showEditIcon={plan.direct.includes('manage')}
-            showThreeDots={plan.overflow.length > 0}
-            viewIcon="mdi:account-circle-outline"
-            viewLabel={`Open Applicant 360 for ${inquiry.applicantName}`}
-            editLabel={`Edit inquiry ${reference}`}
             moreLabel={`More actions for ${reference}`}
-            handleViewClick={() => options.onOpenApplicant360(inquiry)}
-            handleEditClick={() => options.onManage(inquiry)}
-            directActions={directActions}
-            actions={({ popover }) => (
-              <MenuList dense>
-                {plan.overflow.includes('assign') && (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      options.onAssign(inquiry);
-                    }}
-                  >
-                    <Iconify icon="mdi:account-arrow-right-outline" sx={{ mr: 1 }} />
-                    {inquiry.assignedCounsellorId ? 'Reassign counsellor' : 'Assign counsellor'}
-                  </MenuItem>
-                )}
-                {plan.overflow.includes('communicate') && (
-                  <MenuItem
-                    onClick={() => {
-                      popover.onClose();
-                      options.onCommunicate(inquiry);
-                    }}
-                  >
-                    <Iconify icon="mdi:message-text-outline" sx={{ mr: 1 }} />
-                    Compose communication
-                  </MenuItem>
-                )}
-                {plan.overflow.includes('markContacted') && (
-                  <MenuItem
-                    disabled={options.isMarkingContacted}
-                    onClick={() => {
-                      popover.onClose();
-                      options.onMarkContacted(inquiry);
-                    }}
-                  >
-                    <Iconify icon="mdi:phone-check-outline" sx={{ mr: 1 }} />
-                    Mark contacted
-                  </MenuItem>
-                )}
-              </MenuList>
-            )}
+            mobileDirectActionLimit={0}
+            sx={{
+              gap: 0,
+              justifyContent: 'flex-end',
+              '& .MuiIconButton-root': {
+                width: { xs: 44, sm: 30 },
+                height: { xs: 44, sm: 30 },
+              },
+            }}
+            actions={getAdmissionInquiryActions(inquiry, options)}
           />
         );
       },

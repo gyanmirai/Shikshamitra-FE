@@ -1,5 +1,8 @@
 import type { FormikProps } from 'formik';
-import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  CreateUpdateAdmissionForm,
+  AdmissionFormSystemFieldMetadata,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
@@ -156,6 +159,85 @@ export function useFormBuilderCommands(
     onSelect(section.id, field.id);
   };
 
+  const addGroupSection = (name: string, groupFields: AdmissionFormSystemFieldMetadata[]) => {
+    const usedBindings = new Set(
+      formik.values.sections.flatMap((section) =>
+        section.fields
+          .filter((field) => field.bindingType === 0 && field.bindingKey)
+          .map((field) => field.bindingKey!.toLowerCase())
+      )
+    );
+    const availableFields = groupFields.filter(
+      (field) => !usedBindings.has(field.key.toLowerCase())
+    );
+    if (!availableFields.length) {
+      shikshaMitraToast.info({
+        message: `All ${name.toLowerCase()} fields are already in the form.`,
+      });
+      return null;
+    }
+
+    const id = crypto.randomUUID();
+    const selected = formik.values.sections.find((section) => section.id === selectedSectionId);
+    const selectedStep = steps.find((step) =>
+      step.sections.some(({ section }) => section.id === selected?.id)
+    );
+    const stepId = isStepper ? (selectedStep?.id ?? crypto.randomUUID()) : undefined;
+    const fieldOrder = nextFieldOrder(formik.values.sections);
+    const usedCodes = new Set(
+      formik.values.sections.flatMap((section) =>
+        section.fields.map((field) => field.code.toUpperCase())
+      )
+    );
+    const fields = availableFields.map((metadata, index) => {
+      const field = newField(id, fieldOrder + index, metadata.fieldType);
+      const baseCode = metadata.key.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase();
+      let code = baseCode;
+      let suffix = 2;
+      while (usedCodes.has(code)) {
+        code = `${baseCode}_${suffix}`;
+        suffix += 1;
+      }
+      usedCodes.add(code);
+      field.code = code;
+      field.label = metadata.displayName;
+      field.bindingType = 0;
+      field.bindingKey = metadata.key;
+      field.readOnly = metadata.readOnly;
+      field.optionsJson = metadata.optionsJson;
+      return field;
+    });
+
+    formik.setFieldValue('sections', [
+      ...formik.values.sections,
+      {
+        id,
+        code: `SECTION_${nextSectionNumber(formik.values.sections)}`,
+        name,
+        displayOrder: formik.values.sections.length,
+        stepId,
+        stepCode: stepId
+          ? (selectedStep?.code ?? `STEP_${nextStepNumber(formik.values.sections)}`)
+          : undefined,
+        stepName: stepId ? (selectedStep?.name ?? `Step ${steps.length + 1}`) : undefined,
+        stepDisplayOrder: stepId ? (selectedStep?.displayOrder ?? steps.length) : undefined,
+        stepVisibilityRuleJson: selectedStep?.visibilityRuleJson,
+        isRepeatable: false,
+        minEntries: 1,
+        maxEntries: 1,
+        fields,
+      },
+    ]);
+    onSelect(id, null);
+    const skipped = groupFields.length - availableFields.length;
+    if (skipped) {
+      shikshaMitraToast.info({
+        message: `${skipped} ${skipped === 1 ? 'field was' : 'fields were'} already in the form and skipped.`,
+      });
+    }
+    return id;
+  };
+
   const addSectionTemplate = (templateId: AdmissionFormSectionTemplateId) => {
     const result = materializeAdmissionFormSectionTemplate(
       templateId,
@@ -177,5 +259,12 @@ export function useFormBuilderCommands(
     }
   };
 
-  return { addCanvasUnit, addSection, addField, addSectionTemplate, systemFieldsQuery };
+  return {
+    addCanvasUnit,
+    addSection,
+    addField,
+    addGroupSection,
+    addSectionTemplate,
+    systemFieldsQuery,
+  };
 }

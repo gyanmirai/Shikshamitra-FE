@@ -150,16 +150,12 @@ describe('Admissions settings row actions', () => {
     expect(handlers.onEdit).not.toHaveBeenCalled();
   });
 
-  it('keeps form edit and delete out of the overflow menu', async () => {
+  it('keeps draft edit, publish, and delete direct without approval actions', async () => {
     const user = userEvent.setup();
     const handlers = {
-      onPreview: vi.fn(),
       onEdit: vi.fn(),
       onClone: vi.fn(),
       onValidate: vi.fn(),
-      onRequestApproval: vi.fn(),
-      onApprove: vi.fn(),
-      onReject: vi.fn(),
       onPublish: vi.fn(),
       onHistory: vi.fn(),
       onCreateVersion: vi.fn(),
@@ -170,7 +166,6 @@ describe('Admissions settings row actions', () => {
       id: 'form-1',
       name: 'Fresh admission',
       status: 0,
-      approvalStatus: 0,
     } as AdmissionForm;
 
     render(
@@ -179,19 +174,18 @@ describe('Admissions settings row actions', () => {
         canManage
         canPublish
         canDelete
-        canOverrideMakerChecker={false}
         {...handlers}
       />
     );
 
-    expect(screen.getByRole('button', { name: 'Preview Fresh admission' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Edit Fresh admission' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Delete Fresh admission' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Publish' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeEnabled();
 
-    await user.click(screen.getByRole('button', { name: 'More actions for Fresh admission' }));
+    await user.click(screen.getByRole('button', { name: 'More actions' }));
     expect(screen.getByRole('menuitem', { name: 'Clone as draft' })).toBeVisible();
-    expect(screen.queryByRole('menuitem', { name: 'Edit draft' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('menuitem', { name: 'Delete draft' })).not.toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: 'History & versions' })).toBeVisible();
+    expect(screen.queryByRole('menuitem', { name: /approve|request changes/i })).not.toBeInTheDocument();
   });
 
   it('offers distinct workflow preview and edit actions for a draft', () => {

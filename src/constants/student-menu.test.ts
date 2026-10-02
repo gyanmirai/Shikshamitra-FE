@@ -12,6 +12,47 @@ type NestedMenuItem = {
 };
 
 describe('student navigation', () => {
+  it('exposes four Attendance workspaces with existing URLs and permission bundles', () => {
+    const items = Object.values(studentModule(true)).flatMap((sections) =>
+      sections.flatMap((group) => group.items)
+    );
+    const attendance = items.find((item) => item.title === 'Attendance') as NestedMenuItem;
+    expect(attendance.path).toBe('/student/attendance/take-attendance');
+    expect(attendance.children?.map((item) => item.title)).toEqual([
+      'Daily Attendance',
+      'Leave & Corrections',
+      'Reports',
+      'Settings',
+    ]);
+    expect(attendance.children?.map((item) => item.path)).toEqual([
+      '/student/attendance/take-attendance',
+      '/student/attendance/leave-absent',
+      '/student/attendance/reports',
+      '/student/attendance/setting',
+    ]);
+    expect(
+      attendance.children?.find((item) => item.title === 'Settings')?.children
+    ).toBeUndefined();
+    expect(
+      attendance.children?.find((item) => item.title === 'Daily Attendance')?.permissionName
+    ).toBe(studentPermissions.attendance.markAttendance);
+  });
+  it('exposes the six Student Records workspaces and retains legacy URLs outside the menu', () => {
+    const items = Object.values(studentModule(true)).flatMap((sections) =>
+      sections.flatMap((group) => group.items)
+    );
+    const records = items.find((item) => item.title === 'Student Records') as NestedMenuItem;
+    expect(records.children?.map((item) => item.title)).toEqual([
+      'Student Directory',
+      'Changes & Approvals',
+      'Documents & IDs',
+      'Year-End & Transitions',
+      'Reports',
+      'Settings',
+    ]);
+    expect(records.children?.every((item) => item.path.startsWith('/student/records/'))).toBe(true);
+    expect(records.children?.some((item) => item.path === '/student/management')).toBe(false);
+  });
   it('keeps Dashboard access separate from Dashboard visibility', () => {
     const sections = Object.values(studentModule(true));
     const items = sections.flatMap((section) => section.flatMap((group) => group.items));

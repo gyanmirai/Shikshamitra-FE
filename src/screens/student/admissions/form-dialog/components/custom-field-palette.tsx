@@ -2,6 +2,7 @@ import type { AdmissionFormFieldType } from 'src/redux/student/admissions/admiss
 
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { Scrollbar } from 'src/components/scrollbar';
 
 import { PaletteFieldButton } from './palette-field-button';
 import { CUSTOM_FIELD_PRESETS } from '../form-field-presets';
@@ -19,33 +20,44 @@ type Props = {
 
 export function CustomFieldPalette({ onAddField }: Props) {
   return (
-    <Stack spacing={1} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', pr: 0.5 }}>
-      <Typography variant="caption" color="text.secondary">
-        Collect extra information for this admission form.
-      </Typography>
-      <Typography variant="overline" color="text.secondary">
-        Ready to use
-      </Typography>
-      {CUSTOM_FIELD_PRESETS.map((preset) => (
-        <PaletteFieldButton
-          key={preset.key}
-          label={preset.label}
-          description={preset.description}
-          icon={preset.icon}
-          onClick={() => onAddField(preset.fieldType, undefined, preset)}
-        />
-      ))}
-      <Typography variant="overline" color="text.secondary" sx={{ pt: 1 }}>
-        Basic field types
-      </Typography>
-      {CREATABLE_FIELD_TYPES.map(([label, value]) => (
-        <PaletteFieldButton
-          key={value}
-          label={label}
-          icon={fieldTypeIcon(value)}
-          onClick={() => onAddField(value)}
-        />
-      ))}
-    </Stack>
+    <Scrollbar
+      fillContent
+      aria-label="Custom fields"
+      sx={{
+        flex: 1,
+        minHeight: 0,
+        '& .simplebar-content-wrapper': { overflowX: 'hidden !important' },
+        '& .simplebar-track.simplebar-horizontal': { display: 'none' },
+      }}
+    >
+      <Stack spacing={1} sx={{ pr: 1, pb: 1 }}>
+        <Typography variant="caption" color="text.secondary">
+          Collect extra information for this admission form.
+        </Typography>
+        <Typography variant="overline" color="text.secondary">
+          Ready to use
+        </Typography>
+        {CUSTOM_FIELD_PRESETS.map((preset) => (
+          <PaletteFieldButton
+            key={preset.key}
+            label={preset.label}
+            description={preset.description}
+            icon={preset.icon}
+            onClick={() => onAddField(preset.fieldType, undefined, preset)}
+          />
+        ))}
+        <Typography variant="overline" color="text.secondary" sx={{ pt: 1 }}>
+          Basic field types
+        </Typography>
+        {CREATABLE_FIELD_TYPES.map(([label, value]) => (
+          <PaletteFieldButton
+            key={value}
+            label={label}
+            icon={fieldTypeIcon(value)}
+            onClick={() => onAddField(value)}
+          />
+        ))}
+      </Stack>
+    </Scrollbar>
   );
 }

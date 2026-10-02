@@ -1,4 +1,5 @@
 import type { FormikProps } from 'formik';
+import type { KeyboardEvent } from 'react';
 import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import { useMemo, useState } from 'react';
@@ -35,9 +36,10 @@ type Props = {
   form: AdmissionForm;
   formik: FormikProps<Record<string, string>>;
   resolvedOptions: Record<string, string>;
+  embedded?: boolean;
 };
 
-export function FormPreviewContent({ form, formik, resolvedOptions }: Props) {
+export function FormPreviewContent({ form, formik, resolvedOptions, embedded = false }: Props) {
   const fieldsPerRow = form.fieldsPerRow ?? 1;
   const { values } = formik;
   const [activeStep, setActiveStep] = useState(0);
@@ -99,7 +101,14 @@ export function FormPreviewContent({ form, formik, resolvedOptions }: Props) {
           ? (values[field.code] ?? '')
           : (readRepeatableValues(values[field.code])[entryIndex] ?? '');
       return (
-        <Grid key={field.code} size={{ xs: 12, sm: 12 / fieldsPerRow }}>
+        <Grid
+          key={field.code}
+          size={{
+            xs: 12,
+            sm: field.fieldType === 1 ? 12 : 12 / Math.min(fieldsPerRow, 2),
+            lg: field.fieldType === 1 ? 12 : 12 / fieldsPerRow,
+          }}
+        >
           <AdmissionRuntimeField
             field={{
               ...field,
@@ -186,7 +195,21 @@ export function FormPreviewContent({ form, formik, resolvedOptions }: Props) {
   };
 
   return (
-    <Card component="form" onSubmit={formik.handleSubmit}>
+    <Card
+      component={embedded ? 'div' : 'form'}
+      onSubmit={embedded ? undefined : formik.handleSubmit}
+      onKeyDownCapture={(event: KeyboardEvent<HTMLElement>) => {
+        if (
+          embedded &&
+          event.key === 'Enter' &&
+          event.target instanceof HTMLInputElement &&
+          event.target.getAttribute('role') !== 'combobox'
+        ) {
+          event.preventDefault();
+          formik.submitForm();
+        }
+      }}
+    >
       <CardContent>
         <Typography variant="h6" sx={{ mb: 2 }}>
           {form.name} · v{form.version}
@@ -245,7 +268,13 @@ export function FormPreviewContent({ form, formik, resolvedOptions }: Props) {
               {error}
             </Alert>
           ))}
-        <Button size="small" type="submit" variant="contained" sx={{ mt: 3 }}>
+        <Button
+          size="small"
+          type={embedded ? 'button' : 'submit'}
+          variant="contained"
+          onClick={embedded ? () => formik.submitForm() : undefined}
+          sx={{ mt: 3 }}
+        >
           Validate preview
         </Button>
       </CardContent>

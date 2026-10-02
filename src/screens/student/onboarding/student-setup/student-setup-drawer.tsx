@@ -3,6 +3,7 @@
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
+import Link from 'next/link';
 import { useRef, useState, useEffect, type ReactNode } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -518,6 +519,32 @@ export default function StudentSetupDrawer({
                     >
                       <Label color={meta.color}>{meta.label}</Label>
                       {activeStudent.source === 'onboarding-case' &&
+                      activeStudent.studentId &&
+                      canManage &&
+                      check.key === 'communication' &&
+                      check.status === 'failed' ? (
+                        <Button
+                          component={Link}
+                          href={`/student/profile?student=${encodeURIComponent(activeStudent.studentId)}&tab=general`}
+                          variant="text"
+                          size="small"
+                        >
+                          Open student record
+                        </Button>
+                      ) : activeStudent.source === 'onboarding-case' &&
+                      canManage &&
+                      check.key === 'approval_review' &&
+                      check.status === 'pending' ? (
+                        <Button
+                          variant="text"
+                          color="primary"
+                          size="small"
+                          aria-label={`Record approval for ${check.label}`}
+                          onClick={() => setWaiverCheck(check)}
+                        >
+                          Record approval
+                        </Button>
+                      ) : activeStudent.source === 'onboarding-case' &&
                       canManage &&
                       check.blocking &&
                       check.status === 'failed' &&

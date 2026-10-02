@@ -1,6 +1,6 @@
 import React from 'react';
-import AttendanceType from 'src/screens/student/attendance/setting/attendance-type';
+import AttendanceSettingsScreen from 'src/screens/student/attendance/setting';
 
-const StudentAttendanceSetting = () => <AttendanceType />;
+const StudentAttendanceSetting = () => <AttendanceSettingsScreen />;
 
 export default StudentAttendanceSetting;

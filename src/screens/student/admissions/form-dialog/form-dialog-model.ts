@@ -64,12 +64,6 @@ const admissionFormSectionSchema = Yup.object({
 
 export const admissionFormSchema = Yup.object({
   name: Yup.string().trim().max(128).required('Form name is required'),
-  code: Yup.string()
-    .trim()
-    .uppercase()
-    .matches(/^[A-Z][A-Z0-9_-]*$/, 'Use uppercase letters, numbers, hyphens, or underscores')
-    .max(64)
-    .required('Form code is required'),
   layoutType: Yup.number().oneOf([0, 1]).required('Choose a form layout'),
   purpose: Yup.number().oneOf([0, 1]).required('Choose a form purpose'),
   fieldsPerRow: Yup.number().oneOf([1, 2, 3, 4]).required('Choose fields per row'),

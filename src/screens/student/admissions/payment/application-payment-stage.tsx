@@ -16,6 +16,11 @@ import {
 import { PaymentTransactions } from './payment-transactions';
 import { PaymentActionDialog } from './payment-action-dialog';
 import { useApplicationPayment } from './use-application-payment';
+import AdmissionFeeSelectionPanel, {
+  useFeeSelectionEditorState,
+} from '../fee-selection/admission-fee-selection-panel';
+
+import type { AdmissionFeeSelectionEditorState } from '../fee-selection/admission-fee-selection-editor';
 
 type Props = {
   applicationId: string;
@@ -23,6 +28,7 @@ type Props = {
   canAdvance: boolean;
   advancing: boolean;
   onComplete: () => void;
+  onFeeSelectionStateChange?: (state: AdmissionFeeSelectionEditorState) => void;
 };
 const statusColor = (status: string): 'success' | 'warning' | 'error' | 'default' =>
   status === 'settled' || status === 'waived'
@@ -39,14 +45,16 @@ export function ApplicationPaymentStage({
   canAdvance,
   advancing,
   onComplete,
+  onFeeSelectionStateChange,
 }: Props) {
   const query = useGetAdmissionPaymentStageQuery({ applicationId, stageId: stage.id });
+  const feeEditor = useFeeSelectionEditorState(onFeeSelectionStateChange);
   const state = query.data;
   const actions = useApplicationPayment(
     applicationId,
     stage.id,
     state?.concurrencyStamp ?? '',
-    canAdvance && !advancing,
+    canAdvance && !advancing && !feeEditor.blocked,
     onComplete
   );
   if (query.isLoading)
@@ -67,6 +75,16 @@ export function ApplicationPaymentStage({
       : 0;
   return (
     <>
+      <AdmissionFeeSelectionPanel
+        applicationId={applicationId}
+        outlined
+        onEditorStateChange={feeEditor.update}
+      />
+      {feeEditor.blocked && (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          Save or discard your fee selection before recording payment or completing this step.
+        </Alert>
+      )}
       <Card variant="outlined" sx={{ p: 2.5 }}>
         <Stack spacing={2}>
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={2}>
@@ -132,6 +150,7 @@ export function ApplicationPaymentStage({
               <Button
                 size="small"
                 variant="contained"
+                disabled={feeEditor.blocked}
                 startIcon={<Iconify icon="mdi:cash-plus" />}
                 onClick={() => actions.open('record')}
               >
@@ -139,7 +158,12 @@ export function ApplicationPaymentStage({
               </Button>
             )}
             {state.canWaive && (
-              <Button size="small" variant="outlined" onClick={() => actions.open('waive')}>
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={feeEditor.blocked}
+                onClick={() => actions.open('waive')}
+              >
                 Record waiver
               </Button>
             )}
@@ -147,7 +171,7 @@ export function ApplicationPaymentStage({
               <Button
                 size="small"
                 variant="contained"
-                disabled={!canAdvance || advancing}
+                disabled={!canAdvance || advancing || feeEditor.blocked}
                 onClick={() => onComplete()}
               >
                 Continue
@@ -156,7 +180,7 @@ export function ApplicationPaymentStage({
           </Stack>
           <PaymentTransactions
             items={state.transactions}
-            active={state.isActive}
+            active={state.isActive && !feeEditor.blocked}
             onVerify={(item) => actions.open('verify', item)}
             onReject={(item) => actions.open('reject', item)}
             onReverse={(item) => actions.open('reverse', item)}
@@ -168,7 +192,7 @@ export function ApplicationPaymentStage({
         state={state}
         busy={actions.busy}
         onClose={actions.close}
-        onSubmit={actions.submit}
+        onSubmit={(value) => (feeEditor.blocked ? Promise.resolve() : actions.submit(value))}
       />
     </>
   );

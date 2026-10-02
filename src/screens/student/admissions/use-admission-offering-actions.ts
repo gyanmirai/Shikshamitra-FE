@@ -30,7 +30,7 @@ export type PendingOfferingAction = {
   row: AdmissionOfferingListItem;
 } | null;
 
-export function useAdmissionOfferingActions(cycle: AdmissionCycle | null) {
+export function useAdmissionOfferingActions(cycle: AdmissionCycle | null, initialBulkOpen = false) {
   const granted = useSelector((state: RootState) => state.auth.permissions);
   const [loadOffering, detailState] = useLazyGetAdmissionOfferingQuery();
   const [createOffering, createState] = useCreateAdmissionOfferingMutation();
@@ -42,7 +42,7 @@ export function useAdmissionOfferingActions(cycle: AdmissionCycle | null) {
   const [dialogMode, setDialogMode] = useState<OfferingDialogMode | null>(null);
   const [selected, setSelected] = useState<AdmissionOffering | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(initialBulkOpen);
   const [pendingAction, setPendingAction] = useState<PendingOfferingAction>(null);
 
   const openDetailed = async (mode: 'view' | 'edit' | 'clone', row: AdmissionOfferingListItem) => {

@@ -2,8 +2,8 @@
 
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Box, Alert, Button } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
-import { Box, Alert, Stack, Button } from '@mui/material';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
@@ -13,6 +13,7 @@ import { AdmissionOfferingDialog } from './admission-offering-dialog';
 import { AdmissionOfferingFilters } from './admission-offering-filters';
 import { useAdmissionOfferingsScreen } from './use-admission-offerings-screen';
 import { BulkAdmissionOfferingDialog } from './bulk-admission-offering-dialog';
+import { AdmissionOfferingMoreFilters } from './admission-offering-more-filters';
 import { AdmissionOfferingActionImpact } from './admission-offering-action-impact';
 import { AdmissionOfferingDetailsDrawer } from './admission-offering-details-drawer';
 
@@ -49,36 +50,24 @@ export default function AdmissionOfferingsScreen() {
           { name: 'Admission Offering' },
         ]}
         slotProps={{
-          action: {
-            width: { xs: 1, sm: 'auto' },
-            '& > .MuiStack-root': { width: 1 },
-            '& .MuiButton-root': { flex: { xs: 1, sm: '0 0 auto' } },
-          },
-          heading: { whiteSpace: 'nowrap', overflowWrap: 'normal' },
+          action: { alignSelf: 'flex-end' },
+          heading: {},
           moreLink: {},
           breadcrumbs: {},
         }}
-        sx={{
-          '& > .MuiStack-root': {
-            flexDirection: { xs: 'column', sm: 'row' },
-            alignItems: { xs: 'stretch', sm: 'flex-start' },
-            gap: { xs: 1, sm: 2 },
-          },
-        }}
         action={
-          <Stack direction="row" spacing={1}>
-            {screen.permissions.bulkCreate && (
-              <Button
-                variant="contained"
-                size="small"
-                startIcon={<Iconify icon={GlobalIcons.addIcon} />}
-                disabled={!screen.cycle}
-                onClick={screen.openBulk}
-              >
-                Add offering
-              </Button>
-            )}
-          </Stack>
+          screen.permissions.bulkCreate ? (
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Iconify icon={GlobalIcons.addIcon} />}
+              sx={{ minWidth: 140 }}
+              disabled={!screen.cycle}
+              onClick={screen.openBulk}
+            >
+              Add Offering
+            </Button>
+          ) : null
         }
       />
 
@@ -94,10 +83,17 @@ export default function AdmissionOfferingsScreen() {
         <AdmissionQueryError onRetry={() => screen.offeringsQuery.refetch()} />
       )}
       <AdmissionOfferingFilters
-        cycles={screen.cycles}
         cycle={screen.cycle}
         values={screen.filters}
         onChange={screen.update}
+        filterAction={
+          <AdmissionOfferingMoreFilters
+            cycles={screen.cycles}
+            cycle={screen.cycle}
+            values={screen.filters}
+            onChange={screen.update}
+          />
+        }
       />
       <Box
         sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
@@ -164,7 +160,12 @@ export default function AdmissionOfferingsScreen() {
         />
       )}
       {screen.cycle && screen.bulkOpen && (
-        <BulkAdmissionOfferingDialog open cycle={screen.cycle} onClose={screen.closeBulk} />
+        <BulkAdmissionOfferingDialog
+          open
+          cycle={screen.cycle}
+          initialIntakeSetupId={screen.initialIntakeSetupId}
+          onClose={screen.closeBulk}
+        />
       )}
       <AdmissionOfferingDetailsDrawer
         open={screen.detailsOpen}

@@ -1,653 +1,137 @@
-import type { Dayjs } from 'dayjs';
-import type { LabelColor } from 'src/components/label';
+'use client';
+
+import type { RootState } from 'src/redux/store';
 
 import dayjs from 'dayjs';
-import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { alpha, useTheme } from '@mui/material/styles';
-import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { PickersDay, DatePicker, DateCalendar } from '@mui/x-date-pickers';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useGetAttendanceSummaryQuery } from 'src/redux/student/attendance-management/api';
+import { Box, Stack, Paper, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
-  AttendanceStatusType,
-  AttendanceStatusOptions,
-  AttendanceStatusTypeColors,
-} from 'src/enums/attendance-type';
-import {
-  Box,
-  Grid,
-  Card,
-  Stack,
-  Divider,
-  CardHeader,
-  Typography,
-  CircularProgress,
-} from '@mui/material';
-
-import { AttendanceChart, YearlyAttendance } from './attendanceChart';
+  attendanceError,
+  attendanceStatus,
+  attendancePercentage,
+} from 'src/redux/student/attendance-management/types';
 
 import type { StudentTabsComponentType } from '.';
 
-type DotProps = { sx?: React.CSSProperties; color?: string; children?: React.ReactNode };
-
-export const Dot: React.FC<DotProps> = ({
-  sx = {},
+export const Dot = ({
+  children,
   color = 'primary.main',
-  children = null,
-  ...props
+}: {
+  children?: React.ReactNode;
+  color?: string;
 }) => (
-  <Box display="flex" alignItems="center" sx={{ ...sx }} {...props}>
-    <Box
-      component="span"
-      bgcolor={color}
-      sx={{
-        width: 8,
-        height: 8,
-        borderRadius: '50%',
-        mr: 1,
-      }}
-    />
-    <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 500 }}>
-      {children}
-    </Typography>
-  </Box>
+  <Stack direction="row" spacing={1}>
+    <Box sx={{ width: 8, height: 8, borderRadius: '50%', bgcolor: color, alignSelf: 'center' }} />
+    <Typography variant="body2">{children}</Typography>
+  </Stack>
 );
-
-const Attendance = (props: StudentTabsComponentType) => {
-  // State to track active view mode (monthly or yearly)
-  const [activeButton, setActiveButton] = useState<'monthly' | 'yearly'>('monthly');
-
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
-
-  // Get theme object for styling
-  const theme = useTheme();
-
+export default function Attendance({ student }: StudentTabsComponentType) {
+  const year = useSelector((state: RootState) => state.globalState.currentYear);
+  const router = useRouter();
+  const params = useSearchParams();
+  const pathname = usePathname();
+  const month = params.get('attendanceMonth') || dayjs().format('YYYY-MM');
+  const setMonth = (value: string) => {
+    const next = new URLSearchParams(params.toString());
+    next.set('attendanceMonth', value);
+    router.push(`${pathname}?${next.toString()}`);
+  };
+  const query = useGetAttendanceSummaryQuery(
+    {
+      studentId: student?.studentId ?? student?.id ?? '',
+      academicYearId: year?.id ?? '',
+      startDate: dayjs(`${month}-01`).startOf('month').format('YYYY-MM-DD'),
+      endDate: dayjs(`${month}-01`).endOf('month').format('YYYY-MM-DD'),
+    },
+    { skip: !(student?.studentId || student?.id) || !year?.id || !dayjs(`${month}-01`).isValid() }
+  );
+  const metrics = query.currentData;
+  const rows = (metrics?.daily ?? []).map((row) => ({
+    ...row,
+    statusLabel: attendanceStatus(row.status, row.expected),
+    detail:
+      row.exclusionReason ||
+      [row.late ? 'Late' : '', row.halfDay ? 'Half-day' : ''].filter(Boolean).join(', ') ||
+      '—',
+  }));
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 280px)' }}>
-      <Scrollbar sx={{ flexGrow: 1, height: '100%' }}>
-        <Grid container spacing={1}>
-          {/* Header Section */}
-          <Grid size={{ xs: 12 }}>
-            <Card
-              sx={{
-                p: 2,
-                boxShadow: (t) => `0 8px 24px -4px ${alpha(t.palette.primary.main, 0.08)}`,
-              }}
-            >
-              <Stack
-                direction={{ xs: 'column', sm: 'row' }}
-                alignItems="center"
-                justifyContent="space-between"
-                spacing={3}
-              >
-                {/* Left Side */}
-                <Box>
-                  <DatePicker
-                    format="MMM YYYY"
-                    views={['year', 'month']}
-                    value={date}
-                    onChange={(newValue) => setDate(newValue)}
-                    slotProps={{
-                      textField: {
-                        variant: 'standard',
-                        InputProps: {
-                          disableUnderline: true,
-                          sx: { typography: 'h4', fontWeight: 700, color: 'text.primary' },
-                        },
-                        sx: { width: 160 },
-                      },
-                    }}
-                  />
-                  <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-                    <Typography variant="body2" color="text.secondary" fontWeight={500}>
-                      No working day data
-                    </Typography>
-                    <Box
-                      sx={{ width: 4, height: 4, borderRadius: '50%', bgcolor: 'text.disabled' }}
-                    />
-                    <Typography variant="body2" color="error.main" fontWeight={600}>
-                      - Absent
-                    </Typography>
-                  </Stack>
-                </Box>
-
-                {/* Right Side */}
-                <Stack direction="row" alignItems="center" spacing={3}>
-                  <Box position="relative" display="inline-flex">
-                    <CircularProgress
-                      variant="determinate"
-                      value={100}
-                      size={64}
-                      thickness={3}
-                      sx={{ color: 'grey.200', position: 'absolute' }}
-                    />
-                    <CircularProgress
-                      variant="determinate"
-                      value={0}
-                      size={64}
-                      thickness={3}
-                      sx={{
-                        color: 'success.main',
-                        strokeLinecap: 'round',
-                        filter: (t) =>
-                          `drop-shadow(0 4px 8px ${alpha(t.palette.success.main, 0.24)})`,
-                      }}
-                    />
-                    <Box
-                      sx={{
-                        top: 0,
-                        left: 0,
-                        bottom: 0,
-                        right: 0,
-                        position: 'absolute',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Typography variant="h6" fontWeight={800} color="success.dark">
-                        -
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box>
-                    <Typography variant="subtitle1" fontWeight={700}>
-                      No Attendance Summary
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Stack>
-            </Card>
-          </Grid>
-
-          {/* Charts & Calendar */}
-          <Grid size={{ xs: 12, md: 6 }}>
-            {activeButton === 'monthly' ? (
-              // @ts-ignore
-              <AttendanceChart
-                title={
-                  <Stack
-                    sx={{ ml: -1, mt: -1 }}
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    width="100%"
-                  >
-                    <Typography variant="h6">Attendance Progress</Typography>
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      sx={{ bgcolor: 'background.neutral', p: 0.5, borderRadius: 1.5 }}
-                    >
-                      {['Monthly', 'Yearly'].map((view) => (
-                        <Box
-                          key={view}
-                          onClick={() =>
-                            setActiveButton(view.toLowerCase() as 'monthly' | 'yearly')
-                          }
-                          sx={{
-                            px: 2,
-                            py: 0.5,
-                            borderRadius: 1,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            ...(activeButton === view.toLowerCase()
-                              ? {
-                                  bgcolor: 'background.paper',
-                                  boxShadow: (t) =>
-                                    t.palette.mode === 'light'
-                                      ? `0 2px 4px ${alpha(t.palette.grey[500], 0.16)}`
-                                      : `0 2px 4px ${alpha(t.palette.common.black, 0.4)}`,
-                                  color: 'text.primary',
-                                  fontWeight: 600,
-                                }
-                              : {
-                                  color: 'text.secondary',
-                                  '&:hover': { color: 'text.primary' },
-                                }),
-                          }}
-                        >
-                          <Typography variant="subtitle2">{view}</Typography>
-                        </Box>
-                      ))}
-                    </Stack>
-                  </Stack>
-                }
-                chart={{
-                  colors: [
-                    theme.palette.primary.main,
-                    theme.palette.error.main,
-                    theme.palette.warning.main,
-                  ],
-                  series: [
-                    { label: 'Present', value: 0 },
-                    { label: 'Absent', value: 0 },
-                    { label: 'Holiday', value: 0 },
-                  ],
-                }}
-                sx={{ height: '100%' }}
-              />
-            ) : (
-              <YearlyAttendance
-                title={
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    width="100%"
-                  >
-                    <Typography variant="h6">Attendance Progress</Typography>
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      sx={{ bgcolor: 'background.neutral', p: 0.5, borderRadius: 1.5 }}
-                    >
-                      {['Monthly', 'Yearly'].map((view) => (
-                        <Box
-                          key={view}
-                          onClick={() =>
-                            setActiveButton(view.toLowerCase() as 'monthly' | 'yearly')
-                          }
-                          sx={{
-                            px: 2,
-                            py: 0.5,
-                            borderRadius: 1,
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            ...(activeButton === view.toLowerCase()
-                              ? {
-                                  bgcolor: 'background.paper',
-                                  boxShadow: (t) =>
-                                    t.palette.mode === 'light'
-                                      ? `0 2px 4px ${alpha(t.palette.grey[500], 0.16)}`
-                                      : `0 2px 4px ${alpha(t.palette.common.black, 0.4)}`,
-                                  color: 'text.primary',
-                                  fontWeight: 600,
-                                }
-                              : {
-                                  color: 'text.secondary',
-                                  '&:hover': { color: 'text.primary' },
-                                }),
-                          }}
-                        >
-                          <Typography variant="subtitle2">{view}</Typography>
-                        </Box>
-                      ))}
-                    </Stack>
-                  </Stack>
-                }
-                chart={{
-                  colors: [theme.palette.primary.main, theme.palette.error.main],
-                  categories: [
-                    'Jan',
-                    'Feb',
-                    'Mar',
-                    'Apr',
-                    'May',
-                    'Jun',
-                    'Jul',
-                    'Aug',
-                    'Sep',
-                    'Oct',
-                    'Nov',
-                    'Dec',
-                  ],
-                  series: [
-                    { name: 'Present', data: [] },
-                    { name: 'Absent', data: [] },
-                  ],
-                }}
-                sx={{ height: '100%' }}
-              />
-            )}
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Card
-              sx={{
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-              }}
-            >
-              <CardHeader
-                title={
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, ml: -1, mt: -1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                      Attendance Calendar
-                    </Typography>
-                  </Box>
-                }
-                sx={{ pb: 1.5 }}
-              />
-              <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', px: 2 }}>
-                <DateCalendar
-                  value={date}
-                  disableFuture
-                  showDaysOutsideCurrentMonth
-                  sx={{
-                    width: '100%',
-                    maxHeight: '100%',
-                    '& .MuiPickersCalendarHeader-root': { display: 'none' },
-                    '& .MuiDayCalendar-header': {
-                      justifyContent: 'space-around',
-                      pb: 1,
-                      '& .MuiDayCalendar-weekDayLabel': {
-                        fontWeight: 700,
-                        fontSize: '0.75rem',
-                        color: 'text.secondary',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.5px',
-                      },
-                    },
-                    '& .MuiDayCalendar-weekContainer': {
-                      justifyContent: 'space-around',
-                      mt: 0.75,
-                    },
-                  }}
-                  slots={{
-                    day: (prop: any) => {
-                      const { day } = prop;
-                      const absent = false;
-                      const isSunday = day.day() === 0;
-                      const isHalfDay = false;
-                      const isHoliday = false;
-                      const isLate = false;
-                      const isPresent = false;
-
-                      const disabled = isSunday || isHoliday || prop.disabled;
-                      let backgroundColor = '';
-                      let textColor = 'text.primary';
-                      let tooltipContent: React.ReactNode = '';
-
-                      if (absent) {
-                        backgroundColor = 'error.lighter';
-                        textColor = 'error.main';
-                        tooltipContent = (
-                          <Box sx={{ p: 0.5 }}>
-                            <Stack
-                              direction="row"
-                              spacing={0.5}
-                              alignItems="center"
-                              sx={{ mb: 0.5 }}
-                            >
-                              <Iconify
-                                icon="solar:close-circle-bold"
-                                sx={{ width: 14, color: 'error.light' }}
-                              />
-                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                                Absent
-                              </Typography>
-                            </Stack>
-                            <Typography variant="caption" sx={{ fontSize: '0.7rem', opacity: 0.9 }}>
-                              No attendance reason available
-                            </Typography>
-                          </Box>
-                        );
-                      } else if (isHalfDay) {
-                        tooltipContent = (
-                          <Box sx={{ p: 0.5 }}>
-                            <Stack direction="row" spacing={0.5} alignItems="center">
-                              <Iconify
-                                icon="solar:clock-circle-bold"
-                                sx={{ width: 14, color: 'warning.light' }}
-                              />
-                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                                Half Day
-                              </Typography>
-                            </Stack>
-                          </Box>
-                        );
-                      } else if (isHoliday) {
-                        backgroundColor = 'background.neutral';
-                        textColor = 'text.disabled';
-                        tooltipContent = (
-                          <Box sx={{ p: 0.5 }}>
-                            <Stack direction="row" spacing={0.5} alignItems="center">
-                              <Iconify
-                                icon="solar:calendar-mark-bold"
-                                sx={{ width: 14, color: 'warning.light' }}
-                              />
-                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                                Public Holiday
-                              </Typography>
-                            </Stack>
-                          </Box>
-                        );
-                      } else if (isLate) {
-                        backgroundColor = 'warning.lighter';
-                        textColor = 'warning.dark';
-                        tooltipContent = (
-                          <Box sx={{ p: 0.5 }}>
-                            <Stack
-                              direction="row"
-                              spacing={0.5}
-                              alignItems="center"
-                              sx={{ mb: 0.5 }}
-                            >
-                              <Iconify
-                                icon="solar:clock-circle-bold"
-                                sx={{ width: 14, color: 'warning.light' }}
-                              />
-                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                                Late Arrival
-                              </Typography>
-                            </Stack>
-                            <Typography variant="caption" sx={{ fontSize: '0.7rem', opacity: 0.9 }}>
-                              No late arrival detail available
-                            </Typography>
-                          </Box>
-                        );
-                      } else if (isPresent) {
-                        tooltipContent = (
-                          <Box sx={{ p: 0.5 }}>
-                            <Stack direction="row" spacing={0.5} alignItems="center">
-                              <Iconify
-                                icon="solar:check-circle-bold"
-                                sx={{ width: 14, color: 'success.light' }}
-                              />
-                              <Typography variant="caption" sx={{ fontWeight: 700 }}>
-                                Present
-                              </Typography>
-                            </Stack>
-                          </Box>
-                        );
-                      }
-
-                      return (
-                        <CustomTooltip title={tooltipContent} arrow placement="top">
-                          <Box sx={{ position: 'relative' }}>
-                            <PickersDay
-                              {...prop}
-                              day={day}
-                              sx={{
-                                position: 'relative',
-                                fontSize: '0.875rem',
-                                fontWeight: disabled ? 400 : 600,
-                                bgcolor: backgroundColor || 'transparent',
-                                borderRadius: 1.5,
-                                color: textColor,
-                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxShadow: 'none',
-                                '&:hover': {
-                                  bgcolor: backgroundColor || 'action.hover',
-                                  transform: 'translateY(-2px)',
-                                  boxShadow: (t) => `0 4px 8px ${alpha(t.palette.grey[500], 0.16)}`,
-                                },
-                                '&.Mui-selected': {
-                                  bgcolor: 'primary.main',
-                                  color: 'primary.contrastText',
-                                  fontWeight: 700,
-                                  boxShadow: (t) =>
-                                    `0 0 0 2px ${alpha(t.palette.primary.main, 0.24)}`,
-                                  '&:hover': {
-                                    bgcolor: 'primary.dark',
-                                  },
-                                },
-                                ...(isHalfDay
-                                  ? {
-                                      background: (t) =>
-                                        `linear-gradient(135deg, ${t.palette.warning.lighter} 50%, ${alpha(t.palette.warning.lighter, 0.3)} 50%)`,
-                                      color: 'warning.dark',
-                                      fontWeight: 600,
-                                    }
-                                  : {}),
-                              }}
-                              disabled={disabled}
-                            />
-                            {isPresent && (
-                              <Box
-                                sx={{
-                                  position: 'absolute',
-                                  bottom: 2,
-                                  right: 2,
-                                  width: 6,
-                                  height: 6,
-                                  borderRadius: '50%',
-                                  bgcolor: 'success.main',
-                                  boxShadow: (t) => `0 0 0 2px ${t.palette.background.paper}`,
-                                  animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-                                  '@keyframes pulse': {
-                                    '0%, 100%': {
-                                      opacity: 1,
-                                    },
-                                    '50%': {
-                                      opacity: 0.5,
-                                    },
-                                  },
-                                }}
-                              />
-                            )}
-                          </Box>
-                        </CustomTooltip>
-                      );
-                    },
-                  }}
-                />
-              </Box>
-
-              <Divider sx={{ borderStyle: 'dashed', mx: 0.5 }} />
-
-              <Box
-                sx={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  gap: 3,
-                  p: 3,
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box
-                    sx={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: '50%',
-                      bgcolor: 'success.main',
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.2px' }}
-                  >
-                    Present
-                  </Typography>
-                </Box>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box
-                    sx={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: '50%',
-                      bgcolor: 'warning.main',
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.2px' }}
-                  >
-                    Holiday
-                  </Typography>
-                </Box>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box
-                    sx={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: '50%',
-                      bgcolor: 'error.main',
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.2px' }}
-                  >
-                    Absent
-                  </Typography>
-                </Box>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Box
-                    sx={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: '50%',
-                      bgcolor: 'info.main',
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: 600, fontSize: '0.8125rem', letterSpacing: '0.2px' }}
-                  >
-                    Half-Day
-                  </Typography>
-                </Box>
-              </Box>
-            </Card>
-          </Grid>
-
-          <Grid size={{ xs: 12 }}>
-            <CustomizableTable
-              tableId="student-attendance-table"
-              data={[]}
-              noDataText="No attendance history found."
-              columns={[
-                { id: 'date', label: 'Date', minWidth: '10%', filterType: 'date' },
-                {
-                  id: 'status',
-                  label: 'Status',
-                  minWidth: '10%',
-                  filterType: 'enum',
-                  enumOptions: AttendanceStatusOptions,
-                  render(value, row) {
-                    const color = AttendanceStatusTypeColors[
-                      value as AttendanceStatusType
-                    ] as LabelColor;
-                    return (
-                      <Label variant="soft" color={color}>
-                        {AttendanceStatusType[value as AttendanceStatusType]}
-                      </Label>
-                    );
-                  },
-                },
-                { id: 'reason', label: 'Reason', minWidth: '10%' },
-                { id: 'remarks', label: 'Remarks', minWidth: '20%' },
-              ]}
-              isPagination={false}
-              isShowedDense={false}
-              isFilter={false}
-            />
-          </Grid>
-        </Grid>
-      </Scrollbar>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, gap: 1 }}>
+      <Paper variant="outlined" sx={{ p: 1 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
+          <TextField
+            size="small"
+            type="month"
+            label="Attendance month"
+            slotProps={{ inputLabel: { shrink: true } }}
+            value={month}
+            onChange={(event) => setMonth(event.target.value)}
+          />
+          {query.isLoading ? (
+            <Skeleton width={240} />
+          ) : (
+            metrics && (
+              <Typography variant="body2">
+                Attendance {attendancePercentage(metrics.percentage)} · Recorded{' '}
+                {metrics.recordedDays}/{metrics.expectedDays} · Unmarked {metrics.missingDays}{' '}
+                <Label color={metrics.isProvisional ? 'warning' : 'default'}>
+                  {metrics.expectedDays === 0
+                    ? 'Not expected'
+                    : metrics.isProvisional
+                      ? 'Provisional'
+                      : 'Complete'}
+                </Label>
+              </Typography>
+            )
+          )}
+        </Stack>
+      </Paper>
+      {!year?.id && (
+        <Alert severity="info">Select an academic year to view this student’s attendance.</Alert>
+      )}
+      {query.isError && (
+        <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
+          {attendanceError(query.error, 'Attendance summary could not be loaded.')}
+        </Alert>
+      )}
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <CustomizableTable
+          tableId="student-canonical-attendance"
+          tableTitle="Daily attendance history"
+          wrapperProps={{ sx: { height: 1 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
+          isLoading={query.isLoading}
+          data={rows}
+          noDataText="No eligible attendance days in this month."
+          columns={[
+            { id: 'date', label: 'Date', filterType: 'date' },
+            {
+              id: 'statusLabel',
+              label: 'Attendance',
+              render: (value) => (
+                <Label
+                  color={
+                    value === 'Present'
+                      ? 'success'
+                      : value === 'Absent'
+                        ? 'error'
+                        : value === 'Unmarked'
+                          ? 'warning'
+                          : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              ),
+            },
+            { id: 'detail', label: 'Details', minWidth: 180 },
+            { id: 'remarks', label: 'Remarks', minWidth: 200 },
+          ]}
+        />
+      </Box>
     </Box>
   );
-};
-export default Attendance;
+}

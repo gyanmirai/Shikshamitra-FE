@@ -18,14 +18,25 @@ type Props = {
   systemFields: AdmissionFormSystemFieldMetadata[];
   usedBindings?: readonly string[];
   targetLabel?: string;
+  loading?: boolean;
+  error?: boolean;
   onAddField: (
     fieldType: AdmissionFormFieldType,
     systemBinding?: string,
     preset?: AdmissionFieldPreset
   ) => void;
+  onAddGroupSection?: (name: string, fields: AdmissionFormSystemFieldMetadata[]) => void;
 };
 
-export function FormBuilderPalette({ systemFields, usedBindings, targetLabel, onAddField }: Props) {
+export function FormBuilderPalette({
+  systemFields,
+  usedBindings,
+  targetLabel,
+  loading,
+  error,
+  onAddField,
+  onAddGroupSection,
+}: Props) {
   const tabId = useId();
   const [activeTab, setActiveTab] = useState<'system' | 'custom'>('system');
   return (
@@ -70,7 +81,10 @@ export function FormBuilderPalette({ systemFields, usedBindings, targetLabel, on
             <StudentFieldPalette
               fields={systemFields}
               usedBindings={usedBindings}
+              loading={loading}
+              error={error}
               onAdd={(field) => onAddField(field.fieldType, field.key)}
+              onAddSection={onAddGroupSection}
             />
           ) : (
             <CustomFieldPalette onAddField={onAddField} />

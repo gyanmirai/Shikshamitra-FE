@@ -1,16 +1,19 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { AdmissionWorkflow, AdmissionWorkflowNotification } from 'src/redux/student/admissions/admission-workflows-api';
+import type {
+  AdmissionWorkflow,
+  AdmissionWorkflowNotification,
+} from 'src/redux/student/admissions/admission-workflows-api';
 
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Stack, Button } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
-import { Box, Badge, Paper, Stack, Button } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -82,44 +85,14 @@ export default function AdmissionWorkflowsScreen() {
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Stage' },
         ]}
-      />
-      <Paper variant="outlined" sx={{ p: 1, borderRadius: 2 }}>
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={1}
-          alignItems={{ xs: 'stretch', sm: 'center' }}
-          justifyContent="space-between"
-        >
-          <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={
-                <Badge
-                  color="error"
-                  badgeContent={notificationsQuery.data?.filter((item) => !item.isRead).length ?? 0}
-                >
-                  <Iconify icon="mdi:bell-outline" />
-                </Badge>
-              }
-              onClick={notificationsDialog.onTrue}
-              sx={{ minHeight: { xs: 44, sm: 36 }, px: 1.25 }}
-            >
-              Notifications
-            </Button>
-            {canManageGovernance && (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:shield-check-outline" />}
-                onClick={governanceDialog.onTrue}
-                sx={{ minHeight: { xs: 44, sm: 36 }, px: 1.25 }}
-              >
-                Governance
-              </Button>
-            )}
-          </Stack>
-          <Stack direction="row" spacing={1} useFlexGap sx={{ alignSelf: { sm: 'center' } }}>
+        slotProps={{
+          action: { alignSelf: 'flex-end' },
+          heading: {},
+          moreLink: {},
+          breadcrumbs: {},
+        }}
+        action={
+          <Stack direction="row" spacing={1} alignItems="center">
             <WorkflowListFilters filters={filters} onUpdate={filterState.update} />
             <Button
               size="small"
@@ -127,19 +100,13 @@ export default function AdmissionWorkflowsScreen() {
               disabled={!actions.allowed.canCreate}
               startIcon={<Iconify icon="mdi:plus" />}
               onClick={actions.createDialog.onTrue}
-              sx={{
-                minHeight: { xs: 44, sm: 36 },
-                px: 1.25,
-                bgcolor: 'text.primary',
-                color: 'background.paper',
-                '&:hover': { bgcolor: 'text.secondary' },
-              }}
+              sx={{ minWidth: 140 }}
             >
-              Create workflow
+              Add Workflow
             </Button>
           </Stack>
-        </Stack>
-      </Paper>
+        }
+      />
       {query.isError && <AdmissionQueryError onRetry={() => query.refetch()} />}
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomizableTable
@@ -154,7 +121,10 @@ export default function AdmissionWorkflowsScreen() {
             tabIndex: 0,
             sx: { cursor: 'pointer' },
             onKeyDown: (event) => {
-              if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+              if (
+                event.target === event.currentTarget &&
+                (event.key === 'Enter' || event.key === ' ')
+              ) {
                 event.preventDefault();
                 actions.navigate(row as AdmissionWorkflow, 'preview');
               }

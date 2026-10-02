@@ -8,14 +8,9 @@ type Props = {
   canManage: boolean;
   canPublish: boolean;
   canDelete: boolean;
-  canOverrideMakerChecker: boolean;
-  currentUserId?: string | null;
   onEdit: () => void;
   onClone: () => void;
   onValidate: () => void;
-  onRequestApproval: () => void;
-  onApprove: () => void;
-  onReject: () => void;
   onPublish: () => void;
   onHistory: () => void;
   onCreateVersion: () => void;
@@ -27,32 +22,17 @@ export function getFormRowActionVisibility(
   status: AdmissionForm['status'],
   canManage: boolean,
   canPublish: boolean,
-  canDelete: boolean,
-  approvalStatus: AdmissionForm['approvalStatus'] = 0,
-  isApprovalRequester = false,
-  canOverrideMakerChecker = false
+  canDelete: boolean
 ) {
   const isDraft = status === 0;
   const isPublished = status === 1;
-  const canEditDraft = isDraft && (approvalStatus === 0 || approvalStatus === 3);
 
   return {
-    edit: canManage && canEditDraft,
+    edit: canManage && isDraft,
     clone: canManage,
-    validate: canManage && canEditDraft,
-    requestApproval: canManage && canEditDraft,
-    approve:
-      canPublish &&
-      isDraft &&
-      approvalStatus === 1 &&
-      (!isApprovalRequester || canOverrideMakerChecker),
-    reject:
-      canPublish &&
-      isDraft &&
-      approvalStatus === 1 &&
-      (!isApprovalRequester || canOverrideMakerChecker),
-    publish: canPublish && isDraft && approvalStatus === 2,
-    delete: canDelete && canEditDraft,
+    validate: canManage && isDraft,
+    publish: canPublish && isDraft,
+    delete: canDelete && isDraft,
     history: true,
     createVersion: canPublish && isPublished,
     archive: canDelete && isPublished,
@@ -64,56 +44,43 @@ export function FormRowActions({
   canManage,
   canPublish,
   canDelete,
-  canOverrideMakerChecker,
-  currentUserId,
   onEdit,
   onClone,
   onValidate,
-  onRequestApproval,
-  onApprove,
-  onReject,
   onPublish,
   onHistory,
   onCreateVersion,
   onArchive,
   onDelete,
 }: Props) {
-  const isApprovalRequester = Boolean(
-    currentUserId &&
-    form.approvalRequestedBy &&
-    currentUserId.toLowerCase() === form.approvalRequestedBy.toLowerCase()
-  );
-  const visible = getFormRowActionVisibility(
-    form.status,
-    canManage,
-    canPublish,
-    canDelete,
-    form.approvalStatus,
-    isApprovalRequester,
-    canOverrideMakerChecker
-  );
+  const visible = getFormRowActionVisibility(form.status, canManage, canPublish, canDelete);
   const actions: AdaptiveThreeDotsAction[] = [];
-  if (canManage)
+  if (visible.edit)
     actions.push({
       id: 'edit',
-      label: `Edit `,
+      label: `Edit`,
       icon: 'solar:pen-bold',
-      disabled: !visible.edit,
       onClick: onEdit,
     });
-  if (canDelete)
+  if (visible.publish)
+    actions.push({
+      id: 'publish',
+      label: `Publish`,
+      icon: 'mdi:publish',
+      onClick: onPublish,
+    });
+  if (visible.delete)
     actions.push({
       id: 'delete',
       label: `Delete `,
       icon: 'solar:trash-bin-trash-bold',
-      color: visible.delete ? 'error.main' : 'text.disabled',
-      disabled: !visible.delete,
+      color: 'error.main',
       onClick: onDelete,
     });
   if (visible.clone)
     actions.push({
       id: 'clone',
-      label: `Clone  as draft`,
+      label: `Clone as draft`,
       icon: 'mdi:content-copy',
       onClick: onClone,
     });
@@ -124,44 +91,6 @@ export function FormRowActions({
       icon: 'mdi:check-decagram-outline',
       onClick: onValidate,
     });
-  if (visible.requestApproval)
-    actions.push({
-      id: 'request-approval',
-      label: `Request approval  `,
-      icon: 'mdi:account-arrow-right-outline',
-      onClick: onRequestApproval,
-    });
-  if (visible.approve)
-    actions.push({
-      id: 'approve',
-      label: `${isApprovalRequester ? 'Approve with admin override' : 'Approve'} `,
-      icon: 'mdi:check-circle-outline',
-      onClick: onApprove,
-    });
-  if (visible.reject)
-    actions.push({
-      id: 'reject',
-      label: `${isApprovalRequester ? 'Request changes with admin override ' : 'Request changes '} `,
-      icon: 'mdi:close-circle-outline',
-      onClick: onReject,
-    });
-  if (
-    canPublish &&
-    form.status === 0 &&
-    form.approvalStatus === 1 &&
-    isApprovalRequester &&
-    !canOverrideMakerChecker
-  ) {
-    actions.push({
-      id: 'awaiting-reviewer',
-      label: 'Awaiting another authorized reviewer',
-      icon: 'mdi:account-clock-outline',
-      disabled: true,
-      onClick: () => {},
-    });
-  }
-  if (visible.publish)
-    actions.push({ id: 'publish', label: `Publish `, icon: 'mdi:publish', onClick: onPublish });
   if (visible.createVersion)
     actions.push({
       id: 'new-version',

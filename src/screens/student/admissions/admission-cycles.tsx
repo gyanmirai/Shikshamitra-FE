@@ -53,8 +53,6 @@ import { AdmissionQueryError } from './admission-query-error';
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
 import { useAdmissionCycleFilters } from './use-admission-cycle-filters';
 import { AdmissionCycleActionDialog } from './admission-cycle-action-dialog';
-import { AdmissionCycleDetailsDialog } from './admission-cycle-details-dialog';
-import { AdmissionCycleCapacityDialog } from './admission-cycle-capacity-dialog';
 import { AdmissionCycleConfigurationDialog } from './admission-cycle-configuration-dialog';
 import {
   canEditCycle,
@@ -88,8 +86,6 @@ const getErrorMessage = (error: unknown): string =>
 export default function AdmissionCyclesScreen() {
   const editDialog = useBoolean();
   const [editingCycle, setEditingCycle] = useState<AdmissionCycle | null>(null);
-  const [detailsCycle, setDetailsCycle] = useState<AdmissionCycle | null>(null);
-  const [capacityCycle, setCapacityCycle] = useState<AdmissionCycle | null>(null);
   const [actionCycle, setActionCycle] = useState<AdmissionCycle | null>(null);
   const [guardedAction, setGuardedAction] = useState<CycleGuardedAction | null>(null);
   const [configurationMode, setConfigurationMode] = useState<CycleConfigurationMode | null>(null);
@@ -98,7 +94,6 @@ export default function AdmissionCyclesScreen() {
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canView = hasGrantedPermission(permissions, 'Students.Admissions.View');
   const canAdd = hasGrantedPermission(permissions, 'Students.Admissions.Add');
   const canDelete = hasGrantedPermission(permissions, 'Students.Admissions.Delete');
 
@@ -259,7 +254,7 @@ export default function AdmissionCyclesScreen() {
         return (
           <AdmissionTableText
             text={cycle.name}
-            secondary={`${cycle.code} · ${cycle.academicYearName || 'Academic year'}`}
+
             strong
           />
         );
@@ -292,21 +287,7 @@ export default function AdmissionCyclesScreen() {
         );
       },
     },
-    {
-      id: 'status',
-      label: 'Lifecycle',
-      minWidth: 110,
-      sticky: true,
-      stickyPosition: 'right',
-      stickyOnMobile: false,
-      headerSx: { display: { xs: 'none', sm: 'table-cell' } },
-      cellSx: { display: { xs: 'none', sm: 'table-cell' } },
-      render: (value) => (
-        <Label color={lifecycleColors[Number(value) as AdmissionCycleStatus]}>
-          {lifecycleLabels[Number(value) as AdmissionCycleStatus]}
-        </Label>
-      ),
-    },
+
     {
       id: 'windowStatus',
       label: (
@@ -350,6 +331,21 @@ export default function AdmissionCyclesScreen() {
           </>
         );
       },
+    },
+    {
+      id: 'status',
+      label: 'Status',
+      minWidth: 110,
+      sticky: true,
+      stickyPosition: 'right',
+      stickyOnMobile: false,
+      headerSx: { display: { xs: 'none', sm: 'table-cell' } },
+      cellSx: { display: { xs: 'none', sm: 'table-cell' } },
+      render: (value) => (
+        <Label color={lifecycleColors[Number(value) as AdmissionCycleStatus]}>
+          {lifecycleLabels[Number(value) as AdmissionCycleStatus]}
+        </Label>
+      ),
     },
     {
       id: 'actions',
@@ -396,16 +392,7 @@ export default function AdmissionCyclesScreen() {
                 },
               ]
             : []),
-          ...(canView
-            ? [
-                {
-                  id: 'capacity',
-                  label: `Capacity & reservations `,
-                  icon: 'mdi:seat-outline',
-                  onClick: () => setCapacityCycle(cycle),
-                },
-              ]
-            : []),
+          // Capacity & reservations is temporarily hidden from Admission Periods.
           ...(canAdd && canPublishCycle(cycle)
             ? [
                 {
@@ -504,17 +491,8 @@ export default function AdmissionCyclesScreen() {
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Periods' },
         ]}
-        sx={{
-          flexWrap: { xs: 'wrap', md: 'nowrap' },
-          rowGap: { xs: 0.5, md: 0 },
-          '& > :first-of-type': { flexGrow: { xs: 1, md: 0 } },
-          '& > :nth-of-type(2)': {
-            order: { xs: 3, md: 0 },
-            flexBasis: { xs: '100%', md: 'auto' },
-          },
-        }}
         slotProps={{
-          action: { order: { xs: 2, md: 0 } },
+          action: { alignSelf: 'flex-end' },
           heading: {},
           moreLink: {},
           breadcrumbs: {},
@@ -525,13 +503,13 @@ export default function AdmissionCyclesScreen() {
             variant="contained"
             disabled={!canAdd}
             startIcon={<Iconify icon="mdi:plus" />}
-            sx={{ minHeight: { xs: 44, sm: 32 } }}
+            sx={{ minWidth: 140 }}
             onClick={() => {
               setEditingCycle(null);
               editDialog.onTrue();
             }}
           >
-            Create cycle
+            Add Cycle
           </Button>
         }
       />
@@ -638,21 +616,6 @@ export default function AdmissionCyclesScreen() {
           onServerSearch={(term) => updateFilters({ search: term.trim() })}
           columns={columns}
           data={data?.items ?? []}
-          handleRowClick={(row) => canView && setDetailsCycle(row as unknown as AdmissionCycle)}
-          rowProps={(row) => ({
-            tabIndex: canView ? 0 : -1,
-            sx: { cursor: canView ? 'pointer' : 'default' },
-            onKeyDown: (event) => {
-              if (
-                canView &&
-                event.target === event.currentTarget &&
-                (event.key === 'Enter' || event.key === ' ')
-              ) {
-                event.preventDefault();
-                setDetailsCycle(row as unknown as AdmissionCycle);
-              }
-            },
-          })}
           noDataText={
             <Stack spacing={1} alignItems="center">
               <Typography color="text.secondary">
@@ -680,12 +643,6 @@ export default function AdmissionCyclesScreen() {
         editingCycle={editingCycle}
         saving={creating || updating}
         onSave={saveCycle}
-      />
-      <AdmissionCycleDetailsDialog cycle={detailsCycle} onClose={() => setDetailsCycle(null)} />
-      <AdmissionCycleCapacityDialog
-        cycle={capacityCycle}
-        canManage={canAdd}
-        onClose={() => setCapacityCycle(null)}
       />
       <AdmissionCycleActionDialog
         action={guardedAction}

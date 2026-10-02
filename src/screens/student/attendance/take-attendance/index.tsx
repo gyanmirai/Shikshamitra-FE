@@ -2,30 +2,43 @@
 
 import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
+import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { Division, Standards, Organization } from 'src/types/school';
+import type {
+  AttendanceDay,
+  AttendanceMark,
+  AttendanceStudent,
+} from 'src/redux/student/take-attendance/attendance-types';
 
 import dayjs from 'dayjs';
 import { useSelector } from 'react-redux';
-import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
-import { RestartAlt } from '@mui/icons-material';
-import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
-import sortQueryString from 'src/utils/sort-query-string';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { toDateOnly, formatDateOnly } from 'src/utils/date-only';
+import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { AttendanceStatus } from 'src/enums/student-attendace-status';
-import { Box, Card, Stack, Button, TextField, Typography } from '@mui/material';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRef, useMemo, useState, Suspense, useEffect, useCallback } from 'react';
+import {
+  Box,
+  Alert,
+  Stack,
+  Button,
+  Tooltip,
+  TextField,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 import {
   useMarkAttendanceMutation,
   useLockAttendanceMutation,
@@ -33,1361 +46,890 @@ import {
   useGetAttendanceByFilterQuery,
 } from 'src/redux/student/take-attendance/take-attendace-api';
 
-import { getAttendanceLockButtonState } from './attendance-lock-state';
+import AttendanceDetailsDialog from './attendance-details-dialog';
+import AttendanceCorrectionDialog from './attendance-correction-dialog';
+import { readAttendanceTableQuery } from './attendance-url-state';
+import {
+  getAttendanceCounts,
+  hasAttendanceChanges,
+  markRemainingPresent,
+  attendanceStudentName,
+  changeAttendanceStatus,
+  normalizeAttendanceRows,
+} from './attendance-draft';
 
-const TakeAttendanceScreen = () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [view, setView] = React.useState('list');
-
-  // State to store all available mediums
-
-  // State to store all available organizations
-  const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
-  // State to store the selected organization
-  const [organization, setOrganization] = useState<string>('');
-  // State to store all available classes
-  const [allClass, setAllClass] = useState<Standards[]>([]);
-  // State to store the selected class
-  const [classes, setClass] = useState<string>('');
-  // State to store all available divisions
-  const [allDivision, setAllDivision] = useState<Division[]>([]);
-  // State to store the selected division
-  const [division, setDivision] = useState<string>('');
-  // State to store the selected date
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
-  // check if the attendance is saved
-  const isSaved = useBoolean();
-  // Reset confirmation dialog
-  const resetConfirmDialog = useBoolean();
-  // Lock confirmation dialog
-  const lockConfirmDialog = useBoolean();
-
-  const { currentYear, currentMedium: medium } = useSelector(
-    (state: RootState) => state.globalState
+type Selection = { date: string; organization: string; standard: string; division: string };
+const today = () => toDateOnly(dayjs());
+const DailyAttendanceWorkspace = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const tableQuery = useMemo(
+    () => readAttendanceTableQuery(searchParams.toString()),
+    [searchParams]
   );
+  const globals = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canMarkAttendance = hasGrantedPermission(
-    permissions,
-    'Students.Attendance.MarkAttendance.Add'
+  const [academicContext, setAcademicContext] = useState({
+    year: globals.currentYear,
+    medium: globals.currentMedium,
+  });
+  const { year, medium } = academicContext;
+  const [selection, setSelection] = useState<Selection>(() => ({
+    date: searchParams.get('date') || today(),
+    organization: searchParams.get('organization') || '',
+    standard: searchParams.get('class') || '',
+    division: searchParams.get('division') || '',
+  }));
+  const [snapshot, setSnapshot] = useState<AttendanceDay | null>(null);
+  const [rows, setRows] = useState<AttendanceStudent[]>([]);
+  const [details, setDetails] = useState<AttendanceStudent | null>(null);
+  const [requestedCorrection, setRequestedCorrection] = useState<AttendanceStudent | null>(null);
+  const [decision, setDecision] = useState<'submit' | 'discard' | 'lock' | null>(null);
+  const [failure, setFailure] = useState<string>('');
+  const [correctionReason, setCorrectionReason] = useState('');
+  const [retryPayload, setRetryPayload] = useState<AttendanceMark | null>(null);
+  const contextSeen = useRef(`${globals.currentYear?.id}/${globals.currentMedium?.id}`);
+  const lastUrl = useRef(searchParams.toString());
+  const lastAppliedData = useRef<AttendanceDay | undefined>(undefined);
+  const dirty = snapshot ? hasAttendanceChanges(rows, snapshot.students) : false;
+  const { requestNavigation, confirmation } = useUnsavedNavigation(dirty, { push: router.push });
+  const [mark, { isLoading: saving }] = useMarkAttendanceMutation();
+  const [lock, { isLoading: locking }] = useLockAttendanceMutation();
+  const [unlock, { isLoading: unlocking }] = useUnlockAttendanceMutation();
+  const busy = saving || locking || unlocking;
+  const clearDraft = useCallback(() => {
+    lastAppliedData.current = undefined;
+    setSnapshot(null);
+    setRows([]);
+    setFailure('');
+    setRetryPayload(null);
+    setCorrectionReason('');
+    setDetails(null);
+    setRequestedCorrection(null);
+    setDecision(null);
+  }, []);
+  const organizations: Organization[] = medium?.educationMediumStages || [];
+  const organization = organizations.find((item) => item.id === selection.organization);
+  const standards: Standards[] = organization?.standards || [];
+  const standard = standards.find((item) => item.id === selection.standard);
+  const divisions: Division[] = standard?.divisions || [];
+  const validSelection =
+    !!year?.id &&
+    !!divisions.find((item) => item.id === selection.division) &&
+    dayjs(selection.date).isValid() &&
+    (!year.startDate || selection.date >= toDateOnly(year.startDate)) &&
+    (!year.endDate || selection.date <= toDateOnly(year.endDate));
+  const { currentData, isLoading, isFetching, isError, error, refetch } =
+    useGetAttendanceByFilterQuery(
+      {
+        AcademicYearId: year?.id || '',
+        StandardId: selection.standard,
+        DivisionId: selection.division,
+        Date: selection.date,
+      },
+      {
+        skip: !validSelection,
+        refetchOnMountOrArgChange: true,
+        refetchOnFocus: true,
+        refetchOnReconnect: true,
+      }
+    );
+
+  const replaceSelection = useCallback(
+    (next: Selection) => {
+      clearDraft();
+      setSelection(next);
+      const params = new URLSearchParams(searchParams.toString());
+      Object.entries({
+        date: next.date,
+        organization: next.organization,
+        class: next.standard,
+        division: next.division,
+      }).forEach(([key, value]) => (value ? params.set(key, value) : params.delete(key)));
+      params.set('page', '0');
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [clearDraft, pathname, router, searchParams]
   );
-  const canManageAttendanceLock = hasGrantedPermission(
+  const changeSelection = (patch: Partial<Selection>) =>
+    requestNavigation(() => replaceSelection({ ...selection, ...patch }));
+
+  useEffect(() => {
+    if (lastUrl.current === searchParams.toString()) return;
+    lastUrl.current = searchParams.toString();
+    const next = {
+      date: searchParams.get('date') || today(),
+      organization: searchParams.get('organization') || '',
+      standard: searchParams.get('class') || '',
+      division: searchParams.get('division') || '',
+    };
+    if (
+      Object.keys(next).every(
+        (key) => next[key as keyof Selection] === selection[key as keyof Selection]
+      )
+    )
+      return;
+    clearDraft();
+    setSelection(next);
+  }, [searchParams, clearDraft, selection]);
+
+  // A global year or medium switch must not silently discard the locally owned draft.
+  useEffect(() => {
+    const nextKey = `${globals.currentYear?.id}/${globals.currentMedium?.id}`;
+    if (contextSeen.current === nextKey) return;
+    contextSeen.current = nextKey;
+    requestNavigation(() => {
+      clearDraft();
+      setAcademicContext({ year: globals.currentYear, medium: globals.currentMedium });
+      replaceSelection({ ...selection, organization: '', standard: '', division: '' });
+    });
+  }, [
+    globals.currentYear,
+    globals.currentMedium,
+    requestNavigation,
+    clearDraft,
+    replaceSelection,
+    selection,
+  ]);
+
+  // Background refreshes may update clean state only. Revisions remain tied to the draft baseline.
+  useEffect(() => {
+    if (!currentData || dirty || busy || lastAppliedData.current === currentData) return;
+    lastAppliedData.current = currentData;
+    setSnapshot({ ...currentData, students: normalizeAttendanceRows(currentData.students) });
+    setRows(normalizeAttendanceRows(currentData.students));
+  }, [currentData, dirty, busy]);
+
+  const counts = useMemo(() => getAttendanceCounts(rows), [rows]);
+  const academicContextChanged =
+    year?.id !== globals.currentYear?.id || medium?.id !== globals.currentMedium?.id;
+  const stale =
+    !!snapshot &&
+    !!currentData &&
+    (snapshot.revision !== currentData.revision ||
+      snapshot.rosterRevision !== currentData.rosterRevision);
+  const canAdd = hasGrantedPermission(permissions, 'Students.Attendance.MarkAttendance.Add');
+  const canManageLock = hasGrantedPermission(
     permissions,
     'Students.Attendance.MarkAttendance.Delete'
   );
+  const authoritative = currentData || snapshot;
+  const canRequestCorrection = hasGrantedPermission(
+    permissions,
+    'Students.Attendance.LeaveAndAbsent.Add'
+  );
+  const editable =
+    !!snapshot &&
+    !!authoritative?.canMark &&
+    canAdd &&
+    !authoritative.isLocked &&
+    authoritative.isExpected &&
+    !busy &&
+    !stale &&
+    validSelection;
+  const correction = !!snapshot?.isSubmitted;
+  const needsCreditCorrection = rows.some((row) => row.needsCreditCorrection);
+  const leaveConflict = rows.some(
+    (row) =>
+      row.isExpected &&
+      !row.needsCreditCorrection &&
+      row.approvedLeaveId &&
+      row.status === AttendanceStatus.Present
+  );
+  const reasonRequired =
+    dirty &&
+    ((correction && snapshot?.policy.sameDayCorrectionRequiresReason !== false) || leaveConflict);
+  const canSave = editable && dirty && (!reasonRequired || !!correctionReason.trim());
+  const canSubmit =
+    editable &&
+    counts.expected > 0 &&
+    counts.unmarked === 0 &&
+    !needsCreditCorrection &&
+    (!snapshot?.isSubmitted || snapshot.needsReview || dirty) &&
+    (!reasonRequired || !!correctionReason.trim());
 
-  const now = dayjs().valueOf();
-  const start = currentYear?.startDate
-    ? dayjs(currentYear.startDate).startOf('day').valueOf()
-    : null;
-  const end = currentYear?.endDate ? dayjs(currentYear.endDate).endOf('day').valueOf() : null;
-
-  const isCurrentYearActive = start && end ? now >= start && now <= end : true;
-
-  // const [markAttendance] = useMarkAttendanceMutation();
-
-  const [markAttendance, { isLoading: isMarkAttendanceLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useMarkAttendanceMutation,
-  });
-
-  const [lockAttendance, { isLoading: isLockLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLockAttendanceMutation,
-  });
-
-  const [unlockAttendance, { isLoading: isUnlockLoading }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUnlockAttendanceMutation,
-  });
-
-  useEffect(() => {
-    setAllOrganization(medium?.educationMediumStages || []);
-    setOrganization(medium?.educationMediumStages?.[0]?.id || '');
-  }, [medium]);
-
-  useEffect(() => {
-    setAllClass(allOrganization.find((org: any) => org?.id === organization)?.standards || []);
-    setClass(
-      allOrganization.find((org: any) => org?.id === organization)?.standards?.[0]?.id || ''
+  const updateRow = (studentId: string, change: (row: AttendanceStudent) => AttendanceStudent) => {
+    if (!editable) return;
+    setRetryPayload(null);
+    setRows((previous) =>
+      previous.map((row) =>
+        row.studentId === studentId &&
+        row.isExpected &&
+        !row.requiresCorrectionApproval &&
+        !row.needsCreditCorrection
+          ? change(row)
+          : row
+      )
     );
-  }, [organization, allOrganization]);
-
-  useEffect(() => {
-    setAllDivision(allClass.find((org: any) => org?.id === classes)?.divisions || []);
-    setDivision(allClass.find((org: any) => org?.id === classes)?.divisions?.[0]?.id || '');
-  }, [allClass, classes]);
-
-  const handleSave = async () => {
-    if (!canMarkAttendance) {
-      shikshaMitraToast.error({ message: 'You do not have permission to mark attendance.' });
-      return;
-    }
-
+  };
+  const refresh = () =>
+    requestNavigation(() => {
+      clearDraft();
+      refetch();
+    });
+  const save = async (submit: boolean) => {
+    if ((!submit && !canSave) || (submit && !canSubmit) || !snapshot || !year) return;
+    const payload: AttendanceMark =
+      retryPayload && retryPayload.submit === submit
+        ? retryPayload
+        : {
+            academicYearId: year.id,
+            standardId: selection.standard,
+            divisionId: selection.division,
+            date: selection.date,
+            revision: snapshot.revision,
+            rosterRevision: snapshot.rosterRevision,
+            submit,
+            operationId: crypto.randomUUID(),
+            correctionReason: correctionReason.trim() || undefined,
+            entries: rows
+              .filter((row) => row.isExpected && !row.needsCreditCorrection)
+              .map((row) => ({
+                studentId: row.studentId,
+                enrollmentId: row.enrollmentId,
+                status: row.status,
+                late: row.late,
+                halfDay: row.halfDay,
+                remarks: row.remarks || '',
+              })),
+          };
+    setFailure('');
+    setRetryPayload(payload);
     try {
-      const payload = {
-        academicYearId: currentYear?.id,
-        standardId: classes,
-        divisionId: division,
-        date: dateConvertor(date?.format(dateFormat) ?? ''),
-        entries: studentData.map((student: any) => ({
-          studentId: student.studentId,
-          status: student.isPresent,
-          remarks: student.remarks || '',
-        })),
-      };
-
-      await markAttendance(payload).unwrap();
-
-      shikshaMitraToast.success({
-        message: `Attendance saved successfully for ${date?.format('DD-MM-YYYY')}`,
+      const result = await mark(payload).unwrap();
+      setSnapshot({
+        ...snapshot,
+        revision: result.revision,
+        isSubmitted: result.isSubmitted,
+        students: rows,
       });
-    } catch (error) {
-      console.error('Error marking attendance:', error);
-      shikshaMitraToast.error({ message: 'Failed to save attendance.' });
+      setRetryPayload(null);
+      setCorrectionReason('');
+      setDecision(null);
+      shikshaMitraToast.success({
+        message: submit ? 'Attendance submitted.' : 'Attendance draft saved.',
+      });
+      refetch();
+    } catch (problem) {
+      const message = parseApiProblemDetail(problem).detail;
+      setFailure(message);
+      shikshaMitraToast.error({ message });
     }
   };
-
-  const isValidSelection = React.useMemo(() => {
-    const selectedOrg = allOrganization.find((org: any) => org?.id === organization);
-    if (!selectedOrg) return false;
-    const selectedClass = selectedOrg.standards?.find((c: any) => c.id === classes);
-    if (!selectedClass) return false;
-    const selectedDivision = selectedClass.divisions?.find((d: any) => d.id === division);
-    if (!selectedDivision) return false;
-    return true;
-  }, [allOrganization, organization, classes, division]);
-
-  const { data, isLoading, isFetching } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAttendanceByFilterQuery,
-    params: {
-      AcademicYearId: currentYear?.id,
-      StandardId: classes,
-      DivisionId: division,
-      Date: dateConvertor(dayjs(date).format(dateFormat)),
-    },
-    options: { skip: !(date && isValidSelection) },
-  });
-
-  // Derived from API response
-  const isLocked: boolean = data?.isLocked ?? false;
-  const attendanceDayId: string | undefined = data?.attendanceDayId;
-  const lockButtonState = getAttendanceLockButtonState({
-    isLocked,
-    attendanceDayId,
-    isLockLoading,
-    isUnlockLoading,
-    canManageLock: canManageAttendanceLock,
-  });
-
-  /** Lock payload shared by lock/unlock calls */
-  const lockPayload = {
-    academicYearId: currentYear?.id,
-    standardId: classes,
-    divisionId: division,
-    date: dateConvertor(date?.format(dateFormat) ?? ''),
-  };
-
-  const handleLockToggle = async () => {
+  const toggleLock = async () => {
+    if (!canManageLock || !year || !snapshot?.attendanceDayId || busy || dirty) return;
+    const payload = {
+      academicYearId: year.id,
+      standardId: selection.standard,
+      divisionId: selection.division,
+      date: selection.date,
+    };
     try {
-      if (isLocked) {
-        await unlockAttendance(lockPayload).unwrap();
-        shikshaMitraToast.success({ message: 'Attendance unlocked successfully' });
-      } else {
-        await lockAttendance(lockPayload).unwrap();
-        shikshaMitraToast.success({ message: 'Attendance locked successfully' });
-      }
-      lockConfirmDialog.onFalse();
-    } catch (error) {
-      console.error('Lock/unlock error:', error);
-      lockConfirmDialog.onFalse();
+      await (authoritative?.isLocked ? unlock(payload) : lock(payload)).unwrap();
+      setDecision(null);
+      shikshaMitraToast.success({
+        message: authoritative?.isLocked ? 'Attendance unlocked.' : 'Attendance locked.',
+      });
+    } catch (problem) {
+      setFailure(parseApiProblemDetail(problem).detail);
     }
   };
 
-  const [studentData, setStudentData] = useState<any>([]);
-
-  useEffect(() => {
-    if (data?.students) {
-      setStudentData(
-        data?.students?.map((item: any) => ({
-          ...item,
-          rollNo: item?.rollNo || '-',
-          name: `${item?.firstName} ${item?.lastName} ${item?.middleName}`,
-          // percentage: (item.presentDays / item.totalDays) * 100,
-          // Ensure isPresent reflects the actual attendance data from API
-          // If attendance is already marked for this date, use that value
-          // Otherwise, set to null (unmarked)
-          isPresent: item.status,
-          remarks: item.remarks || '',
-        })) || []
-      );
-    } else {
-      // Clear student data when no data is available
-      setStudentData([]);
-    }
-  }, [data?.students]);
-
-  // // Reset student data when filters change to ensure fresh data
-  // useEffect(() => {
-  //   setStudentData([]);
-  // }, [date, organization, classes, division]);
-
-  const hasUnsavedChanges = React.useMemo(() => {
-    if (!data?.students) return false;
-    if (studentData.length !== data.students.length) return true;
-
-    // eslint-disable-next-line no-plusplus
-    for (let i = 0; i < data.students.length; i++) {
-      const original = data.students[i];
-      const current = studentData.find((s: any) => s.studentId === original.studentId);
-      if (!current) return true;
-      if (current.isPresent !== original.status) return true;
-      if (current.remarks !== (original.remarks || '')) return true;
-    }
-    return false;
-  }, [data?.students, studentData]);
+  const columns: IColumn[] = [
+    {
+      id: 'rollNo',
+      label: 'Roll no.',
+      width: 85,
+      filterType: 'string',
+      render: (value) => value ?? '—',
+    },
+    {
+      id: 'name',
+      label: 'Student',
+      minWidth: 200,
+      filterType: 'string',
+      render: (_value, item) => {
+        const row = item as AttendanceStudent;
+        return (
+          <Stack spacing={0.25}>
+            <Typography variant="body2" fontWeight={600}>
+              {attendanceStudentName(row)}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              GR no. {row.grNo ?? '—'}
+            </Typography>
+            {row.scheduleLabel && (
+              <Typography variant="caption" color="text.secondary">
+                {row.scheduleLabel}
+              </Typography>
+            )}
+          </Stack>
+        );
+      },
+    },
+    {
+      id: 'statusLabel',
+      label: 'Attendance',
+      minWidth: 225,
+      sticky: true,
+      stickyPosition: 'right',
+      isSort: false,
+      isFilter: false,
+      render: (_value, item) => {
+        const row = item as AttendanceStudent;
+        if (!row.isExpected)
+          return (
+            <Tooltip title={row.notExpectedReason || 'Not scheduled today'}>
+              <span>
+                <Label>Not expected</Label>
+              </span>
+            </Tooltip>
+          );
+        return (
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            {[AttendanceStatus.Present, AttendanceStatus.Absent].map((status) => (
+              <Button
+                key={status}
+                size="small"
+                variant={row.status === status ? 'contained' : 'outlined'}
+                color={status === AttendanceStatus.Present ? 'success' : 'error'}
+                aria-pressed={row.status === status}
+                aria-label={`${status === AttendanceStatus.Present ? 'Present' : 'Absent'}: ${attendanceStudentName(row)}`}
+                disabled={
+                  !editable || !!row.requiresCorrectionApproval || !!row.needsCreditCorrection
+                }
+                onClick={() =>
+                  updateRow(row.studentId, (before) => changeAttendanceStatus(before, status))
+                }
+              >
+                {status === AttendanceStatus.Present ? 'Present' : 'Absent'}
+              </Button>
+            ))}
+            {row.status === AttendanceStatus.Pending && <Label color="warning">Unmarked</Label>}
+          </Stack>
+        );
+      },
+    },
+    {
+      id: 'detailLabel',
+      label: 'Details',
+      minWidth: 190,
+      isSort: false,
+      isFilter: false,
+      render: (_value, item) => {
+        const row = item as AttendanceStudent;
+        return (
+          <Stack spacing={0.5}>
+            <Stack direction="row" spacing={0.5} flexWrap="wrap">
+              {row.late && <Label color="warning">Late</Label>}
+              {row.halfDay && <Label color="info">Half-day</Label>}
+              {row.approvedLeaveId && <Label color="info">Approved leave</Label>}
+              {row.needsCreditCorrection && <Label color="warning">Leave correction needed</Label>}
+            </Stack>
+            {row.remarks && (
+              <Typography variant="caption" sx={{ overflowWrap: 'anywhere' }}>
+                {row.remarks}
+              </Typography>
+            )}
+          </Stack>
+        );
+      },
+    },
+    {
+      id: 'actions',
+      label: 'Actions',
+      width: 105,
+      align: 'right',
+      sticky: true,
+      stickyPosition: 'right',
+      isFilter: false,
+      isSort: false,
+      excludeFromExport: true,
+      render: (_value, item) => {
+        const row = item as AttendanceStudent;
+        return (
+          <ThreeDotsActions
+            showThreeDots={false}
+            directActions={
+              editable && !row.requiresCorrectionApproval && !row.needsCreditCorrection
+                ? [
+                    {
+                      id: 'attendance-details',
+                      label: `Edit attendance details: ${attendanceStudentName(row)}`,
+                      icon: 'mdi:pencil-outline',
+                      disabled: !editable || !row.isExpected,
+                      onClick: () => setDetails(row),
+                    },
+                  ]
+                : [
+                    {
+                      id: 'attendance-correction',
+                      label: `Request attendance correction: ${attendanceStudentName(row)}`,
+                      icon: 'mdi:history',
+                      disabled:
+                        !canRequestCorrection ||
+                        busy ||
+                        dirty ||
+                        stale ||
+                        !snapshot?.attendanceDayId ||
+                        !snapshot.revision ||
+                        row.status === AttendanceStatus.Pending,
+                      tooltip:
+                        row.status === AttendanceStatus.Pending
+                          ? 'Attendance must be recorded before requesting a correction.'
+                          : !canRequestCorrection
+                            ? 'You do not have permission to request attendance corrections.'
+                            : `Request attendance correction: ${attendanceStudentName(row)}`,
+                      onClick: () => setRequestedCorrection(row),
+                    },
+                  ]
+            }
+          />
+        );
+      },
+    },
+  ];
+  const tableRows = rows.map((row) => ({
+    ...row,
+    id: row.studentId,
+    name: attendanceStudentName(row),
+    statusLabel: !row.isExpected
+      ? 'Not expected'
+      : row.status === AttendanceStatus.Pending
+        ? 'Unmarked'
+        : row.status === AttendanceStatus.Present
+          ? 'Present'
+          : 'Absent',
+    detailLabel: [
+      row.late && 'Late',
+      row.halfDay && 'Half-day',
+      row.approvedLeaveId && 'Approved leave',
+      row.needsCreditCorrection && 'Leave correction needed',
+      row.remarks,
+    ]
+      .filter(Boolean)
+      .join(' · '),
+  }));
+  const orderedColumns = [columns[0], columns[1], columns[3], columns[2], columns[4]];
+  const empty =
+    !year || !medium
+      ? 'Choose an academic year and medium to open attendance.'
+      : !organizations.length
+        ? 'No academic classes are available in your current scope.'
+        : !validSelection
+          ? 'Choose a school level, class, division and a valid date.'
+          : snapshot && !snapshot.isExpected
+            ? snapshot.notExpectedReason || 'Attendance is not expected on this date.'
+            : 'No eligible students are assigned to this class on the selected date.';
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, gap: 1 }}>
       <CustomBreadcrumbs
-        heading="Mark Attendance"
+        heading="Daily Attendance"
+        description="Choose a class and date, mark attendance, then save a draft or submit the complete register."
         links={[
-          { name: 'Student', href: '/student/dashboard/' },
-          { name: 'Attendance', href: '/student/dashboard//' },
-          { name: 'Mark Attendance' },
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Attendance', href: studentPaths.attendance.root },
+          { name: 'Daily Attendance' },
         ]}
-        description="Quickly record student attendance: Choose the date, then simply mark each student as Present or Absent."
       />
-
-      <Card
-        sx={{
-          mb: 1,
-          pb: 1,
-          pt: 1,
-          pl: 1,
-
-          display: 'flex',
-          gap: 1,
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}
-      >
-        <CustomTooltip
-          title={
-            !isCurrentYearActive
-              ? `You are currently viewing the academic year ${currentYear?.name || ''}. Attendance dates are restricted to this active global academic year.`
-              : ''
-          }
-          placement="top"
-          arrow
-          disableHoverListener={isCurrentYearActive}
-          disableTouchListener={isCurrentYearActive}
-          disableFocusListener={isCurrentYearActive}
-        >
-          <Box>
-            <DatePicker
-              label="Date"
-              value={date}
-              disableFuture
-              minDate={dayjs(currentYear?.startDate)}
-              maxDate={dayjs(currentYear?.endDate)}
-              onChange={(val) => {
-                if (val && val.isValid()) {
-                  if (val.isAfter(dayjs(), 'day')) {
-                    shikshaMitraToast.error({ message: 'Future dates are not allowed' });
-                    setDate(
-                      dayjs().isAfter(dayjs(currentYear?.endDate))
-                        ? dayjs(currentYear?.endDate)
-                        : dayjs()
-                    );
-                  } else if (
-                    currentYear?.startDate &&
-                    val.isBefore(dayjs(currentYear.startDate), 'day')
-                  ) {
-                    shikshaMitraToast.error({
-                      message: 'Date cannot be before academic year start date',
-                    });
-                    setDate(dayjs(currentYear.startDate));
-                  } else {
-                    setDate(val);
-                  }
-                } else {
-                  setDate(val);
-                }
-              }}
-              format="DD-MM-YYYY"
-              slotProps={{ textField: { size: 'small', sx: { maxWidth: '200px', width: '100%' } } }}
-            />
-          </Box>
-        </CustomTooltip>
-
-        <CustomSelect
-          options={allOrganization}
-          label="Organization"
-          value={organization}
-          onChange={(val) => setOrganization(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '200px', width: '100%' } }}
-          disabled={!medium}
-        />
-        <CustomSelect
-          options={allClass}
-          label="Class"
-          value={classes}
-          onChange={(val) => setClass(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
-          disabled={!organization}
-        />
-        <CustomSelect
-          options={allDivision}
-          label="Division"
-          value={division}
-          onChange={(val) => setDivision(val as string)}
-          labelKey="name"
-          valueKey="id"
-          formControlProps={{ sx: { maxWidth: '150px', width: '100%' } }}
-          disabled={!classes}
-        />
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 2,
-            ml: 'auto',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            mr: 1,
-          }}
-        >
-          {/* Reset Button */}
-          {!isLocked && (
-            <Button
-              size="small"
-              variant="outlined"
-              color="inherit"
-              startIcon={<RestartAlt sx={{ fontSize: '16px' }} />}
-              onClick={() => {
-                resetConfirmDialog.onTrue();
-              }}
-              disabled={
-                isLockLoading ||
-                isUnlockLoading ||
-                !canMarkAttendance ||
-                studentData.length === 0 ||
-                studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending)
-              }
-              sx={{
-                minWidth: '90px',
-                fontWeight: 500,
-                fontSize: '0.875rem',
-              }}
-            >
-              Reset
-            </Button>
-          )}
-
-          {/* Lock / Unlock Button */}
-          <CustomTooltip title={lockButtonState.title} arrow placement="top">
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ flex: 1 }}>
+          <DatePicker
+            label="Date"
+            value={dayjs(selection.date)}
+            format="DD-MM-YYYY"
+            disabled={busy}
+            minDate={year?.startDate ? dayjs(year.startDate) : undefined}
+            maxDate={year?.endDate ? dayjs(year.endDate) : undefined}
+            onChange={(value: Dayjs | null) => {
+              if (value?.isValid()) changeSelection({ date: toDateOnly(value) });
+            }}
+            slotProps={{ textField: { size: 'small', sx: { width: { xs: '100%', sm: 170 } } } }}
+          />
+          <CustomSelect
+            label="School level"
+            options={organizations}
+            value={selection.organization}
+            labelKey="name"
+            valueKey="id"
+            onChange={(value) =>
+              changeSelection({ organization: String(value), standard: '', division: '' })
+            }
+            disabled={!medium || busy}
+            formControlProps={{ sx: { width: { xs: '100%', sm: 170 } } }}
+          />
+          <CustomSelect
+            label="Class"
+            options={standards}
+            value={selection.standard}
+            labelKey="name"
+            valueKey="id"
+            onChange={(value) => changeSelection({ standard: String(value), division: '' })}
+            disabled={!organization || busy}
+            formControlProps={{ sx: { width: { xs: '100%', sm: 140 } } }}
+          />
+          <CustomSelect
+            label="Division"
+            options={divisions}
+            value={selection.division}
+            labelKey="name"
+            valueKey="id"
+            onChange={(value) => changeSelection({ division: String(value) })}
+            disabled={!standard || busy}
+            formControlProps={{ sx: { width: { xs: '100%', sm: 140 } } }}
+          />
+        </Stack>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+          <Button
+            size="small"
+            variant="outlined"
+            disabled={!canSave}
+            loading={saving}
+            onClick={() => save(false)}
+          >
+            Save draft
+          </Button>
+          <Tooltip
+            title={
+              counts.unmarked
+                ? `Mark all ${counts.unmarked} remaining students before submitting.`
+                : ''
+            }
+          >
             <span>
               <Button
                 size="small"
-                variant={lockButtonState.variant}
-                color={lockButtonState.color}
-                loading={isLockLoading || isUnlockLoading}
-                disabled={lockButtonState.disabled}
-                startIcon={
-                  <Iconify
-                    icon={isLocked ? 'eva:lock-fill' : 'eva:unlock-fill'}
-                    sx={{ fontSize: '16px' }}
-                  />
-                }
-                onClick={() => lockConfirmDialog.onTrue()}
-                sx={{ minWidth: '90px', fontWeight: 500, fontSize: '0.875rem' }}
+                variant="contained"
+                disabled={!canSubmit}
+                loading={saving}
+                onClick={() => setDecision('submit')}
               >
-                {lockButtonState.label}
+                Submit attendance
               </Button>
             </span>
-          </CustomTooltip>
-
-          {/* Save Button */}
-          {!isLocked && (
+          </Tooltip>
+        </Stack>
+      </Stack>
+      {isFetching && <LinearProgress aria-label="Refreshing attendance" />}
+      {academicContextChanged && (
+        <Alert
+          severity="warning"
+          action={
             <Button
-              size="small"
-              variant="contained"
-              loading={isMarkAttendanceLoading}
-              startIcon={<Iconify icon={GlobalIcons.submit} sx={{ fontSize: '16px' }} />}
-              onClick={() => {
-                handleSave();
-              }}
-              disabled={
-                isLockLoading ||
-                isUnlockLoading ||
-                !canMarkAttendance ||
-                studentData.length === 0 ||
-                studentData.every((item: any) => item.isPresent === AttendanceStatus.Pending) ||
-                !hasUnsavedChanges
+              color="inherit"
+              disabled={busy}
+              onClick={() =>
+                requestNavigation(() => {
+                  clearDraft();
+                  setAcademicContext({ year: globals.currentYear, medium: globals.currentMedium });
+                  replaceSelection({ ...selection, organization: '', standard: '', division: '' });
+                })
               }
-              sx={{
-                minWidth: '90px',
-                fontWeight: 500,
-                fontSize: '0.875rem',
-              }}
             >
-              Save
+              Switch context
             </Button>
-          )}
-        </Box>
-      </Card>
-
-      <ListView
-        isSaved={isSaved}
-        data={studentData}
-        setStudentData={setStudentData}
-        isLoading={isLoading}
-        isFetching={isFetching}
-        studentData={studentData}
-        isLocked={isLocked}
-        canMarkAttendance={canMarkAttendance}
-      />
-
-      {/* Lock Confirmation Dialog */}
-      <ConfirmDialog
-        open={lockConfirmDialog.value}
-        onClose={() => {
-          if (!isLockLoading && !isUnlockLoading) {
-            lockConfirmDialog.onFalse();
           }
-        }}
-        title={isLocked ? 'Unlock Attendance' : 'Lock Attendance'}
-        content={
-          <>
-            Are you sure you want to {isLocked ? 'unlock' : 'lock'} the attendance?
-            <br />
-            <strong>
-              {isLocked
-                ? 'Unlocking will allow further modifications to the attendance.'
-                : 'Locking will prevent any further modifications to the attendance.'}
-            </strong>
-          </>
-        }
-        action={
-          <Button
-            variant="contained"
-            color={isLocked ? 'error' : 'primary'}
-            size="small"
-            loading={isLockLoading || isUnlockLoading}
-            onClick={handleLockToggle}
-          >
-            Yes, {isLocked ? 'Unlock' : 'Lock'}
+        >
+          This draft remains in {year?.name || 'the previous academic year'} and{' '}
+          {medium?.name || 'the previous medium'}. Save or discard it before switching to the
+          selected academic context.
+        </Alert>
+      )}
+      {validSelection && isError && (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" onClick={refresh} disabled={busy}>
+              Retry
+            </Button>
+          }
+        >
+          Attendance could not be loaded. {parseApiProblemDetail(error).detail}
+          {dirty && ' Your unsaved changes are retained.'}
+        </Alert>
+      )}
+      {failure && (
+        <Alert
+          severity="error"
+          action={
+            <Button color="inherit" onClick={refresh} disabled={busy}>
+              Review latest
+            </Button>
+          }
+        >
+          {failure} Your draft is retained.
+        </Alert>
+      )}
+      {stale && (
+        <Alert
+          severity="warning"
+          action={
+            <Button color="inherit" onClick={refresh} disabled={busy}>
+              Review latest
+            </Button>
+          }
+        >
+          The register or student roster changed after this draft was loaded. Review the latest
+          version before saving.
+        </Alert>
+      )}
+      {snapshot && !snapshot.isExpected && (
+        <Alert severity="info">
+          {snapshot.notExpectedReason || 'Attendance is not expected on this date.'}
+        </Alert>
+      )}
+      {snapshot?.needsReview && (
+        <Alert severity="warning">Roster changed after submission. Review and submit again.</Alert>
+      )}
+      {needsCreditCorrection && (
+        <Alert severity="warning">
+          Approved leave changed after attendance was submitted. Request corrections for rows marked
+          “Leave correction needed” before submitting this register again.
+        </Alert>
+      )}
+      {snapshot?.isExpected && !snapshot.isSubmitted && snapshot.isPastMarkingCutoff && (
+        <Alert severity="warning">
+          The school marking cutoff has passed. Review and submit the attendance register.
+        </Alert>
+      )}
+      {snapshot && snapshot.isExpected && (!canAdd || !authoritative?.canMark) && (
+        <Alert severity="info">
+          This register is read-only. Your permission, teacher assignment or correction policy does
+          not allow marking here.
+          <Button size="small" href={studentPaths.attendance.leaveAndAbsent}>
+            Leave &amp; Corrections
           </Button>
-        }
-      />
-
-      {/* Reset Confirmation Dialog */}
-      <ConfirmDialog
-        open={resetConfirmDialog.value}
-        onClose={() => {
-          resetConfirmDialog.onFalse();
-        }}
-        title="Reset Attendance"
-        content={
-          <>
-            Are you sure you want to reset all attendance?
-            <br />
-            <strong>All students will be marked as Pending and remarks will be cleared.</strong>
-          </>
-        }
-        action={
+        </Alert>
+      )}
+      {snapshot && (
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Label
+            color={
+              authoritative?.isLocked ? 'warning' : snapshot.isSubmitted ? 'success' : 'default'
+            }
+          >
+            {authoritative?.isLocked ? 'Locked' : snapshot.isSubmitted ? 'Submitted' : 'Draft'}
+          </Label>
+          <Typography variant="body2">
+            Expected {counts.expected} · Present {counts.present} · Absent {counts.absent} ·
+            Unmarked {counts.unmarked}
+            {counts.notExpected > 0 && ` · Not expected ${counts.notExpected}`}
+          </Typography>
+          {dirty && <Label color="warning">Unsaved changes</Label>}
+          <Box sx={{ flex: 1 }} />
           <Button
-            variant="contained"
             size="small"
+            disabled={
+              !editable ||
+              !rows.some(
+                (row) =>
+                  row.isExpected && row.status === AttendanceStatus.Pending && !row.approvedLeaveId
+              )
+            }
             onClick={() => {
-              setStudentData((prev: any) =>
-                prev.map((item: any) => ({
-                  ...item,
-                  isPresent: AttendanceStatus.Pending,
-                  remarks: '',
-                }))
-              );
-              resetConfirmDialog.onFalse();
-              shikshaMitraToast.success({ message: 'Attendance Data Reset Successfully' });
+              setRetryPayload(null);
+              setRows(markRemainingPresent(rows));
             }}
           >
-            Yes
+            Mark remaining present
+          </Button>
+          <Button
+            size="small"
+            color="inherit"
+            disabled={!dirty || busy}
+            onClick={() => setDecision('discard')}
+          >
+            Discard changes
+          </Button>
+          {canManageLock && (
+            <Tooltip
+              title={
+                dirty
+                  ? 'Save or discard your changes first.'
+                  : !snapshot.isSubmitted && !authoritative?.isLocked
+                    ? 'Submit the register before locking it.'
+                    : ''
+              }
+            >
+              <span>
+                <Button
+                  size="small"
+                  color="inherit"
+                  startIcon={
+                    <Iconify
+                      icon={authoritative?.isLocked ? 'mdi:lock-open-outline' : 'mdi:lock-outline'}
+                    />
+                  }
+                  disabled={
+                    busy ||
+                    dirty ||
+                    !snapshot.attendanceDayId ||
+                    (!snapshot.isSubmitted && !authoritative?.isLocked)
+                  }
+                  onClick={() => setDecision('lock')}
+                >
+                  {authoritative?.isLocked ? 'Unlock' : 'Lock'}
+                </Button>
+              </span>
+            </Tooltip>
+          )}
+        </Stack>
+      )}
+      {reasonRequired && (
+        <TextField
+          size="small"
+          label="Correction reason"
+          value={correctionReason}
+          onChange={(event) => {
+            setCorrectionReason(event.target.value);
+            setRetryPayload(null);
+          }}
+          disabled={busy}
+          helperText={
+            leaveConflict
+              ? 'Explain why the student was present during approved leave. The reason is retained in the attendance history.'
+              : 'Required when changing a submitted register. The reason is retained in the attendance history.'
+          }
+          inputProps={{ maxLength: 500 }}
+        />
+      )}
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <CustomizableTable
+          tableId="student-daily-attendance"
+          tableTitle="Class register"
+          columns={orderedColumns}
+          data={tableRows}
+          isLoading={validSelection && !snapshot && (isLoading || isFetching)}
+          isSearch
+          isPagination
+          isFilter={false}
+          page={tableQuery.page}
+          rowsPerPage={tableQuery.rowsPerPage}
+          rowsPerPageOptions={[10, 25, 50, 100]}
+          searchTerm={tableQuery.searchTerm}
+          sorts={tableQuery.sorts}
+          searchFieldProps={{ placeholder: 'Search students by name, roll no. or GR no.' }}
+          wrapperProps={{ sx: { height: 1, minHeight: 0 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
+          noDataText={
+            <Stack alignItems="center" spacing={1}>
+              <Iconify icon="mdi:calendar-check-outline" width={40} />
+              <Typography variant="body2">
+                {validSelection && isError
+                  ? 'Attendance could not be loaded. Use Retry above.'
+                  : empty}
+              </Typography>
+            </Stack>
+          }
+        />
+      </Box>
+      {details && snapshot && (
+        <AttendanceDetailsDialog
+          student={details}
+          policy={snapshot.policy}
+          onClose={() => setDetails(null)}
+          onApply={(row) => updateRow(row.studentId, () => row)}
+        />
+      )}
+      {requestedCorrection && snapshot?.revision && year && (
+        <AttendanceCorrectionDialog
+          student={requestedCorrection}
+          policy={snapshot.policy}
+          revision={snapshot.revision}
+          scope={{
+            academicYearId: year.id,
+            standardId: selection.standard,
+            divisionId: selection.division,
+            date: selection.date,
+          }}
+          onClose={() => setRequestedCorrection(null)}
+        />
+      )}
+      <ConfirmDialog
+        open={decision !== null}
+        disableBackdropClick
+        disableCancel={busy}
+        disableEscapeKeyDown={busy}
+        onClose={() => {
+          if (!busy) setDecision(null);
+        }}
+        icon={decision === 'discard' ? 'error' : 'info'}
+        title={
+          decision === 'submit'
+            ? 'Submit attendance?'
+            : decision === 'discard'
+              ? 'Discard unsaved attendance?'
+              : authoritative?.isLocked
+                ? 'Unlock attendance?'
+                : 'Lock attendance?'
+        }
+        content={
+          <Stack spacing={1}>
+            <Typography variant="body2">
+              {decision === 'submit'
+                ? `Submit the complete register for ${formatDateOnly(selection.date)}? All ${counts.expected} expected students have been marked.`
+                : decision === 'discard'
+                  ? 'Your unsaved marks and notes will be replaced with the last saved register.'
+                  : authoritative?.isLocked
+                    ? 'Unlocking allows corrections according to your school policy. Previous-day changes still require approval.'
+                    : 'Lock this submitted register to require approved corrections.'}
+            </Typography>
+            {failure && <Alert severity="error">{failure} Your draft is retained.</Alert>}
+          </Stack>
+        }
+        action={
+          <Button
+            variant="contained"
+            color={decision === 'discard' ? 'error' : 'primary'}
+            loading={busy}
+            disabled={busy}
+            onClick={() => {
+              if (decision === 'submit') save(true);
+              else if (decision === 'lock') toggleLock();
+              else {
+                setRows(normalizeAttendanceRows(snapshot?.students || []));
+                setRetryPayload(null);
+                setFailure('');
+                setDecision(null);
+              }
+            }}
+          >
+            {decision === 'submit'
+              ? 'Submit attendance'
+              : decision === 'discard'
+                ? 'Discard changes'
+                : authoritative?.isLocked
+                  ? 'Unlock attendance'
+                  : 'Lock attendance'}
           </Button>
         }
       />
+      {confirmation}
     </Box>
   );
 };
-export default TakeAttendanceScreen;
 
-const ListView = ({
-  isSaved,
-  data,
-  setStudentData,
-  isLoading,
-  isFetching,
-  studentData,
-  isLocked,
-  canMarkAttendance,
-}: any) => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [selectedStudent, setSelectedStudent] = useState<any>([]);
-  const sendInstantNotificationDialogValue = useBoolean();
-
-  const [query, setQuery] = useState({
-    sorting: '',
-    skipCount: 0,
-    maxResultCount: 10,
-  });
-
-  const handlerSendNotification = () => {
-    if (!sendInstantNotificationDialogValue.value) {
-      sendInstantNotificationDialogValue.onTrue();
-    }
-  };
+export default function TakeAttendanceScreen() {
   return (
-    <>
-      <CustomizableTable
-        tableTitle="Mark Attendance"
-        onSendNotification={handlerSendNotification}
-        showCheckbox={selectedStudent.length !== 0}
-        tableId="student-attendance-list"
-        noDataText="No Students Found for Attendance"
-        isLoading={isLoading || isFetching}
-        rowProps={(tableData: any) => ({
-          sx: {
-            background: (theme) =>
-              tableData.isPresent === AttendanceStatus.Present
-                ? varAlpha(theme.vars.palette.success.mainChannel, 0.12)
-                : tableData.isPresent === AttendanceStatus.Absent
-                  ? varAlpha(theme.vars.palette.error.mainChannel, 0.12)
-                  : varAlpha(theme.vars.palette.warning.mainChannel, 0.08),
-            transition: 'background-color 0.2s',
-            height: '40px', // Compact row height
-            '& td': { py: 0.5 }, // Reduce cell padding
-          },
-        })}
-        columns={[
-          {
-            id: 'rollNo',
-            label: 'Roll No',
-            align: 'left',
-            minWidth: '100px',
-            sticky: true,
-            isFilter: false,
-          },
-          {
-            id: 'name',
-            label: 'Name (GR No.)',
-            align: 'left',
-            isFilter: true,
-            minWidth: '350px',
-            sticky: true,
-            render: (value, row) => (
-              <Typography variant="caption" fontSize="13px">
-                {value || '-'} ({row.grNo})
-              </Typography>
-            ),
-          },
-          {
-            id: 'presentDays',
-            label: 'Present Days',
-            align: 'left',
-            minWidth: '100px',
-            isFilter: false,
-          },
-          { id: 'attendancePercentage', label: 'Attendance %', align: 'left', minWidth: '100px' },
-          {
-            id: 'remarks',
-            label: 'Remarks',
-            minWidth: '280px',
-            isFilter: false,
-            isSort: false,
-            align: 'left',
-            render(value, row) {
-              return row.isPresent === AttendanceStatus.Absent ? (
-                <TextField
-                  size="small"
-                  disabled={isLocked || !canMarkAttendance}
-                  value={value || ''}
-                  onChange={(e) => {
-                    setStudentData((prev: any) =>
-                      prev.map((item: any) =>
-                        item.studentId === row.studentId
-                          ? { ...item, remarks: e.target.value }
-                          : item
-                      )
-                    );
-                  }}
-                  label="Add remarks"
-                  multiline
-                  rows={2}
-                  sx={{
-                    width: '100%',
-                    '& .MuiInputBase-input::placeholder': { color: 'text.secondary', opacity: 0.7 },
-                  }}
-                />
-              ) : (
-                <Box
-                  sx={{
-                    width: '100%',
-                    height: '56px', // Same height as TextField with 2 rows
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'text.disabled',
-                    fontStyle: 'italic',
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  {row.isPresent === AttendanceStatus.Present
-                    ? 'No remarks needed'
-                    : 'Mark attendance first'}
-                </Box>
-              );
-            },
-          },
-          ...(isLocked
-            ? [
-                {
-                  id: 'status',
-                  label: 'Status',
-                  minWidth: '200px',
-                  align: 'left' as const,
-                  isSort: false,
-                  sticky: true,
-                  isFilter: false,
-                  render(_value: any, row: any) {
-                    return (
-                      <Label
-                        color={
-                          row.isPresent === AttendanceStatus.Present
-                            ? 'success'
-                            : row.isPresent === AttendanceStatus.Absent
-                              ? 'error'
-                              : 'warning'
-                        }
-                      >
-                        {row.isPresent === AttendanceStatus.Present
-                          ? 'Present'
-                          : row.isPresent === AttendanceStatus.Absent
-                            ? 'Absent'
-                            : 'Not Yet Marked'}
-                      </Label>
-                    );
-                  },
-                },
-              ]
-            : [
-                {
-                  id: 'isPresent',
-                  label: (
-                    <Stack spacing={0.75} alignItems="center">
-                      {/* Count Badges Row - Positioned Above Buttons */}
-                      <Stack
-                        direction="row"
-                        spacing={4}
-                        alignItems="center"
-                        justifyContent="center"
-                      >
-                        {/* Present Count Badge */}
-                        <Box
-                          sx={{
-                            minWidth: '28px',
-                            height: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '10px',
-                            bgcolor: (theme) =>
-                              varAlpha(theme.vars.palette.success.mainChannel, 0.16),
-                            color: 'success.dark',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            px: 0.75,
-                          }}
-                        >
-                          {
-                            studentData.filter(
-                              (item: any) => item.isPresent === AttendanceStatus.Present
-                            ).length
-                          }
-                        </Box>
-
-                        {/* Pending Count Badge */}
-                        <Box
-                          sx={{
-                            minWidth: '28px',
-                            height: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '10px',
-                            bgcolor: (theme) =>
-                              varAlpha(theme.vars.palette.warning.mainChannel, 0.16),
-                            color: 'warning.dark',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            px: 0.75,
-                          }}
-                        >
-                          {
-                            studentData.filter(
-                              (item: any) => item.isPresent === AttendanceStatus.Pending
-                            ).length
-                          }
-                        </Box>
-
-                        {/* Absent Count Badge */}
-                        <Box
-                          sx={{
-                            minWidth: '28px',
-                            height: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            borderRadius: '10px',
-                            bgcolor: (theme) =>
-                              varAlpha(theme.vars.palette.error.mainChannel, 0.16),
-                            color: 'error.dark',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            px: 0.75,
-                          }}
-                        >
-                          {
-                            studentData.filter(
-                              (item: any) => item.isPresent === AttendanceStatus.Absent
-                            ).length
-                          }
-                        </Box>
-                      </Stack>
-
-                      {/* Action Buttons Row - Grouped Segmented Control */}
-                      <Box
-                        sx={{
-                          position: 'relative',
-                          display: 'flex',
-                          width: '180px',
-                          height: '32px',
-                          bgcolor: (theme) => theme.vars.palette.background.neutral,
-                          borderRadius: '6px',
-                          p: 0.25,
-                          gap: 0.25,
-                        }}
-                      >
-                        {/* Present Button with Tooltip - Clickable to Mark All */}
-                        <CustomTooltip
-                          title={
-                            studentData.filter(
-                              (item: any) => item.isPresent === AttendanceStatus.Present
-                            ).length > 0 ? (
-                              <Box sx={{ p: 1, maxWidth: 300 }}>
-                                <Typography
-                                  variant="caption"
-                                  fontWeight={600}
-                                  display="block"
-                                  mb={0.5}
-                                >
-                                  Present Students (
-                                  {
-                                    studentData.filter(
-                                      (item: any) => item.isPresent === AttendanceStatus.Present
-                                    ).length
-                                  }
-                                  )
-                                </Typography>
-                                {studentData
-                                  .filter(
-                                    (item: any) => item.isPresent === AttendanceStatus.Present
-                                  )
-                                  .slice(0, 10)
-                                  .map((student: any) => (
-                                    <Typography
-                                      key={student.studentId}
-                                      variant="caption"
-                                      display="block"
-                                    >
-                                      • {student.rollNo} - {student.name}
-                                    </Typography>
-                                  ))}
-                                {studentData.filter(
-                                  (item: any) => item.isPresent === AttendanceStatus.Present
-                                ).length > 10 && (
-                                  <Typography
-                                    variant="caption"
-                                    display="block"
-                                    sx={{ fontStyle: 'italic', mt: 0.5 }}
-                                  >
-                                    +
-                                    {studentData.filter(
-                                      (item: any) => item.isPresent === AttendanceStatus.Present
-                                    ).length - 10}{' '}
-                                    more
-                                  </Typography>
-                                )}
-                                <Typography
-                                  variant="caption"
-                                  display="block"
-                                  mt={1}
-                                  sx={{ fontStyle: 'italic', opacity: 0.8 }}
-                                >
-                                  Click to mark all as Present
-                                </Typography>
-                              </Box>
-                            ) : (
-                              'Click to mark all as Present'
-                            )
-                          }
-                          arrow
-                          placement="top"
-                          slotProps={{
-                            tooltip: {
-                              sx: {
-                                bgcolor: 'background.paper',
-                                color: 'text.primary',
-                                boxShadow: (theme) => theme.shadows[8],
-                                border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                                '& .MuiTooltip-arrow': {
-                                  color: 'background.paper',
-                                  '&::before': {
-                                    border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                                  },
-                                },
-                              },
-                            },
-                          }}
-                        >
-                          <Box
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (
-                                !canMarkAttendance ||
-                                data.length === 0 ||
-                                data.every(
-                                  (item: any) => item.isPresent === AttendanceStatus.Present
-                                )
-                              ) {
-                                return;
-                              }
-                              setStudentData((pre: any) =>
-                                pre.map((item: any) => ({
-                                  ...item,
-                                  isPresent: AttendanceStatus.Present,
-                                }))
-                              );
-                            }}
-                            sx={{
-                              flex: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '4px',
-                              bgcolor: (theme) =>
-                                studentData.filter(
-                                  (item: any) => item.isPresent === AttendanceStatus.Present
-                                ).length > 0
-                                  ? theme.vars.palette.success.main
-                                  : 'transparent',
-                              color: (theme) =>
-                                studentData.filter(
-                                  (item: any) => item.isPresent === AttendanceStatus.Present
-                                ).length > 0
-                                  ? theme.vars.palette.success.contrastText
-                                  : theme.vars.palette.text.secondary,
-                              cursor:
-                                data.length === 0 ||
-                                !canMarkAttendance ||
-                                data.every(
-                                  (item: any) => item.isPresent === AttendanceStatus.Present
-                                )
-                                  ? 'not-allowed'
-                                  : 'pointer',
-                              opacity:
-                                data.length === 0 ||
-                                !canMarkAttendance ||
-                                data.every(
-                                  (item: any) => item.isPresent === AttendanceStatus.Present
-                                )
-                                  ? 0.5
-                                  : 1,
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                bgcolor: (theme) =>
-                                  data.length === 0 ||
-                                  !canMarkAttendance ||
-                                  data.every(
-                                    (item: any) => item.isPresent === AttendanceStatus.Present
-                                  )
-                                    ? studentData.filter(
-                                        (item: any) => item.isPresent === AttendanceStatus.Present
-                                      ).length > 0
-                                      ? theme.vars.palette.success.main
-                                      : 'transparent'
-                                    : studentData.filter(
-                                          (item: any) => item.isPresent === AttendanceStatus.Present
-                                        ).length > 0
-                                      ? theme.vars.palette.success.dark
-                                      : varAlpha(theme.vars.palette.success.mainChannel, 0.08),
-                              },
-                            }}
-                          >
-                            <Iconify icon="eva:checkmark-fill" width={18} />
-                          </Box>
-                        </CustomTooltip>
-
-                        {/* Pending Button with Tooltip */}
-                        <CustomTooltip
-                          title={
-                            studentData.filter(
-                              (item: any) => item.isPresent === AttendanceStatus.Pending
-                            ).length > 0 ? (
-                              <Box sx={{ p: 1, maxWidth: 300 }}>
-                                <Typography
-                                  variant="caption"
-                                  fontWeight={600}
-                                  display="block"
-                                  mb={0.5}
-                                >
-                                  Pending Students (
-                                  {
-                                    studentData.filter(
-                                      (item: any) => item.isPresent === AttendanceStatus.Pending
-                                    ).length
-                                  }
-                                  )
-                                </Typography>
-                                {studentData
-                                  .filter(
-                                    (item: any) => item.isPresent === AttendanceStatus.Pending
-                                  )
-                                  .slice(0, 10)
-                                  .map((student: any) => (
-                                    <Typography
-                                      key={student.studentId}
-                                      variant="caption"
-                                      display="block"
-                                    >
-                                      • {student.rollNo} - {student.name}
-                                    </Typography>
-                                  ))}
-                                {studentData.filter(
-                                  (item: any) => item.isPresent === AttendanceStatus.Pending
-                                ).length > 10 && (
-                                  <Typography
-                                    variant="caption"
-                                    display="block"
-                                    sx={{ fontStyle: 'italic', mt: 0.5 }}
-                                  >
-                                    +
-                                    {studentData.filter(
-                                      (item: any) => item.isPresent === AttendanceStatus.Pending
-                                    ).length - 10}{' '}
-                                    more
-                                  </Typography>
-                                )}
-                              </Box>
-                            ) : (
-                              'No pending students'
-                            )
-                          }
-                          arrow
-                          placement="top"
-                          slotProps={{
-                            tooltip: {
-                              sx: {
-                                bgcolor: 'background.paper',
-                                color: 'text.primary',
-                                boxShadow: (theme) => theme.shadows[8],
-                                border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                                '& .MuiTooltip-arrow': {
-                                  color: 'background.paper',
-                                  '&::before': {
-                                    border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                                  },
-                                },
-                              },
-                            },
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              flex: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '4px',
-                              bgcolor: (theme) =>
-                                studentData.filter(
-                                  (item: any) => item.isPresent === AttendanceStatus.Pending
-                                ).length > 0
-                                  ? theme.vars.palette.warning.main
-                                  : 'transparent',
-                              color: (theme) =>
-                                studentData.filter(
-                                  (item: any) => item.isPresent === AttendanceStatus.Pending
-                                ).length > 0
-                                  ? theme.vars.palette.warning.contrastText
-                                  : theme.vars.palette.text.secondary,
-                              cursor: 'default',
-                              transition: 'all 0.2s',
-                            }}
-                          >
-                            <Iconify icon="eva:minus-fill" width={18} />
-                          </Box>
-                        </CustomTooltip>
-
-                        {/* Absent Button with Tooltip - Clickable to Mark All */}
-                        <CustomTooltip
-                          title={
-                            studentData.filter(
-                              (item: any) => item.isPresent === AttendanceStatus.Absent
-                            ).length > 0 ? (
-                              <Box sx={{ p: 1, maxWidth: 300 }}>
-                                <Typography
-                                  variant="caption"
-                                  fontWeight={600}
-                                  display="block"
-                                  mb={0.5}
-                                >
-                                  Absent Students (
-                                  {
-                                    studentData.filter(
-                                      (item: any) => item.isPresent === AttendanceStatus.Absent
-                                    ).length
-                                  }
-                                  )
-                                </Typography>
-                                {studentData
-                                  .filter((item: any) => item.isPresent === AttendanceStatus.Absent)
-                                  .slice(0, 10)
-                                  .map((student: any) => (
-                                    <Typography
-                                      key={student.studentId}
-                                      variant="caption"
-                                      display="block"
-                                    >
-                                      • {student.rollNo} - {student.name}
-                                    </Typography>
-                                  ))}
-                                {studentData.filter(
-                                  (item: any) => item.isPresent === AttendanceStatus.Absent
-                                ).length > 10 && (
-                                  <Typography
-                                    variant="caption"
-                                    display="block"
-                                    sx={{ fontStyle: 'italic', mt: 0.5 }}
-                                  >
-                                    +
-                                    {studentData.filter(
-                                      (item: any) => item.isPresent === AttendanceStatus.Absent
-                                    ).length - 10}{' '}
-                                    more
-                                  </Typography>
-                                )}
-                                <Typography
-                                  variant="caption"
-                                  display="block"
-                                  mt={1}
-                                  sx={{ fontStyle: 'italic', opacity: 0.8 }}
-                                >
-                                  Click to mark all as Absent
-                                </Typography>
-                              </Box>
-                            ) : (
-                              'Click to mark all as Absent'
-                            )
-                          }
-                          arrow
-                          placement="top"
-                          slotProps={{
-                            tooltip: {
-                              sx: {
-                                bgcolor: 'background.paper',
-                                color: 'text.primary',
-                                boxShadow: (theme) => theme.shadows[8],
-                                border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                                '& .MuiTooltip-arrow': {
-                                  color: 'background.paper',
-                                  '&::before': {
-                                    border: (theme) => `1px solid ${theme.vars.palette.divider}`,
-                                  },
-                                },
-                              },
-                            },
-                          }}
-                        >
-                          <Box
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (
-                                !canMarkAttendance ||
-                                data.length === 0 ||
-                                data.every(
-                                  (item: any) => item.isPresent === AttendanceStatus.Absent
-                                )
-                              ) {
-                                return;
-                              }
-                              setStudentData((pre: any) =>
-                                pre.map((item: any) => ({
-                                  ...item,
-                                  isPresent: AttendanceStatus.Absent,
-                                }))
-                              );
-                            }}
-                            sx={{
-                              flex: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '4px',
-                              bgcolor: (theme) =>
-                                studentData.filter(
-                                  (item: any) => item.isPresent === AttendanceStatus.Absent
-                                ).length > 0
-                                  ? theme.vars.palette.error.main
-                                  : 'transparent',
-                              color: (theme) =>
-                                studentData.filter(
-                                  (item: any) => item.isPresent === AttendanceStatus.Absent
-                                ).length > 0
-                                  ? theme.vars.palette.error.contrastText
-                                  : theme.vars.palette.text.secondary,
-                              cursor:
-                                data.length === 0 ||
-                                !canMarkAttendance ||
-                                data.every(
-                                  (item: any) => item.isPresent === AttendanceStatus.Absent
-                                )
-                                  ? 'not-allowed'
-                                  : 'pointer',
-                              opacity:
-                                data.length === 0 ||
-                                !canMarkAttendance ||
-                                data.every(
-                                  (item: any) => item.isPresent === AttendanceStatus.Absent
-                                )
-                                  ? 0.5
-                                  : 1,
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                bgcolor: (theme) =>
-                                  data.length === 0 ||
-                                  !canMarkAttendance ||
-                                  data.every(
-                                    (item: any) => item.isPresent === AttendanceStatus.Absent
-                                  )
-                                    ? studentData.filter(
-                                        (item: any) => item.isPresent === AttendanceStatus.Absent
-                                      ).length > 0
-                                      ? theme.vars.palette.error.main
-                                      : 'transparent'
-                                    : studentData.filter(
-                                          (item: any) => item.isPresent === AttendanceStatus.Absent
-                                        ).length > 0
-                                      ? theme.vars.palette.error.dark
-                                      : varAlpha(theme.vars.palette.error.mainChannel, 0.08),
-                              },
-                            }}
-                          >
-                            <Iconify icon="eva:close-fill" width={18} />
-                          </Box>
-                        </CustomTooltip>
-                      </Box>
-                    </Stack>
-                  ),
-                  minWidth: '200px',
-                  align: 'left' as const,
-                  isSort: false,
-                  sticky: true,
-                  isFilter: false,
-                  render(value: any, row: any) {
-                    return isSaved.value ? (
-                      <Label
-                        color={
-                          value === AttendanceStatus.Present
-                            ? 'success'
-                            : value === AttendanceStatus.Absent
-                              ? 'error'
-                              : 'warning'
-                        }
-                      >
-                        {value === AttendanceStatus.Present
-                          ? 'Present'
-                          : value === AttendanceStatus.Absent
-                            ? 'Absent'
-                            : 'Not Yet Marked'}
-                      </Label>
-                    ) : (
-                      <Stack direction="row" spacing={0} sx={{ alignItems: 'center' }}>
-                        <Box
-                          sx={{
-                            position: 'relative',
-                            display: 'flex',
-                            width: '180px',
-                            height: '32px',
-                            bgcolor: (theme) => theme.vars.palette.background.neutral,
-                            borderRadius: '6px',
-                            p: 0.25,
-                            gap: 0.25,
-                          }}
-                        >
-                          {/* Present Button */}
-                          <Box
-                            onClick={() => {
-                              if (!canMarkAttendance) {
-                                return;
-                              }
-                              setStudentData(
-                                data.map((item: any) =>
-                                  item.studentId === row.studentId
-                                    ? { ...item, isPresent: AttendanceStatus.Present }
-                                    : item
-                                )
-                              );
-                            }}
-                            sx={{
-                              flex: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              opacity: 1,
-                              bgcolor:
-                                value === AttendanceStatus.Present
-                                  ? (theme) => theme.vars.palette.success.main
-                                  : 'transparent',
-                              color:
-                                value === AttendanceStatus.Present
-                                  ? (theme) => theme.vars.palette.success.contrastText
-                                  : (theme) => theme.vars.palette.text.secondary,
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                bgcolor:
-                                  value === AttendanceStatus.Present
-                                    ? (theme) => theme.vars.palette.success.dark
-                                    : (theme) =>
-                                        varAlpha(theme.vars.palette.success.mainChannel, 0.08),
-                              },
-                            }}
-                          >
-                            <Iconify icon="eva:checkmark-fill" width={18} />
-                          </Box>
-
-                          {/* Pending Button */}
-                          <Box
-                            onClick={() => {
-                              if (!canMarkAttendance) {
-                                return;
-                              }
-                              setStudentData(
-                                data.map((item: any) =>
-                                  item.studentId === row.studentId
-                                    ? { ...item, isPresent: AttendanceStatus.Pending }
-                                    : item
-                                )
-                              );
-                            }}
-                            sx={{
-                              flex: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              opacity: 1,
-                              bgcolor:
-                                value === AttendanceStatus.Pending
-                                  ? (theme) => theme.vars.palette.warning.main
-                                  : 'transparent',
-                              color:
-                                value === AttendanceStatus.Pending
-                                  ? (theme) => theme.vars.palette.warning.contrastText
-                                  : (theme) => theme.vars.palette.text.secondary,
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                bgcolor:
-                                  value === AttendanceStatus.Pending
-                                    ? (theme) => theme.vars.palette.warning.dark
-                                    : (theme) =>
-                                        varAlpha(theme.vars.palette.warning.mainChannel, 0.08),
-                              },
-                            }}
-                          >
-                            <Iconify icon="eva:minus-fill" width={18} />
-                          </Box>
-
-                          {/* Absent Button */}
-                          <Box
-                            onClick={() => {
-                              if (!canMarkAttendance) {
-                                return;
-                              }
-                              setStudentData(
-                                data.map((item: any) =>
-                                  item.studentId === row.studentId
-                                    ? { ...item, isPresent: AttendanceStatus.Absent }
-                                    : item
-                                )
-                              );
-                            }}
-                            sx={{
-                              flex: 1,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              borderRadius: '4px',
-                              cursor: 'pointer',
-                              opacity: 1,
-                              bgcolor:
-                                value === AttendanceStatus.Absent
-                                  ? (theme) => theme.vars.palette.error.main
-                                  : 'transparent',
-                              color:
-                                value === AttendanceStatus.Absent
-                                  ? (theme) => theme.vars.palette.error.contrastText
-                                  : (theme) => theme.vars.palette.text.secondary,
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                bgcolor:
-                                  value === AttendanceStatus.Absent
-                                    ? (theme) => theme.vars.palette.error.dark
-                                    : (theme) =>
-                                        varAlpha(theme.vars.palette.error.mainChannel, 0.08),
-                              },
-                            }}
-                          >
-                            <Iconify icon="eva:close-fill" width={18} />
-                          </Box>
-                        </Box>
-                      </Stack>
-                    );
-                  },
-                },
-              ]),
-        ]}
-        data={data}
-        serverSide
-        onServerSort={(column, sortData) => {
-          setQuery((prev) => ({
-            ...prev,
-            sorting: sortQueryString(sortData),
-          }));
-        }}
-        onServerPagination={(page: number, rowsPerPage: number) => {
-          setQuery((prev) => ({
-            ...prev,
-            skipCount: page * rowsPerPage,
-            maxResultCount: rowsPerPage,
-          }));
-        }}
-      />{' '}
-    </>
+    <Suspense
+      fallback={
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
+          <CustomBreadcrumbs
+            heading="Daily Attendance"
+            description="Choose a class and date to record daily attendance."
+            links={[
+              { name: 'Student', href: studentPaths.dashboard },
+              { name: 'Attendance', href: studentPaths.attendance.root },
+              { name: 'Daily Attendance' },
+            ]}
+          />
+          <LinearProgress aria-label="Loading daily attendance" />
+        </Box>
+      }
+    >
+      <DailyAttendanceWorkspace />
+    </Suspense>
   );
-};
+}

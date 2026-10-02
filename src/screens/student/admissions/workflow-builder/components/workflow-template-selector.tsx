@@ -36,18 +36,13 @@ const cardSx = (selected: boolean) => ({
   display: 'flex',
   flexDirection: 'column',
   borderRadius: 1.5,
-  borderColor: selected ? 'success.main' : 'divider',
+  borderColor: 'divider',
   bgcolor: (theme: Theme) =>
     selected
       ? varAlpha(theme.vars.palette.success.mainChannel, 0.06)
       : theme.vars.palette.background.paper,
   transition: (theme: Theme) => theme.transitions.create(['border-color', 'background-color']),
-  '&:hover': { borderColor: selected ? 'success.main' : 'text.secondary' },
-  '&:focus-within': {
-    outline: '2px solid',
-    outlineColor: 'text.primary',
-    outlineOffset: 2,
-  },
+  '&:hover': { borderColor: 'text.secondary' },
 });
 
 export function WorkflowTemplateSelector({

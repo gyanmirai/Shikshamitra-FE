@@ -75,6 +75,9 @@ export function useBulkAdmissionOffering(
     },
     loading: bulkState.isLoading || standardsState.isFetching,
     hierarchy: hierarchyQuery.data?.items ?? [],
+    hierarchyError: hierarchyQuery.isError,
+    hierarchyEmpty: hierarchyQuery.isSuccess && !hierarchyQuery.data?.items?.length,
+    retryHierarchy: hierarchyQuery.refetch,
     ...definitionOptions,
     optionsLoading: hierarchyQuery.isFetching,
   };

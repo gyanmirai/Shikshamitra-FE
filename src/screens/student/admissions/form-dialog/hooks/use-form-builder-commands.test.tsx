@@ -31,8 +31,38 @@ function Commands({
       <button type="button" onClick={() => commands.addCanvasUnit(steps[0]?.id)}>
         Add next step
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          commands.addGroupSection('Student profile', [
+            {
+              key: 'Applicant.TestProfileOne',
+              displayName: 'Test profile one',
+              description: 'First test field',
+              fieldType: 0,
+              readOnly: false,
+            },
+            {
+              key: 'Applicant.TestProfileTwo',
+              displayName: 'Test profile two',
+              description: 'Second test field',
+              fieldType: 0,
+              readOnly: false,
+            },
+          ])
+        }
+      >
+        Add profile section
+      </button>
       <output data-testid="sections">
-        {JSON.stringify(formik.values.sections.map(({ code, stepId }) => ({ code, stepId })))}
+        {JSON.stringify(
+          formik.values.sections.map(({ code, name, stepId, fields }) => ({
+            code,
+            name,
+            stepId,
+            bindings: fields.map((field) => field.bindingKey),
+          }))
+        )}
       </output>
       <output data-testid="steps">
         {JSON.stringify(steps.map(({ id, name, code }) => ({ id, name, code })))}
@@ -102,5 +132,28 @@ describe('useFormBuilderCommands', () => {
     expect(after[1].name).toBe('Step 2');
     expect(after[1].code).toMatch(/^STEP_/);
     expect(after.slice(2).map(({ id }) => id)).toEqual(before.slice(1).map(({ id }) => id));
+  });
+
+  it('adds a student field group as a section in the selected step without duplicate bindings', async () => {
+    const user = userEvent.setup();
+    const { bank } = renderCommands();
+
+    await user.click(screen.getByRole('button', { name: 'Add profile section' }));
+    const sections = JSON.parse(screen.getByTestId('sections').textContent || '[]') as {
+      name: string;
+      stepId: string;
+      bindings: string[];
+    }[];
+    expect(sections.at(-1)).toMatchObject({
+      name: 'Student profile',
+      stepId: bank.stepId,
+      bindings: ['Applicant.TestProfileOne', 'Applicant.TestProfileTwo'],
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Add profile section' }));
+    const afterDuplicate = JSON.parse(
+      screen.getByTestId('sections').textContent || '[]'
+    ) as typeof sections;
+    expect(afterDuplicate).toHaveLength(sections.length);
   });
 });

@@ -4,11 +4,13 @@ import type { FormikProps } from 'formik';
 import type { Standards } from 'src/types/school';
 import type { AdmissionCycle } from 'src/redux/student/admissions/admission-cycles-api';
 
-import { useRef, useState } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { useRef, useMemo, useState } from 'react';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { useGetClassByMediumQuery } from 'src/redux/class/classApi';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { useGetAdmissionIntakeSetupsQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 import {
   Box,
   Alert,
@@ -16,6 +18,7 @@ import {
   Table,
   Paper,
   Radio,
+  Button,
   Drawer,
   Divider,
   TableRow,
@@ -29,26 +32,39 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import { AdmissionDialogTitle } from './admission-dialog-title';
 import { useBulkAdmissionOffering } from './use-bulk-admission-offering';
 import { BulkAdmissionHierarchyFields } from './bulk-admission-hierarchy-fields';
 import { AdmissionOfferingCycleContext } from './admission-offering-cycle-context';
 import { BulkAdmissionConfigurationFields } from './bulk-admission-configuration-fields';
-import {
-  bulkOfferingSchema,
-  bulkOfferingInitialValues,
-  bulkOfferingSelectionSchema,
-} from './bulk-admission-offering-model';
+import { bulkOfferingSchema, bulkOfferingInitialValues } from './bulk-admission-offering-model';
 
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
 
-type Props = { open: boolean; cycle: AdmissionCycle; onClose: () => void };
+type Props = {
+  open: boolean;
+  cycle: AdmissionCycle;
+  initialIntakeSetupId?: string | null;
+  onClose: () => void;
+};
 
-const STEPS = ['Select classes', 'Configure', 'Preview'];
+// Select classes + Configure are merged into step 0; Preview is step 1
+const STEPS = ['Select & Configure', 'Preview'];
 
-export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
+export function BulkAdmissionOfferingDialog({ open, cycle, initialIntakeSetupId, onClose }: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const formikRef = useRef<FormikProps<BulkOfferingValues> | null>(null);
   const bulk = useBulkAdmissionOffering(cycle, open, onClose);
+  const setups = useGetAdmissionIntakeSetupsQuery(undefined, { skip: !initialIntakeSetupId });
+  const initialSetup = (setups.data ?? []).find((setup) => setup.id === initialIntakeSetupId);
+  const initialValues = useMemo<BulkOfferingValues>(
+    () => ({
+      ...bulkOfferingInitialValues,
+      inquiryIntakeProfileId: initialSetup?.inquiryIntakeProfileId ?? '',
+      counsellorAssignmentProfileId: initialSetup?.counsellorAssignmentProfileId ?? '',
+    }),
+    [initialSetup]
+  );
   const selectedCount = bulk.preview?.items.length ?? 0;
 
   const requestClose = () => {
@@ -68,17 +84,17 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
     setIsLoading: (value: boolean) => void
   ) => {
     if (activeStep === 0) {
-      setActiveStep(1);
+      setIsLoading(true);
+      try {
+        const preview = await bulk.previewOfferings(values);
+        if (preview) setActiveStep(1);
+      } finally {
+        setIsLoading(false);
+      }
       return;
     }
-
     setIsLoading(true);
     try {
-      if (activeStep === 1) {
-        const preview = await bulk.previewOfferings(values);
-        if (preview) setActiveStep(2);
-        return;
-      }
       await bulk.createOfferings(values);
     } finally {
       setIsLoading(false);
@@ -104,12 +120,14 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
     >
       <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography id="bulk-admission-offering-title" variant="h6" component="h2">
-            Bulk create offerings
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Create one admission offering for every selected standard.
-          </Typography>
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Typography id="bulk-admission-offering-title" variant="h6" component="h2">
+              <AdmissionDialogTitle
+                title="Bulk create offerings"
+                helpText="Create one admission offering for every selected class."
+              />
+            </Typography>
+          </Stack>
         </Box>
         <IconButton
           aria-label="Close bulk admission offering drawer"
@@ -122,47 +140,63 @@ export function BulkAdmissionOfferingDialog({ open, cycle, onClose }: Props) {
       </Stack>
       <Divider />
 
-      <Box sx={{ px: 2, pt: 2, pb: 1 }}>
-        <AdmissionOfferingCycleContext cycle={cycle} />
-      </Box>
-
       <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
         <CustomStepperWithFormik
-          key={cycle.id}
+          key={`${cycle.id}-${initialSetup?.id ?? 'default'}`}
           steps={STEPS}
           activeStep={activeStep}
-          initialValues={bulkOfferingInitialValues}
-          validationSchema={activeStep === 0 ? bulkOfferingSelectionSchema : bulkOfferingSchema}
+          initialValues={initialValues}
+          validationSchema={bulkOfferingSchema}
           handleNext={handleNext}
           handleBack={() => setActiveStep((step) => Math.max(0, step - 1))}
           onStepClick={(step) => {
             if (step <= activeStep) setActiveStep(step);
           }}
           isStepClickable={(step) => step <= activeStep}
-          completedSteps={activeStep === 2 ? [0, 1] : activeStep === 1 ? [0] : []}
+          completedSteps={activeStep === 1 ? [0] : []}
           validateForwardStepClick
           showSaveButton={false}
-          backButtonProps={{ sx: { minHeight: { xs: 44, sm: 32 } } }}
-          nextButtonLabel={activeStep === 0 ? 'Continue' : 'Preview offerings'}
+          backButtonProps={{ sx: { ml: 'auto', mr: 1 } }}
+          nextButtonLabel="Preview offerings"
           finalButtonLabel={`Create ${selectedCount} offering${selectedCount === 1 ? '' : 's'}`}
           disableSubmit={
-            activeStep === 2 &&
+            activeStep === 1 &&
             (!bulk.canSaveInactive ||
               Boolean(formikRef.current?.values.isActive && !bulk.canActivate))
           }
           saveAndNextButtonProps={{
-            sx: { minHeight: { xs: 44, sm: 32 } },
-            endIcon: activeStep === 1 ? <Iconify icon="mdi:eye-outline" width={18} /> : undefined,
+            endIcon: activeStep === 0 ? <Iconify icon="mdi:eye-outline" width={18} /> : undefined,
           }}
           renderItem={({ formik }) => {
             formikRef.current = formik;
             return (
-              <BulkAdmissionOfferingStep
-                activeStep={activeStep}
-                formik={formik}
-                cycle={cycle}
-                bulk={bulk}
-              />
+              <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 } }}>
+                {initialIntakeSetupId && setups.isError && (
+                  <Alert
+                    severity="error"
+                    action={
+                      <Button size="small" onClick={() => setups.refetch()}>
+                        Retry
+                      </Button>
+                    }
+                  >
+                    The selected admission intake setup could not be loaded.
+                  </Alert>
+                )}
+                {initialSetup && (
+                  <Alert severity="success">
+                    <strong>{initialSetup.name}</strong> is selected. It will provide inquiry
+                    handling and counsellor routing for these Offerings.
+                  </Alert>
+                )}
+                <AdmissionOfferingCycleContext cycle={cycle} />
+                <BulkAdmissionOfferingStep
+                  activeStep={activeStep}
+                  formik={formik}
+                  cycle={cycle}
+                  bulk={bulk}
+                />
+              </Stack>
             );
           }}
         />
@@ -195,41 +229,72 @@ function BulkAdmissionOfferingStep({
 
   if (activeStep === 0) {
     return (
-      <Stack spacing={2} sx={{ p: 2 }}>
-        <Box>
-          <Typography variant="subtitle1">Select classes</Typography>
-        </Box>
-        <BulkAdmissionHierarchyFields
-          formik={formik}
-          hierarchy={bulk.hierarchy}
-          standards={standards}
-          loading={bulk.optionsLoading || standardsQuery.isFetching}
-          change={change}
-        />
-        <Typography variant="caption" color="text.secondary">
-          One offering will be created for each selected standard.
-        </Typography>
-      </Stack>
-    );
-  }
+      <Stack spacing={2}>
+        <FormSectionCard
+          icon="mdi:school-outline"
+          title="Select classes"
+          titleTypographyProps={{
+            sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+          }}
+        >
+          {bulk.hierarchyError && (
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={bulk.retryHierarchy}>
+                  Retry
+                </Button>
+              }
+            >
+              School class options could not be loaded.
+            </Alert>
+          )}
+          {bulk.hierarchyEmpty && !bulk.optionsLoading && (
+            <Alert severity="info">No school classes are configured for this academic year.</Alert>
+          )}
+          {formik.values.mediumId && standardsQuery.isError && (
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={() => standardsQuery.refetch()}>
+                  Retry
+                </Button>
+              }
+            >
+              Classes for this medium could not be loaded.
+            </Alert>
+          )}
+          {formik.values.mediumId &&
+            standardsQuery.isSuccess &&
+            !standardsQuery.isFetching &&
+            !standards.length && (
+              <Alert severity="info">No classes are configured for this medium.</Alert>
+            )}
+          <BulkAdmissionHierarchyFields
+            formik={formik}
+            hierarchy={bulk.hierarchy}
+            standards={standards}
+            loading={bulk.optionsLoading || standardsQuery.isFetching}
+            change={change}
+          />
+        </FormSectionCard>
 
-  if (activeStep === 1) {
-    return (
-      <Stack spacing={2} sx={{ p: 2 }}>
-        <Box>
-          <Typography variant="subtitle1">Configure offerings</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Apply one entry path, published process, and admission window to the selected classes.
-          </Typography>
-        </Box>
-        <BulkAdmissionConfigurationFields
-          formik={formik}
-          cycle={cycle}
-          fetchWorkflows={bulk.fetchWorkflows}
-          fetchInquiryForms={bulk.fetchInquiryForms}
-          fetchRegistrationForms={bulk.fetchRegistrationForms}
-          change={change}
-        />
+        <FormSectionCard
+          icon="mdi:cog-outline"
+          title="Configure offerings"
+          titleTypographyProps={{
+            sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+          }}
+        >
+          <BulkAdmissionConfigurationFields
+            formik={formik}
+            cycle={cycle}
+            fetchWorkflows={bulk.fetchWorkflows}
+            fetchInquiryForms={bulk.fetchInquiryForms}
+            fetchRegistrationForms={bulk.fetchRegistrationForms}
+            change={change}
+          />
+        </FormSectionCard>
       </Stack>
     );
   }
@@ -255,15 +320,11 @@ function BulkAdmissionOfferingPreview({
   standardNameById: Record<string, string>;
 }) {
   if (!bulk.preview) {
-    return (
-      <Box sx={{ p: 2 }}>
-        <Alert severity="warning">Preview the selected offerings before creating them.</Alert>
-      </Box>
-    );
+    return <Alert severity="warning">Preview the selected offerings before creating them.</Alert>;
   }
 
   return (
-    <Stack spacing={2} sx={{ p: 2 }}>
+    <Stack spacing={2}>
       <Box>
         <Typography variant="subtitle1">Preview offerings</Typography>
         <Typography variant="body2" color="text.secondary">

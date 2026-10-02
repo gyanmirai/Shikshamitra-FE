@@ -11,6 +11,7 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { Alert, Stack, Button, Typography } from '@mui/material';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
 import AssignmentDrawer from 'src/screens/finance/FeeStructureAssign/Components/AssignmentDrawer';
+import AdmissionFeeSelectionPanel from 'src/screens/student/admissions/fee-selection/admission-fee-selection-panel';
 import {
   useGetStudentOnboardingCaseQuery,
   useRefreshStudentOnboardingReadinessMutation,
@@ -30,6 +31,13 @@ export default function StudentOnboardingFees({ caseId, canManage }: { caseId: s
   const canCollect = hasGrantedPermission(permissions, `${financePermissions.fees.collections}.Add`);
   return (
     <Stack spacing={1}>
+      {item.applicationId && (
+        <AdmissionFeeSelectionPanel
+          applicationId={item.applicationId}
+          mode="onboarding"
+          canConfirm={canManage}
+        />
+      )}
       <Alert severity={item.firstPaymentConfirmed ? 'success' : 'info'}>
         {item.financeReadinessDetail ?? 'Fee assignment and the first installment must be verified in Finance.'}
       </Alert>

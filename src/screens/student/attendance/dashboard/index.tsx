@@ -1,9 +1,15 @@
 'use client';
 
 import type { Dayjs } from 'dayjs';
+import type { RootState } from 'src/redux/store';
 import type { LabelColor } from 'src/components/label';
+import type {
+  AttendanceDashboardClass,
+  AttendanceDashboardDivision,
+} from 'src/redux/student/attendance-dashboard-types';
 
 import dayjs from 'dayjs';
+import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { useTheme } from '@mui/material/styles';
 import React, { useMemo, useState } from 'react';
@@ -11,15 +17,26 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import sortQueryString from 'src/utils/sort-query-string';
+import { studentPaths } from 'src/constants/student-menu';
 import UserHoverProfile from 'src/components/student-popover';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Grid, Paper, Avatar, Button, Typography } from '@mui/material';
 import {
   AttendanceStatusType,
   AttendanceStatusOptions,
   AttendanceStatusTypeColors,
 } from 'src/enums/attendance-type';
+import {
+  Box,
+  Grid,
+  Paper,
+  Alert,
+  Avatar,
+  Button,
+  Skeleton,
+  Typography,
+  LinearProgress,
+} from '@mui/material';
 import {
   useGetStudentsByDivisionQuery,
   useGetStudentAttendanceHistoryQuery,
@@ -30,34 +47,53 @@ import {
   buildAttendanceHistoryQuery,
   buildAttendanceSummaryQuery,
 } from './attendance-dashboard-query';
+import {
+  attendanceCompletionLabel,
+  attendancePercentageColor,
+  attendancePercentageLabel,
+} from './attendance-dashboard-metrics';
+
+type SelectedDivision = AttendanceDashboardDivision & { class: AttendanceDashboardClass };
 
 const StudentAttendanceDashboardScreen = () => {
+  const year = useSelector((state: RootState) => state.globalState.currentYear);
   // State to track selected division for detailed view
-  const [selectedDivision, setSelectedDivision] = useState(null);
+  const [selectedDivision, setSelectedDivision] = useState<SelectedDivision | null>(null);
   // State to track selected month for attendance data
   const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(dayjs());
   const attendanceSummaryQuery = useMemo(
-    () => buildAttendanceSummaryQuery(selectedMonth),
-    [selectedMonth]
+    () => ({ ...buildAttendanceSummaryQuery(selectedMonth), academicYearId: year?.id }),
+    [selectedMonth, year?.id]
   );
-  const { data: attendanceSummary } =
-    useGetStudentAttendanceDashboardSummaryQuery(attendanceSummaryQuery);
+  const {
+    data: attendanceSummary,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useGetStudentAttendanceDashboardSummaryQuery(attendanceSummaryQuery);
   const attendanceClassSummary = attendanceSummary?.classes || [];
-  const schoolAttendance = attendanceSummary?.schoolAttendancePercentage || 0;
+  const schoolAttendance = attendanceSummary?.schoolAttendancePercentage;
   return (
-    <Box height="100%">
+    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       {!selectedDivision ? (
         <>
           <CustomBreadcrumbs
             heading="Dashboard"
             links={[
-              { name: 'Student', href: '/student/dashboard' },
-              { name: 'Attendance', href: '/student/attendance/dashboard/' },
+              { name: 'Student', href: studentPaths.dashboard },
+              { name: 'Attendance', href: studentPaths.attendance.markAttendance },
               { name: 'Dashboard' },
             ]}
             description="This dashboard shows daily attendance stats, overall attendance rates"
           />
-          <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            gap={1}
+            flexWrap="wrap"
+          >
             <DatePicker
               views={['month']}
               label="Select Month"
@@ -67,22 +103,45 @@ const StudentAttendanceDashboardScreen = () => {
               format="MMM"
               slotProps={{ textField: { size: 'small' } }}
             />
-            <Label
-              sx={{ cursor: 'pointer' }}
-              color={
-                schoolAttendance > 75 ? 'success' : schoolAttendance > 40 ? 'warning' : 'error'
+            <Label sx={{ cursor: 'pointer' }} color={attendancePercentageColor(schoolAttendance)}>
+              School Attendance : {attendancePercentageLabel(schoolAttendance)}
+            </Label>
+          </Box>
+          {isLoading && <Skeleton variant="rounded" height={120} sx={{ mt: 2 }} />}
+          {isFetching && !isLoading && (
+            <LinearProgress aria-label="Refreshing attendance summary" sx={{ mt: 1 }} />
+          )}
+          {isError && (
+            <Alert
+              severity="error"
+              sx={{ mt: 1 }}
+              action={
+                <Button size="small" onClick={() => refetch()}>
+                  Retry
+                </Button>
               }
             >
-              School Attendance : {schoolAttendance}%
-            </Label>
-          </Box>{' '}
+              Attendance summary could not be loaded.
+            </Alert>
+          )}
+          {attendanceSummary && (
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {attendanceCompletionLabel(attendanceSummary)}
+            </Typography>
+          )}
+          {attendanceSummary?.isProvisional && (
+            <Alert severity="info" sx={{ mt: 1 }}>
+              Attendance is provisional. Complete pending marking and confirm imported attendance
+              start dates before relying on this percentage.
+            </Alert>
+          )}
           <Box display="flex" gap={1} flexWrap="wrap" mt={2}>
-            {attendanceClassSummary.length === 0 && (
+            {!isLoading && !isError && attendanceClassSummary.length === 0 && (
               <Typography variant="body2" color="text.secondary">
                 No attendance summary found.
               </Typography>
             )}
-            {attendanceClassSummary.map((classData: any) => (
+            {attendanceClassSummary.map((classData) => (
               <ClassCard
                 key={classData.standardId || classData.name}
                 classItem={classData}
@@ -96,13 +155,17 @@ const StudentAttendanceDashboardScreen = () => {
           <CustomBreadcrumbs
             description="This dashboard shows daily attendance stats, overall attendance rates."
             heading="Dashboard"
-            links={[{ name: 'Student' }, { name: 'Attendance' }, { name: 'Dashboard' }]}
+            links={[
+              { name: 'Student', href: studentPaths.dashboard },
+              { name: 'Attendance', href: studentPaths.attendance.markAttendance },
+              { name: 'Dashboard' },
+            ]}
             action={
               <Button
                 size="small"
                 variant="soft"
                 onClick={() => setSelectedDivision(null)}
-                startIcon={<Iconify icon="mingcute:back-2-fill" />}
+                startIcon={<Iconify icon="mdi:arrow-left" />}
               >
                 Back To Dashboard
               </Button>
@@ -121,20 +184,22 @@ const StudentAttendanceDashboardScreen = () => {
 
 export default StudentAttendanceDashboardScreen;
 
-const ClassCard = ({ classItem, setSelectedDivision }: any) => (
+const ClassCard = ({
+  classItem,
+  setSelectedDivision,
+}: {
+  classItem: AttendanceDashboardClass;
+  setSelectedDivision: (value: SelectedDivision) => void;
+}) => (
   <Paper sx={{ p: 2 }} elevation={3}>
     <Box display="flex" justifyContent="space-between">
       <Typography variant="h6">Class {classItem.name}</Typography>
-      <Label
-        color={
-          classItem.percentage > 75 ? 'success' : classItem.percentage > 40 ? 'warning' : 'error'
-        }
-      >
-        {classItem.percentage}%
+      <Label color={attendancePercentageColor(classItem.percentage)}>
+        {attendancePercentageLabel(classItem.percentage)}
       </Label>
     </Box>
     <Box display="flex" gap={1} flexWrap="wrap" mt={2}>
-      {classItem.divisions.map((item: any) => (
+      {classItem.divisions.map((item) => (
         <RenderDivision
           key={item.divisionId || item.name}
           classDetails={classItem}
@@ -146,7 +211,15 @@ const ClassCard = ({ classItem, setSelectedDivision }: any) => (
   </Paper>
 );
 
-const RenderDivision = ({ item, setSelectedDivision, classDetails }: any) => (
+const RenderDivision = ({
+  item,
+  setSelectedDivision,
+  classDetails,
+}: {
+  item: AttendanceDashboardDivision;
+  classDetails: AttendanceDashboardClass;
+  setSelectedDivision: (value: SelectedDivision) => void;
+}) => (
   <Paper
     sx={{
       borderRadius: 1,
@@ -160,14 +233,14 @@ const RenderDivision = ({ item, setSelectedDivision, classDetails }: any) => (
       '&:hover': { scale: '1.17' },
     }}
     elevation={5}
+    component="button"
+    type="button"
+    aria-label={`View class ${classDetails.name}, division ${item.name}`}
     onClick={() => setSelectedDivision({ ...item, class: classDetails })}
   >
     {item.name}
-    <Label
-      sx={{ cursor: 'pointer' }}
-      color={item.percentage > 75 ? 'success' : item.percentage > 40 ? 'warning' : 'error'}
-    >
-      {item.percentage}%
+    <Label sx={{ cursor: 'pointer' }} color={attendancePercentageColor(item.percentage)}>
+      {attendancePercentageLabel(item.percentage)}
     </Label>
   </Paper>
 );
@@ -201,13 +274,13 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
     () =>
       selectedStudent?.studentId
         ? buildAttendanceHistoryQuery({
-          studentId: selectedStudent.studentId,
-          startDate,
-          endDate,
-          skipCount: historyQuery.skipCount,
-          maxResultCount: historyQuery.maxResultCount,
-          sorting: historyQuery.sorting,
-        })
+            studentId: selectedStudent.studentId,
+            startDate,
+            endDate,
+            skipCount: historyQuery.skipCount,
+            maxResultCount: historyQuery.maxResultCount,
+            sorting: historyQuery.sorting,
+          })
         : undefined,
     [
       selectedStudent?.studentId,
@@ -238,28 +311,23 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
   // Get the current theme instance
   const theme = useTheme();
   return (
-    <Grid container spacing={1} height="calc(100vh - 225px)">
-      <Grid size={{ xs: 3 }} height="100%">
-        <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
+    <Grid container spacing={1} sx={{ flex: 1, minHeight: 0 }}>
+      <Grid size={{ xs: 12, md: 3 }} sx={{ minHeight: 0 }}>
+        <Paper
+          variant="outlined"
+          sx={{ p: 1, height: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}
+        >
           <Box
             display="flex"
             justifyContent="space-between"
-            sx={{ borderBottom: `1px dashed gray`, pb: 2 }}
+            sx={{ borderBottom: 1, borderColor: 'divider', pb: 1, gap: 1, flexWrap: 'wrap' }}
           >
             <Typography component="span">
               Class : <Label color="info">{selectedDivision?.class.name}</Label>
             </Typography>
             <Typography component="span">
-              <Label
-                color={
-                  selectedDivision?.percentage > 75
-                    ? 'success'
-                    : selectedDivision?.percentage > 40
-                      ? 'warning'
-                      : 'error'
-                }
-              >
-                {selectedDivision?.percentage}
+              <Label color={attendancePercentageColor(selectedDivision?.percentage)}>
+                {attendancePercentageLabel(selectedDivision?.percentage)}
               </Label>
             </Typography>
             <Typography component="span">
@@ -267,7 +335,7 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
             </Typography>
           </Box>
 
-          <Scrollbar sx={{ height: 'calc(100% -  60px)' }}>
+          <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
             <Box mt={1} p={0.5} display="flex" flexDirection="column" gap={1}>
               {studentsLoading && (
                 <Typography variant="body2" color="text.secondary">
@@ -310,9 +378,12 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
         </Paper>
       </Grid>
 
-      <Grid size={{ xs: 9 }} height="100%">
-        <Paper elevation={3} sx={{ p: 1, height: '100%' }}>
-          <Box display="flex" gap={1}>
+      <Grid size={{ xs: 12, md: 9 }} sx={{ minHeight: 0 }}>
+        <Paper
+          variant="outlined"
+          sx={{ p: 1, height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
+        >
+          <Box display="flex" gap={1} flexWrap="wrap">
             <DatePicker
               value={startDate}
               onChange={(value) => setStartDate(value)}
@@ -327,59 +398,57 @@ const DivisionOverview = ({ selectedDivision, selectedMonth }: any) => {
             />
           </Box>
 
-          <Scrollbar sx={{ height: 'calc(100% -  60px)', p: 1 }}>
-            <Grid container spacing={1}>
-              <Grid size={{ xs: 12 }}>
-                <CustomizableTable
-                  tableId="attendance-table"
-                  data={attendanceHistoryRows}
-                  noDataText={
-                    selectedStudent
-                      ? 'No attendance history found.'
-                      : 'Select a student to view attendance history.'
-                  }
-                  serverSide
-                  serverSidePagination
-                  serverSideSort
-                  totalCount={attendanceHistory?.totalCount || 0}
-                  isLoading={attendanceHistoryLoading || attendanceHistoryFetching}
-                  onServerSort={(column, sortData) => {
-                    setHistoryQuery((prev) => ({
-                      ...prev,
-                      sorting: sortQueryString(sortData) || 'date desc',
-                      skipCount: 0,
-                    }));
-                  }}
-                  onServerPagination={(page: number, rowsPerPage: number) => {
-                    setHistoryQuery((prev) => ({
-                      ...prev,
-                      skipCount: (page - 1) * rowsPerPage,
-                      maxResultCount: rowsPerPage,
-                    }));
-                  }}
-                  columns={[
-                    { id: 'date', label: 'Date', minWidth: '10%', filterType: 'date' },
-                    {
-                      id: 'status',
-                      label: 'Status',
-                      minWidth: '10%',
-                      filterType: 'enum',
-                      enumOptions: AttendanceStatusOptions,
-                      render(value, row) {
-                        const color = AttendanceStatusTypeColors[value as AttendanceStatusType];
-                        return (
-                          <Label color={color as LabelColor}>
-                            {AttendanceStatusType[value as AttendanceStatusType]}
-                          </Label>
-                        );
-                      },
-                    },
-                    { id: 'remarks', label: 'Remarks', minWidth: '20%' },
-                  ]}
-                />
-              </Grid>
-            </Grid>
-          </Scrollbar>
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            <CustomizableTable
+              tableId="attendance-table"
+              wrapperProps={{ sx: { height: 1 } }}
+              tableContainerProps={{ sx: { height: 1 } }}
+              data={attendanceHistoryRows}
+              noDataText={
+                selectedStudent
+                  ? 'No attendance history found.'
+                  : 'Select a student to view attendance history.'
+              }
+              serverSide
+              serverSidePagination
+              serverSideSort
+              totalCount={attendanceHistory?.totalCount || 0}
+              isLoading={attendanceHistoryLoading || attendanceHistoryFetching}
+              onServerSort={(column, sortData) => {
+                setHistoryQuery((prev) => ({
+                  ...prev,
+                  sorting: sortQueryString(sortData) || 'date desc',
+                  skipCount: 0,
+                }));
+              }}
+              onServerPagination={(page: number, rowsPerPage: number) => {
+                setHistoryQuery((prev) => ({
+                  ...prev,
+                  skipCount: (page - 1) * rowsPerPage,
+                  maxResultCount: rowsPerPage,
+                }));
+              }}
+              columns={[
+                { id: 'date', label: 'Date', minWidth: '10%', filterType: 'date' },
+                {
+                  id: 'status',
+                  label: 'Status',
+                  minWidth: '10%',
+                  filterType: 'enum',
+                  enumOptions: AttendanceStatusOptions,
+                  render(value, row) {
+                    const color = AttendanceStatusTypeColors[value as AttendanceStatusType];
+                    return (
+                      <Label color={color as LabelColor}>
+                        {AttendanceStatusType[value as AttendanceStatusType]}
+                      </Label>
+                    );
+                  },
+                },
+                { id: 'remarks', label: 'Remarks', minWidth: '20%' },
+              ]}
+            />
+          </Box>
         </Paper>
       </Grid>
     </Grid>

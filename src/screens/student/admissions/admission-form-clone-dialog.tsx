@@ -23,12 +23,6 @@ type Props = {
 
 const schema = Yup.object({
   name: Yup.string().trim().max(128, 'Use 128 characters or fewer').required('Name is required'),
-  code: Yup.string()
-    .trim()
-    .uppercase()
-    .matches(/^[A-Z][A-Z0-9_-]*$/, 'Use uppercase letters, numbers, hyphens, or underscores')
-    .max(64, 'Use 64 characters or fewer')
-    .required('Code is required'),
   description: Yup.string().trim().max(1024, 'Use 1,024 characters or fewer'),
 });
 
@@ -37,7 +31,7 @@ export function getAdmissionFormCloneInitialValues(
 ): AdmissionFormCloneValues {
   return {
     name: `${source.name} copy`,
-    code: `${source.code.slice(0, 59)}_COPY`,
+    code: '',
     description: source.description ?? '',
   };
 }
@@ -84,8 +78,8 @@ function AdmissionFormCloneEditor({
       <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
         <Stack spacing={2}>
           <Typography variant="body2" color="text.secondary">
-            Copy version {source.version} into a new independent draft. Choose a unique code so the
-            original form and its applications remain unchanged.
+            Copy version {source.version} into a new independent draft. The original form and its
+            applications remain unchanged.
           </Typography>
           <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
             <TextField
@@ -98,20 +92,6 @@ function AdmissionFormCloneEditor({
               error={Boolean(formik.touched.name && formik.errors.name)}
               helperText={
                 formik.touched.name ? formik.errors.name : 'A name your team will recognize.'
-              }
-            />
-          </ShakingTextField>
-          <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
-            <TextField
-              fullWidth
-              required
-              size="small"
-              label="Form code"
-              {...formik.getFieldProps('code')}
-              onChange={(event) => formik.setFieldValue('code', event.target.value.toUpperCase())}
-              error={Boolean(formik.touched.code && formik.errors.code)}
-              helperText={
-                formik.touched.code ? formik.errors.code : 'Unique code for this cloned draft.'
               }
             />
           </ShakingTextField>

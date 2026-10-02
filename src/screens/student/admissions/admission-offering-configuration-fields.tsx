@@ -10,13 +10,18 @@ import { Grid, Alert, MenuItem, TextField, Typography } from '@mui/material';
 import { useGetAdmissionFormQuery } from 'src/redux/student/admissions/admission-forms-api';
 import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
 import { useLazyGetAdmissionWorkflowQuery } from 'src/redux/student/admissions/admission-workflows-api';
-import { useGetAdmissionIntakeProfilesQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
+import { useGetAdmissionIntakeSetupsQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import { AdmissionDefinitionSelect } from './admission-definition-select';
 import {
   type AdmissionOfferingFormValues,
   isAdmissionOfferingConfigurationIncomplete,
 } from './admission-offering-model';
+import {
+  getIntakeSetupSelection,
+  hasLegacyIntakeSelection,
+  findSelectedIntakeSetup,
+} from './admission-intake-setup-selection';
 
 import type {
   AdmissionDefinitionOption,
@@ -93,9 +98,19 @@ export function AdmissionOfferingConfigurationFields({
       if (selection === workflowSelection.current) setLoadingWorkflowForms(false);
     }
   };
-  const profiles = useGetAdmissionIntakeProfilesQuery();
-  const inquiryProfiles = profiles.data?.filter((profile) => profile.kind === 0) ?? [];
-  const assignmentProfiles = profiles.data?.filter((profile) => profile.kind === 1) ?? [];
+  const setups = useGetAdmissionIntakeSetupsQuery();
+  const selectedSetup = findSelectedIntakeSetup(
+    setups.data ?? [],
+    formik.values.inquiryIntakeProfileId,
+    formik.values.counsellorAssignmentProfileId,
+    startsWithInquiry
+  );
+  const legacySelection = hasLegacyIntakeSelection(
+    selectedSetup,
+    formik.values.inquiryIntakeProfileId,
+    formik.values.counsellorAssignmentProfileId,
+    startsWithInquiry
+  );
 
   return (
     <Grid container spacing={1.5}>
@@ -105,9 +120,9 @@ export function AdmissionOfferingConfigurationFields({
       {missingPublishedConfiguration && (
         <Grid size={12}>
           <Alert severity="warning">
-            Select a published workflow and application form, plus a counsellor assignment profile
-            {startsWithInquiry ? ', an inquiry form, and an inquiry profile' : ''} before activating
-            this offering. You may save it as inactive while configuration is incomplete.
+            Select a published workflow, application form, and intake & assignment setup
+            {startsWithInquiry ? ', plus an inquiry form' : ''} before activating this Offering. You
+            may save it as inactive while configuration is incomplete.
           </Alert>
         </Grid>
       )}
@@ -151,6 +166,13 @@ export function AdmissionOfferingConfigurationFields({
             if (entryMode === 1) {
               formik.setFieldValue('inquiryFormDefinitionId', null);
               formik.setFieldValue('inquiryIntakeProfileId', null);
+            } else if (!formik.values.inquiryIntakeProfileId) {
+              const setup = (setups.data ?? []).find(
+                (item) =>
+                  item.counsellorAssignmentProfileId === formik.values.counsellorAssignmentProfileId
+              );
+              if (setup)
+                formik.setFieldValue('inquiryIntakeProfileId', setup.inquiryIntakeProfileId);
             }
           }}
           helperText={
@@ -238,44 +260,45 @@ export function AdmissionOfferingConfigurationFields({
           noOptionsText="No published forms found"
         />
       </Grid>
-      {startsWithInquiry && (
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <TextField
-            select
-            fullWidth
-            size="small"
-            label="Inquiry setup"
-            value={formik.values.inquiryIntakeProfileId ?? ''}
-            onChange={(event) =>
-              formik.setFieldValue('inquiryIntakeProfileId', event.target.value || null)
-            }
-            helperText="Controls sources, duplicates, follow-ups, and when an application may start."
-          >
-            <MenuItem value="">Choose inquiry setup</MenuItem>
-            {inquiryProfiles.map((profile) => (
-              <MenuItem key={profile.id} value={profile.id}>
-                {profile.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-      )}
-      <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={12}>
         <TextField
           select
           fullWidth
           size="small"
-          label="Counsellor assignment"
-          value={formik.values.counsellorAssignmentProfileId ?? ''}
-          onChange={(event) =>
-            formik.setFieldValue('counsellorAssignmentProfileId', event.target.value || null)
+          label="Intake & assignment setup"
+          value={selectedSetup?.id ?? (legacySelection ? '__legacy__' : '')}
+          onChange={(event) => {
+            if (event.target.value === '__legacy__') return;
+            if (!event.target.value) {
+              formik.setFieldValue('inquiryIntakeProfileId', null);
+              formik.setFieldValue('counsellorAssignmentProfileId', null);
+              return;
+            }
+            const setup = (setups.data ?? []).find((item) => item.id === event.target.value);
+            if (!setup) return;
+            const selection = getIntakeSetupSelection(setup, startsWithInquiry);
+            formik.setFieldValue('inquiryIntakeProfileId', selection.inquiryIntakeProfileId);
+            formik.setFieldValue(
+              'counsellorAssignmentProfileId',
+              selection.counsellorAssignmentProfileId
+            );
+          }}
+          error={setups.isError}
+          helperText={
+            setups.isError
+              ? 'Unable to load admission intake setups.'
+              : legacySelection
+                ? 'Legacy profiles are preserved. Choose a combined setup only when you want to replace them.'
+                : startsWithInquiry
+                  ? 'Applies inquiry handling and counsellor routing together.'
+                  : 'Direct registration uses only this setup’s counsellor routing.'
           }
-          helperText="Assigns the owner for inquiries and direct registrations."
         >
-          <MenuItem value="">Choose assignment setup</MenuItem>
-          {assignmentProfiles.map((profile) => (
-            <MenuItem key={profile.id} value={profile.id}>
-              {profile.name}
+          <MenuItem value="">Choose intake setup</MenuItem>
+          {legacySelection && <MenuItem value="__legacy__">Legacy profile selection</MenuItem>}
+          {(setups.data ?? []).map((setup) => (
+            <MenuItem key={setup.id} value={setup.id}>
+              {setup.name}
             </MenuItem>
           ))}
         </TextField>
@@ -283,7 +306,7 @@ export function AdmissionOfferingConfigurationFields({
       <Grid size={12}>
         <Typography variant="caption" color="text.secondary">
           Save incomplete preparation as inactive. Activation requires a published cycle, the forms
-          needed by this entry mode, a workflow, the intake profiles, and valid dates.
+          needed by this entry mode, a workflow, an intake setup, and valid dates.
         </Typography>
       </Grid>
     </Grid>

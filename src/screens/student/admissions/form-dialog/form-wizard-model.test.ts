@@ -44,15 +44,16 @@ describe('admission form wizard validation', () => {
       ['name', ''],
       ['name', '   '],
       ['name', 'A'.repeat(129)],
-      ['code', ''],
-      ['code', '   '],
-      ['code', '123_FORM'],
-      ['code', 'FORM CODE'],
-      ['code', 'A'.repeat(65)],
     ])('rejects an invalid %s', async (field, value) => {
       await expect(
         getAdmissionWizardSchema(0).validate({ ...validForm(), [field]: value })
       ).rejects.toMatchObject({ path: field });
+    });
+
+    it('allows a new form without a manually entered code', async () => {
+      await expect(getAdmissionWizardSchema(0).isValid({ ...validForm(), code: '' })).resolves.toBe(
+        true
+      );
     });
 
     it('allows advancing before sections or fields are ready', async () => {
@@ -62,6 +63,14 @@ describe('admission form wizard validation', () => {
       await expect(getAdmissionWizardSchema(0).isValid({ ...form, sections: [] })).resolves.toBe(
         true
       );
+    });
+
+    it('lets an old invalid grid value reach the builder where it can be corrected', async () => {
+      const form = { ...validForm(), fieldsPerRow: 0 };
+      await expect(getAdmissionWizardSchema(0).isValid(form)).resolves.toBe(true);
+      await expect(getAdmissionWizardSchema(2).validate(form)).rejects.toMatchObject({
+        path: 'fieldsPerRow',
+      });
     });
   });
 
@@ -105,7 +114,9 @@ describe('admission form wizard validation', () => {
 
   describe('Review & save', () => {
     it('accepts a complete admission draft', async () => {
-      await expect(getAdmissionWizardSchema(2).isValid(validForm())).resolves.toBe(true);
+      await expect(getAdmissionWizardSchema(2).isValid({ ...validForm(), code: '' })).resolves.toBe(
+        true
+      );
     });
 
     it('checks both earlier stages before the draft can be saved', async () => {
@@ -118,7 +129,6 @@ describe('admission form wizard validation', () => {
       ).rejects.toMatchObject({
         inner: expect.arrayContaining([
           expect.objectContaining({ path: 'name' }),
-          expect.objectContaining({ path: 'code' }),
           expect.objectContaining({ path: 'sections[0].fields[0].label' }),
         ]),
       });

@@ -43,7 +43,6 @@ function renderDrawer() {
           open
           saving={false}
           showStarterJourney
-          autoGenerateCode
           fetchInquiryForms={fetchInquiryForms}
           fetchRegistrationForms={fetchRegistrationForms}
           onClose={vi.fn()}
@@ -90,9 +89,7 @@ describe('workflow creation drawer', () => {
     fireEvent.change(screen.getByRole('textbox', { name: 'Workflow name *' }), {
       target: { value: 'Grade 1 Admission' },
     });
-    expect(screen.getByRole('textbox', { name: 'Workflow code *' })).toHaveValue(
-      'GRADE_1_ADMISSION'
-    );
+    expect(screen.queryByRole('textbox', { name: 'Workflow code *' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('radio', { name: /Assessment-based admission/ }));
     await selectForm(user, 'Inquiry form (optional)', 'Parent inquiry · v2');
     await selectForm(user, 'Registration form *', 'Student registration · v3');
@@ -101,7 +98,7 @@ describe('workflow creation drawer', () => {
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0]).toMatchObject({
       name: 'Grade 1 Admission',
-      code: 'GRADE_1_ADMISSION',
+      code: '',
       starterJourney: 'assessment',
       defaultInquiryFormDefinitionId: 'inquiry-form',
       registrationFormDefinitionId: 'registration-form',

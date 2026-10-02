@@ -33,6 +33,7 @@ type Props = {
   initialPurpose?: CreateUpdateAdmissionForm['purpose'];
   saving: boolean;
   onSave: (value: CreateUpdateAdmissionForm) => Promise<void>;
+  onPublishNow: (value: CreateUpdateAdmissionForm) => Promise<void>;
 };
 
 export function AdmissionFormDialog({
@@ -85,8 +86,9 @@ function AdmissionFormEditor({
   initialPurpose,
   saving,
   onSave,
+  onPublishNow,
 }: Omit<Props, 'open'>) {
-  const wizard = useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave });
+  const wizard = useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave, onPublishNow });
   const busy = saving || wizard.submitting;
   return (
     <CustomDialog
@@ -144,6 +146,9 @@ function AdmissionFormEditor({
             minHeight: 0,
             '& > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper > .simplebar-content':
               { height: 1, minHeight: 0, overflow: 'hidden' },
+            '& > .simplebar-wrapper > .simplebar-mask > .simplebar-offset > .simplebar-content-wrapper':
+              { overflowX: 'hidden !important' },
+            '& > .simplebar-track.simplebar-horizontal': { display: 'none' },
           },
         }}
       >
@@ -155,16 +160,16 @@ function AdmissionFormEditor({
             validationSchema={wizard.validationSchema}
             validateOnChange
             scrollbarHeight="auto"
-            showSaveButton={wizard.activeStep < ADMISSION_FORM_STEPS.length - 1}
+            showSaveButton
             saveButtonLabel="Save draft"
             nextButtonLabel="Continue"
-            finalButtonLabel="Save draft"
+            finalButtonLabel="Publish now"
             backButtonProps={{ size: 'small' }}
             saveAndNextButtonProps={{
               loading: busy,
               startIcon:
                 wizard.activeStep === ADMISSION_FORM_STEPS.length - 1 ? (
-                  <Iconify icon="mdi:content-save-outline" width={18} />
+                  <Iconify icon="mdi:publish" width={18} />
                 ) : undefined,
               endIcon:
                 wizard.activeStep < ADMISSION_FORM_STEPS.length - 1 ? (

@@ -24,11 +24,21 @@ export function parseOptions(value?: string | null) {
       const optionValue =
         typeof item === 'string'
           ? item
-          : item && typeof item === 'object' && 'value' in item
-            ? String((item as { value?: unknown }).value ?? '')
+          : item && typeof item === 'object' && typeof (item as { value?: unknown }).value === 'string'
+            ? (item as { value: string }).value
             : '';
-      if (!optionValue || values.has(optionValue)) return false;
-      values.add(optionValue);
+      const optionLabel =
+        item && typeof item === 'object' && 'label' in item
+          ? (item as { label?: unknown }).label
+          : undefined;
+      if (
+        !optionValue.trim() ||
+        (optionLabel !== undefined &&
+          (typeof optionLabel !== 'string' || !optionLabel.trim())) ||
+        values.has(optionValue.toLowerCase())
+      )
+        return false;
+      values.add(optionValue.toLowerCase());
       return true;
     });
   } catch {

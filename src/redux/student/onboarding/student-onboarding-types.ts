@@ -107,6 +107,7 @@ export type StudentOnboardingCase = {
   seatReservationId?: string | null;
   grNumber?: string | null;
   rollNumber?: number | null;
+  rollAssignmentMode?: 'manual' | 'automatic' | 'both';
   studentEnrollmentId?: string | null;
   startedAt?: string | null;
   readyAt?: string | null;

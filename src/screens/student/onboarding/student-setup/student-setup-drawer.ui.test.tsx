@@ -1,5 +1,5 @@
 import { it, vi, expect, describe } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 
 import StudentSetupDrawer from './student-setup-drawer';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
@@ -125,9 +125,15 @@ describe('Student Setup drawer readiness UI', () => {
       />
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
-    expect(screen.getByText('Backend readiness confirmed at 100%.')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm activation' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
+    });
+    await waitFor(() =>
+      expect(screen.getByText('Backend readiness confirmed at 100%.')).toBeInTheDocument()
+    );
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Confirm activation' }));
+    });
 
     expect(onPrimaryAction).toHaveBeenCalledWith(liveStudent, 'latest-case-stamp', 'activate');
   });
@@ -166,7 +172,7 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.getByRole('heading', { name: 'Activate student?' })).toBeInTheDocument();
   });
 
-  it('offers an audited exception review for a failed blocking requirement', () => {
+  it('links a failed communication requirement to the existing student record', () => {
     const liveStudent = {
       ...student,
       id: 'case-1',
@@ -185,12 +191,34 @@ describe('Student Setup drawer readiness UI', () => {
 
     render(<StudentSetupDrawer open canManage student={liveStudent} onClose={vi.fn()} />);
 
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Review exception for Address and communication' })
+    expect(screen.getByRole('link', { name: 'Open student record' })).toHaveAttribute(
+      'href',
+      `/student/profile?student=${liveStudent.studentId}&tab=general`
     );
-    expect(
-      screen.getByRole('heading', { name: 'Review onboarding exception' })
-    ).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Waive requirement' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Review exception for Address and communication' })).not.toBeInTheDocument();
+  });
+
+  it('offers a pending approval as a distinct audited action', () => {
+    const liveStudent = {
+      ...student,
+      id: 'case-1',
+      source: 'onboarding-case' as const,
+      readinessItems: [
+        {
+          key: 'approval_review',
+          label: 'Onboarding approval',
+          detail: 'Review is required before activation.',
+          status: 'pending' as const,
+          blocking: true,
+          owner: 'Student Onboarding',
+        },
+      ],
+    };
+
+    render(<StudentSetupDrawer open canManage student={liveStudent} onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Record approval for Onboarding approval' }));
+    expect(screen.getByRole('heading', { name: 'Approve onboarding' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Approve onboarding' })).toBeDisabled();
   });
 });

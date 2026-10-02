@@ -13,32 +13,15 @@ export function FormBuilderDetailFields({
 }) {
   return (
     <Grid container spacing={1.5}>
-      <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={{ xs: 12 }}>
         <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
           <TextField
             fullWidth
             size="small"
             label="Form name *"
-            placeholder="e.g. Admission application 2026–27"
-            slotProps={{ inputLabel: { shrink: true } }}
             {...formik.getFieldProps('name')}
             error={Boolean(formik.touched.name && formik.errors.name)}
             helperText={formik.touched.name && formik.errors.name}
-          />
-        </ShakingTextField>
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
-          <TextField
-            fullWidth
-            size="small"
-            label="Form code *"
-            placeholder="e.g. ADMISSION_2026"
-            slotProps={{ inputLabel: { shrink: true } }}
-            {...formik.getFieldProps('code')}
-            onChange={(event) => formik.setFieldValue('code', event.target.value.toUpperCase())}
-            error={Boolean(formik.touched.code && formik.errors.code)}
-            helperText={formik.touched.code && formik.errors.code}
           />
         </ShakingTextField>
       </Grid>
@@ -68,31 +51,13 @@ export function FormBuilderDetailFields({
           <MenuItem value={1}>Step by step</MenuItem>
         </TextField>
       </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          label="Fields per row *"
-          value={formik.values.fieldsPerRow}
-          onChange={(event) => formik.setFieldValue('fieldsPerRow', Number(event.target.value))}
-        >
-          {[1, 2, 3, 4].map((columns) => (
-            <MenuItem key={columns} value={columns}>
-              {columns} {columns === 1 ? 'field' : 'fields'}
-            </MenuItem>
-          ))}
-        </TextField>
-      </Grid>
       <Grid size={{ xs: 12 }}>
         <TextField
           fullWidth
           size="small"
           label="Description (optional)"
           multiline
-          minRows={2}
-          placeholder="Help your team know when to use this form."
-          slotProps={{ inputLabel: { shrink: true } }}
+          minRows={1}
           {...formik.getFieldProps('description')}
         />
       </Grid>
