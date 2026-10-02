@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-09-16
+updated_on: 2026-10-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -53,6 +53,11 @@ npm run build
 ```
 
 ## Coverage map
+
+For the operational dashboard, run `operational-dashboard-state.test.ts`, the permission and role catalogue tests, and `e2e/hr/hr-dashboard-standard-design.spec.ts`.
+The browser suite covers status filtering, URL reload, read-only refresh, long names, unavailable data, real empty results, exact-grant denial for an admin role, four viewport widths, and light/dark themes.
+Finish with signed-in local Codex browser checks against the real backend for HR, principal, and restricted supervisor access.
+Mocked browser contracts supplement backend scope and classification tests rather than proving database authorization.
 
 Use this table to choose validation:
 

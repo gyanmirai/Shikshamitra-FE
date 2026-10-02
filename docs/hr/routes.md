@@ -3,7 +3,7 @@ module: hr
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-09-16
+updated_on: 2026-10-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -19,7 +19,7 @@ The route map is frontend integration truth, not backend product truth:
 
 | Area                      | Routes                                                                                                  | Frontend permission                                                        |
 | ------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Dashboard                 | `/hr/dashboard`                                                                                         | `HR.Dashboard`                                                             |
+| Dashboard                 | `/hr/dashboard`                                                                                         | `HR.Dashboard.View`                                                             |
 | Employee list             | `/hr/employee`                                                                                          | `HR.Employee.EmployeeList`                                                 |
 | I-card                    | `/hr/i-card`                                                                                            | `HR.Employee.ICard.View`                                                   |
 | Document settings         | `/hr/setting`                                                                                           | `HR.Employee.Setting.DocumentTypes`                                        |

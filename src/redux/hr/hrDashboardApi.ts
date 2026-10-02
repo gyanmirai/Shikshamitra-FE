@@ -237,23 +237,6 @@ export const buildHRDashboardDefaultParams = (now: Dayjs = dayjs()) => ({
 
 export const hrDashboardApi = employeeApi.injectEndpoints({
   endpoints: (builder) => ({
-    getHRDashboardSummary: builder.query<
-      HRDashboardSummary,
-      { date?: string; month?: string; range?: number } | void
-    >({
-      query: (params) => ({
-        url: '/hr/dashboard/summary',
-        method: 'GET',
-        params: buildHRDashboardSummaryParams(params),
-      }),
-      providesTags: [
-        employeeType.hrDashboard,
-        employeeType.employee,
-        employeeType.attendance,
-        employeeType.runPayroll,
-      ],
-      keepUnusedDataFor: 60,
-    }),
     getHRDashboardPreview: builder.query<HRDashboardPreview, HRDashboardKey>({
       query: (dashboardKey) => ({
         url: `/hr/dashboard/previews/${dashboardKey}`,
@@ -277,7 +260,6 @@ export const hrDashboardApi = employeeApi.injectEndpoints({
 });
 
 export const {
-  useGetHRDashboardSummaryQuery,
   useGetHRDashboardPreviewQuery,
   useRefreshHRDashboardPreviewMutation,
 } = hrDashboardApi;

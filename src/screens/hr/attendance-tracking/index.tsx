@@ -12,6 +12,7 @@ import { GlobalIcons } from 'src/utils/icons';
 import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { hrPaths } from 'src/constants/hr-menus';
+import { useSearchParams } from 'next/navigation';
 import ClearIcon from '@mui/icons-material/Clear';
 import SearchIcon from '@mui/icons-material/Search';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -275,9 +276,21 @@ const validateAttendanceDraft = (draft: AttendanceDraft): AttendanceDraftErrors 
 };
 
 const AttendanceTrackingScreen = () => {
+  const dashboardParams = useSearchParams();
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [filters, setFilters] = useState(getDefaultFilters);
+  useEffect(() => {
+    const start = dashboardParams.get('startDate');
+    const end = dashboardParams.get('endDate');
+    const employeeId = dashboardParams.get('employeeId');
+    if (start && end && dayjs(start).isValid() && dayjs(end).isValid() &&
+      dayjs(start).format('YYYY-MM-DD') === start && dayjs(end).format('YYYY-MM-DD') === end &&
+      !dayjs(end).isBefore(dayjs(start), 'day')) {
+      setFilters((previous) => ({ ...previous, startDate: dayjs(start), endDate: dayjs(end),
+        employeeId: employeeId && /^[a-f0-9-]{36}$/i.test(employeeId) ? employeeId : '' }));
+    }
+  }, [dashboardParams]);
   const [employeeSearch, setEmployeeSearch] = useState('');
   const [selectedEmployeeOption, setSelectedEmployeeOption] = useState<any | null>(null);
   const [page, setPage] = useState(1);
@@ -295,7 +308,9 @@ const AttendanceTrackingScreen = () => {
     reason: '',
   });
   const [draftErrors, setDraftErrors] = useState<AttendanceDraftErrors>({});
-  const academicYearId = currentYear?.id;
+  // A dashboard link carries an explicit date; let the register resolve that date's calendar.
+  const academicYearId = dashboardParams.get('employeeId') && dashboardParams.get('startDate')
+    ? undefined : currentYear?.id;
   const { options: stages } = useAcademicOrganizationOptions(academicYearId);
   const employeeLookupSearch =
     selectedEmployeeOption && employeeSearch === getEmployeeOptionLabel(selectedEmployeeOption)
@@ -346,7 +361,7 @@ const AttendanceTrackingScreen = () => {
     type: 'query',
     currentQueryAndMutation: useGetGroupedAttendanceRegisterQuery,
     params: queryParams,
-    options: { skip: !filters.startDate || !filters.endDate || !academicYearId },
+    options: { skip: !filters.startDate || !filters.endDate || (!academicYearId && !filters.employeeId) },
   });
 
   const [adjustAttendance, { isLoading: isAdjusting }] = useQueryAndMutation({
@@ -360,6 +375,14 @@ const AttendanceTrackingScreen = () => {
   });
 
   const rows = useMemo(() => (data?.items || []) as GroupedAttendanceRegisterRow[], [data?.items]);
+  useEffect(() => {
+    if (!filters.employeeId || selectedEmployeeOption?.id === filters.employeeId) return;
+    const row = rows.find((item) => item.employeeId === filters.employeeId);
+    if (!row) return;
+    const option = { id: row.employeeId, employeeName: row.employeeName, employeeCode: row.employeeCode };
+    setSelectedEmployeeOption(option);
+    setEmployeeSearch(getEmployeeOptionLabel(option));
+  }, [rows, filters.employeeId, selectedEmployeeOption?.id]);
   const allDayRows = useMemo(() => rows.flatMap((row) => row.days || []), [rows]);
   const getDayIdentifier = useCallback(
     (day: AttendanceRegisterRow) => day.attendanceId || `${day.employeeId}_${day.attendanceDate}`,

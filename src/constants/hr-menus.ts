@@ -96,6 +96,7 @@ export const hrPaths = {
 export const hrPermissions = {
   root: `${defaultModulePermissionName}HR`,
   dashboard: `${defaultModulePermissionName}${defaultHrPermissionName}Dashboard`,
+  dashboardView: `${defaultHrPermissionName}Dashboard.View`,
   policies: {
     root: `${defaultModulePermissionName}${defaultHrPermissionName}Policies`,
     calendars: `${defaultHrPermissionName}Policies.Calendars`,
@@ -231,7 +232,7 @@ const hrModule = (isDdvs: boolean) => ({
           _action: 'dashboard',
           shortcutKey: 'Alt+H+1',
           shortcutKeyName: 'Alt+H+1',
-          permissionName: hrPermissions.dashboard,
+          permissionName: hrPermissions.dashboardView,
           icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {

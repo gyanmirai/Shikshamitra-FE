@@ -3,7 +3,7 @@ module: hr
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-16
+updated_on: 2026-10-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -19,7 +19,8 @@ Use this table before searching `src/redux`:
 
 | Client                             | Endpoint families                                                                             | Backend owner                   |
 | ---------------------------------- | --------------------------------------------------------------------------------------------- | ------------------------------- |
-| `hrDashboardApi.ts`                | HR dashboard summary, preview, refresh                                                        | HR dashboard                    |
+| `hrOperationalDashboardApi.ts`     | Live HR overview and server-paged staff reads                                                | HR operational dashboard        |
+| `hrDashboardApi.ts`                | Separate attendance and payroll previews and refresh                                        | HR dashboard previews           |
 | `employeeApi.ts`                   | Employees, profile tabs, status, documents, reporting, search                                 | HR employees                    |
 | `employee-icard-template-api.ts`   | I-card templates, assets, and PDF download                                                    | HR employees and I-card         |
 | `employee-payroll-api.ts`          | Earning components, deduction components, provident fund, professional tax, pay elements      | HR payroll settings             |
@@ -37,6 +38,11 @@ Use this table before searching `src/redux`:
 | Calendar clients                   | Event and holiday type APIs, event and holiday APIs, employee selection                       | HR calendar and Calendar module |
 
 ## Cache and invalidation rules
+
+Operational dashboard queries use existing HR dashboard, employee, attendance, and payroll tags.
+The client-only access key isolates identity and grants in RTK Query without sending that key to the API.
+Operational queries retain unused data for zero seconds and use `currentData` to avoid displaying a previous date or scope.
+The retired combined summary and Main preview are not used by the main HR dashboard.
 
 Use these expectations when reviewing client behavior:
 
