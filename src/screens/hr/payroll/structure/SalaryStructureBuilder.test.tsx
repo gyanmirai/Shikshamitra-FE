@@ -10,14 +10,38 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 
 const mocks = vi.hoisted(() => ({
+  templatesLoading: false,
   revisions: [] as any[],
   readiness: { canActivate: false, blockerCodes: [] as string[] },
   activate: vi.fn(),
+  calculate: vi.fn(),
+  saveSalary: vi.fn(),
   refetchReadiness: vi.fn(),
+  canViewEsi: true,
+  canManageEsi: true,
+  updateEnrollment: vi.fn(),
+  enrollment: {
+    employeeId: 'employee-1',
+    status: 'PendingReview',
+    wageCeilingCategory: 'Standard',
+    insuranceNumber: '',
+    employerShareReliefEligible: false,
+  },
 }));
 
 vi.mock('react-redux', () => ({ useSelector: () => [] }));
-vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
+vi.mock('src/utils/permissions', () => ({
+  hasGrantedPermission: (_permissions: unknown, name: string) => {
+    if (name.endsWith('StatutorySchemes.View')) return mocks.canViewEsi;
+    if (name.endsWith('StatutorySchemes.ManageEnrollment')) return mocks.canManageEsi;
+    return true;
+  },
+}));
+vi.mock('src/redux/hr/statutory-scheme-api', () => ({
+  useGetEsiEnrollmentQuery: () => ({ currentData: mocks.enrollment, isFetching: false }),
+  useGetEsiOverridesQuery: () => ({}),
+  useUpdateEsiEnrollmentMutation: () => [mocks.updateEnrollment, { isLoading: false }],
+}));
 // Icon assets are unrelated to salary form behavior and must not start network requests.
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
 
@@ -61,10 +85,10 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
         },
       ],
     },
-    isLoading: false,
+    isLoading: mocks.templatesLoading,
     isError: false,
   }),
-  useCalculateSalaryTemplateMutation: () => [vi.fn(), { isLoading: false }],
+  useCalculateSalaryTemplateMutation: () => [mocks.calculate, { isLoading: false }],
 }));
 vi.mock('src/redux/hr/compensation-revision-api', () => ({
   useGetCompensationRevisionsQuery: () => ({
@@ -72,7 +96,7 @@ vi.mock('src/redux/hr/compensation-revision-api', () => ({
     isLoading: false,
     isError: false,
   }),
-  useSaveEmployeeCompensationMutation: () => [vi.fn(), { isLoading: false }],
+  useSaveEmployeeCompensationMutation: () => [mocks.saveSalary, { isLoading: false }],
   useGetEmployeeActivationReadinessQuery: () => ({
     data: mocks.readiness,
     refetch: mocks.refetchReadiness,
@@ -104,6 +128,9 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     mocks.readiness = { canActivate: false, blockerCodes: [] };
     mocks.activate.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
     mocks.refetchReadiness.mockResolvedValue({});
+    mocks.canViewEsi = true;
+    mocks.canManageEsi = true;
+    mocks.updateEnrollment.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
   });
 
   it('preselects the school default template and joining month for a new salary setup', async () => {
@@ -115,6 +142,47 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       );
       expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11');
     });
+  });
+
+  it('saves CTC without contaminating the separate payroll form with partial salary provenance', async () => {
+    const user = userEvent.setup();
+    mocks.calculate.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        grossSalary: 9685,
+        totalDeductions: 73,
+        netSalary: 9612,
+        employerCost: 10000,
+        earnings: [],
+        deductions: [],
+        employerContributions: [],
+        warnings: [],
+        employeeStateInsurance: { canCalculate: true, issueCodes: [] },
+        targetResult: { isExact: true, difference: 0 },
+      }),
+    });
+    mocks.saveSalary.mockReturnValue({
+      unwrap: vi.fn().mockResolvedValue({
+        salaryBasis: 'EMPLOYER_COST',
+        quotedMonthlyAmount: 10000,
+        sourceSalaryTemplateId: 'template-default',
+        sourceSalaryTemplateVersionId: 'version-default',
+        sourceSalaryTemplateVersion: 1,
+        revisionNumber: 1,
+        pfRuleId: null,
+      }),
+    });
+    renderBuilder();
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '10000');
+    await user.click(screen.getByRole('button', { name: 'Calculate' }));
+    await user.click(await screen.findByRole('button', { name: 'Save salary' }));
+    await waitFor(() => expect(mocks.refetchReadiness).toHaveBeenCalled());
+    expect(mocks.saveSalary).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: expect.objectContaining({ salaryBasis: 'EMPLOYER_COST', monthlyAmount: 10000 }),
+      })
+    );
+    expect(formik.setFieldValue).toHaveBeenCalledTimes(1);
+    expect(formik.setFieldValue).toHaveBeenCalledWith('pfRule', null, false);
   });
 
   it('reopens the saved immutable revision and offers activation as a separate action', async () => {
@@ -148,7 +216,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
         'Saved Template'
       );
       expect(screen.getByLabelText('Effective month')).toHaveValue('2026-10');
-      expect(screen.getByLabelText('Monthly amount')).toHaveValue(55_000);
+      expect(screen.getByLabelText('Monthly salary')).toHaveValue(55_000);
     });
 
     await user.click(screen.getByRole('button', { name: 'Activate employee' }));
@@ -162,4 +230,69 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       },
     });
   });
+
+  it('lets HR enter ESIC details for an inactive employee before salary setup', async () => {
+    const user = userEvent.setup();
+    mocks.readiness = { canActivate: false, blockerCodes: ['ESI_INSURANCE_NUMBER_REQUIRED'] };
+    renderBuilder();
+    expect(screen.queryByRole('button', { name: 'Activate employee' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
+    expect(screen.queryByText('Contribution details')).not.toBeInTheDocument();
+    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
+    await user.click(screen.getByRole('button', { name: 'Save enrollment' }));
+    await waitFor(() =>
+      expect(mocks.updateEnrollment).toHaveBeenCalledWith({
+        employeeId: 'employee-1',
+        body: expect.objectContaining({ insuranceNumber: '1234567890' }),
+      })
+    );
+    expect(mocks.refetchReadiness).toHaveBeenCalled();
+  });
+
+  it('preserves entered registration details when saving fails', async () => {
+    const user = userEvent.setup();
+    mocks.updateEnrollment.mockReturnValue({
+      unwrap: vi.fn().mockRejectedValue(new Error('offline')),
+    });
+    renderBuilder();
+    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
+    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
+    await user.click(screen.getByRole('button', { name: 'Save enrollment' }));
+    await waitFor(() => expect(mocks.updateEnrollment).toHaveBeenCalled());
+    expect(screen.getByRole('textbox', { name: /ESIC insurance number/ })).toHaveValue(
+      '1234567890'
+    );
+    expect(mocks.refetchReadiness).not.toHaveBeenCalled();
+  });
+
+  it('does not expose enrollment editing without its permissions', async () => {
+    const user = userEvent.setup();
+    mocks.canManageEsi = false;
+    renderBuilder();
+    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
+    expect(screen.getByRole('textbox', { name: /ESIC insurance number/ })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Save enrollment' })).not.toBeInTheDocument();
+  });
+
+  it('does not expose ESIC details without View permission', () => {
+    mocks.canViewEsi = false;
+    renderBuilder();
+    expect(screen.queryByRole('button', { name: 'ESIC details' })).not.toBeInTheDocument();
+  });
+});
+
+it('keeps form-shaped loading and removes the routine salary banner', () => {
+  mocks.templatesLoading = true;
+  const result = renderBuilder();
+  expect(screen.getByLabelText('Loading employee salary')).toHaveAttribute('aria-busy', 'true');
+  expect(screen.getByText('Earnings')).toBeVisible();
+  expect(screen.getByText('Deductions')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeDisabled();
+  mocks.templatesLoading = false;
+  result.rerender(
+    <ThemeProvider theme={theme}>
+      <SalaryStructureBuilder formik={formik} employeeId="employee-1" />
+    </ThemeProvider>
+  );
+  expect(screen.queryByText(/Salary saves immediately/)).not.toBeInTheDocument();
 });

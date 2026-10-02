@@ -1,7 +1,6 @@
 import type {
   SalaryBasis,
   SalaryTemplate,
-  ProtectionPolicy,
   SalaryTemplateRule,
 } from 'src/redux/hr/salary-template-api';
 
@@ -13,7 +12,6 @@ export type EditorValues = {
   name: string;
   description: string;
   defaultSalaryBasis: SalaryBasis;
-  defaultProtectionPolicy: ProtectionPolicy;
   defaultPfApplicable: boolean;
   defaultPfRuleId: string;
   rules: SalaryTemplateRule[];
@@ -23,8 +21,6 @@ export const initialEditorValues = (template?: SalaryTemplate): EditorValues => 
   name: template?.name || '',
   description: template?.description || '',
   defaultSalaryBasis: template?.editableVersion.defaultSalaryBasis || 'EMPLOYER_COST',
-  defaultProtectionPolicy:
-    template?.editableVersion.defaultProtectionPolicy || 'PROTECT_EMPLOYER_COST',
   defaultPfApplicable: template?.editableVersion.defaultPfApplicable || false,
   defaultPfRuleId: template?.editableVersion.defaultPfRuleId || '',
   rules: template?.editableVersion.rules || [],
@@ -34,7 +30,6 @@ export const editorSchema = Yup.object({
   name: Yup.string().trim().required('Template name is required.').max(160),
   description: Yup.string().trim().max(500),
   defaultSalaryBasis: Yup.string().required(),
-  defaultProtectionPolicy: Yup.string().required(),
   defaultPfRuleId: Yup.string().when('defaultPfApplicable', {
     is: true,
     then: (schema) => schema.required('Choose the default PF rule.'),

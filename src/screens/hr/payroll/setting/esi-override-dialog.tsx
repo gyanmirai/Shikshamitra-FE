@@ -64,8 +64,8 @@ export default function EsiOverrideDialog({
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [evidenceReference, setEvidenceReference] = useState('');
-  const [effectiveFrom, setEffectiveFrom] = useState(`${month}-01`);
-  const [effectiveTo, setEffectiveTo] = useState(getMonthEnd(month));
+  const [effectiveFrom, setEffectiveFrom] = useState(month);
+  const [effectiveTo, setEffectiveTo] = useState(month);
 
   useEffect(() => {
     if (!open) return;
@@ -73,8 +73,8 @@ export default function EsiOverrideDialog({
     setAmount('');
     setReason('');
     setEvidenceReference('');
-    setEffectiveFrom(`${month}-01`);
-    setEffectiveTo(getMonthEnd(month));
+    setEffectiveFrom(month);
+    setEffectiveTo(month);
   }, [employee?.employeeId, month, open]);
 
   const needsAmount = overrideType === 'EmployeeAmount' || overrideType === 'EmployerAmount';
@@ -96,8 +96,8 @@ export default function EsiOverrideDialog({
           amount: needsAmount ? amountValue : null,
           reason: reason.trim(),
           evidenceReference: evidenceReference.trim() || null,
-          effectiveFrom,
-          effectiveTo,
+          effectiveFrom: `${effectiveFrom}-01`,
+          effectiveTo: getMonthEnd(effectiveTo),
         },
       }).unwrap();
       shikshaMitraToast.success({ message: 'Audited ESI exception added.' });
@@ -162,9 +162,9 @@ export default function EsiOverrideDialog({
             <TextField
               fullWidth
               required
-              type="date"
+              type="month"
               name="overrideEffectiveFrom"
-              label="Effective From"
+              label="Start month"
               value={effectiveFrom}
               slotProps={{ inputLabel: { shrink: true } }}
               onChange={(event) => setEffectiveFrom(event.target.value)}
@@ -174,9 +174,9 @@ export default function EsiOverrideDialog({
             <TextField
               fullWidth
               required
-              type="date"
+              type="month"
               name="overrideEffectiveTo"
-              label="Effective To"
+              label="End month"
               value={effectiveTo}
               slotProps={{ inputLabel: { shrink: true } }}
               onChange={(event) => setEffectiveTo(event.target.value)}

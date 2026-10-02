@@ -2,6 +2,8 @@ import { employeeType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
 
+import type { SalaryBasis } from './salary-template-api';
+
 export interface EmployeeSalaryComponent {
   id?: string | null;
   componentId?: string | null;
@@ -21,7 +23,7 @@ export interface EmployeeSalaryStructureResponse {
   earningComponents: EmployeeSalaryComponent[];
   deductionComponents: EmployeeSalaryComponent[];
   pfRuleId?: string | null;
-  quotedSalaryBasis?: string | null;
+  quotedSalaryBasis?: SalaryBasis | null;
   quotedMonthlyAmount?: number | null;
   sourceSalaryTemplateId?: string | null;
   sourceSalaryTemplateVersionId?: string | null;
@@ -34,7 +36,7 @@ export interface UpdateEmployeeSalaryStructureRequest {
   earningComponents: EmployeeSalaryComponent[];
   deductionComponents: EmployeeSalaryComponent[];
   pfRuleId?: string | null;
-  quotedSalaryBasis?: string | null;
+  quotedSalaryBasis?: SalaryBasis | null;
   quotedMonthlyAmount?: number | null;
   sourceSalaryTemplateId?: string | null;
   sourceSalaryTemplateVersionId?: string | null;

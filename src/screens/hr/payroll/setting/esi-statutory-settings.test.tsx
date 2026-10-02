@@ -1,240 +1,188 @@
 import { it, vi, expect, describe, afterEach, beforeEach } from 'vitest';
 import { render, screen, cleanup, waitFor, fireEvent } from '@testing-library/react';
 
-import EsiStatutorySettings, { isStalePreviewError } from './esi-statutory-settings';
+import EsiStatutorySettings from './esi-statutory-settings';
 
 const mocks = vi.hoisted(() => ({
-  query: 'view=advanced&month=2026-08',
-  replace: vi.fn(),
-  push: vi.fn(),
-  previewQuery: vi.fn(),
-  previewRefetch: vi.fn(),
-  activate: vi.fn(),
-  previewData: undefined as any,
-  rule: {
-    id: 'rule-1',
-    schemeCode: 'ESI',
-    jurisdictionCode: 'IN-GJ',
-    version: 1,
-    effectiveFrom: '2025-11-21',
-    establishmentThreshold: 10,
-    standardWageCeiling: 21000,
-    disabilityWageCeiling: 25000,
-    employeePercentage: 0.75,
-    employerPercentage: 3.25,
-    exclusionCapPercentage: 50,
-    inKindCapPercentage: 15,
-    roundingPolicy: 'NextHigherRupee',
-    sourceUrl: 'https://labour.gov.in/',
-    sourceVerifiedOn: '2026-08-18',
-  },
-  establishment: {
-    schemeCode: 'ESI',
-    jurisdictionCode: 'IN-GJ',
-    registrationNumber: 'GJ-ESI-1',
-    employeeCount: 18,
-    coveredSince: '2026-01-01',
-    benefitsActiveFrom: '2026-01-01',
-    status: 'Ready',
-    canActivate: true,
-  },
-  componentTreatments: [
-    {
-      componentId: 'basic-1',
-      componentName: 'Basic Salary',
-      treatment: 'Included',
-      effectiveFrom: '2026-08-01',
+  save: vi.fn(),
+  preview: vi.fn(),
+  cancel: vi.fn(),
+  loading: false,
+  error: false,
+  settings: {
+    current: {
+      id: 'version-1',
+      enabled: true,
+      concurrencyStamp: 'stamp-1',
+      effectiveMonth: '1900-01',
+      registrationNumber: '',
+      coveredSince: null as string | null,
+      isCancelled: false,
     },
-    {
-      componentId: 'allowance-1',
-      componentName: 'Other Allowance',
-      treatment: 'Unclassified',
-      effectiveFrom: '2026-08-01',
-    },
-  ],
-}));
-
-const successfulMutation = (result: unknown = {}) =>
-  vi.fn(() => ({ unwrap: vi.fn().mockResolvedValue(result) }));
-
-const readyPreview = () => ({
-  schemeCode: 'ESI',
-  monthYear: '08-2026',
-  summary: {
-    employeesNeedingAttention: 0,
-    employeeCount: 18,
-    coveredEmployeeCount: 2,
-    employeeContributionTotal: 204,
-    employerContributionTotal: 884,
-    governmentContributionTotal: 0,
-    canActivate: true,
-    blockingIssues: [],
+    history: [],
+    suggestedEffectiveMonth: '2026-10',
+    hasSchoolWideScope: true,
   },
-  totalCount: 18,
-  page: 0,
-  pageSize: 25,
-  items: [],
-  generatedAtUtc: '2026-08-18T10:00:00Z',
-  previewFingerprint: 'A'.repeat(64),
-});
-
-vi.mock('react-redux', () => ({ useSelector: () => [], useDispatch: () => vi.fn() }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: mocks.replace, push: mocks.push }),
-  useSearchParams: () => new URLSearchParams(mocks.query),
 }));
+vi.mock('react-redux', () => ({ useSelector: () => [] }));
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock('src/utils/permissions', () => ({ hasGrantedPermission: () => true }));
+vi.mock('src/components/toast', () => ({ shikshaMitraToast: { success: vi.fn() } }));
+vi.mock('../../employee/employee-form-fields/InformationFields', () => ({
+  SectionCard: ({ title, children, headerContent }: any) => (
+    <section>
+      <h2>{title}</h2>
+      {headerContent}
+      {children}
+    </section>
+  ),
+}));
+vi.mock('./esi-enrollment-drawer', () => ({ EsiEnrollmentDrawer: () => null }));
+vi.mock('./esi-override-dialog', () => ({ default: () => null }));
+vi.mock('./esi-configuration-employees', () => ({ EsiConfigurationEmployees: () => null }));
+vi.mock('./esi-unsaved-navigation', () => ({
+  useEsiUnsavedNavigation: () => ({
+    requestNavigation: (fn: () => void) => fn(),
+    confirmation: null,
+  }),
+}));
 vi.mock('src/redux/hr/statutory-scheme-api', () => ({
+  usePreviewEsiImpactQuery: () => ({
+    data: { summary: { employeesNeedingAttention: 0 } },
+    refetch: vi.fn(),
+  }),
   useGetEsiRuleQuery: () => ({
-    data: mocks.rule,
-    isLoading: false,
-    isError: false,
+    data: {
+      employeePercentage: 0.75,
+      employeeShareDailyWageExemption: 176,
+      employerPercentage: 3.25,
+      standardWageCeiling: 21000,
+      disabilityWageCeiling: 25000,
+    },
+  }),
+  useGetEsiComponentTreatmentsQuery: () => ({ data: [] }),
+}));
+vi.mock('src/redux/hr/esi-configuration-api', () => ({
+  useGetEsiConfigurationQuery: () => ({
+    data: mocks.loading || mocks.error ? undefined : mocks.settings,
+    isLoading: mocks.loading,
+    isError: mocks.error,
     refetch: vi.fn(),
   }),
-  useGetEsiEstablishmentQuery: () => ({
-    data: mocks.establishment,
-    isLoading: false,
-    isError: false,
-    refetch: vi.fn(),
-  }),
-  useGetEsiComponentTreatmentsQuery: () => ({
-    data: mocks.componentTreatments,
-    isFetching: false,
-    isError: false,
-    refetch: vi.fn(),
-  }),
-  useConfigureEsiEstablishmentMutation: () => [successfulMutation(), { isLoading: false }],
-  useUpdateEsiComponentTreatmentsMutation: () => [successfulMutation(), { isLoading: false }],
-  usePreviewEsiImpactQuery: (request: unknown) => {
-    mocks.previewQuery(request);
-    return {
-      data: mocks.previewData,
-      isFetching: false,
-      isError: false,
-      refetch: mocks.previewRefetch,
-    };
-  },
-  useActivateEsiMutation: () => [mocks.activate, { isLoading: false }],
-  useGetEsiEnrollmentQuery: () => ({ data: undefined, isFetching: false, isError: false }),
-  useUpdateEsiEnrollmentMutation: () => [successfulMutation(), { isLoading: false }],
-  useGetEsiOverridesQuery: () => ({ data: [], isFetching: false, isError: false }),
-  useCreateEsiOverrideMutation: () => [successfulMutation(), { isLoading: false }],
+  usePreviewEsiConfigurationMutation: () => [mocks.preview, { isLoading: false }],
+  useSaveEsiConfigurationMutation: () => [mocks.save, { isLoading: false }],
+  useCancelEsiConfigurationMutation: () => [mocks.cancel, { isLoading: false }],
 }));
 
-describe('ESI statutory settings workspace', () => {
-  it('does not mislabel unrelated conflicts as stale previews', () => {
-    expect(isStalePreviewError({ status: 409, data: { errorCode: 'OTHER_CONFLICT' } })).toBe(false);
-    expect(isStalePreviewError({ status: 409, data: { errorCode: 'ESI_PREVIEW_STALE' } })).toBe(true);
-  });
+const initial = {
+  current: {
+    id: 'version-1',
+    enabled: true,
+    concurrencyStamp: 'stamp-1',
+    effectiveMonth: '1900-01',
+    registrationNumber: '',
+    coveredSince: null,
+    isCancelled: false,
+  },
+  history: [],
+  suggestedEffectiveMonth: '2026-09',
+  hasSchoolWideScope: true,
+};
+describe('Compact ESIC settings', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.query = 'view=advanced&month=2026-08';
-    mocks.previewData = undefined;
-    mocks.previewRefetch.mockResolvedValue({ data: mocks.previewData });
-    mocks.activate.mockReturnValue({ unwrap: vi.fn().mockResolvedValue({}) });
+    mocks.settings = structuredClone(initial);
+    mocks.loading = false;
+    mocks.error = false;
+    mocks.save.mockReset().mockImplementation((body) => ({
+      unwrap: () =>
+        Promise.resolve({ ...mocks.settings, current: { ...mocks.settings.current, ...body } }),
+    }));
   });
-
   afterEach(cleanup);
-
-  it('protects establishment edits when the payroll month changes', () => {
+  it('shows one form with optional registration and no preview or scheduling', () => {
     render(<EsiStatutorySettings />);
-    fireEvent.change(screen.getByRole('textbox', { name: /ESIC registration number/ }), { target: { value: 'UNSAVED' } });
-    fireEvent.change(screen.getByLabelText('Payroll month'), { target: { value: '2026-07' } });
-    expect(mocks.replace).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
-    expect(screen.getByRole('textbox', { name: /ESIC registration number/ })).toHaveValue('UNSAVED');
-    expect(screen.getByLabelText('Payroll month')).toHaveValue('2026-08');
-    fireEvent.change(screen.getByLabelText('Payroll month'), { target: { value: '2026-07' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
-    expect(mocks.replace).toHaveBeenCalledWith(expect.stringContaining('month=2026-07'), { scroll: false });
+    expect(screen.queryByRole('tab')).toBeNull();
+    expect(screen.queryByLabelText('Apply from')).toBeNull();
+    expect(screen.getByLabelText('ESIC registration number')).toHaveValue('');
+    expect(screen.getByText('Applies to current and future unlocked payroll.')).toBeVisible();
+    expect(screen.queryByRole('button', { name: /preview|schedule/i })).toBeNull();
+    expect(screen.queryByText(/Employees needing attention/)).toBeNull();
+    fireEvent.click(screen.getByRole('switch', { name: 'Calculate ESIC in payroll' }));
+    expect(screen.queryByLabelText('ESIC registration number')).toBeNull();
   });
-
-  it('shows only classifications needing attention by default', () => {
+  it('saves directly with concurrency and idempotency, without confirmation', async () => {
     render(<EsiStatutorySettings />);
-
-    expect(screen.getByRole('heading', { name: 'Settings' })).toBeVisible();
-    expect(screen.getByText('1 included, 0 excluded, 1 need review')).toBeVisible();
-    expect(screen.getByText('Other Allowance')).toBeVisible();
-    expect(screen.queryByText('Basic Salary')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('ESIC registration number'), {
+      target: { value: 'REG-123' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() =>
+      expect(mocks.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          enabled: true,
+          registrationNumber: 'REG-123',
+          coveredSince: null,
+          concurrencyStamp: 'stamp-1',
+          idempotencyKey: expect.any(String),
+        })
+      )
+    );
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(mocks.save.mock.calls[0][0]).not.toHaveProperty('effectiveMonth');
+    expect(mocks.save.mock.calls[0][0]).not.toHaveProperty('previewFingerprint');
   });
-
-  it('loads the monthly preview automatically with the complete server query', () => {
-    mocks.query =
-      'view=overview&month=2026-08&search=Patel&coverage=covered&readiness=ready&page=2&pageSize=10&sort=statutoryWages&direction=desc';
-
+  it('preserves drafts and reuses the request key after a failure', async () => {
+    mocks.save.mockReturnValue({ unwrap: () => Promise.reject(new Error('network')) });
     render(<EsiStatutorySettings />);
-
-    expect(mocks.previewQuery).toHaveBeenCalledWith(
-      expect.objectContaining({
-        monthYear: '08-2026',
-        search: 'Patel',
-        coverage: 'covered',
-        readiness: 'ready',
-        page: 2,
-        pageSize: 10,
-        sortBy: 'statutoryWages',
-        sortDirection: 'desc',
-      })
+    fireEvent.change(screen.getByLabelText('ESIC registration number'), {
+      target: { value: 'DRAFT' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await screen.findByText(/Your changes are preserved/);
+    expect(screen.getByLabelText('ESIC registration number')).toHaveValue('DRAFT');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(2));
+    expect(mocks.save.mock.calls[0][0].idempotencyKey).toBe(
+      mocks.save.mock.calls[1][0].idempotencyKey
     );
   });
-
-  it('normalizes an old wage-tab deep link to the advanced workspace', async () => {
-    mocks.query = 'tab=wages&month=2026-08';
-
-    render(<EsiStatutorySettings />);
-
-    expect(screen.getByRole('heading', { name: 'Settings' })).toBeVisible();
+  it('does not replace unsaved input or its concurrency token on background refresh', async () => {
+    const view = render(<EsiStatutorySettings />);
+    fireEvent.change(screen.getByLabelText('ESIC registration number'), {
+      target: { value: 'DRAFT' },
+    });
+    mocks.settings = {
+      ...mocks.settings,
+      current: {
+        ...mocks.settings.current,
+        registrationNumber: 'NEW',
+        concurrencyStamp: 'stamp-2',
+      },
+    };
+    view.rerender(<EsiStatutorySettings />);
+    expect(screen.getByLabelText('ESIC registration number')).toHaveValue('DRAFT');
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() =>
-      expect(mocks.replace).toHaveBeenCalledWith(
-        expect.stringMatching(/view=advanced.*#earning-classifications$/),
-        { scroll: false }
+      expect(mocks.save).toHaveBeenCalledWith(
+        expect.objectContaining({ concurrencyStamp: 'stamp-1' })
       )
     );
   });
-
-  it('shows exact totals in the activation confirmation', () => {
-    mocks.query = 'view=overview&month=2026-08';
-    mocks.previewData = readyPreview();
-
-    render(<EsiStatutorySettings />);
-    fireEvent.click(screen.getByRole('button', { name: 'Review and activate' }));
-
-    expect(screen.getByRole('dialog', { name: 'Review and activate ESI' })).toBeVisible();
-    expect(screen.getAllByText('₹204').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('₹884').length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Confirm activation' })).toBeEnabled();
+  it('uses a form-shaped skeleton and never treats a failed load as enabled', () => {
+    mocks.loading = true;
+    const view = render(<EsiStatutorySettings />);
+    expect(screen.getByLabelText('Loading ESIC settings')).toHaveAttribute('aria-busy', 'true');
+    mocks.loading = false;
+    mocks.error = true;
+    view.rerender(<EsiStatutorySettings />);
+    expect(screen.getByText('ESIC settings could not be loaded.')).toBeVisible();
+    expect(screen.queryByRole('switch')).toBeNull();
   });
-
-  it('does not report employee coverage or impact complete before a preview exists', () => {
-    mocks.query = 'view=overview&month=2026-08';
+  it('keeps school-scoped configuration read only for restricted HR users', () => {
+    mocks.settings.hasSchoolWideScope = false;
     render(<EsiStatutorySettings />);
-    expect(screen.getAllByText('Checking')).toHaveLength(2);
-    expect(screen.queryByText('Employee coverage records are ready for this month.')).not.toBeInTheDocument();
-    expect(screen.queryByText('This month is ready for HR review and activation.')).not.toBeInTheDocument();
-  });
-
-  it('uses the server distinct employee count instead of summing overlapping issues', () => {
-    mocks.query = 'view=overview&month=2026-08';
-    mocks.previewData = readyPreview();
-    mocks.previewData.summary.employeesNeedingAttention = 3;
-    render(<EsiStatutorySettings />);
-    expect(screen.getByText('3 affected')).toBeVisible();
-  });
-
-  it('refreshes and closes the dialog when activation reports a stale preview', async () => {
-    mocks.query = 'view=overview&month=2026-08';
-    mocks.previewData = readyPreview();
-    mocks.activate.mockReturnValue({
-      unwrap: vi.fn().mockRejectedValue({ status: 409, data: { errorCode: 'ESI_PREVIEW_STALE' } }),
-    });
-
-    render(<EsiStatutorySettings />);
-    fireEvent.click(screen.getByRole('button', { name: 'Review and activate' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm activation' }));
-
-    await waitFor(() => expect(mocks.previewRefetch).toHaveBeenCalled());
-    expect(
-      screen.queryByRole('dialog', { name: 'Review and activate ESI' })
-    ).not.toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'Calculate ESIC in payroll' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Save' })).toBeNull();
   });
 });

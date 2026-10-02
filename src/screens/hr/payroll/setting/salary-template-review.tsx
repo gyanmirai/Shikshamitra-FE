@@ -1,4 +1,5 @@
 import type {
+  SalaryBasis,
   SalaryTemplateVersion,
   SalaryTemplateCalculation,
 } from 'src/redux/hr/salary-template-api';
@@ -18,6 +19,7 @@ import { formatRuleLabel } from './salary-template-editor-utils';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 type Props = {
+  salaryBasis: SalaryBasis;
   previewCurrent: boolean;
   sampleAmount: number;
   setSampleAmount: (value: number) => void;
@@ -31,6 +33,7 @@ type Props = {
   versions: SalaryTemplateVersion[];
 };
 export default function SalaryTemplateReview({
+  salaryBasis,
   previewCurrent,
   sampleAmount,
   setSampleAmount,
@@ -82,7 +85,11 @@ export default function SalaryTemplateReview({
                   size="small"
                   fullWidth
                   name="sampleMonthlyAmount"
-                  label="Sample monthly amount"
+                  label={
+                    salaryBasis === 'EMPLOYER_COST'
+                      ? 'Monthly cost to school (CTC)'
+                      : 'Monthly salary'
+                  }
                   value={sampleAmount}
                   decimalScale={2}
                   isAllowed={({ floatValue }) =>

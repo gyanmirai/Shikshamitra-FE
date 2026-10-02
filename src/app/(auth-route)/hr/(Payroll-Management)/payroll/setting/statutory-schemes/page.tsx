@@ -12,7 +12,7 @@ export default function StatutorySchemesPage() {
       <CustomBreadcrumbs
         heading="Statutory Schemes"
         layout={isDesktop ? 'inline' : 'stacked'}
-        description="Review ESI readiness, employee coverage, monthly impact, and advanced settings."
+        description="Configure ESIC and review its effect on payroll."
         links={[
           { name: 'HR/Staff' },
           { name: 'Payroll Management' },
