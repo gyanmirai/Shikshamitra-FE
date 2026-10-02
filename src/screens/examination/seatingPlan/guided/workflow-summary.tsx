@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
 import Typography from '@mui/material/Typography';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { formatPlanSchedules } from './workflow-utils';
 
@@ -31,56 +31,50 @@ export function WorkflowSummary({ workspace, workflow }: GuidedStepProps) {
         borderLeft: '1px solid',
         borderColor: 'divider',
         bgcolor: 'background.neutral',
+        overflowY: 'auto',
       }}
     >
-      <Stack spacing={0.25}>
-        <Typography variant="overline" color="text.secondary">
-          Examination progress
-        </Typography>
-        <Typography variant="subtitle1">{workspace.examName}</Typography>
-        <Typography variant="body2" color="text.secondary">
-          {workspace.standardName}
-        </Typography>
-      </Stack>
-      <Divider />
-      <SummaryRow
-        label="Subjects"
-        value={`${workflow.readiness.plannedSubjectCount}/${workflow.readiness.totalSubjectCount}`}
-      />
-      <SummaryRow
-        label="Plans ready"
-        value={`${workflow.readiness.readyPlanCount}/${workflow.readiness.totalPlanCount}`}
-      />
-      <SummaryRow
-        label="Seats"
-        value={`${workflow.readiness.allocatedStudentSeats}/${workflow.readiness.totalStudentSeats}`}
-      />
-      <SummaryRow label="State" value={workflow.isPublished ? 'Published' : 'Draft'} />
-      {plan ? (
-        <>
-          <Divider />
-          <SummaryRow label="Plan" value={plan.name} />
+      <FormSectionCard icon="mdi:clipboard-text-outline" title="Examination">
+        <Stack spacing={1}>
+          <Typography variant="subtitle2">{workspace.examName}</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {workspace.standardName}
+          </Typography>
           <SummaryRow
             label="Subjects"
-            value={plan.subjects.map((subject) => subject.subjectName).join(', ')}
+            value={`${workflow.readiness.plannedSubjectCount}/${workflow.readiness.totalSubjectCount}`}
           />
           <SummaryRow
-            label="Schedule"
-            value={<ScheduleValue value={formatPlanSchedules(plan.subjects)} />}
+            label="Plans ready"
+            value={`${workflow.readiness.readyPlanCount}/${workflow.readiness.totalPlanCount}`}
           />
-          <SummaryRow label="Students" value={plan.totalStudents} />
-          <SummaryRow label="Proposed" value={allocatedStudents} />
-          <SummaryRow label="Rooms" value={workflow.formik.values.selectedRoomIds.length} />
-          <SummaryRow label="Usable seats" value={selectedCapacity} />
-          <SummaryRow label="Pending" value={pendingStudents} />
-        </>
-      ) : (
-        <Typography variant="body2" color="text.secondary">
-          {workflow.readiness.isReadyToPublish
-            ? 'Every plan is ready. Review the whole examination and publish once.'
-            : 'Choose an existing plan or select unplanned subjects for a new one.'}
-        </Typography>
-      )}
+          <SummaryRow
+            label="Saved seats"
+            value={`${workflow.readiness.allocatedStudentSeats}/${workflow.readiness.totalStudentSeats}`}
+          />
+          <SummaryRow label="State" value={workflow.isPublished ? 'Published' : 'Draft'} />
+        </Stack>
+      </FormSectionCard>
+      {plan ? (
+        <FormSectionCard icon="mdi:seat" title="Selected plan">
+          <Stack spacing={1}>
+            <SummaryRow label="Plan" value={plan.name} />
+            <SummaryRow
+              label="Subjects"
+              value={plan.subjects.map((subject) => subject.subjectName).join(', ')}
+            />
+            <SummaryRow
+              label="Schedule"
+              value={<ScheduleValue value={formatPlanSchedules(plan.subjects)} />}
+            />
+            <SummaryRow label="Students" value={plan.totalStudents} />
+            <SummaryRow label="Proposed" value={allocatedStudents} />
+            <SummaryRow label="Rooms" value={workflow.formik.values.selectedRoomIds.length} />
+            <SummaryRow label="Usable seats" value={selectedCapacity} />
+            <SummaryRow label="Unallocated" value={pendingStudents} />
+          </Stack>
+        </FormSectionCard>
+      ) : null}
     </Stack>
   );
 }
@@ -113,6 +107,7 @@ export function SummaryRow({ label, value }: { label: string; value: ReactNode }
         {label}
       </Typography>
       <Typography
+        component="div"
         variant="body2"
         fontWeight={600}
         textAlign="right"

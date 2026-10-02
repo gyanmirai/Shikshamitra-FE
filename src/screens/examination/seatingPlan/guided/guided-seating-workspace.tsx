@@ -5,7 +5,6 @@ import type { SeatingPlanWorkspaceDto } from 'src/redux/academicAPI/ExaminationA
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 
-import { WorkflowSummary } from './workflow-summary';
 import { GuidedSeatingStepper } from './guided-seating-stepper';
 import { useGuidedSeatingWorkflow } from './use-guided-seating-workflow';
 import { PublishedSeatingView } from './published/published-seating-view';
@@ -33,6 +32,7 @@ function EditableGuidedSeatingWorkspace({ workspace }: { workspace: SeatingPlanW
         borderRadius: 2,
         display: 'flex',
         flexDirection: 'row',
+        bgcolor: 'background.neutral',
         '& .MuiStepLabel-label.Mui-active': {
           color: `${theme.palette.primary.darker} !important`,
         },
@@ -60,7 +60,6 @@ function EditableGuidedSeatingWorkspace({ workspace }: { workspace: SeatingPlanW
       <Box sx={{ flex: 1, minWidth: 0, minHeight: 0, overflow: 'hidden' }}>
         <GuidedSeatingStepper workspace={workspace} workflow={workflow} />
       </Box>
-      <WorkflowSummary workspace={workspace} workflow={workflow} />
     </Paper>
   );
 }

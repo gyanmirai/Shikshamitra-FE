@@ -1,7 +1,9 @@
+import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import { FormSectionCard } from 'src/components/form-section-card';
 
+import { SeatingMetrics } from './seating-metrics';
 import { SeatingPreviewGrid } from './seating-preview-grid';
 
 import type { GuidedStepProps } from '../types';
@@ -12,33 +14,46 @@ export function ReviewStep({ workflow }: GuidedStepProps) {
   if (!plan) return <Alert severity="warning">Choose a seating plan before reviewing.</Alert>;
 
   return (
-    <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 }, maxWidth: 1040 }}>
-      <Stack spacing={0.75}>
-        <Typography variant="h5">Review the proposed seating</Typography>
-        <Typography color="text.secondary">
-          Check every room and exception before applying the proposal. Applying runs the final
-          server validation; it does not publish the plan.
-        </Typography>
-      </Stack>
-
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25}>
-        <Metric label="Students" value={preview?.totalStudents ?? plan.totalStudents} />
-        <Metric label="Proposed" value={preview?.assignments.length ?? 0} />
-        <Metric label="Rooms" value={preview?.roomsUsed ?? 0} />
-        <Metric label="Utilization" value={`${preview?.utilizationPercent ?? 0}%`} />
-      </Stack>
+    <Stack spacing={1.5} sx={{ p: 2 }}>
+      <FormSectionCard
+        icon="mdi:clipboard-check-outline"
+        title="Seating review"
+        descriptionTooltip="Review every room, seat assignment and exception. Apply seating saves the proposal and runs final validation. Publishing the examination is a separate step."
+        action={
+          <Chip
+            size="small"
+            variant="soft"
+            label={validation?.isValid ? 'Validated' : 'Preview'}
+            color={validation?.isValid ? 'success' : 'default'}
+          />
+        }
+      >
+        <Stack spacing={1}>
+          <SeatingMetrics
+            items={[
+              { label: 'Students', value: preview?.totalStudents ?? plan.totalStudents },
+              { label: 'Proposed assignments', value: preview ? preview.assignments.length : '—' },
+              { label: 'Rooms', value: preview ? preview.roomsUsed : '—' },
+              {
+                label: 'Unallocated in preview',
+                value: preview ? preview.unallocatedStudentIds.length : '—',
+              },
+            ]}
+          />
+        </Stack>
+      </FormSectionCard>
+      {validation && (validation.blockers.length > 0 || validation.warnings.length === 0) && (
+        <ValidationResults validation={validation} />
+      )}
 
       {!preview ? (
-        <Alert severity="info">
-          Generate a new preview to review changes. The saved seating remains unchanged until you
-          apply and validate the proposal.
-        </Alert>
+        <Alert severity="info">Generate a preview to review seating.</Alert>
       ) : (
         <>
           {preview.assignments.length === 0 && (
             <Alert severity="error">
-              No seats were proposed. Return to Configure and choose rooms or rules that can seat
-              at least one student before applying.
+              No seats were proposed. Return to Configure and choose rooms or rules that can seat at
+              least one student before applying.
             </Alert>
           )}
           {preview.unallocatedStudentIds.length > 0 && (
@@ -50,8 +65,6 @@ export function ReviewStep({ workflow }: GuidedStepProps) {
           <SeatingPreviewGrid assignments={preview.assignments} />
         </>
       )}
-
-      {validation && <ValidationResults validation={validation} />}
     </Stack>
   );
 }
@@ -66,24 +79,11 @@ function ValidationResults({
       {validation.isValid && validation.warnings.length === 0 && (
         <Alert severity="success">All mandatory checks passed and no warnings were found.</Alert>
       )}
-      {validation.isValid && validation.warnings.length > 0 && (
-        <Alert severity="warning">
-          Mandatory checks passed, but review {validation.warnings.length} warning
-          {validation.warnings.length === 1 ? '' : 's'} before publishing.
-        </Alert>
-      )}
       {validation.blockers.map((issue) => (
         <ValidationIssue
           key={`blocker-${issue.code}-${issue.roomName ?? ''}`}
           issue={issue}
           severity="error"
-        />
-      ))}
-      {validation.warnings.map((issue) => (
-        <ValidationIssue
-          key={`warning-${issue.code}-${issue.roomName ?? ''}`}
-          issue={issue}
-          severity="warning"
         />
       ))}
     </Stack>
@@ -102,26 +102,5 @@ function ValidationIssue({
       {issue.message}
       {issue.suggestedActionLabel ? ` Suggested action: ${issue.suggestedActionLabel}.` : ''}
     </Alert>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string | number }) {
-  return (
-    <Stack
-      spacing={0.25}
-      sx={{
-        flex: 1,
-        minWidth: 120,
-        p: 1.5,
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 1.5,
-      }}
-    >
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="h6">{value}</Typography>
-    </Stack>
   );
 }

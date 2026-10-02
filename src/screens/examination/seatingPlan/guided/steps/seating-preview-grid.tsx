@@ -2,15 +2,15 @@ import type { GuidedAllocationPreviewDto } from 'src/redux/academicAPI/Examinati
 
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 type Assignment = GuidedAllocationPreviewDto['assignments'][number];
 
 export function SeatingPreviewGrid({ assignments }: { assignments: Assignment[] }) {
   const rooms = assignments.reduce<Record<string, Assignment[]>>((grouped, assignment) => {
-    const roomKey = assignment.roomName || assignment.roomId;
+    const roomKey = assignment.roomId;
     grouped[roomKey] = [...(grouped[roomKey] ?? []), assignment];
     return grouped;
   }, {});
@@ -25,12 +25,16 @@ export function SeatingPreviewGrid({ assignments }: { assignments: Assignment[] 
 
   return (
     <Stack spacing={1.5} aria-label="Proposed room seating">
-      {Object.entries(rooms).map(([roomName, roomAssignments]) => (
-        <Paper key={roomName} variant="outlined" sx={{ p: 1.5 }}>
-          <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ mb: 1.5 }}>
-            <Typography variant="subtitle1">{roomName}</Typography>
+      {Object.entries(rooms).map(([roomId, roomAssignments]) => (
+        <FormSectionCard
+          key={roomId}
+          icon="mdi:seat"
+          title={`${roomAssignments[0].roomName || 'Room'} · Proposed assignments`}
+          descriptionTooltip="Check each student's seat number, name, roll number and division. These cards list assignments in seat-number order; their position does not represent the classroom layout."
+          action={
             <Chip size="small" variant="outlined" label={`${roomAssignments.length} students`} />
-          </Stack>
+          }
+        >
           <Box
             sx={{
               display: 'grid',
@@ -39,21 +43,17 @@ export function SeatingPreviewGrid({ assignments }: { assignments: Assignment[] 
             }}
           >
             {roomAssignments
-              .sort((left, right) => left.seatNumber - right.seatNumber)
+              .toSorted((left, right) => left.seatNumber - right.seatNumber)
               .map((assignment) => (
                 <Stack
                   key={`${assignment.roomId}-${assignment.seatNumber}`}
                   spacing={0.25}
-                  sx={{ p: 1, minHeight: 68, borderRadius: 1, bgcolor: 'action.selected' }}
+                  sx={{ p: 1, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
                 >
                   <Typography variant="overline" color="text.primary">
                     Seat {assignment.seatNumber}
                   </Typography>
-                  <Typography
-                    variant="subtitle2"
-                    noWrap
-                    title={assignment.studentName ?? undefined}
-                  >
+                  <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
                     {assignment.studentName || `Student ${assignment.studentId.slice(0, 6)}`}
                   </Typography>
                   <Typography variant="caption" color="text.primary" noWrap>
@@ -63,7 +63,7 @@ export function SeatingPreviewGrid({ assignments }: { assignments: Assignment[] 
                 </Stack>
               ))}
           </Box>
-        </Paper>
+        </FormSectionCard>
       ))}
     </Stack>
   );

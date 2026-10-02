@@ -38,7 +38,8 @@ export function EditPlanSubjectsDialog({
     [workspace.plans]
   );
   const subjectsChanged =
-    selectedIds.length !== originalIds.length || originalIds.some((id) => !selectedIds.includes(id));
+    selectedIds.length !== originalIds.length ||
+    originalIds.some((id) => !selectedIds.includes(id));
 
   const toggle = (subjectId: string) => {
     setSelectedIds((current) =>
@@ -65,6 +66,7 @@ export function EditPlanSubjectsDialog({
       <DialogContent>
         <Stack spacing={1.5} sx={{ pt: 0.5 }}>
           <TextField
+            size="small"
             fullWidth
             label="Plan name"
             value={name}
@@ -80,6 +82,7 @@ export function EditPlanSubjectsDialog({
                 disabled={ownedByAnotherPlan}
                 control={
                   <Checkbox
+                    size="small"
                     checked={selectedIds.includes(subject.examSubjectId)}
                     onChange={() => toggle(subject.examSubjectId)}
                   />
@@ -101,10 +104,17 @@ export function EditPlanSubjectsDialog({
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button color="inherit" variant="outlined" disabled={submitting} onClick={onClose}>
+        <Button
+          size="small"
+          color="inherit"
+          variant="outlined"
+          disabled={submitting}
+          onClick={onClose}
+        >
           Cancel
         </Button>
         <LoadingButton
+          size="small"
           variant="contained"
           loading={submitting}
           disabled={selectedIds.length === 0 || (!subjectsChanged && name.trim() === plan.name)}

@@ -35,44 +35,44 @@ export function ManualEditorToolbar({
       sx={{ p: 1.5, borderBottom: '1px solid', borderColor: 'divider' }}
     >
       <Stack spacing={0.25}>
-        <Typography variant="subtitle1">Classroom seating editor</Typography>
         <Typography variant="body2" color="text.secondary" aria-live="polite">
           {assigned} of {total} students assigned
         </Typography>
       </Stack>
       <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
         <Button
+          size="small"
           variant="outlined"
           startIcon={<Iconify icon="mdi:auto-fix" />}
           disabled={isReadOnly || total === 0}
           onClick={onAutoArrange}
-          sx={{ minHeight: 44 }}
         >
           Auto-arrange all
         </Button>
         <Button
+          size="small"
           variant="text"
           startIcon={<Iconify icon="mdi:undo" />}
           disabled={isReadOnly || !canUndo}
           onClick={onUndo}
-          sx={{ minHeight: 44 }}
         >
           Undo
         </Button>
         <Button
+          size="small"
           variant="text"
           startIcon={<Iconify icon="mdi:redo" />}
           disabled={isReadOnly || !canRedo}
           onClick={onRedo}
-          sx={{ minHeight: 44 }}
         >
           Redo
         </Button>
         <Button
+          size="small"
+          color="error"
           variant="text"
           disabled={isReadOnly || assigned === 0}
           onClick={onClear}
-          sx={{ minHeight: 44, color: 'error.dark' }}
         >
           Clear placements
         </Button>

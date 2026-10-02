@@ -1,6 +1,5 @@
 import Stack from '@mui/material/Stack';
-import Divider from '@mui/material/Divider';
-import Typography from '@mui/material/Typography';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { RoomsStep } from './rooms-step';
 import { AllocationStep } from './allocation-step';
@@ -12,20 +11,19 @@ import type { GuidedStepProps } from '../types';
 export function ConfigureStep(props: GuidedStepProps) {
   const { workflow } = props;
   return (
-    <Stack spacing={2.5} sx={{ p: { xs: 2, md: 3 }, width: '100%' }}>
-      <Stack spacing={0.75}>
-        <Typography variant="h5">Configure capacity and seating rules</Typography>
-        <Typography color="text.secondary">
-          Confirm enough usable seats, then choose how students should be arranged. The next step
-          generates a preview without changing the approved plan.
-        </Typography>
-      </Stack>
+    <Stack spacing={1.5} sx={{ p: 2, width: '100%' }}>
       <RoomsStep {...props} />
-      <Divider />
       <AllocationModeStep {...props} />
-      <Divider />
       <AllocationStep {...props} />
-      {workflow.formik.values.allocationMode === 'manual' && <GuidedManualEditor {...props} />}
+      {workflow.formik.values.allocationMode === 'manual' && (
+        <FormSectionCard
+          icon="mdi:seat"
+          title="Classroom seating"
+          descriptionTooltip="Arrange students on the classroom layout by dragging, selecting, moving or swapping them. Review the proposal before applying it to save the assignments."
+        >
+          <GuidedManualEditor {...props} />
+        </FormSectionCard>
+      )}
     </Stack>
   );
 }

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import Stack from '@mui/material/Stack';
-import Alert from '@mui/material/Alert';
 import { LoadingButton } from '@mui/lab';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -46,11 +45,8 @@ export function ResetSeatingDraftDialog({
             {workflow.readiness.allocatedStudentSeats === 1 ? '' : 's'}. Examination subjects and
             schedules are not deleted.
           </Typography>
-          <Alert severity="warning">
-            You can immediately regroup every subject and create the seating again. This action is
-            unavailable after publication.
-          </Alert>
           <TextField
+            size="small"
             autoFocus
             fullWidth
             required
@@ -63,6 +59,7 @@ export function ResetSeatingDraftDialog({
       }
       action={
         <LoadingButton
+          size="small"
           color="error"
           variant="contained"
           loading={submitting}

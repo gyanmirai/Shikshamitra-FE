@@ -24,7 +24,7 @@ export function SubjectOption({
   return (
     <FormControlLabel
       disabled={Boolean(owner)}
-      control={<Checkbox checked={checked} onChange={onToggle} />}
+      control={<Checkbox size="small" checked={checked} onChange={onToggle} />}
       label={
         <Stack spacing={0.2}>
           <Typography variant="subtitle2">{subject.subjectName}</Typography>
@@ -36,11 +36,10 @@ export function SubjectOption({
       }
       sx={{
         m: 0,
-        px: 1.5,
-        py: 0.75,
-        minHeight: 60,
+        px: 1,
+        py: 0.5,
         border: '1px solid',
-        borderColor: checked ? 'primary.main' : 'divider',
+        borderColor: 'divider',
         borderRadius: 1.5,
         bgcolor: checked ? 'action.selected' : 'background.paper',
       }}

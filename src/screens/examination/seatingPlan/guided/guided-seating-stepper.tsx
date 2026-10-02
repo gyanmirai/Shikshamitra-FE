@@ -58,9 +58,8 @@ export function GuidedSeatingStepper(props: GuidedStepProps) {
         saveAndNextButtonProps={{
           disabled: workflow.nextDisabled,
           loading: workflow.isBusy,
-          sx: { minHeight: 40, minWidth: 0, px: 1 },
         }}
-        viewMode="vertical"
+        viewMode="horizontal"
       />
       <ConfirmDialog
         open={automaticReplacementDialog.value}
@@ -77,6 +76,7 @@ export function GuidedSeatingStepper(props: GuidedStepProps) {
         }
         action={
           <LoadingButton
+            size="small"
             variant="contained"
             loading={workflow.isBusy}
             onClick={continueWithAutomaticPreview}

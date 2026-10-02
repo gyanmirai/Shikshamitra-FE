@@ -26,7 +26,7 @@ export default function GuidedSeatingPage() {
   const isPublished = normalizedWorkspace?.readiness.isPublished ?? false;
 
   return (
-    <GuidedSeatingPageShell isPublished={isPublished}>
+    <GuidedSeatingPageShell isPublished={isPublished} standardId={normalizedWorkspace?.standardId}>
       {isLoading || (isFetching && !currentData) ? (
         <GuidedSeatingWorkspaceSkeleton />
       ) : isError || !normalizedWorkspace ? (

@@ -53,7 +53,7 @@ export function getNextLabel(
     return allocationMode === 'manual' ? 'Review manual seating' : 'Generate seating preview';
   if (activeStep === 2 && !hasPreview) return 'Generate preview';
   if (activeStep === 2 && !hasValidation) return 'Apply seating & validate';
-  if (activeStep === 2) return 'Save plan & return to subjects';
+  if (activeStep === 2) return 'Save plan & return to list';
   return isPublished ? 'Back to seating plans' : 'Publish examination seating';
 }
 

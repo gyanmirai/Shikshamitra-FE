@@ -12,6 +12,7 @@ import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import SeatingPlanTable from '../components/list/SeatingPlanTable';
 import { useSeatingPlanList } from '../hooks/use-seating-plan-list';
+import { buildSeatingPlanSetupUrl } from '../utils/seating-plan-navigation';
 import SeatingPlanHelpTooltip from '../components/list/SeatingPlanHelpTooltip';
 import SeatingPlanPreviewDrawer from '../components/list/SeatingPlanPreviewDrawer';
 
@@ -30,9 +31,8 @@ export default function SeatingPlanListPage() {
   const router = useRouter();
   const list = useSeatingPlanList();
   const openPlan = (row: SeatingPlanListRow) => {
-    const params = new URLSearchParams({ step: '0' });
     router.push(
-      `${academicPaths.examination.seatAllocationSetup(row.examId)}?${params.toString()}`
+      buildSeatingPlanSetupUrl(row.examId, list.selectedClassId, list.activeSummaryFilter)
     );
   };
 
@@ -62,7 +62,6 @@ export default function SeatingPlanListPage() {
             value={list.selectedClassId}
             onChange={(value) => {
               list.setSelectedClassId(value as string);
-              list.setActiveSummaryFilter(null);
               list.setPreviewRow(null);
             }}
             labelKey="name"
