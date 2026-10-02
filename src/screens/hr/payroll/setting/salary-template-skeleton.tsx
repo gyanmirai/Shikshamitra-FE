@@ -1,4 +1,3 @@
-import { varAlpha } from 'src/theme/styles';
 import { Box, Card, Skeleton, Typography } from '@mui/material';
 
 export default function SalaryTemplateSkeleton() {
@@ -35,7 +34,7 @@ export default function SalaryTemplateSkeleton() {
               rowGap: 3,
             }}
           >
-            {['name', 'description', 'salary-basis', 'protection-policy'].map((field) => (
+            {['name', 'description', 'salary-basis'].map((field) => (
               <Skeleton key={field} height={40} sx={{ borderRadius: 1 }} />
             ))}
           </Box>
@@ -78,12 +77,8 @@ export default function SalaryTemplateSkeleton() {
                 justifyContent: 'space-between',
                 gap: 1,
                 pb: 1,
-                borderBottom: 2,
-                borderColor: (theme) =>
-                  varAlpha(
-                    theme.vars.palette[section === 'Earnings' ? 'success' : 'warning'].mainChannel,
-                    0.4
-                  ),
+                borderBottom: 1,
+                borderColor: 'divider',
               }}
             >
               <Typography variant="h6">{section}</Typography>

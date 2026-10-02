@@ -27,7 +27,8 @@ Use this table before searching `src/redux`:
 | `compensation-revision-api.ts`     | Direct effective-dated compensation save, history, and activation readiness                    | HR payroll compensation         |
 | `runPayrollApi.ts`                 | Generation-bound reviews and lock, adjustments, salary slips, PDFs                            | HR payroll operations           |
 | `payroll-preview-run-api.ts`       | Start/resume background calculation, status polling, and server-paged generation results       | HR payroll operations           |
-| `statutory-scheme-api.ts`          | ESI rule, establishment, earning classifications, enrollment, audited exceptions, preview, and activation | HR payroll statutory settings   |
+| `statutory-scheme-api.ts`          | ESI rule, earning classifications, registration details, exceptions, and employee impact | HR payroll statutory settings   |
+| `esi-configuration-api.ts` | ESIC settings read and direct save with concurrency stamp and idempotency key | HR payroll statutory settings |
 | `attendanceApi.ts`                 | Attendance tracking, employee attendance, import preview, confirm, template, register, adjust | HR attendance and leaves        |
 | `attendanceImportApi.ts`           | Automated attendance runs, rows, lock, unlock, save rows                                      | HR attendance imports           |
 | `leaveApi.ts`                      | Leave policies, leave requests, actions, balances                                             | HR attendance and leaves        |
@@ -63,9 +64,18 @@ Do not infer backend behavior from a client helper alone.
 Confirm request and response behavior in `../../../Shikshamitra-BE/docs/modules/hr/api.md` and backend `Application.Contracts/HR/**`.
 The salary-template RTK Query client is `src/redux/hr/salary-template-api.ts`.
 It owns the complete template list, active-template choices, active component catalog, atomic active create or update, calculation, version history, default selection, and archiving through the shared authenticated API service.
-The calculation contract includes Gross, Take-home, and Employer Cost quote bases, protection policy, effective month, optional employee context, target variance, and ESI preview details.
+The calculation contract includes Monthly salary (GROSS) and Monthly cost to school (EMPLOYER_COST) salary bases, effective month, optional employee context, target variance, and ESI preview details.
 The separate employee-independent `previewSalaryTemplate` mutation posts current rules to `/payroll/salary-templates/preview` without invalidating cached templates.
 Create/update send the returned preview token with sample amount and effective month; saved-template employee calculations retain their existing endpoint and authorization.
 The compensation-revision client saves recurring results directly through the employee-scoped compensation endpoint, reads immutable history and readiness, and never converts system statutory preview lines into editable salary rows.
-The statutory-scheme client automatically posts URL-backed month, search, coverage, readiness, enrollment, paging, and single-sort state to the paged ESI preview endpoint.
-Its preview summary remains unfiltered, employee rows use server-authored issue and coverage labels, and activation submits the reviewed preview fingerprint.
+The configuration client posts the unsaved form and optional employee filters to the draft impact endpoint.
+Its summary remains unfiltered, employee rows use server-authored issue labels, and saving submits the exact reviewed fingerprint.
+
+ESIC saves invalidate payroll, payslip, salary setup, and statutory query tags.
+Failed settings loads display an error instead of assuming ESIC is enabled.
+The server owns the effective current month and derives compensation protection from the selected basis.
+
+ESIC exception month inputs serialize to the first day of Start month and the inclusive last day of End month.
+The existing EffectiveFrom and EffectiveTo contract remains date-based, with server validation of month boundaries.
+Completed SUPERSEDED payroll runs may return their previous rows with IsCurrent false and CanLock false.
+Cached rows never override the status response when determining whether payroll actions are available.

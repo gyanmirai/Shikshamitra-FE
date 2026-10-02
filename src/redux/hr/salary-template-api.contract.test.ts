@@ -17,11 +17,12 @@ describe('salary template API contract', () => {
 
   it('creates a complete active template and updates through the same contract', () => {
     const body = {
-      previewToken: 'proof', sampleMonthlyAmount: 20000, sampleEffectiveMonth: '2026-09-01T00:00:00.000Z',
+      previewToken: 'proof',
+      sampleMonthlyAmount: 20000,
+      sampleEffectiveMonth: '2026-09-01T00:00:00.000Z',
       name: 'Gujarat Staff',
       description: 'Reusable salary setup',
       defaultSalaryBasis: 'EMPLOYER_COST' as const,
-      defaultProtectionPolicy: 'PROTECT_EMPLOYER_COST' as const,
       defaultPfApplicable: false,
       defaultPfRuleId: null,
       rules: [],
@@ -29,9 +30,7 @@ describe('salary template API contract', () => {
       expectedActiveVersionId: null,
       concurrencyStamp: null,
     };
-    expect(
-      buildSaveSalaryTemplateRequest(body)
-    ).toEqual({
+    expect(buildSaveSalaryTemplateRequest(body)).toEqual({
       url: '/payroll/salary-templates',
       method: 'POST',
       body,
@@ -43,12 +42,11 @@ describe('salary template API contract', () => {
     });
   });
 
-  it('sends quote protection, effective month, employee context, and Gujarat statutory profile', () => {
+  it('sends the salary basis, effective month, employee context, and Gujarat statutory profile', () => {
     expect(
       buildSalaryTemplateCalculationRequest({
         templateVersionId: 'version-1',
-        salaryBasis: 'TAKE_HOME',
-        protectionPolicy: 'PROTECT_TAKE_HOME',
+        salaryBasis: 'GROSS',
         monthlyAmount: 25990,
         effectiveMonth: '2026-08-01T00:00:00.000Z',
         employeeId: 'employee-1',
@@ -59,8 +57,7 @@ describe('salary template API contract', () => {
       url: '/payroll/salary-templates/versions/version-1/calculate',
       method: 'POST',
       body: {
-        salaryBasis: 'TAKE_HOME',
-        protectionPolicy: 'PROTECT_TAKE_HOME',
+        salaryBasis: 'GROSS',
         monthlyAmount: 25990,
         effectiveMonth: '2026-08-01T00:00:00.000Z',
         employeeId: 'employee-1',

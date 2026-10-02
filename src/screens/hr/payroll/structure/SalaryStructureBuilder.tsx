@@ -4,7 +4,6 @@ import type { FormikProps } from 'formik';
 import type { RootState } from 'src/redux/store';
 import type {
   SalaryBasis,
-  ProtectionPolicy,
   SalaryRuleOverride,
   SalaryTemplateCalculation,
 } from 'src/redux/hr/salary-template-api';
@@ -40,15 +39,16 @@ import {
   Switch,
   Divider,
   MenuItem,
+  Skeleton,
   TextField,
   Typography,
   InputLabel,
   FormControl,
   FormControlLabel,
-  CircularProgress,
 } from '@mui/material';
 
 import { getLocalMonthKey } from './salary-structure-builder-utils';
+import { EmployeeEsiDetails } from '../setting/employee-esi-details';
 
 type Props = {
   formik: FormikProps<any>;
@@ -60,13 +60,20 @@ type Props = {
 const monthlyPayload = (month: string) => `${month}-01T00:00:00.000Z`;
 const newKey = () => globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`;
 const contractLabel = (value: string) =>
-  value.toLowerCase().replaceAll('_', ' ').replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
+  value
+    .toLowerCase()
+    .replaceAll('_', ' ')
+    .replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
 
 function Summary({ label, amount }: { label: string; amount: number }) {
   return (
     <Paper variant="outlined" sx={{ p: 1.5, height: '100%' }}>
-      <Typography variant="caption" color="text.secondary">{label}</Typography>
-      <Typography variant="subtitle1" fontWeight={700}>{formatCurrency(amount)}</Typography>
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography variant="subtitle1" fontWeight={700}>
+        {formatCurrency(amount)}
+      </Typography>
       <Typography variant="caption" color="text.secondary">
         {formatCurrency(amount * 12)} yearly
       </Typography>
@@ -91,8 +98,12 @@ export function SalaryStructureBuilder({
   );
   const canReadCompensation = canView || canManage;
   const canActivate = hasGrantedPermission(permissions, 'HR.Employee.EmployeeList.Edit');
-  const { data: templateData, isLoading: templatesLoading, isError: templatesError } =
-    useGetActiveSalaryTemplatesQuery();
+  const {
+    data: templateData,
+    isLoading: templatesLoading,
+    isError: templatesError,
+    refetch: refetchTemplates,
+  } = useGetActiveSalaryTemplatesQuery();
   const { data: pfData, isError: pfRulesError } = useGetPFQuery({});
   const {
     data: revisionData,
@@ -110,10 +121,10 @@ export function SalaryStructureBuilder({
   const [activateEmployee, activationState] = useUpdateEmployeeStatusMutation();
   const [selectedTemplateId, setSelectedTemplateId] = useState('');
   const [salaryBasis, setSalaryBasis] = useState<SalaryBasis>('EMPLOYER_COST');
-  const [protectionPolicy, setProtectionPolicy] =
-    useState<ProtectionPolicy>('PROTECT_EMPLOYER_COST');
   const [effectiveMonth, setEffectiveMonth] = useState(getLocalMonthKey);
-  const [monthlyAmount, setMonthlyAmount] = useState(Number(formik.values.quotedMonthlyAmount || 0));
+  const [monthlyAmount, setMonthlyAmount] = useState(
+    Number(formik.values.quotedMonthlyAmount || 0)
+  );
   const [pfApplicable, setPfApplicable] = useState(false);
   const [pfRuleId, setPfRuleId] = useState('');
   const [customizing, setCustomizing] = useState(false);
@@ -127,12 +138,12 @@ export function SalaryStructureBuilder({
   const operationSignatureRef = useRef('');
   const salaryTemplateLabelId = useId();
   const salaryBasisLabelId = useId();
-  const protectionPolicyLabelId = useId();
   const pfRuleLabelId = useId();
 
   const templates = templateData?.items || [];
   const defaultTemplate = templates.find((template) => template.isDefault) || templates[0];
-  const selectedTemplate = templates.find((template) => template.id === selectedTemplateId) || defaultTemplate;
+  const selectedTemplate =
+    templates.find((template) => template.id === selectedTemplateId) || defaultTemplate;
   const selectedVersion = selectedTemplate?.editableVersion;
   const pfRules = (pfData?.items || []).filter((rule: any) => rule.isActive);
   const exactMonthRevision = useMemo(
@@ -140,7 +151,8 @@ export function SalaryStructureBuilder({
       revisionData?.items
         .filter(
           (revision) =>
-            revision.status === 'EFFECTIVE' && revision.effectiveMonth.slice(0, 7) === effectiveMonth
+            revision.status === 'EFFECTIVE' &&
+            revision.effectiveMonth.slice(0, 7) === effectiveMonth
         )
         .sort((left, right) => right.revisionNumber - left.revisionNumber)[0],
     [effectiveMonth, revisionData?.items]
@@ -148,18 +160,14 @@ export function SalaryStructureBuilder({
 
   useEffect(() => {
     const initializationKey = employeeId || 'unsaved-employee';
-    if (
-      revisionsLoading ||
-      !selectedTemplate ||
-      initializedRef.current === initializationKey
-    ) {
+    if (revisionsLoading || !selectedTemplate || initializedRef.current === initializationKey) {
       return;
     }
-    const source = revisionData?.items.find((revision) => revision.isCurrent) || revisionData?.items[0];
+    const source =
+      revisionData?.items.find((revision) => revision.isCurrent) || revisionData?.items[0];
     if (source) {
       setSelectedTemplateId(source.sourceSalaryTemplateId || selectedTemplate.id);
       setSalaryBasis(source.salaryBasis);
-      setProtectionPolicy(source.protectionPolicy);
       setEffectiveMonth(source.effectiveMonth.slice(0, 7));
       setMonthlyAmount(source.quotedMonthlyAmount);
       setPfApplicable(Boolean(source.pfRuleId));
@@ -170,7 +178,6 @@ export function SalaryStructureBuilder({
     } else {
       setSelectedTemplateId(selectedTemplate.id);
       setSalaryBasis(selectedTemplate.editableVersion.defaultSalaryBasis);
-      setProtectionPolicy(selectedTemplate.editableVersion.defaultProtectionPolicy);
       setPfApplicable(selectedTemplate.editableVersion.defaultPfApplicable);
       setPfRuleId(selectedTemplate.editableVersion.defaultPfRuleId || '');
       const joining = dateOfJoining;
@@ -184,7 +191,6 @@ export function SalaryStructureBuilder({
   const signature = JSON.stringify({
     templateVersionId: selectedVersion?.id,
     salaryBasis,
-    protectionPolicy,
     effectiveMonth,
     monthlyAmount,
     pfApplicable,
@@ -205,7 +211,6 @@ export function SalaryStructureBuilder({
     setSelectedTemplateId(templateId);
     if (template) {
       setSalaryBasis(template.editableVersion.defaultSalaryBasis);
-      setProtectionPolicy(template.editableVersion.defaultProtectionPolicy);
       setPfApplicable(template.editableVersion.defaultPfApplicable);
       setPfRuleId(template.editableVersion.defaultPfRuleId || '');
       setCustomizing(false);
@@ -221,7 +226,6 @@ export function SalaryStructureBuilder({
       const result = await calculate({
         templateVersionId: selectedVersion.id,
         salaryBasis,
-        protectionPolicy,
         monthlyAmount,
         effectiveMonth: monthlyPayload(effectiveMonth),
         employeeId: employeeId || null,
@@ -252,7 +256,6 @@ export function SalaryStructureBuilder({
         body: {
           templateVersionId: selectedVersion.id,
           salaryBasis,
-          protectionPolicy,
           monthlyAmount,
           effectiveMonth: monthlyPayload(effectiveMonth),
           pfApplicable,
@@ -265,9 +268,8 @@ export function SalaryStructureBuilder({
         },
       }).unwrap();
       operationKeyRef.current = '';
-      formik.setFieldValue('quotedMonthlyAmount', result.quotedMonthlyAmount, false);
-      formik.setFieldValue('quotedSalaryBasis', result.salaryBasis, false);
-      formik.setFieldValue('sourceSalaryTemplateId', result.sourceSalaryTemplateId, false);
+      // Compensation owns salary amounts and provenance. Do not copy partial metadata
+      // into the independent bank-details and one-time-component form.
       formik.setFieldValue('pfRule', result.pfRuleId || null, false);
       toast.success(
         result.isScheduled
@@ -292,7 +294,11 @@ export function SalaryStructureBuilder({
     try {
       await activateEmployee({
         id: employeeId,
-        body: { employeeStatusType: 0, remarks: 'Activated after payroll setup', effectiveDate: null },
+        body: {
+          employeeStatusType: 0,
+          remarks: 'Activated after payroll setup',
+          effectiveDate: null,
+        },
       }).unwrap();
       setActivationCompleted(true);
       toast.success('Employee activated.');
@@ -320,18 +326,60 @@ export function SalaryStructureBuilder({
   };
 
   if (templatesLoading || revisionsLoading) {
-    return <Box display="flex" justifyContent="center" py={4}><CircularProgress /></Box>;
+    return (
+      <Box aria-busy="true" aria-label="Loading employee salary" display="grid" gap={2.5}>
+        <Grid container spacing={2}>
+          {[6, 3, 3].map((width, index) => (
+            <Grid key={index} size={{ xs: 12, md: width }}>
+              <Skeleton width="40%" height={20} />
+              <Skeleton variant="rounded" height={40} />
+            </Grid>
+          ))}
+          {['Earnings', 'Deductions'].map((title) => (
+            <Grid key={title} size={{ xs: 12, md: 6 }}>
+              <Typography variant="subtitle1">{title}</Typography>
+              {[0, 1, 2].map((row) => (
+                <Skeleton key={row} height={40} />
+              ))}
+            </Grid>
+          ))}
+        </Grid>
+        <Box display="flex" justifyContent="flex-end">
+          <Button size="small" variant="contained" disabled>
+            Calculate salary
+          </Button>
+        </Box>
+      </Box>
+    );
   }
-  if (templatesError) {
-    return <Alert severity="error">Salary templates could not be loaded.</Alert>;
+  if (templatesError && !templateData) {
+    return (
+      <Box display="grid" gap={2.5}>
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" onClick={() => refetchTemplates()}>
+              Retry
+            </Button>
+          }
+        >
+          Salary templates could not be loaded.
+        </Alert>
+      </Box>
+    );
   }
   if (!templates.length) {
-    return <Alert severity="warning">Create an active salary template before setting up employee salary.</Alert>;
+    return (
+      <Alert severity="warning">
+        Create an active salary template before setting up employee salary.
+      </Alert>
+    );
   }
   if (!employeeId) {
     return (
       <Alert severity="info">
-        Save the employee first. The employee will be created as Inactive, then salary can be set up separately.
+        Save the employee first. The employee will be created as Inactive, then salary can be set up
+        separately.
       </Alert>
     );
   }
@@ -350,9 +398,31 @@ export function SalaryStructureBuilder({
 
   return (
     <Box display="grid" gap={2.5}>
-      <Alert severity="info">
-        Salary saves immediately as an immutable revision. Activating the employee remains a separate action.
-      </Alert>
+      <Box
+        display="flex"
+        alignItems="center"
+        justifyContent="space-between"
+        gap={1}
+        flexWrap="wrap"
+      >
+        {readiness?.blockerCodes.includes('ESI_INSURANCE_NUMBER_REQUIRED') && (
+          <Typography variant="body2" color="error.main">
+            Enter the employee’s ESIC insurance number before activation.
+          </Typography>
+        )}
+        <EmployeeEsiDetails
+          employeeId={employeeId}
+          employeeName={
+            [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ') ||
+            'Employee'
+          }
+          employeeIdentifier={formik.values.employeeIdentifier || ''}
+          onSaved={async () => {
+            setCalculation(null);
+            if (canActivate) await refetchReadiness();
+          }}
+        />
+      </Box>
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>
           <FormControl fullWidth disabled={!canManage}>
@@ -365,7 +435,8 @@ export function SalaryStructureBuilder({
             >
               {templates.map((template) => (
                 <MenuItem key={template.id} value={template.id}>
-                  {template.name}{template.isDefault ? ' (School default)' : ''}
+                  {template.name}
+                  {template.isDefault ? ' (School default)' : ''}
                 </MenuItem>
               ))}
             </Select>
@@ -378,18 +449,26 @@ export function SalaryStructureBuilder({
             type="month"
             value={effectiveMonth}
             disabled={!canManage}
-            onChange={(event) => { setEffectiveMonth(event.target.value); setCalculation(null); }}
+            onChange={(event) => {
+              setEffectiveMonth(event.target.value);
+              setCalculation(null);
+            }}
             slotProps={{ inputLabel: { shrink: true } }}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <TextField
             fullWidth
-            label="Monthly amount"
+            label={
+              salaryBasis === 'EMPLOYER_COST' ? 'Monthly cost to school (CTC)' : 'Monthly salary'
+            }
             type="number"
             value={monthlyAmount || ''}
             disabled={!canManage}
-            onChange={(event) => { setMonthlyAmount(Number(event.target.value)); setCalculation(null); }}
+            onChange={(event) => {
+              setMonthlyAmount(Number(event.target.value));
+              setCalculation(null);
+            }}
             slotProps={{ htmlInput: { min: 1, step: 100 } }}
           />
         </Grid>
@@ -400,26 +479,13 @@ export function SalaryStructureBuilder({
               labelId={salaryBasisLabelId}
               label="Amount basis"
               value={salaryBasis}
-              onChange={(event) => { setSalaryBasis(event.target.value as SalaryBasis); setCalculation(null); }}
+              onChange={(event) => {
+                setSalaryBasis(event.target.value as SalaryBasis);
+                setCalculation(null);
+              }}
             >
-              <MenuItem value="EMPLOYER_COST">Employer cost / CTC</MenuItem>
-              <MenuItem value="GROSS">Gross salary</MenuItem>
-              <MenuItem value="TAKE_HOME">Take-home salary</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <FormControl fullWidth disabled={!canManage}>
-            <InputLabel id={protectionPolicyLabelId}>Protection policy</InputLabel>
-            <Select
-              labelId={protectionPolicyLabelId}
-              label="Protection policy"
-              value={protectionPolicy}
-              onChange={(event) => { setProtectionPolicy(event.target.value as ProtectionPolicy); setCalculation(null); }}
-            >
-              <MenuItem value="PROTECT_EMPLOYER_COST">Protect employer cost</MenuItem>
-              <MenuItem value="PROTECT_GROSS">Protect gross salary</MenuItem>
-              <MenuItem value="PROTECT_TAKE_HOME">Protect take-home salary</MenuItem>
+              <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
+              <MenuItem value="GROSS">Monthly salary</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -432,7 +498,8 @@ export function SalaryStructureBuilder({
                 onChange={(_, checked) => {
                   setPfApplicable(checked);
                   if (!checked) setPfRuleId('');
-                  else if (!pfRuleId) setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
+                  else if (!pfRuleId)
+                    setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
                   setCalculation(null);
                 }}
                 inputProps={{ 'aria-label': 'PF applicable for employee' }}
@@ -448,29 +515,47 @@ export function SalaryStructureBuilder({
               labelId={pfRuleLabelId}
               label="PF rule"
               value={pfRuleId}
-              onChange={(event) => { setPfRuleId(event.target.value); setCalculation(null); }}
+              onChange={(event) => {
+                setPfRuleId(event.target.value);
+                setCalculation(null);
+              }}
             >
-              {pfRules.map((rule: any) => <MenuItem key={rule.id} value={rule.id}>{rule.name}</MenuItem>)}
+              {pfRules.map((rule: any) => (
+                <MenuItem key={rule.id} value={rule.id}>
+                  {rule.name}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </Grid>
       </Grid>
 
       <Divider />
-      <Box display="flex" justifyContent="space-between" gap={2} alignItems="center" flexWrap="wrap">
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        gap={2}
+        alignItems="center"
+        flexWrap="wrap"
+      >
         <Box>
           <Box display="flex" gap={1} alignItems="center">
             <Typography variant="subtitle1">Employee-specific customization</Typography>
-            {customizing && overrides.length ? <Chip size="small" color="warning" label="Customized" /> : null}
+            {customizing && overrides.length ? (
+              <Chip size="small" color="warning" label="Customized" />
+            ) : null}
           </Box>
           <Typography variant="body2" color="text.secondary">
-            Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay locked.
+            Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay
+            locked.
           </Typography>
         </Box>
         {canManage ? (
           <Box display="flex" gap={1}>
             {customizing ? (
-              <Button startIcon={<RestartAlt />} onClick={resetToTemplate}>Reset to template</Button>
+              <Button startIcon={<RestartAlt />} onClick={resetToTemplate}>
+                Reset to template
+              </Button>
             ) : null}
             <Button
               variant="outlined"
@@ -505,7 +590,11 @@ export function SalaryStructureBuilder({
                           label="Calculation"
                           value={override?.formulaType || rule.formulaType}
                           onChange={(event) =>
-                            setOverride(rule.componentId, event.target.value, override?.value ?? rule.value ?? 0)
+                            setOverride(
+                              rule.componentId,
+                              event.target.value,
+                              override?.value ?? rule.value ?? 0
+                            )
                           }
                         >
                           <MenuItem value="FIXED_AMOUNT">Fixed amount</MenuItem>
@@ -522,7 +611,11 @@ export function SalaryStructureBuilder({
                         label="Value"
                         value={override?.value ?? rule.value ?? 0}
                         onChange={(event) =>
-                          setOverride(rule.componentId, override?.formulaType || rule.formulaType, Number(event.target.value))
+                          setOverride(
+                            rule.componentId,
+                            override?.formulaType || rule.formulaType,
+                            Number(event.target.value)
+                          )
                         }
                       />
                     </Grid>
@@ -537,7 +630,10 @@ export function SalaryStructureBuilder({
               required={overrides.length > 0}
               label="Customization reason"
               value={customizationReason}
-              onChange={(event) => { setCustomizationReason(event.target.value); setCalculation(null); }}
+              onChange={(event) => {
+                setCustomizationReason(event.target.value);
+                setCalculation(null);
+              }}
               helperText="Required when any row differs from the source template."
             />
           </Grid>
@@ -549,8 +645,13 @@ export function SalaryStructureBuilder({
           variant="outlined"
           startIcon={<Calculate />}
           onClick={calculateSalary}
-          disabled={!canManage || calculationState.isLoading || monthlyAmount <= 0 || (pfApplicable && !pfRuleId)}
-          sx={{ minHeight: 44 }}
+          disabled={
+            !canManage ||
+            calculationState.isLoading ||
+            monthlyAmount <= 0 ||
+            (pfApplicable && !pfRuleId)
+          }
+          size="small"
         >
           Calculate
         </Button>
@@ -559,18 +660,38 @@ export function SalaryStructureBuilder({
       {calculation ? (
         <Box display="grid" gap={2} aria-live="polite">
           <Grid container spacing={1.5}>
-            <Grid size={{ xs: 6, md: 3 }}><Summary label="Full-month gross" amount={calculation.grossSalary} /></Grid>
-            <Grid size={{ xs: 6, md: 3 }}><Summary label="Deductions" amount={calculation.totalDeductions} /></Grid>
-            <Grid size={{ xs: 6, md: 3 }}><Summary label="Net salary" amount={calculation.netSalary} /></Grid>
-            <Grid size={{ xs: 6, md: 3 }}><Summary label="Employer cost" amount={calculation.employerCost} /></Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Summary label="Full-month gross" amount={calculation.grossSalary} />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Summary label="Deductions" amount={calculation.totalDeductions} />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Summary label="Net salary" amount={calculation.netSalary} />
+            </Grid>
+            <Grid size={{ xs: 6, md: 3 }}>
+              <Summary label="Employer cost" amount={calculation.employerCost} />
+            </Grid>
           </Grid>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="subtitle1" mb={1}>Earnings</Typography>
+                <Typography variant="subtitle1" mb={1}>
+                  Earnings
+                </Typography>
                 {calculation.earnings.map((line) => (
-                  <Box key={`${line.componentId}-${line.code}`} display="flex" justifyContent="space-between" py={0.5}>
-                    <Box display="flex" gap={0.75}>{line.name}{line.lineSource === 'CUSTOMIZED' ? <Chip size="small" label="Customized" /> : null}</Box>
+                  <Box
+                    key={`${line.componentId}-${line.code}`}
+                    display="flex"
+                    justifyContent="space-between"
+                    py={0.5}
+                  >
+                    <Box display="flex" gap={0.75}>
+                      {line.name}
+                      {line.lineSource === 'CUSTOMIZED' ? (
+                        <Chip size="small" label="Customized" />
+                      ) : null}
+                    </Box>
                     <Typography>{formatCurrency(line.amount)}</Typography>
                   </Box>
                 ))}
@@ -578,31 +699,59 @@ export function SalaryStructureBuilder({
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
-                <Typography variant="subtitle1" mb={1}>Deductions and employer contributions</Typography>
+                <Typography variant="subtitle1" mb={1}>
+                  Deductions and employer contributions
+                </Typography>
                 {[...calculation.deductions, ...calculation.employerContributions].map((line) => (
-                  <Box key={`${line.componentId}-${line.code}-${line.name}`} display="flex" justifyContent="space-between" py={0.5}>
-                    <Box display="flex" gap={0.75}>{line.name}{line.lineSource === 'CUSTOMIZED' ? <Chip size="small" label="Customized" /> : null}</Box>
+                  <Box
+                    key={`${line.componentId}-${line.code}-${line.name}`}
+                    display="flex"
+                    justifyContent="space-between"
+                    py={0.5}
+                  >
+                    <Box display="flex" gap={0.75}>
+                      {line.name}
+                      {line.lineSource === 'CUSTOMIZED' ? (
+                        <Chip size="small" label="Customized" />
+                      ) : null}
+                    </Box>
                     <Typography>{formatCurrency(line.amount)}</Typography>
                   </Box>
                 ))}
               </Paper>
             </Grid>
           </Grid>
-          <Alert severity={statutoryBlocked ? 'error' : calculation.employeeStateInsurance.registrationPending ? 'warning' : 'info'}>
-            ESI: {contractLabel(calculation.employeeStateInsurance.coverageDecision || 'not evaluated')}.
-            {calculation.employeeStateInsurance.registrationPending
-              ? ' Registration is pending. Salary can be saved and the insurance number remains a visible follow-up.'
-              : ''}
-            {calculation.employeeStateInsurance.issueCodes.length
-              ? ` ${calculation.employeeStateInsurance.issueCodes.map(contractLabel).join(', ')}.`
-              : ''}
-          </Alert>
+          {calculation.employeeStateInsurance.ruleId && (
+            <Alert
+              severity={
+                statutoryBlocked
+                  ? 'error'
+                  : calculation.employeeStateInsurance.registrationPending
+                    ? 'warning'
+                    : 'info'
+              }
+            >
+              ESI:{' '}
+              {contractLabel(
+                calculation.employeeStateInsurance.coverageDecision || 'not evaluated'
+              )}
+              .
+              {calculation.employeeStateInsurance.registrationPending
+                ? ' Registration is pending. Salary can be saved and the insurance number remains a visible follow-up.'
+                : ''}
+              {calculation.employeeStateInsurance.issueCodes.length
+                ? ` ${calculation.employeeStateInsurance.issueCodes.map(contractLabel).join(', ')}.`
+                : ''}
+            </Alert>
+          )}
           <Box display="flex" justifyContent="flex-end" gap={1} flexWrap="wrap">
             <Button
               variant="contained"
               onClick={save}
-              disabled={!canManage || !calculationCurrent || statutoryBlocked || saveState.isLoading}
-              sx={{ minHeight: 44 }}
+              disabled={
+                !canManage || !calculationCurrent || statutoryBlocked || saveState.isLoading
+              }
+              size="small"
             >
               Save salary
             </Button>
@@ -619,7 +768,7 @@ export function SalaryStructureBuilder({
               variant="contained"
               onClick={activate}
               disabled={activationState.isLoading}
-              sx={{ minHeight: 44 }}
+              size="small"
             >
               Activate employee
             </Button>
@@ -632,10 +781,22 @@ export function SalaryStructureBuilder({
       {revisionsError ? <Alert severity="error">Salary history could not be loaded.</Alert> : null}
       {revisionData?.items.length ? (
         <Box>
-          <Typography variant="h6" mb={1}>Salary history</Typography>
+          <Typography variant="h6" mb={1}>
+            Salary history
+          </Typography>
           <Box display="grid" gap={1}>
             {revisionData.items.map((revision) => (
-              <Paper key={revision.id} variant="outlined" sx={{ p: 1.5, display: 'flex', gap: 1.5, justifyContent: 'space-between', flexWrap: 'wrap' }}>
+              <Paper
+                key={revision.id}
+                variant="outlined"
+                sx={{
+                  p: 1.5,
+                  display: 'flex',
+                  gap: 1.5,
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                }}
+              >
                 <Box>
                   <Typography variant="subtitle2">
                     Revision {revision.revisionNumber} - {revision.effectiveMonth.slice(0, 7)}
@@ -645,9 +806,15 @@ export function SalaryStructureBuilder({
                   </Typography>
                 </Box>
                 <Box display="flex" gap={1} alignItems="center">
-                  {revision.isCurrent ? <Chip size="small" color="success" label="Current" /> : null}
-                  {revision.isScheduled ? <Chip size="small" color="info" label="Scheduled" /> : null}
-                  {revision.isCustomized ? <Chip size="small" color="warning" label="Customized" /> : null}
+                  {revision.isCurrent ? (
+                    <Chip size="small" color="success" label="Current" />
+                  ) : null}
+                  {revision.isScheduled ? (
+                    <Chip size="small" color="info" label="Scheduled" />
+                  ) : null}
+                  {revision.isCustomized ? (
+                    <Chip size="small" color="warning" label="Customized" />
+                  ) : null}
                   <Chip size="small" label={contractLabel(revision.status)} />
                   <Typography fontWeight={700}>{formatCurrency(revision.netSalary)}</Typography>
                 </Box>

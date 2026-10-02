@@ -1,7 +1,7 @@
 import { api } from 'src/redux/service';
 import { payrollStructureType } from 'src/redux/tagTypes';
 
-export type SalaryBasis = 'GROSS' | 'TAKE_HOME' | 'EMPLOYER_COST';
+export type SalaryBasis = 'GROSS' | 'EMPLOYER_COST';
 export type ProtectionPolicy = 'PROTECT_GROSS' | 'PROTECT_TAKE_HOME' | 'PROTECT_EMPLOYER_COST';
 
 export type SalaryTemplateRule = {
@@ -66,7 +66,6 @@ export type SaveSalaryTemplate = {
   name: string;
   description?: string | null;
   defaultSalaryBasis: SalaryBasis;
-  defaultProtectionPolicy: ProtectionPolicy;
   defaultPfApplicable: boolean;
   defaultPfRuleId?: string | null;
   rules: SalaryTemplateRule[];
@@ -81,7 +80,6 @@ export type PreviewSalaryTemplateRequest = {
   concurrencyStamp?: string | null;
   rules: SalaryTemplateRule[];
   salaryBasis: SalaryBasis;
-  protectionPolicy: ProtectionPolicy;
   monthlyAmount: number;
   effectiveMonth: string;
   pfApplicable: boolean;
@@ -108,6 +106,7 @@ export type CalculatedSalaryLine = {
 };
 
 export type SalaryTemplateEsiPreview = {
+  configurationId?: string | null;
   isConfigured: boolean;
   isCovered: boolean;
   canCalculate: boolean;
@@ -154,10 +153,7 @@ export type SalaryTemplateCalculation = {
 export const salaryTemplateEndpoint = '/payroll/salary-templates';
 export const salaryTemplateComponentCatalogEndpoint = `${salaryTemplateEndpoint}/component-catalog`;
 
-export const buildSaveSalaryTemplateRequest = (
-  body: SaveSalaryTemplate,
-  templateId?: string
-) => ({
+export const buildSaveSalaryTemplateRequest = (body: SaveSalaryTemplate, templateId?: string) => ({
   url: templateId ? `${salaryTemplateEndpoint}/${templateId}` : salaryTemplateEndpoint,
   method: templateId ? ('PUT' as const) : ('POST' as const),
   body,
@@ -169,7 +165,6 @@ export const buildSalaryTemplateCalculationRequest = ({
 }: {
   templateVersionId: string;
   salaryBasis: SalaryBasis;
-  protectionPolicy: ProtectionPolicy;
   monthlyAmount: number;
   effectiveMonth: string;
   employeeId?: string | null;

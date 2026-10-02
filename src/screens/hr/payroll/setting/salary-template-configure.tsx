@@ -19,7 +19,6 @@ import {
 } from '@mui/material';
 
 import SalaryTemplateRules from './salary-template-rules';
-import SalaryTemplatePolicyHelp from './salary-template-policy-help';
 import { SectionCard } from '../../employee/employee-form-fields/InformationFields';
 
 import type { EditorValues } from './salary-template-form-model';
@@ -132,28 +131,10 @@ export default function SalaryTemplateConfigure({
                     label="Default salary basis"
                     {...formik.getFieldProps('defaultSalaryBasis')}
                   >
-                    <MenuItem value="EMPLOYER_COST">Employer cost</MenuItem>
-                    <MenuItem value="GROSS">Gross salary</MenuItem>
-                    <MenuItem value="TAKE_HOME">Take-home salary</MenuItem>
+                    <MenuItem value="EMPLOYER_COST">Monthly cost to school (CTC)</MenuItem>
+                    <MenuItem value="GROSS">Monthly salary</MenuItem>
                   </Select>
                 </FormControl>
-              </Grid>
-              <Grid size={{ xs: 12, md: 6 }}>
-                <FormControl fullWidth size="small" disabled={readOnly}>
-                  <InputLabel id="salary-template-protection">Protection policy</InputLabel>
-                  <Select
-                    size="small"
-                    labelId="salary-template-protection"
-                    label="Protection policy"
-                    inputProps={{ 'aria-describedby': 'salary-template-protection-help' }}
-                    {...formik.getFieldProps('defaultProtectionPolicy')}
-                  >
-                    <MenuItem value="PROTECT_EMPLOYER_COST">Protect employer cost</MenuItem>
-                    <MenuItem value="PROTECT_GROSS">Protect gross salary</MenuItem>
-                    <MenuItem value="PROTECT_TAKE_HOME">Protect take-home salary</MenuItem>
-                  </Select>
-                </FormControl>
-                <SalaryTemplatePolicyHelp policy={formik.values.defaultProtectionPolicy} />
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Typography variant="body2" color="text.secondary">

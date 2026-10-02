@@ -313,7 +313,6 @@ function SalaryTemplateWorkflow({
     concurrencyStamp: template?.concurrencyStamp || null,
     rules: normalizeRuleOrder(formik.values.rules),
     salaryBasis: formik.values.defaultSalaryBasis,
-    protectionPolicy: formik.values.defaultProtectionPolicy,
     monthlyAmount: sampleAmount,
     effectiveMonth: effectiveMonth ? `${effectiveMonth}-01T00:00:00.000Z` : '',
     pfApplicable: formik.values.defaultPfApplicable,
@@ -398,7 +397,6 @@ function SalaryTemplateWorkflow({
       name: formik.values.name.trim(),
       description: formik.values.description.trim() || null,
       defaultSalaryBasis: formik.values.defaultSalaryBasis,
-      defaultProtectionPolicy: formik.values.defaultProtectionPolicy,
       defaultPfApplicable: formik.values.defaultPfApplicable,
       defaultPfRuleId: formik.values.defaultPfRuleId || null,
       rules: normalizeRuleOrder(formik.values.rules),
@@ -417,7 +415,6 @@ function SalaryTemplateWorkflow({
           name: result.name,
           description: result.description || '',
           defaultSalaryBasis: result.editableVersion.defaultSalaryBasis,
-          defaultProtectionPolicy: result.editableVersion.defaultProtectionPolicy,
           defaultPfApplicable: result.editableVersion.defaultPfApplicable,
           defaultPfRuleId: result.editableVersion.defaultPfRuleId || '',
           rules: result.editableVersion.rules,
@@ -604,6 +601,7 @@ function SalaryTemplateWorkflow({
             issues={showIssues ? issues : []}
           />
           <SalaryTemplateReview
+            salaryBasis={formik.values.defaultSalaryBasis}
             previewCurrent={Boolean(previewCurrent)}
             sampleAmount={sampleAmount}
             setSampleAmount={setSampleAmount}

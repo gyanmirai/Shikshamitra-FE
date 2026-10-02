@@ -12,6 +12,7 @@ export type EsiRule = {
   standardWageCeiling: number;
   disabilityWageCeiling: number;
   employeePercentage: number;
+  employeeShareDailyWageExemption: number;
   employerPercentage: number;
   exclusionCapPercentage: number;
   inKindCapPercentage: number;
@@ -170,41 +171,12 @@ export const statutorySchemeApi = api.injectEndpoints({
       }),
       providesTags: [payrollStructureType.statutoryScheme],
     }),
-    getEsiEstablishment: builder.query<EsiEstablishment, void>({
-      query: () => `${esiStatutoryEndpoint}/establishment`,
-      providesTags: [payrollStructureType.statutoryScheme],
-    }),
-    configureEsiEstablishment: builder.mutation<
-      EsiEstablishment,
-      {
-        jurisdictionCode: 'IN-GJ';
-        registrationNumber?: string | null;
-        employeeCount: number;
-        coveredSince?: string | null;
-        benefitsActiveFrom?: string | null;
-        evidenceReference?: string | null;
-      }
-    >({
-      query: (body) => ({ url: `${esiStatutoryEndpoint}/establishment`, method: 'PUT', body }),
-      invalidatesTags: [payrollStructureType.statutoryScheme],
-    }),
     getEsiComponentTreatments: builder.query<EsiComponentTreatment[], string | void>({
       query: (effectiveOn) => ({
         url: `${esiStatutoryEndpoint}/component-treatments`,
         params: effectiveOn ? { effectiveOn } : undefined,
       }),
       providesTags: [payrollStructureType.statutoryScheme],
-    }),
-    updateEsiComponentTreatments: builder.mutation<
-      EsiComponentTreatment[],
-      { items: EsiComponentTreatment[] }
-    >({
-      query: (body) => ({
-        url: `${esiStatutoryEndpoint}/component-treatments`,
-        method: 'PUT',
-        body,
-      }),
-      invalidatesTags: [payrollStructureType.statutoryScheme],
     }),
     getEsiEnrollment: builder.query<EsiEnrollment, string>({
       query: (employeeId) => `${esiStatutoryEndpoint}/employees/${employeeId}/enrollment`,
@@ -256,27 +228,16 @@ export const statutorySchemeApi = api.injectEndpoints({
       query: (body) => buildEsiImpactPreviewRequest(body),
       providesTags: [payrollStructureType.statutoryScheme],
     }),
-    activateEsi: builder.mutation<
-      EsiEstablishment,
-      { monthYear: string; previewFingerprint: string }
-    >({
-      query: (body) => ({ url: `${esiStatutoryEndpoint}/activate`, method: 'POST', body }),
-      invalidatesTags: [payrollStructureType.statutoryScheme],
-    }),
   }),
   overrideExisting: false,
 });
 
 export const {
   useGetEsiRuleQuery,
-  useGetEsiEstablishmentQuery,
-  useConfigureEsiEstablishmentMutation,
   useGetEsiComponentTreatmentsQuery,
-  useUpdateEsiComponentTreatmentsMutation,
   useGetEsiEnrollmentQuery,
   useUpdateEsiEnrollmentMutation,
   useGetEsiOverridesQuery,
   useCreateEsiOverrideMutation,
   usePreviewEsiImpactQuery,
-  useActivateEsiMutation,
 } = statutorySchemeApi;

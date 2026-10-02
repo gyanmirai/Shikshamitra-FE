@@ -1,12 +1,8 @@
-import { employeeType } from 'src/redux/tagTypes';
+import { employeeType, payrollStructureType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
 
-import type {
-  SalaryBasis,
-  ProtectionPolicy,
-  SalaryRuleOverride,
-} from './salary-template-api';
+import type { SalaryBasis, ProtectionPolicy, SalaryRuleOverride } from './salary-template-api';
 
 export type EmployeeActivationReadiness = {
   canActivate: boolean;
@@ -63,7 +59,6 @@ export type CompensationRevision = {
 export type SaveEmployeeCompensation = {
   templateVersionId: string;
   salaryBasis: SalaryBasis;
-  protectionPolicy: ProtectionPolicy;
   monthlyAmount: number;
   effectiveMonth: string;
   pfApplicable: boolean;
@@ -112,7 +107,11 @@ export const compensationRevisionApi = employeeApi.injectEndpoints({
     }),
     getEmployeeActivationReadiness: builder.query<EmployeeActivationReadiness, string>({
       query: (employeeId) => `/employees/${employeeId}/activation-readiness`,
-      providesTags: [employeeType.salaryStructure, employeeType.employee],
+      providesTags: [
+        employeeType.salaryStructure,
+        employeeType.employee,
+        payrollStructureType.statutoryScheme,
+      ],
     }),
   }),
   overrideExisting: false,

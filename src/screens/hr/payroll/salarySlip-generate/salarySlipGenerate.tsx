@@ -502,19 +502,20 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
     ['IFSC', slip?.ifscCode || '-'],
     ['UAN', slip?.uanNumber || '-'],
     ['EPF No.', slip?.epfNumber || '-'],
-    ['ESI No.', slip?.employeeStateInsuranceNumber || '-'],
-    [
-      'ESI Wages',
-      slip?.employeeStateInsuranceRuleId
-        ? formatCurrency(slip?.employeeStateInsuranceWages || 0)
-        : '-',
-    ],
-    [
-      'Government ESI',
-      slip?.employeeStateInsuranceGovernmentContribution
-        ? formatCurrency(slip.employeeStateInsuranceGovernmentContribution)
-        : '-',
-    ],
+    ...(slip?.employeeStateInsuranceRuleId
+      ? ([
+          ['ESI No.', slip.employeeStateInsuranceNumber || '-'],
+          ['ESI Wages', formatCurrency(slip.employeeStateInsuranceWages || 0)],
+          ...(slip.employeeStateInsuranceGovernmentContribution
+            ? [
+                [
+                  'Government ESI',
+                  formatCurrency(slip.employeeStateInsuranceGovernmentContribution),
+                ],
+              ]
+            : []),
+        ] as Array<[string, string]>)
+      : []),
     [
       'Compensation Revision',
       slip?.compensationRevisionNumber ? `Revision ${slip.compensationRevisionNumber}` : '-',
@@ -586,9 +587,15 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
       </Card>
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Typography variant="body2">Full-month gross: {formatCurrency(slip?.fullGrossSalary ?? 0)}</Typography>
-        <Typography variant="body2">Gross Salary: {formatCurrency(slip?.grossSalary ?? 0)}</Typography>
-        <Typography variant="body2">Additional earnings: {formatCurrency(slip?.additionalEarnings ?? 0)}</Typography>
+        <Typography variant="body2">
+          Full-month gross: {formatCurrency(slip?.fullGrossSalary ?? 0)}
+        </Typography>
+        <Typography variant="body2">
+          Gross Salary: {formatCurrency(slip?.grossSalary ?? 0)}
+        </Typography>
+        <Typography variant="body2">
+          Additional earnings: {formatCurrency(slip?.additionalEarnings ?? 0)}
+        </Typography>
       </Stack>
       <Grid container spacing={1}>
         <Grid size={{ xs: 12, md: 4 }}>
@@ -651,15 +658,6 @@ const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentP
           </DashboardPanel>
         </Grid>
       </Grid>
-
-      {slip?.employerContributions?.length ? (
-        <DashboardBreakdownCard
-          title="Employer Contributions"
-          rows={slip.employerContributions}
-          total={slip.employerContributionTotal || 0}
-          emptyText="No employer contributions"
-        />
-      ) : null}
 
       <Grid container spacing={1} alignItems="stretch">
         <Grid size={{ xs: 12, md: 6 }}>
@@ -1080,19 +1078,20 @@ const PayslipDocumentPreview = ({ employee, monthYear, slip }: PayslipDocumentPr
     ['IFSC', slip?.ifscCode || '-'],
     ['UAN', slip?.uanNumber || '-'],
     ['EPF No.', slip?.epfNumber || '-'],
-    ['ESI No.', slip?.employeeStateInsuranceNumber || '-'],
-    [
-      'ESI Wages',
-      slip?.employeeStateInsuranceRuleId
-        ? formatCurrency(slip?.employeeStateInsuranceWages || 0)
-        : '-',
-    ],
-    [
-      'Government ESI',
-      slip?.employeeStateInsuranceGovernmentContribution
-        ? formatCurrency(slip.employeeStateInsuranceGovernmentContribution)
-        : '-',
-    ],
+    ...(slip?.employeeStateInsuranceRuleId
+      ? ([
+          ['ESI No.', slip.employeeStateInsuranceNumber || '-'],
+          ['ESI Wages', formatCurrency(slip.employeeStateInsuranceWages || 0)],
+          ...(slip.employeeStateInsuranceGovernmentContribution
+            ? [
+                [
+                  'Government ESI',
+                  formatCurrency(slip.employeeStateInsuranceGovernmentContribution),
+                ],
+              ]
+            : []),
+        ] as Array<[string, string]>)
+      : []),
     [
       'Compensation Revision',
       slip?.compensationRevisionNumber ? `Revision ${slip.compensationRevisionNumber}` : '-',
