@@ -1,7 +1,9 @@
 import React from 'react';
 import dayjs from 'dayjs';
+import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
+import { ChargeWorkflowStatusOptions } from 'src/enums/fee-charges-status';
 import { Box, Grid, Paper, Stack, Divider, Typography } from '@mui/material';
 import { Event, Description, CurrencyRupee, CalendarToday } from '@mui/icons-material';
 import { InfoItem } from 'src/screens/academic/homework-assignment-management/homeworkCreation/component/viewHomeworkDetails';
@@ -13,6 +15,9 @@ interface ChargeDetailsCardProps {
 }
 
 const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => {
+  const workflow = ChargeWorkflowStatusOptions.find(
+    (option) => option.value === charge?.workflowStatus
+  );
   const detailIconColor = 'success.main';
   return (
     <Paper
@@ -32,6 +37,7 @@ const ChargeViewDetailsCard: React.FC<ChargeDetailsCardProps> = ({ charge }) => 
             Charge Details
           </Typography>
         </Stack>
+        <Label color={workflow?.color ?? 'default'}>{workflow?.label ?? 'Unknown'}</Label>
       </Stack>
       <Divider sx={{ mb: 2 }} />
 

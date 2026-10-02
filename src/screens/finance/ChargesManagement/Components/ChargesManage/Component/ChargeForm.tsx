@@ -394,11 +394,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         </ShakingTextField>
                         {values.chargeCategoryId && (
                           <Typography variant="body2" color="text.secondary">
-                            {availableChargeCategories.find(
-                              (item: any) => item.id === values.chargeCategoryId
-                            )?.isApprovalRequired
-                              ? 'This charge need the approval from the authority'
-                              : 'This charge does not need the approval from the authority'}
+                            All charges start as Pending and require approval from an authorized person.
                           </Typography>
                         )}
                       </Grid>

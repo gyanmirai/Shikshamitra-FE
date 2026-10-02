@@ -1,18 +1,18 @@
 import { financeModuleType } from 'src/redux/tagTypes';
 
-import type {
-	IChargeDetail,
-	IGetChargesParams,
-	IChargeListResponse,
-	IChargeActionRequest,
-	IGetChargeLinesParams,
-	ICreateChargeRequest,
-	IUpdateChargeRequest,
-	IChargeMutationResponse,
-	IChargeLineListResponse,
-} from './chargeTypes';
-
 import { financeModuleApi } from '../financeModuleApi';
+
+import type {
+  IChargeDetail,
+  IGetChargesParams,
+  IChargeListResponse,
+  IChargeActionRequest,
+  ICreateChargeRequest,
+  IUpdateChargeRequest,
+  IGetChargeLinesParams,
+  IChargeMutationResponse,
+  IChargeLineListResponse,
+} from './chargeTypes';
 
 const unwrapDetail = (response: unknown): IChargeDetail => {
   const wrapped = response as { data?: IChargeDetail };
@@ -47,7 +47,10 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       transformResponse: unwrapChargeLineList,
       providesTags: [financeModuleType.charges],
     }),
-    postCharge: builder.mutation<IChargeMutationResponse, { academicYearId: string; body: ICreateChargeRequest }>({
+    postCharge: builder.mutation<
+      IChargeMutationResponse,
+      { academicYearId: string; body: ICreateChargeRequest }
+    >({
       query: ({ academicYearId, body }) => ({
         url: '/charges',
         method: 'POST',
@@ -56,7 +59,10 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.charges],
     }),
-    updateCharge: builder.mutation<IChargeMutationResponse, { id: string; body: IUpdateChargeRequest }>({
+    updateCharge: builder.mutation<
+      IChargeMutationResponse,
+      { id: string; body: IUpdateChargeRequest }
+    >({
       query: ({ id, body }) => ({
         url: `/charges/${id}`,
         method: 'PUT',
@@ -71,7 +77,10 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [financeModuleType.charges],
     }),
-    approveCharge: builder.mutation<IChargeMutationResponse, { id: string; body: IChargeActionRequest }>({
+    approveCharge: builder.mutation<
+      IChargeMutationResponse,
+      { id: string; body: IChargeActionRequest }
+    >({
       query: ({ id, body }) => ({
         url: `/charges/${id}/approve`,
         method: 'POST',
@@ -79,11 +88,16 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [
         financeModuleType.charges,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
         financeModuleType.accountPosting,
         financeModuleType.draftPosting,
       ],
     }),
-    rejectCharge: builder.mutation<IChargeMutationResponse, { id: string; body: IChargeActionRequest }>({
+    rejectCharge: builder.mutation<
+      IChargeMutationResponse,
+      { id: string; body: IChargeActionRequest }
+    >({
       query: ({ id, body }) => ({
         url: `/charges/${id}/reject`,
         method: 'POST',
@@ -91,22 +105,29 @@ export const chargesApi = financeModuleApi.injectEndpoints({
       }),
       invalidatesTags: [
         financeModuleType.charges,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
         financeModuleType.accountPosting,
         financeModuleType.draftPosting,
       ],
     }),
-    voidCharge: builder.mutation<IChargeMutationResponse, { id: string; body: IChargeActionRequest }>({
+    voidCharge: builder.mutation<
+      IChargeMutationResponse,
+      { id: string; body: IChargeActionRequest }
+    >({
       query: ({ id, body }) => ({
         url: `/charges/${id}/void`,
         method: 'POST',
         body,
       }),
       invalidatesTags: [
-		financeModuleType.charges,
-		financeModuleType.accountPosting,
-		financeModuleType.draftPosting,
-	  ],
-	}),
+        financeModuleType.charges,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
+        financeModuleType.accountPosting,
+        financeModuleType.draftPosting,
+      ],
+    }),
     getChargeById: builder.query<IChargeDetail, { id: string }>({
       query: ({ id }: { id: string }) => ({
         url: `/charges/${id}`,
@@ -127,6 +148,6 @@ export const {
   useDeleteChargeMutation,
   useApproveChargeMutation,
   useRejectChargeMutation,
-	useVoidChargeMutation,
+  useVoidChargeMutation,
   useGetChargeByIdQuery,
 } = chargesApi;

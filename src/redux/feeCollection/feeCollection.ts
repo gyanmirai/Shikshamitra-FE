@@ -449,6 +449,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [
         financeModuleType.feeCollection,
         financeModuleType.feeDetails,
+        financeModuleType.charges,
         financeModuleType.financeAudit,
         financeModuleType.accountPosting,
         financeModuleType.draftPosting,
@@ -464,6 +465,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [
         financeModuleType.feeCollection,
         financeModuleType.feeDetails,
+        financeModuleType.charges,
         financeModuleType.financeAudit,
       ],
     }),

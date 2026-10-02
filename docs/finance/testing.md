@@ -3,7 +3,7 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-01
+updated_on: 2026-10-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -30,7 +30,7 @@ Use these commands as the first validation set.
 
 | Risk area                         | Command                                                                                                                                                   |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Charge client and mapper behavior | No focused Charge Management tests currently exist; add the cases in [Charge Management frontend flow](./references/charge-management-frontend-flow.md), then run their exact test paths |
+| Charge inbox, validation and collection refresh | `npm run test -- src/screens/finance/ChargesManagement src/redux/feeCollection/feeCollection.charges.test.ts` |
 | Finance audit client contract     | `npm run test -- src/redux/finance/audit/financeAuditApi.contract.test.ts`                                                                                |
 | Finance audit UI utilities        | `npm run test -- src/screens/finance/AuditTrail`                                                                                                          |
 | Concession document constraints   | `npm run test -- src/screens/finance/Concession/Components/concessionDocumentUpload.test.ts`                                                              |
@@ -80,3 +80,7 @@ default uniqueness and state-transition rules require their independent regressi
 ## Student fee assignment
 
 The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).
+
+## Charge lifecycle regression checks
+
+Run `npm run test -- src/screens/finance/ChargesManagement src/redux/feeCollection/feeCollection.charges.test.ts` for four-tab counts, server status parameters, pending-only decision actions, field validation and charge cache refresh after collection/waiver. In the in-app browser, open `/finance/charge-management`, switch each tab, inspect detail balances and approval status, and verify the server status after final settlement and reversal. Browser checks are unverified when the browser connection cannot be established.

@@ -1,3 +1,5 @@
+import type { ChargeWorkflowStatus } from 'src/enums/fee-charges-status';
+
 export type StudentSelectionMode = 'AllInScope' | 'Explicit';
 export type ChargeAction = 'View' | 'Edit' | 'Delete' | 'Approve' | 'Reject' | 'Void';
 
@@ -26,8 +28,9 @@ export interface IChargeBatchListItem {
   amount: number;
   dueDate: string;
   purposeDescription: string;
-  /** 0 = Pending (at least one line still pending), 1 = Processed (all lines actioned) */
-  displayStatus: number;
+  /** 0 = Pending, 1 = In Process, 2 = Completed, 3 = Rejected */
+  displayStatus: ChargeWorkflowStatus;
+  workflowStatus: ChargeWorkflowStatus;
   studentCount: number;
   /** Lines no longer pending (approved + rejected) */
   processedCount: number;
@@ -36,8 +39,8 @@ export interface IChargeBatchListItem {
   requestorName?: string;
   requestedOn?: string;
   additionalNotes?: string;
-	concurrencyStamp: string;
-	availableActions: ChargeAction[];
+  concurrencyStamp: string;
+  availableActions: ChargeAction[];
 }
 
 export interface IChargeLineListItem extends IChargeBatchListItem {
@@ -48,13 +51,15 @@ export interface IChargeLineListItem extends IChargeBatchListItem {
   rollNumber?: string | number;
   standardName?: string;
   divisionName?: string;
-	status: number;
-	collectedAmount: number;
-	outstandingAmount: number;
+  status: number;
+  collectedAmount: number;
+  waivedAmount: number;
+  outstandingAmount: number;
 }
 
 export interface IChargeStudentLine {
-	chargeLineId: string;
+  workflowStatus: ChargeWorkflowStatus;
+  chargeLineId: string;
   studentId: string;
   studentName: string;
   grNumber?: string;
@@ -62,11 +67,13 @@ export interface IChargeStudentLine {
   standardName?: string;
   divisionName?: string;
   status: number;
-	collectedAmount: number;
-	outstandingAmount: number;
+  collectedAmount: number;
+  waivedAmount: number;
+  outstandingAmount: number;
 }
 
 export interface IChargeDetail extends IChargeBatchListItem {
+  status: number;
   chargeCategoryId: string;
   priority: number;
   additionalNotes?: string;
@@ -89,46 +96,49 @@ export interface IChargeDetail extends IChargeBatchListItem {
 }
 
 export interface IChargeListResponse {
-	success: boolean;
-	items: IChargeBatchListItem[];
-	totalCount: number;
-	currentPage: number;
-	pageSize: number;
-	totalPages: number;
-	pendingCount: number;
-	processedCount: number;
-	message: string;
+  success: boolean;
+  items: IChargeBatchListItem[];
+  totalCount: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  pendingCount: number;
+  processedCount: number;
+  inProcessCount: number;
+  completedCount: number;
+  rejectedCount: number;
+  message: string;
 }
 
 export interface IChargeLineListResponse {
-	success: boolean;
-	items: IChargeLineListItem[];
-	totalCount: number;
-	message: string;
+  success: boolean;
+  items: IChargeLineListItem[];
+  totalCount: number;
+  message: string;
 }
 
 export interface IGetChargesParams {
-	academicYearId: string;
-	page?: number;
-	pageSize?: number;
-	search?: string;
-	status?: number;
-	sortBy?: string;
-	sortOrder?: 'asc' | 'desc';
-	boardId?: string;
-	educationMediumId?: string;
-	standardId?: string;
-	divisionId?: string;
-	_refetchTrigger?: number;
+  academicYearId: string;
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  status?: ChargeWorkflowStatus;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  boardId?: string;
+  educationMediumId?: string;
+  standardId?: string;
+  divisionId?: string;
+  _refetchTrigger?: number;
 }
 
 export interface IGetChargeLinesParams {
-	academicYearId: string;
-	page?: number;
-	pageSize?: number;
-	status?: number;
-	boardId?: string;
-	educationMediumId?: string;
+  academicYearId: string;
+  page?: number;
+  pageSize?: number;
+  status?: number;
+  boardId?: string;
+  educationMediumId?: string;
 }
 
 export interface ICreateChargeRequest {
@@ -143,25 +153,26 @@ export interface ICreateChargeRequest {
 }
 
 export interface IUpdateChargeRequest extends ICreateChargeRequest {
-	concurrencyStamp: string;
+  concurrencyStamp: string;
 }
 
 export interface IChargeMutationResponse {
-	success: boolean;
-	data: {
-		chargeId: string;
-		status: number;
-		processedCount?: number;
-		remainingPendingCount?: number;
-		concurrencyStamp?: string;
-	};
-	message: string;
+  success: boolean;
+  data: {
+    chargeId: string;
+    status: number;
+    workflowStatus: ChargeWorkflowStatus;
+    processedCount?: number;
+    remainingPendingCount?: number;
+    concurrencyStamp?: string;
+  };
+  message: string;
 }
 
 export interface IChargeActionRequest {
-	studentIds: string[];
-	concurrencyStamp: string;
-	approvalNotes?: string;
-	rejectionReason?: string;
-	reason?: string;
+  studentIds: string[];
+  concurrencyStamp: string;
+  approvalNotes?: string;
+  rejectionReason?: string;
+  reason?: string;
 }

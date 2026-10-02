@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-01
+updated_on: 2026-10-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -32,7 +32,7 @@ Use this table to find the first integration file.
 | Accounts Activity       | `src/redux/finance/accountsActivityApi.ts`                                                                                     |
 | Receipt Book            | `src/redux/finance/receiptBookApi.ts`                                                                                         |
 | Fee collection          | `src/redux/feeCollection/**`                                                                                                  |
-| Late-fee waiver queue   | `src/redux/feeCollection/lateFeeWaiver.ts`                                                                                    |
+| Direct charge/late-fee waiver | `src/redux/feeCollection/feeCollection.ts`                                                                                    |
 | Invoice and receipt     | `src/redux/invoiceAndReceipt/**`                                                                                              |
 | Fee structure           | `src/redux/finance/financeFeeStructure.tsx`                                                                                   |
 | Payment terms           | `src/redux/finance/paymentTerm.tsx`                                                                                           |
@@ -58,7 +58,7 @@ The Concession Type settings client includes inactive records for administration
 
 Collection Policy Version History and its policy-specific Audit Trail both lazily query `GET /finance/collection-policies/{id}/versions`. The immutable version stream is the canonical source for create, edit, clone, archive, and unarchive events; the UI renders the same records either as field-level version diffs or as a lifecycle audit timeline. Both row actions require the Collection Policy `ViewVersions` permission.
 
-The Charge Management client currently uses broad `any` contracts and the active batch-list call omits the required academic year. It must not be considered a stable contract until context, preview, paging, detail/timeline, `availableActions`, concurrency, idempotency, collection, and correction DTOs are typed. The route/client consolidation and cache requirements are in [Charge Management frontend flow](./references/charge-management-frontend-flow.md).
+The Charge Management client uses typed core contracts, sends academic year and server paging/search, and accepts batch workflow filters 0..3. List and detail consume `workflowStatus` rather than treating the stored approval `status` as the lifecycle. The four tab counts come from the server. Approval/rejection/void invalidates charge and collection details; collection/waiver and reconciliation decisions invalidate charge lists/details. Full timeline, preview/fingerprint, create idempotency and paid-charge correction contracts remain gaps. The route/client consolidation and cache requirements are in [Charge Management frontend flow](./references/charge-management-frontend-flow.md).
 
 ## Backend contract source
 
