@@ -3,6 +3,7 @@ import type { ReactElement, ComponentType } from 'react';
 import type { StudentRecordProfile } from 'src/redux/student/student-profile-types';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Box, Tab, Tabs, Paper } from '@mui/material';
 import { FormSlider } from 'src/components/form-slider';
@@ -27,7 +28,8 @@ type Props = {
 };
 
 export function StudentProfileView({ student, refetch, sections }: Props) {
-  const tabs = useTabs('dashboard');
+  const searchParams = useSearchParams();
+  const tabs = useTabs(searchParams.get('tab') ? 'information' : 'dashboard');
   const [isScrolled, setIsScrolled] = useState(false);
   const [isBackClick, setIsBackClick] = useState(false);
   const currentIndex = sections.findIndex((tab) => tab.value === tabs.value);

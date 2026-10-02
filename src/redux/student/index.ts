@@ -4,6 +4,7 @@ import { studentType } from 'src/redux/tagTypes';
 import { unwrapStudentRecordProfile } from './student-profile-types';
 
 import type { StudentRecordProfile } from './student-profile-types';
+import type { StudentAttendanceDashboardSummary } from './attendance-dashboard-types';
 
 export const StudentApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -102,7 +103,10 @@ export const StudentApi = api.injectEndpoints({
       }),
       providesTags: [studentType.student],
     }),
-    getStudentAttendanceDashboardSummary: builder.query({
+    getStudentAttendanceDashboardSummary: builder.query<
+      StudentAttendanceDashboardSummary,
+      StudentAttendanceDashboardSummaryQuery | undefined
+    >({
       query: (params?: StudentAttendanceDashboardSummaryQuery) => ({
         url: '/students/records/attendance-dashboard-summary',
         method: 'GET',
@@ -189,6 +193,7 @@ export type StudentLookupItem = {
 };
 
 export type StudentAttendanceDashboardSummaryQuery = {
+  academicYearId?: string;
   startDate?: string;
   endDate?: string;
 };

@@ -12,8 +12,8 @@ import { useMemo, useState, useEffect } from 'react';
 import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Box, Button, TextField, Typography } from '@mui/material';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { Box, Stack, Alert, Button, Typography } from '@mui/material';
 import { useGetAdmissionFormsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { createFormColumns } from './form-list/form-columns';
@@ -49,18 +49,6 @@ export default function AdmissionFormsScreen() {
     setSearch('');
     setFilters([]);
   }, [view]);
-  const [review, setReview] = useState<{
-    form: AdmissionForm;
-    action: 'approve' | 'reject';
-  } | null>(null);
-  const [reviewComment, setReviewComment] = useState('');
-  const isAdminOverride = Boolean(
-    review &&
-    actions.canOverrideMakerChecker &&
-    actions.currentUserId &&
-    review.form.approvalRequestedBy &&
-    actions.currentUserId.toLowerCase() === review.form.approvalRequestedBy.toLowerCase()
-  );
   const listQuery = useMemo(
     () => buildAdmissionFormListQuery({ page, rowsPerPage, search, filters, purpose }),
     [filters, page, purpose, rowsPerPage, search]
@@ -70,14 +58,9 @@ export default function AdmissionFormsScreen() {
     canManage: actions.canManage,
     canPublish: actions.canPublish,
     canDelete: actions.canDelete,
-    canOverrideMakerChecker: actions.canOverrideMakerChecker,
-    currentUserId: actions.currentUserId,
     onEdit: (form) => actions.edit(form.id),
     onClone: actions.requestClone,
     onValidate: (form) => actions.validate(form.id),
-    onRequestApproval: actions.requestApproval,
-    onApprove: (form) => setReview({ form, action: 'approve' }),
-    onReject: (form) => setReview({ form, action: 'reject' }),
     onPublish: actions.requestPublish,
     onHistory: actions.showHistory,
     onCreateVersion: (form) => actions.createVersion(form.id),
@@ -96,15 +79,22 @@ export default function AdmissionFormsScreen() {
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Form' },
         ]}
+        slotProps={{
+          action: { alignSelf: 'flex-end' },
+          heading: {},
+          moreLink: {},
+          breadcrumbs: {},
+        }}
         action={
           <Button
             size="small"
             variant="contained"
             disabled={!actions.canManage}
             startIcon={<Iconify icon="mdi:plus" />}
+            sx={{ minWidth: 140 }}
             onClick={() => actions.create(purpose)}
           >
-            Create form
+            Add Form
           </Button>
         }
       />
@@ -128,7 +118,10 @@ export default function AdmissionFormsScreen() {
             tabIndex: 0,
             sx: { cursor: 'pointer' },
             onKeyDown: (event) => {
-              if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+              if (
+                event.target === event.currentTarget &&
+                (event.key === 'Enter' || event.key === ' ')
+              ) {
                 event.preventDefault();
                 actions.preview((row as AdmissionForm).id);
               }
@@ -172,6 +165,7 @@ export default function AdmissionFormsScreen() {
         initialPurpose={actions.creatingPurpose}
         saving={actions.saving}
         onSave={actions.save}
+        onPublishNow={actions.saveAndPublish}
       />
       <AdmissionFormCloneDialog
         source={actions.pendingClone}
@@ -198,91 +192,34 @@ export default function AdmissionFormsScreen() {
         }}
       />
       <ConfirmDialog
-        open={Boolean(review)}
-        onClose={() => {
-          setReview(null);
-          setReviewComment('');
-        }}
-        icon={review?.action === 'reject' ? 'warning' : 'info'}
-        title={
-          isAdminOverride
-            ? review?.action === 'reject'
-              ? 'Request changes with admin override?'
-              : 'Approve with admin override?'
-            : review?.action === 'reject'
-              ? 'Request changes?'
-              : 'Approve this form?'
-        }
-        content={
-          <Box>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {isAdminOverride
-                ? 'You requested this approval. As an administrator, you can override the two-person review rule. Enter a reason; this override will be recorded in form history.'
-                : review?.action === 'reject'
-                  ? 'Explain what the form owner should update before requesting approval again.'
-                  : 'Approval confirms that another authorized user reviewed this draft. It can then be published.'}
-            </Typography>
-            <TextField
-              fullWidth
-              size="small"
-              multiline
-              minRows={3}
-              label={
-                isAdminOverride
-                  ? 'Override reason'
-                  : review?.action === 'reject'
-                    ? 'Required changes'
-                    : 'Review note (optional)'
-              }
-              required={isAdminOverride || review?.action === 'reject'}
-              value={reviewComment}
-              onChange={(event) => setReviewComment(event.target.value)}
-            />
-          </Box>
-        }
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            color={review?.action === 'reject' ? 'warning' : 'primary'}
-            disabled={
-              actions.approving ||
-              actions.rejecting ||
-              ((isAdminOverride || review?.action === 'reject') && !reviewComment.trim())
-            }
-            onClick={async () => {
-              if (!review) return;
-              const ok =
-                review.action === 'approve'
-                  ? await actions.approve(review.form, reviewComment)
-                  : await actions.reject(review.form, reviewComment);
-              if (ok) {
-                setReview(null);
-                setReviewComment('');
-              }
-            }}
-          >
-            {isAdminOverride
-              ? review?.action === 'reject'
-                ? 'Request changes with override'
-                : 'Approve with override'
-              : review?.action === 'reject'
-                ? 'Request changes'
-                : 'Approve form'}
-          </Button>
-        }
-      />
-      <ConfirmDialog
         open={Boolean(actions.pendingDelete)}
         onClose={actions.clearPendingDelete}
+        disableCancel={actions.deleting}
+        disableBackdropClick
+        disableEscapeKeyDown={actions.deleting}
+        aria-labelledby="admission-form-delete-title"
+        aria-describedby="admission-form-delete-description"
         icon="error"
-        title="Delete form draft?"
-        content="This permanently removes the unused draft and its sections and fields."
+        title={
+          <Box component="span" id="admission-form-delete-title">
+            Delete form draft?
+          </Box>
+        }
+        content={
+          <Stack spacing={1.5}>
+            <Typography variant="body2" id="admission-form-delete-description">
+              Delete <strong>{actions.pendingDelete?.name}</strong> and its sections and fields?
+            </Typography>
+
+            {actions.deleteError && <Alert severity="error">{actions.deleteError}</Alert>}
+          </Stack>
+        }
         action={
           <Button
             color="error"
             variant="contained"
             size="small"
+            loading={actions.deleting}
             disabled={actions.deleting}
             startIcon={<Iconify icon="mdi:delete-outline" />}
             onClick={actions.confirmDelete}

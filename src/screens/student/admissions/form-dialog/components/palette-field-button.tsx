@@ -32,6 +32,7 @@ export function PaletteFieldButton({ label, icon, description, disabled = false,
             textAlign: 'left',
             justifyContent: 'flex-start',
             borderColor: 'divider',
+            '&.Mui-disabled': { borderColor: 'divider' },
             '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
             '&:focus-visible': {
               outline: '2px solid',

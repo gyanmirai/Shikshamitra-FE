@@ -49,15 +49,21 @@ export function FormBuilderCanvas({
   };
   return (
     <Stack sx={{ height: 1, minHeight: 0, bgcolor: 'background.paper' }}>
-      <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
+      <Scrollbar
+        fillContent
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          '& .simplebar-content-wrapper': { overflowX: 'hidden !important' },
+          '& .simplebar-track.simplebar-horizontal': { display: 'none' },
+        }}
+      >
         <Stack spacing={1.5} sx={{ p: { xs: 1.5, sm: 2 } }}>
-          <Typography variant="caption" color="text.secondary">
-            {!formik.values.sections.length
-              ? 'This draft has no sections. Add a section to continue building the form.'
-              : focused
-                ? 'Select a field to edit its settings. Drag fields to change their order.'
-                : 'Select a section in the outline or below to focus its fields.'}
-          </Typography>
+          {!formik.values.sections.length && (
+            <Typography variant="body2" color="text.secondary">
+              This draft has no sections. Add a section to start building the form.
+            </Typography>
+          )}
           {focused && selectedSection ? (
             <SortableContext
               items={[`section:${selectedSection.id}`]}

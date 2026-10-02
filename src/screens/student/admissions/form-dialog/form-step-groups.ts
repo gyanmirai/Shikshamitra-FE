@@ -47,7 +47,7 @@ export function getAdmissionFormStepGroups<TSection extends StepSection>(
     groups.set(id, {
       id,
       code: section.stepCode || section.code,
-      name: section.stepName || section.name,
+      name: section.stepName ?? section.name,
       displayOrder: section.stepDisplayOrder ?? section.displayOrder,
       visibilityRuleJson: section.stepVisibilityRuleJson,
       sections: [{ section, sectionIndex }],

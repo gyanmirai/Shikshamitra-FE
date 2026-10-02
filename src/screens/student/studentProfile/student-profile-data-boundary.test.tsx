@@ -91,3 +91,30 @@ it.each([
     expect(screen.queryByText('Admission evidence')).not.toBeInTheDocument();
   }
 );
+
+it('keeps protected section queries unmounted during summary-only provisioning', async () => {
+  const protectedRequests: string[] = [];
+  mswServer.use(
+    http.get(profilePath, () =>
+      HttpResponse.json({ data: { ...studentProfile, recordsAccess: 'Summary', maskedFields: [] } })
+    ),
+    http.get(profileDocumentsPath, () => {
+      protectedRequests.push('documents');
+      return HttpResponse.json({ data: [] });
+    }),
+    http.get(profileEvidencePath, () => {
+      protectedRequests.push('evidence');
+      return HttpResponse.json({ data: [] });
+    })
+  );
+  renderStudentProfile();
+  expect(await screen.findByRole('heading', { name: 'Student summary' })).toBeVisible();
+  expect(screen.queryByRole('tablist')).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Open Student Onboarding' })).toBeVisible();
+  expect(protectedRequests).toEqual([]);
+});
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/student/profile',
+}));

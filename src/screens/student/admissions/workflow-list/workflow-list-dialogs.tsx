@@ -22,7 +22,6 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
         onClose={actions.createDialog.onFalse}
         saving={actions.createState.isLoading || actions.openingCreatedWorkflow}
         showStarterJourney
-        autoGenerateCode
         closeOnSave={false}
         fetchInquiryForms={fetchInquiryForms}
         fetchRegistrationForms={fetchRegistrationForms}
@@ -39,7 +38,7 @@ export function WorkflowListDialogs({ actions }: { actions: Actions }) {
         submitLabel="Clone draft"
         initialValues={{
           name: actions.cloneSource ? `${actions.cloneSource.name} Copy` : '',
-          code: actions.cloneSource ? `${actions.cloneSource.code}_COPY` : '',
+          code: '',
           description: actions.cloneSource?.description ?? '',
         }}
         onSave={actions.clone}

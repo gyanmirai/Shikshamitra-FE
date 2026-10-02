@@ -23,7 +23,6 @@ import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
-import { normalizeCycleCode } from './admission-cycle-model';
 import { AdmissionDialogTitle } from './admission-dialog-title';
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 
@@ -41,7 +40,6 @@ type Props = {
 
 const schema = Yup.object({
   name: Yup.string().trim().max(128, 'Maximum 128 characters').required('Cycle name is required'),
-  code: Yup.string().trim().max(64, 'Maximum 64 characters').required('Cycle code is required'),
   description: Yup.string().trim().max(1000, 'Maximum 1000 characters').nullable(),
   academicYearId: Yup.string().required('Academic year is required'),
   startDate: Yup.string().required('Applications open date is required'),
@@ -73,7 +71,6 @@ export function AdmissionCycleDialog({
   onSave,
 }: Props) {
   const [confirmDiscard, setConfirmDiscard] = useState(false);
-  const [codeFocused, setCodeFocused] = useState(false);
   /**
    * Memoization Justification:
    * - Formik uses enableReinitialize and compares initialValues on each render.
@@ -123,7 +120,6 @@ export function AdmissionCycleDialog({
 
   const closeWithoutSaving = () => {
     setConfirmDiscard(false);
-    setCodeFocused(false);
     formik.resetForm();
     onClose();
   };
@@ -164,36 +160,7 @@ export function AdmissionCycleDialog({
               />
             </ShakingTextField>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
-            <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
-              <TextField
-                fullWidth
-                size="small"
-                required
-                label="Cycle code"
-                name="code"
-                value={formik.values.code}
-                onFocus={() => setCodeFocused(true)}
-                onBlur={(event) => {
-                  setCodeFocused(false);
-                  formik.handleBlur(event);
-                }}
-                onChange={(event) =>
-                  formik.setFieldValue('code', normalizeCycleCode(event.target.value))
-                }
-                error={Boolean(formik.touched.code && formik.errors.code)}
-                helperText={
-                  formik.touched.code && formik.errors.code
-                    ? formik.errors.code
-                    : codeFocused
-                      ? 'Uppercase letters, numbers, hyphen and underscore'
-                      : undefined
-                }
-                inputProps={{ maxLength: 64 }}
-              />
-            </ShakingTextField>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6 }}>
+          <Grid size={{ xs: 12 }}>
             <ShakingTextField
               error={
                 Boolean(formik.touched.academicYearId && formik.errors.academicYearId) ||

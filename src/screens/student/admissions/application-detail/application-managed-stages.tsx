@@ -14,9 +14,12 @@ import { ApplicationEligibility } from '../eligibility/application-eligibility';
 import { ApplicationAssessments } from '../assessments/application-assessments';
 import { ApplicationDocuments } from '../document-verification/application-documents';
 
+import type { AdmissionFeeSelectionEditorState } from '../fee-selection/admission-fee-selection-editor';
+
 export function ApplicationManagedStages({
   application,
   workflow,
+  onFeeSelectionStateChange,
   ...actions
 }: {
   application: AdmissionApplication;
@@ -24,6 +27,7 @@ export function ApplicationManagedStages({
   canAdvance: boolean;
   advancing: boolean;
   onComplete: (concurrencyStamp?: string) => void;
+  onFeeSelectionStateChange?: (state: AdmissionFeeSelectionEditorState) => void;
 }) {
   const stageProps = {
     applicationId: application.id,
@@ -33,7 +37,9 @@ export function ApplicationManagedStages({
   };
   const seatStage = stageProps.currentStage?.seatStageEnabled
     ? stageProps.currentStage
-    : [...stageProps.stages].reverse().find((stage) => stage.seatStageEnabled && stage.status === 2);
+    : [...stageProps.stages]
+        .reverse()
+        .find((stage) => stage.seatStageEnabled && stage.status === 2);
   if (
     !stageProps.stages.some(
       (stage) =>
@@ -66,6 +72,7 @@ export function ApplicationManagedStages({
           canAdvance={actions.canAdvance}
           advancing={actions.advancing}
           onComplete={actions.onComplete}
+          onFeeSelectionStateChange={onFeeSelectionStateChange}
         />
       )}
       {stageProps.currentStage?.offerStageEnabled && (
@@ -75,6 +82,7 @@ export function ApplicationManagedStages({
           canAdvance={actions.canAdvance}
           advancing={actions.advancing}
           onComplete={actions.onComplete}
+          onFeeSelectionStateChange={onFeeSelectionStateChange}
         />
       )}
       {seatStage && (

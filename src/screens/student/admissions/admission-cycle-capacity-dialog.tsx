@@ -65,7 +65,9 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
   const occupied = (editing?.reservedCount ?? 0) + (editing?.confirmedCount ?? 0);
   const capacityError =
     capacity !== '' &&
-    (!Number.isInteger(numericCapacity) || numericCapacity < Math.max(1, occupied) || numericCapacity > 100000);
+    (!Number.isInteger(numericCapacity) ||
+      numericCapacity < Math.max(1, occupied) ||
+      numericCapacity > 100000);
   const canSave =
     editing && !capacityError && capacity !== '' && reason.trim().length > 0 && !isSaving;
   const isReadOnly = !canManage || cycle.status === 2 || cycle.status === 3;
@@ -95,9 +97,7 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
       setCapacity('');
       setReason('');
       shikshaMitraToast.success({
-        message: refreshed
-          ? `${refreshed.offeringName} capacity saved`
-          : 'Offering capacity saved',
+        message: refreshed ? `${refreshed.offeringName} capacity saved` : 'Offering capacity saved',
       });
     } catch (error) {
       shikshaMitraToast.error({ message: readError(error) });
@@ -161,12 +161,18 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
               <Box
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: { xs: 'repeat(2, minmax(0, 1fr))', sm: 'repeat(5, minmax(0, 1fr))' },
+                  gridTemplateColumns: {
+                    xs: 'repeat(2, minmax(0, 1fr))',
+                    sm: 'repeat(5, minmax(0, 1fr))',
+                  },
                   gap: 1,
                 }}
               >
                 {metrics.map(([label, value]) => (
-                  <Box key={String(label)} sx={{ p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}>
+                  <Box
+                    key={String(label)}
+                    sx={{ p: 1, border: 1, borderColor: 'divider', borderRadius: 1 }}
+                  >
                     <Typography variant="caption" color="text.secondary">
                       {label}
                     </Typography>
@@ -177,19 +183,21 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
 
               {data.unconfiguredOfferingCount > 0 && (
                 <Alert severity="warning">
-                  {data.unconfiguredOfferingCount} of {data.offeringCount} offerings have no capacity yet.
-                  Configure them before applications reach seat allocation.
+                  {data.unconfiguredOfferingCount} of {data.offeringCount} offerings have no
+                  capacity yet. Configure them before applications reach seat allocation.
                 </Alert>
               )}
               {data.notSeatManagedOfferingCount > 0 && (
                 <Alert severity="info">
-                  {data.notSeatManagedOfferingCount} of {data.offeringCount} offerings do not use a Seat
-                  stage. Assign a published Admission Stage workflow with a Seat stage before configuring capacity.
+                  {data.notSeatManagedOfferingCount} of {data.offeringCount} offerings do not use a
+                  Seat stage. Assign a published Admission Stage workflow with a Seat stage before
+                  configuring capacity.
                 </Alert>
               )}
               {data.overCapacityOfferingCount > 0 && (
                 <Alert severity="error">
-                  {data.overCapacityOfferingCount} offerings are over capacity. Review them immediately.
+                  {data.overCapacityOfferingCount} offerings are over capacity. Review them
+                  immediately.
                 </Alert>
               )}
               {isReadOnly && data.offeringCount > 0 && (
@@ -204,9 +212,12 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                 <Box sx={{ p: 1.5, border: 1, borderColor: 'divider', borderRadius: 1 }}>
                   <Stack spacing={1.5}>
                     <Box>
-                      <Typography variant="subtitle2">Set capacity for {editing.offeringName}</Typography>
+                      <Typography variant="subtitle2">
+                        Set capacity for {editing.offeringName}
+                      </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {occupied} seats are currently reserved or confirmed. Capacity cannot be lower than this.
+                        {occupied} seats are currently reserved or confirmed. Capacity cannot be
+                        lower than this.
                       </Typography>
                     </Box>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
@@ -252,7 +263,8 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
               <Divider />
               {!data.offerings.length ? (
                 <Alert severity="info">
-                  No offerings are linked to this admission period yet. Create an offering before setting capacity.
+                  No offerings are linked to this admission period yet. Create an offering before
+                  setting capacity.
                 </Alert>
               ) : (
                 <TableContainer sx={{ border: 1, borderColor: 'divider', borderRadius: 1 }}>
@@ -274,18 +286,32 @@ export function AdmissionCycleCapacityDialog({ cycle, canManage, onClose }: Prop
                           <TableCell>
                             <Stack direction="row" spacing={1} alignItems="center">
                               <Box>
-                                <Typography variant="body2" fontWeight={600}>{row.offeringName}</Typography>
-                                <Typography variant="caption" color="text.secondary">{row.offeringCode}</Typography>
+                                <Typography variant="body2" fontWeight={600}>
+                                  {row.offeringName}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                  {row.offeringCode}
+                                </Typography>
                               </Box>
-                              {!row.isActive && <Chip size="small" label="Inactive" variant="outlined" />}
-                              {!row.isSeatManaged && <Chip size="small" label="No Seat stage" variant="outlined" />}
-                              {row.isOverCapacity && <Chip size="small" color="error" label="Over capacity" />}
+                              {!row.isActive && (
+                                <Chip size="small" label="Inactive" variant="outlined" />
+                              )}
+                              {!row.isSeatManaged && (
+                                <Chip size="small" label="No Seat stage" variant="outlined" />
+                              )}
+                              {row.isOverCapacity && (
+                                <Chip size="small" color="error" label="Over capacity" />
+                              )}
                             </Stack>
                           </TableCell>
-                          <TableCell align="right">{row.isConfigured ? row.capacity : 'Not set'}</TableCell>
+                          <TableCell align="right">
+                            {row.isConfigured ? row.capacity : 'Not set'}
+                          </TableCell>
                           <TableCell align="right">{row.reservedCount}</TableCell>
                           <TableCell align="right">{row.confirmedCount}</TableCell>
-                          <TableCell align="right">{row.isConfigured ? row.remainingCapacity : '—'}</TableCell>
+                          <TableCell align="right">
+                            {row.isConfigured ? row.remainingCapacity : '—'}
+                          </TableCell>
                           <TableCell align="right">{row.waitlistedCount}</TableCell>
                           <TableCell align="right">
                             <Tooltip

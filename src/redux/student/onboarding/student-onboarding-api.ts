@@ -30,6 +30,13 @@ export type StudentPortalAccount = {
 
 export type StudentOnboardingCampus = { id: string; code: string; name: string };
 
+export type StudentOnboardingRollPreview = {
+  schoolAssignmentMode: 'manual' | 'automatic' | 'both';
+  rollAssignmentMode: 'manual' | 'automatic';
+  proposedRollNumber: number;
+  concurrencyStamp: string;
+};
+
 const unwrap = <T>(response: Result<T> | T): T =>
   response && typeof response === 'object' && 'data' in response && response.data !== undefined
     ? response.data
@@ -189,6 +196,13 @@ export const studentOnboardingApi = api.injectEndpoints({
         { type: studentOnboardingType.onboardingPlacementOptions, id },
       ],
     }),
+    previewStudentOnboardingRoll: builder.mutation<
+      StudentOnboardingRollPreview,
+      { id: string; rollNumber?: number; rollAssignmentMode?: 'manual' | 'automatic'; reason?: string }
+    >({
+      query: ({ id, ...body }) => ({ url: `/student/onboarding/${id}/roll-preview`, method: 'POST', body }),
+      transformResponse: (response: Result<StudentOnboardingRollPreview> | StudentOnboardingRollPreview) => unwrap(response),
+    }),
     allocateStudentOnboardingIdentifier: builder.mutation<
       StudentOnboardingCase,
       {
@@ -196,6 +210,7 @@ export const studentOnboardingApi = api.injectEndpoints({
         concurrencyStamp?: string | null;
         numberSeriesId: string;
         rollNumber: number;
+        rollAssignmentMode?: 'manual' | 'automatic';
         manualValue?: string | null;
         manualSequence?: number | null;
         overrideReason?: string | null;
@@ -489,6 +504,7 @@ export const {
   useUpdateStudentOnboardingStepMutation,
   useSetStudentOnboardingPlacementMutation,
   useAllocateStudentOnboardingIdentifierMutation,
+  usePreviewStudentOnboardingRollMutation,
   usePreviewStudentOnboardingActivationQuery,
   useActivateStudentOnboardingMutation,
   useCancelStudentOnboardingMutation,

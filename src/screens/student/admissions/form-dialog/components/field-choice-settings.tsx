@@ -167,6 +167,8 @@ export function FieldChoiceSettings({ formik, sectionIndex, fieldIndex }: FieldS
                 size="small"
                 label={`Option ${index + 1}`}
                 value={choice.label}
+                error={!choice.label.trim()}
+                helperText={!choice.label.trim() ? 'Enter an option name.' : undefined}
                 onChange={(event) => changeChoiceLabel(index, event.target.value)}
               />
               <Tooltip title="Move option up">

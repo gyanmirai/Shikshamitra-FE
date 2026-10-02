@@ -1,10 +1,7 @@
-import { useState } from 'react';
 import Box from '@mui/material/Box';
-import Menu from '@mui/material/Menu';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import { Label } from 'src/components/label';
-import MenuItem from '@mui/material/MenuItem';
 import { Iconify } from 'src/components/iconify';
 import ButtonBase from '@mui/material/ButtonBase';
 import Typography from '@mui/material/Typography';
@@ -51,10 +48,8 @@ const STARTERS: Array<{
 ];
 
 export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
-  const [starterMenuAnchor, setStarterMenuAnchor] = useState<HTMLElement | null>(null);
-  const selected = STARTERS.find((starter) => starter.id === selectedStarter) ?? STARTERS[0];
   return (
-    <Stack spacing={1.5} sx={{ height: 1 }}>
+    <Stack spacing={1.5}>
       <Box>
         <Typography variant="h6">Start with a form</Typography>
         <Typography variant="body2" color="text.secondary">
@@ -62,7 +57,13 @@ export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
         </Typography>
       </Box>
 
-      <Stack spacing={1.25} sx={{ display: { xs: 'none', md: 'flex' } }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(3, minmax(0, 1fr))' },
+          gap: 1.5,
+        }}
+      >
         {STARTERS.map((starter) => (
           <Paper
             key={starter.id}
@@ -79,9 +80,10 @@ export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
               onClick={() => onSelect(starter.id)}
               sx={{
                 width: 1,
-                minHeight: 82,
-                p: 1.5,
-                gap: 1.25,
+                height: 1,
+                minHeight: { xs: 64, sm: 72, lg: 64 },
+                p: 1.25,
+                gap: 1,
                 textAlign: 'left',
                 alignItems: 'center',
                 '&:focus-visible': {
@@ -93,8 +95,8 @@ export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
             >
               <Box
                 sx={{
-                  width: 40,
-                  height: 40,
+                  width: 36,
+                  height: 36,
                   display: 'grid',
                   flexShrink: 0,
                   placeItems: 'center',
@@ -103,7 +105,7 @@ export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
                   color: 'text.secondary',
                 }}
               >
-                <Iconify icon={starter.icon} width={22} />
+                <Iconify icon={starter.icon} width={20} />
               </Box>
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
@@ -114,7 +116,11 @@ export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
                     </Label>
                   )}
                 </Stack>
-                <Typography variant="body2" color="text.secondary">
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: { xs: 'block', sm: 'none', lg: 'block' } }}
+                >
                   {starter.description}
                 </Typography>
               </Box>
@@ -138,78 +144,7 @@ export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
             </ButtonBase>
           </Paper>
         ))}
-      </Stack>
-
-      <Paper
-        variant="outlined"
-        sx={{ display: { xs: 'block', md: 'none' }, overflow: 'hidden', borderRadius: 1.5 }}
-      >
-        <ButtonBase
-          aria-haspopup="menu"
-          aria-expanded={Boolean(starterMenuAnchor)}
-          aria-label={`Selected template: ${selected.title}. Choose another template`}
-          onClick={(event) => setStarterMenuAnchor(event.currentTarget)}
-          sx={{ width: 1, minHeight: 68, p: 1.25, gap: 1.25, textAlign: 'left' }}
-        >
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              display: 'grid',
-              placeItems: 'center',
-              borderRadius: 1,
-              bgcolor: 'action.hover',
-            }}
-          >
-            <Iconify icon={selected.icon} width={22} />
-          </Box>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="caption" color="text.secondary">
-              Template
-            </Typography>
-            <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap">
-              <Typography variant="subtitle2">{selected.title}</Typography>
-              {selected.id === 'admission-application' && (
-                <Label color="success" variant="soft">
-                  Recommended
-                </Label>
-              )}
-            </Stack>
-          </Box>
-          <Iconify icon="mdi:chevron-right" width={20} />
-        </ButtonBase>
-      </Paper>
-      <Menu
-        anchorEl={starterMenuAnchor}
-        open={Boolean(starterMenuAnchor)}
-        onClose={() => setStarterMenuAnchor(null)}
-        slotProps={{ paper: { sx: { minWidth: 280 } } }}
-      >
-        {STARTERS.map((starter) => (
-          <MenuItem
-            key={starter.id}
-            selected={selectedStarter === starter.id}
-            onClick={() => {
-              onSelect(starter.id);
-              setStarterMenuAnchor(null);
-            }}
-            sx={{ minHeight: 44, gap: 1 }}
-          >
-            <Iconify icon={starter.icon} width={20} />
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="body2" fontWeight={600}>
-                {starter.title}
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                {starter.description}
-              </Typography>
-            </Box>
-            {selectedStarter === starter.id && (
-              <Iconify icon="mdi:check" width={18} sx={{ color: 'success.main' }} />
-            )}
-          </MenuItem>
-        ))}
-      </Menu>
+      </Box>
     </Stack>
   );
 }

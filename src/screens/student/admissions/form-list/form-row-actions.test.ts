@@ -8,10 +8,7 @@ describe('admission form row action visibility', () => {
       edit: true,
       clone: true,
       validate: true,
-      requestApproval: true,
-      approve: false,
-      reject: false,
-      publish: false,
+      publish: true,
       delete: true,
       history: true,
       createVersion: false,
@@ -24,9 +21,6 @@ describe('admission form row action visibility', () => {
       edit: false,
       clone: true,
       validate: false,
-      requestApproval: false,
-      approve: false,
-      reject: false,
       publish: false,
       delete: false,
       history: true,
@@ -40,9 +34,6 @@ describe('admission form row action visibility', () => {
       edit: false,
       clone: true,
       validate: false,
-      requestApproval: false,
-      approve: false,
-      reject: false,
       publish: false,
       delete: false,
       history: true,
@@ -60,34 +51,12 @@ describe('admission form row action visibility', () => {
     ).not.toContain(true);
   });
 
-  it('allows review while pending and publishing only after approval', () => {
-    expect(getFormRowActionVisibility(0, true, true, false, 1)).toMatchObject({
-      edit: false,
-      approve: true,
-      reject: true,
-      publish: false,
-    });
-    expect(getFormRowActionVisibility(0, true, true, false, 2)).toMatchObject({
-      edit: false,
-      approve: false,
-      reject: false,
+  it('allows a publisher to publish any draft without a review state', () => {
+    expect(getFormRowActionVisibility(0, true, true, false)).toMatchObject({
+      edit: true,
+      validate: true,
       publish: true,
     });
-  });
-
-  it('does not offer approve or reject to the user who requested approval', () => {
-    expect(getFormRowActionVisibility(0, true, true, false, 1, true)).toMatchObject({
-      approve: false,
-      reject: false,
-      publish: false,
-    });
-  });
-
-  it('allows an administrator to review their own approval request', () => {
-    expect(getFormRowActionVisibility(0, true, true, false, 1, true, true)).toMatchObject({
-      approve: true,
-      reject: true,
-      publish: false,
-    });
+    expect(getFormRowActionVisibility(0, true, false, false).publish).toBe(false);
   });
 });

@@ -1,11 +1,12 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
+import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderField } from '../form-builder-field';
 import { newField, nextFieldOrder } from '../form-dialog-model';
@@ -40,19 +41,31 @@ export function FormBuilderSectionFields({
     <Stack spacing={1} sx={{ p: 1 }}>
       <SortableContext
         items={section.fields.map((field) => `field:${section.id}:${field.id}`)}
-        strategy={verticalListSortingStrategy}
+        strategy={rectSortingStrategy}
       >
-        {section.fields.map((field, fieldIndex) => (
-          <FormBuilderField
-            key={field.id}
-            formik={formik}
-            sectionIndex={sectionIndex}
-            fieldIndex={fieldIndex}
-            selected={selectedFieldId === field.id}
-            onSelect={() => onSelectField(field.id)}
-            onDelete={() => removeField(fieldIndex)}
-          />
-        ))}
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 1.5,
+            gridTemplateColumns: {
+              xs: 'minmax(0, 1fr)',
+              sm: `repeat(${Math.min(formik.values.fieldsPerRow, 2)}, minmax(0, 1fr))`,
+              lg: `repeat(${formik.values.fieldsPerRow}, minmax(0, 1fr))`,
+            },
+          }}
+        >
+          {section.fields.map((field, fieldIndex) => (
+            <FormBuilderField
+              key={field.id}
+              formik={formik}
+              sectionIndex={sectionIndex}
+              fieldIndex={fieldIndex}
+              selected={selectedFieldId === field.id}
+              onSelect={() => onSelectField(field.id)}
+              onDelete={() => removeField(fieldIndex)}
+            />
+          ))}
+        </Box>
       </SortableContext>
       {!section.fields.length && (
         <Stack

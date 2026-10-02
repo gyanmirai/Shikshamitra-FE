@@ -71,7 +71,6 @@ export function WorkflowListFilters({ filters, onUpdate }: Props) {
           setDraft(pickFilterValues(filters));
           popover.onOpen(event);
         }}
-        sx={{ minHeight: { xs: 44, sm: 36 }, px: 1.25 }}
       >
         Filters
       </Button>

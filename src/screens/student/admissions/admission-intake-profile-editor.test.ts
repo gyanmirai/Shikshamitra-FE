@@ -9,11 +9,19 @@ describe('admission intake profile steps', () => {
     await expect(getProfileStepSchema(0, false, null).validate(values)).rejects.toThrow(
       'Choose a profile type'
     );
-    values.code = 'INQUIRY';
     await expect(getProfileStepSchema(1, false, 0).validate(values)).rejects.toThrow(
       'Enter a profile name'
     );
   });
+
+  it.each([0, 1] as const)(
+    'allows a named profile of kind %s without a manual code',
+    async (kind) => {
+      const values = { ...getInitialProfileValues(null), kind, name: 'School profile' };
+      await expect(getProfileStepSchema(1, false, kind).isValid(values)).resolves.toBe(true);
+      expect(values.code).toBe('');
+    }
+  );
 
   it('rejects an inquiry follow-up period outside the server range', async () => {
     const values = getInitialProfileValues(null);

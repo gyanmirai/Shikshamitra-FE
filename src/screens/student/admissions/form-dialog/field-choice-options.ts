@@ -24,7 +24,7 @@ export function parseEditableAdmissionChoices(
       const candidate = option as { value?: unknown; label?: unknown };
       const value = typeof candidate.value === 'string' ? candidate.value : '';
       const label = typeof candidate.label === 'string' ? candidate.label : value;
-      return value || label ? [{ value: value || label, label: label || value }] : [];
+      return value || label ? [{ value: value || label, label }] : [];
     });
 
     if (choices.length !== parsed.length) {
@@ -53,7 +53,8 @@ export function createAdmissionChoiceValue(label: string, usedValues: string[]) 
       .replace(/^_+|_+$/g, '') || 'OPTION';
   let value = base;
   let suffix = 2;
-  while (usedValues.includes(value)) {
+  const existingValues = new Set(usedValues.map((usedValue) => usedValue.toUpperCase()));
+  while (existingValues.has(value)) {
     value = `${base}_${suffix}`;
     suffix += 1;
   }

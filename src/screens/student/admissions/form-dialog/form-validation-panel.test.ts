@@ -3,8 +3,25 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 import { it, expect, describe } from 'vitest';
 
 import { getBuilderIssues } from './form-validation-panel';
+import { getBlankAdmissionFormInitialValues } from './form-dialog-model';
 
 describe('admission form builder validation', () => {
+  it('reports a cleared step name instead of validating its section-name fallback', () => {
+    const form = getBlankAdmissionFormInitialValues();
+    form.layoutType = 1;
+    form.sections[0] = {
+      ...form.sections[0],
+      stepId: 'step-1',
+      stepCode: 'STEP_1',
+      stepName: '',
+      stepDisplayOrder: 0,
+    };
+
+    expect(getBuilderIssues(form).map((issue) => issue.message)).toContain(
+      'Step 1 needs a name.'
+    );
+  });
+
   it('reports empty sections for step-by-step forms', () => {
     const form = {
       name: 'Student admission form',

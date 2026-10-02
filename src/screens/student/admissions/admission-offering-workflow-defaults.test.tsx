@@ -24,7 +24,7 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   }),
 }));
 vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
-  useGetAdmissionIntakeProfilesQuery: () => ({ data: [] }),
+  useGetAdmissionIntakeSetupsQuery: () => ({ data: [], isError: false }),
 }));
 
 const workflow = { id: 'workflow-1', name: 'Grade 1 Admission', version: 1 };

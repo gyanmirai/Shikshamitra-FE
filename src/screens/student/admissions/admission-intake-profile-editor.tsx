@@ -43,6 +43,7 @@ import {
 } from '@mui/material';
 
 import { INQUIRY_SOURCE_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
+import { AdmissionIntakeNotice } from './admission-intake-notice';
 
 export const defaultInquiryRules: AdmissionInquiryIntakeRules = {
   version: 1,
@@ -115,7 +116,6 @@ const identitySchema = Yup.object({
     .trim()
     .required('Enter a profile name')
     .max(128, 'Use 128 characters or fewer'),
-  code: Yup.string().trim().required('Enter a code').max(64, 'Use 64 characters or fewer'),
 });
 
 const inquiryRulesSchema = Yup.object({
@@ -284,12 +284,12 @@ export function AdmissionIntakeProfileEditor({ profile, onClose }: Props) {
               return (
                 <Stack spacing={2} sx={{ p: 2 }}>
                   {actualStep === 0 && <ProfileTypeFields formik={form} />}
-                  {actualStep === 1 && <ProfileIdentityFields formik={form} profile={profile} />}
+                  {actualStep === 1 && <ProfileIdentityFields formik={form} />}
                   {actualStep === 1 && invalidSavedRules && (
-                    <Alert severity="warning">
+                    <AdmissionIntakeNotice severity="warning">
                       The saved rules could not be read. Review every rule before updating this
                       profile.
-                    </Alert>
+                    </AdmissionIntakeNotice>
                   )}
                   {actualStep === 2 &&
                     (form.values.kind === 0 ? (
@@ -390,18 +390,11 @@ function ProfileTypeFields({ formik }: { formik: FormikProps<IntakeProfileValues
   );
 }
 
-function ProfileIdentityFields({
-  formik,
-  profile,
-}: {
-  formik: FormikProps<IntakeProfileValues>;
-  profile: AdmissionIntakeProfile | null;
-}) {
+function ProfileIdentityFields({ formik }: { formik: FormikProps<IntakeProfileValues> }) {
   return (
     <>
       <Typography variant="body2" color="text.secondary">
         {profileKindLabel(formik.values.kind ?? 0)} profiles can be selected by multiple offerings.
-        The code is a stable school reference.
       </Typography>
       <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
         <TextField
@@ -414,24 +407,6 @@ function ProfileIdentityFields({
           onBlur={formik.handleBlur}
           error={Boolean(formik.touched.name && formik.errors.name)}
           helperText={formik.touched.name && formik.errors.name}
-        />
-      </ShakingTextField>
-      <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
-        <TextField
-          fullWidth
-          size="small"
-          name="code"
-          label="Profile code *"
-          value={formik.values.code}
-          onChange={formik.handleChange}
-          onBlur={formik.handleBlur}
-          error={Boolean(formik.touched.code && formik.errors.code)}
-          helperText={
-            (formik.touched.code && formik.errors.code) ||
-            (profile
-              ? 'Changing this code may affect school references.'
-              : 'For example, GENERAL_INQUIRY.')
-          }
         />
       </ShakingTextField>
     </>
@@ -490,6 +465,8 @@ function InquiryFields({
       </TextField>
       <Autocomplete
         multiple
+        size="small"
+        slotProps={{ chip: { color: 'default', variant: 'soft', size: 'small' } }}
         options={INQUIRY_SOURCE_OPTIONS}
         getOptionLabel={(option) => option.label}
         value={INQUIRY_SOURCE_OPTIONS.filter((option) =>
@@ -505,17 +482,12 @@ function InquiryFields({
               : value.requireSourceDetailFor,
           });
         }}
-        renderInput={(params) => (
-          <TextField
-            {...params}
-            size="small"
-            label="Allowed sources"
-            helperText="Leave empty to allow every source."
-          />
-        )}
+        renderInput={(params) => <TextField {...params} size="small" label="Allowed sources" />}
       />
       <Autocomplete
         multiple
+        size="small"
+        slotProps={{ chip: { color: 'default', variant: 'soft', size: 'small' } }}
         options={INQUIRY_SOURCE_OPTIONS.filter(
           (option) =>
             value.allowedSources.length === 0 || value.allowedSources.includes(option.value)
@@ -629,12 +601,12 @@ function AssignmentFields({
   return (
     <>
       <Typography variant="subtitle1">Counsellor assignment rules</Typography>
-      <Alert severity="info">
+      <AdmissionIntakeNotice severity="info">
         New inquiries and direct registrations go to the counsellor with the fewest active cases.
         That counsellor stays the student&apos;s journey owner through admission and becomes the
         onboarding owner at finalization. A specialist completing one stage does not replace the
         journey owner.
-      </Alert>
+      </AdmissionIntakeNotice>
       {loadError && (
         <Alert
           severity="error"
@@ -648,7 +620,9 @@ function AssignmentFields({
         </Alert>
       )}
       {!loading && !loadError && counsellors.length === 0 && (
-        <Alert severity="info">Add eligible counsellors before saving this profile.</Alert>
+        <AdmissionIntakeNotice severity="info">
+          Add eligible counsellors before saving this profile.
+        </AdmissionIntakeNotice>
       )}
       <Autocomplete
         multiple
@@ -690,7 +664,6 @@ function AssignmentFields({
         onChange={(event) =>
           onChange({ ...value, fallbackManagerUserId: event.target.value || null })
         }
-        helperText="Receives new cases when every counsellor is at capacity."
       >
         <MenuItem value="">No fallback</MenuItem>
         {counsellors.map((person) => (

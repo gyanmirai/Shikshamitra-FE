@@ -55,7 +55,7 @@ export function ConfirmDialog({
     >
       <DialogTitle sx={{ p: 2 }}>
         <Box display="flex" alignItems="center" gap={1}>
-          {iconMap[icon as ConfirmIconType]}
+          {typeof icon === 'string' ? iconMap[icon as ConfirmIconType] : icon}
           <Typography variant="h6">{title}</Typography>
         </Box>
       </DialogTitle>

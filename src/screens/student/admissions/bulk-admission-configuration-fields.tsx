@@ -8,11 +8,16 @@ import type {
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
-import { Grid, TextField, Typography } from '@mui/material';
-import { useGetAdmissionIntakeProfilesQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
+import { Grid, TextField } from '@mui/material';
+import { useGetAdmissionIntakeSetupsQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { AdmissionDefinitionSelect } from './admission-definition-select';
+import {
+  getIntakeSetupSelection,
+  hasLegacyIntakeSelection,
+  findSelectedIntakeSetup,
+} from './admission-intake-setup-selection';
 
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
 import type { AdmissionDefinitionFetcher } from './use-admission-definition-options';
@@ -35,7 +40,20 @@ export function BulkAdmissionConfigurationFields({
   change,
 }: Props) {
   const { values, errors, touched } = formik;
-  const profiles = useGetAdmissionIntakeProfilesQuery();
+  const setups = useGetAdmissionIntakeSetupsQuery();
+  const startsWithInquiry = values.entryMode !== 1;
+  const selectedSetup = findSelectedIntakeSetup(
+    setups.data ?? [],
+    values.inquiryIntakeProfileId,
+    values.counsellorAssignmentProfileId,
+    startsWithInquiry
+  );
+  const legacySelection = hasLegacyIntakeSelection(
+    selectedSetup,
+    values.inquiryIntakeProfileId,
+    values.counsellorAssignmentProfileId,
+    startsWithInquiry
+  );
   return (
     <Grid container spacing={1.5}>
       <Grid size={{ xs: 12, sm: 4 }}>
@@ -46,9 +64,7 @@ export function BulkAdmissionConfigurationFields({
           {...formik.getFieldProps('codePrefix')}
           onChange={(event) => change('codePrefix', event.target.value)}
           error={touched.codePrefix && Boolean(errors.codePrefix)}
-          helperText={
-            touched.codePrefix ? errors.codePrefix : 'Codes are generated as PREFIX-STANDARD.'
-          }
+          helperText={touched.codePrefix ? errors.codePrefix : undefined}
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 4 }}>
@@ -70,7 +86,6 @@ export function BulkAdmissionConfigurationFields({
               change('inquiryIntakeProfileId', '');
             }
           }}
-          helperText="Each class may have one offering per track in the same cycle."
         />
       </Grid>
       <Grid size={{ xs: 12, sm: 4 }}>
@@ -92,9 +107,14 @@ export function BulkAdmissionConfigurationFields({
             if (entryMode === 1) {
               change('inquiryFormDefinitionId', '');
               change('inquiryIntakeProfileId', '');
+            } else if (!values.inquiryIntakeProfileId) {
+              const setup = (setups.data ?? []).find(
+                (item) =>
+                  item.counsellorAssignmentProfileId === values.counsellorAssignmentProfileId
+              );
+              if (setup) change('inquiryIntakeProfileId', setup.inquiryIntakeProfileId);
             }
           }}
-          helperText="The workflow controls the later admission steps."
         />
       </Grid>
       <Grid size={{ xs: 12, sm: values.entryMode !== 1 ? 4 : 6 }}>
@@ -104,11 +124,7 @@ export function BulkAdmissionConfigurationFields({
           fetchOptions={fetchWorkflows}
           onChange={(id) => change('workflowDefinitionId', id)}
           error={touched.workflowDefinitionId && Boolean(errors.workflowDefinitionId)}
-          helperText={
-            touched.workflowDefinitionId && errors.workflowDefinitionId
-              ? errors.workflowDefinitionId
-              : 'Required to activate.'
-          }
+          helperText={touched.workflowDefinitionId ? errors.workflowDefinitionId : undefined}
           noOptionsText="No published workflows found"
         />
       </Grid>
@@ -121,9 +137,7 @@ export function BulkAdmissionConfigurationFields({
             onChange={(id) => change('inquiryFormDefinitionId', id)}
             error={touched.inquiryFormDefinitionId && Boolean(errors.inquiryFormDefinitionId)}
             helperText={
-              touched.inquiryFormDefinitionId && errors.inquiryFormDefinitionId
-                ? errors.inquiryFormDefinitionId
-                : 'Required to activate.'
+              touched.inquiryFormDefinitionId ? errors.inquiryFormDefinitionId : undefined
             }
             noOptionsText="No published forms found"
           />
@@ -137,42 +151,49 @@ export function BulkAdmissionConfigurationFields({
           onChange={(id) => change('applicationFormDefinitionId', id)}
           error={touched.applicationFormDefinitionId && Boolean(errors.applicationFormDefinitionId)}
           helperText={
-            touched.applicationFormDefinitionId && errors.applicationFormDefinitionId
-              ? errors.applicationFormDefinitionId
-              : 'Required to activate.'
+            touched.applicationFormDefinitionId ? errors.applicationFormDefinitionId : undefined
           }
           noOptionsText="No published forms found"
         />
       </Grid>
-      {values.entryMode !== 1 && (
-        <Grid size={{ xs: 12, sm: 6 }}>
-          <CustomSelect
-            label="Inquiry setup"
-            value={values.inquiryIntakeProfileId}
-            options={(profiles.data ?? [])
-              .filter((profile) => profile.kind === 0)
-              .map((profile) => ({ value: profile.id, label: profile.name }))}
-            onChange={(id) => change('inquiryIntakeProfileId', id)}
-            helperText={
-              touched.inquiryIntakeProfileId && errors.inquiryIntakeProfileId
-                ? errors.inquiryIntakeProfileId
-                : 'Required to activate.'
-            }
-          />
-        </Grid>
-      )}
-      <Grid size={{ xs: 12, sm: 6 }}>
+      <Grid size={12}>
         <CustomSelect
-          label="Counsellor assignment"
-          value={values.counsellorAssignmentProfileId}
-          options={(profiles.data ?? [])
-            .filter((profile) => profile.kind === 1)
-            .map((profile) => ({ value: profile.id, label: profile.name }))}
-          onChange={(id) => change('counsellorAssignmentProfileId', id)}
+          label="Intake & assignment setup"
+          value={selectedSetup?.id ?? (legacySelection ? '__legacy__' : '')}
+          options={[
+            ...(legacySelection
+              ? [{ value: '__legacy__', label: 'Legacy profile selection' }]
+              : []),
+            ...(setups.data ?? []).map((setup) => ({ value: setup.id, label: setup.name })),
+          ]}
+          onChange={(id) => {
+            if (id === '__legacy__') return;
+            const setup = (setups.data ?? []).find((item) => item.id === id);
+            if (!setup) {
+              change('inquiryIntakeProfileId', '');
+              change('counsellorAssignmentProfileId', '');
+              return;
+            }
+            const selection = getIntakeSetupSelection(setup, startsWithInquiry);
+            change('inquiryIntakeProfileId', selection.inquiryIntakeProfileId ?? '');
+            change('counsellorAssignmentProfileId', selection.counsellorAssignmentProfileId);
+          }}
+          error={
+            (touched.inquiryIntakeProfileId && Boolean(errors.inquiryIntakeProfileId)) ||
+            (touched.counsellorAssignmentProfileId &&
+              Boolean(errors.counsellorAssignmentProfileId)) ||
+            setups.isError
+          }
           helperText={
-            touched.counsellorAssignmentProfileId && errors.counsellorAssignmentProfileId
-              ? errors.counsellorAssignmentProfileId
-              : 'Required to activate.'
+            setups.isError
+              ? 'Unable to load admission intake setups.'
+              : legacySelection
+                ? 'Legacy profiles are preserved until you choose a combined setup.'
+                : touched.inquiryIntakeProfileId || touched.counsellorAssignmentProfileId
+                  ? errors.inquiryIntakeProfileId || errors.counsellorAssignmentProfileId
+                  : startsWithInquiry
+                    ? 'Applies inquiry handling and counsellor routing together.'
+                    : 'Direct registration uses only this setup’s counsellor routing.'
           }
         />
       </Grid>
@@ -185,7 +206,6 @@ export function BulkAdmissionConfigurationFields({
           label="Admission window"
           value={values.useCycleDates ? 'cycle' : 'custom'}
           onChange={(value) => change('useCycleDates', value === 'cycle')}
-          helperText="Custom dates must remain inside the selected cycle."
         />
       </Grid>
       {!values.useCycleDates && (
@@ -228,12 +248,6 @@ export function BulkAdmissionConfigurationFields({
           </Grid>
         </>
       )}
-      <Grid size={12}>
-        <Typography variant="caption" color="text.secondary">
-          Preview checks whether each Offering can be saved inactive and whether it is ready to
-          activate.
-        </Typography>
-      </Grid>
     </Grid>
   );
 }

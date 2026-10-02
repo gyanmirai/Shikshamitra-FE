@@ -54,14 +54,13 @@ export function createWorkflowColumns(
       id: 'name',
       label: 'Workflow',
       width: 300,
-      maxWidth: 300,
+      minWidth: 250,
       sticky: true,
       stickyPosition: 'left',
       stickyOnMobile: false,
       isFilter: false,
-      render: (value, row) => <AdmissionTableText text={String(value ?? '')} secondary={(row as AdmissionWorkflow).description || 'No description'} strong />,
+      render: (value, row) => <AdmissionTableText text={String(value ?? '')} strong />,
     },
-    { id: 'code', label: 'Code', minWidth: 250, isFilter: false, render: (value) => <AdmissionTableText text={String(value ?? '')} /> },
     { id: 'version', label: 'Version', minWidth: 90, align: 'center', isFilter: false },
     {
       id: 'offeringCount',
@@ -77,7 +76,12 @@ export function createWorkflowColumns(
       isFilter: false,
       render: (value, row) => {
         const date = (value as string | null) || (row as AdmissionWorkflow).creationTime;
-        return <AdmissionTableText text={formatWorkflowListDate(date)} tooltip={formatWorkflowDateTime(date)} />;
+        return (
+          <AdmissionTableText
+            text={formatWorkflowListDate(date)}
+            tooltip={formatWorkflowDateTime(date)}
+          />
+        );
       },
     },
     {
@@ -85,7 +89,12 @@ export function createWorkflowColumns(
       label: 'Published at',
       minWidth: 170,
       isFilter: false,
-      render: (value) => <AdmissionTableText text={formatWorkflowListDate(value as string | null)} tooltip={formatWorkflowDateTime(value as string | null)} />,
+      render: (value) => (
+        <AdmissionTableText
+          text={formatWorkflowListDate(value as string | null)}
+          tooltip={formatWorkflowDateTime(value as string | null)}
+        />
+      ),
     },
     {
       id: 'status',
@@ -106,7 +115,7 @@ export function createWorkflowColumns(
       minWidth: 150,
       headerSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
       cellSx: { width: { xs: 76, sm: 160 }, minWidth: { xs: 76, sm: 150 } },
-      align: 'right',
+      align: 'left',
       sticky: true,
       stickyPosition: 'right',
       isSort: false,

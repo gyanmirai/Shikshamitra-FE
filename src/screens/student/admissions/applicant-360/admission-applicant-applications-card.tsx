@@ -19,6 +19,7 @@ import { formatAdmissionReference } from '../admission-reference';
 import AdmissionApplicantNotes from '../admission-applicant-notes';
 import { AdmissionApplicantStartCard } from './admission-applicant-start-card';
 import { AdmissionApplicantEssentials } from './admission-applicant-profile-card';
+import AdmissionFeeSelectionPanel from '../fee-selection/admission-fee-selection-panel';
 import { ADMISSION_APPLICATION_PERMISSIONS } from '../admission-application-permissions';
 import {
   getAdmissionApplicationStatusColor,
@@ -127,6 +128,9 @@ export function AdmissionApplicantApplicationsCard({
           <Divider />
           <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
             <AdmissionApplicantEssentials data={data} />
+          </Box>
+          <Box sx={{ px: { xs: 1.5, sm: 2 }, pb: 2 }}>
+            <AdmissionFeeSelectionPanel key={application.id} applicationId={application.id} />
           </Box>
           <Divider />
           <Stack spacing={1} sx={{ p: { xs: 1, sm: 1.5 } }}>
@@ -506,7 +510,8 @@ function ApplicationInformation({
     },
     {
       label: 'Journey counsellor',
-      value: application.assignedCounsellorName ||
+      value:
+        application.assignedCounsellorName ||
         (application.assignedCounsellorId ? 'Assigned counsellor' : 'Not assigned'),
     },
     {

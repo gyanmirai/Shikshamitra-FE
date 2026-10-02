@@ -1,321 +1,169 @@
 'use client';
 
-import React, { useState } from 'react';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import CommonReport from 'src/components/common-report';
-import CustomTooltip from 'src/components/custom-tooltip';
-import sortQueryString from 'src/utils/sort-query-string';
+import dayjs from 'dayjs';
+import { Label } from 'src/components/label';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { StudentRecordsReportTitle } from 'src/enums/studentRecordsReports';
-import { Box, Chip, Stack, Button, IconButton, Typography } from '@mui/material';
-import StudentRecordsReportForm from 'src/screens/student/reports/components/StudentRecordsReportForm';
+import { Box, Paper, Stack, Alert, Button, TextField, LinearProgress } from '@mui/material';
+import { useGetAttendanceRegisterQuery } from 'src/redux/student/attendance-management/api';
+import {
+  attendanceError,
+  isAttendanceRange,
+  attendancePercentage,
+} from 'src/redux/student/attendance-management/types';
 
 import { AttendanceAiReportButton } from './components/AttendanceAiReportButton';
+import { useAttendanceContext, AttendanceClassFilters } from '../setting/attendance-context';
 
-const AttendanceReportScreen = () => {
-  const openGenerateReport = useBoolean();
-  const [query, setQuery] = useState({
-    sorting: '',
-    skipCount: 0,
-    maxResultCount: 10,
-  });
+export default function AttendanceReportScreen() {
+  const context = useAttendanceContext();
+  const startDate = context.params.get('from') || dayjs().startOf('month').format('YYYY-MM-DD');
+  const endDate = context.params.get('to') || dayjs().format('YYYY-MM-DD');
+  const page = Math.max(0, Number(context.params.get('page')) || 0);
+  const valid = isAttendanceRange(startDate, endDate);
+  const query = useGetAttendanceRegisterQuery(
+    {
+      academicYearId: context.currentYear?.id ?? '',
+      standardId: context.standardId || undefined,
+      divisionId: context.divisionId || undefined,
+      startDate,
+      endDate,
+      skipCount: page * 50,
+      maxResultCount: 50,
+    },
+    { skip: !context.currentYear?.id || !valid }
+  );
+  const rows = (query.currentData?.rows ?? []).map((row) => ({
+    ...row,
+    percentageLabel: attendancePercentage(row.percentage),
+    completion: `${row.recordedDays}/${row.expectedDays}`,
+    calculationState: row.isProvisional
+      ? 'Provisional'
+      : row.expectedDays === 0
+        ? 'Not expected'
+        : 'Complete',
+    targetState:
+      row.isBelowThreshold === true
+        ? 'Below school target'
+        : row.isBelowThreshold === false && row.percentage != null
+          ? 'Meets school target'
+          : '—',
+  }));
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
-        heading="Reports"
-        description="Generate and filter attendance reports by class, division, date range, and other criteria."
+        heading="Attendance Reports"
+        description="Review attendance credit and recording completeness for eligible school days. Provisional percentages exclude unmarked days."
         links={[
-          { name: 'Student', href: '/student/dashboard/' },
-          { name: 'Attendance', href: '/student/dashboard/' },
+          { name: 'Student', href: '/student/dashboard' },
+          { name: 'Attendance', href: '/student/attendance/take-attendance' },
           { name: 'Reports' },
         ]}
-        isBack={openGenerateReport.value}
-        onBack={openGenerateReport.onFalse}
-        action={
-          <Stack direction="row" spacing={1}>
-            <AttendanceAiReportButton />
-            <Button
-              variant="contained"
-              size="small"
-              onClick={openGenerateReport.onTrue}
-              startIcon={<Iconify icon={GlobalIcons.report} />}
-            >
-              Generate Report
-            </Button>
-          </Stack>
-        }
+        action={<AttendanceAiReportButton />}
       />
-      {openGenerateReport.value ? (
-        <CommonReport
-          categories={[
-            {
-              name: 'Daily',
-              id: 'Daily',
-              icon: 'solar:calendar-outline',
-            },
-            {
-              name: 'Monthly',
-              id: 'Monthly',
-              icon: 'solar:calendar-mark-outline',
-            },
-            {
-              name: 'Student-Specific',
-              id: 'Student-Specific',
-              icon: 'mdi:account-student',
-            },
-          ]}
-          subCategories={[
-            // Daily Reports
-            {
-              name: 'Daily Strength & Gender Summary',
-              id: 'daily-gender-summary',
-              icon: '',
-              render: () => (
-                <StudentRecordsReportForm
-                  report={StudentRecordsReportTitle.DailyStrengthGenderWiseSummary}
-                />
-              ),
-              description: 'View daily strength summary by gender',
-              categoryId: 'Daily',
-            },
-            {
-              name: 'Daily Strength & Attendance',
-              id: 'daily-attendance-summary',
-              icon: '',
-              render: () => (
-                <StudentRecordsReportForm
-                  report={StudentRecordsReportTitle.DailyStrengthAttendanceSummary}
-                />
-              ),
-              description: 'View daily attendance and strength summary',
-              categoryId: 'Daily',
-            },
-
-            // Monthly Reports
-            {
-              name: 'Monthly Attendance Summary',
-              id: 'monthly-attendance-summary',
-              icon: '',
-              render: () => (
-                <StudentRecordsReportForm
-                  report={StudentRecordsReportTitle.MonthlyAttendanceSummary}
-                />
-              ),
-              description: 'View attendance percentage for each class during a month',
-              categoryId: 'Monthly',
-            },
-            {
-              name: 'Monthly Attendance Register',
-              id: 'monthly-attendance-register',
-              icon: '',
-              render: () => (
-                <StudentRecordsReportForm
-                  report={StudentRecordsReportTitle.MonthlyAttendanceRegister}
-                />
-              ),
-              description: 'Generate month-wise attendance register',
-              categoryId: 'Monthly',
-            },
-            {
-              name: 'Monthly Strength Report',
-              id: 'monthly-strength-report',
-              icon: '',
-              render: () => (
-                <StudentRecordsReportForm
-                  report={StudentRecordsReportTitle.MonthlyStrengthSummary}
-                />
-              ),
-              description: 'Analyze attendance strength over a selected month',
-              categoryId: 'Monthly',
-            },
-
-            // Student-Specific Reports
-            {
-              name: 'Student Absent Days Report',
-              id: 'student-absent-days',
-              icon: '',
-              render: () => (
-                <StudentRecordsReportForm
-                  report={StudentRecordsReportTitle.StudentAbsentDaysReport}
-                />
-              ),
-              description: 'View student-wise absent days',
-              categoryId: 'Student-Specific',
-            },
-            {
-              name: 'Absent Days Report (Date Range)',
-              id: 'absent-days-date-range',
-              icon: '',
-              render: () => (
-                <StudentRecordsReportForm
-                  report={StudentRecordsReportTitle.AbsentDaysReportDateRange}
-                />
-              ),
-              description: 'View absent days with custom date range',
-              categoryId: 'Student-Specific',
-            },
-            {
-              name: 'Monthly Strength Report (Date Range)',
-              id: 'monthly-strength-date-range',
-              icon: '',
-              render: () => (
-                <StudentRecordsReportForm
-                  report={StudentRecordsReportTitle.MonthlyStrengthReportDateRange}
-                />
-              ),
-              description: 'View monthly strength with custom date range',
-              categoryId: 'Student-Specific',
-            },
-          ]}
-        />
-      ) : (
-        <CustomizableTable
-          tableTitle="Attendance Reports"
-          tableId="attendance-reports"
-          columns={[
-            {
-              label: 'Report Name',
-              id: 'reportName',
-              minWidth: '150px',
-              align: 'left',
-              sticky: true,
-              render(value, row) {
-                return (
-                  <CustomTooltip title={row.reportName} arrow sx={{ textAlign: 'justify' }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontSize: '13px',
-                        display: 'block',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        maxWidth: '12vw',
-                      }}
-                    >
-                      {row.reportName}
-                    </Typography>
-                  </CustomTooltip>
-                );
-              },
-            },
-            { label: 'Report Category', id: 'reportCategory', minWidth: '10vw', align: 'left' },
-            {
-              label: 'Report Description',
-              id: 'reportDescription',
-              minWidth: '12vw',
-              align: 'left',
-              render(value, row) {
-                return (
-                  <CustomTooltip title={row.reportDescription} arrow sx={{ textAlign: 'justify' }}>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        fontSize: '13px',
-                        display: 'block',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                        maxWidth: '12vw',
-                      }}
-                    >
-                      {row.reportDescription}
-                    </Typography>
-                  </CustomTooltip>
-                );
-              },
-            },
-            {
-              label: 'Generate Report Date',
-              id: 'generateReportDate',
-              minWidth: '13vw',
-              align: 'left',
-            },
-            {
-              label: 'Applied Filters',
-              id: 'appliedFilters',
-              minWidth: '400px',
-              align: 'left',
-              render(value, row) {
-                return (
-                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                    {row.appliedFilters.map((filter: any) => (
-                      <Chip
-                        size="small"
-                        variant="soft"
-                        key={filter.name}
-                        label={`${filter.name}: ${filter.value}`}
-                      />
-                    ))}
-                  </Box>
-                );
-              },
-            },
-            {
-              label: ' Action',
-              id: 'reportAction',
-              minWidth: '5vw',
-              align: 'left',
-              isFilter: false,
-              isSort: false,
-              sticky: true,
-              render(value, row) {
-                return (
-                  <IconButton size="small" onClick={() => {}}>
-                    <Iconify icon={GlobalIcons.report} />
-                  </IconButton>
-                );
-              },
-            },
-          ]}
-          data={[
-            {
-              reportName: 'Daily Strength & Gender Summary',
-              reportCategory: 'Daily',
-              reportDescription: 'View daily strength summary by gender',
-              generateReportDate: '2025-12-02',
-              appliedFilters: [
-                { name: 'Organization', value: 'Primary' },
-                { name: 'Class', value: 'All' },
-                { name: 'Gender', value: 'Male | Female' },
-              ],
-              reportAction: 'View',
-            },
-            {
-              reportName: 'Student Absent Days',
-              reportCategory: 'Student-Specific',
-              reportDescription: 'View student-wise absent days',
-              generateReportDate: '2025-12-01',
-              appliedFilters: [
-                { name: 'Organization', value: 'Primary' },
-                { name: 'Class', value: 'Class 10' },
-                { name: 'Division', value: 'A' },
-                { name: 'Roll No', value: '25' },
-              ],
-              reportAction: 'View',
-            },
-          ]}
-          serverSide
-          onServerSort={(column, sortData) => {
-            setQuery((prev) => ({
-              ...prev,
-              sorting: sortQueryString(sortData),
-            }));
-          }}
-          onServerPagination={(page: number, rowsPerPage: number) => {
-            setQuery((prev) => ({
-              ...prev,
-              skipCount: page * rowsPerPage,
-              maxResultCount: rowsPerPage,
-            }));
-          }}
-        />
+      <AttendanceClassFilters context={context} />
+      <Paper variant="outlined" sx={{ p: 1 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+          <TextField
+            fullWidth
+            size="small"
+            type="date"
+            label="From"
+            slotProps={{ inputLabel: { shrink: true } }}
+            value={startDate}
+            onChange={(event) => context.update({ from: event.target.value, page: undefined })}
+          />
+          <TextField
+            fullWidth
+            size="small"
+            type="date"
+            label="To"
+            slotProps={{ inputLabel: { shrink: true } }}
+            value={endDate}
+            onChange={(event) => context.update({ to: event.target.value, page: undefined })}
+          />
+        </Stack>
+      </Paper>
+      {!context.currentYear?.id && (
+        <Alert severity="info">Select an academic year to view attendance.</Alert>
       )}
+      {!valid && <Alert severity="warning">Select a valid date range with From before To.</Alert>}
+      {query.isError && (
+        <Alert severity="error" action={<Button onClick={() => query.refetch()}>Retry</Button>}>
+          {attendanceError(query.error, 'Attendance report could not be loaded.')}
+        </Alert>
+      )}
+      {query.isFetching && !query.isLoading && (
+        <LinearProgress aria-label="Refreshing attendance register" />
+      )}
+      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <CustomizableTable
+          tableId="attendance-canonical-register"
+          tableTitle="Eligible attendance register"
+          exportLabel="Attendance register (current page)"
+          wrapperProps={{ sx: { height: 1 } }}
+          tableContainerProps={{ sx: { height: 1 } }}
+          data={rows}
+          isLoading={query.isLoading}
+          noDataText="No eligible students match this date range and class scope."
+          serverSidePagination
+          isSearch={false}
+          isFilter={false}
+          page={page}
+          rowsPerPage={50}
+          rowsPerPageOptions={[50]}
+          totalCount={query.currentData?.totalCount ?? 0}
+          onServerPagination={(nextPage) =>
+            context.update({ page: String(Math.max(0, nextPage - 1)) })
+          }
+          columns={[
+            { id: 'rollNo', label: 'Roll no.', filterType: 'number' },
+            { id: 'fullName', label: 'Student', minWidth: 200, filterType: 'string' },
+            { id: 'expectedDays', label: 'Expected days', filterType: 'number' },
+            { id: 'recordedDays', label: 'Recorded days', filterType: 'number' },
+            { id: 'missingDays', label: 'Unmarked days', filterType: 'number' },
+            { id: 'presentCredit', label: 'Present credit', filterType: 'number' },
+            { id: 'percentageLabel', label: 'Attendance', isFilter: false },
+            { id: 'completion', label: 'Completion', isFilter: false },
+            {
+              id: 'targetState',
+              label: 'School target',
+              isSort: false,
+              isFilter: false,
+              render: (value, row) => (
+                <Label
+                  color={row.isBelowThreshold === true ? 'warning' : 'default'}
+                  title={
+                    row.lowAttendanceThreshold == null
+                      ? undefined
+                      : `School attendance target: ${row.lowAttendanceThreshold}%`
+                  }
+                >
+                  {value}
+                </Label>
+              ),
+            },
+            {
+              id: 'calculationState',
+              label: 'State',
+              sticky: true,
+              render: (value) => (
+                <Label
+                  color={
+                    value === 'Provisional'
+                      ? 'warning'
+                      : value === 'Complete'
+                        ? 'success'
+                        : 'default'
+                  }
+                >
+                  {value}
+                </Label>
+              ),
+            },
+          ]}
+        />
+      </Box>
     </Box>
   );
-};
-
-export default AttendanceReportScreen;
+}

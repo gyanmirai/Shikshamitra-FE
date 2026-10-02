@@ -4,7 +4,6 @@ import type { CreateUpdateAdmissionWorkflow } from 'src/redux/student/admissions
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -12,6 +11,7 @@ import { useResponsive } from 'src/hooks/use-responsive';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import {
   Box,
   Stack,
@@ -52,7 +52,6 @@ type Props = {
   initialValues?: WorkflowDetails;
   submitLabel?: string;
   showStarterJourney?: boolean;
-  autoGenerateCode?: boolean;
   closeOnSave?: boolean;
   fetchInquiryForms?: AdmissionDefinitionFetcher;
   fetchRegistrationForms?: AdmissionDefinitionFetcher;
@@ -64,12 +63,6 @@ const schema = Yup.object({
     .trim()
     .max(128, 'Use 128 characters or fewer')
     .required('Workflow name is required'),
-  code: Yup.string()
-    .trim()
-    .uppercase()
-    .matches(/^[A-Z][A-Z0-9_-]*$/, 'Use uppercase letters, numbers, hyphens, or underscores')
-    .max(64, 'Use 64 characters or fewer')
-    .required('Workflow code is required'),
   description: Yup.string().trim().max(1024, 'Use 1,024 characters or fewer'),
   defaultInquiryFormDefinitionId: Yup.string().nullable(),
   registrationFormDefinitionId: Yup.string()
@@ -91,15 +84,6 @@ const EMPTY_VALUES: WorkflowDetails = {
 };
 
 const noFormOptions: AdmissionDefinitionFetcher = async () => ({ data: [], hasMore: false });
-
-const toWorkflowCode = (name: string) => {
-  const code = name
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '');
-  return (code && !/^[A-Z]/.test(code) ? `WF_${code}` : code).slice(0, 64);
-};
 
 type WorkflowStarterDefinition = NonNullable<ReturnType<typeof getWorkflowStarterDefinition>>;
 
@@ -192,7 +176,6 @@ export function AdmissionWorkflowDialog({
   submitLabel = 'Create draft',
   initialValues = EMPTY_VALUES,
   showStarterJourney = false,
-  autoGenerateCode = false,
   closeOnSave = true,
   fetchInquiryForms = noFormOptions,
   fetchRegistrationForms = noFormOptions,
@@ -202,7 +185,6 @@ export function AdmissionWorkflowDialog({
   const previewOpen = useBoolean(false);
   const descriptionOpen = useBoolean(false);
   const isMobile = useResponsive('down', 'sm');
-  const [codeManuallyEdited, setCodeManuallyEdited] = useState(Boolean(initialValues.code));
   const formik = useFormik<WorkflowDetails>({
     enableReinitialize: true,
     initialValues,
@@ -226,10 +208,6 @@ export function AdmissionWorkflowDialog({
       }
     },
   });
-
-  useEffect(() => {
-    if (open) setCodeManuallyEdited(Boolean(initialValues.code));
-  }, [initialValues.code, open]);
 
   const close = () => {
     discard.onFalse();
@@ -298,16 +276,27 @@ export function AdmissionWorkflowDialog({
         <Box
           component="form"
           onSubmit={formik.handleSubmit}
-          sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 2, sm: 2.5 } }}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            bgcolor: 'background.neutral',
+            p: { xs: 1.5, sm: 2 },
+          }}
         >
           <Stack spacing={2}>
-            <Stack spacing={1.5}>
-              {!showStarterJourney && <Typography variant="subtitle2">Workflow details</Typography>}
+            <FormSectionCard
+              icon="mdi:clipboard-text-outline"
+              title="Workflow details"
+              titleTypographyProps={{
+                sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+              }}
+            >
               <Box
                 sx={{
                   display: 'grid',
                   gap: 1.5,
-                  gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
+                  gridTemplateColumns: 'minmax(0, 1fr)',
                 }}
               >
                 <ShakingTextField error={Boolean(formik.touched.name && formik.errors.name)}>
@@ -318,30 +307,8 @@ export function AdmissionWorkflowDialog({
                     label="Workflow name *"
                     placeholder="For example, Fresh Admission"
                     {...formik.getFieldProps('name')}
-                    onChange={(event) => {
-                      const { value } = event.target;
-                      formik.setFieldValue('name', value);
-                      if (autoGenerateCode && !codeManuallyEdited) {
-                        formik.setFieldValue('code', toWorkflowCode(value));
-                      }
-                    }}
                     error={Boolean(formik.touched.name && formik.errors.name)}
                     helperText={formik.touched.name && formik.errors.name}
-                  />
-                </ShakingTextField>
-                <ShakingTextField error={Boolean(formik.touched.code && formik.errors.code)}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    label="Workflow code *"
-                    placeholder="WF-001"
-                    {...formik.getFieldProps('code')}
-                    onChange={(event) => {
-                      setCodeManuallyEdited(true);
-                      formik.setFieldValue('code', event.target.value.toUpperCase());
-                    }}
-                    error={Boolean(formik.touched.code && formik.errors.code)}
-                    helperText={formik.touched.code && formik.errors.code}
                   />
                 </ShakingTextField>
               </Box>
@@ -362,65 +329,75 @@ export function AdmissionWorkflowDialog({
                   />
                 </ShakingTextField>
               )}
-            </Stack>
-            {showStarterJourney && (
-              <>
-                <Divider />
-                <Stack spacing={1.5}>
-                  <Typography variant="subtitle2">Published forms</Typography>
-                  <Box
-                    sx={{
-                      display: 'grid',
-                      gap: 1.5,
-                      gridTemplateColumns: {
-                        xs: 'minmax(0, 1fr)',
-                        sm: 'repeat(2, minmax(0, 1fr))',
-                      },
-                    }}
-                  >
-                    {formik.values.starterJourney !== 'empty' ? (
-                      <ShakingTextField
-                        error={Boolean(
-                          formik.touched.registrationFormDefinitionId &&
-                          formik.errors.registrationFormDefinitionId
-                        )}
-                      >
-                        <AdmissionDefinitionSelect
-                          label="Registration form *"
-                          valueId={formik.values.registrationFormDefinitionId ?? null}
-                          fetchOptions={fetchRegistrationForms}
-                          onChange={(id) =>
-                            formik.setFieldValue('registrationFormDefinitionId', id)
-                          }
-                          noOptionsText="No published registration forms found"
+              {showStarterJourney && (
+                <>
+                  <Divider />
+                  <Stack spacing={1.5}>
+                    <Typography variant="subtitle2">Published forms</Typography>
+                    <Box
+                      sx={{
+                        display: 'grid',
+                        gap: 1.5,
+                        gridTemplateColumns: {
+                          xs: 'minmax(0, 1fr)',
+                          sm: 'repeat(2, minmax(0, 1fr))',
+                        },
+                      }}
+                    >
+                      {formik.values.starterJourney !== 'empty' ? (
+                        <ShakingTextField
                           error={Boolean(
                             formik.touched.registrationFormDefinitionId &&
                             formik.errors.registrationFormDefinitionId
                           )}
-                          helperText={
-                            formik.touched.registrationFormDefinitionId &&
-                            formik.errors.registrationFormDefinitionId
-                          }
-                        />
-                      </ShakingTextField>
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        A blank workflow can attach a registration form after its Form stage is
-                        added.
-                      </Typography>
-                    )}
-                    <AdmissionDefinitionSelect
-                      label="Inquiry form (optional)"
-                      valueId={formik.values.defaultInquiryFormDefinitionId ?? null}
-                      fetchOptions={fetchInquiryForms}
-                      onChange={(id) => formik.setFieldValue('defaultInquiryFormDefinitionId', id)}
-                      noOptionsText="No published inquiry forms found"
-                    />
-                  </Box>
-                </Stack>
-                <Divider />
+                        >
+                          <AdmissionDefinitionSelect
+                            label="Registration form *"
+                            valueId={formik.values.registrationFormDefinitionId ?? null}
+                            fetchOptions={fetchRegistrationForms}
+                            onChange={(id) =>
+                              formik.setFieldValue('registrationFormDefinitionId', id)
+                            }
+                            noOptionsText="No published registration forms found"
+                            error={Boolean(
+                              formik.touched.registrationFormDefinitionId &&
+                              formik.errors.registrationFormDefinitionId
+                            )}
+                            helperText={
+                              formik.touched.registrationFormDefinitionId &&
+                              formik.errors.registrationFormDefinitionId
+                            }
+                          />
+                        </ShakingTextField>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          A blank workflow can attach a registration form after its Form stage is
+                          added.
+                        </Typography>
+                      )}
+                      <AdmissionDefinitionSelect
+                        label="Inquiry form (optional)"
+                        valueId={formik.values.defaultInquiryFormDefinitionId ?? null}
+                        fetchOptions={fetchInquiryForms}
+                        onChange={(id) =>
+                          formik.setFieldValue('defaultInquiryFormDefinitionId', id)
+                        }
+                        noOptionsText="No published inquiry forms found"
+                      />
+                    </Box>
+                  </Stack>
+                </>
+              )}
+            </FormSectionCard>
+            {showStarterJourney && (
+              <FormSectionCard
+                icon="mdi:sitemap-outline"
+                title="Choose a workflow template"
+                titleTypographyProps={{
+                  sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+                }}
+              >
                 <Stack spacing={1.5}>
-                  <Typography variant="subtitle2">Choose a workflow template</Typography>
                   <WorkflowTemplateSelector
                     includeBlank
                     columns={1}
@@ -454,7 +431,7 @@ export function AdmissionWorkflowDialog({
                     </AccordionDetails>
                   </Accordion>
                 </Stack>
-              </>
+              </FormSectionCard>
             )}
           </Stack>
         </Box>

@@ -4,8 +4,8 @@ import { vi, it, expect, describe } from 'vitest';
 
 import { inquiryWorkState } from './admission-inquiry-work-state';
 import {
+  getAdmissionInquiryActions,
   buildAdmissionInquiryColumns,
-  getAdmissionInquiryActionPlan,
 } from './admission-inquiry-columns';
 
 const columnOptions = {
@@ -89,26 +89,44 @@ describe('admission inquiry columns', () => {
     expect(columns.find((column) => column.id === 'inquiryNumber')).toMatchObject({
       sticky: true,
       stickyPosition: 'left',
+      stickyOnMobile: false,
     });
     expect(columns.find((column) => column.id === 'applicantName')).toMatchObject({
       sticky: true,
       stickyPosition: 'left',
+      stickyOnMobile: false,
     });
     expect(columns.slice(-2).map((column) => column.id)).toEqual(['status', 'actions']);
     expect(columns.slice(-2).every((column) => column.stickyPosition === 'right')).toBe(true);
+    expect(columns.find((column) => column.id === 'status')?.stickyOnMobile).toBe(false);
+    expect(columns.find((column) => column.id === 'actions')?.stickyOnMobile).not.toBe(false);
     expect(columns.find((column) => column.id === 'actions')).toMatchObject({
       width: 152,
       maxWidth: 152,
     });
   });
 
-  it('keeps three actions visible and places remaining actions in more', () => {
-    const plan = getAdmissionInquiryActionPlan(
+  it('supplies every permitted action in the existing order', () => {
+    const actions = getAdmissionInquiryActions(
       inquiry({ applicantId: 'applicant-1', admissionOfferingId: 'offering-1', status: 0 }),
       columnOptions
     );
 
-    expect(plan.direct).toEqual(['applicant360', 'manage', 'assign']);
-    expect(plan.overflow).toEqual(['communicate', 'markContacted']);
+    expect(actions.map((action) => action.id)).toEqual([
+      'applicant360',
+      'manage',
+      'assign',
+      'communicate',
+      'markContacted',
+    ]);
+  });
+
+  it('omits unavailable assignment and contact actions', () => {
+    const actions = getAdmissionInquiryActions(inquiry({ applicantId: 'applicant-1', status: 2 }), {
+      ...columnOptions,
+      canAssign: false,
+    });
+
+    expect(actions.map((action) => action.id)).toEqual(['applicant360', 'manage', 'communicate']);
   });
 });

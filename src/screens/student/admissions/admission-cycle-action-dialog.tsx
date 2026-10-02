@@ -11,9 +11,11 @@ import {
   Box,
   Alert,
   Stack,
+  Button,
   Checkbox,
   TextField,
   Typography,
+  CircularProgress,
   FormControlLabel,
 } from '@mui/material';
 import {
@@ -64,18 +66,37 @@ export function AdmissionCycleActionDialog({
   const [reason, setReason] = useState('');
   const [newEndDate, setNewEndDate] = useState('');
   const [confirmOfferings, setConfirmOfferings] = useState(false);
-  const [loadImpact, { data: impact, isFetching: impactLoading }] =
-    useLazyGetAdmissionCycleImpactQuery();
+  const [dismissedNotices, setDismissedNotices] = useState<Set<string>>(new Set());
+  const [loadImpact, impactQuery] = useLazyGetAdmissionCycleImpactQuery();
 
   useEffect(() => {
     setReason('');
     setNewEndDate(cycle?.endDate?.slice(0, 10) ?? '');
     setConfirmOfferings(false);
+    setDismissedNotices(new Set());
     if (cycle && action && action !== 'publish') loadImpact(cycle.id);
   }, [action, cycle, loadImpact]);
 
   if (!action || !cycle) return null;
 
+  const needsImpact = action !== 'publish';
+  const impactError =
+    needsImpact &&
+    impactQuery.originalArgs === cycle.id &&
+    (impactQuery.isError ||
+      Boolean(
+        impactQuery.data &&
+        !impactQuery.isFetching &&
+        impactQuery.data.admissionCycleId !== cycle.id
+      ));
+  const impactReady =
+    needsImpact &&
+    impactQuery.originalArgs === cycle.id &&
+    impactQuery.data?.admissionCycleId === cycle.id &&
+    !impactQuery.isFetching &&
+    !impactError;
+  const impactPending = needsImpact && !impactReady && !impactError;
+  const impact = impactReady ? impactQuery.data : null;
   const needsReason = action === 'close' || action === 'reopen' || action === 'archive';
   const hasBlockingValidation = action === 'publish' && Boolean(validation?.errors.length);
   const needsOfferingConfirmation = action === 'close' && Boolean(impact?.activeOfferingCount);
@@ -85,7 +106,8 @@ export function AdmissionCycleActionDialog({
     Boolean((impact?.linkedOfferingCount ?? 0) > 0 || (impact?.applicationCount ?? 0) > 0);
   const disabled =
     busy ||
-    impactLoading ||
+    impactPending ||
+    impactError ||
     hasBlockingValidation ||
     cannotArchive ||
     cannotDelete ||
@@ -109,23 +131,46 @@ export function AdmissionCycleActionDialog({
       disableBackdropClick
       disableEscapeKeyDown={busy}
       disableCancel={busy}
-      icon={action === 'delete' ? 'error' : action === 'publish' || action === 'reopen' ? 'info' : 'warning'}
+      icon={
+        action === 'delete'
+          ? 'error'
+          : action === 'publish' || action === 'reopen'
+            ? 'info'
+            : 'warning'
+      }
       title={titles[action]}
       content={
         <Stack spacing={1.5}>
           {action === 'delete' ? (
-            <>
-              <Typography variant="body2">
-                Are you sure you want to delete the admission cycle &lsquo;{cycle.name} ({cycle.code})&rsquo;?
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                This action cannot be undone.
-              </Typography>
-            </>
-          ) : (
+            <Typography variant="body2">
+              The draft admission cycle <strong>&ldquo;{cycle.name}&rdquo;</strong> will be
+              permanently deleted.
+            </Typography>
+          ) : action !== 'publish' ? (
             <Typography variant="body2">
               <strong>{cycle.name}</strong> ({cycle.code})
             </Typography>
+          ) : null}
+
+          {impactPending && (
+            <Stack direction="row" spacing={1} alignItems="center" role="status" aria-live="polite">
+              <CircularProgress size={18} aria-label="Checking admission cycle" />
+              <Typography variant="body2" color="text.secondary">
+                Checking linked offerings and applications…
+              </Typography>
+            </Stack>
+          )}
+          {impactError && (
+            <Alert
+              severity="error"
+              action={
+                <Button color="inherit" size="small" onClick={() => loadImpact(cycle.id)}>
+                  Retry
+                </Button>
+              }
+            >
+              Could not check linked records. Retry before continuing.
+            </Alert>
           )}
 
           {action === 'publish' && (
@@ -135,20 +180,41 @@ export function AdmissionCycleActionDialog({
                 are accepted only during {dayjs(cycle.startDate).format('DD MMM YYYY')}–
                 {dayjs(cycle.endDate).format('DD MMM YYYY')}.
               </Typography>
-              {validation?.errors.map((issue) => (
+              {/* {validation?.errors.map((issue) => (
                 <Alert severity="error" key={issue.code}>
                   {issue.message}
                 </Alert>
               ))}
-              {validation?.warnings.map((issue) => (
-                <Alert severity="warning" key={issue.code}>
-                  {issue.message}
+              {validation?.warnings
+                .filter((issue) => !dismissedNotices.has(`warning:${issue.code}`))
+                .map((issue) => (
+                  <Alert
+                    severity="warning"
+                    key={issue.code}
+                    closeText="Dismiss publication warning"
+                    onClose={() =>
+                      setDismissedNotices((current) =>
+                        new Set(current).add(`warning:${issue.code}`)
+                      )
+                    }
+                  >
+                    {issue.message}
+                  </Alert>
+                ))}
+              {!validation && !dismissedNotices.has('readiness') && (
+                <Alert
+                  severity="info"
+                  closeText="Dismiss publication information"
+                  onClose={() =>
+                    setDismissedNotices((current) => new Set(current).add('readiness'))
+                  }
+                >
+                  Checking publication readiness…
                 </Alert>
-              ))}
-              {!validation && <Alert severity="info">Checking publication readiness…</Alert>}
+              )}
               {validation?.isValid && !validation.warnings.length && (
                 <Alert severity="success">This cycle is ready to publish.</Alert>
-              )}
+              )} */}
             </>
           )}
 
@@ -175,8 +241,12 @@ export function AdmissionCycleActionDialog({
             </Box>
           )}
 
-          {action === 'close' && (
-            <Alert severity="warning">
+          {action === 'close' && !dismissedNotices.has('closing') && (
+            <Alert
+              severity="warning"
+              closeText="Dismiss closing warning"
+              onClose={() => setDismissedNotices((current) => new Set(current).add('closing'))}
+            >
               New applications stop immediately. Existing applications remain available for review.
             </Alert>
           )}
@@ -234,7 +304,11 @@ export function AdmissionCycleActionDialog({
           variant="contained"
           size="small"
           color={
-            action === 'delete' || action === 'archive' || action === 'close' ? 'error' : 'primary'
+            action === 'publish'
+              ? 'inherit'
+              : action === 'delete' || action === 'archive' || action === 'close'
+                ? 'error'
+                : 'primary'
           }
           loading={busy}
           disabled={disabled}

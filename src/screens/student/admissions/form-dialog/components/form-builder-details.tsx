@@ -4,7 +4,8 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import { Box, Stack, Paper, Button, Typography } from '@mui/material';
+import { Box, Grid, Stack, Button, Typography } from '@mui/material';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { FormBuilderDetailFields } from './form-builder-detail-fields';
 import { getBlankAdmissionFormInitialValues } from '../form-dialog-model';
@@ -25,7 +26,7 @@ export function FormBuilderDetails({ formik, editing }: Props) {
       ? getBlankAdmissionFormInitialValues(formik.values.purpose)
       : getSystemAdmissionFormTemplate(starter);
   const applyStarter = (values: CreateUpdateAdmissionForm, starter: AdmissionFormStarter) => {
-    formik.setValues(values);
+    formik.setValues({ ...values, code: '' });
     formik.setTouched({});
     setSelectedStarter(starter);
     setPendingStarter(null);
@@ -37,52 +38,25 @@ export function FormBuilderDetails({ formik, editing }: Props) {
     else applyStarter(values, starter);
   };
   return (
-    <Stack sx={{ width: 1, maxWidth: 1180, mx: 'auto', p: { xs: 1.5, sm: 2.5 } }}>
-      <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: editing
-              ? 'minmax(0, 1fr)'
-              : { xs: 'minmax(0, 1fr)', md: 'minmax(280px, 0.42fr) minmax(0, 1fr)' },
-          }}
-        >
-          {!editing && (
-            <Box
-              component="aside"
-              aria-label="Form templates"
-              sx={{
-                p: { xs: 2, sm: 2.5 },
-                borderRight: { md: 1 },
-                borderBottom: { xs: 1, md: 0 },
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-              }}
-            >
-              <FormTemplateChooser selectedStarter={selectedStarter} onSelect={selectStarter} />
-            </Box>
-          )}
-          <Stack spacing={2.5} sx={{ p: { xs: 2, sm: 3 } }}>
-            <Box>
-              <Typography component="h2" variant="h6" tabIndex={-1}>
-                Form details
-              </Typography>
-            </Box>
-            <FormBuilderDetailFields formik={formik} />
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              sx={{ p: 1.5, borderRadius: 1.5, bgcolor: 'action.hover' }}
-            >
-              <Iconify icon="mdi:information-outline" width={20} />
-              <Typography variant="body2" color="text.secondary">
-                Saving a draft does not publish the form.
-              </Typography>
-            </Stack>
-          </Stack>
+    <Stack spacing={2} sx={{ width: 1, minWidth: 0, p: { xs: 1.5, sm: 2 } }}>
+      {!editing && (
+        <Box component="section" aria-label="Form templates">
+          <FormTemplateChooser selectedStarter={selectedStarter} onSelect={selectStarter} />
         </Box>
-      </Paper>
+      )}
+      <SectionCard gridProps={{ spacing: 0 }} paperProps={{ sx: { mb: 0, p: { xs: 2, sm: 2 } } }}>
+        <Grid size={{ xs: 12 }}>
+          <Typography
+            component="h2"
+            variant="h6"
+            tabIndex={-1}
+            sx={{ pb: 1, mb: 1.5, borderBottom: '1px dashed', borderColor: 'divider' }}
+          >
+            Form details
+          </Typography>
+          <FormBuilderDetailFields formik={formik} />
+        </Grid>
+      </SectionCard>
       <ConfirmDialog
         open={Boolean(pendingStarter)}
         onClose={() => setPendingStarter(null)}

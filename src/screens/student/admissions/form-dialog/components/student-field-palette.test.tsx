@@ -39,14 +39,25 @@ describe('StudentFieldPalette', () => {
   it('groups linked fields, marks used fields, and filters by group or name', async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
+    const onAddSection = vi.fn();
     render(
       <ThemeProvider theme={createTheme(defaultSettings)}>
-        <StudentFieldPalette fields={fields} usedBindings={['Applicant.FirstName']} onAdd={onAdd} />
+        <StudentFieldPalette
+          fields={fields}
+          usedBindings={['Applicant.FirstName']}
+          onAdd={onAdd}
+          onAddSection={onAddSection}
+        />
       </ThemeProvider>
     );
 
     expect(screen.getByText('2 available of 3 student fields')).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Health and support (1)' })).toBeVisible();
+    expect(screen.queryByRole('button', { name: 'Add Blood group' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Add Health and support section' }));
+    expect(onAddSection).toHaveBeenCalledWith('Health and support', [fields[1]]);
+    await user.click(screen.getByRole('button', { name: 'Health and support (1)' }));
+    await user.click(screen.getByRole('button', { name: 'Student profile (1)' }));
     expect(
       screen.getByRole('button', { name: 'Applicant first name already added' })
     ).toBeDisabled();
@@ -84,5 +95,54 @@ describe('StudentFieldPalette', () => {
     expect(screen.getByText('1 matching fields')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Add Student record 100' }));
     expect(onAdd).toHaveBeenCalledWith(fullCatalogue[99]);
+  });
+
+  it('adds the full category when the user clicks its plus after searching', async () => {
+    const user = userEvent.setup();
+    const onAddSection = vi.fn();
+    const healthFields = [
+      fields[1],
+      {
+        key: 'Medical.Allergies',
+        displayName: 'Allergies',
+        description: 'Student allergies',
+        fieldType: 0 as const,
+        readOnly: false,
+      },
+    ];
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentFieldPalette fields={healthFields} onAdd={vi.fn()} onAddSection={onAddSection} />
+      </ThemeProvider>
+    );
+
+    await user.type(screen.getByRole('textbox', { name: 'Search student fields' }), 'blood');
+    await user.click(screen.getByRole('button', { name: 'Add Health and support section' }));
+    expect(onAddSection).toHaveBeenCalledWith('Health and support', healthFields);
+    expect(screen.getByRole('textbox', { name: 'Search student fields' })).toHaveValue('');
+  });
+
+  it('shows distinct loading, error, and empty catalogue states', () => {
+    const { rerender } = render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentFieldPalette fields={[]} loading onAdd={vi.fn()} />
+      </ThemeProvider>
+    );
+    expect(screen.getByText('Loading student fields…')).toBeVisible();
+    expect(screen.getByRole('textbox', { name: 'Search student fields' })).toBeDisabled();
+
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentFieldPalette fields={[]} error onAdd={vi.fn()} />
+      </ThemeProvider>
+    );
+    expect(screen.getByText('Student fields unavailable')).toBeVisible();
+
+    rerender(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentFieldPalette fields={[]} onAdd={vi.fn()} />
+      </ThemeProvider>
+    );
+    expect(screen.getByText('No student fields available')).toBeVisible();
   });
 });

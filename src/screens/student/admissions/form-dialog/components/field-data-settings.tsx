@@ -1,4 +1,6 @@
 import Stack from '@mui/material/Stack';
+import Alert from '@mui/material/Alert';
+import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -9,7 +11,23 @@ import type { FieldSettingsProps } from '../types/field-settings';
 export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {
   const field = formik.values.sections[sectionIndex].fields[fieldIndex];
   const path = `sections[${sectionIndex}].fields[${fieldIndex}]`;
-  const { data: systemFields = [] } = useGetAdmissionFormSystemFieldsQuery();
+  const {
+    data: systemFields,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAdmissionFormSystemFieldsQuery();
+  const compatibleFields = (systemFields ?? []).filter(
+    (item) => item.fieldType === field.fieldType
+  );
+  const selectedField = (systemFields ?? []).find((item) => item.key === field.bindingKey);
+  const catalogueReady = systemFields !== undefined && !isLoading && !isError;
+  const invalidMapping = Boolean(
+    catalogueReady && field.bindingKey && selectedField?.fieldType !== field.fieldType
+  );
+  const retainedMapping = Boolean(
+    field.bindingKey && !compatibleFields.some((item) => item.key === field.bindingKey)
+  );
   const codeMeta = formik.getFieldMeta<string>(`${path}.code`);
   const codeError = Boolean(codeMeta.touched && codeMeta.error);
   return (
@@ -46,6 +64,13 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
               { value: 0, label: 'Student record' },
               { value: 1, label: 'This admission form only' },
             ]}
+            disabledValues={isLoading || isError || !compatibleFields.length ? [0] : []}
+            disabledLabel={isLoading || isError ? 'Fields unavailable' : 'No compatible field'}
+            helperText={
+              catalogueReady && !compatibleFields.length
+                ? 'No student record field supports this answer type. Save it in this admission form.'
+                : undefined
+            }
             onChange={(value) => {
               const nextBindingType = Number(value);
               formik.setFieldValue(`${path}.bindingType`, nextBindingType);
@@ -60,15 +85,49 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
               size="small"
               label="Student record field"
               value={field.bindingKey ?? ''}
-              options={systemFields.map((item) => ({ value: item.key, label: item.displayName }))}
-              helperText="The answer is linked to this field in the student record."
+              options={[
+                { value: '', label: 'Select a student record field' },
+                ...(retainedMapping
+                  ? [
+                      {
+                        value: field.bindingKey!,
+                        label: selectedField?.displayName ?? field.bindingKey!,
+                      },
+                    ]
+                  : []),
+                ...compatibleFields.map((item) => ({ value: item.key, label: item.displayName })),
+              ]}
+              disabledValues={retainedMapping ? [field.bindingKey!] : []}
+              disabledLabel="Choose another field"
+              isLoading={isLoading}
+              disabled={isError}
+              error={invalidMapping}
+              helperText={
+                invalidMapping
+                  ? selectedField
+                    ? 'The linked student record field does not match this answer type. Choose a compatible field.'
+                    : 'The linked student record field is unavailable. Choose another field or save in this admission form.'
+                  : 'The answer is linked to this field in the student record.'
+              }
               onChange={(value) => {
-                const selected = systemFields.find((item) => item.key === value);
+                const selected = compatibleFields.find((item) => item.key === value);
                 formik.setFieldValue(`${path}.bindingKey`, value || undefined);
                 if (selected?.optionsJson)
                   formik.setFieldValue(`${path}.optionsJson`, selected.optionsJson);
               }}
             />
+          )}
+          {isError && (
+            <Alert
+              severity="error"
+              action={
+                <Button size="small" onClick={() => refetch()}>
+                  Retry
+                </Button>
+              }
+            >
+              Could not load student record fields.
+            </Alert>
           )}
         </>
       )}

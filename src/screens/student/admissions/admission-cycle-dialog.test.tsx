@@ -1,4 +1,5 @@
 import { Provider } from 'react-redux';
+import { addIcon } from '@iconify/react';
 import { configureStore } from '@reduxjs/toolkit';
 import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
@@ -11,6 +12,10 @@ import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { AdmissionCycleDialog } from './admission-cycle-dialog';
+
+['mdi:information-outline', 'basil:cross-solid', 'material-symbols-light:save'].forEach((name) => {
+  addIcon(name, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
+});
 
 const academicYear = {
   id: 'year-1',
@@ -65,20 +70,20 @@ describe('admission cycle dialog', () => {
       </Provider>
     );
 
-    expect(screen.queryByText('Uppercase letters, numbers, hyphen and underscore')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Uppercase letters, numbers, hyphen and underscore')
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Description (optional)' })).toHaveAttribute(
       'placeholder',
       'Internal purpose or audience, e.g. Nursery to Grade 9'
     );
 
     await user.click(screen.getByRole('button', { name: 'Admission cycle information' }));
-    expect(await screen.findByRole('tooltip')).toHaveTextContent('Save the cycle as a draft first.');
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'Save the cycle as a draft first.'
+    );
 
-    const code = screen.getByRole('textbox', { name: 'Cycle code' });
-    await user.click(code);
-    expect(screen.getByText('Uppercase letters, numbers, hyphen and underscore')).toBeInTheDocument();
-    await user.tab();
-    expect(screen.queryByText('Uppercase letters, numbers, hyphen and underscore')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Cycle code' })).not.toBeInTheDocument();
   });
 
   it('closes directly after a successful save without showing the discard warning', async () => {
@@ -112,6 +117,10 @@ describe('admission cycle dialog', () => {
     await user.click(screen.getByRole('button', { name: 'Save as draft' }));
 
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(onSave.mock.calls[0][0]).toMatchObject({
+      name: 'Updated cycle',
+      code: editingCycle.code,
+    });
     await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(
       screen.queryByRole('dialog', { name: 'Discard unsaved changes?' })

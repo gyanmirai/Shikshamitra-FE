@@ -5,6 +5,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { LoadingButton } from 'src/components/loading-button';
 import { useGetAdmissionFormUsageQuery } from 'src/redux/student/admissions/admission-forms-api';
 import {
+  Box,
   List,
   Stack,
   Alert,
@@ -37,13 +38,42 @@ export function AdmissionFormPublishDialog({
 }: Props) {
   const usage = useGetAdmissionFormUsageQuery(form?.id ?? '', { skip: !form });
   const hasIssues = Boolean(issues?.length);
+  const busy = validating || publishing;
 
   return (
     <ConfirmDialog
       open={Boolean(form)}
-      onClose={onClose}
-      icon={hasIssues ? 'error' : 'warning'}
-      title={hasIssues ? 'Form needs changes' : `Publish ${form?.name ?? 'form'}?`}
+      onClose={busy ? () => undefined : onClose}
+      disableBackdropClick
+      disableEscapeKeyDown={busy}
+      disableCancel={busy}
+      aria-labelledby="admission-form-publish-title"
+      icon={
+        hasIssues ? (
+          'error'
+        ) : (
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              flexShrink: 0,
+              borderRadius: '50%',
+              display: 'grid',
+              placeItems: 'center',
+              bgcolor: 'info.lighter',
+              color: 'info.main',
+            }}
+          >
+            <Iconify icon="mdi:publish" width={20} />
+          </Box>
+        )
+      }
+      title={
+        <Box component="span" id="admission-form-publish-title">
+          {hasIssues ? 'Form needs changes' : `Publish ${form?.name ?? 'form'}?`}
+        </Box>
+      }
+      sx={{ '& .MuiDialogActions-root': { p: 2, borderTop: 1, borderColor: 'divider' } }}
       content={
         validating || issues === null ? (
           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ py: 1 }}>
@@ -68,21 +98,11 @@ export function AdmissionFormPublishDialog({
             </List>
           </Stack>
         ) : (
-          <Stack spacing={1}>
-            <Alert severity="success">All publish-readiness checks passed.</Alert>
+          <Stack spacing={1.5}>
             <Typography variant="body2">
               Version {form?.version} will become available for new admission offerings. Published
               versions cannot be edited; create a new version for future changes.
             </Typography>
-            {usage.data && (
-              <Typography variant="caption" color="text.secondary">
-                This version is currently linked to {usage.data.offeringCount}{' '}
-                {usage.data.offeringCount === 1 ? 'offering' : 'offerings'} and{' '}
-                {usage.data.applicationCount}{' '}
-                {usage.data.applicationCount === 1 ? 'application' : 'applications'}. Existing
-                applications keep their assigned version.
-              </Typography>
-            )}
             {usage.isError && (
               <Typography variant="caption" color="warning.main">
                 Usage details are unavailable. Publishing still affects only future assignments.
@@ -96,6 +116,7 @@ export function AdmissionFormPublishDialog({
           <Button
             size="small"
             variant="contained"
+            color="primary"
             startIcon={<Iconify icon="mdi:pencil-outline" />}
             onClick={onEdit}
           >

@@ -26,6 +26,12 @@ describe('admission form visual choices', () => {
     ).toBe('[{"value":"SCHOOL_BUS","label":"School bus"},{"value":"OWN","label":"Own transport"}]');
   });
 
+  it('keeps an explicitly cleared option label empty while it is being edited', () => {
+    expect(parseEditableAdmissionChoices('[{"value":"OPTION_1","label":""}]')).toEqual({
+      choices: [{ value: 'OPTION_1', label: '' }],
+    });
+  });
+
   it('creates unique values for pasted choices', () => {
     expect(
       appendPastedAdmissionChoices(
@@ -45,6 +51,14 @@ describe('admission form visual choices', () => {
       choices: [],
       error: 'The saved choices contain invalid JSON.',
     });
+  });
+
+  it('avoids case-insensitive collisions with legacy option values', () => {
+    expect(createAdmissionChoiceValue('Option 1', ['option_1', 'Option_1_2'])).toBe('OPTION_1_3');
+    expect(appendPastedAdmissionChoices([{ value: 'bus', label: 'Old bus' }], 'Bus')).toEqual([
+      { value: 'bus', label: 'Old bus' },
+      { value: 'BUS_2', label: 'Bus' },
+    ]);
   });
 
   it('falls back to a readable option code', () => {

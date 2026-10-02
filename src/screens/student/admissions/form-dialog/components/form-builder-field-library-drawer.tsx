@@ -95,6 +95,8 @@ export function FormBuilderFieldLibraryDrawer({
               systemFields={systemFields}
               usedBindings={usedBindings}
               targetLabel={targetLabel}
+              loading={loading}
+              error={error}
               onAddField={onAddField}
             />
           </Box>

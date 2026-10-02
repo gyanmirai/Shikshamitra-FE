@@ -5,8 +5,8 @@ import type {
 
 import { useFormik } from 'formik';
 import { useMemo, useState } from 'react';
+import { Box, Stack } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
-import { Box, Alert, Stack, Typography } from '@mui/material';
 
 import { FormPreviewContent } from '../../form-preview/form-preview-content';
 import { buildDynamicAdmissionYupSchema } from '../../admission-form-validation';
@@ -55,7 +55,6 @@ export function FormBuilderLivePreview({ form }: { form: CreateUpdateAdmissionFo
   return (
     <Box sx={{ height: 1, overflowY: 'auto', p: { xs: 1, sm: 2 } }}>
       <Stack spacing={1.5} sx={{ mb: 1.5 }}>
-       
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }}>
           <Box sx={{ width: { xs: 1, sm: 260 } }}>
             <CustomSelect
@@ -65,10 +64,9 @@ export function FormBuilderLivePreview({ form }: { form: CreateUpdateAdmissionFo
               onChange={applyPersona}
             />
           </Box>
-         
         </Stack>
       </Stack>
-      <FormPreviewContent form={previewForm} formik={formik} resolvedOptions={{}} />
+      <FormPreviewContent form={previewForm} formik={formik} resolvedOptions={{}} embedded />
     </Box>
   );
 }

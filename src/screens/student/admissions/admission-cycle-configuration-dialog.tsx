@@ -15,11 +15,11 @@ import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { LoadingButton } from 'src/components/loading-button';
 import { DatePicker, DateTimePicker } from '@mui/x-date-pickers';
+import { Grid, Alert, TextField, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
-import { Grid, Alert, TextField, Typography, DialogActions } from '@mui/material';
 
+import { suggestCloneName } from './admission-cycle-model';
 import { AdmissionDialogTitle } from './admission-dialog-title';
-import { suggestCloneCode, suggestCloneName, normalizeCycleCode } from './admission-cycle-model';
 import { ADMISSION_DATE_FORMAT, ADMISSION_DATE_TIME_FORMAT } from './admission-date-formats';
 
 export type CycleConfigurationMode = 'clone' | 'window' | 'schedule';
@@ -56,7 +56,6 @@ export function AdmissionCycleConfigurationDialog({
   onConfirm,
 }: Props) {
   const [name, setName] = useState('');
-  const [code, setCode] = useState('');
   const [description, setDescription] = useState('');
   const [academicYearId, setAcademicYearId] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -64,11 +63,11 @@ export function AdmissionCycleConfigurationDialog({
   const [reason, setReason] = useState('');
   const [publishAt, setPublishAt] = useState('');
   const [closeAt, setCloseAt] = useState('');
+  const [dismissedNotice, setDismissedNotice] = useState<CycleConfigurationMode | null>(null);
 
   useEffect(() => {
     if (!cycle || !mode) return;
     setName(mode === 'clone' ? suggestCloneName(cycle) : cycle.name);
-    setCode(mode === 'clone' ? suggestCloneCode(cycle) : cycle.code);
     setDescription(cycle.description ?? '');
     setAcademicYearId(cycle.academicYearId);
     setStartDate(cycle.startDate.slice(0, 10));
@@ -76,6 +75,7 @@ export function AdmissionCycleConfigurationDialog({
     setReason('');
     setPublishAt(cycle.scheduledPublishAt?.slice(0, 16) ?? '');
     setCloseAt(cycle.scheduledCloseAt?.slice(0, 16) ?? '');
+    setDismissedNotice(null);
   }, [cycle, mode]);
 
   if (!mode || !cycle) return null;
@@ -88,7 +88,7 @@ export function AdmissionCycleConfigurationDialog({
     Boolean(publishAt && closeAt && !dayjs(closeAt).isAfter(dayjs(publishAt)));
   const disabled =
     busy ||
-    (mode === 'clone' && (!name.trim() || !code.trim() || !academicYearId || datesInvalid)) ||
+    (mode === 'clone' && (!name.trim() || !academicYearId || datesInvalid)) ||
     (mode === 'window' && (datesInvalid || !reason.trim())) ||
     (mode === 'schedule' && scheduleInvalid);
 
@@ -97,7 +97,7 @@ export function AdmissionCycleConfigurationDialog({
       await onConfirm({
         sourceCycleId: cycle.id,
         name: name.trim(),
-        code,
+        code: '',
         description: description.trim() || null,
         academicYearId,
         startDate,
@@ -136,11 +136,17 @@ export function AdmissionCycleConfigurationDialog({
         <Grid container spacing={1.5}>
           {mode === 'clone' && (
             <>
-              <Grid size={{ xs: 12 }}>
-                <Alert severity="info">
-                  The copy is created as a draft. Offerings and applications are not copied.
-                </Alert>
-              </Grid>
+              {dismissedNotice !== 'clone' && (
+                <Grid size={{ xs: 12 }}>
+                  <Alert
+                    severity="info"
+                    onClose={() => setDismissedNotice('clone')}
+                    closeText="Dismiss copy information"
+                  >
+                    The copy is created as a draft. Offerings and applications are not copied.
+                  </Alert>
+                </Grid>
+              )}
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
@@ -151,17 +157,7 @@ export function AdmissionCycleConfigurationDialog({
                   onChange={(event) => setName(event.target.value.slice(0, 128))}
                 />
               </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <TextField
-                  fullWidth
-                  required
-                  size="small"
-                  label="Cycle code"
-                  value={code}
-                  onChange={(event) => setCode(normalizeCycleCode(event.target.value).slice(0, 64))}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
+              <Grid size={{ xs: 12 }}>
                 <CustomSelect
                   label="Academic year"
                   name="academicYearId"
@@ -222,9 +218,15 @@ export function AdmissionCycleConfigurationDialog({
 
           {mode === 'window' && (
             <Grid size={{ xs: 12 }}>
-              <Alert severity="warning">
-                Linked offering dates must remain inside the revised cycle window.
-              </Alert>
+              {dismissedNotice !== 'window' && (
+                <Alert
+                  severity="warning"
+                  onClose={() => setDismissedNotice('window')}
+                  closeText="Dismiss window warning"
+                >
+                  Linked offering dates must remain inside the revised cycle window.
+                </Alert>
+              )}
               <TextField
                 sx={{ mt: 1.5 }}
                 fullWidth
@@ -242,21 +244,16 @@ export function AdmissionCycleConfigurationDialog({
 
           {mode === 'schedule' && (
             <>
-              <Grid size={{ xs: 12 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Times use your institution’s configured timezone. Leave an action blank if it
-                  should remain manual.
-                </Typography>
-              </Grid>
               {cycle.status === 0 && (
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <DateTimePicker
                     label="Publish at"
                     format={ADMISSION_DATE_TIME_FORMAT}
                     value={publishAt ? dayjs(publishAt) : null}
-                    onChange={(value) =>
-                      setPublishAt(value?.isValid() ? value.format('YYYY-MM-DDTHH:mm') : '')
-                    }
+                    onChange={(value) => {
+                      setPublishAt(value?.isValid() ? value.format('YYYY-MM-DDTHH:mm') : '');
+                      setDismissedNotice(null);
+                    }}
                     slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                   />
                 </Grid>
@@ -266,15 +263,20 @@ export function AdmissionCycleConfigurationDialog({
                   label="Close at"
                   format={ADMISSION_DATE_TIME_FORMAT}
                   value={closeAt ? dayjs(closeAt) : null}
-                  onChange={(value) =>
-                    setCloseAt(value?.isValid() ? value.format('YYYY-MM-DDTHH:mm') : '')
-                  }
+                  onChange={(value) => {
+                    setCloseAt(value?.isValid() ? value.format('YYYY-MM-DDTHH:mm') : '');
+                    setDismissedNotice(null);
+                  }}
                   slotProps={{ textField: { fullWidth: true, size: 'small' } }}
                 />
               </Grid>
-              {scheduleInvalid && (
+              {scheduleInvalid && dismissedNotice !== 'schedule' && (
                 <Grid size={{ xs: 12 }}>
-                  <Alert severity="warning">
+                  <Alert
+                    severity="warning"
+                    onClose={() => setDismissedNotice('schedule')}
+                    closeText="Dismiss schedule warning"
+                  >
                     Choose a future time. Close time must be later than publish time.
                   </Alert>
                 </Grid>

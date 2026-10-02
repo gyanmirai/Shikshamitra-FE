@@ -24,7 +24,6 @@ export function FormBuilderReview({ form, onEditDetails, onEditFields }: Props) 
   const fields = form.sections.flatMap((section) => section.fields);
   const summary = [
     { label: 'Layout', value: form.layoutType === 1 ? 'Step by step' : 'Single page' },
-    { label: 'Fields per row on desktop', value: form.fieldsPerRow },
     ...(form.layoutType === 1
       ? [{ label: 'Steps', value: getAdmissionFormStepGroups(form.sections).length }]
       : []),
@@ -38,8 +37,8 @@ export function FormBuilderReview({ form, onEditDetails, onEditFields }: Props) 
       sx={{ width: 1, minWidth: 0, maxWidth: 1120, mx: 'auto', p: { xs: 1.5, sm: 2 } }}
     >
       <Alert severity="info" icon={<Iconify icon="mdi:content-save-outline" />}>
-        Save this form as a draft to keep your progress. You can edit it again before publishing.
-        Applicants will see it only after you publish it.
+        Save draft to keep editing later, or Publish now to make this version available to new
+        admission offerings. Published versions cannot be edited.
       </Alert>
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
         <Stack direction="row" spacing={1.5} justifyContent="space-between" alignItems="flex-start">
@@ -49,9 +48,6 @@ export function FormBuilderReview({ form, onEditDetails, onEditFields }: Props) 
             </Typography>
             <Typography variant="h6" sx={{ overflowWrap: 'anywhere' }}>
               {form.name || 'Untitled form'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-              Form code: {form.code || 'Not entered'}
             </Typography>
           </Box>
           <Button

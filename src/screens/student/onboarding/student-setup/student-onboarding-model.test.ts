@@ -160,8 +160,33 @@ describe('mapOnboardingCaseToItem', () => {
       })
     );
 
-    expect(item.readinessItems[0]).toMatchObject({ status: 'pending', blocking: false });
+    expect(item.readinessItems[0]).toMatchObject({
+      status: 'pending',
+      blocking: false,
+      detail: 'This is completed automatically when activation validates every required check.',
+    });
     expect(getReadinessSummary(item).blockingCount).toBe(0);
+  });
+
+  it('explains a pending approval requirement before a staff member records it', () => {
+    const item = mapOnboardingCaseToItem(
+      buildCase({
+        steps: [
+          {
+            id: 'step-approval',
+            key: 'approval_review',
+            label: 'Onboarding approval',
+            displayOrder: 85,
+            required: true,
+            status: 0,
+          },
+        ],
+      })
+    );
+
+    expect(item.readinessItems[0].detail).toBe(
+      'Review the current requirements and record an approval note.'
+    );
   });
 
   it.each([

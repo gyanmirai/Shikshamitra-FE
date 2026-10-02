@@ -1,4 +1,7 @@
+import type { RootState } from 'src/redux/store';
+
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { Box, Grid } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
 import {
@@ -7,12 +10,19 @@ import {
 } from 'src/redux/student';
 
 import CompactKPICard from './kpi-card-item';
+import {
+  attendanceCompletionLabel,
+  attendancePercentageLabel,
+} from '../../attendance/dashboard/attendance-dashboard-metrics';
 
 type KpiStatus = 'success' | 'warning' | 'error' | 'info' | 'primary' | 'secondary';
 
 const PrincipalKPICards = () => {
+  const year = useSelector((state: RootState) => state.globalState.currentYear);
   const { data: summary } = useGetStudentDashboardSummaryQuery(undefined);
-  const { data: attendanceSummary } = useGetStudentAttendanceDashboardSummaryQuery(undefined);
+  const { data: attendanceSummary } = useGetStudentAttendanceDashboardSummaryQuery({
+    academicYearId: year?.id,
+  });
 
   const items: {
     id: string;
@@ -48,13 +58,12 @@ const PrincipalKPICards = () => {
     },
     {
       id: 'attendance-average',
-      title: 'Avg Attendance',
-      value:
-        attendanceSummary?.schoolAttendancePercentage !== undefined
-          ? `${attendanceSummary.schoolAttendancePercentage}%`
-          : '-',
-      tooltip: 'Average student attendance percentage for the selected default attendance range.',
-      status: 'warning',
+      title: attendanceSummary?.isProvisional ? 'Attendance · Provisional' : 'Attendance',
+      value: attendancePercentageLabel(attendanceSummary?.schoolAttendancePercentage),
+      tooltip: attendanceSummary
+        ? attendanceCompletionLabel(attendanceSummary)
+        : 'Attendance summary is unavailable.',
+      status: attendanceSummary?.isProvisional ? 'warning' : 'info',
       path: studentPaths.attendance.reports,
     },
   ];

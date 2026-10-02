@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   refreshReadiness: vi.fn(() => ({ unwrap: () => Promise.resolve() })),
   refetch: vi.fn(),
   isError: false,
+  applicationId: 'application-1',
+  feeSelection: vi.fn(),
 }));
 
 vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
@@ -15,6 +17,9 @@ vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
 }));
 vi.mock('src/screens/finance/FeeStructureAssign/Components/AssignmentDrawer', () => ({ default: () => null }));
+vi.mock('src/screens/student/admissions/fee-selection/admission-fee-selection-panel', () => ({
+  default: (props: unknown) => { mocks.feeSelection(props); return null; },
+}));
 vi.mock('react-redux', () => ({ useSelector: (select: (state: unknown) => unknown) => select({
   auth: { permissions: [
     { name: `${financePermissions.fees.collections}.Add`, isGranted: true },
@@ -24,6 +29,7 @@ vi.mock('react-redux', () => ({ useSelector: (select: (state: unknown) => unknow
 vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
   useGetStudentOnboardingCaseQuery: () => ({ data: mocks.isError ? undefined : {
     id: 'case-1', studentName: 'Jay QA', grNumber: 'QA29-000001', academicYearName: '2026-2027',
+    applicationId: mocks.applicationId,
     feeAssignmentConfirmed: true, firstPaymentConfirmed: true, status: 6,
     studentEnrollmentId: 'enrollment-1', concurrencyStamp: 'case-stamp-1',
   }, isError: mocks.isError, isFetching: false, refetch: mocks.refetch }),
@@ -31,6 +37,34 @@ vi.mock('src/redux/student/onboarding/student-onboarding-api', () => ({
 }));
 
 describe('Onboarding uses unchanged Finance navigation', () => {
+  it('loads the saved admission choice for the linked application and permits explicit confirmation', () => {
+    mocks.feeSelection.mockClear();
+    render(<StudentOnboardingFees caseId="case-1" canManage />);
+    expect(mocks.feeSelection).toHaveBeenCalledWith({
+      applicationId: 'application-1', mode: 'onboarding', canConfirm: true,
+    });
+  });
+
+  it('keeps the admission choice read-only for onboarding viewers', () => {
+    mocks.feeSelection.mockClear();
+    render(<StudentOnboardingFees caseId="case-1" canManage={false} />);
+    expect(mocks.feeSelection).toHaveBeenCalledWith({
+      applicationId: 'application-1', mode: 'onboarding', canConfirm: false,
+    });
+  });
+
+  it('preserves Finance-only onboarding when there is no linked application', () => {
+    mocks.applicationId = '';
+    mocks.feeSelection.mockClear();
+    try {
+      render(<StudentOnboardingFees caseId="case-1" canManage />);
+      expect(mocks.feeSelection).not.toHaveBeenCalled();
+      expect(screen.getByRole('link', { name: 'Open Finance collections' })).toBeInTheDocument();
+    } finally {
+      mocks.applicationId = 'application-1';
+    }
+  });
+
   it('opens the standard Finance route and tells staff to select the student themselves', () => {
     render(<StudentOnboardingFees caseId="case-1" canManage />);
     expect(screen.getByRole('link', { name: 'Open Finance collections' }))

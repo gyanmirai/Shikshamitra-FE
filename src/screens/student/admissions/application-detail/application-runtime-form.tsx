@@ -192,7 +192,11 @@ export function ApplicationRuntimeForm({
         return (
           <Grid
             key={field.code}
-            size={{ xs: 12, md: field.fieldType === 1 ? 12 : 12 / Math.min(fieldsPerRow, 2) }}
+            size={{
+              xs: 12,
+              sm: field.fieldType === 1 ? 12 : 12 / Math.min(fieldsPerRow, 2),
+              lg: field.fieldType === 1 ? 12 : 12 / fieldsPerRow,
+            }}
           >
             <AdmissionRuntimeField
               field={{

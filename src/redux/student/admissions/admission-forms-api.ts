@@ -6,7 +6,6 @@ export type AdmissionFormLayoutType = 0 | 1;
 export type AdmissionFormPurpose = 0 | 1;
 export type AdmissionFormFieldType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionFormBindingType = 0 | 1;
-export type AdmissionFormApprovalStatus = 0 | 1 | 2 | 3;
 export type AdmissionFormTranslation = {
   label?: string | null;
   placeholder?: string | null;
@@ -64,12 +63,6 @@ export type AdmissionForm = {
   fieldsPerRow?: 1 | 2 | 3 | 4;
   defaultLanguage?: string;
   supportedLanguages?: string[];
-  approvalStatus?: AdmissionFormApprovalStatus;
-  approvalRequestedBy?: string | null;
-  approvalRequestedAt?: string | null;
-  reviewedBy?: string | null;
-  reviewedAt?: string | null;
-  reviewComment?: string | null;
   sectionCount: number;
   sections: AdmissionFormSection[];
   description?: string | null;
@@ -219,42 +212,6 @@ export const admissionFormsApi = api.injectEndpoints({
         invalidatesTags: [studentAdmissionsCrmType.admissionForm],
       }
     ),
-    requestAdmissionFormApproval: builder.mutation<
-      AdmissionForm,
-      { id: string; concurrencyStamp: string; comment?: string }
-    >({
-      query: ({ id, ...body }) => ({
-        url: `/student/enrollment/admissions/forms/${id}/request-approval`,
-        method: 'POST',
-        body,
-      }),
-      transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionForm],
-    }),
-    approveAdmissionForm: builder.mutation<
-      AdmissionForm,
-      { id: string; concurrencyStamp: string; comment?: string }
-    >({
-      query: ({ id, ...body }) => ({
-        url: `/student/enrollment/admissions/forms/${id}/approve`,
-        method: 'POST',
-        body,
-      }),
-      transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionForm],
-    }),
-    rejectAdmissionForm: builder.mutation<
-      AdmissionForm,
-      { id: string; concurrencyStamp: string; comment?: string }
-    >({
-      query: ({ id, ...body }) => ({
-        url: `/student/enrollment/admissions/forms/${id}/reject`,
-        method: 'POST',
-        body,
-      }),
-      transformResponse: (r: Result<AdmissionForm> | AdmissionForm) => unwrap(r),
-      invalidatesTags: [studentAdmissionsCrmType.admissionForm],
-    }),
     getAdmissionFormAudit: builder.query<AdmissionFormAuditEntry[], string>({
       query: (id) => `/student/enrollment/admissions/forms/${id}/audit`,
       transformResponse: (r: Result<AdmissionFormAuditEntry[]> | AdmissionFormAuditEntry[]) =>
@@ -376,9 +333,6 @@ export const {
   useLazyGetAdmissionFormOptionsQuery,
   useValidateAdmissionFormMutation,
   usePublishAdmissionFormMutation,
-  useRequestAdmissionFormApprovalMutation,
-  useApproveAdmissionFormMutation,
-  useRejectAdmissionFormMutation,
   useGetAdmissionFormAuditQuery,
   useGetAdmissionFormVersionsQuery,
   useLazyCompareAdmissionFormVersionsQuery,

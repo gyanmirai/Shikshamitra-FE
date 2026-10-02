@@ -15,17 +15,15 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useGetAdmissionFormQuery,
+  useLazyGetAdmissionFormQuery,
   useCloneAdmissionFormMutation,
   useCreateAdmissionFormMutation,
   useDeleteAdmissionFormMutation,
   useUpdateAdmissionFormMutation,
-  useRejectAdmissionFormMutation,
   usePublishAdmissionFormMutation,
   useArchiveAdmissionFormMutation,
-  useApproveAdmissionFormMutation,
   useValidateAdmissionFormMutation,
   useCreateAdmissionFormVersionMutation,
-  useRequestAdmissionFormApprovalMutation,
 } from 'src/redux/student/admissions/admission-forms-api';
 
 import { getAdmissionFormAccess } from '../form-access';
@@ -47,30 +45,20 @@ export function useFormListActions() {
       setEditingForm((current) => (current?.id === editingId ? current : form));
     }
   }, [editingId, editingQuery.data]);
-  const { permissions, user } = useSelector((state: RootState) => state.auth);
+  const { permissions } = useSelector((state: RootState) => state.auth);
   const { canManage, canPublish, canDelete } = getAdmissionFormAccess(permissions);
-  const roles = (Array.isArray(user?.role) ? user.role : [user?.role])
-    .map((role: unknown) =>
-      String(role ?? '')
-        .trim()
-        .toLowerCase()
-    )
-    .filter(Boolean);
-  const canOverrideMakerChecker = roles.some(
-    (role: string) => role === 'admin' || role === 'super-admin'
-  );
   const [create, createState] = useCreateAdmissionFormMutation();
   const [update, updateState] = useUpdateAdmissionFormMutation();
   const [clone, cloneState] = useCloneAdmissionFormMutation();
   const [validate, validateState] = useValidateAdmissionFormMutation();
   const [publish, publishState] = usePublishAdmissionFormMutation();
-  const [requestApproval, requestApprovalState] = useRequestAdmissionFormApprovalMutation();
-  const [approve, approveState] = useApproveAdmissionFormMutation();
-  const [reject, rejectState] = useRejectAdmissionFormMutation();
   const [createVersion] = useCreateAdmissionFormVersionMutation();
   const [archive] = useArchiveAdmissionFormMutation();
   const [deleteForm, deleteState] = useDeleteAdmissionFormMutation();
+  const [loadDeleteForm] = useLazyGetAdmissionFormQuery();
   const [pendingDelete, setPendingDelete] = useState<AdmissionForm | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [checkingDelete, setCheckingDelete] = useState(false);
   const [pendingPublish, setPendingPublish] = useState<AdmissionForm | null>(null);
   const [publishIssues, setPublishIssues] = useState<string[] | null>(null);
   const [pendingClone, setPendingClone] = useState<AdmissionForm | null>(null);
@@ -95,6 +83,27 @@ export function useFormListActions() {
     setEditingId(null);
     setEditingForm(null);
   };
+  const saveAndPublish = async (values: CreateUpdateAdmissionForm) => {
+    const draft = await (editingId
+      ? update({ id: editingId, body: values }).unwrap()
+      : create(values).unwrap());
+    try {
+      if (!draft.concurrencyStamp) {
+        throw new Error('Unable to verify the saved draft version. Refresh and try again.');
+      }
+      const readiness = await validate(draft.id).unwrap();
+      if (!readiness.isValid) {
+        throw new Error(formatAdmissionFormValidationErrors(readiness.errors));
+      }
+      await publish({ id: draft.id, concurrencyStamp: draft.concurrencyStamp }).unwrap();
+      shikshaMitraToast.success({ message: 'Form published' });
+    } catch (error) {
+      // Save succeeded: keep editing the persisted draft so a retry cannot create a duplicate.
+      setEditingId(draft.id);
+      setEditingForm(draft);
+      throw new Error(`Draft saved, but not published. ${parseApiProblemDetail(error).detail}`);
+    }
+  };
   const close = () => {
     dialog.onFalse();
     setEditingId(null);
@@ -116,10 +125,9 @@ export function useFormListActions() {
     canManage,
     canPublish,
     canDelete,
-    canOverrideMakerChecker,
-    currentUserId: typeof user?.sub === 'string' ? user.sub : null,
     saving: createState.isLoading || updateState.isLoading,
     save,
+    saveAndPublish,
     close,
     edit,
     create: (purpose: AdmissionFormPurpose = 1) => {
@@ -193,38 +201,6 @@ export function useFormListActions() {
           })
         : Promise.resolve(false),
     publishing: publishState.isLoading,
-    requestApproval: (form: AdmissionForm) =>
-      run(async () => {
-        const result = await validate(form.id).unwrap();
-        if (!result.isValid) throw new Error(formatAdmissionFormValidationErrors(result.errors));
-        await requestApproval({
-          id: form.id,
-          concurrencyStamp: form.concurrencyStamp ?? '',
-        }).unwrap();
-      }, 'Approval requested'),
-    approving: approveState.isLoading,
-    approve: (form: AdmissionForm, comment?: string) =>
-      run(
-        () =>
-          approve({
-            id: form.id,
-            concurrencyStamp: form.concurrencyStamp ?? '',
-            comment,
-          }).unwrap(),
-        'Form approved'
-      ),
-    rejecting: rejectState.isLoading,
-    reject: (form: AdmissionForm, comment?: string) =>
-      run(
-        () =>
-          reject({
-            id: form.id,
-            concurrencyStamp: form.concurrencyStamp ?? '',
-            comment,
-          }).unwrap(),
-        'Changes requested'
-      ),
-    requestingApproval: requestApprovalState.isLoading,
     historyForm,
     showHistory: (form: AdmissionForm) => setHistoryForm(form),
     closeHistory: () => setHistoryForm(null),
@@ -235,23 +211,47 @@ export function useFormListActions() {
         () => archive({ id: form.id, concurrencyStamp: form.concurrencyStamp ?? '' }).unwrap(),
         'Form archived'
       ),
-    requestDelete: (form: AdmissionForm) => setPendingDelete(form),
+    requestDelete: (form: AdmissionForm) => {
+      setDeleteError(null);
+      setPendingDelete(form);
+    },
     pendingDelete,
-    clearPendingDelete: () => setPendingDelete(null),
-    confirmDelete: () =>
-      pendingDelete
-        ? run(
-            () =>
-              deleteForm({
-                id: pendingDelete.id,
-                concurrencyStamp: pendingDelete.concurrencyStamp ?? '',
-              }).unwrap(),
-            'Form draft deleted'
-          ).then((ok) => {
-            if (ok) setPendingDelete(null);
-            return ok;
-          })
-        : Promise.resolve(false),
-    deleting: deleteState.isLoading,
+    deleteError,
+    clearPendingDelete: () => {
+      if (checkingDelete || deleteState.isLoading) return;
+      setPendingDelete(null);
+      setDeleteError(null);
+    },
+    confirmDelete: async () => {
+      if (!pendingDelete || checkingDelete || deleteState.isLoading) return false;
+      setDeleteError(null);
+      setCheckingDelete(true);
+      try {
+        // The list row can be stale; confirm against a fresh version before deleting.
+        const latestRequest = loadDeleteForm(pendingDelete.id, false);
+        const current = await latestRequest.unwrap().finally(() => latestRequest.unsubscribe());
+        if (current.status !== 0) {
+          throw new Error('Only a draft admission form can be deleted. Refresh the list.');
+        }
+        if (!current.concurrencyStamp) {
+          throw new Error('Unable to verify the latest form version. Refresh the list and try again.');
+        }
+        await deleteForm({
+          id: pendingDelete.id,
+          concurrencyStamp: current.concurrencyStamp,
+        }).unwrap();
+        shikshaMitraToast.success({ message: 'Admission form draft deleted successfully' });
+        setPendingDelete(null);
+        return true;
+      } catch (error) {
+        const message = parseApiProblemDetail(error).detail;
+        setDeleteError(message);
+        shikshaMitraToast.error({ message });
+        return false;
+      } finally {
+        setCheckingDelete(false);
+      }
+    },
+    deleting: checkingDelete || deleteState.isLoading,
   };
 }

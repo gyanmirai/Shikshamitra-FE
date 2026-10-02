@@ -6,7 +6,6 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { GlobalIcons } from 'src/utils/icons';
 import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -14,6 +13,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
@@ -46,7 +46,13 @@ import {
 
 import type { IAttendanceRule } from './type';
 
-const AttendanceType = () => {
+const AttendanceType = ({ embedded = false }: { embedded?: boolean }) => {
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canWrite = hasGrantedPermission(permissions, 'Students.Attendance.Setting.LeaveType.Add');
+  const canDelete = hasGrantedPermission(
+    permissions,
+    'Students.Attendance.Setting.LeaveType.Delete'
+  );
   // Dialog state for add/edit form
   const dialog = useBoolean();
   // Dialog state for delete confirmation
@@ -136,8 +142,8 @@ const AttendanceType = () => {
         render: (value, row) => (
           <ThreeDotsActions
             showThreeDots={false}
-            showEditIcon
-            showDeleteIcon
+            showEditIcon={canWrite}
+            showDeleteIcon={canDelete}
             handleEditClick={() => {
               dialog.onTrue();
               setEditData(row as IAttendanceRule);
@@ -151,32 +157,38 @@ const AttendanceType = () => {
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    []
+    [canWrite, canDelete]
   );
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <CustomBreadcrumbs
-        heading="Leave Type"
-        description="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
-        links={[
-          { name: 'Student', href: '/student/dashboard/' },
-          { name: 'Attendance', href: '/student/dashboard/' },
-          { name: 'Settings', href: '/student/dashboard/' },
-          { name: 'Leave Type' },
-        ]}
-        action={
-          <Button
-            variant="contained"
-            size="small"
-            onClick={dialog.onTrue}
-            startIcon={<Iconify icon="eva:plus-fill" />}
-            sx={{ textTransform: 'capitalize', width: '160px' }}
-          >
-            Leave Type
-          </Button>
-        }
-      />
+      {embedded ? (
+        <Button disabled={!canWrite} variant="outlined" size="small" onClick={dialog.onTrue}>
+          Add leave type
+        </Button>
+      ) : (
+        <CustomBreadcrumbs
+          heading="Leave Type"
+          description="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
+          links={[
+            { name: 'Student', href: '/student/dashboard/' },
+            { name: 'Attendance', href: '/student/dashboard/' },
+            { name: 'Settings', href: '/student/dashboard/' },
+            { name: 'Leave Type' },
+          ]}
+          action={
+            <Button
+              variant="contained"
+              size="small"
+              onClick={dialog.onTrue}
+              startIcon={<Iconify icon="mdi:plus" />}
+              sx={{ textTransform: 'capitalize', width: '160px' }}
+            >
+              Leave Type
+            </Button>
+          }
+        />
+      )}
       <CustomizableTable
         tableTitle="Leave Type"
         tableId="attendance-type"
@@ -287,7 +299,11 @@ const AttendanceType = () => {
               placement="right"
               title="Define Leave types (like Sick or Casual) and choose a distinct color for each. To quickly differentiate them in attendance"
             >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
+              <Iconify
+                icon="mdi:information-outline"
+                sx={{ cursor: 'pointer' }}
+                color="info.main"
+              />
             </CustomTooltip>
           </Box>
         }
@@ -422,7 +438,7 @@ export const AttendanceTypeForm = ({
       <DialogActions>
         <Button
           size="small"
-          startIcon={<Iconify icon={GlobalIcons.cancel} />}
+          startIcon={<Iconify icon="mdi:close" />}
           variant="outlined"
           color="inherit"
           onClick={() => {
@@ -434,7 +450,7 @@ export const AttendanceTypeForm = ({
         <LoadingButton
           startIcon={
             <Iconify
-              icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
+              icon={editData ? 'mdi:pencil-outline' : 'mdi:content-save-outline'}
               width={editData ? 16 : 20}
               height={editData ? 16 : 20}
             />

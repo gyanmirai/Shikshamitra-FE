@@ -9,6 +9,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { studentPaths } from 'src/constants/student-menu';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Tab, Alert, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
 
@@ -42,6 +43,8 @@ import {
   canStageTypeCompleteForStatus,
 } from './application-detail/application-progress-model';
 
+import type { AdmissionFeeSelectionEditorState } from './fee-selection/admission-fee-selection-editor';
+
 type DetailTab = 'current' | 'form' | 'history';
 
 export default function AdmissionApplicationDetailScreen() {
@@ -50,6 +53,16 @@ export default function AdmissionApplicationDetailScreen() {
   const detail = useApplicationDetail(id);
   const completionDialog = useBoolean();
   const [activeTab, setActiveTab] = useState<DetailTab>('current');
+  const [requestedTab, setRequestedTab] = useState<DetailTab>();
+  const [feeEditorState, setFeeEditorState] = useState<AdmissionFeeSelectionEditorState>({
+    dirty: false,
+    busy: false,
+  });
+  const requestTabChange = (value: DetailTab) => {
+    if (value === activeTab || feeEditorState.busy) return;
+    if (feeEditorState.dirty) setRequestedTab(value);
+    else setActiveTab(value);
+  };
   const { applicationQuery, formQuery, workflowQuery } = detail;
   const application = applicationQuery.data;
   const form = formQuery.data;
@@ -109,10 +122,12 @@ export default function AdmissionApplicationDetailScreen() {
       workflow?.history.length || (detail.formHistoryQuery.data?.length ?? 0) > 0
     );
     const active = workflow?.status === 0 && Boolean(workflow.currentStageInstanceId);
+    const canLeaveFeeEditor = !feeEditorState.dirty && !feeEditorState.busy;
     const canComplete = canCompleteStageFromProgress(
       currentStage,
       application.status,
       detail.canAdvance &&
+        canLeaveFeeEditor &&
         !currentStage?.formStageEnabled &&
         !currentStage?.paymentStageEnabled &&
         !currentStage?.offerStageEnabled &&
@@ -128,6 +143,7 @@ export default function AdmissionApplicationDetailScreen() {
       !canStageTypeCompleteForStatus(currentStage, application.status);
     const canSkip = Boolean(
       detail.canSkip &&
+      canLeaveFeeEditor &&
       !currentStage?.reviewEnabled &&
       !currentStage?.paymentStageEnabled &&
       !currentStage?.offerStageEnabled &&
@@ -135,6 +151,7 @@ export default function AdmissionApplicationDetailScreen() {
     );
     const canOverride = Boolean(
       detail.canOverride &&
+      canLeaveFeeEditor &&
       !currentStage?.reviewEnabled &&
       !currentStage?.paymentStageEnabled &&
       !currentStage?.offerStageEnabled &&
@@ -157,7 +174,9 @@ export default function AdmissionApplicationDetailScreen() {
           workflow={workflow}
           currentStage={currentStage}
           canOverride={canOverride}
-          onOverride={() => detail.setRuntimeAction('override')}
+          onOverride={() => {
+            if (canLeaveFeeEditor) detail.setRuntimeAction('override');
+          }}
         />
 
         <Paper
@@ -176,7 +195,7 @@ export default function AdmissionApplicationDetailScreen() {
         >
           <CustomTabs
             value={activeTab}
-            onChange={(_, value: DetailTab) => setActiveTab(value)}
+            onChange={(_, value: DetailTab) => requestTabChange(value)}
             aria-label="Application detail sections"
             variant="scrollable"
             scrollButtons="auto"
@@ -187,6 +206,7 @@ export default function AdmissionApplicationDetailScreen() {
               id="application-tab-current"
               aria-controls="application-panel-current"
               value="current"
+              disabled={feeEditorState.busy}
               label="Current step"
               icon={<Iconify icon="mdi:clipboard-check-outline" width={20} />}
               iconPosition="start"
@@ -195,6 +215,7 @@ export default function AdmissionApplicationDetailScreen() {
               id="application-tab-form"
               aria-controls="application-panel-form"
               value="form"
+              disabled={feeEditorState.busy}
               label="Application form"
               icon={<Iconify icon="mdi:file-document-outline" width={20} />}
               iconPosition="start"
@@ -203,6 +224,7 @@ export default function AdmissionApplicationDetailScreen() {
               id="application-tab-history"
               aria-controls="application-panel-history"
               value="history"
+              disabled={feeEditorState.busy}
               label="History"
               icon={<Iconify icon="mdi:history" width={20} />}
               iconPosition="start"
@@ -233,20 +255,25 @@ export default function AdmissionApplicationDetailScreen() {
                       advancing={detail.advanceState.isLoading}
                       retryingFormHandoff={detail.submitState.isLoading}
                       onAdvance={() => {
+                        if (!canLeaveFeeEditor) return;
                         if (requiresStageCompletionDetails(currentStage)) completionDialog.onTrue();
                         else detail.advance();
                       }}
                       onRetryFormHandoff={detail.submitApplication}
-                      onSkip={() => detail.setRuntimeAction('skip')}
-                      onReviewForm={() => setActiveTab('form')}
+                      onSkip={() => {
+                        if (canLeaveFeeEditor) detail.setRuntimeAction('skip');
+                      }}
+                      onReviewForm={() => requestTabChange('form')}
                     />
                   )}
                   <ApplicationManagedStages
                     application={application}
                     workflow={workflow}
-                    canAdvance={detail.canAdvance}
+                    canAdvance={detail.canAdvance && canLeaveFeeEditor}
                     advancing={detail.advanceState.isLoading}
+                    onFeeSelectionStateChange={setFeeEditorState}
                     onComplete={(concurrencyStamp) => {
+                      if (!canLeaveFeeEditor) return;
                       detail.advance(concurrencyStamp ? { concurrencyStamp } : undefined);
                     }}
                   />
@@ -334,7 +361,8 @@ export default function AdmissionApplicationDetailScreen() {
               size="small"
               variant="outlined"
               startIcon={<Iconify icon="mdi:file-document-outline" />}
-              onClick={() => setActiveTab('form')}
+              disabled={feeEditorState.busy}
+              onClick={() => requestTabChange('form')}
             >
               Review application form
             </Button>
@@ -350,6 +378,7 @@ export default function AdmissionApplicationDetailScreen() {
         open
         fullScreen
         hasForm={false}
+        disableClose={feeEditorState.busy}
         data-testid="admission-application-full-screen-dialog"
         title={
           <Box component="span" sx={{ display: 'block', minWidth: 0 }}>
@@ -465,6 +494,33 @@ export default function AdmissionApplicationDetailScreen() {
           </Box>
         </DialogScrollContent>
       </CustomDialog>
+
+      <ConfirmDialog
+        open={Boolean(requestedTab)}
+        onClose={() => {
+          if (!feeEditorState.busy) setRequestedTab(undefined);
+        }}
+        title="Discard unsaved fee selection?"
+        icon="warning"
+        content="Changing sections will discard the unsaved fee selection. Your saved application information remains available."
+        disableCancel={feeEditorState.busy}
+        disableEscapeKeyDown={feeEditorState.busy}
+        disableBackdropClick={feeEditorState.busy}
+        action={
+          <Button
+            size="small"
+            variant="contained"
+            color="error"
+            disabled={feeEditorState.busy}
+            onClick={() => {
+              if (requestedTab) setActiveTab(requestedTab);
+              setRequestedTab(undefined);
+            }}
+          >
+            Discard changes
+          </Button>
+        }
+      />
 
       {completionDialog.value && currentStage && (
         <AdmissionStageCompletionDialog

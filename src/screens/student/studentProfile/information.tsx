@@ -1,9 +1,16 @@
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { RouterLink } from 'src/routes/components';
 import React, { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import { Box, Card, Grid, Button } from '@mui/material';
+import { studentPaths } from 'src/constants/student-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { useCustomSearchParams } from 'src/hooks/use-search-param';
+import { Box, Card, Grid, Stack, Alert, Button } from '@mui/material';
 import { StudentInformationForm } from 'src/components/studentProfile/StudentInformationForm';
+import StudentRecordGuardianAccess from 'src/screens/student/records/student-record-guardian-access';
 
 import type { StudentTabsComponentType } from '.';
 
@@ -104,6 +111,27 @@ export const StudentInformation = React.memo(
       () => TABS.findIndex((tab) => tab.value === searchParams.tab),
       [searchParams.tab]
     );
+    const permissions = useSelector((state: RootState) => state.auth.permissions);
+    const canCreate = hasGrantedPermission(permissions, 'Students.Records.Changes.Create');
+    const section = [
+      'general',
+      'family',
+      'communication',
+      'additional',
+      'medical',
+      'previous-school',
+      'bank',
+    ][Math.max(currentTabIndex, 0)];
+    const groups = [
+      ['Identity', 'Contact'],
+      ['Guardian', 'Contact'],
+      ['Contact'],
+      ['Identity', 'Medical', 'Contact'],
+      ['Medical'],
+      [],
+      ['Bank'],
+    ][Math.max(currentTabIndex, 0)];
+    const restricted = groups.some((group) => student?.maskedFields?.includes(group));
 
     // Memoize tab change handler to prevent recreation
     const handleTabChange = useCallback(
@@ -162,12 +190,75 @@ export const StudentInformation = React.memo(
             <Card sx={{ p: 1, flexGrow: 1, height: '100%', overflow: 'hidden' }}>
               <Scrollbar sx={{ height: '100%' }}>
                 <Box sx={{ p: 2 }}>
-                  <StudentInformationForm
-                    tabIndex={currentTabIndex !== -1 ? currentTabIndex : 0}
-                    editData={student}
-                    isEdit
-                    refetch={refetch}
-                  />
+                  {restricted ? (
+                    <Alert severity="info">
+                      This section contains fields restricted by school policy.
+                    </Alert>
+                  ) : (
+                    <>
+                      <Alert
+                        severity="info"
+                        sx={{ mb: 2 }}
+                        action={
+                          canCreate ? (
+                            <Button
+                              component={RouterLink}
+                              href={`${studentPaths.records.changes}?mode=new&student=${encodeURIComponent(student.studentId)}&section=${section}`}
+                            >
+                              Request change
+                            </Button>
+                          ) : undefined
+                        }
+                      >
+                        Changes to these details are submitted through Changes & Approvals.
+                      </Alert>
+                      <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" sx={{ mb: 2 }}>
+                        {hasGrantedPermission(permissions, 'Students.Records.Changes.View') && (
+                          <Button
+                            component={RouterLink}
+                            href={`${studentPaths.records.changes}?student=${encodeURIComponent(student.studentId)}`}
+                          >
+                            Change history
+                          </Button>
+                        )}
+                        {section === 'general' && canCreate && (
+                          <Button
+                            component={RouterLink}
+                            href={`${studentPaths.records.changes}?mode=new&student=${encodeURIComponent(student.studentId)}&section=photo`}
+                          >
+                            Change photo
+                          </Button>
+                        )}
+                        {section === 'general' &&
+                          canCreate &&
+                          student.placementEditable === true && (
+                            <Button
+                              component={RouterLink}
+                              href={`${studentPaths.records.changes}?mode=new&student=${encodeURIComponent(student.studentId)}&section=placement`}
+                            >
+                              Change class & division
+                            </Button>
+                          )}
+                      </Stack>
+                      <Box
+                        component="fieldset"
+                        disabled
+                        sx={{ p: 0, m: 0, border: 0, minWidth: 0 }}
+                      >
+                        <StudentInformationForm
+                          tabIndex={currentTabIndex !== -1 ? currentTabIndex : 0}
+                          editData={student}
+                          isEdit={false}
+                          refetch={refetch}
+                        />
+                      </Box>
+                      {section === 'family' && (
+                        <Box sx={{ mt: 3 }}>
+                          <StudentRecordGuardianAccess studentId={student.studentId} />
+                        </Box>
+                      )}
+                    </>
+                  )}
                 </Box>
               </Scrollbar>
             </Card>
@@ -179,5 +270,7 @@ export const StudentInformation = React.memo(
   // Custom comparison function to prevent re-renders when props haven't meaningfully changed
   (prevProps, nextProps) =>
     prevProps.student?.studentId === nextProps.student?.studentId &&
+    (prevProps.student?.maskedFields ?? []).join(',') ===
+      (nextProps.student?.maskedFields ?? []).join(',') &&
     prevProps.refetch === nextProps.refetch
 );

@@ -37,6 +37,62 @@ export type IntakeCounsellorChoice = { id: string; name: string; userName: strin
 
 export type SaveAdmissionIntakeProfileInput = Omit<AdmissionIntakeProfile, 'id'>;
 
+export type AdmissionIntakeSetupInquiryRules = Omit<AdmissionInquiryIntakeRules, 'version'>;
+export type AdmissionIntakeSetupAssignmentRules = Omit<
+  AdmissionCounsellorAssignmentRules,
+  'version' | 'fallbackManagerUserId'
+> & { fallbackManagerUserId: string };
+
+export type AdmissionIntakeSetupOfferingUsage = {
+  id: string;
+  name: string;
+  code: string;
+  admissionCycleId: string;
+  entryMode: 0 | 1 | 2;
+  isActive: boolean;
+};
+
+export type AdmissionIntakeSetupPublicLinkUsage = {
+  id: string;
+  name: string;
+  admissionCycleId: string;
+  expiresAtUtc?: string | null;
+  isActive: boolean;
+  isOperational: boolean;
+};
+
+export type AdmissionIntakeSetupUsage = {
+  setupId: string;
+  offerings: AdmissionIntakeSetupOfferingUsage[];
+  publicInquiryLinks: AdmissionIntakeSetupPublicLinkUsage[];
+  activeOfferingCount: number;
+  activePublicInquiryLinkCount: number;
+  hasActiveUsage: boolean;
+};
+
+export type AdmissionIntakeSetup = {
+  id: string;
+  name: string;
+  inquiryIntakeProfileId: string;
+  counsellorAssignmentProfileId: string;
+  inquiryRules: AdmissionIntakeSetupInquiryRules;
+  counsellorAssignmentRules: AdmissionIntakeSetupAssignmentRules;
+  isArchived: boolean;
+  archivedTime?: string | null;
+  concurrencyStamp: string;
+  activeOfferingCount: number;
+  activePublicInquiryLinkCount: number;
+  isConfigurationValid: boolean;
+  configurationIssue?: string | null;
+};
+
+export type SaveAdmissionIntakeSetupInput = {
+  name: string;
+  inquiryRules: AdmissionIntakeSetupInquiryRules;
+  counsellorAssignmentRules: AdmissionIntakeSetupAssignmentRules;
+  concurrencyStamp?: string;
+};
+
 export type AdmissionPublicInquiryLink = {
   id: string;
   admissionCycleId: string;
@@ -64,6 +120,7 @@ const unwrap = <T>(response: Envelope<T>): T =>
     : (response as T);
 
 const tag = studentAdmissionsCrmType.admissionOffering;
+const setupBaseUrl = '/student/enrollment/admissions/intake-setups';
 
 export const admissionIntakeProfilesApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -101,6 +158,51 @@ export const admissionIntakeProfilesApi = api.injectEndpoints({
       transformResponse: (response: Envelope<AdmissionIntakeProfile>) => unwrap(response),
       invalidatesTags: [tag],
     }),
+    getAdmissionIntakeSetups: builder.query<
+      AdmissionIntakeSetup[],
+      { includeArchived?: boolean } | void
+    >({
+      query: (params) => ({
+        url: setupBaseUrl,
+        method: 'GET',
+        params: params?.includeArchived ? { includeArchived: true } : undefined,
+      }),
+      transformResponse: (response: Envelope<AdmissionIntakeSetup[]>) => unwrap(response),
+      providesTags: [tag],
+    }),
+    createAdmissionIntakeSetup: builder.mutation<
+      AdmissionIntakeSetup,
+      SaveAdmissionIntakeSetupInput
+    >({
+      query: (body) => ({ url: setupBaseUrl, method: 'POST', body }),
+      transformResponse: (response: Envelope<AdmissionIntakeSetup>) => unwrap(response),
+      invalidatesTags: [tag],
+    }),
+    updateAdmissionIntakeSetup: builder.mutation<
+      AdmissionIntakeSetup,
+      { id: string; body: SaveAdmissionIntakeSetupInput }
+    >({
+      query: ({ id, body }) => ({ url: `${setupBaseUrl}/${id}`, method: 'PUT', body }),
+      transformResponse: (response: Envelope<AdmissionIntakeSetup>) => unwrap(response),
+      invalidatesTags: [tag],
+    }),
+    getAdmissionIntakeSetupUsage: builder.query<AdmissionIntakeSetupUsage, string>({
+      query: (id) => `${setupBaseUrl}/${id}/usage`,
+      transformResponse: (response: Envelope<AdmissionIntakeSetupUsage>) => unwrap(response),
+      providesTags: [tag],
+    }),
+    archiveAdmissionIntakeSetup: builder.mutation<
+      AdmissionIntakeSetup,
+      { id: string; concurrencyStamp: string }
+    >({
+      query: ({ id, concurrencyStamp }) => ({
+        url: `${setupBaseUrl}/${id}/archive`,
+        method: 'POST',
+        body: { concurrencyStamp },
+      }),
+      transformResponse: (response: Envelope<AdmissionIntakeSetup>) => unwrap(response),
+      invalidatesTags: [tag],
+    }),
     getAdmissionPublicInquiryLinks: builder.query<AdmissionPublicInquiryLink[], void>({
       query: () => '/student/enrollment/admissions/public-inquiry-links',
       transformResponse: (response: Envelope<AdmissionPublicInquiryLink[]>) => unwrap(response),
@@ -115,7 +217,8 @@ export const admissionIntakeProfilesApi = api.injectEndpoints({
         method: 'POST',
         body,
       }),
-      transformResponse: (response: Envelope<CreatedAdmissionPublicInquiryLink>) => unwrap(response),
+      transformResponse: (response: Envelope<CreatedAdmissionPublicInquiryLink>) =>
+        unwrap(response),
       invalidatesTags: [tag],
     }),
     setAdmissionPublicInquiryLinkForm: builder.mutation<
@@ -150,6 +253,12 @@ export const {
   useGetAdmissionIntakeProfilesQuery,
   useCreateAdmissionIntakeProfileMutation,
   useUpdateAdmissionIntakeProfileMutation,
+  useGetAdmissionIntakeSetupsQuery,
+  useCreateAdmissionIntakeSetupMutation,
+  useUpdateAdmissionIntakeSetupMutation,
+  useGetAdmissionIntakeSetupUsageQuery,
+  useLazyGetAdmissionIntakeSetupUsageQuery,
+  useArchiveAdmissionIntakeSetupMutation,
   useGetAdmissionPublicInquiryLinksQuery,
   useCreateAdmissionPublicInquiryLinkMutation,
   useSetAdmissionPublicInquiryLinkFormMutation,

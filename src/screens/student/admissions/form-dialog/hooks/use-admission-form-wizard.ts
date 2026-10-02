@@ -10,7 +10,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 
 import { getAdmissionWizardSchema } from '../form-wizard-model';
-import { clearAdmissionFormDraft, useAdmissionFormDraftOwner } from '../form-draft-recovery';
 import {
   getAdmissionFormInitialValues,
   getBlankAdmissionFormInitialValues,
@@ -21,10 +20,10 @@ type Props = {
   initialPurpose?: CreateUpdateAdmissionForm['purpose'];
   onClose: () => void;
   onSave: (value: CreateUpdateAdmissionForm) => Promise<void>;
+  onPublishNow: (value: CreateUpdateAdmissionForm) => Promise<void>;
 };
 
-export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave }: Props) {
-  const draftOwner = useAdmissionFormDraftOwner();
+export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSave, onPublishNow }: Props) {
   const [activeStep, setActiveStep] = useState(0);
   const [initialValues] = useState(() =>
     editing
@@ -33,7 +32,8 @@ export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSav
   );
   const submitting = useBoolean();
   const savingRef = useRef(false);
-  const saveDraft = async (
+  const submit = async (
+    action: (value: CreateUpdateAdmissionForm) => Promise<void>,
     _isLastStep: boolean,
     values: CreateUpdateAdmissionForm,
     formik: FormikProps<CreateUpdateAdmissionForm>,
@@ -44,8 +44,7 @@ export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSav
     setLoading(true);
     submitting.onTrue();
     try {
-      await onSave({ ...values, name: values.name.trim(), code: values.code.trim().toUpperCase() });
-      clearAdmissionFormDraft(draftOwner, editing?.id);
+      await action({ ...values, name: values.name.trim(), code: editing?.code ?? '' });
       formik.resetForm();
       onClose();
     } catch (error) {
@@ -58,6 +57,18 @@ export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSav
       submitting.onFalse();
     }
   };
+  const saveDraft = (
+    isLastStep: boolean,
+    values: CreateUpdateAdmissionForm,
+    formik: FormikProps<CreateUpdateAdmissionForm>,
+    setLoading: (loading: boolean) => void
+  ) => submit(onSave, isLastStep, values, formik, setLoading);
+  const publishNow = (
+    isLastStep: boolean,
+    values: CreateUpdateAdmissionForm,
+    formik: FormikProps<CreateUpdateAdmissionForm>,
+    setLoading: (loading: boolean) => void
+  ) => submit(onPublishNow, isLastStep, values, formik, setLoading);
   const next = async (
     isLastStep: boolean,
     values: CreateUpdateAdmissionForm,
@@ -69,7 +80,7 @@ export function useAdmissionFormWizard({ editing, initialPurpose, onClose, onSav
       return;
     }
     // The shared stepper validates asynchronously, so lock before React updates busy state.
-    await saveDraft(isLastStep, values, formik, setLoading);
+    await publishNow(isLastStep, values, formik, setLoading);
   };
   return {
     activeStep,

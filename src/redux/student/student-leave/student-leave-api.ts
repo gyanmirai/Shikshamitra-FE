@@ -1,7 +1,8 @@
 import { api } from 'src/redux/service';
-import { studentLeaveType } from 'src/redux/tagTypes';
+import { studentType, studentLeaveType, studentTakeAttendanceType } from 'src/redux/tagTypes';
 
 export type StudentLeaveListQuery = {
+  academicYearId?: string;
   filterText?: string;
   studentId?: string;
   educationMediumId?: string;
@@ -32,7 +33,11 @@ export const StudentLeaveApi = api.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: [studentLeaveType.studentLeave],
+      invalidatesTags: [
+        studentLeaveType.studentLeave,
+        studentTakeAttendanceType.studentTakeAttendance,
+        studentType.student,
+      ],
     }),
     approveStudentLeave: builder.mutation({
       query: ({ id, data }) => ({
@@ -40,7 +45,11 @@ export const StudentLeaveApi = api.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: [studentLeaveType.studentLeave],
+      invalidatesTags: [
+        studentLeaveType.studentLeave,
+        studentTakeAttendanceType.studentTakeAttendance,
+        studentType.student,
+      ],
     }),
     rejectStudentLeave: builder.mutation({
       query: ({ id, data }) => ({
@@ -48,7 +57,11 @@ export const StudentLeaveApi = api.injectEndpoints({
         method: 'POST',
         data,
       }),
-      invalidatesTags: [studentLeaveType.studentLeave],
+      invalidatesTags: [
+        studentLeaveType.studentLeave,
+        studentTakeAttendanceType.studentTakeAttendance,
+        studentType.student,
+      ],
     }),
   }),
 });
