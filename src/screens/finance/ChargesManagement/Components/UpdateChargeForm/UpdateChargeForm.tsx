@@ -34,12 +34,12 @@ import {
   Paper,
   Stack,
   Alert,
+  Radio,
   Button,
   Divider,
   Skeleton,
   TextField,
-  Typography,
-	Radio,
+	Typography,
 	RadioGroup,
 	FormControlLabel,
 } from '@mui/material';
@@ -537,11 +537,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                           />
                           {values.chargeCategoryId && (
                             <Typography variant="caption" color="text.secondary" fontSize="0.75rem">
-                              {availableChargeCategories.find(
-                                (item: any) => item.id === values.chargeCategoryId
-                              )?.isApprovalRequired
-                                ? 'Need the approval from the authority'
-                                : 'Does not need the approval from the authority'}
+                              All charges start as Pending and require approval from an authorized person.
                             </Typography>
                           )}
                         </ShakingTextField>

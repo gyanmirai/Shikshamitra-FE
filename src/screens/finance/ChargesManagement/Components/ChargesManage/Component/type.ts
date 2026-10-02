@@ -11,6 +11,7 @@ export interface IChargeData {
   priority?: number;
   dueDate: string;
   status?: number;
+  workflowStatus?: number;
   purposeDescription: string;
   additionalNotes?: string;
   studentCount?: number;
@@ -22,8 +23,8 @@ export interface IChargeData {
   educationMediumId?: string;
   requestorName?: string;
   requestedOn?: string;
-	concurrencyStamp?: string;
-	availableActions?: string[];
+  concurrencyStamp?: string;
+  availableActions?: string[];
   // Legacy per-student fields (charge lines view)
   studentId?: string;
   studentName?: string;
@@ -45,12 +46,13 @@ export interface IChargeDetailData {
   priority: number;
   dueDate: string;
   status?: number;
+  workflowStatus?: number;
   purposeDescription: string;
   additionalNotes?: string;
   appliedOn?: string;
   chargeName?: string;
-	concurrencyStamp?: string;
-	availableActions?: string[];
+  concurrencyStamp?: string;
+  availableActions?: string[];
   audience?: {
     scope?: {
       boardId?: string;
@@ -71,6 +73,7 @@ export interface IChargeDetailData {
     standardName?: string;
     divisionName?: string;
     status?: number;
+    workflowStatus?: number;
   }>;
   appliedCount?: number;
   isApprovalRequired?: boolean;

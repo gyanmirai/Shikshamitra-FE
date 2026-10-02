@@ -7,6 +7,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Description } from '@mui/icons-material';
+import { fCurrency } from 'src/utils/format-number';
 import { InfoItem } from 'src/components/info-item';
 import { Scrollbar } from 'src/components/scrollbar';
 import CustomizableTable from 'src/components/customizabaleTable';
@@ -16,6 +17,7 @@ import { Box, Grid, Paper, Stack, Button, Divider, Typography, DialogActions } f
 import {
   ChargesPaymentStatus,
   ChargesPaymentStatusColors,
+  ChargeWorkflowStatusOptions,
   ChargesPaymentStatusOptions,
 } from 'src/enums/fee-charges-status';
 
@@ -48,8 +50,31 @@ const ChargeDetailsCard: React.FC<Props> = ({
       { id: 'standardName', label: 'Class', align: 'left' },
       { id: 'divisionName', label: 'Division', align: 'left' },
       {
-        id: 'status',
+        id: 'collectedAmount',
+        label: 'Collected',
+        align: 'left',
+        render: (value) => fCurrency(value),
+      },
+      { id: 'waivedAmount', label: 'Waived', align: 'left', render: (value) => fCurrency(value) },
+      {
+        id: 'outstandingAmount',
+        label: 'Outstanding',
+        align: 'left',
+        render: (value) => fCurrency(value),
+      },
+      {
+        id: 'workflowStatus',
         label: 'Status',
+        align: 'left',
+        sticky: true,
+        render: (value) => {
+          const option = ChargeWorkflowStatusOptions.find((item) => item.value === value);
+          return <Label color={option?.color ?? 'default'}>{option?.label ?? 'Unknown'}</Label>;
+        },
+      },
+      {
+        id: 'status',
+        label: 'Approval',
         align: 'left',
         isFilter: true,
         filterType: 'enum',

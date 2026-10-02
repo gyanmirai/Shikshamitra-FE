@@ -3,20 +3,20 @@ module: finance
 domain: charge-management
 content_type: Reference
 status: active
-updated_on: 2026-09-24
+updated_on: 2026-10-02
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Charge Management frontend flow
 
-## Implementation status (2026-09-21)
+## Implementation status (2026-10-02)
 
 The canonical workspace is `/finance/charge-management`; the former `chargesRequest` and `chargesList` URLs redirect there. The workspace now uses typed charge requests/responses, explicit all-in-scope versus selected-student audience modes, server paging/search, exact action permissions plus backend `availableActions`, optimistic concurrency stamps, collected/outstanding amounts, and an audited void dialog. Charge Category setup requires an Income Category and displays its resolved account head.
 
 Collected charges cannot be voided from this screen. Users are directed to reconciliation/refund handling, and the backend enforces that boundary. A charge-specific paid-refund UI, immutable event timeline, notifications, export parity, and browser automation remain follow-up work.
 
-TL;DR: `/finance/charge-management` is the active workspace and already supports create, review, approve/reject, and collection handoff. Its current client and screens are not a complete production contract: the list omits the required academic year, actions do not enforce exact permissions, batch selection can accidentally mean all students, paging and errors are incomplete, and the nested history route contains a placeholder Remove action.
+The inbox now shows Pending, In Process, Completed and Rejected with server counts and status badges. Every new charge requires approval, and category setup no longer offers a bypass. Detail distinguishes approval decisions from collection status and shows collected, waived and outstanding amounts per student. Payment, waiver and reconciliation mutations refresh subscribed charge queries. Completion uses the server's batch `workflowStatus`; the original student `status` remains the approval decision. See [Finance testing](../testing.md) for focused regression commands.
 
 Backend behavior, financial invariants, gaps, and the target lifecycle are canonical in [Charge management end to end](../../../../Shikshamitra-BE/docs/modules/finance/references/charge-management-end-to-end.md).
 
@@ -37,15 +37,18 @@ The route layout and menu protect navigation with Charge View. Navigation access
 
 ## Current user journey
 
-1. The active page lists charge request batches in Fees and Approvals tabs.
+1. The active page lists charge request batches in Pending, In Process, Completed and Rejected tabs.
 2. Add/Edit opens `UpdateChargeForm`, which loads Charge Categories and only students with a fee-structure assignment for the selected academic year, builds an audience, and posts to `api/charges`.
 3. A detail/review surface loads the request and lets a checker approve or reject selected pending student lines.
 4. Approved lines are fetched by Fee Collection. The collector can include full or partial charge allocations with normal fee allocations.
 5. The backend issues a separate charge receipt and collection views can display the paid charge lines.
+6. The batch becomes Completed when all approved student balances are settled, including applied waivers. A reversed allocation can return it to In Process. Pending rejection moves a fully rejected batch to Rejected; partial decisions remain Pending until every student is reviewed.
 
 This is a partial flow. Charge correction, void, refund, source drill-through, account classification, and a complete audit timeline are not available from Charge Management. The approved target deliberately keeps waiver controls out of this screen and places the reason-only full-balance toggle in Fee Collection.
 
-## Confirmed frontend gaps
+## Historical gap assessment (2026-09-21)
+
+This table records the original assessment; the implementation status above and current source describe delivered behavior.
 
 | ID | Priority | Current issue | Required frontend behavior |
 |---|---|---|---|
@@ -198,8 +201,9 @@ Stable backend errors should drive messages such as:
 ### Browser journeys
 
 1. Author creates a selected-student charge after preview and cannot approve it.
-2. Independent checker approves a subset; pending and processed summaries stay correct.
+2. Independent checker approves a subset; the batch stays Pending until all lines are reviewed, then appears in In Process or Rejected.
 3. Collector makes a partial then final charge payment and opens both returned receipts.
+   Verify that partial settlement stays In Process, all-student settlement becomes Completed, and reversing a payment restores In Process when a balance returns.
 4. A stale approval or collection is blocked, refreshed, and safely retried.
 5. A user with View only sees no mutation controls and direct mutation calls are rejected.
 6. Switching academic years never displays or mutates the previous year's charges.

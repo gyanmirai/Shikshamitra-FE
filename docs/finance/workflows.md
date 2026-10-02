@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-01
+updated_on: 2026-10-02
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -59,7 +59,7 @@ Use this page to pick the first files for common Finance changes.
 
 ## Trace charge management changes
 
-Charge changes start at `/finance/charge-management`.
+Charge changes start at `/finance/charge-management`. The workspace has Pending, In Process, Completed and Rejected tabs with server counts. Each row and detail header displays the server `workflowStatus`; the student table distinguishes approval, collected, waived and outstanding amounts. New charges always need an independent checker, and the form explains this for every category. Collection/waiver and reconciliation decisions invalidate the charge cache so rows move between tabs after settlement or reversal. The active tab is preserved when returning from detail. See the [backend lifecycle contract](../../../Shikshamitra-BE/docs/modules/finance/references/charge-management-end-to-end.md#four-state-batch-lifecycle) for state and compatibility rules.
 
 1. Inspect `src/app/(auth-route)/finance/charge-management/**`.
 2. Inspect `src/screens/finance/ChargesManagement/**`.
@@ -67,7 +67,7 @@ Charge changes start at `/finance/charge-management`.
 4. Inspect `src/redux/finance/ChargeManagement/chargeMappers.ts`.
 5. Confirm backend behavior in `../../../Shikshamitra-BE/docs/modules/finance/api.md`.
 
-The current workspace creates and reviews charge batches, while Fee Collection collects approved student lines and displays charge receipts. It does not yet provide a complete correction/refund lifecycle. Academic-year filtering, exact action permissions, explicit audience mode, preview/fingerprint, stamps, idempotency, pagination, and placeholder route cleanup are required. Follow [Charge Management frontend flow](./references/charge-management-frontend-flow.md) for the reviewed current state, target interaction sequence, and acceptance coverage.
+The current workspace creates and reviews charge batches, while Fee Collection collects approved student lines and displays charge receipts. It uses academic-year filters, exact action permissions, explicit audience modes, concurrency stamps and server pagination. Full paid-charge refund handling, audience preview/fingerprints and command idempotency remain follow-up work. Follow [Charge Management frontend flow](./references/charge-management-frontend-flow.md) for the current state, target interaction sequence and acceptance coverage.
 
 ## Trace collection and receipt changes
 

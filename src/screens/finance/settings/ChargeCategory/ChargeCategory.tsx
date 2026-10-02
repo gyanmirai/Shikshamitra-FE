@@ -1,7 +1,6 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import * as Yup from 'yup';
@@ -13,21 +12,22 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
+import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
-import CustomSelect from 'src/components/custom-select';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { financePermissions } from 'src/constants/finance-menu';
-import { hasGrantedPermission } from 'src/utils/permissions';
+import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
@@ -36,11 +36,9 @@ import {
   Chip,
   Stack,
   Button,
-  Switch,
   TextField,
   Typography,
   DialogActions,
-  FormControlLabel,
 } from '@mui/material';
 import {
   chargeCategoryApi,
@@ -228,10 +226,8 @@ const FinanceChargeCategory = () => {
         id: 'isApprovalRequired',
         label: 'Approval Required',
         minWidth: '200px',
-        isSort: true,
-        isFilter: true,
         align: 'left',
-        render: (value: boolean) => (value ? 'Yes' : 'No'),
+        render: () => 'Yes',
       },
       {
         id: 'description',
@@ -532,7 +528,6 @@ interface ChargeCategoryDialogProps {
 
 interface ChargeCategoryFormValues {
   chargeName: string;
-  isRefundable: boolean;
   description: string;
   incomeCategoryId: string;
 }
@@ -611,7 +606,6 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
             if (editData && editData.name.trim().toLowerCase() === trimmed) return true;
             return !existingNamesRef.current.has(trimmed);
           }),
-        isRefundable: Yup.boolean().required(),
         description: Yup.string().optional(),
         incomeCategoryId: Yup.string().required('Income Category is required'),
       }),
@@ -622,7 +616,6 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
   const formik = useFormik<ChargeCategoryFormValues>({
     initialValues: {
       chargeName: editData?.name || '',
-      isRefundable: editData?.isApprovalRequired || false,
       description: editData?.description || '',
       incomeCategoryId: editData?.incomeCategoryId || '',
     },
@@ -646,7 +639,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
     try {
       const payload = {
         name: values.chargeName,
-        isApprovalRequired: values.isRefundable,
+        isApprovalRequired: true,
         description: values.description || '',
         incomeCategoryId: values.incomeCategoryId,
       };
@@ -744,19 +737,9 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
               />
             </ShakingTextField>
 
-            {/* Approval Required Switch */}
-            <Box>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={formik.values.isRefundable}
-                    onChange={(e) => formik.setFieldValue('isRefundable', e.target.checked)}
-                    name="isRefundable"
-                  />
-                }
-                label="Approval Required?"
-              />
-            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Charges in every category require approval from an authorized person.
+            </Typography>
 
             {/* Description Field */}
             <ShakingTextField

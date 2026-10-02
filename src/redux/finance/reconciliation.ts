@@ -8,7 +8,7 @@ import type {
 } from 'src/types/finance/reconciliation';
 
 import { api } from 'src/redux/service';
-import { reconciliationType } from 'src/redux/tagTypes';
+import { financeModuleType, reconciliationType } from 'src/redux/tagTypes';
 
 export const ReconciliationApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -45,7 +45,11 @@ export const ReconciliationApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [reconciliationType.reconciliation],
+      invalidatesTags: [
+        reconciliationType.reconciliation,
+        financeModuleType.charges,
+        financeModuleType.feeDetails,
+      ],
     }),
 
     /** Reject a provisional fee receipt with mandatory remarks. */
@@ -58,7 +62,11 @@ export const ReconciliationApi = api.injectEndpoints({
         method: 'PATCH',
         body,
       }),
-      invalidatesTags: [reconciliationType.reconciliation],
+      invalidatesTags: [
+        reconciliationType.reconciliation,
+        financeModuleType.charges,
+        financeModuleType.feeDetails,
+      ],
     }),
 
     /** Download receipt PDF for reconciliation item */

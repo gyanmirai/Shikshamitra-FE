@@ -1,30 +1,27 @@
 'use client';
 
-import type { LabelColor } from 'src/components/label';
-
 import dayjs from 'dayjs';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState, useEffect } from 'react';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useGetChargesQuery } from 'src/redux/finance/ChargeManagement/chargeApi';
 import { Box, Tab, Tabs, Card, Chip, Typography, IconButton } from '@mui/material';
+import { ChargeWorkflowStatus, ChargeWorkflowStatusOptions } from 'src/enums/fee-charges-status';
+import { useChargePermissions } from 'src/screens/finance/ChargesManagement/useChargePermissions';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
   useFinanceAcademicFilters,
   type UseFinanceAcademicFiltersResult,
 } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
-import { useChargePermissions } from 'src/screens/finance/ChargesManagement/useChargePermissions';
 
 import type { IChargeData } from './type';
 
-/** Tab value 0 = Pending, 1 = Processed */
-const PENDING = 0;
-const PROCESSED = 1;
+const PENDING = ChargeWorkflowStatus.Pending;
 
 const ChargesTable = ({
   onView,
@@ -124,26 +121,24 @@ const ChargesTable = ({
   const chargeCounts = useMemo(
     () => ({
       pending: chargesData?.pendingCount ?? 0,
-      processed: chargesData?.processedCount ?? 0,
+      inProcess: chargesData?.inProcessCount ?? 0,
+      completed: chargesData?.completedCount ?? 0,
+      rejected: chargesData?.rejectedCount ?? 0,
     }),
     [chargesData]
   );
 
   const TABS = useMemo(
-    () => [
-      {
-        label: 'Pending',
-        value: PENDING,
-        count: chargeCounts.pending,
-        color: 'warning' as LabelColor,
-      },
-      {
-        label: 'Processed',
-        value: PROCESSED,
-        count: chargeCounts.processed,
-        color: 'success' as LabelColor,
-      },
-    ],
+    () =>
+      ChargeWorkflowStatusOptions.map((option) => ({
+        ...option,
+        count: [
+          chargeCounts.pending,
+          chargeCounts.inProcess,
+          chargeCounts.completed,
+          chargeCounts.rejected,
+        ][option.value],
+      })),
     [chargeCounts]
   );
 
@@ -266,9 +261,9 @@ const ChargesTable = ({
               const isPending = row.displayStatus === PENDING;
               return (
                 <Chip
-                  label={`${processed}/${total} processed`}
+                  label={`${processed}/${total} reviewed`}
                   size="small"
-                  color={isPending ? 'warning' : 'success'}
+                  color={isPending ? 'warning' : 'default'}
                   variant="outlined"
                   sx={{ fontSize: '11px', height: 22 }}
                 />
@@ -326,6 +321,18 @@ const ChargesTable = ({
             width: 120,
             minWidth: 100,
             maxWidth: 150,
+          },
+          {
+            id: 'workflowStatus',
+            label: 'Status',
+            align: 'left',
+            sticky: true,
+            width: 120,
+            minWidth: 110,
+            render: (value) => {
+              const option = ChargeWorkflowStatusOptions.find((item) => item.value === value);
+              return <Label color={option?.color ?? 'default'}>{option?.label ?? 'Unknown'}</Label>;
+            },
           },
           {
             id: 'actions',
