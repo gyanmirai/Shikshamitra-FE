@@ -12,6 +12,7 @@ type RubricScoreSelectorProps = {
   onMarksChange: (criterionId: string, marks: string) => void;
   readOnly?: boolean;
   compact?: boolean;
+  isRatingScale?: boolean;
 };
 
 const RubricScoreSelector = ({
@@ -21,6 +22,7 @@ const RubricScoreSelector = ({
   onMarksChange,
   readOnly,
   compact = false,
+  isRatingScale = false,
 }: RubricScoreSelectorProps) => (
   <Box component="fieldset" sx={{ p: 0, m: 0, border: 0, minWidth: 0 }}>
     <Typography
@@ -30,7 +32,7 @@ const RubricScoreSelector = ({
       color="text.secondary"
       sx={{ mb: 1 }}
     >
-      {readOnly ? 'Recorded score' : 'Select a score'}
+      {readOnly ? (isRatingScale ? 'Recorded rating' : 'Recorded score') : (isRatingScale ? 'Select a rating' : 'Select a score')}
     </Typography>
     <ToggleButtonGroup
       fullWidth
@@ -40,7 +42,7 @@ const RubricScoreSelector = ({
       onChange={(_event, selectedMarks: string | null) => {
         if (selectedMarks !== null) onMarksChange(criterion.id, selectedMarks);
       }}
-      aria-label={`${criterion.title} performance level`}
+      aria-label={`${criterion.title} ${isRatingScale ? 'rating scale' : 'performance level'}`}
       sx={{
         display: 'grid',
         gridTemplateColumns: {
@@ -80,7 +82,7 @@ const RubricScoreSelector = ({
           key={`${level.level}-${level.label}`}
           value={String(level.score)}
           disabled={readOnly}
-          aria-label={`${criterion.title}: ${level.label}, ${level.score} points`}
+          aria-label={`${criterion.title}: ${level.label}, ${level.score} ${isRatingScale ? 'rating' : 'points'}`}
         >
           <Stack spacing={0.25} alignItems="flex-start" sx={{ width: '100%' }}>
             <Typography
@@ -100,7 +102,7 @@ const RubricScoreSelector = ({
                 color: compact && marks === String(level.score) ? 'primary.darker' : undefined,
               }}
             >
-              {level.score} {level.score === 1 ? 'point' : 'points'}
+              {isRatingScale ? `Rating ${level.score}` : `${level.score} ${level.score === 1 ? 'point' : 'points'}`}
             </Typography>
           </Stack>
         </ToggleButton>

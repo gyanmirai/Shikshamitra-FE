@@ -56,25 +56,31 @@ const ExamBasicReview = ({
               </Typography>
             </Box>
             <Divider sx={{ my: 1.5 }} />
-            <Grid container columnSpacing={2} rowSpacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ExamReviewInfoItem label="Exam Name" value={values.examName || '-'} />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ExamReviewInfoItem
-                  label="Exam Type"
-                  value={values.examTypeName || values.examType || '-'}
-                />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ExamReviewInfoItem label="Grading Scale" value={gradingScaleName} />
-              </Grid>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'minmax(0, 1fr)',
+                  sm: 'repeat(2, minmax(0, 1fr))',
+                  md:
+                    values.examName?.length > 24
+                      ? 'minmax(0, 1.5fr) repeat(2, minmax(0, 1fr))'
+                      : 'repeat(3, minmax(0, 1fr))',
+                },
+                columnGap: 2,
+                rowGap: 2,
+              }}
+            >
+              <ExamReviewInfoItem label="Exam Name" value={values.examName || '-'} />
+              <ExamReviewInfoItem
+                label="Exam Type"
+                value={values.examTypeName || values.examType || '-'}
+              />
+              <ExamReviewInfoItem label="Grading Scale" value={gradingScaleName} />
               {values.description && (
-                <Grid size={{ xs: 12 }}>
-                  <ExamReviewInfoItem label="Description" value={values.description} />
-                </Grid>
+                <ExamReviewInfoItem label="Description" value={values.description} />
               )}
-            </Grid>
+            </Box>
           </Paper>
         </Grid>
 
@@ -87,53 +93,58 @@ const ExamBasicReview = ({
               </Typography>
             </Box>
             <Divider sx={{ my: 1.5 }} />
-            <Grid container columnSpacing={2} rowSpacing={2}>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ExamReviewInfoItem label="Class" value={className || '-'} />
-              </Grid>
-              <Grid size={{ xs: 12, sm: 6 }}>
-                <ExamReviewInfoItem
-                  label="Divisions"
-                  value={
-                    divisions.length > 0 ? (
-                      <Box display="flex" flexWrap="wrap" gap={0.75}>
-                        {divisions.map((division: Division) => (
-                          <Chip
-                            key={division.id}
-                            label={division.name}
-                            size="small"
-                            variant="outlined"
-                          />
-                        ))}
-                      </Box>
-                    ) : (
-                      '-'
-                    )
-                  }
-                />
-              </Grid>
-              <Grid size={{ xs: 12 }}>
-                <ExamReviewInfoItem
-                  label="Subjects"
-                  value={
-                    values.subjects.length > 0 ? (
-                      <Box display="flex" flexWrap="wrap" gap={0.75}>
-                        {values.subjects.map((subject) => (
-                          <Chip
-                            key={subject.subjectId}
-                            label={subject.subjectName}
-                            size="small"
-                            variant="outlined"
-                          />
-                        ))}
-                      </Box>
-                    ) : (
-                      '-'
-                    )
-                  }
-                />
-              </Grid>
-            </Grid>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                  xs: 'minmax(0, 1fr)',
+                  sm: 'repeat(2, minmax(0, 1fr))',
+                  md: 'repeat(3, minmax(0, 1fr))',
+                },
+                columnGap: 2,
+                rowGap: 2,
+              }}
+            >
+              <ExamReviewInfoItem label="Class" value={className || '-'} />
+              <ExamReviewInfoItem
+                label="Divisions"
+                value={
+                  divisions.length > 0 ? (
+                    <Box display="flex" flexWrap="wrap" gap={0.75}>
+                      {divisions.map((division: Division) => (
+                        <Chip
+                          key={division.id}
+                          label={division.name}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  ) : (
+                    '-'
+                  )
+                }
+              />
+              <ExamReviewInfoItem
+                label="Subjects"
+                value={
+                  values.subjects.length > 0 ? (
+                    <Box display="flex" flexWrap="wrap" gap={0.75}>
+                      {values.subjects.map((subject) => (
+                        <Chip
+                          key={subject.subjectId}
+                          label={subject.subjectName}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  ) : (
+                    '-'
+                  )
+                }
+              />
+            </Box>
           </Paper>
         </Grid>
       </Grid>

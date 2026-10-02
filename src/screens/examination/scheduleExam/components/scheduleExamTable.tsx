@@ -373,7 +373,8 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
     onClick: () => handleInsightClick(metric.id),
   }));
 
-  const classLabel = classOptions.find((option) => option.value === selectedClass)?.label ?? 'All Classes';
+  const classLabel =
+    classOptions.find((option) => option.value === selectedClass)?.label ?? 'All Classes';
   const dateLabel =
     dateRange[0]?.isValid() && dateRange[1]?.isValid()
       ? `${dateRange[0].format('DD MMM YYYY')} – ${dateRange[1].format('DD MMM YYYY')}`
@@ -394,21 +395,100 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
           elevation={0}
           sx={{
             display: 'flex',
-            gap: 1.5,
             alignItems: 'center',
             justifyContent: 'space-between',
-            px: 2,
+            flexWrap: 'wrap',
+            gap: 1.5,
+            px: 1,
             py: 0.75,
+            minHeight: 62,
             borderRadius: 1,
             border: '1px solid',
             borderColor: 'divider',
-            flexWrap: 'wrap',
+          }}
+        >
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            alignItems={{ xs: 'stretch', sm: 'center' }}
+            sx={{ width: { xs: '100%', sm: 'auto' }, gap: 1.5 }}
+          >
+            <Box sx={{ width: { xs: '100%', sm: 160 } }}>
+              <CustomSelect
+                label="Class"
+                options={classOptions}
+                labelKey="label"
+                valueKey="value"
+                value={selectedClass || 'all'}
+                onChange={(val) => {
+                  onClassChange?.(String(val));
+                }}
+                formControlProps={{ fullWidth: true, size: 'small', sx: { maxWidth: 'unset' } }}
+              />
+            </Box>
+
+            <Box sx={{ width: { xs: '100%', sm: 230 } }}>
+              <CustomDateRangePicker
+                label="Date Range"
+                value={dateRange}
+                dateFormat="DD-MM-YYYY"
+                onChange={(value) => {
+                  onDateRangeChange?.(value);
+                }}
+              />
+            </Box>
+          </Stack>
+
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="flex-end"
+            sx={{ width: { xs: '100%', sm: 'auto' }, flexWrap: 'wrap', gap: 1.5, ml: 'auto' }}
+          >
+            <Button
+              size="small"
+              variant="outlined"
+              color="inherit"
+              startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+              onClick={onOpenInsights}
+              disabled={!medium?.id}
+              sx={{ width: 160, whiteSpace: 'nowrap', flexShrink: 0 }}
+            >
+              View all insights
+            </Button>
+
+            {isScheduleExamButton && canAdd && (
+              <Button
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                onClick={() => {
+                  setOpenDialog?.(true);
+                }}
+                sx={{ width: 160, whiteSpace: 'nowrap', flexShrink: 0 }}
+              >
+                Schedule Exam
+              </Button>
+            )}
+          </Stack>
+        </Paper>
+
+        <Paper
+          elevation={0}
+          sx={{
+            px: 1,
+            py: 0.75,
+            minHeight: 62,
+            borderRadius: 1,
+            border: '1px solid',
+            borderColor: 'divider',
           }}
         >
           <Tabs
             value={tabs.value}
             onChange={handleTabChange}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, flexShrink: 0 }}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, maxWidth: '100%' }}
           >
             {TABS.map((tab) => (
               <Tab
@@ -424,73 +504,6 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
               />
             ))}
           </Tabs>
-
-          <Stack
-            direction="row"
-            alignItems="center"
-            sx={{
-              maxWidth: '100%',
-              flex: '0 1 auto',
-              flexWrap: 'wrap',
-              gap: 1.5,
-              ml: 'auto',
-            }}
-          >
-            <Stack direction="row" alignItems="center" sx={{ flexWrap: 'wrap', gap: 1.5 }}>
-              <Box sx={{ minWidth: { xs: 130, sm: 160 } }}>
-                <CustomSelect
-                  label="Class"
-                  options={classOptions}
-                  labelKey="label"
-                  valueKey="value"
-                  value={selectedClass || 'all'}
-                  onChange={(val) => {
-                    onClassChange?.(String(val));
-                  }}
-                  formControlProps={{ fullWidth: true, size: 'small', sx: { maxWidth: 'unset' } }}
-                />
-              </Box>
-
-              <Box sx={{ minWidth: { xs: 190, sm: 230 } }}>
-                <CustomDateRangePicker
-                  label="Date Range"
-                  value={dateRange}
-                  dateFormat="DD-MM-YYYY"
-                  onChange={(value) => {
-                    onDateRangeChange?.(value);
-                  }}
-                />
-              </Box>
-            </Stack>
-
-            <Stack direction="row" alignItems="center" sx={{ flexWrap: 'wrap', gap: 1.5 }}>
-              <Button
-                size="small"
-                variant="outlined"
-                color="inherit"
-                startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
-                onClick={onOpenInsights}
-                disabled={!medium?.id}
-                sx={{ width: 160, whiteSpace: 'nowrap', flexShrink: 0 }}
-              >
-                View all insights
-              </Button>
-
-              {isScheduleExamButton && canAdd && (
-                <Button
-                  size="small"
-                  startIcon={<Add />}
-                  variant="contained"
-                  onClick={() => {
-                    setOpenDialog?.(true);
-                  }}
-                  sx={{ width: 160, whiteSpace: 'nowrap', flexShrink: 0 }}
-                >
-                  Schedule Exam
-                </Button>
-              )}
-            </Stack>
-          </Stack>
         </Paper>
       </Box>
       <AcademicInsights

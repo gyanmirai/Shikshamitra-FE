@@ -1,6 +1,7 @@
 import { Stack } from '@mui/material';
 
 import RubricCriterionCard from './rubricCriterionCard';
+import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import type { RubricCriterionScoringProps } from './rubricEvaluationTypes';
 
@@ -29,6 +30,7 @@ const RubricPerformanceCards = ({
           onCommentsChange={onCommentsChange}
           readOnly={readOnly}
           compact={compact}
+          isRatingScale={rubric.scoringModel === RubricScoringModel.RatingScale}
         />
       ))}
     </Stack>

@@ -5,7 +5,7 @@ import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { Box, Card, Chip, Alert, Stack, Divider, Typography, IconButton } from '@mui/material';
-import { RubricStatus } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+import { RubricStatus, RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import RubricScoreSummary from './rubricScoreSummary';
 import { useRubricEvaluation } from './useRubricEvaluation';
@@ -25,6 +25,15 @@ const RubricEvaluationPanel = React.forwardRef<
   const readOnly =
     props.readOnly || evaluation.isLocked || evaluation.isLoading || evaluation.hasEvaluationError;
   const { onStateChange, studentRow } = props;
+  const scoringGuidance = evaluation.activeRubric?.scoringModel === RubricScoringModel.Checklist
+    ? 'Mark each item Met or Not met and add focused feedback.'
+    : evaluation.activeRubric?.scoringModel === RubricScoringModel.WeightedPercentage && !evaluation.activeRubric.performanceLevels.length
+      ? 'Enter achievement from 0 to 100% for each weighted criterion.'
+      : evaluation.activeRubric?.scoringModel === RubricScoringModel.PointsBased && !evaluation.activeRubric.performanceLevels.length
+        ? 'Enter points earned for each criterion and add focused feedback.'
+        : evaluation.activeRubric?.scoringModel === RubricScoringModel.RatingScale
+          ? 'Choose a rating for each criterion and add focused feedback.'
+          : 'Select a performance level and add focused feedback for every criterion.';
 
   React.useEffect(() => {
     onStateChange?.({
@@ -55,8 +64,8 @@ const RubricEvaluationPanel = React.forwardRef<
               <CustomTooltip
                 title={
                   props.readOnly
-                    ? 'Review the recorded performance level and feedback for every criterion.'
-                    : 'Select a performance level and add focused feedback for every criterion.'
+                    ? 'Review the recorded score and feedback for every criterion.'
+                    : scoringGuidance
                 }
                 placement="right"
                 arrow
@@ -69,7 +78,7 @@ const RubricEvaluationPanel = React.forwardRef<
           </Stack>
           {!compact ? (
             <Typography variant="body2" color="text.secondary">
-              Select a performance level and add focused feedback for every criterion.
+              {scoringGuidance}
             </Typography>
           ) : null}
         </Box>
@@ -136,6 +145,7 @@ const RubricEvaluationPanel = React.forwardRef<
           <RubricScoreSummary
             totalMarks={evaluation.totalMarks}
             maxMarks={evaluation.activeRubric.totalMarks}
+            scoringModel={evaluation.activeRubric.scoringModel}
             remarks={evaluation.remarks}
             onRemarksChange={evaluation.setRemarks}
             readOnly={readOnly}

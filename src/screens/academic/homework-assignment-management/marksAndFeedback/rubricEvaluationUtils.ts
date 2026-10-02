@@ -3,6 +3,7 @@ import type {
   RubricEvaluationDto,
   RubricEvaluationScoreInputDto,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import type { CriterionEvaluationValues } from './rubricEvaluationTypes';
 
@@ -42,7 +43,14 @@ export const validateCriterionValues = (
     if (marks === undefined || marks.trim() === '') return criterion.isRequired;
 
     const numericMarks = Number(marks);
-    return !Number.isFinite(numericMarks) || numericMarks < 0 || numericMarks > criterion.maxMarks;
+    if (!Number.isFinite(numericMarks) || numericMarks < 0 || numericMarks > Math.min(criterion.maxMarks, 1000)) return true;
+    if (rubric.scoringModel === RubricScoringModel.Checklist && !rubric.performanceLevels.length) {
+      return numericMarks !== 0 && numericMarks !== 1;
+    }
+    if (usesPerformanceLevels(rubric)) {
+      return !rubric.performanceLevels.some((level) => level.score === numericMarks && level.score <= criterion.maxMarks);
+    }
+    return false;
   });
 
 export const buildEvaluationScores = (

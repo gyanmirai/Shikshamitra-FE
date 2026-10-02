@@ -363,7 +363,7 @@ const ScheduleExamPreviewDrawer = ({
         <Box sx={{ p: { xs: 2, sm: 3 } }}>
           {isDetailsLoading && <LoadingScreen sx={{ minHeight: 200 }} />}
           {!isDetailsLoading && (
-            <Stack spacing={2}>
+            <Stack spacing={1.5}>
               <ScheduleExamPreviewOverview
                 className={resolvedStandardName}
                 createdBy={resolvedCreatedBy}

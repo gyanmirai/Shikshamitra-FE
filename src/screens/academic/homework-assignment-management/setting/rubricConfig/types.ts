@@ -6,6 +6,7 @@ import type {
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 export type RubricCriterionFormValue = {
+  id: string;
   title: string;
   description: string;
   maxMarks: string;
@@ -15,7 +16,7 @@ export type RubricCriterionFormValue = {
 };
 
 export type RubricPerformanceLevelFormValue = {
-  level: string;
+  id: string;
   label: string;
   score: string;
   description: string;

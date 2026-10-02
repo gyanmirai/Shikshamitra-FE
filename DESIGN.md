@@ -49,6 +49,7 @@ Every authenticated page uses the shared application shell.
 The page header contains the title, breadcrumb context, concise description, and primary page action when one exists.
 Global navigation and the page header stay mounted while page content loads, refreshes, or reports an error.
 Page-specific filters and context controls appear between the header and the primary content.
+Contained page-header rows, including filter/action and status-tab rows, use one spacing unit of horizontal padding (`px: 1`); keep vertical padding aligned to the controls.
 Repeated actions use the same label, icon, order, and placement across related pages.
 
 Do not add a second page title inside the primary card.
@@ -335,7 +336,9 @@ Text and controls must meet the project's contrast requirements in light and dar
 ## Copy and formatting
 
 Use school-facing language and the same visible term for the same concept.
-Buttons begin with a clear verb.
+Buttons begin with a clear verb. On matching settings creation pages, a leading
+plus icon may stand for `Add` with an object-only visible label; give that
+button an action-specific accessible name.
 Headings use sentence case unless a proper noun requires otherwise.
 Descriptions are concise and explain outcomes rather than implementation.
 Errors state what failed and what the user can do next.
@@ -1455,6 +1458,7 @@ The established shared implementation is exported from `src/screens/hr/employee/
 
 - Use `SectionCard` whenever a form contains multiple logical groups of fields, especially when those groups are implemented in separate files or step components.
 - Give every section a meaningful title that describes the fields inside it; do not use generic titles such as `Section 1`.
+- Use a neutral leading icon for informational section headings, aligned with the title and optional help icon. The help icon may use the theme info color; reserve other semantic icon colors for status.
 - Keep one logical field group inside one `SectionCard`; do not combine unrelated domains merely to reduce the number of cards.
 - Keep field components and Formik state in the owning form/step files while using `SectionCard` only for visual grouping and section layout.
 - Pass the same Formik instance into field components; `SectionCard` must not create or own form state.

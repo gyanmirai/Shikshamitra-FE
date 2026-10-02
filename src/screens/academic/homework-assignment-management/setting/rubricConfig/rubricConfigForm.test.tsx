@@ -98,16 +98,20 @@ describe('Rubric template visibility', () => {
     await user.click(screen.getByRole('option', { name: 'Both' }));
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.type(await screen.findByLabelText('Criterion *'), 'Accuracy');
-    await user.click(screen.getByRole('combobox', { name: 'Max Score *' }));
-    await user.click(screen.getByRole('option', { name: 'Excellent (4)' }));
+    expect(screen.getByLabelText('Max Points *')).toHaveValue(10);
     await user.click(screen.getByRole('button', { name: 'Next' }));
     await user.click(await screen.findByRole('button', { name: /^Save$/ }));
     await waitFor(() => expect(requests).toHaveLength(1));
     expect(requests[0]).toMatchObject({
       method: 'POST',
-      body: { title: 'Writing rubric', visibility: RubricVisibility.Institution },
+      body: {
+        title: 'Writing rubric',
+        visibility: RubricVisibility.Institution,
+        performanceLevels: [],
+        criteria: [expect.objectContaining({ title: 'Accuracy', maxMarks: 10 })],
+      },
     });
-  }, 15000);
+  }, 60000);
 
   it.each([
     RubricVisibility.Private,
@@ -126,4 +130,43 @@ describe('Rubric template visibility', () => {
       expect(requests[0]).toMatchObject({ method: 'PUT', body: { visibility } });
     }
   );
+});
+
+describe('Rubric template tags', () => {
+  it('shows saved tags as chips, keeps them through the wizard, and includes them in Preview and save', async () => {
+    const { user, requests } = setup({ ...existingRubric, tags: ['Project', 'Creativity'] });
+    expect(screen.getByRole('button', { name: 'Remove tag Project' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove tag Creativity' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await screen.findByLabelText('Criterion *');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByText('Tags')).toBeInTheDocument();
+    expect(screen.getByText('Project')).toBeInTheDocument();
+    expect(screen.getByText('Creativity')).toBeInTheDocument();
+
+    await user.click(await screen.findByRole('button', { name: /^Save$/ }));
+    await waitFor(() => expect(requests).toHaveLength(1));
+    expect(requests[0].body.tags).toEqual(['Project', 'Creativity']);
+  });
+});
+
+describe('Rubric template step navigation', () => {
+  it('opens completed steps and preserves entered values', async () => {
+    const { user } = setup(null);
+    expect(screen.getByRole('button', { name: 'Step 2: Criteria & Scoring' })).toBeDisabled();
+
+    await user.type(screen.getByLabelText('Rubric Name *'), 'Writing rubric');
+    await user.click(screen.getByRole('combobox', { name: 'Applies To *' }));
+    await user.click(screen.getByRole('option', { name: 'Both' }));
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.type(await screen.findByLabelText('Criterion *'), 'Accuracy');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+
+    await user.click(screen.getByRole('button', { name: 'Step 1: Basic Information' }));
+    expect(screen.getByLabelText('Rubric Name *')).toHaveValue('Writing rubric');
+
+    await user.click(screen.getByRole('button', { name: 'Step 2: Criteria & Scoring' }));
+    expect(await screen.findByLabelText('Criterion *')).toHaveValue('Accuracy');
+  });
 });

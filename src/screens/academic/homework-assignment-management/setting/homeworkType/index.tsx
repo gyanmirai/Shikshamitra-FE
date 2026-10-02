@@ -161,6 +161,7 @@ const HomeworkTypeCreation = () => {
               <Button
                 variant="contained"
                 startIcon={<Iconify icon="mdi:plus" />}
+                aria-label="Add Homework Type"
                 onClick={addHomeworkTypeDialog.onTrue}
                 size="small"
                 sx={{ px: '32px' }}

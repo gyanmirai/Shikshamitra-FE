@@ -3,8 +3,8 @@ import React, { useMemo } from 'react';
 import { Box, Chip, Typography } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseWallClockTime, formatWallClockTime } from 'src/utils/time-of-day';
 import { useGetExamScheduleQuery } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/schedule-examApi';
-import { formatWallClockTime, parseWallClockTime } from 'src/utils/time-of-day';
 
 import type { IExamFormValues } from '../type';
 
@@ -76,6 +76,8 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
         {
           id: 'subjectName',
           label: 'Subject',
+          width: 260,
+          minWidth: 240,
           align: 'left',
           isFilter: true,
           sticky: true,
@@ -89,10 +91,11 @@ const ViewTimetableComp: React.FC<ViewTimetableCompProps> = ({ examData }) => {
                     height: 18,
                     borderRadius: 1,
                     backgroundColor: row.subjectColor,
+                    flexShrink: 0,
                   }}
                 />
-                <Box>
-                  <Typography variant="caption" display="block">
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
                     {value}
                     {row.subjectCode ? ` (${row.subjectCode})` : ''}
                   </Typography>
