@@ -5,7 +5,6 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
-import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -32,20 +31,14 @@ import {
   GradeEntryWorkflowStatusLabel,
 } from 'src/enums/grade-entry-status';
 import {
-  type ITimetableSummaryCard,
-  TimetableSettingsSummaryCards,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
-import {
   Box,
   Card,
-  Grid,
   List,
   Chip,
   Stack,
   Button,
   Divider,
   Tooltip,
-  Skeleton,
   Collapse,
   ListItem,
   TextField,
@@ -59,7 +52,6 @@ import {
   useVerifyMarksMutation,
   useUnlockMarksMutation,
   useBulkSaveMarksMutation,
-  useValidateMarksMutation,
   useSaveDraftMarksMutation,
   useRequestChangesMutation,
   useGetExamMarksSummaryQuery,
@@ -68,10 +60,13 @@ import {
   useSubmitMarksForVerificationMutation,
 } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 
+import { buildMarksPayload } from './marks-payload';
 import AssignGrade from './components/assignGradeForm';
 import GradeEntryTable from './components/GradeEntryTable';
+import { useGradeEntryReview } from './hooks/use-grade-entry-review';
 import { BulkGradeEntryToolbar } from './components/BulkGradeEntryToolbar';
 import { GradeEntryReviewDialog } from './components/GradeEntryReviewDialog';
+import { GradeEntrySummaryDetails } from './components/GradeEntrySummaryDetails';
 import { ImportMarksPreviewDialog } from './components/ImportMarksPreviewDialog';
 import {
   getExamMonthRange,
@@ -253,47 +248,6 @@ const GradeEntry = (props: TabComponentType) => {
   const [allMarksAssigned, setAllMarksAssigned] = useState(false);
   const [analyticsStats, setAnalyticsStats] = useState<IExamAnalyticsStats | null>(null);
 
-  const summaryCards = useMemo<ITimetableSummaryCard[]>(() => {
-    if (!analyticsStats) return [];
-    return [
-      {
-        label: 'Total Students',
-        value: analyticsStats.totalCount ?? 0,
-        icon: 'solar:user-bold',
-        color: 'primary',
-      },
-      {
-        label: 'Graded',
-        value: (analyticsStats.totalCount ?? 0) - (analyticsStats.pendingCount ?? 0),
-        icon: 'solar:check-square-bold',
-        color: 'success',
-      },
-      {
-        label: 'Pending',
-        value: analyticsStats.pendingCount ?? 0,
-        icon: 'solar:clock-circle-bold',
-        color: (analyticsStats.pendingCount ?? 0) > 0 ? 'warning' : 'info',
-      },
-      {
-        label: 'Highest Marks',
-        value: analyticsStats.highestMarks ?? 0,
-        icon: 'solar:arrow-up-bold',
-        color: 'success',
-      },
-      {
-        label: 'Lowest Marks',
-        value: analyticsStats.lowestMarks ?? 0,
-        icon: 'solar:arrow-down-bold',
-        color: 'error',
-      },
-      {
-        label: 'Average Marks',
-        value: analyticsStats.averageMarks ?? 0,
-        icon: 'solar:graph-new-bold',
-        color: 'info',
-      },
-    ];
-  }, [analyticsStats]);
   const [workflowStatus, setWorkflowStatus] = useState<GradeEntryWorkflowStatus>(
     GradeEntryWorkflowStatus.Draft
   );
@@ -333,7 +287,6 @@ const GradeEntry = (props: TabComponentType) => {
 
   // Review & Verification Workflow Dialogs
   const importMarksDialog = useBoolean();
-  const reviewDialog = useBoolean();
   const keyboardHelpDialog = useBoolean();
   const auditLogsDialog = useBoolean();
   const requestChangesDialog = useBoolean();
@@ -414,11 +367,6 @@ const GradeEntry = (props: TabComponentType) => {
     currentQueryAndMutation: useBulkSaveMarksMutation,
   });
 
-  const [validateMarks, { data: validationData }] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useValidateMarksMutation,
-  });
-
   const [requestChanges, { isLoading: isRequestChangesLoading }] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useRequestChangesMutation,
@@ -429,15 +377,15 @@ const GradeEntry = (props: TabComponentType) => {
     currentQueryAndMutation: useUnlockMarksMutation,
   });
 
-  const resolvedValidation = useMemo(() => {
-    if (!validationData) return { isValid: true, blockers: [], warnings: [] };
-    const data = (validationData as any).data ?? validationData;
-    return {
-      isValid: data.isValid ?? true,
-      blockers: data.blockers ?? [],
-      warnings: data.warnings ?? [],
-    };
-  }, [validationData]);
+  const review = useGradeEntryReview({
+    examId,
+    divisionId: division,
+    subjectId: subject,
+    rows: tableRows,
+    isDirty,
+    onSaveStateChange: setSaveState,
+    onSaved: () => setIsDirty(false),
+  });
 
   // Bulk operation actions stay local; Save Draft persists them in one API call.
   const queueBulkEdit = useCallback(
@@ -561,37 +509,15 @@ const GradeEntry = (props: TabComponentType) => {
     }
   };
 
-  // Review before submit validation trigger
-  const handleTriggerReview = async () => {
-    try {
-      if (isDirty) {
-        setSaveState('saving');
-        await bulkSaveMarks({
-          examId,
-          body: { subjectId: subject, divisionId: division, rows: buildMarksPayload(tableRows) },
-        }).unwrap();
-        await saveDraftMarks({ examId, divisionId: division, subjectId: subject }).unwrap();
-        setIsDirty(false);
-        setSaveState('saved');
-      }
-      await validateMarks({ examId, divisionId: division, subjectId: subject }).unwrap();
-      reviewDialog.onTrue();
-    } catch (e) {
-      console.error(e);
-      if (isDirty) {
-        setSaveState('failed');
-      }
-    }
-  };
-
   const handleFinalSubmit = async () => {
+    if (!review.canSubmit) return;
     try {
       await submitMarksForVerification({
         examId,
         divisionId: division,
         subjectId: subject,
       }).unwrap();
-      reviewDialog.onFalse();
+      review.closeReview();
       setWorkflowStatus(GradeEntryWorkflowStatus.Submitted);
       setIsDirty(false);
       shikshaMitraToast.success({ message: 'Marks successfully submitted for verification.' });
@@ -614,20 +540,6 @@ const GradeEntry = (props: TabComponentType) => {
       console.error('[GradeEntry] Failed to publish marks:', error);
     }
   };
-
-  const buildMarksPayload = useCallback(
-    (rows: IExamMarkItem[]) =>
-      rows.map((row) => {
-        const hasAttendance = row.attendanceStatus !== null && row.attendanceStatus !== undefined;
-        return {
-          studentId: row.studentId,
-          attendanceStatus: hasAttendance ? row.attendanceStatus : null,
-          obtainedMarks: row.attendanceStatus === 0 ? row.marks : null,
-          feedback: row.attendanceStatus === 0 ? (row.feedback ?? '') : '',
-        };
-      }),
-    []
-  );
 
   const handleWorkflowAction = async (action: 'draft' | 'verify') => {
     if (!examId || !division || !subject) return;
@@ -1042,6 +954,7 @@ const GradeEntry = (props: TabComponentType) => {
                       size="small"
                       color="inherit"
                       loading={isSaveDraftLoading || isBulkSaveLoading}
+                      disabled={review.isPreparing}
                       startIcon={<Iconify icon="solar:diskette-bold" />}
                       onClick={() => handleWorkflowAction('draft')}
                     >
@@ -1056,10 +969,10 @@ const GradeEntry = (props: TabComponentType) => {
                         variant="contained"
                         size="small"
                         color="primary"
-                        loading={isSubmitLoading}
-                        disabled={!allMarksAssigned}
+                        loading={review.isPreparing || isSubmitLoading}
+                        disabled={!allMarksAssigned || isSaveDraftLoading || isBulkSaveLoading}
                         startIcon={<Iconify icon="solar:plain-bold" />}
-                        onClick={handleTriggerReview}
+                        onClick={review.prepareReview}
                       >
                         Review & Submit
                       </LoadingButton>
@@ -1142,189 +1055,11 @@ const GradeEntry = (props: TabComponentType) => {
 
               <Collapse in={summaryOpen}>
                 <Box sx={{ p: 2 }}>
-                  <Grid container spacing={1}>
-                    <Grid size={{ xs: 12, md: 8 }}>
-                      <TimetableSettingsSummaryCards cards={summaryCards} cardsPerRow={3} />
-                    </Grid>
-
-                    <Grid
-                      size={{ xs: 12, md: 4 }}
-                      sx={{
-                        borderLeft: { md: '1px solid' },
-                        borderColor: { md: 'divider' },
-                        pl: { md: 2 },
-                      }}
-                    >
-                      {analyticsStats ? (
-                        <Stack spacing={1} height="100%">
-                          <Stack spacing={1}>
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              <Box
-                                sx={{
-                                  height: 8,
-                                  borderRadius: 1,
-                                  flex: analyticsStats.passPercentage || 1,
-                                  bgcolor: 'success.main',
-                                  minWidth: analyticsStats.passPercentage ? 0 : 'auto',
-                                }}
-                              />
-                              {analyticsStats.failPercentage > 0 && (
-                                <Box
-                                  sx={{
-                                    height: 8,
-                                    borderRadius: 1,
-                                    flex: analyticsStats.failPercentage,
-                                    bgcolor: 'error.main',
-                                  }}
-                                />
-                              )}
-                            </Stack>
-                            <Stack direction="row" justifyContent="space-between">
-                              <Stack direction="row" alignItems="center" spacing={1}>
-                                <Box
-                                  sx={{
-                                    width: 7,
-                                    height: 7,
-                                    borderRadius: '50%',
-                                    bgcolor: 'success.main',
-                                  }}
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  Pass{' '}
-                                  <Typography
-                                    component="span"
-                                    variant="caption"
-                                    fontWeight={700}
-                                    color="success.main"
-                                  >
-                                    {analyticsStats.passCount} ({analyticsStats.passPercentage}%)
-                                  </Typography>
-                                </Typography>
-                              </Stack>
-                              <Stack direction="row" alignItems="center" spacing={1}>
-                                <Box
-                                  sx={{
-                                    width: 7,
-                                    height: 7,
-                                    borderRadius: '50%',
-                                    bgcolor: 'error.main',
-                                  }}
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  Fail{' '}
-                                  <Typography
-                                    component="span"
-                                    variant="caption"
-                                    fontWeight={700}
-                                    color="error.main"
-                                  >
-                                    {analyticsStats.failCount} ({analyticsStats.failPercentage}%)
-                                  </Typography>
-                                </Typography>
-                              </Stack>
-                            </Stack>
-                          </Stack>
-                          <Divider sx={{ borderStyle: 'dashed' }} />
-                          <Stack spacing={1}>
-                            <Typography
-                              variant="overline"
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 0.75,
-                                color: 'text.secondary',
-                                letterSpacing: 0.8,
-                              }}
-                            >
-                              <Iconify
-                                icon="solar:clipboard-check-bold"
-                                width={14}
-                                sx={{ color: 'success.main' }}
-                              />
-                              Result Readiness
-                            </Typography>
-                            <Grid container spacing={1}>
-                              {[
-                                { label: 'All Students Graded', done: allMarksAssigned },
-                                {
-                                  label: 'Verification Complete',
-                                  done: workflowStatus >= GradeEntryWorkflowStatus.Verified,
-                                },
-                                {
-                                  label: 'No Missing Marks',
-                                  done: analyticsStats.pendingCount === 0,
-                                },
-                                {
-                                  label: 'Ready For Result Generation',
-                                  done:
-                                    allMarksAssigned &&
-                                    workflowStatus >= GradeEntryWorkflowStatus.Published,
-                                },
-                              ].map((check) => (
-                                <Grid size={{ xs: 6 }} key={check.label}>
-                                  <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={1}
-                                    sx={{
-                                      py: 0.4,
-                                      px: 0.75,
-                                      borderRadius: 1,
-                                      bgcolor: (theme) =>
-                                        check.done
-                                          ? alpha(theme.palette.success.main, 0.1)
-                                          : alpha(theme.palette.grey[500], 0.06),
-                                    }}
-                                  >
-                                    <Iconify
-                                      icon={
-                                        check.done
-                                          ? 'solar:check-circle-bold'
-                                          : 'solar:close-circle-bold'
-                                      }
-                                      width={14}
-                                      sx={{
-                                        color: check.done ? 'success.main' : 'text.disabled',
-                                        flexShrink: 0,
-                                      }}
-                                    />
-                                    <Typography
-                                      variant="caption"
-                                      color={check.done ? 'text.primary' : 'text.disabled'}
-                                      lineHeight={1.2}
-                                      noWrap
-                                    >
-                                      {check.label}
-                                    </Typography>
-                                  </Stack>
-                                </Grid>
-                              ))}
-                            </Grid>
-                          </Stack>
-                        </Stack>
-                      ) : (
-                        <Stack spacing={1} height="100%">
-                          {[...Array(3)].map((_, i) => (
-                            <Skeleton
-                              key={i}
-                              variant="rounded"
-                              height={22}
-                              sx={{ borderRadius: 1 }}
-                            />
-                          ))}
-                          <Divider />
-                          {[...Array(4)].map((_, i) => (
-                            <Skeleton
-                              key={i}
-                              variant="rounded"
-                              height={18}
-                              sx={{ borderRadius: 1 }}
-                            />
-                          ))}
-                        </Stack>
-                      )}
-                    </Grid>
-                  </Grid>
+                  <GradeEntrySummaryDetails
+                    stats={analyticsStats}
+                    allMarksAssigned={allMarksAssigned}
+                    workflowStatus={workflowStatus}
+                  />
                 </Box>
               </Collapse>
             </Card>
@@ -1467,8 +1202,8 @@ const GradeEntry = (props: TabComponentType) => {
         />
 
         <GradeEntryReviewDialog
-          open={reviewDialog.value}
-          onClose={reviewDialog.onFalse}
+          open={review.open}
+          onClose={review.closeReview}
           stats={{
             totalCount: analyticsStats?.totalCount ?? 0,
             gradedCount: (analyticsStats?.totalCount ?? 0) - (analyticsStats?.pendingCount ?? 0),
@@ -1479,9 +1214,12 @@ const GradeEntry = (props: TabComponentType) => {
             highestMarks: analyticsStats?.highestMarks ?? 0,
             lowestMarks: analyticsStats?.lowestMarks ?? 0,
           }}
-          validation={resolvedValidation}
+          validation={review.validation}
+          isPreparing={review.isPreparing}
+          preparationError={review.preparationError}
+          onRetry={review.prepareReview}
           onFix={(studentId) => {
-            reviewDialog.onFalse();
+            review.closeReview();
             setTimeout(() => {
               const el = document.querySelector(
                 `input[data-student-id="${studentId}"][data-col-type="marks"]`

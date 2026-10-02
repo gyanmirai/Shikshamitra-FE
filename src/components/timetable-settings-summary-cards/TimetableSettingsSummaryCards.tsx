@@ -1,7 +1,7 @@
 'use client';
 
-import { Iconify } from 'src/components/iconify';
 import { varAlpha } from 'src/theme/styles';
+import { Iconify } from 'src/components/iconify';
 import { Box, Card, Grid, Typography } from '@mui/material';
 
 export interface ITimetableSummaryCard {
@@ -16,13 +16,21 @@ export interface ITimetableSummaryCard {
 interface TimetableSettingsSummaryCardsProps {
   cards: ITimetableSummaryCard[];
   cardsPerRow?: number;
+  tone?: 'accent' | 'neutral';
 }
 
-export function TimetableSettingsSummaryCards({ cards, cardsPerRow }: TimetableSettingsSummaryCardsProps) {
+export function TimetableSettingsSummaryCards({
+  cards,
+  cardsPerRow,
+  tone = 'accent',
+}: TimetableSettingsSummaryCardsProps) {
   return (
     <Grid container spacing={1} sx={{ mb: 1 }}>
       {cards.map((card) => (
-        <Grid key={card.label} size={{ xs: 6, sm: 4, md: cardsPerRow ? (12 / cardsPerRow) : (12 / cards.length) }}>
+        <Grid
+          key={card.label}
+          size={{ xs: 6, sm: 4, md: cardsPerRow ? 12 / cardsPerRow : 12 / cards.length }}
+        >
           <Card
             onClick={card.onClick}
             sx={{
@@ -56,9 +64,12 @@ export function TimetableSettingsSummaryCards({ cards, cardsPerRow }: TimetableS
                 display: 'grid',
                 placeItems: 'center',
                 flexShrink: 0,
-                bgcolor: (theme) =>
-                  varAlpha(theme.vars.palette[card.color ?? 'primary'].mainChannel, 0.12),
-                color: `${card.color ?? 'primary'}.main`,
+                bgcolor:
+                  tone === 'neutral'
+                    ? 'action.hover'
+                    : (theme) =>
+                        varAlpha(theme.vars.palette[card.color ?? 'primary'].mainChannel, 0.12),
+                color: tone === 'neutral' ? 'text.secondary' : `${card.color ?? 'primary'}.main`,
               }}
             >
               <Iconify icon={card.icon} width={20} />
@@ -67,7 +78,13 @@ export function TimetableSettingsSummaryCards({ cards, cardsPerRow }: TimetableS
               <Typography variant="h5" fontWeight={700} lineHeight={1} noWrap>
                 {card.value}
               </Typography>
-              <Typography variant="caption" color="text.secondary" noWrap display="block" mt={0.5}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                noWrap={tone !== 'neutral'}
+                display="block"
+                mt={0.5}
+              >
                 {card.label}
               </Typography>
             </Box>
@@ -79,4 +96,3 @@ export function TimetableSettingsSummaryCards({ cards, cardsPerRow }: TimetableS
 }
 
 export default TimetableSettingsSummaryCards;
-

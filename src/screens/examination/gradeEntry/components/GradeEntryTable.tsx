@@ -1,9 +1,9 @@
 import type { LabelColor } from 'src/components/label';
 
 import { Label } from 'src/components/label';
-import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useMemo, useState, useEffect, useCallback, useLayoutEffect } from 'react';
 import { Box, Select, Checkbox, MenuItem, TextField, Typography, FormControl } from '@mui/material';
 import { useGetExamMarksQuery } from 'src/redux/academicAPI/ExaminationApi/RecordMarksApi/recordMarksApi';
 import {
@@ -120,7 +120,8 @@ const GradeEntryTable = ({
     [savedRowsByStudentId]
   );
 
-  useEffect(() => {
+  // Flush the current edit snapshot to the parent before the next button interaction.
+  useLayoutEffect(() => {
     if (onRowsChange) {
       onRowsChange(localRows);
     }
@@ -264,14 +265,14 @@ const GradeEntryTable = ({
   };
 
   // Notify parent whether all students have marks assigned
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!onAllAssignedChange) return;
     const allAssigned = localRows.length > 0 && localRows.every((item) => item.status === 1);
     onAllAssignedChange(allAssigned);
   }, [localRows, onAllAssignedChange]);
 
   // Notify parent whether any row has unsaved modifications
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!onDirtyChange) return;
     const hasUnsavedChanges = !isLocked && localRows.some((row) => isRowModified(row));
     onDirtyChange(hasUnsavedChanges);
