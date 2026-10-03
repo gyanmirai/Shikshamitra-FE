@@ -10,11 +10,11 @@ import type {
 
 import * as Yup from 'yup';
 import { Iconify } from 'src/components/iconify';
-import { useRef, useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import CustomSelect from 'src/components/custom-select';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
+import { useRef, useState, useEffect, useCallback } from 'react';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import {
@@ -39,9 +39,10 @@ import {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import AssignmentReview from './AssignmentReview';
-import AssignmentStudentInputs from './AssignmentStudentInputs';
 import AssignmentPolicies from './AssignmentPolicies';
 import AssignedPolicyEditor from './AssignedPolicyEditor';
+import AssignmentStudentInputs from './AssignmentStudentInputs';
+import { variableAssignmentError } from './variableAssignmentValidation';
 
 interface Student {
   studentId: string;
@@ -338,6 +339,27 @@ export default function AssignmentWorkflow({
         handleNext={async (_last, values: AssignmentValues, _formik, setLoading) => {
           if (operation.current || busy) return;
           if (activeStep <= 1) {
+            if (activeStep === 1) {
+              const candidate = candidates.data?.find((c) => c.id === values.structureId);
+              if (!candidate) {
+                setError('Reload the selected fee structure.');
+                return;
+              }
+              const problem = values.requests
+                .filter((r) => !committedIds.has(r.studentId))
+                .map((request) => {
+                  const message = variableAssignmentError(candidate, request);
+                  if (!message) return undefined;
+                  const student = students.find((s) => s.studentId === request.studentId);
+                  return `${student?.studentName ?? 'Student'  }: ${  message}`;
+                })
+                .find(Boolean);
+              if (problem) {
+                setError(problem);
+                return;
+              }
+            }
+            setError('');
             setActiveStep(activeStep + 1);
             return;
           }
@@ -432,6 +454,7 @@ export default function AssignmentWorkflow({
                           selectedOptionalFeeHeadIds: [],
                           servicePeriods: [],
                           feeHeadDetails: [],
+                          variableFeeHeads: [],
                         })),
                       });
                     }}

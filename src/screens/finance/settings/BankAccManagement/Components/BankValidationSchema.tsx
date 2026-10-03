@@ -27,8 +27,6 @@ export const bankAccountValidationSchema = Yup.object().shape({
     .transform((value) => (value === '' ? null : value))
     .matches(/^[\w.-]+@[\w.-]+$/, 'Invalid UPI ID. Example: prerna123@paytm')
     .nullable(),
-
-  accountHeadId: Yup.string().required('Asset account head is required'),
   effectiveFrom: Yup.date().required('Effective from is required'),
   effectiveTo: Yup.date()
     .nullable()

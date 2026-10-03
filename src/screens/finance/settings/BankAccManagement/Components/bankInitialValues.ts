@@ -10,7 +10,6 @@ export const getBankAccountInitialValues = (editData?: IBankAccount | null) => (
   purpose: editData?.purpose || '',
   ifscCode: editData?.ifscCode || '',
   upiId: editData?.upiId || '',
-  accountHeadId: editData?.accountHeadId || '',
   effectiveFrom: editData?.effectiveFrom?.slice(0, 10) || new Date().toISOString().slice(0, 10),
   effectiveTo: editData?.effectiveTo?.slice(0, 10) || '',
   concurrencyStamp: editData?.concurrencyStamp || '',

@@ -11,16 +11,14 @@ import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingScreen } from 'src/components/loading-screen';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetFeeHeadModulesQuery } from 'src/redux/feeHeadModule/feeHeadModuleApi';
+import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   useGetFeeCategoriesQuery,
@@ -78,32 +76,18 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     },
   });
 
-  // Fetch the fee head module lookup for the Module dropdown
-  const { data: moduleData, isLoading: isModulesLoading } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeHeadModulesQuery,
-    options: {
-      skip: !open?.value,
-    },
-  });
-
-  const moduleOptions = useMemo(
-    () => (moduleData || []).map((m: any) => ({ label: m.displayName, value: m.value })),
-    [moduleData]
-  );
-
   const {
     data: incomeCategoryData,
     isLoading: isIncomeCategoryLoading,
     isFetching: isIncomeCategoryFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetIncomeCategoriesQuery,
+    currentQueryAndMutation: useGetFinanceRoutingOptionsQuery,
     params: {
       academicYearId: currentYear?.id,
       page: 1,
       pageSize: 100,
-      includeInactive: false,
+      operation: 'fee-head',
     },
     options: {
       skip: !currentYear?.id || !open?.value,
@@ -114,9 +98,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     () =>
       (incomeCategoryData?.items ?? []).map((category: any) => ({
         id: category.id,
-        displayName: `${category.name} → ${
-          category.defaultAccountHeadName || 'No account head'
-        }`,
+        displayName: category.name,
       })),
     [incomeCategoryData]
   );
@@ -168,7 +150,6 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
           id: fh.id || null,
           incomeCategoryId: fh.incomeCategoryId,
           name: fh.name.trim(),
-          module: fh.module === '' ? null : fh.module,
           isConcessionApplied: fh.isConcessionApplied,
           description: fh.description || '',
         })),
@@ -203,7 +184,6 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
         id: '',
         incomeCategoryId: '',
         name: '',
-        module: '',
         description: '',
         isConcessionApplied: false,
       },
@@ -232,7 +212,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
     setRemoveIndex(null);
   };
 
-  if (isLoadingDetails || isModulesLoading) {
+  if (isLoadingDetails) {
     return <LoadingScreen />;
   }
 
@@ -386,7 +366,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                             gridTemplateColumns: {
                               xs: 'minmax(0, 1fr)',
                               sm: 'repeat(2, minmax(0, 1fr))',
-                              md: 'minmax(150px, 1fr) minmax(220px, 1.45fr) minmax(130px, 0.8fr) minmax(170px, auto)',
+                              md: 'minmax(150px, 1fr) minmax(220px, 1.45fr) minmax(170px, auto)',
                             },
                             gap: 2,
                             alignItems: 'start',
@@ -490,7 +470,7 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                       feeHeadTouched?.incomeCategoryId &&
                                       feeHeadError?.incomeCategoryId
                                         ? (feeHeadError.incomeCategoryId as string)
-                                        : 'Determines the Income Account Head for posting.'
+                                        : 'Collections are recorded under this Income Category.'
                                     }
                                     inputProps={{
                                       ...params.inputProps,
@@ -513,33 +493,6 @@ const FeeCategoryForm: React.FC<IFeeCategoryFormProps> = ({ open, onClose, editD
                                     textOverflow: 'ellipsis',
                                   },
                                 }}
-                              />
-                            </ShakingTextField>
-                          </Box>
-
-                          {/* Module */}
-                          <Box minWidth={0}>
-                            <ShakingTextField
-                              error={!!(feeHeadTouched?.module && feeHeadError?.module)}
-                            >
-                              <CustomSelect
-                                name={`feeHeads.${idx}.module`}
-                                label="Module"
-                                options={moduleOptions}
-                                value={fh.module ?? ''}
-                                labelKey="label"
-                                valueKey="value"
-                                onChange={(value) => {
-                                  formik.setFieldValue(`feeHeads.${idx}.module`, value);
-                                  formik.setFieldTouched(`feeHeads.${idx}.module`, false);
-                                }}
-                                error={!!(feeHeadTouched?.module && feeHeadError?.module)}
-                                helperText={
-                                  feeHeadTouched?.module && feeHeadError?.module
-                                    ? (feeHeadError.module as string)
-                                    : ''
-                                }
-                                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
                               />
                             </ShakingTextField>
                           </Box>

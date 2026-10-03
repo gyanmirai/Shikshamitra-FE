@@ -9,7 +9,6 @@ export const getFeeCategoryInitialValues = (editData?: IFeeCategory | null) => (
       isUsedInDownstream: fh.isUsedInDownstream || false,
       incomeCategoryId: fh.incomeCategoryId || '',
       name: fh.name || '',
-      module: fh.module ?? '',
       description: fh.description || '',
       isConcessionApplied: fh.isConcessionApplied || false,
     })) || [],

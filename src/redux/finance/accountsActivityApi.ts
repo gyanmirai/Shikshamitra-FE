@@ -1,3 +1,5 @@
+import { financeModuleType } from 'src/redux/tagTypes';
+
 import { financeModuleApi } from './financeModuleApi';
 
 export type AccountsActivityRow = {
@@ -6,6 +8,8 @@ export type AccountsActivityRow = {
   studentId: string | null;
   studentName: string;
   categoryName: string;
+  bankAccountId?: string;
+  bankLabel: string;
   source: 'Collection' | 'Refund' | 'Income' | 'Expense';
   reference: string;
   sourceStatus: string;
@@ -29,6 +33,12 @@ export const accountsActivityApi = financeModuleApi.injectEndpoints({
       { academicYearId: string; source?: string; search?: string; page: number; pageSize: number }
     >({
       query: (params) => ({ url: '/accounts/register', method: 'GET', params }),
+      providesTags: [
+        financeModuleType.incomeTracking,
+        financeModuleType.expenseDetails,
+        financeModuleType.feeCollection,
+        financeModuleType.feeRefund,
+      ],
     }),
   }),
 });

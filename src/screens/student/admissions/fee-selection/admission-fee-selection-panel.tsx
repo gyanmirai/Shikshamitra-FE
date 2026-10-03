@@ -247,8 +247,12 @@ export function AdmissionFeeHeads({
           <Typography variant="body2">
             {head.feeHeadName} ·{' '}
             {currency
-              ? fCurrency(head.configuredAmount, { currency })
-              : fNumber(head.configuredAmount)}
+              ? head.isVariable
+                ? 'Entered during Finance assignment'
+                : fCurrency(head.configuredAmount ?? 0, { currency })
+              : head.isVariable
+                ? 'Entered during Finance assignment'
+                : fNumber(head.configuredAmount ?? 0)}
             {head.isOptional ? ' · Optional' : ' · Mandatory'}
             {head.isOneTime ? ' · One-time' : ''}
           </Typography>

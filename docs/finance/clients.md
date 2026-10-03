@@ -3,7 +3,7 @@ module: finance
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-10-02
+updated_on: 2026-10-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -40,7 +40,7 @@ Use this table to find the first integration file.
 | Concession Types        | `src/redux/finance/concessionType.ts`                                                                                         |
 | Categories and settings | `src/redux/finance/*Category*`, `src/redux/feeCategory/**`, and `src/redux/feeHeadManage/**`                                  |
 
-Fee-head module options are defined by the numeric `FeeHeadModule` enum in `src/redux/feeHeadModule/feeHeadModuleApi.ts`. Fee-category and fee-head clients send the selected number, or `null` when no module is selected, so create and edit forms use the same value type as backend responses. Both Fee Head entry surfaces load active Income Categories for the selected academic year and send the required `incomeCategoryId`. Lists and details show the category together with its server-resolved default Income Account Head; used Fee Heads keep this selector locked.
+Fee-head module options are defined by the numeric `FeeHeadModule` enum in `src/redux/feeHeadModule/feeHeadModuleApi.ts`. Fee-category and fee-head clients send the selected number, or `null` when no module is selected, so create and edit forms use the same value type as backend responses. Both Fee Head entry surfaces load active Income Categories for the selected academic year and send the required `incomeCategoryId`. Lists and details show the Income Category; used Fee Heads keep this selector locked. Account Head selectors are retired.
 
 Collections owns academic filter state in `FeeCollection/index.tsx` and passes it to its table. `useFinanceAcademicFilters` subscribes to standards by medium and uses `currentData`, so changing class/division or returning from a student view does not force another standards request or reuse another medium's options. Selecting a division preserves the class; changing a class clears only its division, and changing board, medium, or academic year clears both. Refreshing the same valid academic year preserves selections. The collection request and visible paginator switch to page 1 together when academic filters change, avoiding a request for the old page in the new scope.
 
@@ -62,20 +62,25 @@ The Charge Management client uses typed core contracts, sends academic year and 
 
 ## Backend contract source
 
-Account Head lookups use `src/hooks/useAccountHeadOptions.ts` and `src/redux/finance/accountHeadApi.ts`.
-The hook waits for permission initialization and a selected academic year, and exposes permission/API failures separately from empty results. Master and bank selectors require Account Head View. Income and Expense Category forms pass `categoryType` and use their own `/income-categories/account-head-options` or `/expense-categories/account-head-options` endpoint with the corresponding category Add or Edit permission. Options display account names and filter by type and active status.
-It uses current query data so switching academic years cannot reuse another year's account options.
-`src/screens/security/role/permission-catalogue.ts` organizes every server-defined Accounts action in the retained role editor without a Finance-specific action list.
-The [Security workflow](../security/workflows.md) explains complete subtree operations and why removing direct user grants does not remove inherited role access.
-Account Head forms and contracts omit code, currency, direct-posting/control toggles, and effective dates. Both category forms omit code and effective dates; the server owns legacy category metadata. A category's default-head selector is enabled for permitted creation and unused-category editing. Used categories retain the server mapping lock and show an explanation. These changes require the matching backend release and migration described in the [backend API guide](../../../Shikshamitra-BE/docs/modules/finance/api.md).
+Income Categories, Expense Categories, and Bank Accounts are independent masters. Account Heads editors and lookups have been retired. Workflow selectors use `src/redux/finance/financeRoutingApi.ts` and `FinanceRoutingFields`, with the owning operation's permission and selected academic year. Options expose category labels and masked bank labels. Collection and refund changes invalidate the related Income/Expense register tags.
 
-Income and Expense Category forms accept an empty tag list while still requiring a matching default Account Head. The Bank Account form does not ask for an internal code; the backend generates it on create and preserves it on update. It still requires real bank details and an Asset Account Head. A blank optional UPI ID passes frontend validation. No Accounts Settings form asks the user to select a fee policy.
+The routing client normalizes bank labels once with `bankAccountOptionLabel.ts` before
+storing lookup results, so collection dropdowns, selected values, and payment review
+receive the same safe display text.
+Canonical server labels retain their masked identifier; delimited missing-value tokens
+are omitted, with compatibility fallbacks to `maskedAccountNumber` or
+`accountHolderName` when supplied.
+The mapper never reads a full account number and never changes the bank-account ID.
 
-Fee Collections owns the existing seven payment-method choices, and Income/Expense use the same `src/enums/finance-payment-method.ts` labels. Accounts Settings has no Payment Modes client. The former Draft Postings client still names unimplemented `/account-postings` endpoints; its menu route is hidden and its direct page now explains that posting cannot be finalised. Posting Automation's hardcoded Save action has likewise been removed. These are deliberate unavailable states until the backend journal/mapping contracts in the [delivery plan](../../../Shikshamitra-BE/docs/modules/finance/references/accounts-frontend-backend-delivery.md) ship.
+Fee Collection resolves selection months from the selected academic year's
+server-provided `startDate` and `endDate`.
+The existing academic-month lookup remains a compatibility path for older context
+responses without dates; collectors with dated context do not need Fee Structure
+settings access to use the six-month selection controls.
 
-Income and Expense entry forms now treat category tags as optional and limit amount input to two decimal places. They send category ID, not a caller-resolved Account Head ID; the backend validates the category-to-head mapping. Their former attachment control called an Academic Curriculum upload API without an Income/Expense evidence link, so it is unavailable until Finance provides a scoped document contract. The existing Income/Expense routes remain legacy transaction CRUD, not posted journals.
+Income/Expense manual entry forms send category IDs, and the backend validates active categories of the correct type. Source-linked automatic entries cannot be edited or deleted through those forms. General Accounts journal posting remains unavailable.
 
-Focused coverage: `src/hooks/useAccountHeadOptions.test.ts`, `src/screens/finance/settings/account-settings-forms.test.ts`, `src/screens/security/role/permission-catalogue.test.ts`, and `src/screens/security/role/permission-node.test.tsx`.
+Focused coverage: `src/screens/finance/settings/account-settings-forms.test.ts` and `src/screens/finance/ChargesManagement/Components/UpdateChargeForm/UpdateChargeValidation.test.ts`. See [Income, expense, and bank routing](./references/income-expense-routing.md) for the implemented contracts and rollout checks.
 
 The current late-fee waiver client owns the scoped paged queue, due-line history, request, approve, and reason-bearing reject operations.
 The approved but unshipped target removes that queue and approval client, and neither Collection Policy nor Charge Management exposes waiver settings.
@@ -98,3 +103,7 @@ Keep these rules when changing Finance clients.
 ## Student fee assignment
 
 The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).
+
+## Income, expense, and bank routing
+
+The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).

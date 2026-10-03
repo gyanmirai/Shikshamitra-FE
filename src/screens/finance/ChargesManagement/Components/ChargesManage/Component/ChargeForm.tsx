@@ -23,6 +23,7 @@ import { useLazyGetClassByMediumQuery } from 'src/redux/class/classApi';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import FinanceRoutingFields from 'src/screens/finance/components/FinanceRoutingFields';
 import {
   usePostChargeMutation,
   useUpdateChargeMutation,
@@ -84,10 +85,7 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     },
   });
   const availableChargeCategories = useMemo(
-    () =>
-      (chargeCategories?.items ?? []).filter(
-        (category: any) => category.isActive === true && category.isAccountingReady === true
-      ),
+    () => (chargeCategories?.items ?? []).filter((category: any) => category.isActive === true),
     [chargeCategories?.items]
   );
   const [postCharge, { isLoading: postChargeLoading }] = useQueryAndMutation({
@@ -104,6 +102,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     if (isEdit && editData) {
       return {
         chargeCategoryId: editData.chargeCategoryId || '',
+        incomeCategoryId: editData.incomeCategoryId || '',
+        receivingBankAccountId: editData.receivingBankAccountId || '',
         chargeCategoryName: editData.categoryName || '',
         purposeDescription: editData.purposeDescription || '',
         amount: editData.amount || '',
@@ -121,6 +121,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     }
     return {
       chargeCategoryId: '',
+      incomeCategoryId: '',
+      receivingBankAccountId: '',
       chargeCategoryName: '',
       purposeDescription: '',
       amount: '',
@@ -141,6 +143,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
     enableReinitialize: true,
     validationSchema: Yup.object({
       chargeCategoryId: Yup.string().required('Charge Category is required'),
+      incomeCategoryId: Yup.string().required('Income Category is required'),
+      receivingBankAccountId: Yup.string().required('Receiving Bank Account is required'),
       purposeDescription: Yup.string()
         .required('Purpose/Description is required')
         .min(10, 'Purpose/Description must be at least 10 characters')
@@ -188,6 +192,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
       try {
         const payload = {
           chargeCategoryId: values.chargeCategoryId,
+          incomeCategoryId: values.incomeCategoryId,
+          receivingBankAccountId: values.receivingBankAccountId,
           purposeDescription: values.purposeDescription,
           amount: parseFloat(String(values.amount)),
           dueDate: values.dueDate ? dayjs(values.dueDate).toISOString() : null,
@@ -333,6 +339,13 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
   return (
     <BackPopUpChecked initialValues={formik.initialValues} currentValues={formik.values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
+        <FinanceRoutingFields
+          formik={formik}
+          academicYearId={currentYear?.id || ''}
+          operation="charge"
+          categoryField="incomeCategoryId"
+          bankField="receivingBankAccountId"
+        />
         <Box
           component={motion.div}
           initial={{ opacity: 0, y: 12 }}
@@ -394,7 +407,8 @@ const ChargeForm = ({ open, onClose, editData, isEdit = false }: IChargeFormProp
                         </ShakingTextField>
                         {values.chargeCategoryId && (
                           <Typography variant="body2" color="text.secondary">
-                            All charges start as Pending and require approval from an authorized person.
+                            All charges start as Pending and require approval from an authorized
+                            person.
                           </Typography>
                         )}
                       </Grid>

@@ -8,7 +8,6 @@ export interface IFeeHeadItemRequest {
   id?: string | null;
   incomeCategoryId: string;
   name: string;
-  module?: FeeHeadModule | null;
   isConcessionApplied: boolean;
   description?: string;
 }

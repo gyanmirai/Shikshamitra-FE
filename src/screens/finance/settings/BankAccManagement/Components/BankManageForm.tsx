@@ -13,7 +13,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
@@ -95,7 +94,6 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
         purpose: values.purpose || '',
         ifscCode: values.ifscCode,
         upiId: values.upiId || '',
-        accountHeadId: values.accountHeadId,
         effectiveFrom: new Date(`${values.effectiveFrom}T00:00:00Z`).toISOString(),
         effectiveTo: values.effectiveTo
           ? new Date(`${values.effectiveTo}T23:59:59Z`).toISOString()
@@ -137,7 +135,6 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
       accountType: 'accountDetails',
       accountNumber: 'accountDetails',
       purpose: 'accountDetails',
-      accountHeadId: 'accountDetails',
       effectiveFrom: 'bankDetails',
       effectiveTo: 'bankDetails',
       ifscCode: 'paymentInfo',
@@ -392,27 +389,6 @@ const BankAccountForm: React.FC<IBankAccountFormProps> = ({ open, onClose, editD
                   helperText={`${formik.values.purpose?.length ?? 0}/500`}
                   FormHelperTextProps={{ sx: { textAlign: 'right', mr: 0 } }}
                 />
-              </Grid>
-              {/* Bank Head */}
-              <Grid size={{ xs: 12 }}>
-                <ShakingTextField
-                  error={!!(formik.touched.accountHeadId && formik.errors.accountHeadId) || false}
-                >
-                  <HeadSelector
-                    name="accountHeadId"
-                    label="Asset Account Head"
-                    headType="Asset"
-                    required
-                    value={formik.values.accountHeadId}
-                    onChange={(val) => formik.setFieldValue('accountHeadId', val)}
-                    error={formik.touched.accountHeadId && Boolean(formik.errors.accountHeadId)}
-                    helperText={
-                      formik.touched.accountHeadId
-                        ? (formik.errors.accountHeadId as string)
-                        : undefined
-                    }
-                  />
-                </ShakingTextField>
               </Grid>
             </Grid>
           </AccordionDetails>

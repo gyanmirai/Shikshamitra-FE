@@ -81,6 +81,8 @@ export const useChargeDetails = (chargeId?: string) => {
       chargeId: chargeDetail.chargeId || '',
       chargeName: chargeDetail.chargeName || '',
       chargeCategoryId: chargeDetail.chargeCategoryId || '',
+      incomeCategoryId: chargeDetail.incomeCategoryId || '',
+      receivingBankAccountId: chargeDetail.receivingBankAccountId || '',
       chargeCategoryName: chargeDetail.categoryName || '',
       purposeDescription: chargeDetail.purposeDescription || '',
       amount: chargeDetail.amount || '',
@@ -100,11 +102,11 @@ export const useChargeDetails = (chargeId?: string) => {
         grNumber: s.grNumber,
         divisionName: s.divisionName,
       })),
-	  selectionMode:
-		chargeDetail.audience?.selection?.mode === 'AllInScope' ||
-		chargeDetail.audience?.selection?.mode === 0
-			? 'all'
-			: 'selected',
+      selectionMode:
+        chargeDetail.audience?.selection?.mode === 'AllInScope' ||
+        chargeDetail.audience?.selection?.mode === 0
+          ? 'all'
+          : 'selected',
     };
   }, [chargeDetail, currentYear]);
 

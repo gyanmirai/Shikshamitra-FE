@@ -19,7 +19,8 @@ export interface StructureLine {
   feeHeadId: string;
   feeHeadName?: string;
   categoryName?: string;
-  amount: number;
+  amount: number | null;
+  isVariable?: boolean;
   isOneTime: boolean;
   isOptional: boolean;
   payableMonth: number;
@@ -109,7 +110,7 @@ export interface StructurePreview {
   schedules: {
     feeHeadId: string;
     feeHeadName: string;
-    annualAmount: number;
+    annualAmount: number | null;
     paymentTermName: string;
     versionNumber: number;
     installments: {
@@ -120,7 +121,7 @@ export interface StructurePreview {
       demandDate: string;
       dueDate: string;
       allocationPercentage: number;
-      calculatedAmount: number;
+      calculatedAmount: number | null;
     }[];
   }[];
 }

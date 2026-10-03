@@ -22,7 +22,7 @@ const boards = [{ id: 'gseb', name: 'GSEB', educationMediums: [{ id: 'english', 
 const store = configureStore({
   reducer: {
     [api.reducerPath]: api.reducer, confirmPopup,
-    globalState: () => ({ currentYear: { id: 'year-2026', name: '2026-2027', boards } }),
+    globalState: () => ({ currentYear: { id: 'year-2026', name: '2026-2027', startDate: '2026-06-01', endDate: '2027-05-31', boards } }),
     auth: () => ({ permissions: ['Finance.Fees.Collections.View', 'Finance.Fees.Collections.Add', 'Finance.Fees.Collections.Waive'].map((name) => ({ name, isGranted: true })) }),
   },
   middleware: (getDefault) => getDefault().concat(api.middleware),
@@ -51,6 +51,7 @@ function Fixture() {
       <Stack direction="row" spacing={1}>
         <Button onClick={() => { close(); resetFixture(); store.dispatch(api.util.resetApiState()); }}>Reset synthetic scenario</Button>
         <Button onClick={() => { close(); resetFixture('statuses'); store.dispatch(api.util.resetApiState()); }}>Mixed statuses</Button>
+        <Button onClick={() => { close(); resetFixture('selection'); store.dispatch(api.util.resetApiState()); }}>Selection regression</Button>
         <Button onClick={() => setMode('light')}>Light</Button><Button onClick={() => setMode('dark')}>Dark</Button>
         <Button onClick={() => setShowRequests(!showRequests)}>Request evidence</Button>
       </Stack>

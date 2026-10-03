@@ -4,7 +4,7 @@ import { FeeHeadModule } from 'src/redux/feeHeadModule/feeHeadModuleApi';
 import { getFeeCategoryInitialValues } from './FeeCategoryInitialValues';
 
 describe('getFeeCategoryInitialValues', () => {
-  it('preserves a numeric module value for the update dropdown', () => {
+  it('omits legacy module from the editable fee head values', () => {
     const values = getFeeCategoryInitialValues({
       name: 'Library Fees',
       description: 'desc',
@@ -20,7 +20,7 @@ describe('getFeeCategoryInitialValues', () => {
       ],
     } as never);
 
-    expect(values.feeHeads[0].module).toBe(8);
+    expect(values.feeHeads[0]).not.toHaveProperty('module');
     expect(values.feeHeads[0].incomeCategoryId).toBe('income-category-id');
   });
 
@@ -29,6 +29,6 @@ describe('getFeeCategoryInitialValues', () => {
       feeHeads: [{ module: FeeHeadModule.Dashboard }],
     } as never);
 
-    expect(values.feeHeads[0].module).toBe(0);
+    expect(values.feeHeads[0]).not.toHaveProperty('module');
   });
 });

@@ -50,6 +50,12 @@ export interface FeeRefundRequestDto {
   originalReceiptId?: string;
   originalReceiptNumber?: string;
   currency: string;
+  expenseCategoryId?: string | null;
+  payingBankAccountId?: string | null;
+  defaultExpenseCategoryId?: string | null;
+  defaultPayingBankAccountId?: string | null;
+  expenseCategoryName?: string | null;
+  payingBankLabel?: string | null;
   refundMethod: string | null;
   reason: string | null;
   approverNotes: string | null;
@@ -267,7 +273,12 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         method: 'POST',
         body,
       }),
-      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails],
+      invalidatesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.expenseDetails,
+        financeModuleType.incomeTracking,
+      ],
     }),
 
     previewFeeRefund: builder.mutation<FeeRefundPreviewDto, FeeRefundCreationPayload>({
@@ -284,13 +295,27 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
       invalidatesTags: [financeModuleType.feeRefund],
     }),
 
-    approveFeeRefund: builder.mutation<FeeRefundRequestDto, { id: string; notes?: string }>({
-      query: ({ id, notes }) => ({
+    approveFeeRefund: builder.mutation<
+      FeeRefundRequestDto,
+      {
+        id: string;
+        notes?: string;
+        expenseCategoryId: string;
+        bankAccountId?: string;
+        method: string;
+      }
+    >({
+      query: ({ id, ...body }) => ({
         url: `/fee-refunds/${id}/approve`,
         method: 'POST',
-        body: { notes },
+        body,
       }),
-      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails],
+      invalidatesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.expenseDetails,
+        financeModuleType.incomeTracking,
+      ],
     }),
 
     rejectFeeRefund: builder.mutation<FeeRefundRequestDto, { id: string; notes: string }>({
@@ -363,23 +388,65 @@ export const feeRefundApi = financeModuleApi.injectEndpoints({
         financeModuleType.draftPosting,
       ],
     }),
-    recordRefundPayout: builder.mutation<FeeRefundRequestDto, { id: string; body: RecordRefundPayoutInput }>({
+    recordRefundPayout: builder.mutation<
+      FeeRefundRequestDto,
+      { id: string; body: RecordRefundPayoutInput }
+    >({
       query: ({ id, body }) => ({ url: `/fee-refunds/${id}/payout`, method: 'POST', body }),
-      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails],
+      invalidatesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.expenseDetails,
+        financeModuleType.incomeTracking,
+      ],
     }),
-    confirmRefundPayout: builder.mutation<FeeRefundRequestDto, { id: string; payoutId: string; body: ResolveRefundPayoutInput }>({
-      query: ({ id, payoutId, body }) => ({ url: `/fee-refunds/${id}/payout/${payoutId}/confirm`, method: 'POST', body }),
-      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails,
-        financeModuleType.feeCollection, financeModuleType.accountPosting],
+    confirmRefundPayout: builder.mutation<
+      FeeRefundRequestDto,
+      { id: string; payoutId: string; body: ResolveRefundPayoutInput }
+    >({
+      query: ({ id, payoutId, body }) => ({
+        url: `/fee-refunds/${id}/payout/${payoutId}/confirm`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
+        financeModuleType.accountPosting,
+      ],
     }),
-    failRefundPayout: builder.mutation<FeeRefundRequestDto, { id: string; payoutId: string; body: ResolveRefundPayoutInput }>({
-      query: ({ id, payoutId, body }) => ({ url: `/fee-refunds/${id}/payout/${payoutId}/fail`, method: 'POST', body }),
-      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails],
+    failRefundPayout: builder.mutation<
+      FeeRefundRequestDto,
+      { id: string; payoutId: string; body: ResolveRefundPayoutInput }
+    >({
+      query: ({ id, payoutId, body }) => ({
+        url: `/fee-refunds/${id}/payout/${payoutId}/fail`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.expenseDetails,
+        financeModuleType.incomeTracking,
+      ],
     }),
-    returnRefundPayout: builder.mutation<FeeRefundRequestDto, { id: string; settlementId: string; reason: string; evidenceReference: string }>({
-      query: ({ id, ...body }) => ({ url: `/fee-refunds/${id}/payout/return`, method: 'POST', body }),
-      invalidatesTags: [financeModuleType.feeRefund, financeModuleType.feeDetails,
-        financeModuleType.feeCollection, financeModuleType.accountPosting],
+    returnRefundPayout: builder.mutation<
+      FeeRefundRequestDto,
+      { id: string; settlementId: string; reason: string; evidenceReference: string }
+    >({
+      query: ({ id, ...body }) => ({
+        url: `/fee-refunds/${id}/payout/return`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: [
+        financeModuleType.feeRefund,
+        financeModuleType.feeDetails,
+        financeModuleType.feeCollection,
+        financeModuleType.accountPosting,
+      ],
     }),
   }),
   overrideExisting: false,

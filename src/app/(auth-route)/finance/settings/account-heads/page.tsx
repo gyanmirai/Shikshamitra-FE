@@ -1,9 +1,5 @@
-import AccountHeadMaster from 'src/screens/finance/settings/AccountHeadMaster';
-
-export const metadata = {
-  title: 'Account Heads - Settings',
-};
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return <AccountHeadMaster />;
+  redirect('/finance/settings/incomeCategories');
 }

@@ -60,8 +60,8 @@ const getInitialValues = (
     roundingMethod: data?.roundingMethod || 'None',
     maximumLateFeeAmount: data?.maximumLateFeeAmount ?? null,
     maximumChargingDays: data?.maximumChargingDays ?? null,
-    considerAsIncome: data?.considerAsIncome ?? false,
-    lateFeeIncomeHeadId: data?.lateFeeIncomeHeadId ?? null,
+    considerAsIncome: true,
+    lateFeeIncomeCategoryId: data?.lateFeeIncomeCategoryId ?? null,
 
     allowOnlineCollection: data?.allowOnlineCollection ?? true,
   };
@@ -201,11 +201,11 @@ const validationSchema = Yup.object().shape({
 
   allowOnlineCollection: Yup.boolean(),
   considerAsIncome: Yup.boolean(),
-  lateFeeIncomeHeadId: Yup.string()
+  lateFeeIncomeCategoryId: Yup.string()
     .nullable()
-    .when(['enableLateFee', 'considerAsIncome'], {
-      is: (enableLateFee: boolean, considerAsIncome: boolean) => enableLateFee && considerAsIncome,
-      then: (s) => s.required('Select the income head for late-fee posting'),
+    .when(['enableLateFee', 'status'], {
+      is: (enableLateFee: boolean, status: string) => enableLateFee && status === 'Active',
+      then: (s) => s.required('Select the Income Category for late fees'),
     }),
 });
 
@@ -315,8 +315,7 @@ export function useCollectionPolicyForm({
       !v.enableLateFee ||
       !computeSlabIssues(v.escalationRules).hasIssues;
 
-    const incomeHeadValid =
-      !v.enableLateFee || !v.considerAsIncome || Boolean(v.lateFeeIncomeHeadId);
+    const incomeHeadValid = !v.enableLateFee || Boolean(v.lateFeeIncomeCategoryId);
     const isDefaultConflict = false;
 
     // Phase 4b: Compound and Percentage can grow unbounded with days-late — warn (don't

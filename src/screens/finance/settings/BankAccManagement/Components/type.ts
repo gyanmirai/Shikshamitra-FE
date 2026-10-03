@@ -6,8 +6,6 @@ export enum BankAccountType {
 export interface IBankAccount {
   id: string;
   code?: string;
-  accountHeadId?: string;
-  accountHeadName?: string;
   bankName: string;
   branchName: string;
   branchAddress?: string;

@@ -24,7 +24,7 @@ export interface IActiveFeeHeadLookup {
   incomeAccountHeadId: string;
   incomeAccountHeadName: string;
   name: string;
-  module: FeeHeadModule | null;
+  module?: FeeHeadModule | null;
   isConcessionApplied: boolean;
 }
 
@@ -32,7 +32,6 @@ export interface IFeeHeadCreateOrUpdateBody {
   feeCategoryId: string;
   incomeCategoryId: string;
   name: string;
-  module?: FeeHeadModule | null;
   isConcessionApplied: boolean;
   description?: string;
 }

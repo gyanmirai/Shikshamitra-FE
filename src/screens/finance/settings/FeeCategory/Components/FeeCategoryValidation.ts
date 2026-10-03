@@ -1,5 +1,4 @@
 import * as Yup from 'yup';
-import { FEE_HEAD_MODULE_VALUES } from 'src/redux/feeHeadModule/feeHeadModuleApi';
 
 import type { IFeeCategory } from './type';
 
@@ -42,12 +41,6 @@ export const feeCategoryValidationSchema = (
             .test('max-length', 'Fee Head Name must be between 3 and 40 characters', (value) =>
               value ? value.trim().length <= 40 : true
             ),
-          module: Yup.number()
-            .transform((value, originalValue) => (originalValue === '' ? null : value))
-            .integer()
-            .oneOf(FEE_HEAD_MODULE_VALUES)
-            .nullable()
-            .notRequired(),
           description: Yup.string()
             .max(500, 'Description cannot exceed 500 characters')
             .test('no-only-spaces', 'Description cannot consist of only spaces', (value) => {

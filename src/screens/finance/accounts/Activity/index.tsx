@@ -22,16 +22,25 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
   const canViewFees = hasGrantedPermission(permissions, financePermissions.accounts.activity);
-  const canViewIncome = hasGrantedPermission(permissions, `${financePermissions.accounts.income}.View`);
-  const canViewExpense = hasGrantedPermission(permissions, `${financePermissions.accounts.expense}.View`);
+  const canViewIncome = hasGrantedPermission(
+    permissions,
+    `${financePermissions.accounts.income}.View`
+  );
+  const canViewExpense = hasGrantedPermission(
+    permissions,
+    `${financePermissions.accounts.expense}.View`
+  );
   const canView = canViewFees || canViewIncome || canViewExpense;
   const [source, setSource] = useState<SourceFilter>('all');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
-  const effectiveSource = (((source === 'collection' || source === 'refund') && !canViewFees) ||
-    (source === 'income' && !canViewIncome) || (source === 'expense' && !canViewExpense))
-    ? 'all' : source;
+  const effectiveSource =
+    ((source === 'collection' || source === 'refund') && !canViewFees) ||
+    (source === 'income' && !canViewIncome) ||
+    (source === 'expense' && !canViewExpense)
+      ? 'all'
+      : source;
   const activity = useGetAccountsActivityQuery(
     {
       academicYearId: currentYear?.id || '',
@@ -54,6 +63,7 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
       },
       { id: 'source', label: 'Source', minWidth: 110 },
       { id: 'categoryName', label: 'Category', minWidth: 140 },
+      { id: 'bankLabel', label: 'School Bank Account', minWidth: 180 },
       {
         id: 'amount',
         label: 'Amount',
@@ -91,15 +101,26 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
         render: (_value, row) => {
           const item = row as AccountsActivityRow;
           if (!item.canOpenSource) return null;
-          const destination = item.source === 'Refund' ? 'Refunds' :
-            item.source === 'Collection' ? 'Receipts' :
-            item.source === 'Income' ? 'Other income' : 'School expenses';
+          const destination =
+            item.source === 'Refund'
+              ? 'Refunds'
+              : item.source === 'Collection'
+                ? 'Receipts'
+                : item.source === 'Income'
+                  ? 'Other income'
+                  : 'School expenses';
           return (
             <Button
               size="small"
-              href={item.source === 'Refund' ? financePaths.feeRefund :
-                item.source === 'Collection' ? financePaths.fees.invoicesAndReceipts :
-                item.source === 'Income' ? financePaths.incomeTracking : financePaths.expenseTracking}
+              href={
+                item.source === 'Refund'
+                  ? financePaths.feeRefund
+                  : item.source === 'Collection'
+                    ? financePaths.fees.invoicesAndReceipts
+                    : item.source === 'Income'
+                      ? financePaths.incomeTracking
+                      : financePaths.expenseTracking
+              }
               aria-label={`Open ${destination} for ${item.reference}`}
             >
               Open {destination}
@@ -113,11 +134,17 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-      {!embedded && <CustomBreadcrumbs
-        heading="Income & expenses"
-        description="Fee collections, confirmed refunds, and manual school entries in one register."
-        links={[{ name: 'Finance', href: financePaths.dashboard }, { name: 'Accounts' }, { name: 'Income & expenses' }]}
-      />}
+      {!embedded && (
+        <CustomBreadcrumbs
+          heading="Income & expenses"
+          description="Fee collections, confirmed refunds, and manual school entries in one register."
+          links={[
+            { name: 'Finance', href: financePaths.dashboard },
+            { name: 'Accounts' },
+            { name: 'Income & expenses' },
+          ]}
+        />
+      )}
       {!canView ? (
         <Alert severity="error">You do not have permission to view Income & Expenses.</Alert>
       ) : !currentYear?.id ? (
@@ -138,11 +165,14 @@ export default function AccountsActivity({ embedded = false }: { embedded?: bool
             <Tab value="all" label="All" />
             {canViewFees && <Tab value="collection" label="Collections" />}
             {canViewFees && <Tab value="refund" label="Refunds" />}
-            {canViewIncome && <Tab value="income" label="Other income" />}
+            {canViewIncome && <Tab value="income" label="Income" />}
             {canViewExpense && <Tab value="expense" label="Expenses" />}
           </CustomTabs>
           {activity.isError && (
-            <Alert severity="error" action={<Button onClick={() => activity.refetch()}>Retry</Button>}>
+            <Alert
+              severity="error"
+              action={<Button onClick={() => activity.refetch()}>Retry</Button>}
+            >
               Income & Expenses could not be loaded.
             </Alert>
           )}

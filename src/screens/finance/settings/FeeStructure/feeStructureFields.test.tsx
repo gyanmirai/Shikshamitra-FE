@@ -43,7 +43,7 @@ vi.mock('src/components/customizabaleTable', () => ({
         <div key={row._id}>
           {columns.map((column: any) => (
             <div key={column.id}>
-              {column.render ? column.render(row[column.id], row) : row[column.id]}
+              {column.render ? column.render(row[column.id] ?? '-', row) : row[column.id]}
             </div>
           ))}
         </div>
@@ -159,7 +159,6 @@ it('saves the selected collection policy before allowing review and publication 
   // Reviewing unsaved input must not permit publishing the older server record.
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
   fireEvent.click(screen.getByRole('tab', { name: /Review & Publish/i }));
-  fireEvent.click(screen.getByRole('button', { name: 'Recheck configuration' }));
   await screen.findByText('All configuration checks passed.');
   expect(publishButton().disabled).toBe(true);
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(saved) });
@@ -311,4 +310,88 @@ it('preserves a saved older pin and permits choosing loaded terms after a failed
   expect(option.getAttribute('aria-disabled')).not.toBe('true');
   fireEvent.click(option);
   expect(select.textContent).toContain('Monthly · v1 · Default');
+});
+
+it('clears configured pricing for variable rows, retains terms and optionality, and requires a new fixed amount', async () => {
+  render(ui());
+  await addHead();
+  fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+    target: { value: 'Variable fees' },
+  });
+  fireEvent.change(screen.getByRole('spinbutton', { name: 'Tuition total fee' }), {
+    target: { value: '999' },
+  });
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Optional' }));
+  fireEvent.click(screen.getByRole('switch', { name: 'Tuition variable fee' }));
+  expect(screen.queryByRole('spinbutton')).toBeNull();
+  expect(screen.getByRole('combobox', { name: /Payment Term/ }).textContent).toContain('Monthly');
+  expect(screen.getByRole('checkbox', { name: 'Optional' })).toBeChecked();
+  state.mutate.mockReturnValue({
+    unwrap: () => Promise.resolve({ id: 'saved', name: 'Variable fees', status: 1, feeHeads: [] }),
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
+  const row = state.mutate.mock.calls[0][0].standardFeeStructures.feeHeads[0];
+  expect(row).toMatchObject({
+    isVariable: true,
+    amount: null,
+    isOptional: true,
+    paymentTermId: 'monthly',
+    paymentTermVersionId: 'monthly-v1',
+  });
+});
+
+it('does not restore an old fixed price after switching variable pricing off', async () => {
+  render(ui());
+  await addHead();
+  fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+    target: { value: 'Annual fees' },
+  });
+  fireEvent.change(screen.getByRole('spinbutton', { name: 'Tuition total fee' }), {
+    target: { value: '999' },
+  });
+  fireEvent.click(screen.getByRole('switch', { name: 'Tuition variable fee' }));
+  fireEvent.click(screen.getByRole('switch', { name: 'Tuition variable fee' }));
+  expect(screen.getByRole('spinbutton', { name: 'Tuition total fee' })).toHaveValue(null);
+  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  expect(await screen.findByText('Enter the total fee for this Fee Head.')).toBeTruthy();
+  expect(state.mutate).not.toHaveBeenCalled();
+});
+
+it('shows unpriced variable installments as entered at assignment even when the table supplies its null placeholder', async () => {
+  render(ui());
+  fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+    target: { value: 'Variable fees' },
+  });
+  state.mutate.mockReturnValueOnce({
+    unwrap: () =>
+      Promise.resolve({
+        isReady: true,
+        errors: [],
+        warnings: [],
+        coverage: [],
+        schedules: [
+          {
+            feeHeadId: 'tuition',
+            feeHeadName: 'Tuition',
+            paymentTermName: 'Monthly',
+            versionNumber: 1,
+            installments: [
+              {
+                sequence: 1,
+                name: 'First',
+                calculatedAmount: null,
+                coverageStartDate: '2026-04-01',
+                coverageEndDate: '2026-04-30',
+                demandDate: '2026-04-01',
+                dueDate: '2026-04-10',
+              },
+            ],
+          },
+        ],
+      }),
+  });
+  fireEvent.click(screen.getByRole('tab', { name: /Review & Publish/i }));
+  expect(await screen.findByText('Calculated during assignment')).toBeTruthy();
+  expect(screen.queryByText(/NaN/)).toBeNull();
 });

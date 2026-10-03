@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-02
+updated_on: 2026-10-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -53,6 +53,28 @@ those filters are All. Filtering preserves the collector's existing selections.
 
 Fee-line status and overdue classification come from the backend; see the
 [Finance product rules](../../../Shikshamitra-BE/docs/modules/finance/product.md).
+
+## Fee Collection selection and receiving bank
+
+Selection Filters operate on the student's complete ledger independently of the Month,
+Fee Head, Status, and grouping controls, which only change the visible rows.
+**All Pending** selects collectible fee installments; **All Charges** selects unpaid
+Additional Charges, including generated late fees.
+**First 6 Month** and **Last 6 Month** use the academic-year month sequence, including
+months whose installments are already paid, and select only collectible installments.
+Combining selection filters adds their matching rows without duplicates.
+Unticking a filter removes its contribution while preserving rows retained by another
+active filter or a manual selection.
+Manual row changes update the selection controls, counts, and checkout totals together;
+a partially selected active filter scope is shown as indeterminate.
+Paid and other noncollectible rows cannot enter the payment selection.
+
+Checkout receiving-bank options come from the academic-year collection routing lookup.
+Their labels retain the server's masked account identifier or account name.
+Missing identifiers omit the separator and missing-value suffix; a bank with no usable
+display fields shows **Bank account (details unavailable)**.
+The selected option and payment-review label use the same normalized label, while the
+submitted bank-account ID remains the server-issued identifier.
 
 TL;DR: trace Finance workflows from the menu route to the App Router page, then screen folder, client, mapper, and backend contract.
 Use this page to pick the first files for common Finance changes.
@@ -168,3 +190,13 @@ clears are retained when lookups refresh. The backend owns the
 ## Student fee assignment
 
 The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).
+
+## Income, expense, and bank routing
+
+The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).
+
+
+## Variable fee structure assignment
+
+See [variable fee assignment](./references/variable-fee-assignment.md) for the active fixed/variable and required/optional conditions.
+Included variable heads require a student amount before preview and commit; skipped optional heads create no dues.

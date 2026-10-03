@@ -119,7 +119,7 @@ export interface IResolvedInstallment {
   demandDate: string;
   dueDate: string;
   allocationPercentage: number;
-  calculatedAmount: number;
+  calculatedAmount: number | null;
   allowPartialOverride?: boolean | null;
   gracePeriodDaysOverride?: number | null;
 }
@@ -128,7 +128,7 @@ export interface IResolvedFeeHeadSchedule {
   feeStructureDetailId: string;
   feeHeadId: string;
   feeHeadName: string;
-  annualAmount: number;
+  annualAmount: number | null;
   paymentTermId?: string;
   paymentTermName?: string;
   paymentTermVersionId?: string;
