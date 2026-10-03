@@ -59,7 +59,11 @@ export default function PayslipPdfViewer({ url, title, contentRef, onReady }: Pr
         section.setAttribute('aria-label', `Page ${pageNumber}`);
         const accessibleText = document.createElement('div');
         accessibleText.className = 'payslip-pdf-text';
-        accessibleText.textContent = text.items.map((item) => ('str' in item ? item.str : '')).join(' ');
+        const extractedText = text.items.map((item) => ('str' in item ? item.str : '')).join(' ');
+        // An explicit NUL glyph mapping loses the source letters. Never guess them or silently drop them.
+        accessibleText.textContent = extractedText.includes('\u0000')
+          ? `Text extraction is incomplete for this page. ${extractedText.replaceAll('\u0000', '[unmapped PDF glyph]')}`
+          : extractedText;
         section.append(canvas, accessibleText);
         container?.append(section);
       }

@@ -54,6 +54,21 @@ describe('canonical PDF renderer', () => {
     expect(pdf.terminate).toHaveBeenCalled();
   });
 
+  it('announces unmapped source glyphs without guessing letters or changing the PDF source', async () => {
+    const source = documentWithText('Synthe\u0000c Employee ESI 75.00 Net pay 9925.00');
+    pdf.getDocument.mockReturnValue({ promise: Promise.resolve(source), destroy: pdf.destroy });
+    const contentRef = createRef<HTMLDivElement>();
+    const ready = vi.fn();
+    render(<PayslipPdfViewer url="blob:unchanged-issued-pdf" title="Official payslip PDF" contentRef={contentRef} onReady={ready} />);
+    await waitFor(() => expect(ready).toHaveBeenLastCalledWith('blob:unchanged-issued-pdf'));
+    const extracted = contentRef.current?.querySelector('.payslip-pdf-text')?.textContent;
+    expect(extracted).toBe('Text extraction is incomplete for this page. Synthe[unmapped PDF glyph]c Employee ESI 75.00 Net pay 9925.00');
+    expect(extracted).not.toContain('\u0000');
+    expect(extracted).not.toContain('Synthetic');
+    expect(pdf.getDocument).toHaveBeenCalledWith(expect.objectContaining({ url: 'blob:unchanged-issued-pdf' }));
+    expect(contentRef.current?.querySelectorAll('canvas')).toHaveLength(1);
+  });
+
   it('keeps incomplete pages non-printable and retries a rendering failure', async () => {
     pdf.getDocument.mockImplementationOnce(() => ({ promise: Promise.reject(new Error('Unreadable PDF')), destroy: pdf.destroy }))
       .mockReturnValueOnce({ promise: Promise.resolve(documentWithText('Recovered PDF')), destroy: pdf.destroy });
