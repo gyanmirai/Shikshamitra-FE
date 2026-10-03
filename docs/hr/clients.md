@@ -53,6 +53,19 @@ Use these expectations when reviewing client behavior:
 
 ## Contract rule
 
+`src/redux/hr/payslip-api.ts` owns issued document metadata/PDFs, version history, delivery attempts, Send/Resend, school settings, payment recording, non-monetary detail replacement and unpaid correction read/start/calculate/review/cancel/apply contracts.
+It uses the shared authenticated API service and invalidates salary-slip tags after mutations.
+Payment recording also invalidates payroll views.
+Correction application invalidates payroll views as well as document and correction queries.
+Correction controls consume recorded attendance, original totals, candidate components and concurrency stamps from the server.
+The client cannot submit arbitrary monetary figures or a conflicting calculation basis.
+Current selection data, rather than retained previous query data, determines delivery history.
+The employee/month selection and returned current document ID determine which stored artifact is displayed.
+The client never regenerates an issued PDF or fabricates a fallback document after an API failure.
+`payslip-pdf-viewer.tsx` renders that private stored-artifact URL with PDF.js and a worker bundled from the installed package.
+The preview and print content contain those rendered PDF pages, not a second salary template.
+Download retains the original stored bytes.
+
 The durable payroll preview client is a pending coordinated release and requires the additive backend schema.
 `src/screens/hr/payroll/run-payroll/use-payroll-preview-run.ts` owns month/run URL state, bounded polling, debounced search, and late-response protection.
 The monthly workbench and Payroll Overview consume the same background-run contract instead of invoking synchronous readiness calculations.
@@ -79,3 +92,9 @@ ESIC exception month inputs serialize to the first day of Start month and the in
 The existing EffectiveFrom and EffectiveTo contract remains date-based, with server validation of month boundaries.
 Completed SUPERSEDED payroll runs may return their previous rows with IsCurrent false and CanLock false.
 Cached rows never override the status response when determining whether payroll actions are available.
+## Paid correction settlement
+
+The payslip RTK Query client exposes settlePayslipCorrection with correction ID, concurrency stamp, target month and preview run ID.
+The settlement control reuses startPayrollPreview and getPayrollPreviewStatus rather than introducing another payroll calculator.
+Use currentData and the active month/academic-year selection to prevent cached or interrupted target results enabling Apply settlement.
+Invalidate payslip and payroll tags after an acknowledged settlement, then require the ordinary payroll regeneration/review workflow.

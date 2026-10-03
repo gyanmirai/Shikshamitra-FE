@@ -1,0 +1,87 @@
+import type { PayslipSettings } from 'src/redux/hr/payslip-api';
+
+import { useFormik } from 'formik';
+import { useRouter } from 'src/routes/hooks';
+import { useRef, useState, useEffect } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
+import { Stack, Alert, Switch, Button, Skeleton, TextField, FormControlLabel } from '@mui/material';
+import { useGetPayslipSettingsQuery, useSavePayslipSettingsMutation } from 'src/redux/hr/payslip-api';
+
+export default function PayslipSettingsForm({ canEdit }: { canEdit: boolean }) {
+  const query = useGetPayslipSettingsQuery();
+  if (query.data) return <SettingsForm initial={query.data} canEdit={canEdit} />;
+  if (query.isError) return <Alert severity="error" action={<Button size="small" onClick={() => query.refetch()}>Retry</Button>}>Settings could not be loaded.</Alert>;
+  return <Stack spacing={1} aria-busy="true" aria-label="Loading payslip settings">
+    <Skeleton variant="rounded" height={40} /><Skeleton variant="rounded" height={80} /><Skeleton width={220} height={36} />
+    <Stack direction="row" justifyContent="flex-end" spacing={1}><Button disabled size="small">Cancel</Button><Button disabled size="small">Save</Button></Stack>
+  </Stack>;
+}
+
+function SettingsForm({ initial, canEdit }: { initial: PayslipSettings; canEdit: boolean }) {
+  const router = useRouter();
+  const baseline = useRef(initial);
+  const observedInitial = useRef(initial);
+  const latestInitial = useRef(initial);
+  latestInitial.current = initial;
+  const [save, saving] = useSavePayslipSettingsMutation();
+  const [error, setError] = useState<string | null>(null);
+  const request = useRef<{ payload: string; key: string } | null>(null);
+  const form = useFormik({
+    initialValues: initial,
+    validate: (values) => ({
+      ...(!values.schoolName.trim() ? { schoolName: 'Enter the school name.' } : {}),
+      ...(!values.schoolAddress.trim() ? { schoolAddress: 'Enter the school address.' } : {}),
+    }),
+    onSubmit: async (values, helpers) => {
+      const payload = JSON.stringify(values);
+      if (request.current?.payload !== payload) request.current = { payload, key: crypto.randomUUID() };
+      setError(null);
+      try {
+        const saved = await save({ ...values, idempotencyKey: request.current.key }).unwrap();
+        baseline.current = saved;
+        // A refresh observed before this write was acknowledged cannot supersede it.
+        observedInitial.current = latestInitial.current;
+        helpers.resetForm({ values: saved });
+        request.current = null;
+        shikshaMitraToast.success({ message: 'Payslip settings saved.' });
+      } catch (failure) { setError(parseApiProblemDetail(failure).detail || 'Settings could not be saved.'); }
+    },
+  });
+  const { dirty, isSubmitting, resetForm } = form;
+  useEffect(() => {
+    if (isSubmitting || observedInitial.current === initial) return;
+    observedInitial.current = initial;
+    baseline.current = initial;
+    if (!dirty) resetForm({ values: initial });
+  }, [initial, dirty, isSubmitting, resetForm]);
+  const guard = useUnsavedNavigation(form.dirty, { push: router.push });
+  return <>
+    <Stack component="form" spacing={1} onSubmit={form.handleSubmit} noValidate>
+      {error && <Alert severity="error">{error}</Alert>}
+      <TextField label="School name" name="schoolName" value={form.values.schoolName} onChange={form.handleChange}
+        onBlur={form.handleBlur} size="small" fullWidth disabled={!canEdit || saving.isLoading}
+        error={!!form.touched.schoolName && !!form.errors.schoolName} helperText={form.touched.schoolName && form.errors.schoolName}
+        slotProps={{ htmlInput: { maxLength: 250 } }} />
+      <TextField label="School address" name="schoolAddress" value={form.values.schoolAddress} onChange={form.handleChange}
+        onBlur={form.handleBlur} size="small" fullWidth multiline minRows={2} disabled={!canEdit || saving.isLoading}
+        error={!!form.touched.schoolAddress && !!form.errors.schoolAddress} helperText={form.touched.schoolAddress && form.errors.schoolAddress}
+        slotProps={{ htmlInput: { maxLength: 1000 } }} />
+      <FormControlLabel label="Email each employee after payroll finalization" control={<Switch size="small"
+        name="automaticEmail" checked={form.values.automaticEmail} onChange={form.handleChange} disabled={!canEdit || saving.isLoading} />} />
+      <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Button size="small" disabled={!canEdit || saving.isLoading || !form.dirty}
+          onClick={() => guard.requestNavigation(() => {
+            form.resetForm({ values: baseline.current });
+            request.current = null;
+            setError(null);
+          })}>Cancel</Button>
+        <Button type="submit" variant="contained" size="small" disabled={!canEdit || saving.isLoading || !form.dirty}>Save</Button>
+      </Stack>
+    </Stack>
+    {guard.confirmation}
+  </>;
+}
+
+

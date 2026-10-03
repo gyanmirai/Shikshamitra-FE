@@ -1,1491 +1,191 @@
 'use client';
 
-import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
+import type { PayslipDocument } from 'src/redux/hr/payslip-api';
 
 import dayjs from 'dayjs';
+import dynamic from 'next/dynamic';
 import { useSelector } from 'react-redux';
-import { alpha } from '@mui/material/styles';
+import { useReactToPrint } from 'react-to-print';
+import { ExpandMore } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers';
-import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import { skipToken } from '@reduxjs/toolkit/query';
-import { Scrollbar } from 'src/components/scrollbar';
-import { formatCurrency } from 'src/utils/cureencyFormater';
-import { EmptyContent } from 'src/components/empty-content';
-import React, { useRef, useState, useCallback } from 'react';
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useRef, useState, useCallback } from 'react';
+import { shikshaMitraToast } from 'src/components/toast';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
-import {
-  useGetEmployeeSalarySlipQuery,
-  useLazyGetEmployeeSalarySlipPdfQuery,
-  useLazyGetEmployeeSalarySlipPreviewPdfQuery,
-} from 'src/redux/runPayroll/runPayrollApi';
-import {
-  Box,
-  Card,
-  Grid,
-  Alert,
-  Stack,
-  Button,
-  Avatar,
-  Divider,
-  Skeleton,
-  CardHeader,
-  Typography,
-  ToggleButton,
-  ToggleButtonGroup,
-} from '@mui/material';
+import { Box, Stack, Alert, Button, Skeleton, Accordion, Typography, AccordionSummary, AccordionDetails } from '@mui/material';
+import { useGetEmployeeSalarySlipQuery, useLazyGetEmployeeSalarySlipPreviewPdfQuery } from 'src/redux/runPayroll/runPayrollApi';
+import { useSendPayslipMutation, useGetPayslipDocumentsQuery, useGetPayslipDeliveriesQuery, useLazyGetPayslipDocumentPdfQuery } from 'src/redux/hr/payslip-api';
 
-import PaySlipPrintView from './payslip-print-view';
-import { usePayslipActions, isOfficialPayslipStatus } from './use-payslip-actions';
-import {
-  buildPayslipSelection,
-  isPayslipNotFoundError,
-  payslipMatchesSelection,
-  buildPayslipEmployeeSearch,
-} from './payslip-selection';
+import PayslipSettingsForm from './payslip-settings-form';
+import { usePayslipActions } from './use-payslip-actions';
+import PayslipCorrectionDialog from './payslip-correction-dialog';
+import PayslipDocumentActionDialog from './payslip-document-action-dialog';
+import { buildPayslipSelection, payslipMatchesSelection, buildPayslipEmployeeSearch } from './payslip-selection';
 
-// ---------------------------------------------------------------------------
-// Main screen
-// ---------------------------------------------------------------------------
+const deliveryLabels = {
+  QUEUED: 'Queued', PROCESSING: 'Sending', PROVIDER_ACCEPTED: 'Accepted by email provider',
+  FAILED: 'Failed', UNCERTAIN: 'Send outcome unknown', SUPERSEDED: 'Document replaced',
+};
 
-type PayslipViewMode = 'dashboard' | 'pdf';
-type PayslipTone = 'success' | 'error' | 'info' | 'warning' | 'default';
+const PayslipPdfViewer = dynamic(() => import('./payslip-pdf-viewer'), { ssr: false });
 
-const PaySlipGenerationScreen = () => {
-  const [employee, setEmployee] = useState<any>(null);
-  const [monthYear, setMonthYear] = useState<null | Dayjs>(dayjs());
-  const [viewMode, setViewMode] = useState<PayslipViewMode>('dashboard');
-
-  const { currentYear } = useSelector((state: RootState) => state.globalState);
-
-  const printRef = useRef<HTMLDivElement>(null);
-
-  const [getEmployees] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useLazyGetEmployeeQuery,
+export default function PaySlipGenerationScreen() {
+  const printContentRef = useRef<HTMLDivElement>(null);
+  const [renderedPdfUrl, setRenderedPdfUrl] = useState<string | null>(null);
+  const [printError, setPrintError] = useState(false);
+  const printPdf = useReactToPrint({ contentRef: printContentRef,
+    documentTitle: 'Payslip',
+    pageStyle: '@page { size: A4; margin: 0; } @media print { body { margin: 0; } }',
+    onPrintError: () => setPrintError(true),
   });
-
-  const payslipSelection = buildPayslipSelection(employee?.id, monthYear);
-  const {
-    currentData: queriedEmployeeSalarySlip,
-    isLoading: employeeSalarySlipInitialLoading,
-    isFetching: employeeSalarySlipFetching,
-    isError: employeeSalarySlipIsError,
-    error: employeeSalarySlipError,
-    refetch: refetchEmployeeSalarySlip,
-  } = useGetEmployeeSalarySlipQuery(
-    payslipSelection
-      ? {
-          employeeId: payslipSelection.employeeId,
-          monthYear: payslipSelection.monthYear,
-        }
-      : skipToken,
-    {
-      refetchOnMountOrArgChange: true,
-      refetchOnFocus: true,
-      refetchOnReconnect: true,
-    }
-  );
-  const employeeSalarySlip = payslipMatchesSelection(queriedEmployeeSalarySlip, payslipSelection)
-    ? queriedEmployeeSalarySlip
-    : undefined;
-  const employeeSalarySlipLoading = employeeSalarySlipInitialLoading || employeeSalarySlipFetching;
-  const payslipNotFound =
-    employeeSalarySlipIsError && isPayslipNotFoundError(employeeSalarySlipError);
-  const payslipLoadFailed = employeeSalarySlipIsError && !payslipNotFound;
-
-  const [getEmployeeSalarySlipPdf] = useLazyGetEmployeeSalarySlipPdfQuery();
-  const [getEmployeeSalarySlipPreviewPdf] = useLazyGetEmployeeSalarySlipPreviewPdfQuery();
-
-  const normalizedSalarySlip = employeeSalarySlip
-    ? {
-        ...employeeSalarySlip,
-        netSalary: employeeSalarySlip.netSalary ?? employeeSalarySlip.netPay ?? 0,
-      }
-    : null;
-
-  const downloadOfficialPdf = useCallback(async () => {
-    if (!employee?.id || !monthYear) return null;
-
-    return getEmployeeSalarySlipPdf({
-      employeeId: employee.id,
-      monthYear: monthYear.format('YYYY-MM'),
-    }).unwrap();
-  }, [employee?.id, getEmployeeSalarySlipPdf, monthYear]);
-
-  const downloadPreviewPdf = useCallback(async () => {
-    if (!employee?.id || !monthYear) return null;
-
-    return getEmployeeSalarySlipPreviewPdf({
-      employeeId: employee.id,
-      monthYear: monthYear.format('YYYY-MM'),
-    }).unwrap();
-  }, [employee?.id, getEmployeeSalarySlipPreviewPdf, monthYear]);
-
-  const { handlePrint, handleDownload, isDownloading, isOfficialPayslip } = usePayslipActions({
-    printRef,
-    employee,
-    monthYear,
-    employeeSalarySlip: normalizedSalarySlip,
-    downloadOfficialPdf,
-    downloadPreviewPdf,
+  const [employee, setEmployee] = useState<{ id: string; label: string } | null>(null);
+  const [month, setMonth] = useState<dayjs.Dayjs | null>(dayjs());
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const canView = hasGrantedPermission(permissions, `${hrPermissions.payroll.generateSalarySlip}.View`);
+  const canSend = hasGrantedPermission(permissions, `${hrPermissions.payroll.generateSalarySlip}.Add`);
+  const canCorrect = canSend && hasGrantedPermission(permissions, `${hrPermissions.payroll.runPayroll}.View`)
+    && hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollAdjustments);
+  const canReviewCorrection = canCorrect && hasGrantedPermission(permissions, `${hrPermissions.payroll.runPayroll}.Add`);
+  const canApplyCorrection = canCorrect && hasGrantedPermission(permissions, hrPermissions.payroll.runPayrollLock);
+  const [correctionDocument, setCorrectionDocument] = useState<PayslipDocument | null>(null);
+  const [searchEmployees] = useLazyGetEmployeeQuery();
+  const selection = buildPayslipSelection(employee?.id, month);
+  const args = selection && canView ? { employeeId: selection.employeeId, monthYear: selection.monthYear } : skipToken;
+  const slips = useGetEmployeeSalarySlipQuery(args);
+  const versions = useGetPayslipDocumentsQuery(args);
+  const slip = payslipMatchesSelection(slips.currentData, selection) ? slips.currentData : null;
+  const currentDocument = versions.currentData?.find((version) => version.isCurrent);
+  const [viewedVersion, setViewedVersion] = useState<{ selection: string; id: string } | null>(null);
+  const displayedDocument = viewedVersion && viewedVersion.selection === selection?.key
+    ? versions.currentData?.find((version) => version.id === viewedVersion.id) ?? currentDocument : currentDocument;
+  const viewingCurrent = !!displayedDocument?.isCurrent;
+  const [action, setAction] = useState<{ documentId: string; mode: 'payment' | 'replace' } | null>(null);
+  const [resendConfirmation, setResendConfirmation] = useState<string | null>(null);
+  const deliveries = useGetPayslipDeliveriesQuery(currentDocument?.salarySlipId ?? skipToken, {
+    pollingInterval: 5000, skipPollingIfUnfocused: true,
   });
+  const [loadDocument] = useLazyGetPayslipDocumentPdfQuery();
+  const [loadPreview] = useLazyGetEmployeeSalarySlipPreviewPdfQuery();
+  const [send, sending] = useSendPayslipMutation();
+  const [sendKey, setSendKey] = useState<{ documentId: string; key: string } | null>(null);
+	const currentDocumentId = displayedDocument?.id;
+	const selectedEmployeeId = selection?.employeeId;
+	const selectedMonth = selection?.monthYear;
+	const hasSlip = !!slip && versions.isSuccess && !versions.isError;
+  const loadPdf = useCallback(async () => {
+    if (currentDocumentId) return loadDocument(currentDocumentId).unwrap();
+    if (selectedEmployeeId && selectedMonth && hasSlip) return loadPreview({ employeeId: selectedEmployeeId, monthYear: selectedMonth }).unwrap();
+    return null;
+  }, [currentDocumentId, loadDocument, loadPreview, selectedEmployeeId, selectedMonth, hasSlip]);
+  const documentKey = displayedDocument?.id ?? (hasSlip ? selection?.key ?? null : null);
+  const actions = usePayslipActions({ selectionKey: documentKey, loadPdf: documentKey ? loadPdf : null,
+    fileName: `Payslip_${month?.format('YYYY-MM') ?? ''}_${displayedDocument ? `R${displayedDocument.revision}` : 'Preview'}.pdf` });
+  const previousAttempts = deliveries.currentData?.filter((attempt) => attempt.documentId === currentDocument?.id) ?? [];
+  const queued = previousAttempts.some((attempt) => ['QUEUED', 'PROCESSING'].includes(attempt.status));
 
-  const hasData = !!employee?.id && !employeeSalarySlipLoading && !!employeeSalarySlip;
-
-  return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <CustomBreadcrumbs
-        heading="Payslips"
-        links={[
-          { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
-          { name: 'Payslips' },
-        ]}
-        description="View, download, or print finalized salary slips after payroll lock."
-      />
-
-      <Box
-        sx={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          bgcolor: 'background.neutral',
-          pb: 1.5,
-          pt: 0.5,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 1,
-        }}
-      >
-        <Card
-          sx={{
-            p: 1.5,
-            width: '100%',
-            border: (theme) => `1px solid ${theme.palette.divider}`,
-            boxShadow: (theme) => theme.customShadows?.z1,
-          }}
-        >
-          <Stack
-            direction={{ xs: 'column', lg: 'row' }}
-            spacing={1.5}
-            alignItems={{ lg: 'center' }}
-          >
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={1.5}
-              flexWrap="wrap"
-              alignItems={{ sm: 'center' }}
-              sx={{ flex: 1 }}
-            >
-              <PaginatedSearchSelect
-                label="Select Employee"
-                fetchOptions={async (query, page) => {
-                  const res = await getEmployees(buildPayslipEmployeeSearch(query, page)).unwrap();
-                  const hasMore = res.currentPage !== res.totalPages;
-                  return {
-                    data: res?.items?.map((item: any) => ({
-                      label: item.fullName,
-                      id: item.id,
-                    })),
-                    hasMore,
-                  };
-                }}
-                value={employee}
-                isOptionEqualToValue={(option, value) => option.id === value.id}
-                renderOption={(prop, option: any) => {
-                  const { key, ...optionProps } = prop;
-                  return (
-                    <li key={key || option.id} {...optionProps}>
-                      {option.label}
-                    </li>
-                  );
-                }}
-                getOptionLabel={(option: any) => option?.label || ''}
-                minChars={2}
-                onChange={(_, value) => setEmployee(value)}
-                debounceMs={400}
-                placeholder="Search by name or email"
-                error={false}
-                sx={{ width: { xs: '100%', sm: 320 } }}
-                size="small"
-                clearOnBlur={false}
-              />
-
-              <DatePicker
-                minDate={dayjs(currentYear?.startDate)}
-                maxDate={dayjs(currentYear?.endDate)}
-                value={monthYear}
-                onChange={(val) => setMonthYear(val)}
-                views={['month', 'year']}
-                label="Select Pay Period"
-                format="MMMM-YYYY"
-                sx={{ width: { xs: '100%', sm: 220 } }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                  },
-                }}
-              />
-            </Stack>
-
-            <Stack
-              direction="row"
-              gap={1}
-              alignItems="center"
-              justifyContent="flex-end"
-              flexWrap="wrap"
-            >
-              <ToggleButtonGroup
-                exclusive
-                size="small"
-                value={viewMode}
-                onChange={(_, value: PayslipViewMode | null) => {
-                  if (value) setViewMode(value);
-                }}
-                sx={{
-                  p: 0,
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                  borderRadius: 1,
-                  '& .MuiToggleButton-root': {
-                    px: 1.25,
-                    py: 0.55,
-                    gap: 0.5,
-                    border: 0,
-                    typography: 'caption',
-                    fontWeight: 700,
-                    textTransform: 'none',
-                    color: 'text.secondary',
-                    '&.Mui-selected': {
-                      bgcolor: 'background.neutral',
-                      color: 'text.primary',
-                    },
-                  },
-                }}
-              >
-                <ToggleButton value="dashboard">
-                  <Iconify icon="solar:widget-5-linear" width={16} />
-                  Dashboard
-                </ToggleButton>
-                <ToggleButton value="pdf">
-                  <Iconify icon="solar:document-text-linear" width={16} />
-                  PDF View
-                </ToggleButton>
-              </ToggleButtonGroup>
-              <Button
-                size="small"
-                startIcon={<Iconify icon="solar:download-linear" />}
-                variant="outlined"
-                color="inherit"
-                disabled={!hasData || isDownloading}
-                onClick={handleDownload}
-              >
-                {isDownloading
-                  ? 'Downloading...'
-                  : isOfficialPayslip
-                    ? 'Download'
-                    : 'Download Preview'}
-              </Button>
-              <Button
-                size="small"
-                startIcon={<Iconify icon="solar:printer-linear" />}
-                variant="outlined"
-                color="inherit"
-                disabled={!hasData}
-                onClick={() => handlePrint()}
-              >
-                {isOfficialPayslip ? 'Print' : 'Print Preview'}
-              </Button>
-            </Stack>
-          </Stack>
-        </Card>
-
-        {employeeSalarySlipLoading && (
-          <Grid container spacing={1.5}>
-            {[1, 2, 3].map((item) => (
-              <Grid size={{ xs: 12, md: 4 }} key={item}>
-                <Card sx={{ p: 1.5, border: (theme) => `1px solid ${theme.palette.divider}` }}>
-                  <Box flexGrow={1}>
-                    <Skeleton variant="text" width="50%" height={20} sx={{ mb: 0.5 }} />
-                    <Skeleton variant="text" width="70%" height={40} />
-                  </Box>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </Box>
-
-      {/* Scrollable Body Content */}
-      <Scrollbar sx={{ flexGrow: 1 }}>
-        <Stack spacing={1} sx={{ pb: 2 }}>
-          {hasData ? (
-            <>
-              {viewMode === 'dashboard' ? (
-                <PayslipDashboardPreview
-                  key={`${payslipSelection?.key}:dashboard`}
-                  employee={employee}
-                  monthYear={monthYear}
-                  slip={normalizedSalarySlip}
-                />
-              ) : (
-                <PayslipDocumentPreview
-                  key={`${payslipSelection?.key}:pdf`}
-                  employee={employee}
-                  monthYear={monthYear}
-                  slip={normalizedSalarySlip}
-                />
-              )}
-            </>
-          ) : employeeSalarySlipLoading ? (
-            <>
-              <Divider sx={{ my: 1 }} />
-              <Grid container spacing={1}>
-                {[1, 2].map((item) => (
-                  <Grid size={{ xs: 12, md: 6 }} key={item}>
-                    <Card sx={{ border: (theme) => `1px solid ${theme.palette.divider}` }}>
-                      <CardHeader
-                        title={<Skeleton variant="text" width="30%" height={24} />}
-                        subheader={<Skeleton variant="text" width="40%" height={20} />}
-                        sx={{ p: 2 }}
-                      />
-                      <Box sx={{ px: 2, py: 2, pt: 0 }}>
-                        <Skeleton
-                          variant="rectangular"
-                          width="100%"
-                          height={200}
-                          sx={{ borderRadius: 1 }}
-                        />
-                      </Box>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            </>
-          ) : (
-            <Card
-              sx={{
-                minHeight: 360,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-              }}
-            >
-              <EmptyContent
-                title={
-                  payslipLoadFailed
-                    ? 'Payslip could not be loaded'
-                    : payslipNotFound && payslipSelection
-                      ? 'No payslip found for the selected employee and pay period'
-                      : 'Search an employee to view a finalized payslip'
-                }
-                description={
-                  payslipLoadFailed
-                    ? 'Check your connection and access, then try again.'
-                    : undefined
-                }
-                action={
-                  payslipLoadFailed ? (
-                    <Button
-                      variant="outlined"
-                      startIcon={<Iconify icon="mdi:refresh" />}
-                      onClick={() => {
-                        refetchEmployeeSalarySlip();
-                      }}
-                      sx={{ mt: 2 }}
-                    >
-                      Retry
-                    </Button>
-                  ) : undefined
-                }
-              />
-            </Card>
-          )}
-        </Stack>
-      </Scrollbar>
-
-      {/* Hidden print component */}
-      <Box sx={{ display: 'none', displayPrint: 'block' }}>
-        <PaySlipPrintView
-          key={`${payslipSelection?.key}:print`}
-          ref={printRef}
-          employee={employee}
-          monthYear={monthYear}
-          slip={normalizedSalarySlip}
-        />
-      </Box>
-    </Box>
-  );
-};
-
-export default PaySlipGenerationScreen;
-
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-interface PayslipDocumentPreviewProps {
-  employee: { label?: string } | null;
-  monthYear: Dayjs | null;
-  slip: any;
-}
-
-const documentBorder = '1px solid #d9dde3';
-const documentHeaderBg = '#f6f7f9';
-const documentText = '#111827';
-
-const formatDays = (value: number | null | undefined) =>
-  value === null || value === undefined ? '-' : Number(value).toLocaleString('en-IN');
-
-const formatDecimal = (value: number | null | undefined, digits = 4) =>
-  value === null || value === undefined ? '-' : Number(value).toFixed(digits);
-
-const formatDate = (value: string | Date | null | undefined) =>
-  value ? dayjs(value).format('DD MMM YYYY') : '-';
-
-const formatMode = (value: string | null | undefined) => {
-  if (!value) return '-';
-  return value
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-};
-
-const formatStatus = (value: string | number | null | undefined) => {
-  if (value === 0 || value === '0') return 'Draft';
-  if (value === 1 || value === '1') return 'Finalized';
-  if (value === 2 || value === '2') return 'Paid';
-  if (!value) return 'Status Pending';
-
-  const normalized = String(value).replace(/[_-]/g, ' ');
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
-};
-
-const salaryLineTotal = (data: any[]) =>
-  (data || []).reduce((sum, item) => sum + Number(item?.amount || 0), 0);
-
-const getEmployeeName = (employee: { label?: string } | null, slip: any) =>
-  slip?.employeeName || employee?.label || '-';
-
-const getStatusTone = (status: string | number | null | undefined): PayslipTone => {
-  const normalized = formatStatus(status).toLowerCase();
-
-  if (normalized === 'paid') return 'success';
-  if (normalized === 'finalized') return 'info';
-  if (normalized === 'draft') return 'warning';
-
-  return 'default';
-};
-
-const PayslipDashboardPreview = ({ employee, monthYear, slip }: PayslipDocumentPreviewProps) => {
-  const period = monthYear ? monthYear.format('MMMM YYYY') : '-';
-  const status = formatStatus(slip?.status);
-  const employeeName = getEmployeeName(employee, slip);
-  const payBasisItems = [
-    ['Payable Days', formatDays(slip?.payableDays)],
-    ['Payroll Basis Days', formatDays(slip?.payrollBasisDays)],
-    ['Present Days', formatDays(slip?.presentDays)],
-    ['Half Days', formatDays(slip?.halfWorkingDays)],
-    ['LOP / Absent Days', formatDays(slip?.lopDays)],
-    ['Proration Factor', formatDecimal(slip?.prorationFactor)],
-    ['Day Calculation', formatMode(slip?.payrollDayCalculationMode)],
-    ['Pay Period', period],
-  ];
-  const paymentItems = [
-    ['Bank', slip?.bankName || '-'],
-    ['Account No.', slip?.maskedAccountNumber || '-'],
-    ['IFSC', slip?.ifscCode || '-'],
-    ['UAN', slip?.uanNumber || '-'],
-    ['EPF No.', slip?.epfNumber || '-'],
-    ...(slip?.employeeStateInsuranceRuleId
-      ? ([
-          ['ESI No.', slip.employeeStateInsuranceNumber || '-'],
-          ['ESI Wages', formatCurrency(slip.employeeStateInsuranceWages || 0)],
-          ...(slip.employeeStateInsuranceGovernmentContribution
-            ? [
-                [
-                  'Government ESI',
-                  formatCurrency(slip.employeeStateInsuranceGovernmentContribution),
-                ],
-              ]
-            : []),
-        ] as Array<[string, string]>)
-      : []),
-    [
-      'Compensation Revision',
-      slip?.compensationRevisionNumber ? `Revision ${slip.compensationRevisionNumber}` : '-',
-    ],
-    [
-      'Protected Compensation',
-      slip?.compensationProtectedAmount ? formatCurrency(slip.compensationProtectedAmount) : '-',
-    ],
-  ];
+  const handleSend = async () => {
+    if (!currentDocument || !viewingCurrent || sending.isLoading || queued) return;
+    const key = sendKey?.documentId === currentDocument.id ? sendKey.key : crypto.randomUUID();
+    setSendKey({ documentId: currentDocument.id, key });
+    try {
+      await send({ documentId: currentDocument.id, idempotencyKey: key }).unwrap();
+      setSendKey(null);
+      setResendConfirmation(null);
+      shikshaMitraToast.success({ message: 'Payslip queued for email.' });
+    } catch (error) { shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail || 'Payslip could not be queued.' }); }
+  };
 
   return (
     <Stack spacing={1}>
-      <Card
-        sx={{
-          p: { xs: 1.5, md: 2 },
-          border: (theme) => `1px solid ${theme.palette.divider}`,
-          boxShadow: (theme) => theme.customShadows?.z1,
-        }}
-      >
-        <Stack
-          direction={{ xs: 'column', md: 'row' }}
-          spacing={1.5}
-          justifyContent="space-between"
-          alignItems={{ md: 'center' }}
-        >
-          <Stack direction="row" spacing={1.5} alignItems="center">
-            <Avatar
-              variant="rounded"
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: 1.5,
-                bgcolor: 'background.neutral',
-                color: 'text.primary',
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-              }}
-            >
-              <Iconify icon="solar:user-id-linear" width={24} />
-            </Avatar>
-            <Box sx={{ minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>
-                  {employeeName}
-                </Typography>
-                <StatusBadge status={status} />
-              </Stack>
-              <Typography variant="body2" color="text.secondary">
-                {slip?.employeeCode || '-'} / {slip?.department || '-'} / {slip?.designation || '-'}
-              </Typography>
-            </Box>
-          </Stack>
-
-          <Stack
-            direction={{ xs: 'row', md: 'column' }}
-            spacing={0.25}
-            sx={{ textAlign: { md: 'right' } }}
-          >
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-              Pay Period
-            </Typography>
-            <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-              {period}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Slip No: {slip?.slipNumber || '-'}
-            </Typography>
+      <CustomBreadcrumbs heading="Payslips" links={[{ name: 'HR/Staff', href: hrPaths.dashboard },
+        { name: 'Payroll Management', href: hrPaths.payroll.runPayroll }, { name: 'Payslips' }]} />
+      {!canView ? <Alert severity="info">You do not have access to payslips.</Alert> : <>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+          <PaginatedSearchSelect label="Employee" value={employee} size="small"
+            sx={{ width: { xs: '100%', md: 320 } }} minChars={2} debounceMs={400}
+            fetchOptions={async (query, page) => {
+              const result = await searchEmployees(buildPayslipEmployeeSearch(query, page)).unwrap();
+              return { data: result.items.map((item: { id: string; fullName: string }) => ({ id: item.id, label: item.fullName })),
+                hasMore: result.currentPage !== result.totalPages };
+            }} onChange={(_, value) => setEmployee(value)} getOptionLabel={(option: { label: string }) => option.label}
+            isOptionEqualToValue={(option, value) => option.id === value.id} />
+          <DatePicker label="Pay period" views={['month', 'year']} value={month} onChange={setMonth}
+            slotProps={{ textField: { size: 'small' } }} sx={{ width: { xs: '100%', md: 220 } }} />
+          <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ ml: { md: 'auto' } }}>
+            <Button size="small" disabled={!actions.pdfUrl || renderedPdfUrl !== actions.pdfUrl}
+              onClick={() => { setPrintError(false); printPdf(); }}>Print</Button>
+            <Button size="small" variant="outlined" disabled={!actions.pdfUrl} onClick={actions.handleDownload}>Download</Button>
+            <Button size="small" variant="contained" disabled={!canSend || !viewingCurrent || !currentDocument?.recipientEmail || queued || sending.isLoading || deliveries.isFetching || deliveries.isError}
+              onClick={() => { if (previousAttempts.length && currentDocument) setResendConfirmation(currentDocument.id); else handleSend(); }}>
+              {previousAttempts.length ? 'Resend' : 'Send'}</Button>
           </Stack>
         </Stack>
-      </Card>
-
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Typography variant="body2">
-          Full-month gross: {formatCurrency(slip?.fullGrossSalary ?? 0)}
-        </Typography>
-        <Typography variant="body2">
-          Gross Salary: {formatCurrency(slip?.grossSalary ?? 0)}
-        </Typography>
-        <Typography variant="body2">
-          Additional earnings: {formatCurrency(slip?.additionalEarnings ?? 0)}
-        </Typography>
-      </Stack>
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <DashboardMetricCard
-            label="Total Earnings"
-            value={formatCurrency(slip?.totalEarning || 0)}
-            icon="solar:wallet-money-linear"
-            tone="success"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <DashboardMetricCard
-            label="Total Deductions"
-            value={formatCurrency(slip?.totalDeduction || 0)}
-            icon="solar:bill-list-linear"
-            tone="error"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
-          <DashboardMetricCard
-            label="Net Payable"
-            value={formatCurrency(slip?.netSalary || 0)}
-            icon="solar:card-send-linear"
-            tone="info"
-            strong
-          />
-        </Grid>
-      </Grid>
-
-      {slip?.compensationTargetDifference ? (
-        <Alert severity="warning">
-          The normalized {formatMode(slip?.compensationProtectionPolicy)} result differs from the
-          saved protected amount by {formatCurrency(slip.compensationTargetDifference)}. This
-          payslip preserves the effective revision and records the variance for review.
-        </Alert>
-      ) : null}
-
-      <Grid container spacing={1} alignItems="stretch">
-        <Grid size={{ xs: 12, lg: 8 }}>
-          <DashboardPanel
-            title="Pay Basis"
-            subtitle="Attendance and proration values used for payroll"
-          >
-            <Grid container spacing={1}>
-              {payBasisItems.map(([label, value]) => (
-                <Grid size={{ xs: 12, sm: 6, md: 3 }} key={label}>
-                  <DashboardInfoTile label={label} value={value} />
-                </Grid>
-              ))}
-            </Grid>
-          </DashboardPanel>
-        </Grid>
-        <Grid size={{ xs: 12, lg: 4 }}>
-          <DashboardPanel title="Payment & Statutory" subtitle="Bank and statutory references">
-            <Stack divider={<Divider flexItem />}>
-              {paymentItems.map(([label, value]) => (
-                <CompactKeyValue key={label} label={label} value={value} />
-              ))}
-            </Stack>
-          </DashboardPanel>
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={1} alignItems="stretch">
-        <Grid size={{ xs: 12, md: 6 }}>
-          <DashboardBreakdownCard
-            title="Earnings"
-            rows={slip?.earnings || []}
-            total={slip?.totalEarning || 0}
-            emptyText="No earnings"
-          />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <DashboardBreakdownCard
-            title="Deductions"
-            rows={slip?.deductions || []}
-            total={slip?.totalDeduction || 0}
-            emptyText="No deductions"
-          />
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={1}>
-        <Grid size={{ xs: 12, md: slip?.remarks ? 8 : 12 }}>
-          <DashboardPanel title="Net Pay in Words">
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>
-              {slip?.netPayInWords || '-'}
-            </Typography>
-          </DashboardPanel>
-        </Grid>
-        {slip?.remarks ? (
-          <Grid size={{ xs: 12, md: 4 }}>
-            <DashboardPanel title="Remarks">
-              <Typography variant="body2" color="text.secondary">
-                {slip.remarks}
-              </Typography>
-            </DashboardPanel>
-          </Grid>
-        ) : null}
-      </Grid>
-    </Stack>
-  );
-};
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const tone = getStatusTone(status);
-
-  return (
-    <Box
-      component="span"
-      sx={(theme) => {
-        const isDark = theme.palette.mode === 'dark';
-        let bgColor = theme.palette.background.neutral;
-        let borderColor = theme.palette.divider;
-        let textColor = theme.palette.text.primary;
-
-        if (tone !== 'default') {
-          const palette = theme.palette[tone];
-          bgColor = isDark ? alpha(palette.main, 0.2) : alpha(palette.lighter, 0.42);
-          borderColor = alpha(palette.main, isDark ? 0.5 : 0.28);
-          textColor = palette.main;
-        }
-
-        return {
-          px: 1,
-          py: 0.35,
-          borderRadius: 1,
-          border: `1px solid ${borderColor}`,
-          bgcolor: bgColor,
-          typography: 'caption',
-          fontWeight: 800,
-          textTransform: 'uppercase',
-          color: textColor,
-          letterSpacing: 0,
-        };
-      }}
-    >
-      {status}
-    </Box>
-  );
-};
-
-const DashboardMetricCard = ({
-  label,
-  value,
-  icon,
-  tone = 'default',
-  strong = false,
-}: {
-  label: string;
-  value: string;
-  icon: string;
-  tone?: Exclude<PayslipTone, 'warning'>;
-  strong?: boolean;
-}) => (
-  <Card
-    sx={(theme) => {
-      const accent =
-        tone === 'default' ? theme.palette.divider : alpha(theme.palette[tone].main, 0.55);
-
-      return {
-        p: 1.5,
-        height: '100%',
-        border: `1px solid ${theme.palette.divider}`,
-        borderLeft: `3px solid ${accent}`,
-        boxShadow: theme.customShadows?.z1,
-      };
-    }}
-  >
-    <Stack direction="row" spacing={1.25} alignItems="center">
-      <Avatar
-        variant="rounded"
-        sx={(theme) => {
-          const isDark = theme.palette.mode === 'dark';
-          const bgColor = theme.palette.background.neutral;
-          let textColor = theme.palette.text.primary;
-          let borderColor = theme.palette.divider;
-
-          if (tone !== 'default') {
-            const palette = theme.palette[tone];
-            textColor = palette.main;
-            borderColor = alpha(palette.main, isDark ? 0.4 : 0.18);
-          }
-
-          return {
-            width: 38,
-            height: 38,
-            borderRadius: 1.25,
-            bgcolor: bgColor,
-            color: textColor,
-            border: `1px solid ${borderColor}`,
-          };
-        }}
-      >
-        <Iconify icon={icon} width={20} />
-      </Avatar>
-      <Box sx={{ minWidth: 0 }}>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-          {label}
-        </Typography>
-        <Typography
-          variant={strong ? 'h6' : 'subtitle1'}
-          sx={{ fontWeight: 800, overflowWrap: 'anywhere' }}
-        >
-          {value}
-        </Typography>
-      </Box>
-    </Stack>
-  </Card>
-);
-
-const DashboardPanel = ({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) => (
-  <Card
-    sx={{
-      p: 1.5,
-      height: '100%',
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-      boxShadow: (theme) => theme.customShadows?.z1,
-    }}
-  >
-    <Box sx={{ mb: 1.25 }}>
-      <Typography variant="subtitle2" sx={{ fontWeight: 800 }}>
-        {title}
-      </Typography>
-      {subtitle ? (
-        <Typography variant="caption" color="text.secondary">
-          {subtitle}
-        </Typography>
-      ) : null}
-    </Box>
-    {children}
-  </Card>
-);
-
-const DashboardInfoTile = ({ label, value }: { label: string; value: string }) => (
-  <Box
-    sx={{
-      px: 1.25,
-      py: 1,
-      borderRadius: 1,
-      bgcolor: 'background.neutral',
-      border: (theme) => `1px solid ${theme.palette.divider}`,
-      minHeight: 68,
-    }}
-  >
-    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-      {label}
-    </Typography>
-    <Typography variant="subtitle2" sx={{ mt: 0.35, fontWeight: 800 }}>
-      {value}
-    </Typography>
-  </Box>
-);
-
-const CompactKeyValue = ({ label, value }: { label: string; value: string }) => (
-  <Stack direction="row" justifyContent="space-between" spacing={1.5} sx={{ py: 0.85 }}>
-    <Typography variant="body2" color="text.secondary">
-      {label}
-    </Typography>
-    <Typography variant="body2" sx={{ fontWeight: 700, textAlign: 'right' }}>
-      {value}
-    </Typography>
-  </Stack>
-);
-
-const DashboardBreakdownCard = ({
-  title,
-  rows,
-  total,
-  emptyText,
-}: {
-  title: string;
-  rows: any[];
-  total: number;
-  emptyText: string;
-}) => (
-  <DashboardPanel title={title}>
-    {rows?.length ? (
-      <Stack divider={<Divider flexItem />}>
-        {rows.map((row, index) => (
-          <Stack
-            key={`${row?.name || title}-${index}`}
-            direction="row"
-            spacing={1.5}
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{ py: 0.85 }}
-          >
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {row?.name || '-'}
-              </Typography>
-              {row?.description ? (
-                <Typography variant="caption" color="text.secondary">
-                  {row.description}
-                </Typography>
-              ) : null}
+        {displayedDocument && <Typography variant="body2" color="text.secondary">
+          Revision {displayedDocument.revision} · {viewingCurrent ? 'Current' : 'Replaced'} · {currentDocument?.paymentStatus === 'Paid' ? 'Paid' : 'Finalized, unpaid'}
+          {currentDocument?.recipientEmail ? ` · Email: ${currentDocument.recipientEmail}` : ' · Add an employee email address to send.'}
+        </Typography>}
+        {currentDocument && viewingCurrent && canSend && <Stack direction="row" spacing={1} flexWrap="wrap">
+          {currentDocument.paymentStatus === 'Finalized' && <Button size="small"
+            onClick={() => setAction({ documentId: currentDocument.id, mode: 'payment' })}>Record payment</Button>}
+          <Button size="small" onClick={() => setAction({ documentId: currentDocument.id, mode: 'replace' })}>Replace document details</Button>
+          {canCorrect && ['Finalized', 'Paid'].includes(currentDocument.paymentStatus) && <Button size="small" onClick={() => setCorrectionDocument(currentDocument)}>Correct payroll</Button>}
+        </Stack>}
+        {(slips.isError || versions.isError) && <Alert severity="error" action={<Button size="small" onClick={() => {
+          if (selection) { slips.refetch(); versions.refetch(); }
+        }}>Retry</Button>}>The payslip could not be loaded.</Alert>}
+        {actions.error && <Alert severity="error" action={<Button size="small" onClick={actions.retry}>Retry</Button>}>{actions.error}</Alert>}
+        {!selection && <Typography variant="body2" color="text.secondary">Select an employee and pay period.</Typography>}
+        {(slips.isLoading || versions.isLoading || actions.isLoading) && <Box aria-busy="true" aria-label="Loading payslip">
+          <Skeleton width="45%" height={36} /><Skeleton variant="rounded" height={560} />
+        </Box>}
+        {printError && <Alert severity="error">The print window could not be opened. Retry printing or download the PDF.</Alert>}
+        {actions.pdfUrl && <PayslipPdfViewer key={actions.pdfUrl} url={actions.pdfUrl}
+          title={displayedDocument ? `Official payslip PDF, revision ${displayedDocument.revision}` : 'Draft payslip PDF'}
+          contentRef={printContentRef} onReady={setRenderedPdfUrl} />}
+        {currentDocument && <Accordion disableGutters elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
+          <AccordionSummary expandIcon={<ExpandMore />}><Typography variant="subtitle2">Delivery history</Typography></AccordionSummary>
+          <AccordionDetails>
+            {deliveries.isError && <Alert severity="error" action={<Button size="small" onClick={() => deliveries.refetch()}>Retry</Button>}>History could not be loaded.</Alert>}
+            {deliveries.isFetching && !deliveries.currentData && <Skeleton aria-label="Loading delivery history" height={48} />}
+            {!deliveries.isError && !deliveries.isFetching && !deliveries.currentData?.length && <Typography variant="body2">No delivery attempts.</Typography>}
+            {deliveries.currentData?.map((attempt) => <Stack key={attempt.id} sx={{ py: 1, borderBottom: 1, borderColor: 'divider' }}>
+              <Typography variant="body2">Revision {attempt.revision} · {deliveryLabels[attempt.status]} · {attempt.recipient || 'Employee email not resolved'}</Typography>
+              <Typography variant="caption" color="text.secondary">{dayjs(attempt.requestedAt).format('DD MMM YYYY HH:mm')}
+                {attempt.errorCategory ? ` · ${attempt.errorCategory === 'EMPLOYEE_EMAIL_REQUIRED' ? 'Update the employee email and retry.' : attempt.errorCategory === 'RECIPIENT_CHANGED' ? 'The employee email changed. Check the recipient before resending.' : attempt.errorCategory === 'SEND_OUTCOME_UNKNOWN' ? 'Confirm receipt before deliberately resending.' : 'Review employee access or document status.'}` : ''}</Typography>
+            </Stack>)}
+          </AccordionDetails>
+        </Accordion>}
+        {!!versions.currentData?.length && <Accordion disableGutters elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
+          <AccordionSummary expandIcon={<ExpandMore />}><Typography variant="subtitle2">Document versions</Typography></AccordionSummary>
+          <AccordionDetails>{versions.currentData.map((version) => <Stack key={version.id} direction="row" spacing={1} alignItems="center" sx={{ py: 1 }}>
+            <Box flex={1}><Typography variant="body2">Revision {version.revision} · {version.isCurrent ? 'Current' : 'Replaced'} · {dayjs(version.issuedAt).format('DD MMM YYYY HH:mm')}</Typography>
+              {version.replacementReason && <Typography variant="body2" color="text.secondary">{version.replacementReason}</Typography>}
             </Box>
-            <Typography variant="body2" sx={{ fontWeight: 800, whiteSpace: 'nowrap' }}>
-              {formatCurrency(row?.amount || 0)}
-            </Typography>
-          </Stack>
-        ))}
-      </Stack>
-    ) : (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
-        {emptyText}
-      </Typography>
-    )}
-    <Stack
-      direction="row"
-      justifyContent="space-between"
-      sx={{
-        mt: 1,
-        px: 1,
-        py: 0.85,
-        borderRadius: 1,
-        bgcolor: 'background.neutral',
-      }}
-    >
-      <Typography variant="body2" sx={{ fontWeight: 800 }}>
-        Total
-      </Typography>
-      <Typography variant="body2" sx={{ fontWeight: 800 }}>
-        {formatCurrency(rows?.length ? salaryLineTotal(rows) : total)}
-      </Typography>
+            <Button size="small" disabled={displayedDocument?.id === version.id} onClick={() => {
+              if (selection) setViewedVersion({ selection: selection.key, id: version.id });
+            }}>View</Button>
+          </Stack>)}</AccordionDetails>
+        </Accordion>}
+        <Accordion disableGutters elevation={0} sx={{ border: 1, borderColor: 'divider' }}>
+          <AccordionSummary expandIcon={<ExpandMore />}><Typography variant="subtitle2">Payslip settings</Typography></AccordionSummary>
+          <AccordionDetails><PayslipSettingsForm canEdit={canSend} /></AccordionDetails>
+        </Accordion>
+      </>}
+      {currentDocument && action?.documentId === currentDocument.id && <PayslipDocumentActionDialog
+        key={`${action.documentId}-${action.mode}`} document={currentDocument} mode={action.mode} onClose={() => setAction(null)} />}
+      {correctionDocument && <PayslipCorrectionDialog key={correctionDocument.id} document={correctionDocument}
+        canEdit={canCorrect} canReview={canReviewCorrection} canApply={canApplyCorrection} onClose={() => setCorrectionDocument(null)} />}
+      <ConfirmDialog open={!!currentDocument && resendConfirmation === currentDocument.id} title="Resend payslip?" icon={null}
+        disableCancel={sending.isLoading} disableBackdropClick={sending.isLoading} onClose={() => { if (!sending.isLoading) setResendConfirmation(null); }}
+        content={`Send revision ${currentDocument?.revision ?? ''} again to ${currentDocument?.recipientEmail ?? ''}? Confirm receipt first if an earlier send outcome is unknown.`}
+        action={<Button variant="contained" disabled={sending.isLoading || queued || !viewingCurrent} onClick={handleSend}>Resend</Button>} />
     </Stack>
-  </DashboardPanel>
-);
-
-interface SalaryDetailsTableCardProps {
-  title: string;
-  subheader?: string;
-  icon?: string;
-  iconColor?: { bg?: string; bgcolor?: string; color?: string };
-  data: any[];
-  tableId?: string;
-  nameColumnLabel?: string;
-  noDataText: string;
+  );
 }
-
-export const SalaryDetailsTableCard = ({
-  title,
-  subheader,
-  icon = 'solar:bill-list-linear',
-  iconColor,
-  data,
-  tableId,
-  nameColumnLabel = 'Component',
-  noDataText,
-}: SalaryDetailsTableCardProps) => {
-  const total = salaryLineTotal(data);
-
-  return (
-    <Card
-      data-table-id={tableId}
-      sx={{
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        border: (theme) => `1px solid ${theme.palette.divider}`,
-        boxShadow: (theme) => theme.customShadows?.z1,
-      }}
-    >
-      <CardHeader
-        avatar={
-          <Avatar
-            variant="rounded"
-            sx={{
-              width: 34,
-              height: 34,
-              borderRadius: 1.25,
-              bgcolor: iconColor?.bg || iconColor?.bgcolor || 'background.neutral',
-              color: iconColor?.color || 'text.primary',
-            }}
-          >
-            <Iconify icon={icon} width={18} />
-          </Avatar>
-        }
-        title={
-          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
-                {title}
-              </Typography>
-              {subheader ? (
-                <Typography variant="caption" color="text.secondary">
-                  {subheader}
-                </Typography>
-              ) : null}
-            </Box>
-            <Typography variant="caption" sx={{ fontWeight: 800, whiteSpace: 'nowrap' }}>
-              {formatCurrency(total)}
-            </Typography>
-          </Stack>
-        }
-        sx={{ p: 1.5, pb: 1 }}
-      />
-
-      <Box sx={{ px: 1.5, pb: 1.5, flex: 1 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          sx={{
-            py: 0.75,
-            borderTop: (theme) => `1px solid ${theme.palette.divider}`,
-            borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-          }}
-        >
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-            {nameColumnLabel}
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-            Amount
-          </Typography>
-        </Stack>
-        {data?.length ? (
-          <Stack divider={<Divider flexItem />}>
-            {data.map((item, index) => (
-              <Stack
-                key={`${item?.name || title}-${index}`}
-                direction="row"
-                justifyContent="space-between"
-                spacing={1.5}
-                sx={{ py: 0.9 }}
-              >
-                <Typography variant="body2" color="text.secondary" sx={{ minWidth: 0 }}>
-                  {item?.name || '-'}
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
-                  {formatCurrency(item?.amount || 0)}
-                </Typography>
-              </Stack>
-            ))}
-          </Stack>
-        ) : (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-            {noDataText}
-          </Typography>
-        )}
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          sx={{ mt: 1, px: 1, py: 0.85, borderRadius: 1, bgcolor: 'background.neutral' }}
-        >
-          <Typography variant="body2" sx={{ fontWeight: 800 }}>
-            Total
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 800 }}>
-            {formatCurrency(total)}
-          </Typography>
-        </Stack>
-      </Box>
-    </Card>
-  );
-};
-
-const PayslipDocumentPreview = ({ employee, monthYear, slip }: PayslipDocumentPreviewProps) => {
-  const period = monthYear ? monthYear.format('MMMM YYYY') : '-';
-  const status = formatStatus(slip?.status);
-  const isPreview = !isOfficialPayslipStatus(slip?.status);
-  const employeeRows: Array<[string, string]> = [
-    ['Employee Name', getEmployeeName(employee, slip)],
-    ['Employee Code', slip?.employeeCode || '-'],
-    ['Department', slip?.department || '-'],
-    ['Designation', slip?.designation || '-'],
-    ['Date of Joining', formatDate(slip?.dateOfJoining)],
-  ];
-  const paymentRows: Array<[string, string]> = [
-    ['Bank', slip?.bankName || '-'],
-    ['Account No.', slip?.maskedAccountNumber || '-'],
-    ['IFSC', slip?.ifscCode || '-'],
-    ['UAN', slip?.uanNumber || '-'],
-    ['EPF No.', slip?.epfNumber || '-'],
-    ...(slip?.employeeStateInsuranceRuleId
-      ? ([
-          ['ESI No.', slip.employeeStateInsuranceNumber || '-'],
-          ['ESI Wages', formatCurrency(slip.employeeStateInsuranceWages || 0)],
-          ...(slip.employeeStateInsuranceGovernmentContribution
-            ? [
-                [
-                  'Government ESI',
-                  formatCurrency(slip.employeeStateInsuranceGovernmentContribution),
-                ],
-              ]
-            : []),
-        ] as Array<[string, string]>)
-      : []),
-    [
-      'Compensation Revision',
-      slip?.compensationRevisionNumber ? `Revision ${slip.compensationRevisionNumber}` : '-',
-    ],
-    [
-      'Protected Compensation',
-      slip?.compensationProtectedAmount ? formatCurrency(slip.compensationProtectedAmount) : '-',
-    ],
-  ];
-  const payBasisRows: Array<[string, string]> = [
-    ['Payroll Basis Days', formatDays(slip?.payrollBasisDays)],
-    ['Payable Days', formatDays(slip?.payableDays)],
-    ['Present Days', formatDays(slip?.presentDays)],
-    ['Half Days', formatDays(slip?.halfWorkingDays)],
-    ['LOP / Absent Days', formatDays(slip?.lopDays)],
-    ['Proration Factor', formatDecimal(slip?.prorationFactor)],
-    ['Day Calculation', formatMode(slip?.payrollDayCalculationMode)],
-    ['Pay Period', period],
-    ['Full-month gross', formatCurrency(slip?.fullGrossSalary ?? 0)],
-    ['Gross Salary', formatCurrency(slip?.grossSalary ?? 0)],
-    ['Additional earnings', formatCurrency(slip?.additionalEarnings ?? 0)],
-    ['Total earnings', formatCurrency(slip?.totalEarning ?? 0)],
-  ];
-
-  return (
-    <Box
-      sx={{
-        py: { xs: 1, md: 2 },
-        px: { xs: 0, md: 2 },
-        bgcolor: 'background.neutral',
-      }}
-    >
-      <Card
-        sx={{
-          width: { xs: '100%', md: 794 },
-          mx: 'auto',
-          p: { xs: 2, sm: 3 },
-          bgcolor: '#fff',
-          color: documentText,
-          border: documentBorder,
-          borderRadius: 0.75,
-          boxShadow: (theme) => theme.customShadows?.z8,
-          overflow: 'hidden',
-        }}
-      >
-        <Stack spacing={2}>
-          <PayslipHeader
-            employeeName={getEmployeeName(employee, slip)}
-            period={period}
-            status={isPreview ? `Preview - ${status}` : status}
-            slipNumber={slip?.slipNumber}
-            generatedAt={slip?.generatedAt}
-            isPreview={isPreview}
-          />
-
-          {isPreview ? (
-            <Box
-              sx={{
-                border: documentBorder,
-                bgcolor: documentHeaderBg,
-                px: 1.25,
-                py: 1,
-              }}
-            >
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                Preview payslip only. Finalize/lock payroll to issue the official salary slip.
-              </Typography>
-            </Box>
-          ) : null}
-
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <DocumentInfoSection title="Employee Details" rows={employeeRows} />
-            <DocumentInfoSection title="Payment & Statutory" rows={paymentRows} />
-          </Stack>
-
-          <DocumentInfoSection title="Pay Basis" rows={payBasisRows} columns={4} />
-
-          {slip?.compensationTargetDifference ? (
-            <Box sx={{ border: documentBorder, bgcolor: documentHeaderBg, px: 1.25, py: 1 }}>
-              <Typography variant="body2" sx={{ fontWeight: 700 }}>
-                Protected compensation variance: {formatCurrency(slip.compensationTargetDifference)}
-                . Review the payroll record for the approved revision and normalized comparison.
-              </Typography>
-            </Box>
-          ) : null}
-
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
-            <PayslipAmountTable
-              title="Earnings"
-              rows={slip?.earnings || []}
-              total={slip?.totalEarning || 0}
-              emptyText="No earnings"
-            />
-            <PayslipAmountTable
-              title="Deductions"
-              rows={slip?.deductions || []}
-              total={slip?.totalDeduction || 0}
-              emptyText="No deductions"
-            />
-          </Stack>
-
-          <NetPayDocumentBlock slip={slip} />
-
-          {slip?.remarks ? (
-            <Box sx={{ border: documentBorder, p: 1.25 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                Remarks
-              </Typography>
-              <Typography variant="body2" sx={{ mt: 0.5 }}>
-                {slip.remarks}
-              </Typography>
-            </Box>
-          ) : null}
-
-          <Box sx={{ pt: 1.25, borderTop: documentBorder, textAlign: 'center' }}>
-            {isPreview ? (
-              <Typography
-                variant="caption"
-                sx={{ display: 'block', fontWeight: 800, color: 'text.primary' }}
-              >
-                This is a preview payslip and is not an official salary slip.
-              </Typography>
-            ) : null}
-            <Typography variant="caption" color="text.secondary">
-              This is a computer-generated payslip and does not require a signature.
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-              Confidential payroll document. Contact HR/payroll for any discrepancy.
-            </Typography>
-          </Box>
-        </Stack>
-      </Card>
-    </Box>
-  );
-};
-
-const PayslipHeader = ({
-  employeeName,
-  period,
-  status,
-  slipNumber,
-  generatedAt,
-  isPreview,
-}: {
-  employeeName: string;
-  period: string;
-  status: string;
-  slipNumber?: string | null;
-  generatedAt?: string | Date | null;
-  isPreview?: boolean;
-}) => (
-  <Box sx={{ borderBottom: `2px solid ${documentText}`, pb: 1.5 }}>
-    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} justifyContent="space-between">
-      <Box>
-        <Typography variant="subtitle1" sx={{ fontWeight: 800, textTransform: 'uppercase' }}>
-          Institution Payroll
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {isPreview ? 'Preview salary statement' : 'Official salary statement'}
-        </Typography>
-      </Box>
-      <Box sx={{ textAlign: { xs: 'left', sm: 'right' } }}>
-        <Typography
-          variant="caption"
-          sx={{
-            px: 1.25,
-            py: 0.5,
-            border: `1px solid ${documentText}`,
-            fontWeight: 800,
-            letterSpacing: 0,
-            textTransform: 'uppercase',
-            display: 'inline-block',
-          }}
-        >
-          {status}
-        </Typography>
-      </Box>
-    </Stack>
-
-    <Typography variant="h5" sx={{ mt: 1.5, fontWeight: 800, textAlign: 'center' }}>
-      Salary Slip
-    </Typography>
-
-    <Grid container spacing={1.5} sx={{ mt: 1 }}>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <DocumentKeyValue label="Employee" value={employeeName} />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <DocumentKeyValue label="Pay Period" value={period} alignRight />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <DocumentKeyValue label="Slip Number" value={slipNumber || '-'} />
-      </Grid>
-      <Grid size={{ xs: 12, sm: 6 }}>
-        <DocumentKeyValue label="Generated On" value={formatDate(generatedAt)} alignRight />
-      </Grid>
-    </Grid>
-  </Box>
-);
-
-const DocumentInfoSection = ({
-  title,
-  rows,
-  columns = 2,
-}: {
-  title: string;
-  rows: Array<[string, string]>;
-  columns?: 2 | 4;
-}) => (
-  <Box sx={{ flex: 1, border: documentBorder }}>
-    <Box sx={{ px: 1.25, py: 0.75, bgcolor: documentHeaderBg, borderBottom: documentBorder }}>
-      <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase' }}>
-        {title}
-      </Typography>
-    </Box>
-    <Grid container>
-      {rows.map(([label, value]) => (
-        <Grid key={label} size={{ xs: 12, sm: columns === 4 ? 3 : 6 }}>
-          <Box
-            sx={{
-              px: 1.25,
-              py: 0.85,
-              minHeight: 48,
-              borderRight: { sm: documentBorder },
-              borderBottom: documentBorder,
-            }}
-          >
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-              {label}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 0.25, fontWeight: 600 }}>
-              {value}
-            </Typography>
-          </Box>
-        </Grid>
-      ))}
-    </Grid>
-  </Box>
-);
-
-const DocumentKeyValue = ({
-  label,
-  value,
-  alignRight = false,
-}: {
-  label: string;
-  value: string;
-  alignRight?: boolean;
-}) => (
-  <Box sx={{ textAlign: { xs: 'left', sm: alignRight ? 'right' : 'left' } }}>
-    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-      {label}
-    </Typography>
-    <Typography variant="body2" sx={{ fontWeight: 700 }}>
-      {value}
-    </Typography>
-  </Box>
-);
-
-const PayslipAmountTable = ({
-  title,
-  rows,
-  total,
-  emptyText,
-}: {
-  title: string;
-  rows: any[];
-  total: number;
-  emptyText: string;
-}) => {
-  const computedTotal = rows?.length ? salaryLineTotal(rows) : Number(total || 0);
-
-  return (
-    <Box sx={{ flex: 1, border: documentBorder }}>
-      <Box sx={{ px: 1.25, py: 0.75, bgcolor: documentHeaderBg, borderBottom: documentBorder }}>
-        <Typography variant="caption" sx={{ fontWeight: 800, textTransform: 'uppercase' }}>
-          {title}
-        </Typography>
-      </Box>
-      <Box component="table" sx={{ width: '100%', borderCollapse: 'collapse' }}>
-        <Box component="thead">
-          <Box component="tr">
-            <AmountTableHeaderCell>Component</AmountTableHeaderCell>
-            <AmountTableHeaderCell align="right">Amount</AmountTableHeaderCell>
-          </Box>
-        </Box>
-        <Box component="tbody">
-          {rows?.length ? (
-            rows.map((row, index) => (
-              <Box component="tr" key={`${row?.name || title}-${index}`}>
-                <AmountTableCell>{row?.name || '-'}</AmountTableCell>
-                <AmountTableCell align="right">{formatCurrency(row?.amount || 0)}</AmountTableCell>
-              </Box>
-            ))
-          ) : (
-            <Box component="tr">
-              <AmountTableCell colSpan={2}>{emptyText}</AmountTableCell>
-            </Box>
-          )}
-          <Box component="tr">
-            <AmountTableCell strong bg>
-              Total
-            </AmountTableCell>
-            <AmountTableCell align="right" strong bg>
-              {formatCurrency(computedTotal)}
-            </AmountTableCell>
-          </Box>
-        </Box>
-      </Box>
-    </Box>
-  );
-};
-
-const AmountTableHeaderCell = ({
-  children,
-  align = 'left',
-}: {
-  children: React.ReactNode;
-  align?: 'left' | 'right';
-}) => (
-  <Box
-    component="th"
-    sx={{
-      px: 1.25,
-      py: 0.75,
-      borderBottom: documentBorder,
-      textAlign: align,
-      typography: 'caption',
-      color: 'text.secondary',
-      fontWeight: 800,
-    }}
-  >
-    {children}
-  </Box>
-);
-
-const AmountTableCell = ({
-  children,
-  align = 'left',
-  colSpan,
-  strong = false,
-  bg = false,
-}: {
-  children: React.ReactNode;
-  align?: 'left' | 'right';
-  colSpan?: number;
-  strong?: boolean;
-  bg?: boolean;
-}) => (
-  <Box
-    component="td"
-    colSpan={colSpan}
-    sx={{
-      px: 1.25,
-      py: 0.8,
-      borderBottom: documentBorder,
-      bgcolor: bg ? documentHeaderBg : '#fff',
-      textAlign: align,
-      typography: 'body2',
-      fontWeight: strong ? 800 : 500,
-      color: strong ? 'text.primary' : 'text.secondary',
-    }}
-  >
-    {children}
-  </Box>
-);
-
-const NetPayDocumentBlock = ({ slip }: { slip: any }) => (
-  <Box sx={{ border: `2px solid ${documentText}` }}>
-    <Stack
-      direction={{ xs: 'column', sm: 'row' }}
-      justifyContent="space-between"
-      spacing={1}
-      sx={{ p: 1.25, bgcolor: documentHeaderBg }}
-    >
-      <Box>
-        <Typography variant="subtitle2" sx={{ fontWeight: 800, textTransform: 'uppercase' }}>
-          Net Payable
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          Final amount payable after all deductions
-        </Typography>
-      </Box>
-      <Typography variant="h6" sx={{ fontWeight: 800 }}>
-        {formatCurrency(slip?.netSalary || 0)}
-      </Typography>
-    </Stack>
-    <Box sx={{ px: 1.25, py: 1, borderTop: documentBorder }}>
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-        Amount in Words
-      </Typography>
-      <Typography variant="body2" sx={{ mt: 0.25, fontWeight: 600 }}>
-        {slip?.netPayInWords || '-'}
-      </Typography>
-    </Box>
-  </Box>
-);

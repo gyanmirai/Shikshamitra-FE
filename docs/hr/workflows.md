@@ -170,7 +170,8 @@ A later save creates another revision, supersedes the previous effective revisio
 After salary is ready, users with Employee Edit permission activate the employee as a separate action.
 Only effective revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
 System-managed statutory lines stay visible in the calculation but are never persisted as editable employee components.
-Run Payroll and payslips show revision provenance and protected-target drift without silently changing salary or blocking lock.
+Run Payroll shows compensation revision provenance and protected-target drift without silently changing salary or blocking lock.
+Employee payslips omit employer cost and compensation protection details.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
 Salary Template settings uses one full-height table for Active, Needs setup, and Archived templates.
 The shared inline breadcrumb header owns the Create template action and places reusable-default guidance in its information tooltip.
@@ -232,3 +233,46 @@ Superseded payroll previews remain non-actionable and require recalculation and 
 Payroll readiness displays Needs attention when the server reports an ESIC or compensation blocker, and Needs recalculation for stale results.
 Readiness labels and monetary totals wrap without truncation on narrow screens.
 The disclosure uses a labelled keyboard-accessible button with its expanded state exposed.
+
+## Payslip completion requirements
+
+Immutable issued documents, payment recording, document-detail replacement and delivery are implemented with focused regression coverage.
+Unpaid reissue and paid later-payroll settlement are implemented with focused regression coverage; the complete acceptance matrix remains open.
+The owning [payslip specification](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/references/payslip-design.md) defines issuance, money, corrections, email and acceptance requirements.
+Keep the existing Payslips route, standard breadcrumbs and employee/month controls.
+Use one server-generated document for the screen document preview, Print, Download and email attachment.
+PDF.js renders the stored document with a bundled worker rather than relying on native PDF frames.
+Print becomes available only after every selected document page renders and copies those pages using the existing print library.
+Changing the selection cancels the previous renderer and cannot publish its pages into the new selection.
+Rendering failures keep Print disabled and provide Retry without regenerating payroll facts.
+Official documents become available after payroll finalization, with payment status recorded separately.
+HR manages distribution; no employee portal is included.
+The school can enable automatic employee email after successful locking, with the setting off by default.
+Authorized HR can Send and Resend even when automatic email is off.
+Show the employee's recorded recipient address and delivery state, with failed/missing-address recovery through existing employee details.
+Keep delivery history and document revisions under secondary disclosures.
+Viewing a replaced revision disables sending and mutation actions.
+Recording payment keeps the PDF unchanged and stores a payment reference separately.
+Replacing document details requires a reason and uses current employee/school facts while retaining frozen monetary and attendance evidence.
+Payment and replacement forms preserve drafts and idempotency keys after failed writes.
+Deliberate resend uses the shared confirmation and shows the employee recipient.
+Provider acceptance is not labelled as inbox delivery.
+Failed document-history loading blocks a draft fallback; HR retries the failed request.
+Unpaid corrections require a reason and a replacement retaining the original; paid monetary differences go through later payroll.
+Correct payroll opens a compact reasoned draft for an unpaid or paid current revision.
+Recorded attendance remains editable without fabricating Present values for missing records.
+Recalculate shows issued and candidate earnings, employee deductions, net pay and school cost, with component evidence for HR.
+Attendance edits disable review and reissue until recalculated.
+For a reviewed paid correction, select a later settlement month and calculate its payroll through the existing preview service.
+Apply settlement requires a current successful target preview and the existing payroll Lock permission.
+Changing the month or academic year invalidates the selected target run; interrupted requests from another selection cannot enable settlement.
+Successful settlement leaves the paid document unchanged and requires target payroll regeneration, review and locking.
+Failed settlement retains the month and shows the server's actionable error.
+Review and reissue follow the existing RunPayroll permissions in addition to payslip permissions.
+Close protects unsaved edits, failed writes retain the draft, and failed follow-up history refresh is reported separately from an acknowledged write.
+Cancellation preserves audit evidence and does not discard the issued document.
+Clean settings adopt refreshed server values; dirty settings retain their draft and original concurrency token until saved or discarded.
+Discard restores the latest observed server baseline.
+Internal links and browser traversal use the shared keep-editing/discard guard.
+An earlier refresh observed during saving cannot overwrite the acknowledged save response.
+Preserve compact labelled controls, stable loading/error layouts, draft protection and keyboard focus behavior.

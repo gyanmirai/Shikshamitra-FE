@@ -156,3 +156,23 @@ Run the full src/screens/hr/payroll Vitest scope for calculation-preview state, 
 Check that the payroll readiness disclosure works with Enter and Space and retains focus.
 At 390, 768 and 1440 px, inspect complete readiness labels and currency values, plus the stale and blocking-issue statuses.
 The backend [calculation audit matrix](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/testing.md#final-calculation-audit-matrix) owns monetary and transaction acceptance.
+
+## Payslip completion acceptance
+
+The [payslip specification](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/references/payslip-design.md) owns the acceptance matrix.
+Run the payroll Vitest scope, TypeScript, scoped ESLint, production webpack build and HR docs validator.
+The independent final run on 2026-10-03 passed 54 tests across 13 payroll files, TypeScript, scoped lint and the production build.
+PDF.js 5.6.205 is pinned with a portable registry lock and supports the existing Node 20 build environment (20.19 or later).
+
+Regressions cover clean settings refresh, preservation of dirty drafts, discard to the latest server baseline, failed writes and repeated request keys, guarded navigation, pending/failed employee history selection, correction/reissue controls, settlement retry, cancelled or obsolete PDF renders and PDF-loading retry.
+Identical RTK Query responses retain their object reference; cloned component props alone do not establish a production network race.
+
+Authenticated Codex browser checks covered the paid October source and the regenerated, reviewed and locked November settlement, repeated employee selection, keyboard selection and PDF layouts at 390/768/1440 pixels.
+The original paid document remained unchanged.
+Supporting Playwright verification compared the UI download to the stored PDF SHA256 and compared every printed canvas pixel to the preview, including A4 print rules.
+Native physical printer selection was not tested.
+Repeat the browser smoke whenever renderer or dependency changes follow that evidence.
+
+Keep synthetic identity files, screenshots, PDFs and traces in ignored local artifact folders.
+No production email or payroll data is used for these checks.
+Full two-issued-employee delayed/failed history, every dirty-dialog traversal and current Gujarat form/signature applicability remain acceptance items; focused passing tests do not certify the complete matrix.
