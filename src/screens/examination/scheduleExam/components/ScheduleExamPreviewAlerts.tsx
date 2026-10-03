@@ -1,6 +1,3 @@
-import type { Theme } from '@mui/material/styles';
-
-import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, Chip, Stack, Typography } from '@mui/material';
@@ -35,26 +32,27 @@ export function ScheduleExamPreviewAlerts({
   if (!visibleIssues.length && missingRoomAssignmentCount <= 0) return null;
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1}>
       {visibleIssues.length > 0 && (
         <Box
           sx={{
             p: 2,
             borderRadius: 2,
             border: '1px solid',
-            borderColor: (theme) => alpha(theme.palette.warning.main, 0.28),
-            bgcolor: (theme) => alpha(theme.palette.warning.main, 0.06),
+            borderColor: 'divider',
+            bgcolor: 'background.paper',
+            boxShadow: 'var(--shadows-2)',
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
-            <Iconify icon={GlobalIcons.bell} color="warning.main" width={19} height={19} />
+          <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 1 }}>
+            <Iconify icon={GlobalIcons.bell} color="text.secondary" width={18} height={18} />
             <Typography variant="subtitle2" sx={{ fontWeight: 700, flex: 1 }}>
               Readiness attention
             </Typography>
-            <Chip size="small" color="warning" variant="soft" label={visibleIssues.length} />
+            <Chip size="small" variant="soft" label={visibleIssues.length} />
           </Stack>
 
-          <Stack spacing={1} component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
+          <Stack component="ul" sx={{ m: 0, p: 0, listStyle: 'none' }}>
             {visibleIssues.map((issue) => {
               const isBlocking = issue.severity === 'blocking';
 
@@ -63,18 +61,16 @@ export function ScheduleExamPreviewAlerts({
                   component="li"
                   key={issue.id}
                   sx={{
-                    p: 1.5,
-                    borderRadius: 1.5,
-                    bgcolor: 'background.paper',
-                    border: '1px solid',
-                    borderColor: (theme: Theme) =>
-                      alpha(
-                        isBlocking ? theme.palette.error.main : theme.palette.warning.main,
-                        0.2
-                      ),
+                    py: 1.25,
+                    '&:not(:last-child)': { borderBottom: '1px solid', borderColor: 'divider' },
                   }}
                 >
-                  <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+                  <Stack
+                    direction="row"
+                    justifyContent="space-between"
+                    alignItems="flex-start"
+                    gap={1}
+                  >
                     <Typography variant="body2" sx={{ fontWeight: 600 }}>
                       {issue.title}
                     </Typography>
@@ -107,13 +103,20 @@ export function ScheduleExamPreviewAlerts({
           sx={{
             p: 2,
             borderRadius: 2,
-            bgcolor: (theme) => alpha(theme.palette.info.main, 0.06),
+            bgcolor: 'background.paper',
             border: '1px solid',
-            borderColor: (theme) => alpha(theme.palette.info.main, 0.2),
+            borderColor: 'divider',
+            boxShadow: 'var(--shadows-2)',
           }}
         >
-          <Stack direction="row" alignItems="flex-start" spacing={1.25}>
-            <Iconify icon={GlobalIcons.info} color="info.main" width={20} height={20} />
+          <Stack direction="row" alignItems="flex-start" spacing={0.75}>
+            <Iconify
+              icon={GlobalIcons.info}
+              color="text.secondary"
+              width={18}
+              height={18}
+              sx={{ mt: 0.25, flexShrink: 0 }}
+            />
             <Box>
               <Typography variant="body2" sx={{ fontWeight: 700 }}>
                 {missingRoomAssignmentCount} room assignment gap

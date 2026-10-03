@@ -20,6 +20,7 @@ type RubricCriterionCardProps = {
   onCommentsChange: (criterionId: string, comments: string) => void;
   readOnly?: boolean;
   compact?: boolean;
+  isRatingScale?: boolean;
 };
 
 const RubricCriterionCard = ({
@@ -31,6 +32,7 @@ const RubricCriterionCard = ({
   onCommentsChange,
   readOnly,
   compact = false,
+  isRatingScale = false,
 }: RubricCriterionCardProps) => {
   const headingId = `rubric-criterion-${criterion.id}`;
 
@@ -118,7 +120,7 @@ const RubricCriterionCard = ({
             }}
           >
             <Typography variant="caption" color="text.secondary" display="block">
-              Score
+              {isRatingScale ? 'Rating' : 'Score'}
             </Typography>
             <Typography
               variant="subtitle2"
@@ -141,6 +143,7 @@ const RubricCriterionCard = ({
           onMarksChange={onMarksChange}
           readOnly={readOnly}
           compact={compact}
+          isRatingScale={isRatingScale}
         />
 
         <TextField

@@ -5,7 +5,6 @@ import type { Division, Standards, Organization } from 'src/types/school';
 
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
-import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -32,21 +31,13 @@ import {
   GradeEntryWorkflowStatusLabel,
 } from 'src/enums/grade-entry-status';
 import {
-  type ITimetableSummaryCard,
-  TimetableSettingsSummaryCards,
-} from 'src/components/timetable-settings-summary-cards/TimetableSettingsSummaryCards';
-import {
   Box,
   Card,
-  Grid,
   List,
   Chip,
+  Paper,
   Stack,
   Button,
-  Divider,
-  Tooltip,
-  Skeleton,
-  Collapse,
   ListItem,
   TextField,
   IconButton,
@@ -70,8 +61,10 @@ import {
 
 import AssignGrade from './components/assignGradeForm';
 import GradeEntryTable from './components/GradeEntryTable';
+import { GradeEntryInsights } from './components/GradeEntryInsights';
 import { BulkGradeEntryToolbar } from './components/BulkGradeEntryToolbar';
 import { GradeEntryReviewDialog } from './components/GradeEntryReviewDialog';
+import { GradeEntryToolbarActions } from './components/GradeEntryToolbarActions';
 import { ImportMarksPreviewDialog } from './components/ImportMarksPreviewDialog';
 import {
   getExamMonthRange,
@@ -253,57 +246,15 @@ const GradeEntry = (props: TabComponentType) => {
   const [allMarksAssigned, setAllMarksAssigned] = useState(false);
   const [analyticsStats, setAnalyticsStats] = useState<IExamAnalyticsStats | null>(null);
 
-  const summaryCards = useMemo<ITimetableSummaryCard[]>(() => {
-    if (!analyticsStats) return [];
-    return [
-      {
-        label: 'Total Students',
-        value: analyticsStats.totalCount ?? 0,
-        icon: 'solar:user-bold',
-        color: 'primary',
-      },
-      {
-        label: 'Graded',
-        value: (analyticsStats.totalCount ?? 0) - (analyticsStats.pendingCount ?? 0),
-        icon: 'solar:check-square-bold',
-        color: 'success',
-      },
-      {
-        label: 'Pending',
-        value: analyticsStats.pendingCount ?? 0,
-        icon: 'solar:clock-circle-bold',
-        color: (analyticsStats.pendingCount ?? 0) > 0 ? 'warning' : 'info',
-      },
-      {
-        label: 'Highest Marks',
-        value: analyticsStats.highestMarks ?? 0,
-        icon: 'solar:arrow-up-bold',
-        color: 'success',
-      },
-      {
-        label: 'Lowest Marks',
-        value: analyticsStats.lowestMarks ?? 0,
-        icon: 'solar:arrow-down-bold',
-        color: 'error',
-      },
-      {
-        label: 'Average Marks',
-        value: analyticsStats.averageMarks ?? 0,
-        icon: 'solar:graph-new-bold',
-        color: 'info',
-      },
-    ];
-  }, [analyticsStats]);
   const [workflowStatus, setWorkflowStatus] = useState<GradeEntryWorkflowStatus>(
     GradeEntryWorkflowStatus.Draft
   );
+  const { value: insightsOpen, onTrue: openInsights, onFalse: closeInsights } = useBoolean();
 
   useEffect(() => {
     setAnalyticsStats(null);
-    setSummaryOpen(false);
-  }, [examId]);
-
-  const [summaryOpen, setSummaryOpen] = useState(false);
+    closeInsights();
+  }, [examId, closeInsights]);
 
   const { data: summaryData } = useQueryAndMutation({
     type: 'query',
@@ -790,12 +741,12 @@ const GradeEntry = (props: TabComponentType) => {
                   <strong>Mark Entry</strong> — Enter marks (up to the maximum) or mark as absent.
                 </Typography>
                 <Typography component="li" variant="caption" color="text.secondary">
-                  <strong>Status & Progress</strong> — Track pending and graded students through the
-                  top metric cards.
+                  <strong>Status & Progress</strong> — Track pending and graded students in View all
+                  insights.
                 </Typography>
                 <Typography component="li" variant="caption" color="text.secondary">
-                  <strong>Submission</strong> — Click &quot;Submit for Review&quot; once all grades
-                  are verified to lock them.
+                  <strong>Submission</strong> — Click &quot;Review &amp; Submit&quot; once all
+                  grades are verified to lock them.
                 </Typography>
               </Box>
             </Box>
@@ -805,24 +756,6 @@ const GradeEntry = (props: TabComponentType) => {
             { name: 'Examination', href: '/academic/scheduleExam' },
             { name: 'Grade Entry' },
           ]}
-          action={
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
-              {/* Keyboard helper shortcut button */}
-              <Tooltip title="Keyboard Shortcut Help">
-                <IconButton size="small" color="primary" onClick={keyboardHelpDialog.onTrue}>
-                  <Iconify icon="solar:keyboard-bold" width={22} />
-                </IconButton>
-              </Tooltip>
-
-              {examId && (
-                <Tooltip title="View Audit Logs History">
-                  <IconButton size="small" color="info" onClick={auditLogsDialog.onTrue}>
-                    <Iconify icon="solar:history-bold" width={22} />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Stack>
-          }
         />
 
         <motion.div
@@ -910,427 +843,115 @@ const GradeEntry = (props: TabComponentType) => {
           </Box>
         </motion.div>
 
-        {/* Unified Grade Entry Summary Card */}
         {examId && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25, duration: 0.35 }}
+          <Paper
+            elevation={0}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 1.5,
+              px: 1,
+              py: 0.75,
+              minHeight: 62,
+              borderRadius: 1,
+              border: '1px solid',
+              borderColor: 'divider',
+              mb: 1,
+            }}
           >
-            <Card
-              sx={{
-                p: 0,
-                mb: 1.5,
-                boxShadow: 'var(--shadows-2)',
-                border: (theme) => `1px solid ${theme.palette.divider}`,
-              }}
-            >
-              <Box
-                sx={{
-                  height: 4,
-                  background: (theme) =>
-                    `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-                }}
-              />
-              <Box
-                onClick={() => setSummaryOpen((prev) => !prev)}
-                sx={{
-                  px: 2,
-                  py: 1.25,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: 1,
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  bgcolor: (theme) => `rgba(${theme.palette.grey['500Channel']} / 0.06)`,
-                  borderBottom: (theme) =>
-                    summaryOpen ? `1px solid ${theme.palette.divider}` : 'none',
-                  '&:hover': {
-                    bgcolor: (theme) => `rgba(${theme.palette.grey['500Channel']} / 0.10)`,
-                  },
-                }}
-              >
-                <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
-                  <Typography
-                    variant="overline"
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.75,
-                      color: 'text.secondary',
-                      letterSpacing: 0.8,
-                    }}
-                  >
-                    <Iconify
-                      icon="solar:document-text-bold"
-                      width={16}
-                      sx={{ color: 'primary.main' }}
-                    />
-                    Grade Entry Summary
+            <Stack direction="row" alignItems="center" flexWrap="wrap" useFlexGap sx={{ gap: 1.5 }}>
+              {[
+                {
+                  icon: 'solar:diploma-bold',
+                  value: examOptions.find((option) => option.examId === examId)?.examName ?? '—',
+                },
+                {
+                  icon: 'solar:book-2-bold',
+                  value: subjectOptions.find((option) => option.id === subject)?.name ?? '—',
+                },
+                {
+                  icon: 'solar:users-group-rounded-bold',
+                  value: [
+                    allClass.find((item) => item.id === classes)?.name ?? '—',
+                    allDivision.find((item) => item.id === division)?.name ?? '—',
+                  ].join(' / '),
+                },
+                {
+                  icon: 'solar:checklist-minimalistic-bold',
+                  value: `Pending Publish: ${targetSummaryData?.pendingPublishedCount ?? 0} Subj`,
+                },
+              ].map((info) => (
+                <Stack key={info.icon} direction="row" alignItems="center" spacing={0.75}>
+                  <Iconify icon={info.icon} width={14} sx={{ color: 'text.disabled' }} />
+                  <Typography variant="caption" color="text.secondary">
+                    {info.value}
                   </Typography>
-                  <Divider orientation="vertical" flexItem />
-                  {[
-                    {
-                      icon: 'solar:diploma-bold',
-                      value: examOptions.find((o) => o.examId === examId)?.examName ?? '—',
-                    },
-                    {
-                      icon: 'solar:book-2-bold',
-                      value: subjectOptions.find((s) => s.id === subject)?.name ?? '—',
-                    },
-                    {
-                      icon: 'solar:users-group-rounded-bold',
-                      value: `${allClass.find((c) => c.id === classes)?.name ?? '—'} / ${allDivision.find((d) => d.id === division)?.name ?? '—'}`,
-                    },
-                    {
-                      icon: 'solar:checklist-minimalistic-bold',
-                      value: `Pending Publish: ${targetSummaryData?.pendingPublishedCount ?? 0} Subj`,
-                    },
-                  ].map((info) => (
-                    <Stack key={info.value} direction="row" alignItems="center" spacing={1}>
-                      <Iconify icon={info.icon} width={14} sx={{ color: 'text.disabled' }} />
-                      <Typography variant="caption" color="text.secondary" noWrap>
-                        {info.value}
-                      </Typography>
-                    </Stack>
-                  ))}
                 </Stack>
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  spacing={1}
-                  sx={{ ml: 'auto' }}
-                  onClick={(e) => e.stopPropagation()} // Stop accordion collapse on button click
+              ))}
+              <Label color={GradeEntryWorkflowStatusColor[workflowStatus] as any} variant="soft">
+                {GradeEntryWorkflowStatusLabel[workflowStatus]}
+              </Label>
+              {saveState !== 'idle' && (
+                <Label
+                  color={
+                    saveState === 'saving' ? 'warning' : saveState === 'saved' ? 'success' : 'error'
+                  }
+                  variant="soft"
                 >
-                  {/* Autosave feedback badge */}
-                  {saveState !== 'idle' && (
-                    <Label
-                      color={
-                        saveState === 'saving'
-                          ? 'warning'
-                          : saveState === 'saved'
-                            ? 'success'
-                            : 'error'
-                      }
-                      variant="soft"
-                      sx={{ py: 1.5, px: 2, mr: 0.5 }}
-                    >
-                      <Iconify
-                        icon={
-                          saveState === 'saving'
-                            ? 'solar:diskette-bold'
-                            : saveState === 'saved'
-                              ? 'solar:check-circle-bold'
-                              : 'solar:close-circle-bold'
-                        }
-                        width={16}
-                        sx={{ mr: 0.5 }}
-                      />
-                      {saveState === 'saving'
-                        ? 'Saving...'
-                        : saveState === 'saved'
-                          ? 'Saved'
-                          : 'Save failed'}
-                    </Label>
-                  )}
+                  {saveState === 'saving'
+                    ? 'Saving...'
+                    : saveState === 'saved'
+                      ? 'Saved'
+                      : 'Save failed'}
+                </Label>
+              )}
+            </Stack>
 
-                  {examId && workflowStatus === GradeEntryWorkflowStatus.Draft && (
-                    <LoadingButton
-                      variant="outlined"
-                      size="small"
-                      color="inherit"
-                      loading={isSaveDraftLoading || isBulkSaveLoading}
-                      startIcon={<Iconify icon="solar:diskette-bold" />}
-                      onClick={() => handleWorkflowAction('draft')}
-                    >
-                      Save Draft
-                    </LoadingButton>
-                  )}
-
-                  {examId &&
-                    (workflowStatus === GradeEntryWorkflowStatus.Draft ||
-                      workflowStatus === GradeEntryWorkflowStatus.ChangesRequested) && (
-                      <LoadingButton
-                        variant="contained"
-                        size="small"
-                        color="primary"
-                        loading={isSubmitLoading}
-                        disabled={!allMarksAssigned}
-                        startIcon={<Iconify icon="solar:plain-bold" />}
-                        onClick={handleTriggerReview}
-                      >
-                        Review & Submit
-                      </LoadingButton>
-                    )}
-
-                  {examId && workflowStatus === GradeEntryWorkflowStatus.Submitted && (
-                    <>
-                      <LoadingButton
-                        variant="outlined"
-                        size="small"
-                        color="error"
-                        loading={isRequestChangesLoading}
-                        startIcon={<Iconify icon="solar:close-circle-bold" />}
-                        onClick={requestChangesDialog.onTrue}
-                      >
-                        Request Corrections
-                      </LoadingButton>
-                      <LoadingButton
-                        variant="outlined"
-                        size="small"
-                        color="warning"
-                        loading={isVerifyLoading}
-                        startIcon={<Iconify icon="solar:check-circle-bold" />}
-                        onClick={() => handleWorkflowAction('verify')}
-                      >
-                        Verify Marks
-                      </LoadingButton>
-                    </>
-                  )}
-
-                  {examId && workflowStatus === GradeEntryWorkflowStatus.Verified && (
-                    <LoadingButton
-                      variant="contained"
-                      size="small"
-                      color="primary"
-                      loading={isPublishLoading}
-                      disabled={!allMarksAssigned}
-                      startIcon={<Iconify icon={GlobalIcons.publish} />}
-                      onClick={() => publishMarksDialog.onTrue()}
-                      sx={{ px: '20px' }}
-                    >
-                      Publish Marks
-                    </LoadingButton>
-                  )}
-
-                  {examId && workflowStatus === GradeEntryWorkflowStatus.Published && (
-                    <LoadingButton
-                      variant="outlined"
-                      size="small"
-                      color="error"
-                      loading={isUnlockLoading}
-                      startIcon={<Iconify icon="solar:lock-open-bold" />}
-                      onClick={unlockDialog.onTrue}
-                    >
-                      Unlock Marks
-                    </LoadingButton>
-                  )}
-
-                  <Label
-                    color={GradeEntryWorkflowStatusColor[workflowStatus] as any}
-                    variant="soft"
-                  >
-                    {GradeEntryWorkflowStatusLabel[workflowStatus]}
-                  </Label>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSummaryOpen((prev) => !prev);
-                    }}
-                    sx={{
-                      transition: 'transform 0.2s',
-                      transform: summaryOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    }}
-                  >
-                    <Iconify icon="solar:alt-arrow-down-bold" width={16} />
-                  </IconButton>
-                </Stack>
-              </Box>
-
-              <Collapse in={summaryOpen}>
-                <Box sx={{ p: 2 }}>
-                  <Grid container spacing={1}>
-                    <Grid size={{ xs: 12, md: 8 }}>
-                      <TimetableSettingsSummaryCards cards={summaryCards} cardsPerRow={3} />
-                    </Grid>
-
-                    <Grid
-                      size={{ xs: 12, md: 4 }}
-                      sx={{
-                        borderLeft: { md: '1px solid' },
-                        borderColor: { md: 'divider' },
-                        pl: { md: 2 },
-                      }}
-                    >
-                      {analyticsStats ? (
-                        <Stack spacing={1} height="100%">
-                          <Stack spacing={1}>
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              <Box
-                                sx={{
-                                  height: 8,
-                                  borderRadius: 1,
-                                  flex: analyticsStats.passPercentage || 1,
-                                  bgcolor: 'success.main',
-                                  minWidth: analyticsStats.passPercentage ? 0 : 'auto',
-                                }}
-                              />
-                              {analyticsStats.failPercentage > 0 && (
-                                <Box
-                                  sx={{
-                                    height: 8,
-                                    borderRadius: 1,
-                                    flex: analyticsStats.failPercentage,
-                                    bgcolor: 'error.main',
-                                  }}
-                                />
-                              )}
-                            </Stack>
-                            <Stack direction="row" justifyContent="space-between">
-                              <Stack direction="row" alignItems="center" spacing={1}>
-                                <Box
-                                  sx={{
-                                    width: 7,
-                                    height: 7,
-                                    borderRadius: '50%',
-                                    bgcolor: 'success.main',
-                                  }}
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  Pass{' '}
-                                  <Typography
-                                    component="span"
-                                    variant="caption"
-                                    fontWeight={700}
-                                    color="success.main"
-                                  >
-                                    {analyticsStats.passCount} ({analyticsStats.passPercentage}%)
-                                  </Typography>
-                                </Typography>
-                              </Stack>
-                              <Stack direction="row" alignItems="center" spacing={1}>
-                                <Box
-                                  sx={{
-                                    width: 7,
-                                    height: 7,
-                                    borderRadius: '50%',
-                                    bgcolor: 'error.main',
-                                  }}
-                                />
-                                <Typography variant="caption" color="text.secondary">
-                                  Fail{' '}
-                                  <Typography
-                                    component="span"
-                                    variant="caption"
-                                    fontWeight={700}
-                                    color="error.main"
-                                  >
-                                    {analyticsStats.failCount} ({analyticsStats.failPercentage}%)
-                                  </Typography>
-                                </Typography>
-                              </Stack>
-                            </Stack>
-                          </Stack>
-                          <Divider sx={{ borderStyle: 'dashed' }} />
-                          <Stack spacing={1}>
-                            <Typography
-                              variant="overline"
-                              sx={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 0.75,
-                                color: 'text.secondary',
-                                letterSpacing: 0.8,
-                              }}
-                            >
-                              <Iconify
-                                icon="solar:clipboard-check-bold"
-                                width={14}
-                                sx={{ color: 'success.main' }}
-                              />
-                              Result Readiness
-                            </Typography>
-                            <Grid container spacing={1}>
-                              {[
-                                { label: 'All Students Graded', done: allMarksAssigned },
-                                {
-                                  label: 'Verification Complete',
-                                  done: workflowStatus >= GradeEntryWorkflowStatus.Verified,
-                                },
-                                {
-                                  label: 'No Missing Marks',
-                                  done: analyticsStats.pendingCount === 0,
-                                },
-                                {
-                                  label: 'Ready For Result Generation',
-                                  done:
-                                    allMarksAssigned &&
-                                    workflowStatus >= GradeEntryWorkflowStatus.Published,
-                                },
-                              ].map((check) => (
-                                <Grid size={{ xs: 6 }} key={check.label}>
-                                  <Stack
-                                    direction="row"
-                                    alignItems="center"
-                                    spacing={1}
-                                    sx={{
-                                      py: 0.4,
-                                      px: 0.75,
-                                      borderRadius: 1,
-                                      bgcolor: (theme) =>
-                                        check.done
-                                          ? alpha(theme.palette.success.main, 0.1)
-                                          : alpha(theme.palette.grey[500], 0.06),
-                                    }}
-                                  >
-                                    <Iconify
-                                      icon={
-                                        check.done
-                                          ? 'solar:check-circle-bold'
-                                          : 'solar:close-circle-bold'
-                                      }
-                                      width={14}
-                                      sx={{
-                                        color: check.done ? 'success.main' : 'text.disabled',
-                                        flexShrink: 0,
-                                      }}
-                                    />
-                                    <Typography
-                                      variant="caption"
-                                      color={check.done ? 'text.primary' : 'text.disabled'}
-                                      lineHeight={1.2}
-                                      noWrap
-                                    >
-                                      {check.label}
-                                    </Typography>
-                                  </Stack>
-                                </Grid>
-                              ))}
-                            </Grid>
-                          </Stack>
-                        </Stack>
-                      ) : (
-                        <Stack spacing={1} height="100%">
-                          {[...Array(3)].map((_, i) => (
-                            <Skeleton
-                              key={i}
-                              variant="rounded"
-                              height={22}
-                              sx={{ borderRadius: 1 }}
-                            />
-                          ))}
-                          <Divider />
-                          {[...Array(4)].map((_, i) => (
-                            <Skeleton
-                              key={i}
-                              variant="rounded"
-                              height={18}
-                              sx={{ borderRadius: 1 }}
-                            />
-                          ))}
-                        </Stack>
-                      )}
-                    </Grid>
-                  </Grid>
-                </Box>
-              </Collapse>
-            </Card>
-          </motion.div>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="flex-end"
+              sx={{ width: { xs: '100%', md: 'auto' }, flexWrap: 'wrap', gap: 1.5, ml: 'auto' }}
+            >
+              <Button
+                size="small"
+                variant="outlined"
+                color="inherit"
+                startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+                onClick={openInsights}
+                sx={{ whiteSpace: 'nowrap' }}
+              >
+                View all insights
+              </Button>
+              <GradeEntryToolbarActions
+                workflowStatus={workflowStatus}
+                allMarksAssigned={allMarksAssigned}
+                isSaveDraftLoading={isSaveDraftLoading}
+                isBulkSaveLoading={isBulkSaveLoading}
+                isSubmitLoading={isSubmitLoading}
+                isRequestChangesLoading={isRequestChangesLoading}
+                isVerifyLoading={isVerifyLoading}
+                isPublishLoading={isPublishLoading}
+                isUnlockLoading={isUnlockLoading}
+                onSaveDraft={() => handleWorkflowAction('draft')}
+                onReview={handleTriggerReview}
+                onRequestChanges={requestChangesDialog.onTrue}
+                onVerify={() => handleWorkflowAction('verify')}
+                onPublish={publishMarksDialog.onTrue}
+                onUnlock={unlockDialog.onTrue}
+              />{' '}
+            </Stack>
+          </Paper>
         )}
-
+        <GradeEntryInsights
+          open={insightsOpen}
+          onClose={closeInsights}
+          stats={analyticsStats}
+          allMarksAssigned={allMarksAssigned}
+          workflowStatus={workflowStatus}
+        />
         {examId ? (
           <Box
             sx={{

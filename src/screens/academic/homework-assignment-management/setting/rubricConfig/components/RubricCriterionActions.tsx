@@ -1,4 +1,3 @@
-import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import {
@@ -33,7 +32,7 @@ export function RubricCriterionActions({
       aria-label={actionLabel}
       direction="row"
       alignItems="center"
-      justifyContent={{ xs: 'space-between', sm: 'flex-end' }}
+      justifyContent="flex-end"
       spacing={1}
       sx={{ minHeight: 40 }}
     >
@@ -61,14 +60,9 @@ export function RubricCriterionActions({
             disabled={!canDelete}
             onClick={onDelete}
             sx={{
-              width: 44,
-              height: 44,
-              border: 1,
-              borderColor: 'divider',
-              bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-              '&:hover': {
-                bgcolor: (theme) => alpha(theme.palette.error.main, 0.16),
-              },
+              width: 40,
+              height: 40,
+              '&:hover': { bgcolor: 'transparent' },
             }}
           >
             <Iconify icon={GlobalIcons.delete} width={18} />

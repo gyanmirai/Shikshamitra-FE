@@ -113,6 +113,9 @@ prevent accidental interaction without making the interface feel broken.
   labels, helper text, and actions.
 - Give section groups enough breathing room to make the form scannable without
   creating large empty gaps.
+- For informational form sections, show a neutral leading icon aligned with
+  the heading and optional help icon. The help icon may use the theme's info
+  color; reserve other semantic icon colors for status.
 - Keep the action footer visually distinct with spacing and a subtle divider or
   surface change, not a heavy border.
 - Align footer actions consistently: the secondary action first and the primary
@@ -144,6 +147,9 @@ prevent accidental interaction without making the interface feel broken.
 - Use one clear primary submit action for the main form outcome.
 - Use action labels that describe the outcome: `Add`, `Update`, `Save draft`,
   or `Publish now`.
+- When a section's Add button has a leading plus icon, its visible label may
+  name only the object (for example, `+ Level`); give it an accessible name
+  that includes `Add`.
 - Use `Cancel` for abandoning the current form without saving, and confirm only
   when unsaved work could reasonably be lost.
 - Do not present multiple competing primary buttons unless the workflow truly

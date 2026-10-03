@@ -1,5 +1,4 @@
 import dayjs from 'dayjs';
-import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, Chip, Paper, Stack, Divider, Typography } from '@mui/material';
@@ -45,8 +44,18 @@ export function ScheduleExamScheduleSection({
   subjectCount,
 }: ScheduleExamScheduleSectionProps) {
   return (
-    <Box component="section" aria-labelledby="exam-schedule-heading">
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.25 }}>
+    <Paper
+      component="section"
+      aria-labelledby="exam-schedule-heading"
+      variant="outlined"
+      sx={{ borderRadius: 2, overflow: 'hidden', boxShadow: 'var(--shadows-2)' }}
+    >
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ px: 2, py: 1.5 }}
+      >
         <Box>
           <Typography id="exam-schedule-heading" variant="subtitle1" sx={{ fontWeight: 700 }}>
             Subjects &amp; schedule
@@ -62,18 +71,16 @@ export function ScheduleExamScheduleSection({
           sx={{ fontWeight: 600 }}
         />
       </Stack>
+      <Divider />
 
       {subjectCount === 0 ? (
-        <Paper
-          variant="outlined"
-          sx={{ p: 3, textAlign: 'center', borderRadius: 2, borderStyle: 'dashed' }}
-        >
+        <Box sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary">
             No subjects have been scheduled for this exam yet.
           </Typography>
-        </Paper>
+        </Box>
       ) : (
-        <Paper variant="outlined" sx={{ borderRadius: 2, overflow: 'hidden' }}>
+        <Box>
           {dateGroups.map((group, groupIndex) => {
             const isUnscheduled = group.dateKey === 'unscheduled';
 
@@ -82,13 +89,9 @@ export function ScheduleExamScheduleSection({
                 {groupIndex > 0 && <Divider />}
                 <Box
                   sx={{
-                    px: 2.25,
-                    py: 1.25,
-                    bgcolor: (theme) =>
-                      alpha(
-                        isUnscheduled ? theme.palette.warning.main : theme.palette.primary.main,
-                        0.055
-                      ),
+                    px: 2,
+                    py: 1,
+                    bgcolor: 'background.neutral',
                   }}
                 >
                   <Stack
@@ -102,7 +105,7 @@ export function ScheduleExamScheduleSection({
                         icon={isUnscheduled ? 'solar:calendar-cross-bold' : GlobalIcons.calendar}
                         width={17}
                         height={17}
-                        sx={{ color: isUnscheduled ? 'warning.main' : 'primary.main' }}
+                        sx={{ color: 'text.secondary' }}
                       />
                       <Box>
                         <Typography
@@ -136,7 +139,7 @@ export function ScheduleExamScheduleSection({
                         alignItems={{ xs: 'flex-start', sm: 'center' }}
                         justifyContent="space-between"
                         spacing={1.5}
-                        sx={{ px: 2.25, py: 1.75 }}
+                        sx={{ px: 2, py: 1.5 }}
                       >
                         <Box sx={{ minWidth: 0 }}>
                           <Typography variant="body2" sx={{ fontWeight: 650 }}>
@@ -160,7 +163,7 @@ export function ScheduleExamScheduleSection({
                               icon={GlobalIcons.clock}
                               width={16}
                               height={16}
-                              sx={{ color: 'primary.main' }}
+                              sx={{ color: 'text.secondary' }}
                             />
                             <Typography
                               variant="body2"
@@ -189,8 +192,8 @@ export function ScheduleExamScheduleSection({
               </Box>
             );
           })}
-        </Paper>
+        </Box>
       )}
-    </Box>
+    </Paper>
   );
 }

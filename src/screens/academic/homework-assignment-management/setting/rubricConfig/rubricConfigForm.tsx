@@ -3,9 +3,8 @@
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
-import { getIn, useFormik } from 'formik';
+import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
-import { GlobalIcons } from 'src/utils/icons';
 import React, { useRef, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
@@ -13,15 +12,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
 import {
   Box,
-  Grid,
   Chip,
   Alert,
   Stack,
-  Paper,
-  Button,
-  TextField,
   Typography,
-  FormHelperText,
 } from '@mui/material';
 import {
   RubricStatus,
@@ -32,11 +26,15 @@ import {
   usePublishRubricMutation,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
+import { levelNumberAt } from './performance-level-order';
 import { RubricBasicInformation } from './components/RubricBasicInformation';
-import { RubricCriterionActions } from './components/RubricCriterionActions';
+import { RubricCriteriaBuilder } from './components/RubricCriteriaBuilder';
+import { RubricPerformanceLevels } from './components/RubricPerformanceLevels';
+import { RubricTemplatePreview } from './components/RubricTemplatePreview';
+import { parseRubricTags } from './components/RubricTagsField';
 import { RubricFormSection as SectionPaper } from './components/RubricFormSection';
 import {
-  CRITERION_BANK,
+  DEFAULT_RATING_LEVELS,
   DEFAULT_PERFORMANCE_LEVELS,
   RUBRIC_SCORING_MODEL_LABELS,
   RUBRIC_SCORING_MODEL_OPTIONS,
@@ -50,9 +48,10 @@ import type {
 } from './types';
 
 const blankCriterion: RubricCriterionFormValue = {
+  id: 'new-criterion-initial',
   title: '',
   description: '',
-  maxMarks: '',
+  maxMarks: '10',
   studentDescription: '',
   teacherGuidance: '',
   isRequired: true,
@@ -75,19 +74,26 @@ const scoringModelSchema = Yup.object({
   performanceLevels: Yup.array()
     .of(
       Yup.object({
-        level: Yup.number()
-          .typeError('Level must be a number')
-          .min(1, 'Level must be at least 1')
-          .required('Level is required'),
         label: Yup.string().trim().required('Level label is required'),
         score: Yup.number()
           .typeError('Score must be a number')
           .min(0, 'Score cannot be negative')
+          .max(1000, 'Score cannot exceed 1000')
           .required('Score is required'),
         studentLabel: Yup.string().trim().required('Student label is required'),
       })
     )
-    .min(2, 'Add at least two performance levels'),
+    .test('model-levels', function validateLevels(levels) {
+      const model = this.parent.scoringModel;
+      if (model !== RubricScoringModel.PerformanceLevels && model !== RubricScoringModel.RatingScale) return true;
+      if (!levels || levels.length < 2) return this.createError({ message: 'Add at least two levels' });
+      const scores = levels.map((level) => Number(level.score));
+      if (new Set(scores).size !== scores.length) return this.createError({ message: 'Each level needs a different score' });
+      if (model === RubricScoringModel.RatingScale && scores.some((score) => !Number.isInteger(score) || score < 1 || score > 10)) {
+        return this.createError({ message: 'Ratings must be whole numbers from 1 to 10' });
+      }
+      return true;
+    }),
 });
 
 const criteriaSchema = Yup.object({
@@ -97,7 +103,8 @@ const criteriaSchema = Yup.object({
         title: Yup.string().trim().required('Criterion title is required'),
         maxMarks: Yup.number()
           .typeError('Score must be a number')
-          .min(0.5, 'Score must be at least 0.5')
+          .moreThan(0, 'Score must be greater than zero')
+          .max(1000, 'Score cannot exceed 1000')
           .required('Score is required'),
       })
     )
@@ -120,9 +127,34 @@ const criteriaSchema = Yup.object({
           0
         );
 
-        return total === 100;
+        return Math.abs(total - 100) < 0.001;
       }
-    ),
+    )
+    .test('model-criteria', function validateModelCriteria(criteria) {
+      const model = this.parent.scoringModel;
+      if (!criteria) return true;
+      const maxScores = criteria.map((criterion) => Number(criterion.maxMarks));
+      if (model === RubricScoringModel.PointsBased && maxScores.some((score) => score < 0.5)) {
+        return this.createError({ message: 'Points-based criteria need at least 0.5 points' });
+      }
+      if (model === RubricScoringModel.WeightedPercentage && maxScores.some((score) => score > 100)) {
+        return this.createError({ message: 'Each weight must be 100% or less' });
+      }
+      if (model === RubricScoringModel.Checklist && !this.parent.performanceLevels?.length && maxScores.some((score) => score !== 1)) {
+        return this.createError({ message: 'Checklist items must be worth one point' });
+      }
+      if (model === RubricScoringModel.PerformanceLevels || model === RubricScoringModel.RatingScale) {
+        const levels = this.parent.performanceLevels as RubricPerformanceLevelFormValue[];
+        const scores = levels.map((level) => Number(level.score));
+        if (maxScores.some((score) => !scores.includes(score))) {
+          return this.createError({ message: 'Choose a maximum from the configured levels' });
+        }
+      }
+      if (model !== RubricScoringModel.WeightedPercentage && maxScores.reduce((sum, score) => sum + score, 0) > 1000) {
+        return this.createError({ message: 'Total rubric score cannot exceed 1000' });
+      }
+      return true;
+    }),
 });
 
 const fullValidationSchema = basicInformationSchema
@@ -136,15 +168,17 @@ const stepValidationSchemas = [
 ];
 
 const normalizeLevels = (
-  levels?: NonNullable<RubricConfigFormProps['editData']>['performanceLevels']
+  levels: NonNullable<RubricConfigFormProps['editData']>['performanceLevels'] | typeof DEFAULT_PERFORMANCE_LEVELS
 ): RubricPerformanceLevelFormValue[] =>
-  (levels?.length ? levels : DEFAULT_PERFORMANCE_LEVELS).map((level) => ({
-    level: String(level.level),
-    label: level.label,
-    score: String(level.score),
-    description: level.description || '',
-    studentLabel: level.studentLabel || level.label,
-  }));
+  [...levels]
+    .sort((first, second) => second.level - first.level)
+    .map((level, index) => ({
+      id: `level-${index}`,
+      label: level.label,
+      score: String(level.score),
+      description: level.description || '',
+      studentLabel: level.studentLabel || level.label,
+    }));
 
 const buildInitialValues = (
   editData: RubricConfigFormProps['editData']
@@ -160,15 +194,26 @@ const buildInitialValues = (
   studentInstructions: editData?.studentInstructions || '',
   tags: editData?.tags?.join(', ') || '',
   status: editData?.status ?? RubricStatus.Draft,
-  performanceLevels: normalizeLevels(editData?.performanceLevels),
-  criteria: editData?.criteria?.map((criterion) => ({
-    title: criterion.title,
-    description: criterion.description || '',
-    maxMarks: String(criterion.maxMarks),
-    studentDescription: criterion.studentDescription || '',
-    teacherGuidance: criterion.teacherGuidance || '',
-    isRequired: criterion.isRequired,
-  })) || [blankCriterion],
+  performanceLevels: editData?.performanceLevels?.length
+    ? normalizeLevels(editData.performanceLevels)
+    : editData?.scoringModel === RubricScoringModel.RatingScale
+      ? normalizeLevels(DEFAULT_RATING_LEVELS)
+      : editData?.scoringModel === RubricScoringModel.PerformanceLevels
+        ? normalizeLevels(DEFAULT_PERFORMANCE_LEVELS)
+        : [],
+  criteria: editData?.criteria?.length
+    ? [...editData.criteria]
+        .sort((first, second) => first.displayOrder - second.displayOrder)
+        .map((criterion) => ({
+          id: `criterion-${criterion.id}`,
+          title: criterion.title,
+          description: criterion.description || '',
+          maxMarks: String(criterion.maxMarks),
+          studentDescription: criterion.studentDescription || '',
+          teacherGuidance: criterion.teacherGuidance || '',
+          isRequired: criterion.isRequired,
+        }))
+    : [blankCriterion],
 });
 
 const getPublishErrors = (values: RubricConfigFormValues) => {
@@ -184,30 +229,38 @@ const getPublishErrors = (values: RubricConfigFormValues) => {
 
   if (values.criteria.length === 0) errors.push('At least one criterion is required.');
   if (duplicateNames) errors.push('Criterion names must be unique.');
-  if (values.scoringModel === RubricScoringModel.WeightedPercentage && total !== 100) {
+  if (values.criteria.some((criterion) => Number(criterion.maxMarks) > 1000)) {
+    errors.push('A criterion cannot exceed 1000 points.');
+  }
+  if (values.scoringModel === RubricScoringModel.WeightedPercentage && Math.abs(total - 100) >= 0.001) {
     errors.push('Weighted percentage rubrics must total exactly 100%.');
   }
+  if (values.scoringModel !== RubricScoringModel.WeightedPercentage && total > 1000) {
+    errors.push('Total rubric score cannot exceed 1000.');
+  }
   if (
-    values.scoringModel === RubricScoringModel.PerformanceLevels &&
+    (values.scoringModel === RubricScoringModel.PerformanceLevels || values.scoringModel === RubricScoringModel.RatingScale) &&
     values.performanceLevels.filter((level) => level.label.trim()).length < 2
   ) {
-    errors.push('Performance level rubrics require at least two levels.');
+    errors.push('Add at least two scoring levels.');
+  }
+  if (values.scoringModel === RubricScoringModel.Checklist && !values.performanceLevels.length && values.criteria.some((criterion) => criterion.maxMarks !== '1')) {
+    errors.push('Checklist items must be worth one point.');
   }
 
   return errors;
 };
 
-const getFormikError = (formik: any, path: string) =>
-  getIn(formik.touched, path) && getIn(formik.errors, path) ? getIn(formik.errors, path) : '';
-
-const hasFormikError = (formik: any, path: string) => Boolean(getFormikError(formik, path));
-
-
 const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }) => {
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const [activeStep, setActiveStep] = useState(0);
+  const [maxReachedStep, setMaxReachedStep] = useState(0);
   const [submitMode, setSubmitMode] = useState<'draft' | 'publish'>('draft');
   const submitModeRef = useRef<'draft' | 'publish'>('draft');
+  const scoringDrafts = useRef<Partial<Record<RubricScoringModel, {
+    scores: { title: string; maxMarks: string }[];
+    levels: RubricPerformanceLevelFormValue[];
+  }>>>({});
 
   const [addRubric, { isLoading: isAddLoading }] = useAddRubricMutation();
   const [updateRubric, { isLoading: isUpdateLoading }] = useUpdateRubricMutation();
@@ -220,6 +273,10 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
     validateOnChange: false,
     onSubmit: () => { },
   });
+
+  React.useEffect(() => {
+    scoringDrafts.current = {};
+  }, [editData?.id]);
 
   const submitRubric = async (
     mode: 'draft' | 'publish',
@@ -266,12 +323,9 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
         description: values.description.trim() || null,
         evaluationInstructions: values.evaluationInstructions.trim() || null,
         studentInstructions: values.studentInstructions.trim() || null,
-        tags: values.tags
-          .split(',')
-          .map((tag) => tag.trim())
-          .filter(Boolean),
-        performanceLevels: values.performanceLevels.map((level) => ({
-          level: Number(level.level),
+        tags: parseRubricTags(values.tags),
+        performanceLevels: values.performanceLevels.map((level, index) => ({
+          level: levelNumberAt(index, values.performanceLevels.length),
           label: level.label.trim(),
           score: Number(level.score),
           description: level.description.trim() || null,
@@ -311,377 +365,105 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
 
   const isSaving = isAddLoading || isUpdateLoading || isPublishLoading;
 
-  const updateCriterion = (
-    formik: any,
-    index: number,
-    field: keyof RubricCriterionFormValue,
-    value: string | boolean
-  ) => {
-    formik.setFieldValue(`criteria[${index}].${field}`, value);
+  const changeScoringModel = (formik: typeof rubricFormik, value: unknown) => {
+    const nextModel = Number(value) as RubricScoringModel;
+    const current = formik.values;
+    if (!Number.isInteger(nextModel) || nextModel < RubricScoringModel.PointsBased || nextModel > RubricScoringModel.RatingScale) return;
+    if (nextModel === current.scoringModel) return;
+    scoringDrafts.current[current.scoringModel] = {
+      scores: current.criteria.map((criterion) => ({
+        title: criterion.title,
+        maxMarks: criterion.maxMarks,
+      })),
+      levels: current.performanceLevels,
+    };
+    const saved = scoringDrafts.current[nextModel];
+    const defaultLevels = nextModel === RubricScoringModel.RatingScale
+      ? normalizeLevels(DEFAULT_RATING_LEVELS)
+      : nextModel === RubricScoringModel.PerformanceLevels
+        ? normalizeLevels(DEFAULT_PERFORMANCE_LEVELS)
+        : [];
+    const levels = saved?.levels ?? defaultLevels;
+    const highestScore = Math.max(...levels.map((level) => Number(level.score)));
+    const weight = (index: number) => {
+      const previous = Math.round((index * 10000) / current.criteria.length) / 100;
+      const next = Math.round(((index + 1) * 10000) / current.criteria.length) / 100;
+      return String(Number((next - previous).toFixed(2)));
+    };
+    const defaultMax = (index: number) => {
+      if (nextModel === RubricScoringModel.WeightedPercentage) return weight(index);
+      if (nextModel === RubricScoringModel.Checklist) return '1';
+      if (nextModel === RubricScoringModel.PointsBased) return '10';
+      return String(highestScore);
+    };
+    formik.setValues({
+      ...current,
+      scoringModel: nextModel,
+      performanceLevels: levels,
+      criteria: current.criteria.map((criterion, index) => ({
+        ...criterion,
+        maxMarks: (criterion.title
+          ? saved?.scores.find((score) => score.title === criterion.title)?.maxMarks
+          : saved?.scores[index]?.title === criterion.title
+            ? saved.scores[index].maxMarks
+            : undefined) ?? defaultMax(index),
+      })),
+    }, false);
+    formik.setTouched({ ...formik.touched, criteria: [], performanceLevels: [] }, false);
   };
 
-  const updateLevel = (
-    formik: any,
-    index: number,
-    field: keyof RubricPerformanceLevelFormValue,
-    value: string
-  ) => {
-    formik.setFieldValue(`performanceLevels[${index}].${field}`, value);
+  const modelGuidance: Record<RubricScoringModel, string> = {
+    [RubricScoringModel.PointsBased]: 'Set the maximum points for each criterion (up to 1000). Teachers enter points earned.',
+    [RubricScoringModel.WeightedPercentage]: 'Assign each criterion a weight. All weights must add to 100%; teachers enter achievement as a percentage.',
+    [RubricScoringModel.PerformanceLevels]: 'Define descriptive levels, then choose a maximum level score for each criterion.',
+    [RubricScoringModel.Checklist]: 'Add the items teachers will mark Met or Not met. Each item is worth one point.',
+    [RubricScoringModel.RatingScale]: 'Define a shared rating scale from 1 to 10. Teachers choose one rating per criterion.',
   };
 
-
-  const renderScoringModel = (formik: any) => {
-    const totalScore = formik.values.criteria.reduce(
-      (sum: number, criterion: RubricCriterionFormValue) => sum + (Number(criterion.maxMarks) || 0),
-      0
-    );
-
-    return (
+  const renderScoringModel = (formik: any) => (
       <Stack spacing={1.5}>
         <SectionPaper
           icon="solar:calculator-bold-duotone"
           title="Scoring Model"
           caption="Choose how the criteria score should be interpreted."
         >
-          <Grid container spacing={1.25} alignItems="center">
-            <Grid size={{ xs: 12, md: 5 }}>
-              <CustomSelect
-                label="Scoring Model *"
-                options={RUBRIC_SCORING_MODEL_OPTIONS}
-                labelKey="label"
-                valueKey="value"
-                value={formik.values.scoringModel}
-                onChange={(value) => formik.setFieldValue('scoringModel', Number(value))}
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 7 }}>
-              <Alert severity="info" sx={{ py: 0.5 }}>
-                {formik.values.scoringModel === RubricScoringModel.WeightedPercentage
-                  ? `Current total weight is ${totalScore}%. Publish is allowed only at 100%.`
-                  : `Current maximum score is ${totalScore}.`}
+          <Box sx={{ width: '100%', maxWidth: 480 }}>
+            <CustomSelect
+              label="Scoring Model *"
+              options={RUBRIC_SCORING_MODEL_OPTIONS}
+              labelKey="label"
+              valueKey="value"
+              value={formik.values.scoringModel}
+              onChange={(value) => changeScoringModel(formik, value)}
+              formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
+            />
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            {modelGuidance[formik.values.scoringModel as RubricScoringModel]}
+          </Typography>
+          {editData && formik.values.performanceLevels.length > 0 &&
+            formik.values.scoringModel !== RubricScoringModel.PerformanceLevels &&
+            formik.values.scoringModel !== RubricScoringModel.RatingScale && (
+              <Alert severity="info">
+                This existing rubric uses performance levels when teachers score it. Its level settings are shown below.
               </Alert>
-            </Grid>
-          </Grid>
-        </SectionPaper>
-
-        <SectionPaper
-          icon="solar:medal-ribbon-star-bold-duotone"
-          title="Performance Levels"
-          caption="Define labels teachers can use while evaluating the rubric."
-          action={
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:plus" />}
-              onClick={() =>
-                formik.setFieldValue('performanceLevels', [
-                  ...formik.values.performanceLevels,
-                  { level: '', label: '', score: '', description: '', studentLabel: '' },
-                ])
-              }
-            >
-              Add Level
-            </Button>
-          }
-        >
-          {typeof getFormikError(formik, 'performanceLevels') === 'string' ? (
-            <FormHelperText error>{getFormikError(formik, 'performanceLevels')}</FormHelperText>
-          ) : null}
-          <Stack spacing={1}>
-            {formik.values.performanceLevels.map(
-              (level: RubricPerformanceLevelFormValue, index: number) => (
-                <Paper
-                  key={`level-${index}`}
-                  variant="outlined"
-                  sx={{
-                    p: 1.25,
-                    borderRadius: 1,
-                    bgcolor: 'background.neutral',
-                    borderColor: 'divider',
-                  }}
-                >
-                  <Grid container spacing={1} alignItems="center">
-                    <Grid size={{ xs: 6, md: 1.5 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Level"
-                        name={`performanceLevels[${index}].level`}
-                        value={level.level}
-                        onBlur={formik.handleBlur}
-                        onChange={(event) =>
-                          updateLevel(formik, index, 'level', event.target.value)
-                        }
-                        error={hasFormikError(formik, `performanceLevels[${index}].level`)}
-                        helperText={getFormikError(formik, `performanceLevels[${index}].level`)}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 6, md: 2.5 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Label"
-                        name={`performanceLevels[${index}].label`}
-                        value={level.label}
-                        onBlur={formik.handleBlur}
-                        onChange={(event) =>
-                          updateLevel(formik, index, 'label', event.target.value)
-                        }
-                        error={hasFormikError(formik, `performanceLevels[${index}].label`)}
-                        helperText={getFormikError(formik, `performanceLevels[${index}].label`)}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 6, md: 1.5 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Score"
-                        type="number"
-                        name={`performanceLevels[${index}].score`}
-                        value={level.score}
-                        onBlur={formik.handleBlur}
-                        onChange={(event) =>
-                          updateLevel(formik, index, 'score', event.target.value)
-                        }
-                        error={hasFormikError(formik, `performanceLevels[${index}].score`)}
-                        helperText={getFormikError(formik, `performanceLevels[${index}].score`)}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 6, md: 2.5 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Student Label"
-                        name={`performanceLevels[${index}].studentLabel`}
-                        value={level.studentLabel}
-                        onBlur={formik.handleBlur}
-                        onChange={(event) =>
-                          updateLevel(formik, index, 'studentLabel', event.target.value)
-                        }
-                        error={hasFormikError(formik, `performanceLevels[${index}].studentLabel`)}
-                        helperText={getFormikError(
-                          formik,
-                          `performanceLevels[${index}].studentLabel`
-                        )}
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 10, md: 3 }}>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        label="Description"
-                        value={level.description}
-                        onChange={(event) =>
-                          updateLevel(formik, index, 'description', event.target.value)
-                        }
-                      />
-                    </Grid>
-                    <Grid size={{ xs: 2, md: 1 }}>
-                      <Button
-                        size="small"
-                        color="error"
-                        disabled={formik.values.performanceLevels.length <= 2}
-                        onClick={() =>
-                          formik.setFieldValue(
-                            'performanceLevels',
-                            formik.values.performanceLevels.filter(
-                              (_item: RubricPerformanceLevelFormValue, itemIndex: number) =>
-                                itemIndex !== index
-                            )
-                          )
-                        }
-                      >
-                        <Iconify icon={GlobalIcons.delete} />
-                      </Button>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              )
             )}
-          </Stack>
         </SectionPaper>
-      </Stack>
-    );
-  };
 
-  const renderCriteria = (formik: any) => {
-    const totalScore = formik.values.criteria.reduce(
-      (sum: number, criterion: RubricCriterionFormValue) => sum + (Number(criterion.maxMarks) || 0),
-      0
-    );
-
-    return (
-      <Stack spacing={1.5}>
-        <SectionPaper
-          icon="solar:checklist-minimalistic-bold-duotone"
-          title="Criteria Builder"
-          caption="Add the rows teachers will score during evaluation."
-          action={
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:plus" />}
-              onClick={() =>
-                formik.setFieldValue('criteria', [...formik.values.criteria, blankCriterion])
-              }
-            >
-              Add Criterion
-            </Button>
-          }
-        >
-          <Stack spacing={1.25}>
-            <Stack direction="row" flexWrap="wrap" gap={0.75}>
-              {CRITERION_BANK.map((criterion) => (
-                <Chip
-                  key={criterion}
-                  size="small"
-                  label={criterion}
-                  variant="outlined"
-                  onClick={() =>
-                    formik.setFieldValue('criteria', [
-                      ...formik.values.criteria,
-                      { ...blankCriterion, title: criterion },
-                    ])
-                  }
-                  sx={{ borderRadius: 1 }}
-                />
-              ))}
-            </Stack>
-            {typeof getFormikError(formik, 'criteria') === 'string' ? (
-              <FormHelperText error>{getFormikError(formik, 'criteria')}</FormHelperText>
-            ) : null}
-            {formik.values.criteria.map((criterion: RubricCriterionFormValue, index: number) => (
-              <Paper
-                key={`criterion-${index}`}
-                variant="outlined"
-                sx={{
-                  p: 1.25,
-                  borderRadius: 1,
-                  bgcolor: 'background.neutral',
-                  borderColor: 'divider',
-                }}
-              >
-                <Grid container spacing={1} alignItems="flex-start">
-                  <Grid size={{ xs: 12, md: 3 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Criterion *"
-                      name={`criteria[${index}].title`}
-                      value={criterion.title}
-                      onBlur={formik.handleBlur}
-                      onChange={(event) =>
-                        updateCriterion(formik, index, 'title', event.target.value)
-                      }
-                      error={hasFormikError(formik, `criteria[${index}].title`)}
-                      helperText={getFormikError(formik, `criteria[${index}].title`)}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 4 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Description"
-                      value={criterion.description}
-                      onChange={(event) =>
-                        updateCriterion(formik, index, 'description', event.target.value)
-                      }
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 2 }}>
-                    <CustomSelect
-                      label={
-                        formik.values.scoringModel === RubricScoringModel.WeightedPercentage
-                          ? 'Weight % *'
-                          : 'Max Score *'
-                      }
-                      options={formik.values.performanceLevels
-                        .filter((level: RubricPerformanceLevelFormValue) => level.score !== '')
-                        .map((level: RubricPerformanceLevelFormValue) => ({
-                          label: level.label ? `${level.label} (${level.score})` : level.score,
-                          value: level.score,
-                        }))}
-                      labelKey="label"
-                      valueKey="value"
-                      value={criterion.maxMarks}
-                      onBlur={() => formik.setFieldTouched(`criteria[${index}].maxMarks`, true)}
-                      onChange={(value) =>
-                        updateCriterion(formik, index, 'maxMarks', String(value))
-                      }
-                      error={hasFormikError(formik, `criteria[${index}].maxMarks`)}
-                      helperText={getFormikError(formik, `criteria[${index}].maxMarks`)}
-                      formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-                    <RubricCriterionActions
-                      criterionNumber={index + 1}
-                      isRequired={criterion.isRequired}
-                      canDelete={formik.values.criteria.length > 1}
-                      onRequiredChange={(isRequired) =>
-                        updateCriterion(formik, index, 'isRequired', isRequired)
-                      }
-                      onDelete={() =>
-                        formik.setFieldValue(
-                          'criteria',
-                          formik.values.criteria.filter(
-                            (_item: RubricCriterionFormValue, itemIndex: number) =>
-                              itemIndex !== index
-                          )
-                        )
-                      }
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Student-Facing Description"
-                      value={criterion.studentDescription}
-                      onChange={(event) =>
-                        updateCriterion(formik, index, 'studentDescription', event.target.value)
-                      }
-                    />
-                  </Grid>
-                  <Grid size={{ xs: 12, md: 6 }}>
-                    <TextField
-                      fullWidth
-                      size="small"
-                      label="Teacher Guidance"
-                      value={criterion.teacherGuidance}
-                      onChange={(event) =>
-                        updateCriterion(formik, index, 'teacherGuidance', event.target.value)
-                      }
-                    />
-                  </Grid>
-                </Grid>
-              </Paper>
-            ))}
-          </Stack>
-        </SectionPaper>
-        <Alert
-          severity={
-            formik.values.scoringModel === RubricScoringModel.WeightedPercentage &&
-              totalScore !== 100
-              ? 'warning'
-              : 'info'
-          }
-        >
-          {formik.values.scoringModel === RubricScoringModel.WeightedPercentage
-            ? `Total weight: ${totalScore}%. Keep it exactly 100% before publishing.`
-            : `Maximum score: ${totalScore}.`}
-        </Alert>
+        {(formik.values.scoringModel === RubricScoringModel.PerformanceLevels ||
+          formik.values.scoringModel === RubricScoringModel.RatingScale ||
+          formik.values.performanceLevels.length > 0) && (
+          <RubricPerformanceLevels formik={formik} />
+        )}
       </Stack>
-    );
-  };
+  );
+
+  const renderCriteria = (formik: any) => <RubricCriteriaBuilder formik={formik} />;
 
   const renderPreview = (formik: any) => {
-    const totalScore = formik.values.criteria.reduce(
-      (sum: number, criterion: RubricCriterionFormValue) => sum + (Number(criterion.maxMarks) || 0),
-      0
-    );
     const publishErrors = getPublishErrors(formik.values);
+    const previewTags = parseRubricTags(formik.values.tags);
+    const model = formik.values.scoringModel as RubricScoringModel;
 
     return (
       <Stack spacing={1.5}>
@@ -699,14 +481,19 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
             />
             <Chip variant="outlined" size='small'
               label={`Criteria: ${formik.values.criteria.length}`} />
-            <Chip
-              size='small'
-              color={publishErrors.length ? 'warning' : 'success'}
-              label={publishErrors.length ? 'Needs Review' : 'Ready to Publish'}
-            />
           </Stack>
+          {previewTags.length > 0 && (
+            <Stack direction="row" alignItems="center" flexWrap="wrap" gap={0.75} sx={{ mt: 1 }}>
+              <Typography variant="caption" color="text.secondary">
+                Tags
+              </Typography>
+              {previewTags.map((tag) => (
+                <Chip key={tag} label={tag} size="small" variant="outlined" sx={{ borderRadius: 1 }} />
+              ))}
+            </Stack>
+          )}
         </SectionPaper>
-        {publishErrors.length ? (
+        {publishErrors.length > 0 && (
           <Alert severity="warning">
             <Stack component="ul" sx={{ pl: 2, m: 0 }}>
               {publishErrors.map((error) => (
@@ -716,41 +503,20 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
               ))}
             </Stack>
           </Alert>
-        ) : (
-          <Alert severity="success">All blocking validation checks are complete.</Alert>
         )}
         <SectionPaper
           icon="solar:eye-bold-duotone"
-          title="Teacher Evaluation Preview"
-          caption="This is the criteria view teachers will work from."
+          title="Rubric template preview"
+          caption="This is how teachers will see the criteria and scoring choices."
         >
-          <Stack spacing={1}>
-            {formik.values.criteria.map((criterion: RubricCriterionFormValue, index: number) => (
-              <Box
-                key={`preview-${index}`}
-                sx={{
-                  p: 1.25,
-                  borderRadius: 1,
-                  border: (theme) => `1px solid ${theme.palette.divider}`,
-                  bgcolor: 'background.neutral',
-                }}
-              >
-                <Stack direction="row" justifyContent="space-between" gap={1}>
-                  <Typography variant="body2" fontWeight={600}>
-                    {criterion.title || `Criterion ${index + 1}`}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {criterion.maxMarks || 0} pts
-                  </Typography>
-                </Stack>
-                <Typography variant="caption" color="text.secondary">
-                  {criterion.studentDescription ||
-                    criterion.description ||
-                    'No student-facing description added.'}
-                </Typography>
-              </Box>
-            ))}
-          </Stack>
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+            {formik.values.title.trim() || 'Untitled rubric'}
+          </Typography>
+          <RubricTemplatePreview
+            scoringModel={model}
+            criteria={formik.values.criteria}
+            performanceLevels={formik.values.performanceLevels}
+          />
         </SectionPaper>
       </Stack>
     );
@@ -763,6 +529,12 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
       formikInstance={rubricFormik}
       steps={builderSteps}
       activeStep={activeStep}
+      completedSteps={Array.from({ length: maxReachedStep }, (_, index) => index).filter(
+        (index) => index !== activeStep
+      )}
+      isStepClickable={(index) => index <= maxReachedStep}
+      onStepClick={(index) => setActiveStep(index)}
+      validateForwardStepClick
       validateOnChange={false}
       validationSchema={stepValidationSchemas[activeStep]}
       showSaveButton={activeStep === builderSteps.length - 1}
@@ -783,7 +555,9 @@ const RubricConfigForm: React.FC<RubricConfigFormProps> = ({ editData, onClose }
       handleBack={() => setActiveStep((step) => Math.max(step - 1, 0))}
       handleNext={(isLastStep, values, _formik, setIsLoading) => {
         if (!isLastStep) {
-          setActiveStep((step) => Math.min(step + 1, builderSteps.length - 1));
+          const nextStep = Math.min(activeStep + 1, builderSteps.length - 1);
+          setMaxReachedStep((reached) => Math.max(reached, nextStep));
+          setActiveStep(nextStep);
           return;
         }
 

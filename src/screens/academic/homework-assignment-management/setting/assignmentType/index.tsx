@@ -153,6 +153,7 @@ const AssignmentTypeCreation = () => {
             {canAdd && (
               <Button
                 startIcon={<Iconify icon="eva:plus-fill" />}
+                aria-label="Add Assignment Type"
                 variant="contained"
                 onClick={addAssignmentTypeDialog.onTrue}
                 size="small"

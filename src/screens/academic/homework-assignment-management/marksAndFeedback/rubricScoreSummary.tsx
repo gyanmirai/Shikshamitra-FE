@@ -1,8 +1,10 @@
 import { Box, Paper, Stack, Divider, TextField, Typography } from '@mui/material';
+import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 type Props = {
   totalMarks: number;
   maxMarks: number;
+  scoringModel?: RubricScoringModel;
   remarks: string;
   onRemarksChange: (remarks: string) => void;
   readOnly?: boolean;
@@ -12,6 +14,7 @@ type Props = {
 export default function RubricScoreSummary({
   totalMarks,
   maxMarks,
+  scoringModel,
   remarks,
   onRemarksChange,
   readOnly,
@@ -48,10 +51,14 @@ export default function RubricScoreSummary({
               color: compact ? 'primary.main' : 'text.primary',
             }}
           >
-            {totalMarks}
+            {Number(totalMarks.toFixed(2))}{scoringModel === RubricScoringModel.WeightedPercentage ? '%' : ''}
             <Typography component="span" variant="body2" color="text.secondary">
               {' '}
-              / {maxMarks}
+              {scoringModel === RubricScoringModel.WeightedPercentage
+                ? `/ ${maxMarks}%`
+                : scoringModel === RubricScoringModel.Checklist
+                  ? `/ ${maxMarks} items met`
+                  : `/ ${maxMarks}`}
             </Typography>
           </Typography>
         </Stack>

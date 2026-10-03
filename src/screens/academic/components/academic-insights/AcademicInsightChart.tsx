@@ -55,12 +55,20 @@ export function AcademicInsightChart({ config }: Props) {
         {config.description}
       </Typography>
       <Box role="img" aria-label={`${config.title}. ${config.description}`}>
-        <Chart
-          type="bar"
-          height={chartHeight}
-          series={[{ name: config.seriesName, data: config.values }]}
-          options={options}
-        />
+        {config.emptyMessage && config.values.every((value) => value === 0) ? (
+          <Box sx={{ minHeight: 160, display: 'grid', placeItems: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              {config.emptyMessage}
+            </Typography>
+          </Box>
+        ) : (
+          <Chart
+            type="bar"
+            height={chartHeight}
+            series={[{ name: config.seriesName, data: config.values }]}
+            options={options}
+          />
+        )}
       </Box>
       <Box
         sx={{
@@ -76,16 +84,19 @@ export function AcademicInsightChart({ config }: Props) {
           borderColor: 'divider',
         }}
       >
-        {config.categories.map((category, index) => (
-          <Stack key={`${category}-${index}`} direction="row" alignItems="center" spacing={0.75}>
+        {(
+          config.summary ??
+          config.categories.map((label, index) => ({ label, value: config.values[index] }))
+        ).map((item, index, items) => (
+          <Stack key={`${item.label}-${index}`} direction="row" alignItems="center" spacing={0.75}>
             <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.5 }}>
-              {category}:{' '}
+              {item.label}:{' '}
               <Box component="span" sx={{ color: 'text.primary', fontWeight: 600 }}>
-                {config.values[index]}
+                {item.value}
                 {suffix}
               </Box>
             </Typography>
-            {index < config.categories.length - 1 && (
+            {index < items.length - 1 && (
               <Typography
                 component="span"
                 variant="caption"

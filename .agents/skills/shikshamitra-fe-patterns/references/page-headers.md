@@ -28,6 +28,10 @@ A standard page header may contain:
 - Omit any element that does not help the user understand or act on the page.
 - The primary table or content region should begin after the page context is
   established.
+- Give every contained page-header row one spacing unit of horizontal padding
+  (`px: 1`), including filter/action rows and status-tab rows. Do not add a
+  second inset around the row contents. Keep vertical padding tied to the
+  shared controls so compact rows do not become taller.
 
 ## 2. Page title and information icon
 
@@ -68,6 +72,11 @@ verb-first label rather than repeating the name of the page or feature.
 | Schedule Exam | Schedule exam |
 
 - Use a plus icon only when the action creates or adds something.
+- On matching settings creation pages, a leading plus icon may represent
+  `Add` while the visible label names the object, such as `Homework Type`,
+  `Assignment Type`, or `Rubric Template`. Keep this icon-and-noun pattern
+  consistent across those pages and give the button an action-specific
+  accessible name, such as `Add Rubric Template`.
 - Keep the primary action in the same location on equivalent pages.
 - Use sentence case for action labels unless an established product term
   requires otherwise.
@@ -205,6 +214,8 @@ Before approving a page header, verify:
   comparison, compact metrics, and an attention note only when warranted.
 - Metric labels are specific and not duplicated unnecessarily.
 - Status tabs and counts match the content shown below.
+- Contained header rows use `px: 1` without nested horizontal padding.
 - Filters have clear labels, predictable placement, and correct date formats.
-- The primary action is obvious and uses a verb-first label.
+- The primary action is obvious and uses a verb-first label, except for the
+  documented plus-icon settings pattern.
 - The header does not become a wall of cards, colors, alerts, or repeated text.

@@ -38,6 +38,7 @@ import {
 
 import RubricConfigForm from './rubricConfigForm';
 import RubricConfigTable from './rubricConfigTable';
+import { RubricTemplatePreview } from './components/RubricTemplatePreview';
 import {
   RUBRIC_STATUS_LABELS,
   RUBRIC_WORK_TYPE_LABELS,
@@ -196,10 +197,11 @@ const RubricConfigScreen = () => {
                   variant="contained"
                   size="small"
                   startIcon={<Iconify icon="mdi:plus" />}
+                  aria-label="Add Rubric Template"
                   onClick={addDialog.onTrue}
                   sx={{ px: '32px' }}
                 >
-                  Create Rubric
+                  Rubric Template
                 </Button>
               )}
             </Stack>
@@ -380,6 +382,21 @@ const RubricConfigScreen = () => {
               </Label>
             </Stack>
 
+            {selectedData && (
+              <Box component="section" aria-label="Rubric template preview">
+                <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1 }}>
+                  Rubric template preview
+                </Typography>
+                <RubricTemplatePreview
+                  scoringModel={selectedData.scoringModel}
+                  criteria={[...selectedData.criteria].sort(
+                    (first, second) => first.displayOrder - second.displayOrder
+                  )}
+                  performanceLevels={selectedData.performanceLevels}
+                />
+              </Box>
+            )}
+
             <Paper
               variant="outlined"
               sx={{
@@ -410,138 +427,6 @@ const RubricConfigScreen = () => {
                 </Typography>
               </Stack>
             </Paper>
-
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              sx={{ mt: 1 }}
-            >
-              <Typography variant="subtitle2" fontWeight={700} color="text.primary">
-                Evaluation Criteria ({selectedData?.criteria?.length || 0})
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Please evaluate according to the max scores below
-              </Typography>
-            </Stack>
-
-            {selectedData?.criteria.map((criterion, idx) => {
-              const previewCriterion = criterion as typeof criterion & {
-                studentDescription?: string | null;
-                teacherGuidance?: string | null;
-              };
-
-              return (
-                <Paper
-                  key={criterion.id}
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    borderRadius: 1.5,
-                    boxShadow: (theme) =>
-                      `0 2px 8px -2px ${varAlpha(theme.vars.palette.grey['500Channel'], 0.08)}`,
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      borderColor: 'primary.main',
-                      boxShadow: (theme) =>
-                        `0 4px 12px -2px ${varAlpha(theme.vars.palette.primary.mainChannel, 0.08)}`,
-                      transform: 'translateY(-1px)',
-                    },
-                  }}
-                >
-                  <Stack
-                    direction="row"
-                    spacing={2}
-                    alignItems="flex-start"
-                    justifyContent="space-between"
-                  >
-                    <Stack direction="row" spacing={1.5} alignItems="flex-start" width="100%">
-                      <Box
-                        sx={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: '50%',
-                          bgcolor: (theme) =>
-                            varAlpha(theme.vars.palette.primary.mainChannel, 0.08),
-                          color: 'primary.main',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: '13px',
-                          fontWeight: 700,
-                          flexShrink: 0,
-                          mt: 0.25,
-                        }}
-                      >
-                        {idx + 1}
-                      </Box>
-                      <Stack spacing={0.5} width="100%">
-                        <Typography variant="subtitle2" fontWeight={700}>
-                          {criterion.title}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ fontSize: '13px', lineHeight: 1.4 }}
-                        >
-                          {criterion.description || 'No description added for this criterion.'}
-                        </Typography>
-
-                        {(previewCriterion.studentDescription ||
-                          previewCriterion.teacherGuidance) && (
-                            <Stack
-                              spacing={1}
-                              sx={{
-                                mt: 1.5,
-                                pt: 1.5,
-                                borderTop: (theme) => `1px dashed ${theme.palette.divider}`,
-                              }}
-                            >
-                              {previewCriterion.studentDescription && (
-                                <Stack direction="row" gap={1} alignItems="flex-start">
-                                  <Iconify
-                                    icon="solar:user-speak-bold-duotone"
-                                    sx={{ color: 'text.disabled', mt: 0.25 }}
-                                    width={16}
-                                    height={16}
-                                  />
-                                  <Typography variant="caption" color="text.secondary">
-                                    <strong>Student Guidance:</strong>{' '}
-                                    {previewCriterion.studentDescription}
-                                  </Typography>
-                                </Stack>
-                              )}
-                              {previewCriterion.teacherGuidance && (
-                                <Stack direction="row" gap={1} alignItems="flex-start">
-                                  <Iconify
-                                    icon="solar:key-bold-duotone"
-                                    sx={{ color: 'text.disabled', mt: 0.25 }}
-                                    width={16}
-                                    height={16}
-                                  />
-                                  <Typography variant="caption" color="text.secondary">
-                                    <strong>Teacher Guidance:</strong>{' '}
-                                    {previewCriterion.teacherGuidance}
-                                  </Typography>
-                                </Stack>
-                              )}
-                            </Stack>
-                          )}
-                      </Stack>
-                    </Stack>
-
-                    <Box sx={{ flexShrink: 0, textAlign: 'right' }}>
-                      <Typography variant="h6" fontWeight={800} color="primary.main">
-                        {criterion.maxMarks}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Points Max
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Paper>
-              );
-            })}
           </Stack>
         </DialogScrollContent>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>

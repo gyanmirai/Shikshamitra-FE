@@ -31,7 +31,7 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
     <Grid container spacing={1}>
       {metrics.map((metric, index) => {
         const interactive = Boolean(metric.onClick);
-        const tone = METRIC_TONES[index % METRIC_TONES.length];
+        const tone = metric.tone ?? METRIC_TONES[index % METRIC_TONES.length];
 
         return (
           <Grid key={metric.id} size={{ xs: 6 }} sx={{ display: 'flex' }}>

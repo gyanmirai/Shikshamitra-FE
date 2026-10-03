@@ -118,43 +118,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       setSelectedExam(null);
     }
   };
-  const listTooltip = (
-    <Box sx={{ p: 1.5, maxWidth: 320 }}>
-      <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-        Schedule Exam — Overview
-      </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-        Manage all your institution&apos;s exams from a single place.
-      </Typography>
-
-      <Typography
-        variant="caption"
-        fontWeight={700}
-        color="text.primary"
-        sx={{ display: 'block', mb: 0.5 }}
-      >
-        How to use:
-      </Typography>
-      <Box component="ul" sx={{ m: 0, pl: 2, '& li': { mb: 0.25 } }}>
-        <Typography component="li" variant="caption" color="text.secondary">
-          Use <strong>status tabs</strong> (Pending / Published / Ongoing / Completed) to filter
-          exams.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          Click <strong>+ Create Exam</strong> to open the multi-step exam wizard.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          Click any row&apos;s <strong>Edit</strong> icon to update exam details.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          Click <strong>Timetable</strong> to preview the full subject-wise schedule.
-        </Typography>
-        <Typography component="li" variant="caption" color="text.secondary">
-          Click <strong>Delete</strong> (trash icon) to remove a pending exam.
-        </Typography>
-      </Box>
-    </Box>
-  );
+  const listTooltip = "Manage all your institution's exams from a single place.";
 
   const createTooltip = (
     <Box sx={{ p: 1.5, maxWidth: 340 }}>
@@ -383,7 +347,8 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
           viewTimeDialog.onFalse();
           setSelectedExam(null);
         }}
-        maxWidth="md"
+        maxWidth="lg"
+        paperProps={{ sx: { maxWidth: 1040 } }}
       >
         <Box sx={{ px: 2, pb: 2, pt: 2 }}>
           <ViewTimetableComp examData={selectedExam} />

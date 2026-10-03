@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Box, Paper, Stack, Button, Divider, Tooltip, TextField, IconButton, Typography } from '@mui/material';
+import {
+  Box,
+  Paper,
+  Stack,
+  Button,
+  Divider,
+  Tooltip,
+  TextField,
+  IconButton,
+  Typography,
+} from '@mui/material';
 
 interface BulkGradeEntryToolbarProps {
   selectedCount: number;
@@ -71,12 +81,19 @@ export const BulkGradeEntryToolbar: React.FC<BulkGradeEntryToolbarProps> = ({
             <Divider orientation="vertical" flexItem />
 
             {/* Middle Section: Bulk actions */}
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ flexGrow: 1 }}>
+            <Stack
+              direction="row"
+              spacing={1}
+              alignItems="center"
+              flexWrap="wrap"
+              useFlexGap
+              sx={{ flexGrow: 1 }}
+            >
               <Tooltip title="Mark Selected Present">
                 <Button
                   size="small"
-                  variant="soft"
-                  color="success"
+                  variant="outlined"
+                  color="inherit"
                   startIcon={<Iconify icon="solar:user-check-bold" />}
                   onClick={onMarkPresent}
                 >
@@ -87,8 +104,8 @@ export const BulkGradeEntryToolbar: React.FC<BulkGradeEntryToolbarProps> = ({
               <Tooltip title="Mark Selected Absent">
                 <Button
                   size="small"
-                  variant="soft"
-                  color="error"
+                  variant="outlined"
+                  color="inherit"
                   startIcon={<Iconify icon="solar:user-block-bold" />}
                   onClick={onMarkAbsent}
                 >
@@ -127,8 +144,8 @@ export const BulkGradeEntryToolbar: React.FC<BulkGradeEntryToolbarProps> = ({
                 <Tooltip title="Apply same marks to selected">
                   <Button
                     size="small"
-                    variant="soft"
-                    color="primary"
+                    variant="outlined"
+                    color="inherit"
                     startIcon={<Iconify icon="solar:pen-bold" />}
                     onClick={() => {
                       setShowMarksInput(true);
@@ -161,7 +178,11 @@ export const BulkGradeEntryToolbar: React.FC<BulkGradeEntryToolbarProps> = ({
                   >
                     <Iconify icon="solar:check-circle-bold" />
                   </IconButton>
-                  <IconButton size="small" color="inherit" onClick={() => setShowRemarkInput(false)}>
+                  <IconButton
+                    size="small"
+                    color="inherit"
+                    onClick={() => setShowRemarkInput(false)}
+                  >
                     <Iconify icon="solar:close-circle-bold" />
                   </IconButton>
                 </Stack>
@@ -169,8 +190,8 @@ export const BulkGradeEntryToolbar: React.FC<BulkGradeEntryToolbarProps> = ({
                 <Tooltip title="Apply same remark to selected">
                   <Button
                     size="small"
-                    variant="soft"
-                    color="info"
+                    variant="outlined"
+                    color="inherit"
                     startIcon={<Iconify icon="solar:chat-round-line-bold" />}
                     onClick={() => {
                       setShowRemarkInput(true);
