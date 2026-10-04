@@ -64,9 +64,19 @@ let receiptSequence = 4;
 export const requests: Array<{ url: string; method: string; body?: unknown }> = [];
 const replay = new Map<string, CollectFeeOutput>();
 
-export function resetFixture(scenario?: 'statuses') {
+export function resetFixture(scenario?: 'statuses' | 'selection') {
   ledger = initialLedger();
   charges = initialCharges();
+  if (scenario === 'selection') {
+    ledger.flatMap((group) => group.items).forEach((item) => {
+      if (/^tuition-[0-4]$/.test(item.dueFeeId) || item.dueFeeId === 'transport-1') {
+        Object.assign(item, { paid: item.total, due: 0, status: 'Paid' });
+      }
+    });
+    charges.push({ ...charges[0], chargeId: 'sports-charge', sourceId: 'sports-charge', sourceType: 'Charge', name: 'Sports Charge', isSystemGenerated: false, amount: 1200, paidAmount: 1200, pendingAmount: 0, status: 'Paid' });
+    charges.push({ ...charges[0], chargeId: 'art-charge', sourceId: 'art-charge', sourceType: 'Charge', name: 'ART Charge', isSystemGenerated: false, amount: 1111, pendingAmount: 1111 });
+    ledger.forEach((group) => { group.totalDue = group.items.reduce((sum, item) => sum + item.due, 0); });
+  }
   if (scenario === 'statuses') {
     const lines = ledger.flatMap((group) => group.items);
     Object.assign(lines[0], { paid: lines[0].total, due: 0, status: 'Paid' });
@@ -204,6 +214,14 @@ export const api = createApi({
         return { data: structuredClone(form) };
       }
       if (url === '/bank-accounts') return { data: { items: [], totalCount: 0 } };
+      if (url === '/finance-routing-options') return { data: {
+        incomeCategories: [], expenseCategories: [], bankAccounts: [
+          { id: 'sbi-account', label: 'SBI - null' },
+          { id: 'sbi-identified-account', label: 'SBI • 1234' },
+          { id: 'axis-account', label: 'AXIS - undefined' },
+          { id: 'hdfc-account', label: 'HDFC - School Collections' },
+        ],
+      } };
       if (url.startsWith('/student-fee-structure/student/')) return { data: {
         feeHeads: ['tuition', 'transport'].map((feeHeadId) => ({ feeHeadId, feeHeadName: feeHeadId === 'tuition' ? 'Class 3 Tuition Fee' : 'Class 3 Student Transport Fee', isSelected: true })),
       } };

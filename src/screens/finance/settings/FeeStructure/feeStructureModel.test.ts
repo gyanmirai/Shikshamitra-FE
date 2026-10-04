@@ -13,6 +13,40 @@ import {
 } from './feeStructureModel';
 
 describe('Fee Structure editor contract', () => {
+  it('patches fixed to variable pricing together without changing the payment term or optional flag', () => {
+    const before = structureCandidate({
+      feeHeads: [
+        {
+          id: 'line',
+          feeHeadId: 'head',
+          amount: 1200,
+          isVariable: false,
+          isOneTime: false,
+          isOptional: true,
+          payableMonth: 0,
+          payableYear: 0,
+          paymentTermId: 'term',
+          paymentTermVersionId: 'term-v1',
+          scheduleMode: 'Inherited',
+          installmentOverrides: [],
+        },
+      ],
+    });
+    const after = structureCandidate(before);
+    after.feeHeads[0].isVariable = true;
+    after.feeHeads[0].amount = null;
+    expect(buildStructureChanges(before, after)).toEqual({
+      feeHeads: {
+        add: [],
+        update: [{ lineId: 'line', isVariable: true, amount: null }],
+        removeLineIds: [],
+      },
+    });
+    expect(after.feeHeads[0].paymentTermVersionId).toBe('term-v1');
+    expect(after.feeHeads[0].isOptional).toBe(true);
+    expect(amountError(null)).toBeTruthy();
+  });
+
   it('starts an incomplete draft with explicit empty policy and term choices', () => {
     const draft = structureCandidate();
     expect(draft.saveAsDraft).toBe(true);
@@ -38,6 +72,7 @@ describe('Fee Structure editor contract', () => {
         {
           id: 'line',
           feeHeadId: 'head',
+          isVariable: false,
           amount: 1000.01,
           isOneTime: false,
           isOptional: false,

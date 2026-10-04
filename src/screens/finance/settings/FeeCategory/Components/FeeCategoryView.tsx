@@ -85,7 +85,7 @@ const FeeCategoryView: React.FC<IFeeCategoryViewProps> = ({ id }) => {
                             {fh.incomeCategoryName || 'N/A'}
                           </Typography>
                           <Typography variant="caption" color="text.disabled">
-                            Account: {fh.incomeAccountHeadName || 'N/A'}
+                            Income Category: {fh.incomeCategoryName || 'N/A'}
                           </Typography>
                         </Box>
 

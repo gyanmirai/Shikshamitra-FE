@@ -1,17 +1,20 @@
+import 'simplebar-react/dist/simplebar.min.css';
+
+import type { IFeeStructureData } from 'src/screens/finance/FeeStructureAssign/Components/type';
+
 import React from 'react';
-import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
+import { createRoot } from 'react-dom/client';
 import { configureStore } from '@reduxjs/toolkit';
-import { ThemeProvider, useColorScheme } from '@mui/material/styles';
-import { CssBaseline, Box, Alert, Typography, Button, Stack } from '@mui/material';
 import { createTheme } from 'src/theme/create-theme';
-import { defaultSettings } from 'src/components/settings/config-settings';
 import confirmPopup from 'src/redux/confirmPopup/confirmPopupSlice';
+import { ThemeProvider, useColorScheme } from '@mui/material/styles';
+import { defaultSettings } from 'src/components/settings/config-settings';
+import { Box, Alert, Stack, Button, Typography, CssBaseline } from '@mui/material';
 import AssignmentDrawer from 'src/screens/finance/FeeStructureAssign/Components/AssignmentDrawer';
 import FeeStructureAssignTable from 'src/screens/finance/FeeStructureAssign/Components/FeeStructureAssignTable';
-import type { IFeeStructureData } from 'src/screens/finance/FeeStructureAssign/Components/type';
+
 import { api } from './mock-service';
-import 'simplebar-react/dist/simplebar.min.css';
 
 const store = configureStore({
   reducer: {
@@ -33,7 +36,13 @@ const store = configureStore({
         'Finance.Fees.StructureAssign.OverrideAmount',
         'Finance.Fees.StructureAssign.OverridePolicies',
         'Finance.Policies.ProrationPolicy.OverrideChargePeriod',
-      ].map((name) => ({ name, isGranted: true })),
+      ]
+        .filter(
+          (name) =>
+            !new URLSearchParams(window.location.search).has('variableFees') ||
+            !name.endsWith('.OverrideAmount')
+        )
+        .map((name) => ({ name, isGranted: true })),
     }),
   },
   middleware: (getDefault) => getDefault().concat(api.middleware),

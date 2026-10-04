@@ -24,6 +24,10 @@ export interface IChargeBatchListItem {
   chargeId: string;
   chargeName: string;
   chargeCategoryId?: string;
+  incomeCategoryId?: string;
+  receivingBankAccountId?: string;
+  incomeCategoryName?: string;
+  receivingBankLabel?: string;
   categoryName?: string;
   amount: number;
   dueDate: string;
@@ -75,6 +79,10 @@ export interface IChargeStudentLine {
 export interface IChargeDetail extends IChargeBatchListItem {
   status: number;
   chargeCategoryId: string;
+  incomeCategoryId: string;
+  receivingBankAccountId: string;
+  incomeCategoryName?: string;
+  receivingBankLabel?: string;
   priority: number;
   additionalNotes?: string;
   audience: IChargeAudience;
@@ -144,6 +152,10 @@ export interface IGetChargeLinesParams {
 export interface ICreateChargeRequest {
   chargeName: string;
   chargeCategoryId: string;
+  incomeCategoryId: string;
+  receivingBankAccountId: string;
+  incomeCategoryName?: string;
+  receivingBankLabel?: string;
   purposeDescription: string;
   amount: number;
   dueDate: string;

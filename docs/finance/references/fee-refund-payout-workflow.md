@@ -1,3 +1,13 @@
+---
+module: finance
+domain: accounts
+content_type: Reference
+status: active
+updated_on: 2026-10-02
+owner: frontend-team
+audience: humans-and-agents
+---
+
 # Fee refunds workspace
 
 The Fees → Refunds worklist shows Pending, Approved, Processed, Rejected, and Failed tabs. Search, academic/class/division filters, and pagination are server driven. Each row shows only the actions returned by the API for the signed-in user.

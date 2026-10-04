@@ -15,6 +15,8 @@ Backend Finance docs own product and API truth at [Finance backend docs](../../.
 
 Active Fee Structure editor, typed client and browser checks: [workspace implementation](./references/fee-structure-workspace.md).
 
+Variable structure pricing and manual student entry: [variable fee assignment](./references/variable-fee-assignment.md).
+
 ## Read order
 
 Follow this order when changing Finance frontend behavior:
@@ -86,3 +88,7 @@ Do not restore old integration plans under `docs/`.
 ## Student fee assignment
 
 The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).
+
+## Income, expense, and bank routing
+
+The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).

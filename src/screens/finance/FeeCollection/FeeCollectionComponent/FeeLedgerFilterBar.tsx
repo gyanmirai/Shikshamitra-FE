@@ -12,7 +12,6 @@ import CustomSelect from 'src/components/custom-select';
 import { CustomTabs } from 'src/components/custom-tabs';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FeeMonth, FeeCollectionStatusOptions } from 'src/enums/fee-collection-type';
-import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import { useGetStudentFeeStructureQuery } from 'src/redux/student/admission/admission-api';
 import { Box, Tab, Chip, Card, Checkbox, Typography, FormControlLabel } from '@mui/material';
 
@@ -40,6 +39,12 @@ interface FeeLedgerFilterBarProps {
   onFilterChange: (filters: FeeLedgerFilters) => void;
   entryCount?: number;
   studentId?: string;
+  academicYearMonths?: { month: number; year: number }[];
+  isMonthsLoading?: boolean;
+  selectionStates?: Partial<
+    Record<keyof FeeLedgerSelectionFilters, { checked: boolean; indeterminate: boolean }>
+  >;
+  onSelectionFilterChange?: (key: keyof FeeLedgerSelectionFilters, checked: boolean) => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -94,6 +99,10 @@ const FeeLedgerFilterBar = ({
   onFilterChange,
   entryCount,
   studentId,
+  academicYearMonths,
+  isMonthsLoading = false,
+  selectionStates,
+  onSelectionFilterChange,
 }: FeeLedgerFilterBarProps) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -111,28 +120,22 @@ const FeeLedgerFilterBar = ({
   } = useQueryAndMutation({
     type: 'query',
     currentQueryAndMutation: useGetStudentFeeStructureQuery,
-		params: { studentId, academicYearId: currentYear?.id },
-		options: { skip: !studentId || !currentYear?.id },
+    params: { studentId, academicYearId: currentYear?.id },
+    options: { skip: !studentId || !currentYear?.id },
   });
 
-  const {
-    data: academicYearMonthsData,
-    isLoading: isMonthsLoading,
-    isFetching: isMonthsFetching,
-  } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetAcademicYearMonthsQuery,
-    params: { academicYearId: currentYear?.id },
-  });
+  const monthOptions = getAcademicYearMonthOptions(academicYearMonths);
 
-  const monthOptions = getAcademicYearMonthOptions(academicYearMonthsData);
-
-  const handleSelectionFilterToggle = (key: keyof FeeLedgerSelectionFilters) => {
+  const handleSelectionFilterToggle = (key: keyof FeeLedgerSelectionFilters, checked: boolean) => {
+    if (onSelectionFilterChange) {
+      onSelectionFilterChange(key, checked);
+      return;
+    }
     onFilterChange({
       ...filters,
       selectionFilters: {
         ...filters.selectionFilters,
-        [key]: !filters.selectionFilters[key],
+        [key]: checked,
       },
     });
   };
@@ -264,7 +267,7 @@ const FeeLedgerFilterBar = ({
           labelKey="label"
           valueKey="value"
           value={filters.month}
-          isLoading={isMonthsLoading || isMonthsFetching}
+          isLoading={isMonthsLoading}
           onChange={(value) => onFilterChange({ ...filters, month: value as string })}
           formControlProps={{ sx: { flex: 1, minWidth: 180 } }}
           size="small"
@@ -313,8 +316,22 @@ const FeeLedgerFilterBar = ({
               control={
                 <Checkbox
                   size="small"
-                  checked={filters.selectionFilters[option.key]}
-                  onChange={() => handleSelectionFilterToggle(option.key)}
+                  checked={
+                    selectionStates?.[option.key]?.checked ?? filters.selectionFilters[option.key]
+                  }
+                  indeterminate={selectionStates?.[option.key]?.indeterminate ?? false}
+                  slotProps={{
+                    input: {
+                      'aria-checked': selectionStates?.[option.key]?.indeterminate
+                        ? 'mixed'
+                        : undefined,
+                    },
+                  }}
+                  disabled={
+                    (option.key === 'firstSixMonths' || option.key === 'lastSixMonths') &&
+                    (isMonthsLoading || !academicYearMonths?.length)
+                  }
+                  onChange={(_, checked) => handleSelectionFilterToggle(option.key, checked)}
                 />
               }
               label={option.label}

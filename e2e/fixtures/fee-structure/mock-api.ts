@@ -1,5 +1,6 @@
 // Browser fixture only. These responses never enter the Next.js application.
 import { useState } from 'react';
+
 export const useGetStructureContextQuery = 'context';
 export const usePreviewStructureMutation = 'preview';
 export const useSaveStructureDraftMutation = 'save';
@@ -159,7 +160,10 @@ const preview = (candidate: any) => {
         paymentTermName: 'Two terms',
         versionNumber: 2,
         annualAmount: head.amount,
-        installments: installments.map((line) => ({ ...line, calculatedAmount: head.amount / 2 })),
+        installments: installments.map((line) => ({
+          ...line,
+          calculatedAmount: head.isVariable ? null : head.amount / 2,
+        })),
       })),
     policyLabels: Object.fromEntries(
       settings.policies

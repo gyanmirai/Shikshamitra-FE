@@ -16,7 +16,5 @@ export const incomeCategoryValidationSchema = (
         if (editData && editData.name.trim().toLowerCase() === trimmed) return true;
         return !existingNames.has(trimmed);
       }),
-    tags: Yup.array()
-      .of(Yup.string().required('Each tag must be a non-empty string')),
-    defaultAccountHeadId: Yup.string().required('Income account head is required'),
+    tags: Yup.array().of(Yup.string().required('Each tag must be a non-empty string')),
   });

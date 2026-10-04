@@ -5,10 +5,10 @@ import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
 import {
@@ -64,12 +64,6 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
             {value}
           </Typography>
         ),
-      },
-      {
-        id: 'defaultAccountHeadName',
-        label: 'Default Expense Head',
-        align: 'left',
-        render: (value) => value || 'Migration required',
       },
       {
         id: 'tags',

@@ -9,6 +9,7 @@ import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type
 import ByMonthView from './FeeLedgerByMonth';
 import ByFeeHeadView from './FeeLedgerByFeeHead';
 import { FeeRow, toPeriod, ColHeader } from './FeeLedgerShared';
+import { isLedgerItemCollectible } from './feeLedgerSelection';
 import { roundUpToRupee, safeRoundingDifference } from './preview/paymentAllocationUtils';
 
 import type { FeeLedgerTab } from './FeeLedgerFilterBar';
@@ -91,7 +92,7 @@ const ChargesSection = ({ chargesData, selectedCharges, onToggleCharge }: Charge
 
       {/* Charge Rows */}
       {chargesData.map((charge) => {
-        const isDisabled = charge.amount <= 0;
+        const isDisabled = !isLedgerItemCollectible({ due: charge.amount, status: charge.status });
         const isSelected = selectedCharges.includes(charge.chargeId) || isDisabled;
 
         return (
@@ -199,7 +200,7 @@ const FeeLedgerList = ({
   // ── Month group toggle ─────────────────────────────────────────────────────
   const toggleMonthGroup = (group: MonthWiseGroup) => {
     const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
-    const selectableItems = group.items.filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0);
+    const selectableItems = group.items.filter(isLedgerItemCollectible);
     const isAllSelected = selectableItems.every((i) =>
       isItemSelected(selectedItems, i.feeHeadId, period, i.dueFeeId)
     );
@@ -240,7 +241,7 @@ const FeeLedgerList = ({
   const toggleFeeHeadGroup = (group: FeeHeadWiseGroup) => {
     const getPeriod = (item: { month: any; year?: number }) =>
       toPeriod(FeeMonth[item.month] as string, item.year ?? year);
-    const selectableItems = group.items.filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0);
+    const selectableItems = group.items.filter(isLedgerItemCollectible);
     const isAllSelected = selectableItems.every((i) => {
       const period = getPeriod(i);
       return isItemSelected(selectedItems, group.feeHeadId, period, i.dueFeeId);

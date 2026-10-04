@@ -1,26 +1,23 @@
+import type { AssignmentPreview } from 'src/redux/finance/studentFeeAssignment';
+
 import { fDate } from 'src/utils/format-time';
-
+import { Iconify } from 'src/components/iconify';
 import { formatNumber } from 'src/utils/formate_number';
-
+import { assignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 import {
   Box,
   Stack,
   Alert,
   Table,
+  TableRow,
   TableBody,
   TableCell,
   TableHead,
-  TableRow,
-  Typography,
   Accordion,
+  Typography,
   AccordionSummary,
   AccordionDetails,
 } from '@mui/material';
-
-import { Iconify } from 'src/components/iconify';
-
-import type { AssignmentPreview } from 'src/redux/finance/studentFeeAssignment';
-import { assignmentPolicyFamilies } from 'src/redux/finance/studentFeeAssignment';
 
 export default function AssignmentReview({
   data,
@@ -77,15 +74,22 @@ export default function AssignmentReview({
                 </Typography>
               ) : (
                 <Typography variant="body2">
-                  Configured {formatNumber(head.configuredAmount, data.currency)} ·{' '}
-                  {head.amountBasis === 'OneTime' ? 'One-time charge' : 'Annual service total'} ·
-                  Obligation {formatNumber(head.obligation, data.currency)}
+                  {head.isVariable ? 'Entered student amount' : 'Configured'}{' '}
+                  {formatNumber(
+                    head.isVariable ? (head.effectiveAmount ?? 0) : (head.configuredAmount ?? 0),
+                    data.currency
+                  )}{' '}
+                  · {head.amountBasis === 'OneTime' ? 'One-time charge' : 'Total for term coverage'}{' '}
+                  · Obligation {formatNumber(head.obligation, data.currency)}
                 </Typography>
               )}
-              {head.effectiveAmount !== head.configuredAmount && (
+              {!head.isVariable && head.effectiveAmount !== head.configuredAmount && (
                 <Typography variant="body2">
-                  Authorized service total {formatNumber(head.effectiveAmount, data.currency)}
+                  Authorized service total {formatNumber(head.effectiveAmount ?? 0, data.currency)}
                 </Typography>
+              )}
+              {head.zeroAmountReason && (
+                <Typography variant="body2">Zero amount: {head.zeroAmountReason}</Typography>
               )}
               {head.paymentTermName && (
                 <Typography variant="body2">

@@ -5,10 +5,10 @@ import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { usePatchFeeHeadMutation } from 'src/redux/feeHeadManage/feeHeadManageApi';
 
 import type { IFeeHead, IFeeHeadTableProps } from './type';
@@ -67,9 +67,6 @@ const FeeHeadTable: React.FC<IFeeHeadTableProps> = ({
           <Stack spacing={0.25}>
             <Typography variant="caption" fontSize="13px">
               {value || '-'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {(row as IFeeHead).incomeAccountHeadName || 'No account head'}
             </Typography>
           </Stack>
         ),

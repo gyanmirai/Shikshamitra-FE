@@ -142,6 +142,10 @@ export interface FeeLedgerMonth {
 }
 
 export interface ChargeDetail {
+  incomeCategoryId?: string;
+  receivingBankAccountId?: string;
+  incomeCategoryName?: string;
+  receivingBankLabel?: string;
   chargeId: string;
   sourceType: 'Charge' | 'LateFee';
   sourceId: string;
@@ -251,6 +255,7 @@ export interface LateFeePayment {
 }
 
 export interface FeePayment {
+  bankAccountId?: string;
   paymentMethod: string | number;
   amount: number;
   details?: Record<string, unknown>;
@@ -451,6 +456,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         financeModuleType.feeDetails,
         financeModuleType.charges,
         financeModuleType.financeAudit,
+        financeModuleType.incomeTracking,
         financeModuleType.accountPosting,
         financeModuleType.draftPosting,
       ],

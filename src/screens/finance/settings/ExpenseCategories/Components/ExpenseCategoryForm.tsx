@@ -12,7 +12,6 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import HeadSelector from 'src/screens/finance/components/HeadSelector';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { Box, Chip, Grid, Button, TextField, DialogActions } from '@mui/material';
 import {
@@ -77,7 +76,6 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
         name: values.name,
         description: values.description || '',
         tags: values.tags || [],
-        defaultAccountHeadId: values.defaultAccountHeadId,
         concurrencyStamp: editData ? values.concurrencyStamp : null,
       };
 
@@ -159,36 +157,7 @@ const ExpenseCategoryForm: React.FC<IExpenseCategoryFormProps> = ({ open, onClos
               />
             </ShakingTextField>
           </Grid>
-          {/* Expense Head */}
-          <Grid size={12}>
-            <ShakingTextField
-              error={
-                !!(formik.touched.defaultAccountHeadId && formik.errors.defaultAccountHeadId) ||
-                false
-              }
-            >
-              <HeadSelector
-                name="defaultAccountHeadId"
-                label="Default Expense Account Head"
-                headType="Expense"
-                categoryType="Expense"
-                required
-                disabled={editData?.isUsedInDownstream}
-                value={formik.values.defaultAccountHeadId}
-                onChange={(val) => formik.setFieldValue('defaultAccountHeadId', val)}
-                error={
-                  formik.touched.defaultAccountHeadId && Boolean(formik.errors.defaultAccountHeadId)
-                }
-                helperText={
-                  editData?.isUsedInDownstream
-                    ? 'This category is already used. Create a new category to use a different account head.'
-                    : formik.touched.defaultAccountHeadId
-                    ? (formik.errors.defaultAccountHeadId as string)
-                    : undefined
-                }
-              />
-            </ShakingTextField>
-          </Grid>
+
           {/* Tags */}
           <Grid size={12}>
             <ShakingTextField error={!!(formik.touched.tags && formik.errors.tags) || false}>

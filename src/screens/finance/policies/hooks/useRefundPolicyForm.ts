@@ -26,11 +26,15 @@ import type {
 } from '../types/finance-policy.types';
 
 const POLICY_ERROR_MESSAGES: Record<string, string> = {
-  'Finance:RefundPolicy:010005': 'A refund policy with this name already exists for the academic year.',
-  'Finance:RefundPolicy:010006': 'A refund policy with this code already exists for the academic year.',
-  'Finance:RefundPolicy:010018': 'This policy is attached to fee structures and cannot be moved to Draft or archived.',
+  'Finance:RefundPolicy:010005':
+    'A refund policy with this name already exists for the academic year.',
+  'Finance:RefundPolicy:010006':
+    'A refund policy with this code already exists for the academic year.',
+  'Finance:RefundPolicy:010018':
+    'This policy is attached to fee structures and cannot be moved to Draft or archived.',
   'Finance:RefundPolicy:010019': 'The policy was refreshed. Please review and submit again.',
-  'Finance:RefundPolicy:010020': 'This policy was modified in another session. Please refresh and try again.',
+  'Finance:RefundPolicy:010020':
+    'This policy was modified in another session. Please refresh and try again.',
   'Finance:RefundPolicy:010021': 'A change reason is required when editing an Active policy.',
 };
 
@@ -60,6 +64,8 @@ export const emptyValues = (academicYearId: string): IRefundPolicyFormValues => 
   // Payout choice belongs to the refund transaction, not the policy setup screen.
   allowedPayoutMethods: ['Cash', 'Cheque', 'DemandDraft', 'BankTransfer', 'Upi'],
   processingTargetDays: null,
+  expenseCategoryId: '',
+  defaultPayingBankAccountId: '',
   concurrencyStamp: '',
   changeReason: '',
 });
@@ -68,6 +74,16 @@ const emptyStringToNull = (value: number, originalValue: unknown) =>
   originalValue === '' ? null : value;
 
 const validationSchema = Yup.object().shape({
+  expenseCategoryId: Yup.string()
+    .nullable()
+    .when('status', { is: 'Active', then: (s) => s.required('Expense Category is required') }),
+  defaultPayingBankAccountId: Yup.string()
+    .nullable()
+    .when(['status', 'allowedPayoutMethods'], {
+      is: (status: string, methods: string[]) =>
+        status === 'Active' && methods?.some((x) => x !== 'Cash'),
+      then: (s) => s.required('Default Paying Bank Account is required'),
+    }),
   policyName: Yup.string()
     .trim()
     .min(3, 'Must be at least 3 characters')
@@ -204,7 +220,9 @@ export function useRefundPolicyForm({
     useSimulateRefundPolicyMutation();
 
   const isSaving = isCreating || isUpdating;
-  const activeEdit = Boolean(policyId && (detail?.status === 'Active' || editData?.status === 'Active'));
+  const activeEdit = Boolean(
+    policyId && (detail?.status === 'Active' || editData?.status === 'Active')
+  );
 
   // Simulation parameters
   const [simulationInput, setSimulationInput] = useState({
@@ -261,9 +279,11 @@ export function useRefundPolicyForm({
         deductionExplanation:
           values.deductionType === 'None' ? '' : values.deductionExplanation?.trim() || '',
         allowedPayoutMethods: values.allowedPayoutMethods,
+        expenseCategoryId: values.expenseCategoryId || null,
+        defaultPayingBankAccountId: values.defaultPayingBankAccountId || null,
         processingTargetDays: values.processingTargetDays,
         changeReason: activeEdit ? values.changeReason?.trim() : null,
-        concurrencyStamp: policyId ? (detail?.concurrencyStamp || values.concurrencyStamp) : null,
+        concurrencyStamp: policyId ? detail?.concurrencyStamp || values.concurrencyStamp : null,
       };
 
       try {
@@ -467,7 +487,14 @@ export function useRefundPolicyForm({
       (values.deductionType === 'None' ||
         ((values.deductionValue ?? 0) > 0 && !!values.deductionExplanation?.trim()));
 
-    const isReadyToPublish = generalValid && eligibilityValid && amountValid && deductionValid;
+    const routingValid =
+      Boolean(values.expenseCategoryId) &&
+      !errors.expenseCategoryId &&
+      (!values.allowedPayoutMethods.some((method) => method !== 'Cash') ||
+        Boolean(values.defaultPayingBankAccountId)) &&
+      !errors.defaultPayingBankAccountId;
+    const isReadyToPublish =
+      generalValid && eligibilityValid && amountValid && deductionValid && routingValid;
 
     return {
       generalValid,

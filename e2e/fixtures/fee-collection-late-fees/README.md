@@ -46,3 +46,17 @@ supplies an already-assigned student, so that workflow is never rendered.
 The full synthetic ledger contains ₹24,000 tuition and ₹9,600 transport; its six selected
 installments reproduce the reported ₹12,396 payment. Reloading or resetting discards all
 synthetic payments and waivers. No production student data is changed.
+
+## Selection and bank-label regression
+
+Choose **Selection regression**, then open Diya's collection dialog. This scenario
+marks June–October tuition and Quarter 1 transport paid and adds paid Sports and
+unpaid ART charges. Across the June–May academic year, All Pending selects 10
+installments, All Charges selects five unpaid charges, First 6 Month selects two
+installments, and Last 6 Month selects eight. Verify a single click, overlap,
+unticking, manual edits, grouping changes, and counts/totals before any collection.
+
+The routing lookup also supplies malformed legacy labels (`SBI - null`,
+`AXIS - undefined`) alongside a masked SBI account and a named HDFC account.
+Select Cheque to verify the dropdown and its selected label omit missing-value text
+and preserve valid account identifiers. These IDs and labels are synthetic.

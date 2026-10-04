@@ -16,8 +16,10 @@ export interface AssignmentHead {
   isOptional: boolean;
   isOneTime: boolean;
   included: boolean;
-  configuredAmount: number;
-  effectiveAmount: number;
+  configuredAmount: number | null;
+  isVariable?: boolean;
+  zeroAmountReason?: string;
+  effectiveAmount: number | null;
   amountBasis: string;
   obligation: number;
   paymentTermName?: string;
@@ -102,6 +104,7 @@ export interface AssignmentRequest {
   selectedOptionalFeeHeadIds: string[];
   servicePeriods: AssignmentServicePeriod[];
   feeHeadDetails: { feeHeadId: string; amount: number }[];
+  variableFeeHeads?: { feeHeadId: string; amount: number | null; zeroAmountReason?: string }[];
   overrideReason?: string;
   previewToken?: string;
 }
@@ -161,6 +164,8 @@ export function assignmentError(error: unknown): string {
     error as { data?: { error?: { code?: string }; code?: string; errorCode?: string } }
   )?.data;
   const code = data?.error?.code ?? data?.errorCode ?? data?.code ?? '';
+  if (code.endsWith('VariableAmountRequired'))
+    return 'Enter an amount for every included variable fee head.';
   if (code.endsWith('StalePreview'))
     return 'The preview expired or changed. Preview again before assigning.';
   if (code.endsWith('AlreadyAssigned'))

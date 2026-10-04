@@ -6,9 +6,9 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import { Box, Chip, Alert, Stack, Switch, TextField, Typography } from '@mui/material';
 import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
@@ -68,12 +68,6 @@ const IncomeCategoryTable: React.FC<IIncomeCategoryTableProps> = ({
             {value}
           </Typography>
         ),
-      },
-      {
-        id: 'defaultAccountHeadName',
-        label: 'Default Income Head',
-        align: 'left',
-        render: (value) => value || 'Migration required',
       },
       {
         id: 'tags',

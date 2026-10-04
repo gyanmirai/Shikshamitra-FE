@@ -37,7 +37,6 @@ export const financePaths = {
     incomeAndExpense: '/finance/income-and-expense',
     settings: {
       root: '',
-      accountHeads: '/finance/settings/account-heads',
       expenseCategories: '/finance/settings/expenseCategories',
       incomeCategories: '/finance/settings/incomeCategories',
       bankAccounts: '/finance/settings/bank-account-management',
@@ -85,17 +84,17 @@ export const financePermissions = {
     root: `${defaultModulePermissionName}${defaultFinancePermissionName}Fees`,
     collections: `${defaultFinancePermissionName}Fees.FeeCollections`,
     charges: `${defaultFinancePermissionName}Fees.Charges`,
-	chargeActions: {
-		view: `${defaultFinancePermissionName}Fees.Charges.View`,
-		add: `${defaultFinancePermissionName}Fees.Charges.Add`,
-		edit: `${defaultFinancePermissionName}Fees.Charges.Update`,
-		delete: `${defaultFinancePermissionName}Fees.Charges.Delete`,
-		approve: `${defaultFinancePermissionName}Fees.Charges.Approve`,
-		reject: `${defaultFinancePermissionName}Fees.Charges.Reject`,
-		void: `${defaultFinancePermissionName}Fees.Charges.Void`,
-		export: `${defaultFinancePermissionName}Fees.Charges.Export`,
-		viewAudit: `${defaultFinancePermissionName}Fees.Charges.ViewAudit`,
-	},
+    chargeActions: {
+      view: `${defaultFinancePermissionName}Fees.Charges.View`,
+      add: `${defaultFinancePermissionName}Fees.Charges.Add`,
+      edit: `${defaultFinancePermissionName}Fees.Charges.Update`,
+      delete: `${defaultFinancePermissionName}Fees.Charges.Delete`,
+      approve: `${defaultFinancePermissionName}Fees.Charges.Approve`,
+      reject: `${defaultFinancePermissionName}Fees.Charges.Reject`,
+      void: `${defaultFinancePermissionName}Fees.Charges.Void`,
+      export: `${defaultFinancePermissionName}Fees.Charges.Export`,
+      viewAudit: `${defaultFinancePermissionName}Fees.Charges.ViewAudit`,
+    },
     refund: `${defaultFinancePermissionName}Fees.Refund`,
     refundActions: {
       view: `${defaultFinancePermissionName}Fees.Refund.View`,
@@ -190,7 +189,6 @@ export const financePermissions = {
     income: `${defaultFinancePermissionName}Accounts.IncomeTracking`,
     settings: {
       root: `${defaultModulePermissionName}${defaultFinancePermissionName}Accounts.Settings`,
-      accountHead: `${defaultFinancePermissionName}Accounts.Settings.AccountHead.View`,
       expenseCategory: `${defaultFinancePermissionName}Accounts.Settings.ExpenseCategory.View`,
       incomeCategory: `${defaultFinancePermissionName}Accounts.Settings.IncomeCategory.View`,
       bankAccount: `${defaultFinancePermissionName}Accounts.Settings.BankAccount.View`,
@@ -488,13 +486,6 @@ const financeModule = {
               permissionName: financePermissions.accounts.settings.root,
               icon: menuIconView('mdi:cog-outline'),
               children: [
-                {
-                  title: 'Account Heads',
-                  path: financePaths.accounts.settings.accountHeads,
-                  _action: 'account-heads',
-                  permissionName: financePermissions.accounts.settings.accountHead,
-                  icon: menuIconView('mdi:book-open-page-variant-outline'),
-                },
                 {
                   title: 'Income Category',
                   path: financePaths.accounts.settings.incomeCategories,

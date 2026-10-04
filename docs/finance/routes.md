@@ -79,3 +79,7 @@ Accounts Settings does not contain a Payment Modes item. Fee Collections owns th
 ## Student fee assignment
 
 The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).
+
+## Income, expense, and bank routing
+
+The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).

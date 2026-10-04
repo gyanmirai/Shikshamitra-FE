@@ -6,11 +6,11 @@ import React, { useMemo } from 'react';
 import { Label } from 'src/components/label';
 import { useTabs } from 'src/hooks/use-tabs';
 import { Iconify } from 'src/components/iconify';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { FeeRefundStatusType } from 'src/enums/feeRefund-status-type';
 import { Box, Tab, Card, Tabs, Typography, IconButton } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
 import FinanceAcademicContextFilter from 'src/screens/finance/components/FinanceAcademicContextFilter';
 import {
@@ -67,6 +67,10 @@ function mapRefundItem(item: FeeRefundRequestDto, idx: number): IStudentFeeData 
     _approvedAmount: item.approvedAmount,
     _settlementId: item.settlements?.find((x) => x.status === 1)?.id,
     _refundMethod: item.refundMethod ?? undefined,
+    _expenseCategoryId: item.expenseCategoryId ?? undefined,
+    _payingBankAccountId: item.payingBankAccountId ?? undefined,
+    _defaultExpenseCategoryId: item.defaultExpenseCategoryId ?? undefined,
+    _defaultPayingBankAccountId: item.defaultPayingBankAccountId ?? undefined,
   } as IStudentFeeData;
 }
 

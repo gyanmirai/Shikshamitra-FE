@@ -68,34 +68,46 @@ export const useIncomeTableColumns = ({
         align: 'left',
         minWidth: '150px',
       },
-      ...(onEdit || onDelete ? [{
-        id: 'actions',
-        label: 'Actions',
-        align: 'left',
-        isSort: false,
-        isFilter: false,
-        sticky: true,
-        minWidth: 50,
-        render: (_value: unknown, row: unknown) => (
-          <AdaptiveThreeDotsActions
-            actions={[
-              ...(onEdit ? [{
-                id: 'edit',
-                label: 'Edit',
-                icon: 'solar:pen-bold',
-                onClick: () => onEdit(row as IIncomeRecord),
-              }] : []),
-              ...(onDelete ? [{
-                id: 'delete',
-                label: 'Delete',
-                icon: 'solar:trash-bin-trash-bold',
-                onClick: () => onDelete(row as IIncomeRecord),
-                color: 'error.main',
-              }] : []),
-            ]}
-          />
-        ),
-      } as IColumn] : []),
+      ...(onEdit || onDelete
+        ? [
+            {
+              id: 'actions',
+              label: 'Actions',
+              align: 'left',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              minWidth: 50,
+              render: (_value: unknown, row: unknown) => (
+                <AdaptiveThreeDotsActions
+                  actions={[
+                    ...(onEdit && !(row as any).isAutomatic
+                      ? [
+                          {
+                            id: 'edit',
+                            label: 'Edit',
+                            icon: 'solar:pen-bold',
+                            onClick: () => onEdit(row as IIncomeRecord),
+                          },
+                        ]
+                      : []),
+                    ...(onDelete && !(row as any).isAutomatic
+                      ? [
+                          {
+                            id: 'delete',
+                            label: 'Delete',
+                            icon: 'solar:trash-bin-trash-bold',
+                            onClick: () => onDelete(row as IIncomeRecord),
+                            color: 'error.main',
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              ),
+            } as IColumn,
+          ]
+        : []),
       /**
        * Memoization Justification:
        * Columns configuration is stable unless handlers change.

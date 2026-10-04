@@ -6,8 +6,6 @@ export interface IExpenseCategory {
   name: string;
   description?: string;
   tags: string[];
-  defaultAccountHeadId?: string;
-  defaultAccountHeadName?: string;
   effectiveFrom?: string;
   effectiveTo?: string | null;
   concurrencyStamp: string;

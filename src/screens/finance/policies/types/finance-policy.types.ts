@@ -178,6 +178,8 @@ export interface IRefundPolicy extends Omit<
   deductionExplanation: string;
   allowedPayoutMethods: RefundPayoutMethod[];
   processingTargetDays: number | null;
+  expenseCategoryId?: string | null;
+  defaultPayingBankAccountId?: string | null;
   version?: number;
   isUsedInDownstream?: boolean;
   concurrencyStamp: string;
@@ -260,7 +262,7 @@ export interface ICollectionPolicy extends Omit<
   maximumChargingDays: number | null;
   considerAsIncome: boolean;
   allowOnlineCollection: boolean;
-  lateFeeIncomeHeadId?: string | null;
+  lateFeeIncomeCategoryId?: string | null;
   changeReason?: string | null;
   version?: number;
   isUsedInDownstream?: boolean;

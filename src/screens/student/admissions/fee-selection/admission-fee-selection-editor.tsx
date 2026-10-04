@@ -159,8 +159,12 @@ export function AdmissionFeeSelectionEditor({
                     <Typography key={head.feeHeadId} variant="body2">
                       {head.feeHeadName} ·{' '}
                       {state.currency
-                        ? fCurrency(head.configuredAmount, { currency: state.currency })
-                        : fNumber(head.configuredAmount)}
+                        ? head.isVariable
+                          ? 'Entered during Finance assignment'
+                          : fCurrency(head.configuredAmount ?? 0, { currency: state.currency })
+                        : head.isVariable
+                          ? 'Entered during Finance assignment'
+                          : fNumber(head.configuredAmount ?? 0)}
                     </Typography>
                   ))}
                 {chosen.heads.some((head) => head.isOptional) && (
@@ -174,7 +178,7 @@ export function AdmissionFeeSelectionEditor({
                       .filter((head) => head.isOptional)
                       .map((head) => ({
                         value: head.feeHeadId,
-                        label: `${head.feeHeadName} · ${state.currency ? fCurrency(head.configuredAmount, { currency: state.currency }) : fNumber(head.configuredAmount)}`,
+                        label: `${head.feeHeadName} · ${state.currency ? (head.isVariable ? 'Entered during Finance assignment' : fCurrency(head.configuredAmount ?? 0, { currency: state.currency })) : head.isVariable ? 'Entered during Finance assignment' : fNumber(head.configuredAmount ?? 0)}`,
                       }))}
                     onChange={(value) => formik.setFieldValue('optionalHeadIds', value)}
                     error={Boolean(formik.errors.optionalHeadIds)}

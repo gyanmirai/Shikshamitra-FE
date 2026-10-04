@@ -5,7 +5,7 @@ import type { RootState } from 'src/redux/store';
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { fCurrency } from 'src/utils/format-number';
-import { useGetPayableAgeingQuery } from 'src/redux/finance/accountHeadApi';
+import { useGetPayableAgeingQuery } from 'src/redux/finance/reports/financeReportsApi';
 import {
   Card,
   Table,
