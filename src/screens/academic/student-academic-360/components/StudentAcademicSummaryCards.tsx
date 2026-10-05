@@ -73,6 +73,7 @@ export function StudentAcademicSummaryCards({
 
   return (
     <AcademicInsights
+      buttonSx={{ mb: 0 }}
       title="Student academic insights"
       description="Cohort health, engagement and performance for the selected class and division."
       metrics={metrics}

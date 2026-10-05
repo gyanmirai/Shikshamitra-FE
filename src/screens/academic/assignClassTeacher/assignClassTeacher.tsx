@@ -733,7 +733,13 @@ const ClassTeacherAssignment = () => {
       />
 
       {/* Organization Bar */}
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} justifyContent="space-between" alignItems="center" sx={{ px: 0.5, py: 0.5 }}>
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={1}
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ p: 1, borderRadius: 1, bgcolor: 'background.paper', boxShadow: 'var(--shadows-3)' }}
+      >
         <CustomSelect
           options={allOrganization}
           label="Organization *"
