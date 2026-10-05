@@ -1,9 +1,9 @@
 'use client';
 
 import dayjs from 'dayjs';
+import { useMemo } from 'react';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import { useMemo, useEffect } from 'react';
 import { RootState } from 'src/redux/store';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
@@ -60,6 +60,7 @@ import { CalendarDayDateFields } from './CalendarDayDateFields';
 import { calendarDayValidationSchema } from '../validationSchema';
 import { CalendarDayScopeSection } from './CalendarDayScopeSection';
 import { getSyncedExamId, calendarDayInitialValues } from '../initialValues';
+import { useCalendarLinkedExamSync } from '../hooks/useCalendarLinkedExamSync';
 import {
   type CalendarDayNamedOption,
   ensureSelectedCalendarDayOption,
@@ -208,7 +209,7 @@ const CalendarDayFormDialog = ({
     { academicMediumId: mediumId, skipCount: 0, maxResultCount: 1000 },
     { skip: !mediumId || Number(formik.values.dayType) !== DayType.Exam }
   );
-  const { data: examScheduleResponse, isFetching: isExamScheduleFetching } =
+  const { currentData: examScheduleResponse, isFetching: isExamScheduleFetching } =
     useGetExamScheduleQuery(
       { examId: formik.values.linkedExamId },
       { skip: !isExam || !formik.values.linkedExamId }
@@ -276,47 +277,13 @@ const CalendarDayFormDialog = ({
     };
   });
 
-  useEffect(() => {
-    if (!isExam || !formik.values.linkedExamId) return;
-
-    if (!formik.values.examTypeId && selectedExam?.examTypeId) {
-      formik.setFieldValue('examTypeId', selectedExam.examTypeId);
-    }
-
-    if (!selectedExam?.standardId) return;
-
-    formik.setFieldValue('appliesToAll', false);
-    formik.setFieldValue('standardIds', [selectedExam.standardId]);
-    formik.setFieldValue('divisionId', '');
-  }, [formik, selectedExam, formik.values.linkedExamId, isExam]);
-
-  useEffect(() => {
-    if (!isExam || !formik.values.linkedExamId) return;
-    if (persistedLinkedExamId === formik.values.linkedExamId) return;
-
-    const subjects = examScheduleResponse?.subjects ?? examScheduleResponse?.Subjects ?? [];
-    const scheduledSubject = [...subjects]
-      .filter(
-        (subject: any) =>
-          (subject.examDate || subject.ExamDate) &&
-          (subject.startTime || subject.StartTime) &&
-          (subject.endTime || subject.EndTime)
-      )
-      .sort(
-        (left: any, right: any) =>
-          dayjs(left.examDate ?? left.ExamDate).valueOf() -
-          dayjs(right.examDate ?? right.ExamDate).valueOf()
-      )[0];
-
-    if (!scheduledSubject) return;
-
-    const examDate = scheduledSubject.examDate ?? scheduledSubject.ExamDate;
-    const startTime = scheduledSubject.startTime ?? scheduledSubject.StartTime;
-    const endTime = scheduledSubject.endTime ?? scheduledSubject.EndTime;
-    formik.setFieldValue('date', dayjs(examDate));
-    formik.setFieldValue('examStartTime', startTime ? dayjs(startTime).format('HH:mm:ss') : '');
-    formik.setFieldValue('examEndTime', endTime ? dayjs(endTime).format('HH:mm:ss') : '');
-  }, [formik, examScheduleResponse, formik.values.linkedExamId, isExam, persistedLinkedExamId]);
+  useCalendarLinkedExamSync({
+    enabled: open && isExam,
+    formik,
+    selectedExam,
+    schedule: examScheduleResponse,
+    persistedLinkedExamId,
+  });
 
   const handleDayTypeChange = (value: DayType | '') => {
     formik.setFieldValue('dayType', value);
