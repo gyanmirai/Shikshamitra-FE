@@ -24,10 +24,12 @@ import {
 } from '../../workflow-template';
 
 type Props = {
-  value: WorkflowStarterId;
+  value: WorkflowStarterId | undefined;
   onChange: (value: WorkflowStarterId) => void;
   includeBlank?: boolean;
   columns?: 1 | 2;
+  allowedIds?: readonly WorkflowStarterId[];
+  showCounts?: boolean;
   onPreviewSelected?: () => void;
 };
 
@@ -50,15 +52,19 @@ export function WorkflowTemplateSelector({
   onChange,
   includeBlank = false,
   columns = 2,
+  allowedIds,
+  showCounts = true,
   onPreviewSelected,
 }: Props) {
-  const templates = includeBlank ? ADMISSION_WORKFLOW_STARTERS : ADMISSION_WORKFLOW_TEMPLATES;
+  const templates = (
+    includeBlank ? ADMISSION_WORKFLOW_STARTERS : ADMISSION_WORKFLOW_TEMPLATES
+  ).filter((template) => !allowedIds || allowedIds.includes(template.id));
 
   return (
     <RadioGroup
       name="starterJourney"
       aria-label="Workflow starting point"
-      value={value}
+      value={value ?? ''}
       onChange={(event) => onChange(event.target.value as WorkflowStarterId)}
     >
       <Box
@@ -125,26 +131,28 @@ export function WorkflowTemplateSelector({
                         {template.description}
                       </Typography>
                     </Box>
-                    <Stack
-                      direction="row"
-                      spacing={0.75}
-                      useFlexGap
-                      flexWrap="wrap"
-                      sx={{
-                        gridColumn: { xs: '2 / -1', sm: columns === 1 ? 'auto' : '2 / -1' },
-                      }}
-                    >
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={`${template.stages.length} stages`}
-                      />
-                      <Chip
-                        size="small"
-                        variant="outlined"
-                        label={`${Math.max(template.stages.length - 1, 0)} routes`}
-                      />
-                    </Stack>
+                    {showCounts && (
+                      <Stack
+                        direction="row"
+                        spacing={0.75}
+                        useFlexGap
+                        flexWrap="wrap"
+                        sx={{
+                          gridColumn: { xs: '2 / -1', sm: columns === 1 ? 'auto' : '2 / -1' },
+                        }}
+                      >
+                        <Chip
+                          size="small"
+                          variant="outlined"
+                          label={`${template.stages.length} stages`}
+                        />
+                        <Chip
+                          size="small"
+                          variant="outlined"
+                          label={`${Math.max(template.stages.length - 1, 0)} routes`}
+                        />
+                      </Stack>
+                    )}
                   </Box>
                 }
                 sx={{

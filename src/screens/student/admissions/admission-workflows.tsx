@@ -78,6 +78,8 @@ export default function AdmissionWorkflowsScreen() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
         heading="Admission Stage"
+        isBack={actions.createDialog.value}
+        onBack={() => actions.createCloseRef.current?.()}
         description="Design, validate, version, and publish the admission journey used by offerings."
         links={[
           { name: 'Students', href: studentPaths.dashboard },
@@ -92,61 +94,67 @@ export default function AdmissionWorkflowsScreen() {
           breadcrumbs: {},
         }}
         action={
-          <Stack direction="row" spacing={1} alignItems="center">
-            <WorkflowListFilters filters={filters} onUpdate={filterState.update} />
-            <Button
-              size="small"
-              variant="contained"
-              disabled={!actions.allowed.canCreate}
-              startIcon={<Iconify icon="mdi:plus" />}
-              onClick={actions.createDialog.onTrue}
-              sx={{ minWidth: 140 }}
-            >
-              Add Workflow
-            </Button>
-          </Stack>
+          !actions.createDialog.value ? (
+            <Stack direction="row" spacing={1} alignItems="center">
+              <WorkflowListFilters filters={filters} onUpdate={filterState.update} />
+              <Button
+                size="small"
+                variant="contained"
+                disabled={!actions.allowed.canCreate}
+                startIcon={<Iconify icon="mdi:plus" />}
+                onClick={actions.createDialog.onTrue}
+                sx={{ minWidth: 140 }}
+              >
+                Add Workflow
+              </Button>
+            </Stack>
+          ) : undefined
         }
       />
-      {query.isError && <AdmissionQueryError onRetry={() => query.refetch()} />}
-      <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-        <CustomizableTable
-          tableId="admission-workflows"
-          tableTitle="Admission stage workflows"
-          wrapperProps={{ sx: { height: 1 } }}
-          tableContainerProps={{ sx: { height: 1 } }}
-          columns={columns}
-          data={query.data?.items ?? []}
-          handleRowClick={(row) => actions.navigate(row as AdmissionWorkflow, 'preview')}
-          rowProps={(row) => ({
-            tabIndex: 0,
-            sx: { cursor: 'pointer' },
-            onKeyDown: (event) => {
-              if (
-                event.target === event.currentTarget &&
-                (event.key === 'Enter' || event.key === ' ')
-              ) {
-                event.preventDefault();
-                actions.navigate(row as AdmissionWorkflow, 'preview');
-              }
-            },
-          })}
-          isLoading={query.isLoading}
-          isPagination
-          isSearch
-          serverSide
-          serverSidePagination
-          serverSideSearch
-          page={filters.page}
-          rowsPerPage={filters.rowsPerPage}
-          searchTerm={filters.search}
-          totalCount={query.data?.totalCount ?? 0}
-          onServerSearch={(search) => filterState.update({ search })}
-          onServerPagination={(page, rowsPerPage) =>
-            filterState.update({ page: page - 1, rowsPerPage })
-          }
-          noDataText="No admission workflows configured yet. Create a draft to begin."
-        />
-      </Box>
+      {!actions.createDialog.value && query.isError && (
+        <AdmissionQueryError onRetry={() => query.refetch()} />
+      )}
+      {!actions.createDialog.value && (
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <CustomizableTable
+            tableId="admission-workflows"
+            tableTitle="Admission stage workflows"
+            wrapperProps={{ sx: { height: 1 } }}
+            tableContainerProps={{ sx: { height: 1 } }}
+            columns={columns}
+            data={query.data?.items ?? []}
+            handleRowClick={(row) => actions.navigate(row as AdmissionWorkflow, 'preview')}
+            rowProps={(row) => ({
+              tabIndex: 0,
+              sx: { cursor: 'pointer' },
+              onKeyDown: (event) => {
+                if (
+                  event.target === event.currentTarget &&
+                  (event.key === 'Enter' || event.key === ' ')
+                ) {
+                  event.preventDefault();
+                  actions.navigate(row as AdmissionWorkflow, 'preview');
+                }
+              },
+            })}
+            isLoading={query.isLoading}
+            isPagination
+            isSearch
+            serverSide
+            serverSidePagination
+            serverSideSearch
+            page={filters.page}
+            rowsPerPage={filters.rowsPerPage}
+            searchTerm={filters.search}
+            totalCount={query.data?.totalCount ?? 0}
+            onServerSearch={(search) => filterState.update({ search })}
+            onServerPagination={(page, rowsPerPage) =>
+              filterState.update({ page: page - 1, rowsPerPage })
+            }
+            noDataText="No admission workflows configured yet. Create a draft to begin."
+          />
+        </Box>
+      )}
       <WorkflowListDialogs actions={actions} />
       <WorkflowGovernanceSettingsDialog
         open={governanceDialog.value}

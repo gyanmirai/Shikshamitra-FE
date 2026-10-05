@@ -36,10 +36,6 @@ export function AdmissionUnmatchedInquiryDrawer({ open, onClose }: { open: boole
       setError('Choose an admission period and enter applicant and guardian details.');
       return;
     }
-    if ((source === 10 || source === 11) && !sourceDetail.trim()) {
-      setError('Enter the QR campaign or school fair details.');
-      return;
-    }
     if (separateFamily && !duplicateReason.trim()) {
       setError('Enter why a separate family record is needed.');
       return;
@@ -94,9 +90,9 @@ export function AdmissionUnmatchedInquiryDrawer({ open, onClose }: { open: boole
           value={source} onChange={(event) => setSource(Number(event.target.value) as AdmissionInquirySource)}>
           {INQUIRY_SOURCE_OPTIONS.map((option) => <MenuItem key={option.value} value={option.value}>{option.label}</MenuItem>)}
         </TextField>
-        <TextField fullWidth size="small" label="Source details" required={source === 10 || source === 11} value={sourceDetail}
+        <TextField fullWidth size="small" label="Source details" value={sourceDetail}
           onChange={(event) => setSourceDetail(event.target.value)}
-          helperText="For QR code or school fair, record the event, campaign, or location." />
+          helperText="Optional event, campaign, referral, or location details." />
         <Grid container spacing={1.5}>
           <Grid size={{ xs: 12, sm: 6 }}><TextField fullWidth required size="small" label="Applicant first name"
             value={applicantFirstName} onChange={(event) => setApplicantFirstName(event.target.value)} /></Grid>

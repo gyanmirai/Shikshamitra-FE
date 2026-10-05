@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { OTPInput } from 'input-otp';
 import { Box, FormLabel, FormHelperText } from '@mui/material';
 
@@ -86,45 +86,54 @@ const OtpInputField: React.FC<OtpInputFieldProps> = ({
   helperText,
   disabled = false,
   pasteTransformer,
-}) => (
-  <Box sx={{ position: 'relative' }}>
-    <FormLabel
-      error={error}
-      sx={{
-        fontSize: '0.75rem',
-        display: 'block',
-        mb: 0.5,
-        color: error ? 'error.main' : 'text.secondary',
-      }}
-    >
-      {label}
-    </FormLabel>
-    <OTPInput
-      maxLength={maxLength}
-      value={value}
-      onChange={onChange}
-      onBlur={onBlur}
-      pattern={pattern}
-      disabled={disabled}
-      pasteTransformer={pasteTransformer}
-      containerClassName=""
-      render={({ slots }) => (
-        <Box display="flex" gap={1} alignItems="center" flexWrap="nowrap">
-          {slots.map((slot, i) => (
-            <React.Fragment key={i}>
-              <Slot {...slot} error={error} disabled={disabled} />
-              {groupBy && i < maxLength - 1 && (i + 1) % groupBy === 0 && <Sep />}
-            </React.Fragment>
-          ))}
-        </Box>
+}) => {
+  const inputId = useId();
+  const helperId = `${inputId}-helper`;
+
+  return (
+    <Box sx={{ position: 'relative' }}>
+      <FormLabel
+        htmlFor={inputId}
+        error={error}
+        sx={{
+          fontSize: '0.75rem',
+          display: 'block',
+          mb: 0.5,
+          color: error ? 'error.main' : 'text.secondary',
+        }}
+      >
+        {label}
+      </FormLabel>
+      <OTPInput
+        id={inputId}
+        aria-invalid={error || undefined}
+        aria-describedby={helperText ? helperId : undefined}
+        maxLength={maxLength}
+        value={value}
+        onChange={onChange}
+        onBlur={onBlur}
+        pattern={pattern}
+        disabled={disabled}
+        pasteTransformer={pasteTransformer}
+        containerClassName=""
+        render={({ slots }) => (
+          <Box display="flex" gap={1} alignItems="center" flexWrap="nowrap">
+            {slots.map((slot, i) => (
+              <React.Fragment key={i}>
+                <Slot {...slot} error={error} disabled={disabled} />
+                {groupBy && i < maxLength - 1 && (i + 1) % groupBy === 0 && <Sep />}
+              </React.Fragment>
+            ))}
+          </Box>
+        )}
+      />
+      {helperText && (
+        <FormHelperText id={helperId} error={error} sx={{ mx: '14px', mt: '3px' }}>
+          {helperText}
+        </FormHelperText>
       )}
-    />
-    {helperText && (
-      <FormHelperText error={error} sx={{ mx: '14px', mt: '3px' }}>
-        {helperText}
-      </FormHelperText>
-    )}
-  </Box>
-);
+    </Box>
+  );
+};
 
 export default OtpInputField;

@@ -76,12 +76,17 @@ export function AdmissionInquiryDuplicateMatches({
         multiline
         minRows={2}
         label="Reason for creating a separate family"
+        required
         value={overrideReason}
         onChange={(event) => onOverrideReasonChange(event.target.value)}
         slotProps={{ htmlInput: { maxLength: 512 } }}
-        helperText="Some managed workflows require this explanation."
+        helperText="Explain why this inquiry belongs to a separate family. Use Add sibling for another child in the same family."
       />
-      <Button variant="outlined" disabled={busy} onClick={onCreateSeparate}>
+      <Button
+        variant="outlined"
+        disabled={busy || !overrideReason.trim()}
+        onClick={onCreateSeparate}
+      >
         Create separate family
       </Button>
     </Stack>

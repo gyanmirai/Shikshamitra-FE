@@ -423,16 +423,6 @@ export default function AdmissionCyclesScreen() {
                 },
               ]
             : []),
-          ...(canAdd && (cycle.status === 0 || cycle.status === 1)
-            ? [
-                {
-                  id: 'schedule',
-                  label: `Schedule actions `,
-                  icon: GlobalIcons.clock,
-                  onClick: () => openConfiguration('schedule', cycle),
-                },
-              ]
-            : []),
           ...(canAdd
             ? [
                 {

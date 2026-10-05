@@ -7,17 +7,7 @@ import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import {
-  Box,
-  Alert,
-  Stack,
-  Button,
-  Checkbox,
-  TextField,
-  Typography,
-  CircularProgress,
-  FormControlLabel,
-} from '@mui/material';
+import { Box, Alert, Stack, Button, TextField, Typography, CircularProgress } from '@mui/material';
 import {
   type AdmissionCycle,
   type AdmissionCycleAction,
@@ -65,15 +55,11 @@ export function AdmissionCycleActionDialog({
 }: Props) {
   const [reason, setReason] = useState('');
   const [newEndDate, setNewEndDate] = useState('');
-  const [confirmOfferings, setConfirmOfferings] = useState(false);
-  const [dismissedNotices, setDismissedNotices] = useState<Set<string>>(new Set());
   const [loadImpact, impactQuery] = useLazyGetAdmissionCycleImpactQuery();
 
   useEffect(() => {
     setReason('');
     setNewEndDate(cycle?.endDate?.slice(0, 10) ?? '');
-    setConfirmOfferings(false);
-    setDismissedNotices(new Set());
     if (cycle && action && action !== 'publish') loadImpact(cycle.id);
   }, [action, cycle, loadImpact]);
 
@@ -97,9 +83,8 @@ export function AdmissionCycleActionDialog({
     !impactError;
   const impactPending = needsImpact && !impactReady && !impactError;
   const impact = impactReady ? impactQuery.data : null;
-  const needsReason = action === 'close' || action === 'reopen' || action === 'archive';
+  const needsReason = action === 'reopen' || action === 'archive';
   const hasBlockingValidation = action === 'publish' && Boolean(validation?.errors.length);
-  const needsOfferingConfirmation = action === 'close' && Boolean(impact?.activeOfferingCount);
   const cannotArchive = action === 'archive' && Boolean(impact?.activeOfferingCount);
   const cannotDelete =
     action === 'delete' &&
@@ -112,14 +97,17 @@ export function AdmissionCycleActionDialog({
     cannotArchive ||
     cannotDelete ||
     (needsReason && !reason.trim()) ||
-    (needsOfferingConfirmation && !confirmOfferings) ||
     (action === 'reopen' && (!newEndDate || dayjs(newEndDate).isBefore(dayjs(), 'day')));
 
   const confirm = async () => {
     await onConfirm({
       concurrencyStamp: cycle.concurrencyStamp,
-      reason: reason.trim() || undefined,
-      confirmActiveOfferings: confirmOfferings,
+      // Close cycle is the staff confirmation; keep the required audit and API acknowledgement.
+      reason:
+        action === 'close'
+          ? 'Admission cycle closed by staff confirmation.'
+          : reason.trim() || undefined,
+      confirmActiveOfferings: action === 'close' && Boolean(impact?.activeOfferingCount),
       ...(action === 'reopen' ? { newEndDate } : {}),
     });
   };
@@ -145,6 +133,11 @@ export function AdmissionCycleActionDialog({
             <Typography variant="body2">
               The draft admission cycle <strong>&ldquo;{cycle.name}&rdquo;</strong> will be
               permanently deleted.
+            </Typography>
+          ) : action === 'close' ? (
+            <Typography variant="body2">
+              Closing <strong>&ldquo;{cycle.name}&rdquo;</strong> stops new applications. Existing
+              applications remain available for review.
             </Typography>
           ) : action !== 'publish' ? (
             <Typography variant="body2">
@@ -218,7 +211,7 @@ export function AdmissionCycleActionDialog({
             </>
           )}
 
-          {action !== 'publish' && action !== 'delete' && (
+          {(action === 'reopen' || action === 'archive') && (
             <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1 }}>
               <Box>
                 <Typography variant="caption" color="text.secondary">
@@ -241,26 +234,6 @@ export function AdmissionCycleActionDialog({
             </Box>
           )}
 
-          {action === 'close' && !dismissedNotices.has('closing') && (
-            <Alert
-              severity="warning"
-              closeText="Dismiss closing warning"
-              onClose={() => setDismissedNotices((current) => new Set(current).add('closing'))}
-            >
-              New applications stop immediately. Existing applications remain available for review.
-            </Alert>
-          )}
-          {needsOfferingConfirmation && (
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={confirmOfferings}
-                  onChange={(event) => setConfirmOfferings(event.target.checked)}
-                />
-              }
-              label={`I understand ${impact?.activeOfferingCount} active offering(s) will stop accepting applications.`}
-            />
-          )}
           {cannotArchive && (
             <Alert severity="error">
               Close or deactivate active offerings before archiving this cycle.

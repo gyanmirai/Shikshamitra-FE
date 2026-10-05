@@ -377,12 +377,6 @@ export function validateAdmissionInquiry(
     ...(policy?.allowedSources.length && !policy.allowedSources.includes(values.source)
       ? { source: 'Choose a source allowed by this admission workflow' }
       : {}),
-    ...((policy?.requireSourceDetailFor.includes(values.source) ||
-      values.source === 10 ||
-      values.source === 11) &&
-    !values.sourceDetail.trim()
-      ? { sourceDetail: 'Source details are required for this source' }
-      : {}),
     ...(Object.keys(fieldErrors).length ? { fields: fieldErrors } : {}),
   };
 }

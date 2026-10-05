@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
 import Link from 'next/link';
@@ -13,6 +14,7 @@ import { usePopover, CustomPopover } from 'src/components/custom-popover';
 import {
   Box,
   Tab,
+  Card,
   Alert,
   Stack,
   Paper,
@@ -28,6 +30,9 @@ type View = 'configure' | 'map';
 
 export type WorkflowBuilderHeaderProps = {
   workflow: AdmissionWorkflow;
+  afterBreadcrumb?: ReactNode;
+  children?: ReactNode;
+  detailsOpen?: boolean;
   view?: View;
   viewHrefs?: Record<View, string>;
   dirty: boolean;
@@ -223,6 +228,9 @@ export function WorkflowBuilderMobileActions(props: LifecycleActionsProps) {
 export function WorkflowBuilderHeader(props: WorkflowBuilderHeaderProps) {
   const {
     workflow,
+    detailsOpen,
+    afterBreadcrumb,
+    children,
     view = 'configure',
     viewHrefs = { configure: '#', map: '#view=map' },
     readOnly,
@@ -262,9 +270,11 @@ export function WorkflowBuilderHeader(props: WorkflowBuilderHeaderProps) {
           { name: 'Admission Stage' },
         ]}
         action={
-          <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-            <WorkflowLifecycleActions {...props} />
-          </Box>
+          !detailsOpen ? (
+            <Box sx={{ display: { xs: 'none', md: 'block' } }}>
+              <WorkflowLifecycleActions {...props} />
+            </Box>
+          ) : undefined
         }
         slotProps={{
           action: {},
@@ -278,138 +288,156 @@ export function WorkflowBuilderHeader(props: WorkflowBuilderHeaderProps) {
         }}
       />
 
-      <Paper
-        component="section"
-        variant="outlined"
-        aria-label="Workflow version controls"
-        sx={{ overflow: 'hidden' }}
-      >
-        <Stack
-          direction="row"
-          alignItems={{ xs: 'flex-start', md: 'center' }}
-          justifyContent="space-between"
-          spacing={1}
+      {!detailsOpen && (
+        <Card
+          component="section"
+          aria-label="Workflow journey workspace"
           sx={{
-            minHeight: 52,
-            px: { xs: 0.5, sm: 1 },
-            display: 'grid',
-            gridTemplateColumns: 'minmax(0, 1fr) auto',
+            display: 'flex',
+            flexDirection: 'column',
+            flex: 1,
+            minHeight: 0,
+            minWidth: 0,
+            gap: 1.5,
+            p: { xs: 1.5, sm: 2 },
+            overflow: { xs: 'visible', md: 'hidden' },
           }}
         >
-          <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
-            <CustomTabs
-              value={view}
-              aria-label="Workflow builder view"
-              variant="scrollable"
-              scrollButtons={false}
-              guardUnsavedChanges={false}
-              slotProps={{
-                scroller: { p: 0.5 },
-                indicator: { display: 'none' },
-                tab: {
-                  minHeight: { xs: 44, md: 42 },
-                  px: { xs: 1.5, sm: 2.5 },
-                  borderRadius: 1.5,
-                },
-                selected: {
-                  fontWeight: 700,
-                  color: 'text.primary',
-                  bgcolor: 'background.neutral',
-                },
-              }}
-              sx={{ width: 1, minWidth: 0, minHeight: { xs: 52, md: 50 } }}
-            >
-              {WORKFLOW_VIEWS.map((item) => (
-                <Tab
-                  key={item.value}
-                  component={Link}
-                  href={viewHrefs[item.value]}
-                  prefetch={false}
-                  value={item.value}
-                  id={`workflow-builder-${item.value}-tab`}
-                  aria-controls={`workflow-builder-${item.value}-panel`}
-                  icon={<Iconify icon={item.icon} width={18} />}
-                  iconPosition="start"
-                  label={item.label}
-                />
-              ))}
-            </CustomTabs>
-          </Box>
-
-          <Stack
-            role="toolbar"
-            aria-label="Workflow builder tools"
-            direction="row"
-            spacing={0.5}
-            alignItems="center"
-            sx={{
-              flexShrink: 0,
-              '& .MuiButton-root': { minHeight: { xs: 44, md: 36 } },
-            }}
+          {afterBreadcrumb}
+          <Paper
+            component="section"
+            variant="outlined"
+            aria-label="Workflow version controls"
+            sx={{ overflow: 'hidden', flexShrink: 0 }}
           >
-            {!readOnly && (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:auto-fix" width={18} />}
-                onClick={onApplyTemplate}
-                sx={{ display: { xs: 'none', lg: 'inline-flex' } }}
-              >
-                Template
-              </Button>
-            )}
-            <Button
-              size="small"
-              variant="outlined"
-              startIcon={<Iconify icon="mdi:eye-outline" width={18} />}
-              onClick={() => onOpenPanel('preview')}
-              sx={{ display: { xs: 'none', md: 'inline-flex' } }}
+            <Stack
+              direction="row"
+              alignItems={{ xs: 'flex-start', md: 'center' }}
+              justifyContent="space-between"
+              spacing={1}
+              sx={{
+                minHeight: 52,
+                px: { xs: 0.5, sm: 1 },
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1fr) auto',
+              }}
             >
-              Preview
-            </Button>
-            {canValidate && (
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={validating}
-                startIcon={<Iconify icon="mdi:check-decagram-outline" width={18} />}
-                onClick={onValidate}
-                sx={{ display: { xs: 'none', lg: 'inline-flex' } }}
-              >
-                Validate
-              </Button>
-            )}
-            <CustomTooltip title="More workflow actions">
-              <IconButton
-                size="small"
-                aria-label="More workflow actions"
-                aria-haspopup="menu"
-                aria-expanded={morePopover.open}
-                onClick={morePopover.onOpen}
+              <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
+                <CustomTabs
+                  value={view}
+                  aria-label="Workflow builder view"
+                  variant="scrollable"
+                  scrollButtons={false}
+                  guardUnsavedChanges={false}
+                  slotProps={{
+                    scroller: { p: 0.5 },
+                    indicator: { display: 'none' },
+                    tab: {
+                      minHeight: { xs: 44, md: 42 },
+                      px: { xs: 1.5, sm: 2.5 },
+                      borderRadius: 1.5,
+                    },
+                    selected: {
+                      fontWeight: 700,
+                      color: 'text.primary',
+                      bgcolor: 'background.neutral',
+                    },
+                  }}
+                  sx={{ width: 1, minWidth: 0, minHeight: { xs: 52, md: 50 } }}
+                >
+                  {WORKFLOW_VIEWS.map((item) => (
+                    <Tab
+                      key={item.value}
+                      component={Link}
+                      href={viewHrefs[item.value]}
+                      prefetch={false}
+                      value={item.value}
+                      id={`workflow-builder-${item.value}-tab`}
+                      aria-controls={`workflow-builder-${item.value}-panel`}
+                      icon={<Iconify icon={item.icon} width={18} />}
+                      iconPosition="start"
+                      label={item.label}
+                    />
+                  ))}
+                </CustomTabs>
+              </Box>
+
+              <Stack
+                role="toolbar"
+                aria-label="Workflow builder tools"
+                direction="row"
+                spacing={0.5}
+                alignItems="center"
                 sx={{
-                  width: { xs: 44, md: 36 },
-                  height: { xs: 44, md: 36 },
-                  display: { xs: 'none', sm: 'inline-flex' },
+                  flexShrink: 0,
                 }}
               >
-                <Iconify icon="mdi:dots-horizontal" />
-              </IconButton>
-            </CustomTooltip>
-            <Button
-              size="small"
-              variant="outlined"
-              aria-label="Workflow actions"
-              aria-haspopup="menu"
-              aria-expanded={morePopover.open}
-              endIcon={<Iconify icon="mdi:chevron-down" />}
-              onClick={morePopover.onOpen}
-              sx={{ minWidth: 92, minHeight: 44, display: { xs: 'inline-flex', sm: 'none' } }}
-            >
-              Actions
-            </Button>
-          </Stack>
-        </Stack>
-      </Paper>
+                {!readOnly && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Iconify icon="mdi:auto-fix" width={18} />}
+                    onClick={onApplyTemplate}
+                    sx={{ display: { xs: 'none', lg: 'inline-flex' } }}
+                  >
+                    Template
+                  </Button>
+                )}
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<Iconify icon="mdi:eye-outline" width={18} />}
+                  onClick={() => onOpenPanel('preview')}
+                  sx={{ display: { xs: 'none', md: 'inline-flex' } }}
+                >
+                  Preview
+                </Button>
+                {canValidate && (
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    disabled={validating}
+                    startIcon={<Iconify icon="mdi:check-decagram-outline" width={18} />}
+                    onClick={onValidate}
+                    sx={{ display: { xs: 'none', lg: 'inline-flex' } }}
+                  >
+                    Validate
+                  </Button>
+                )}
+                <CustomTooltip title="More workflow actions">
+                  <IconButton
+                    size="small"
+                    aria-label="More workflow actions"
+                    aria-haspopup="menu"
+                    aria-expanded={morePopover.open}
+                    onClick={morePopover.onOpen}
+                    sx={{
+                      width: { xs: 44, md: 36 },
+                      height: { xs: 44, md: 36 },
+                      display: { xs: 'none', sm: 'inline-flex' },
+                    }}
+                  >
+                    <Iconify icon="mdi:dots-horizontal" />
+                  </IconButton>
+                </CustomTooltip>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  aria-label="Workflow actions"
+                  aria-haspopup="menu"
+                  aria-expanded={morePopover.open}
+                  endIcon={<Iconify icon="mdi:chevron-down" />}
+                  onClick={morePopover.onOpen}
+                  sx={{ minWidth: 92, display: { xs: 'inline-flex', sm: 'none' } }}
+                >
+                  Actions
+                </Button>
+              </Stack>
+            </Stack>
+          </Paper>
+          {children}
+        </Card>
+      )}
 
       <CustomPopover
         open={morePopover.open}

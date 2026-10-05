@@ -7,8 +7,13 @@ import type {
 import { shikshaMitraToast } from 'src/components/toast';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
-import { newField, nextFieldOrder, hasSystemBinding } from '../form-dialog-model';
 import { nextStepNumber, nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
+import {
+  newField,
+  nextFieldOrder,
+  hasSystemBinding,
+  nextFieldDisplayOrder,
+} from '../form-dialog-model';
 import {
   type AdmissionFormSectionTemplateId,
   materializeAdmissionFormSectionTemplate,
@@ -145,6 +150,7 @@ export function useFormBuilderCommands(
       metadata?.fieldType ?? fieldType,
       preset
     );
+    field.displayOrder = nextFieldDisplayOrder(formik.values.sections);
     if (metadata) {
       field.code = metadata.key.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase();
       field.label = metadata.displayName;
@@ -183,7 +189,7 @@ export function useFormBuilderCommands(
       step.sections.some(({ section }) => section.id === selected?.id)
     );
     const stepId = isStepper ? (selectedStep?.id ?? crypto.randomUUID()) : undefined;
-    const fieldOrder = nextFieldOrder(formik.values.sections);
+    const fieldOrder = nextFieldDisplayOrder(formik.values.sections);
     const usedCodes = new Set(
       formik.values.sections.flatMap((section) =>
         section.fields.map((field) => field.code.toUpperCase())

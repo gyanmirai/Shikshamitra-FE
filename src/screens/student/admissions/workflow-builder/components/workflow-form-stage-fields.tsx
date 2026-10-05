@@ -6,12 +6,8 @@ import type {
   AdmissionWorkflowStageTypeMetadata,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useRef, useEffect } from 'react';
-import { useTabs } from 'src/hooks/use-tabs';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
-import { CustomTabs } from 'src/components/custom-tabs';
-import { Box, Tab, Badge, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 import { WorkflowFormSettings } from './workflow-form-settings';
 import { WorkflowStageNextSteps } from './workflow-stage-next-steps';
@@ -31,13 +27,9 @@ type Props = {
   formDetailsError?: boolean;
   onRetryFormDetails?: () => void;
   readOnly: boolean;
+  activeStep: number;
+  onGoToBasics: () => void;
 };
-
-const FORM_STAGE_TABS = [
-  { value: 'basics', label: 'Basics', icon: 'mdi:file-document-outline' },
-  { value: 'process', label: 'Process', icon: 'mdi:play-outline' },
-  { value: 'settings', label: 'Settings', icon: 'mdi:cog-outline' },
-] as const;
 
 export function WorkflowFormStageFields(props: Props) {
   const {
@@ -51,92 +43,19 @@ export function WorkflowFormStageFields(props: Props) {
     readOnly,
     stages,
     transitions,
+    activeStep,
+    onGoToBasics,
   } = props;
-  const tabs = useTabs(FORM_STAGE_TABS[0].value);
-  const hasConfigurationError = Boolean(formik.errors.configurationJson);
-  const lastSubmit = useRef(formik.submitCount);
-
-  useEffect(() => {
-    if (formik.isValidating || formik.isSubmitting || lastSubmit.current === formik.submitCount)
-      return;
-    lastSubmit.current = formik.submitCount;
-    if (formik.errors.name || formik.errors.code || (hasConfigurationError && !formDefinitionId)) {
-      tabs.setValue('basics');
-    } else if (hasConfigurationError) {
-      tabs.setValue('process');
-    }
-  }, [
-    formDefinitionId,
-    formik.errors.code,
-    formik.errors.name,
-    formik.submitCount,
-    formik.isValidating,
-    formik.isSubmitting,
-    hasConfigurationError,
-    tabs,
-  ]);
 
   return (
-    <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-      <CustomTabs
-        value={tabs.value}
-        onChange={tabs.onChange}
-        variant="fullWidth"
-        guardUnsavedChanges={false}
-        aria-label="Form stage configuration"
-        sx={{
-          borderBottom: 1,
-          borderColor: 'divider',
-          '& .MuiTabs-indicator': { display: 'none' },
-        }}
-        slotProps={{
-          scroller: { p: 0 },
-          tab: {
-            minHeight: 44,
-            px: { xs: 1, sm: 2 },
-            borderBottom: 2,
-            borderColor: 'transparent',
-          },
-          selected: { borderColor: 'success.main', color: 'text.primary' },
-        }}
-      >
-        {FORM_STAGE_TABS.map((tab) => {
-          const needsAttention = tab.value === 'process' && hasConfigurationError;
-          return (
-            <Tab
-              key={tab.value}
-              id={`form-stage-${tab.value}-tab`}
-              aria-controls={`form-stage-${tab.value}-panel`}
-              value={tab.value}
-              icon={<Iconify icon={tab.icon} width={20} />}
-              iconPosition="start"
-              label={
-                needsAttention ? (
-                  <Badge color="error" variant="dot">
-                    <Typography component="span" variant="body2" sx={{ pr: 0.75 }}>
-                      {tab.label}
-                    </Typography>
-                  </Badge>
-                ) : (
-                  tab.label
-                )
-              }
-              aria-label={needsAttention ? `${tab.label}, needs attention` : tab.label}
-            />
-          );
-        })}
-      </CustomTabs>
-
-      <Scrollbar
-        id={`form-stage-${tabs.value}-panel`}
-        role="tabpanel"
-        aria-labelledby={`form-stage-${tabs.value}-tab`}
-        aria-label={`${String(tabs.value)} stage settings`}
-        sx={{ flex: 1, minHeight: 0 }}
-      >
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
-          {tabs.value === 'basics' && <WorkflowFormStageBasics {...props} />}
-          {tabs.value === 'process' && (
+    <Stack spacing={2} sx={{ p: 2 }}>
+      {activeStep === 0 ? (
+        <FormSectionCard title="Basics" icon="mdi:file-document-outline">
+          <WorkflowFormStageBasics {...props} />
+        </FormSectionCard>
+      ) : (
+        <>
+          <FormSectionCard title="Settings" icon="mdi:cog-outline">
             <WorkflowFormSettings
               formik={formik}
               forms={forms}
@@ -146,29 +65,20 @@ export function WorkflowFormStageFields(props: Props) {
               onRetryFormDetails={onRetryFormDetails}
               readOnly={readOnly}
               available={metadata?.supportedConfiguration?.includes('form') === true}
-              onGoToBasics={() => tabs.setValue('basics')}
+              onGoToBasics={onGoToBasics}
             />
-          )}
-          {tabs.value === 'settings' && (
-            <>
-              <Box sx={{ mb: 2 }}>
-                <WorkflowStageCompletionSummary
-                  stage={formik.values}
-                  error={formik.errors.configurationJson}
-                />
-              </Box>
-              <WorkflowFormStageSettings {...props} />
-              <Box sx={{ mt: 2 }}>
-                <WorkflowStageNextSteps
-                  stage={formik.values}
-                  stages={stages}
-                  transitions={transitions}
-                />
-              </Box>
-            </>
-          )}
-        </Box>
-      </Scrollbar>
-    </Box>
+          </FormSectionCard>
+          <WorkflowStageCompletionSummary stage={formik.values} />
+          <WorkflowFormStageSettings {...props} />
+          <FormSectionCard title="Next steps" icon="mdi:arrow-decision-outline">
+            <WorkflowStageNextSteps
+              stage={formik.values}
+              stages={stages}
+              transitions={transitions}
+            />
+          </FormSectionCard>
+        </>
+      )}
+    </Stack>
   );
 }

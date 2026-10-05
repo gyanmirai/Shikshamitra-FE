@@ -1,8 +1,16 @@
-import type { AdmissionIntakeSetup } from 'src/redux/student/admissions/admission-intake-profiles-api';
+import type { ReactNode, ComponentProps } from 'react';
+import type CustomizableTable from 'src/components/customizabaleTable';
+import type {
+  AdmissionIntakeSetup,
+  AdmissionPublicInquiryLink,
+} from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import userEvent from '@testing-library/user-event';
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, within, waitFor, fireEvent } from '@testing-library/react';
 
 import { AdmissionPublicInquiryLinks } from './admission-public-inquiry-links';
 
@@ -17,6 +25,11 @@ const hooks = vi.hoisted(() => ({
   create: vi.fn(),
   close: vi.fn(),
   setupQuery: vi.fn(),
+  links: [] as AdmissionPublicInquiryLink[],
+  revoke: vi.fn(),
+  setForm: vi.fn(),
+  revokeLoading: false,
+  formLoading: false,
 }));
 
 vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
@@ -24,10 +37,16 @@ vi.mock('src/redux/student/admissions/admission-intake-profiles-api', () => ({
     hooks.setupQuery(...args);
     return hooks.setups;
   },
-  useGetAdmissionPublicInquiryLinksQuery: () => ({ data: [], isLoading: false }),
+  useGetAdmissionPublicInquiryLinksQuery: () => ({ data: hooks.links, isLoading: false }),
   useCreateAdmissionPublicInquiryLinkMutation: () => [hooks.create, { isLoading: false }],
-  useRevokeAdmissionPublicInquiryLinkMutation: () => [vi.fn(), { isLoading: false }],
-  useSetAdmissionPublicInquiryLinkFormMutation: () => [vi.fn(), { isLoading: false }],
+  useRevokeAdmissionPublicInquiryLinkMutation: () => [
+    hooks.revoke,
+    { isLoading: hooks.revokeLoading },
+  ],
+  useSetAdmissionPublicInquiryLinkFormMutation: () => [
+    hooks.setForm,
+    { isLoading: hooks.formLoading },
+  ],
 }));
 vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
   useGetAdmissionCyclesQuery: () => ({
@@ -44,12 +63,53 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
 }));
-vi.mock('src/components/customizabaleTable', () => ({ default: () => null }));
+vi.mock('src/components/customizabaleTable', () => ({
+  default: ({
+    data,
+    columns,
+    handleRowClick,
+    rowProps,
+  }: ComponentProps<typeof CustomizableTable>) => (
+    <table aria-label="Public admission inquiry links">
+      <tbody>
+        {data.map((row, index) => {
+          const { sx: _sx, ...props } = rowProps?.(row, index) ?? {};
+          return (
+            <tr key={String(row.id)} {...props} onClick={() => handleRowClick?.(row, index)}>
+              {columns.map((column) => (
+                <td key={column.id}>
+                  {column.render
+                    ? column.render(row[column.id], row)
+                    : String(row[column.id] ?? '')}
+                </td>
+              ))}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  ),
+}));
 vi.mock('src/components/customDialog', () => ({
-  default: () => null,
+  default: ({
+    open,
+    title,
+    children,
+    handleClose,
+  }: {
+    open: boolean;
+    title: string;
+    children: ReactNode;
+    handleClose: () => void;
+  }) =>
+    open ? (
+      <div role="dialog" aria-label={title}>
+        <button type="button" aria-label="Close dialog" onClick={handleClose} />
+        {children}
+      </div>
+    ) : null,
   DialogScrollContent: ({ children }: { children: React.ReactNode }) => children,
 }));
-vi.mock('src/components/adaptive-three-dots-actions', () => ({ default: () => null }));
 vi.mock('src/screens/hr/employee/employee-form-fields/InformationFields', () => ({
   SectionCard: ({ title, children }: { title: string; children: React.ReactNode }) => (
     <section aria-label={title}>{children}</section>
@@ -92,6 +152,9 @@ describe('create public inquiry link', () => {
     hooks.setups.isLoading = false;
     hooks.setups.isFetching = false;
     hooks.setups.isError = false;
+    hooks.links = [];
+    hooks.formLoading = false;
+    hooks.revokeLoading = false;
     hooks.create.mockReturnValue({ unwrap: () => Promise.resolve({ token: 'fixture-token' }) });
   });
 
@@ -223,6 +286,45 @@ describe('create public inquiry link', () => {
     expect(hooks.close).not.toHaveBeenCalled();
   });
 
+  it.each([
+    [
+      'Admissions.PublicInquiry.OfferingRequired',
+      'RTE has no active offering that accepts inquiries.',
+    ],
+    [
+      'Admissions.PublicInquiry.CounsellorUnavailable',
+      'Review the counsellor pool and academic access.',
+    ],
+    [
+      'Admissions.PublicInquiry.FallbackUnavailable',
+      'Choose an active fallback manager with access.',
+    ],
+    ['Admissions.PublicInquiry.ExpiryInvalid', 'Choose a future link expiry or leave it blank.'],
+  ])(
+    'shows the server reason for %s and allows retry without losing values',
+    async (errorCode, detail) => {
+      hooks.setups.data = [activeSetup];
+      hooks.create.mockReturnValueOnce({
+        unwrap: vi.fn().mockRejectedValue({ status: 400, data: { errorCode, detail } }),
+      });
+      renderDrawer();
+      const user = userEvent.setup();
+      await fillLink(user);
+      await user.click(screen.getByRole('button', { name: 'Create link' }));
+
+      expect(await screen.findByText(detail)).toBeVisible();
+      expect(screen.getByRole('textbox', { name: 'Link name' })).toHaveValue('School fair');
+      expect(screen.getByRole('combobox', { name: /Admission intake setup/ })).toHaveTextContent(
+        'School intake'
+      );
+      expect(hooks.close).not.toHaveBeenCalled();
+      await user.click(screen.getByRole('button', { name: 'Create link' }));
+      await waitFor(() => expect(hooks.close).toHaveBeenCalledOnce());
+      expect(hooks.create).toHaveBeenCalledTimes(2);
+      expect(screen.queryByText(detail)).not.toBeInTheDocument();
+    }
+  );
+
   it('preserves unrelated server errors', async () => {
     hooks.setups.data = [activeSetup];
     hooks.create.mockReturnValue({
@@ -269,5 +371,132 @@ describe('create public inquiry link', () => {
     expect(await screen.findByText('Enter a link name.')).toBeVisible();
     expect(screen.getByText('Choose an admission intake setup.')).toBeVisible();
     expect(hooks.create).not.toHaveBeenCalled();
+  });
+});
+
+const activeLink: AdmissionPublicInquiryLink = {
+  id: 'link-1',
+  name: 'School website',
+  admissionCycleId: 'cycle-1',
+  counsellorAssignmentProfileId: 'routing-1',
+  inquiryFormDefinitionId: 'form-1',
+  source: 0,
+  sourceDetail: 'School campaign',
+  expiresAtUtc: null,
+  isActive: true,
+  concurrencyStamp: 'stamp-1',
+};
+const renderList = (canEdit = true) =>
+  render(
+    <ThemeProvider theme={createTheme(defaultSettings)}>
+      <AdmissionPublicInquiryLinks
+        canEdit={canEdit}
+        createOpen={false}
+        onCreateClose={hooks.close}
+      />
+    </ThemeProvider>
+  );
+
+describe('public inquiry link details and actions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    hooks.links = [activeLink];
+    hooks.formLoading = false;
+    hooks.revokeLoading = false;
+  });
+
+  it('groups all existing facts into shared cards with a status label and Close icon', async () => {
+    const user = userEvent.setup();
+    renderList();
+    await user.click(screen.getByRole('cell', { name: activeLink.name }));
+    const dialog = screen.getByRole('dialog', { name: `Inquiry link: ${activeLink.name}` });
+    expect(dialog.querySelectorAll('section.MuiCard-root')).toHaveLength(2);
+    expect(within(dialog).getByRole('heading', { name: 'Link details' })).toBeVisible();
+    expect(within(dialog).getByRole('heading', { name: 'Routing' })).toBeVisible();
+    expect(within(dialog).getByText('Website · School campaign')).toBeVisible();
+    expect(within(dialog).getByText('No expiry')).toBeVisible();
+    expect(within(dialog).getByText('Regular admission')).toBeVisible();
+    expect(within(dialog).getByText('Inquiry form', { selector: 'dd' })).toBeVisible();
+    expect(within(dialog).getByText('Active')).toBeVisible();
+    expect(
+      within(dialog).getByRole('button', { name: 'Close' }).querySelector('[data-icon="mdi:close"]')
+    ).not.toBeNull();
+    const info = within(dialog).getByRole('button', { name: 'Link details information' });
+    expect(info).toHaveClass('MuiIconButton-colorInfo');
+    await user.hover(info);
+    expect(await screen.findByRole('tooltip')).toHaveTextContent('Review this link’s source');
+    await user.click(within(dialog).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it.each(['Enter', ' '])('retains keyboard details access using %s', (key) => {
+    renderList();
+    fireEvent.keyDown(screen.getByRole('row', { name: /School website/ }), { key });
+    expect(screen.getByRole('dialog', { name: `Inquiry link: ${activeLink.name}` })).toBeVisible();
+  });
+
+  it('opens the existing form editor without triggering row details or submitting', async () => {
+    const user = userEvent.setup();
+    renderList();
+    await user.click(
+      screen.getByRole('button', { name: `Set inquiry form for ${activeLink.name}` })
+    );
+    expect(screen.getByRole('dialog', { name: 'Set inquiry form' })).toBeVisible();
+    expect(
+      screen.queryByRole('dialog', { name: `Inquiry link: ${activeLink.name}` })
+    ).not.toBeInTheDocument();
+    expect(hooks.setForm).not.toHaveBeenCalled();
+    expect(hooks.revoke).not.toHaveBeenCalled();
+  });
+
+  it('preserves action loading guards', () => {
+    hooks.formLoading = true;
+    hooks.revokeLoading = true;
+    renderList();
+    expect(screen.getByTestId('table-action-form')).toBeDisabled();
+    expect(screen.getByTestId('table-action-revoke')).toBeDisabled();
+  });
+
+  it('keeps revoked links viewable while hiding unavailable actions', async () => {
+    hooks.links = [{ ...activeLink, isActive: false }];
+    const user = userEvent.setup();
+    renderList();
+    expect(screen.queryByTestId('table-action-form')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('table-action-revoke')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('cell', { name: activeLink.name }));
+    expect(within(screen.getByRole('dialog')).getByText('Revoked')).toBeVisible();
+  });
+
+  it('preserves read-only access without mutation actions', () => {
+    renderList(false);
+    expect(screen.queryByTestId('table-action-form')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('table-action-revoke')).not.toBeInTheDocument();
+  });
+
+  it('uses a row-labelled mobile menu with concise actions', async () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('max-width'),
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    try {
+      const user = userEvent.setup();
+      renderList();
+      await user.click(screen.getByRole('button', { name: `More actions for ${activeLink.name}` }));
+      const menu = screen.getByRole('menu', { name: `More actions for ${activeLink.name}` });
+      expect(within(menu).getByRole('menuitem', { name: 'Set inquiry form' })).toBeVisible();
+      expect(within(menu).getByRole('menuitem', { name: 'Revoke link' })).toBeVisible();
+      await user.click(within(menu).getByRole('menuitem', { name: 'Set inquiry form' }));
+      expect(screen.getByRole('dialog', { name: 'Set inquiry form' })).toBeVisible();
+      expect(hooks.setForm).not.toHaveBeenCalled();
+    } finally {
+      window.matchMedia = originalMatchMedia;
+    }
   });
 });

@@ -86,10 +86,6 @@ export default function AdmissionInquiryFormPage() {
   const hierarchySelected = Boolean(
     formik.values.boardId && formik.values.mediumId && formik.values.standardId
   );
-  const sourceDetailRequired =
-    controller.policy?.requireSourceDetailFor.includes(formik.values.source) ||
-    formik.values.source === 10 ||
-    formik.values.source === 11;
 
   const changeHierarchy = (field: 'boardId' | 'mediumId' | 'standardId', value: string) => {
     formik.setFieldValue(field, value);
@@ -392,7 +388,6 @@ export default function AdmissionInquiryFormPage() {
                   size="small"
                   name="sourceDetail"
                   label="Source details"
-                  required={sourceDetailRequired}
                   value={formik.values.sourceDetail}
                   disabled={controller.runtimeLoading || controller.runtimeError}
                   inputProps={{ maxLength: 128 }}
@@ -401,9 +396,7 @@ export default function AdmissionInquiryFormPage() {
                     (formik.touched.sourceDetail || formik.submitCount > 0) &&
                     formik.errors.sourceDetail
                       ? formik.errors.sourceDetail
-                      : sourceDetailRequired
-                        ? 'Enter the website, event, person, or campaign that led to this inquiry.'
-                        : 'Optional context to help staff trace this inquiry.'
+                      : 'Optional context to help staff trace this inquiry.'
                   }
                   onBlur={formik.handleBlur}
                   onChange={formik.handleChange}

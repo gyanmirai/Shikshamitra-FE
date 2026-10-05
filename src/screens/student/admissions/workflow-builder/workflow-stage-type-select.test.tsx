@@ -75,6 +75,15 @@ function Fixture({
 const draft = () => JSON.parse(screen.getByTestId('draft').textContent!);
 
 describe('safe stage type changes', () => {
+  it('preserves the chosen ending when changing to another stage type', async () => {
+    const user = userEvent.setup();
+    render(<Fixture stage={{ ...initial, isTerminalStage: true }} />);
+    await user.click(screen.getByRole('combobox', { name: 'Stage type *' }));
+    await user.click(screen.getByRole('option', { name: 'Assessment' }));
+    await user.click(screen.getByRole('button', { name: 'Change type' }));
+    expect(draft()).toMatchObject({ stageType: 2, isTerminalStage: true });
+  });
+
   it('keeps configured form on cancel and clears it only after confirmation', async () => {
     const user = userEvent.setup();
     render(<Fixture />);

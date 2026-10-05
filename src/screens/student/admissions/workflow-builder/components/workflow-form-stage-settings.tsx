@@ -112,7 +112,6 @@ export function WorkflowFormStageSettings({ formik, metadata, readOnly }: Props)
             label="End of journey"
             description="Completing this stage ends the applicant journey."
             checked={formik.values.isTerminalStage}
-            disabled={!metadata?.canBeTerminalStage}
             readOnly={readOnly}
             onChange={(checked) => formik.setFieldValue('isTerminalStage', checked)}
           />

@@ -76,7 +76,8 @@ export function useWorkflowStageEditor({
     enableReinitialize: true,
     initialValues: stage ?? emptyStage,
     validationSchema: schema,
-    validate: (values) => validateConfiguration(values, stageTypes, stages, validationForms.current),
+    validate: (values) =>
+      validateConfiguration(values, stageTypes, stages, validationForms.current),
     onSubmit: (values, helpers) => {
       if (readOnly || values.stageType === 0) return;
       onSave({
@@ -136,13 +137,13 @@ export function useWorkflowStageEditor({
 
   return {
     formik,
+    validationSchema: schema,
     metadata,
     discard,
     close,
     formDefinitionId,
     forms: resolvedForms,
-    formDetailsLoading:
-      needsFormDetails && !formDetails && !formDetailsQuery.isError,
+    formDetailsLoading: needsFormDetails && !formDetails && !formDetailsQuery.isError,
     formDetailsError: needsFormDetails && !formDetails && formDetailsQuery.isError,
     formDetailsUnavailable: needsFormDetails && !formDetails,
     retryFormDetails: formDetailsQuery.refetch,
