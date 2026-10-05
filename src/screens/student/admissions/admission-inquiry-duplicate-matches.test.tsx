@@ -52,3 +52,26 @@ it('honors the server decision even when the mobile numbers match', () => {
   expect(screen.getByText(/not available for linking/)).toBeInTheDocument();
   expect(onUseExisting).not.toHaveBeenCalled();
 });
+
+it('requires a nonblank reason before creating a separate family for a duplicate', () => {
+  const createSeparate = vi.fn();
+  const props = {
+    matches: [match],
+    guardianPhone: '9876543210',
+    busy: false,
+    onUseExisting: vi.fn(),
+    onOpenExisting: vi.fn(),
+    onCreateSeparate: createSeparate,
+    onOverrideReasonChange: vi.fn(),
+  };
+  const view = render(<AdmissionInquiryDuplicateMatches {...props} overrideReason="   " />);
+  expect(screen.getByRole('button', { name: 'Create separate family' })).toBeDisabled();
+  view.rerender(
+    <AdmissionInquiryDuplicateMatches
+      {...props}
+      overrideReason="Another family shares this number."
+    />
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Create separate family' }));
+  expect(createSeparate).toHaveBeenCalledOnce();
+});

@@ -34,7 +34,6 @@ export function WorkflowStageTypeSelect({ formik, metadata, stageTypes, readOnly
           : formik.values.description,
       configurationJson: undefined,
       isEntryStage: next.canBeEntryStage && formik.values.isEntryStage,
-      isTerminalStage: next.canBeTerminalStage && formik.values.isTerminalStage,
     });
     setPending(null);
   };

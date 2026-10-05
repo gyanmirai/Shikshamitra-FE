@@ -35,6 +35,7 @@ describe('WorkflowBuilderHeader', () => {
         <ThemeProvider theme={createTheme(defaultSettings)}>
           <WorkflowBuilderHeader
             workflow={workflow}
+            afterBreadcrumb={<div>Setup progress</div>}
             dirty
             readOnly={false}
             canValidate
@@ -61,12 +62,19 @@ describe('WorkflowBuilderHeader', () => {
             onApplyTemplate={vi.fn()}
             onUndo={vi.fn()}
             onRedo={vi.fn()}
-          />
+          >
+            <div>Journey content</div>
+          </WorkflowBuilderHeader>
         </ThemeProvider>
       </Provider>
     );
 
     const controls = screen.getByRole('region', { name: 'Workflow version controls' });
+    const workspace = screen.getByRole('region', { name: 'Workflow journey workspace' });
+    expect(workspace).toHaveClass('MuiCard-root');
+    expect(workspace).toContainElement(controls);
+    expect(workspace).toContainElement(screen.getByText('Setup progress'));
+    expect(workspace).toContainElement(screen.getByText('Journey content'));
     expect(screen.getAllByText('Admission Stage')).not.toHaveLength(0);
     expect(within(controls).queryByText('Draft')).not.toBeInTheDocument();
     expect(within(controls).queryByText('Version 3')).not.toBeInTheDocument();
@@ -74,6 +82,7 @@ describe('WorkflowBuilderHeader', () => {
     const lifecycleActions = screen.getByRole('group', {
       name: 'Workflow lifecycle actions',
     });
+    expect(workspace).not.toContainElement(lifecycleActions);
     expect(within(lifecycleActions).getByRole('button', { name: 'Save draft' })).toBeEnabled();
     expect(within(lifecycleActions).getByRole('button', { name: 'Publish' })).toBeEnabled();
 

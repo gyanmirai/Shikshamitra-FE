@@ -18,6 +18,7 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { LoadingButton } from 'src/components/loading-button';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
@@ -381,16 +382,19 @@ export function AdmissionPublicInquiryLinks({
       isFilter: false,
       excludeFromExport: true,
       align: 'right',
-      minWidth: 92,
-      headerSx: { width: { xs: 76, sm: 92 }, minWidth: { xs: 76, sm: 92 } },
-      cellSx: { width: { xs: 76, sm: 92 }, minWidth: { xs: 76, sm: 92 } },
+      minWidth: 104,
+      headerSx: { width: { xs: 76, sm: 104 }, minWidth: { xs: 76, sm: 104 } },
+      cellSx: { width: { xs: 76, sm: 104 }, minWidth: { xs: 76, sm: 104 } },
       render: (_value, row) => {
         const link = row as LinkRow;
         return (
           <AdaptiveThreeDotsActions
             mobileDirectActionLimit={0}
+            placement="top-right"
+            moreLabel={`More actions for ${link.name}`}
             sx={{
-              gap: 0,
+              justifyContent: 'flex-end',
+              gap: 0.5,
               '& .MuiIconButton-root': {
                 width: { xs: 44, sm: 30 },
                 height: { xs: 44, sm: 30 },
@@ -401,14 +405,14 @@ export function AdmissionPublicInquiryLinks({
                 ? [
                     {
                       id: 'form',
-                      label: `Set inquiry form for ${link.name}`,
+                      label: isMobile ? 'Set inquiry form' : `Set inquiry form for ${link.name}`,
                       icon: 'mdi:form-select',
                       disabled: setLinkFormState.isLoading,
                       onClick: () => openFormEditor(link),
                     },
                     {
                       id: 'revoke',
-                      label: `Revoke ${link.name}`,
+                      label: isMobile ? 'Revoke link' : `Revoke ${link.name}`,
                       icon: 'mdi:link-variant-off',
                       color: 'error.main',
                       disabled: revokeState.isLoading,
@@ -505,31 +509,103 @@ export function AdmissionPublicInquiryLinks({
         title={viewLink ? `Inquiry link: ${viewLink.name}` : 'Inquiry link details'}
         hasForm={false}
         maxWidth="sm"
+        paperProps={{ sx: { '& .MuiTypography-h6': { overflowWrap: 'anywhere' } } }}
       >
         <DialogScrollContent>
-          <Stack spacing={1.5}>
-            <Typography variant="body2" color="text.secondary">
-              Review this link’s source, admission period, form, and availability.
-            </Typography>
-            <Typography variant="body2">
-              <strong>Source:</strong> {viewLink?.sourceDisplay}
-            </Typography>
-            <Typography variant="body2">
-              <strong>Admission period:</strong> {viewLink?.periodName}
-            </Typography>
-            <Typography variant="body2">
-              <strong>Inquiry form:</strong> {viewLink?.formName}
-            </Typography>
-            <Typography variant="body2">
-              <strong>Expires:</strong>{' '}
-              {viewLink?.expiresAtUtc ? fDateTime(viewLink.expiresAtUtc) : 'No expiry'}
-            </Typography>
-            <Typography variant="body2">
-              <strong>Status:</strong> {viewLink?.status}
-            </Typography>
+          <Stack spacing={2}>
+            <FormSectionCard
+              icon="mdi:link-variant"
+              title="Link details"
+              descriptionTooltip="Review this link’s source, admission period, form, and availability."
+              titleTypographyProps={{
+                sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+              }}
+              action={
+                viewLink && (
+                  <Label color={viewLink.status === 'Active' ? 'success' : 'default'}>
+                    {viewLink.status}
+                  </Label>
+                )
+              }
+            >
+              <Box
+                component="dl"
+                sx={{
+                  m: 0,
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                  gap: 2,
+                }}
+              >
+                {[
+                  { label: 'Source', value: viewLink?.sourceDisplay },
+                  {
+                    label: 'Expires',
+                    value: viewLink?.expiresAtUtc ? fDateTime(viewLink.expiresAtUtc) : 'No expiry',
+                  },
+                ].map(({ label, value }) => (
+                  <Box key={label} sx={{ minWidth: 0 }}>
+                    <Typography component="dt" variant="caption" color="text.secondary">
+                      {label}
+                    </Typography>
+                    <Typography
+                      component="dd"
+                      variant="body2"
+                      fontWeight={600}
+                      sx={{ m: 0, overflowWrap: 'anywhere' }}
+                    >
+                      {value}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </FormSectionCard>
+            <FormSectionCard
+              icon="mdi:source-branch"
+              title="Routing"
+              titleTypographyProps={{
+                sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+              }}
+            >
+              <Box
+                component="dl"
+                sx={{
+                  m: 0,
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+                  gap: 2,
+                }}
+              >
+                {[
+                  { label: 'Admission period', value: viewLink?.periodName },
+                  { label: 'Inquiry form', value: viewLink?.formName },
+                ].map(({ label, value }) => (
+                  <Box key={label} sx={{ minWidth: 0 }}>
+                    <Typography component="dt" variant="caption" color="text.secondary">
+                      {label}
+                    </Typography>
+                    <Typography
+                      component="dd"
+                      variant="body2"
+                      fontWeight={600}
+                      sx={{ m: 0, overflowWrap: 'anywhere' }}
+                    >
+                      {value}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </FormSectionCard>
           </Stack>
         </DialogScrollContent>
-        <DialogActions sx={{ p: 2 }}>
+        <DialogActions
+          sx={{
+            p: 2,
+            borderTop: 1,
+            borderColor: 'divider',
+            '& .MuiButton-root': { minHeight: { xs: 44, sm: 30 } },
+          }}
+        >
           <Button
             variant="outlined"
             size="small"

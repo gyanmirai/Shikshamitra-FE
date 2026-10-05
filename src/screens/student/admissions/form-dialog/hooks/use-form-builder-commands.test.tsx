@@ -11,7 +11,11 @@ import { useFormBuilderCommands } from './use-form-builder-commands';
 import { getSystemAdmissionFormTemplate } from '../admission-form-template-catalog';
 
 vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
-  useGetAdmissionFormSystemFieldsQuery: () => ({ data: [] }),
+  useGetAdmissionFormSystemFieldsQuery: () => ({
+    data: [
+      { key: 'Applicant.DateOfBirth', displayName: 'Date of Birth', fieldType: 5, readOnly: false },
+    ],
+  }),
 }));
 
 function Commands({
@@ -25,6 +29,12 @@ function Commands({
   const steps = getAdmissionFormStepGroups(formik.values.sections);
   return (
     <>
+      <button type="button" onClick={() => commands.addField(0)}>
+        Add custom field
+      </button>
+      <button type="button" onClick={() => commands.addField(5, 'Applicant.DateOfBirth')}>
+        Add birth date
+      </button>
       <button type="button" onClick={commands.addSection}>
         Add section
       </button>
@@ -67,6 +77,9 @@ function Commands({
       <output data-testid="steps">
         {JSON.stringify(steps.map(({ id, name, code }) => ({ id, name, code })))}
       </output>
+      <output data-testid="fields">
+        {JSON.stringify(formik.values.sections.flatMap((section) => section.fields))}
+      </output>
     </>
   );
 }
@@ -84,6 +97,29 @@ function renderCommands(empty = false) {
 }
 
 describe('useFormBuilderCommands', () => {
+  it('retains creation order after custom and student fields are sorted on reload', async () => {
+    const user = userEvent.setup();
+    renderCommands(true);
+
+    await user.click(screen.getByRole('button', { name: 'Add custom field' }));
+    await user.click(screen.getByRole('button', { name: 'Add birth date' }));
+    await user.click(screen.getByRole('button', { name: 'Add custom field' }));
+
+    const fields = JSON.parse(screen.getByTestId('fields').textContent || '[]') as {
+      code: string;
+      displayOrder: number;
+      bindingKey: string;
+    }[];
+    expect(fields.map((field) => field.code)).toEqual([
+      'FIELD_1',
+      'APPLICANT_DATEOFBIRTH',
+      'FIELD_2',
+    ]);
+    expect(fields.map((field) => field.displayOrder)).toEqual([0, 1, 2]);
+    expect([...fields].sort((a, b) => a.displayOrder - b.displayOrder)).toEqual(fields);
+    expect(fields[1].bindingKey).toBe('Applicant.DateOfBirth');
+  });
+
   it('adds a section to the selected template step', async () => {
     const user = userEvent.setup();
     const { bank } = renderCommands();

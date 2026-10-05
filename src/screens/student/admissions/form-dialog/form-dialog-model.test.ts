@@ -5,6 +5,7 @@ import { it, expect, describe } from 'vitest';
 import {
   nextFieldOrder,
   hasSystemBinding,
+  nextFieldDisplayOrder,
   CREATABLE_FIELD_TYPES,
   getConfigurableFieldTypes,
   getBlankAdmissionFormInitialValues,
@@ -37,6 +38,22 @@ describe('admission form field codes', () => {
 
     expect(hasSystemBinding(sections, 'Applicant.DateOfBirth')).toBe(true);
     expect(hasSystemBinding(sections, 'Applicant.Gender')).toBe(false);
+  });
+
+  it('appends display order independently of custom code gaps and student field codes', () => {
+    const sections = [
+      {
+        fields: [
+          { code: 'FIELD_1', displayOrder: 0 },
+          { code: 'FIELD_3', displayOrder: 2 },
+        ],
+      },
+      { fields: [{ code: 'APPLICANT_DATEOFBIRTH', displayOrder: 7 }] },
+    ] as CreateUpdateAdmissionForm['sections'];
+
+    expect(nextFieldOrder(sections)).toBe(1);
+    expect(nextFieldDisplayOrder(sections)).toBe(8);
+    expect(nextFieldDisplayOrder([])).toBe(0);
   });
 
   it('does not offer the runtime-unavailable file type for new fields', () => {

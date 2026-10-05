@@ -48,7 +48,7 @@ export function WorkflowStageCompletionSummary({
     description =
       'An authorized approver has recorded Approve, Waitlist, or Reject. Required review prerequisites and application decision permissions still apply.';
   if ([8, 9].includes(stage.stageType) && managed)
-    description = `A recorded outcome is allowed by this stage: ${outcome?.allowed.join(', ') || 'choose completion outcomes in Process'}. Each non-success outcome needs its own matching special path.`;
+    description = `A recorded outcome is allowed by this stage: ${outcome?.allowed.join(', ') || 'choose completion outcomes in Settings'}. Each non-success outcome needs its own matching special path.`;
   return (
     <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
       <Stack spacing={1}>

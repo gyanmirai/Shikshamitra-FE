@@ -27,6 +27,8 @@ vi.mock('src/redux/student/admissions/admission-cycles-api', () => ({
   useLazyGetAdmissionCycleImpactQuery: () => [impactHook.trigger, impactHook.state],
 }));
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 const cycle: AdmissionCycle = {
   id: 'cycle-1',
   name: 'RTE',
@@ -194,5 +196,93 @@ describe('admission cycle delete confirmation', () => {
     expect(onConfirm).toHaveBeenCalledWith(
       expect.objectContaining({ concurrencyStamp: cycle.concurrencyStamp })
     );
+  });
+});
+
+describe('admission cycle close confirmation', () => {
+  beforeEach(() => {
+    impactHook.trigger.mockReset();
+    impactHook.state.originalArgs = cycle.id;
+    impactHook.state.isFetching = false;
+    impactHook.state.isError = false;
+    impactHook.state.data = {
+      admissionCycleId: cycle.id,
+      linkedOfferingCount: 3,
+      activeOfferingCount: 1,
+      applicationCount: 7,
+    };
+  });
+
+  const renderClose = (onConfirm = vi.fn(), busy = false) =>
+    render(
+      <AdmissionCycleActionDialog
+        action="close"
+        cycle={{ ...cycle, status: 1 }}
+        busy={busy}
+        onClose={vi.fn()}
+        onConfirm={onConfirm}
+      />
+    );
+
+  it('explains the consequence without counts, a banner, a checkbox, or a reason field', () => {
+    renderClose();
+
+    expect(screen.getByText(/stops new applications/)).toHaveTextContent(
+      'Existing applications remain available for review.'
+    );
+    expect(screen.queryByText('Offerings')).not.toBeInTheDocument();
+    expect(screen.queryByText('Active')).not.toBeInTheDocument();
+    expect(screen.queryByText('Applications')).not.toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByText(/CYCLE_INTERNAL_123/)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Close cycle' })).toBeEnabled();
+  });
+
+  it('sends the staff confirmation and audit reason with the current concurrency stamp', async () => {
+    const onConfirm = vi.fn().mockResolvedValue(undefined);
+    renderClose(onConfirm);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close cycle' }));
+    expect(onConfirm).toHaveBeenCalledWith({
+      concurrencyStamp: cycle.concurrencyStamp,
+      reason: 'Admission cycle closed by staff confirmation.',
+      confirmActiveOfferings: true,
+    });
+  });
+
+  it('does not acknowledge active offerings when the cycle has none', async () => {
+    impactHook.state.data!.activeOfferingCount = 0;
+    const onConfirm = vi.fn().mockResolvedValue(undefined);
+    renderClose(onConfirm);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Close cycle' }));
+    expect(onConfirm).toHaveBeenCalledWith(
+      expect.objectContaining({ confirmActiveOfferings: false })
+    );
+  });
+
+  it('keeps Close cycle disabled until the impact check completes', () => {
+    impactHook.state.isFetching = true;
+    renderClose();
+
+    expect(screen.getByRole('status')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Close cycle' })).toBeDisabled();
+  });
+
+  it('keeps Close cycle disabled for an error or a response for a different cycle', () => {
+    impactHook.state.data!.admissionCycleId = 'another-cycle';
+    renderClose();
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not check linked records');
+    expect(screen.getByRole('button', { name: 'Close cycle' })).toBeDisabled();
+  });
+
+  it('locks Close cycle and Cancel during submission', () => {
+    renderClose(vi.fn(), true);
+
+    expect(screen.getByRole('button', { name: 'Close cycle' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
   });
 });

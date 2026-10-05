@@ -218,15 +218,6 @@ export function AdmissionCycleConfigurationDialog({
 
           {mode === 'window' && (
             <Grid size={{ xs: 12 }}>
-              {dismissedNotice !== 'window' && (
-                <Alert
-                  severity="warning"
-                  onClose={() => setDismissedNotice('window')}
-                  closeText="Dismiss window warning"
-                >
-                  Linked offering dates must remain inside the revised cycle window.
-                </Alert>
-              )}
               <TextField
                 sx={{ mt: 1.5 }}
                 fullWidth

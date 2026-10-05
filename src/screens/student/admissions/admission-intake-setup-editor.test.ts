@@ -1,8 +1,8 @@
 import { it, expect, describe } from 'vitest';
 
 import {
-  getInitialAdmissionIntakeSetupValues,
   getAdmissionIntakeSetupStepSchema,
+  getInitialAdmissionIntakeSetupValues,
 } from './admission-intake-setup-editor';
 
 describe('admission intake setup editor', () => {
@@ -31,5 +31,28 @@ describe('admission intake setup editor', () => {
     await expect(getAdmissionIntakeSetupStepSchema(1).validate(values)).rejects.toThrow(
       'Choose a fallback manager'
     );
+  });
+
+  it('normalizes removed settings when an old setup is reopened', () => {
+    const values = getInitialAdmissionIntakeSetupValues({
+      inquiryRules: {
+        duplicateRule: 2,
+        applicationStartRequirement: 2,
+        requireGuardianEmail: true,
+        requireApplicantDateOfBirth: true,
+        requireSourceDetailFor: [10],
+        allowedSources: [10],
+        firstContactDueInHours: 12,
+      },
+    } as Parameters<typeof getInitialAdmissionIntakeSetupValues>[0]);
+    expect(values.inquiryRules).toMatchObject({
+      duplicateRule: 1,
+      applicationStartRequirement: 0,
+      requireGuardianEmail: false,
+      requireApplicantDateOfBirth: false,
+      requireSourceDetailFor: [],
+      allowedSources: [10],
+      firstContactDueInHours: 12,
+    });
   });
 });

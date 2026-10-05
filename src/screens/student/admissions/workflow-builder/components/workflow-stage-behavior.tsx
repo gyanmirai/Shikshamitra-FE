@@ -125,7 +125,7 @@ export function WorkflowStageBehavior({ formik, metadata, readOnly }: Props) {
                 <Switch
                   size="small"
                   checked={formik.values.isTerminalStage}
-                  disabled={readOnly || !metadata?.canBeTerminalStage}
+                  disabled={readOnly}
                   onChange={(_, value) => formik.setFieldValue('isTerminalStage', value)}
                 />
               }

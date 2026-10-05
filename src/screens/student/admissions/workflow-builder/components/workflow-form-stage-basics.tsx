@@ -91,7 +91,9 @@ export function WorkflowFormStageBasics({
 
       <CustomAccordion
         title="Staff instructions · Optional"
-        expanded={instructions.value}
+        expanded={
+          instructions.value || Boolean(formik.touched.description && formik.errors.description)
+        }
         onChange={instructions.onToggle}
         content={
           <TextField
@@ -109,7 +111,7 @@ export function WorkflowFormStageBasics({
       />
 
       <Typography variant="body2" color="text.secondary">
-        Process and stage settings are configured in the next tabs.
+        Process and stage settings are configured in the Settings step.
       </Typography>
     </Stack>
   );

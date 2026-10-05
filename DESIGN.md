@@ -1360,6 +1360,7 @@ The component already creates and manages the Formik instance internally, so a s
 | `steps`                    | Ordered, user-facing step labels as a string array.                                                                          |
 | `activeStep`               | State owned by the parent workflow and kept within the valid step range.                                                     |
 | `initialValues`            | One complete value object shared across all steps.                                                                           |
+| `formikInstance`           | Compatibility option for an existing owning editor hook; reuse that instance without introducing another form-state owner.   |
 | `validationSchema`         | Yup schema passed to the stepper; use step-aware validation when different steps have different requirements.                |
 | `renderItem`               | Render the active step and use the `formik` instance supplied in the callback.                                               |
 | `handleNext`               | Persist or advance the workflow using the validated values supplied by the stepper.                                          |

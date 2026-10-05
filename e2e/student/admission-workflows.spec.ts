@@ -81,12 +81,10 @@ const grantWorkflowPermissions = (page: Page) =>
       json: {
         groups: [
           {
-            permissions: ['View', 'Create', 'Edit', 'Validate', 'Publish', 'ViewUsage'].map(
-              (action) => ({
-                name: `Students.Admissions.Workflows.${action}`,
-                isGranted: true,
-              })
-            ),
+            permissions: ['View', 'Add', 'Delete', 'Approve', 'ManageGovernance'].map((action) => ({
+              name: `Students.Admissions.Workflows.${action}`,
+              isGranted: true,
+            })),
           },
         ],
       },
@@ -96,23 +94,39 @@ const grantWorkflowPermissions = (page: Page) =>
 test.describe('Admission workflow builder', { tag: ['@student', '@critical'] }, () => {
   test.use({ storageState: 'playwright/.auth/academic-admin.json' });
 
-  test('creates an empty draft from the list and preserves the typed payload', async ({ page }) => {
+  test('continues from workflow details to the saved journey builder', async ({ page }) => {
     let createPayload: Record<string, unknown> | null = null;
+    let updatePayload: Record<string, unknown> | null = null;
+    let createdDraft: AdmissionWorkflow = { ...draft, stages: [], transitions: [] };
     await grantWorkflowPermissions(page);
     const handleWorkflowRoute = async (route: Route) => {
       const request = route.request();
       const path = new URL(request.url()).pathname.replace(/\/$/, '');
       if (request.method() === 'POST' && path.endsWith('/workflows')) {
         createPayload = request.postDataJSON() as Record<string, unknown>;
-        await route.fulfill({ json: { data: draft } });
+        await route.fulfill({ json: { data: createdDraft } });
+        return;
+      }
+      if (request.method() === 'PUT' && path.endsWith(`/workflows/${workflowId}`)) {
+        updatePayload = request.postDataJSON() as Record<string, unknown>;
+        createdDraft = {
+          ...createdDraft,
+          ...(updatePayload as Partial<AdmissionWorkflow>),
+          concurrencyStamp: 'stamp-2',
+        };
+        await route.fulfill({ json: { data: createdDraft } });
         return;
       }
       if (request.method() === 'GET' && path.endsWith(`/workflows/${workflowId}`)) {
-        await route.fulfill({ json: { data: draft } });
+        await route.fulfill({ json: { data: createdDraft } });
         return;
       }
       if (path.endsWith('/stage-types')) {
         await route.fulfill({ json: { data: stageTypes } });
+        return;
+      }
+      if (path.endsWith('/governance/notifications')) {
+        await route.fulfill({ json: { data: [] } });
         return;
       }
       if (path.endsWith('/versions')) {
@@ -145,21 +159,87 @@ test.describe('Admission workflow builder', { tag: ['@student', '@critical'] }, 
     await expect(
       page.getByText('No admission workflows configured yet. Create a draft to begin.')
     ).toBeVisible();
-    await page.getByRole('button', { name: 'Create workflow' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Create Workflow' });
+    await page.getByRole('button', { name: 'Add Workflow' }).click();
+    const dialog = page.getByRole('region', { name: 'Create workflow', exact: true });
+    await expect(page.getByRole('link', { name: 'Admission Offering', exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: /Create workflow/i })).toHaveCount(0);
+    await page.setViewportSize({ width: 1855, height: 727 });
+    expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+      true
+    );
+    expect(
+      await dialog
+        .locator('.simplebar-track.simplebar-horizontal')
+        .evaluateAll((tracks) =>
+          tracks.some(
+            (track) =>
+              getComputedStyle(track).display !== 'none' &&
+              getComputedStyle(track).visibility !== 'hidden'
+          )
+        )
+    ).toBe(false);
+    await expect(dialog.getByRole('button', { name: 'Step 1: Workflow details' })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Step 2: Build journey' })).toBeDisabled();
+    await expect(dialog.getByRole('radio')).toHaveCount(4);
+    await expect(dialog.getByText('Choose a workflow template')).toHaveCount(0);
+    await expect(dialog.getByRole('radio', { name: /Selective admission with offer/ })).toHaveCount(
+      0
+    );
+    await expect(dialog.getByRole('combobox', { name: /Inquiry form/ })).toHaveCount(0);
+    await expect(dialog.getByRole('heading', { name: 'Journey preview' })).toBeVisible();
+    await dialog.getByRole('radio', { name: /Assessment-based admission/ }).click();
+    await expect(dialog.getByText('Entrance assessment completed')).toBeVisible();
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+      true
+    );
+    await expect(dialog.getByRole('button', { name: 'Continue' })).toBeInViewport();
+    expect(
+      await dialog
+        .locator('.simplebar-track.simplebar-horizontal')
+        .evaluateAll((tracks) =>
+          tracks.some(
+            (track) =>
+              getComputedStyle(track).display !== 'none' &&
+              getComputedStyle(track).visibility !== 'hidden'
+          )
+        )
+    ).toBe(false);
+    await page.setViewportSize({ width: 1440, height: 900 });
     await dialog.getByLabel('Workflow name *').fill('Grade 5 Admission');
-    await dialog.getByLabel('Workflow code *').fill('grade5_admission');
-    await dialog.getByLabel('Description').fill('Sunrise Public School admission journey');
-    await dialog.getByRole('button', { name: 'Create draft' }).click();
+    await dialog
+      .getByLabel('Description (optional)')
+      .fill('Sunrise Public School admission journey');
+    await dialog.getByRole('radio', { name: /Blank workflow/ }).click();
+    await dialog.getByRole('button', { name: 'Continue' }).click();
 
     await expect.poll(() => createPayload).not.toBeNull();
     expect(createPayload).toMatchObject({
       name: 'Grade 5 Admission',
-      code: 'GRADE5_ADMISSION',
+      code: '',
       stages: [],
       transitions: [],
     });
-    await expect(page).toHaveURL(new RegExp(`/workflows/${workflowId}/?$`));
+    await expect(page).toHaveURL(new RegExp(`/workflows/${workflowId}\\?setup=1$`));
+    const progress = page.getByRole('region', { name: 'Workflow setup progress' });
+    await expect(progress.getByRole('button', { name: 'Step 1: Workflow details' })).toBeVisible();
+    await expect(progress.getByRole('listitem').nth(1)).toHaveAttribute('aria-current', 'step');
+    await progress.getByRole('button', { name: 'Step 1: Workflow details' }).click();
+    const details = page.getByRole('region', {
+      name: 'Edit workflow name and description',
+      exact: true,
+    });
+    await expect(details).toBeVisible();
+    await details.getByLabel('Workflow name *').fill('Updated Grade 5 Admission');
+    await details.getByRole('button', { name: 'Save & continue' }).click();
+    await expect(details).not.toBeVisible();
+    expect(updatePayload).toMatchObject({
+      name: 'Updated Grade 5 Admission',
+      code: 'GRADE5_ADMISSION',
+      concurrencyStamp: 'stamp-1',
+      stages: [],
+      transitions: [],
+    });
   });
 
   test('handles validation, concurrency recovery, publish, and read-only state', async ({

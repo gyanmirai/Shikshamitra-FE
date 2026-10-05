@@ -23,6 +23,9 @@ import { WorkflowStandardTemplateDialog } from './components/workflow-standard-t
   'check-circle',
   'eye-outline',
   'alert-outline',
+  'information-outline',
+  'sitemap-outline',
+  'form-select',
 ].forEach((name) => {
   addIcon(`mdi:${name}`, { body: '<path d="M0 0h16v16H0z"/>', width: 16, height: 16 });
 });
@@ -105,5 +108,20 @@ describe('manual workflow template drawer', () => {
     expect(props.onClose).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Discard selections' }));
     expect(props.onClose).toHaveBeenCalledOnce();
+  });
+
+  it('dismisses the warning without bypassing registration form validation', async () => {
+    const user = userEvent.setup();
+    const props = renderDrawer();
+
+    expect(screen.getByRole('button', { name: 'Workflow template information' })).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Dismiss template replacement warning' }));
+    expect(
+      screen.queryByText(/This replaces the current stages and routes/)
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Replace journey' }));
+    expect(await screen.findByText('Select a published registration form')).toBeInTheDocument();
+    expect(props.onApply).not.toHaveBeenCalled();
+    expect(props.onClose).not.toHaveBeenCalled();
   });
 });

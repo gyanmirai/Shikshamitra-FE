@@ -34,7 +34,7 @@ export const DEFAULT_INQUIRY_POLICY: AdmissionInquiryPolicy = {
   version: 1,
   enabled: true,
   requireLinkedInquiry: true,
-  applicationStartRequirement: 2,
+  applicationStartRequirement: 0,
   duplicateRule: 1,
   assignmentMode: 0,
   defaultCounsellorId: null,
@@ -47,12 +47,32 @@ export const DEFAULT_INQUIRY_POLICY: AdmissionInquiryPolicy = {
   requireGuardianEmail: false,
   requireApplicantDateOfBirth: false,
   allowedSources: [],
-  requireSourceDetailFor: [3, 4, 9],
+  requireSourceDetailFor: [],
   qualificationChecklist: [],
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   Boolean(value && typeof value === 'object' && !Array.isArray(value));
+
+// Retain legacy contract keys, but never revive retired intake requirements.
+export function withStandardInquiryBehavior<
+  T extends {
+    duplicateRule: AdmissionInquiryDuplicateRule;
+    applicationStartRequirement: AdmissionInquiryApplicationStartRequirement;
+    requireGuardianEmail: boolean;
+    requireApplicantDateOfBirth: boolean;
+    requireSourceDetailFor: number[];
+  },
+>(rules: T): T {
+  return {
+    ...rules,
+    duplicateRule: 1,
+    applicationStartRequirement: 0,
+    requireGuardianEmail: false,
+    requireApplicantDateOfBirth: false,
+    requireSourceDetailFor: [],
+  };
+}
 
 export function readAdmissionInquiryPolicy(json?: string): AdmissionInquiryPolicy | null {
   const policy = readStageConfiguration(json)?.inquiry;
@@ -76,7 +96,10 @@ export function readAdmissionInquiryPolicy(json?: string): AdmissionInquiryPolic
     !criteria(policy.qualificationChecklist)
   )
     return null;
-  return { ...DEFAULT_INQUIRY_POLICY, ...policy } as AdmissionInquiryPolicy;
+  return withStandardInquiryBehavior({
+    ...DEFAULT_INQUIRY_POLICY,
+    ...policy,
+  } as AdmissionInquiryPolicy);
 }
 
 export function writeAdmissionInquiryPolicy(
@@ -88,7 +111,10 @@ export function writeAdmissionInquiryPolicy(
   const previous = readAdmissionInquiryPolicy(json);
   if (configuration.inquiry !== undefined && !previous)
     throw new Error('These Inquiry settings are unsupported or incomplete. Reload the workflow.');
-  return JSON.stringify({ ...configuration, inquiry: { ...previous, ...policy } });
+  return JSON.stringify({
+    ...configuration,
+    inquiry: withStandardInquiryBehavior({ ...previous, ...policy }),
+  });
 }
 
 function arrayOf(value: unknown, type: 'string' | 'number') {

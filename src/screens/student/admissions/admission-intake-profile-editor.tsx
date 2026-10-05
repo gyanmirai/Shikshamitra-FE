@@ -17,6 +17,7 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
+import { withStandardInquiryBehavior } from 'src/redux/student/admissions/admission-inquiry-policy';
 import {
   useGetAdmissionIntakeCounsellorsQuery,
   useCreateAdmissionIntakeProfileMutation,
@@ -32,7 +33,6 @@ import {
   Drawer,
   Divider,
   MenuItem,
-  Checkbox,
   TextField,
   IconButton,
   Typography,
@@ -42,8 +42,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { INQUIRY_SOURCE_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
 import { AdmissionIntakeNotice } from './admission-intake-notice';
+import { INQUIRY_SOURCE_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
 
 export const defaultInquiryRules: AdmissionInquiryIntakeRules = {
   version: 1,
@@ -56,7 +56,7 @@ export const defaultInquiryRules: AdmissionInquiryIntakeRules = {
   requireGuardianEmail: false,
   requireApplicantDateOfBirth: false,
   allowedSources: [],
-  requireSourceDetailFor: [10, 11],
+  requireSourceDetailFor: [],
 };
 
 export const defaultAssignmentRules: AdmissionCounsellorAssignmentRules = {
@@ -96,10 +96,11 @@ export function getInitialProfileValues(
     kind: profile?.kind ?? null,
     name: profile?.name ?? '',
     code: profile?.code ?? '',
-    inquiry:
+    inquiry: withStandardInquiryBehavior(
       profile?.kind === 0 && rules
         ? { ...defaultInquiryRules, ...rules }
-        : { ...defaultInquiryRules },
+        : { ...defaultInquiryRules }
+    ),
     assignment:
       profile?.kind === 1 && rules
         ? { ...defaultAssignmentRules, ...rules }
@@ -177,7 +178,9 @@ export function AdmissionIntakeProfileEditor({ profile, onClose }: Props) {
   const [step, setStep] = useState(0);
   const [confirmClose, setConfirmClose] = useState(false);
   const formikRef = useRef<FormikProps<IntakeProfileValues> | null>(null);
-  const counsellors = useGetAdmissionIntakeCounsellorsQuery();
+  const counsellors = useGetAdmissionIntakeCounsellorsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
   const [createProfile, createState] = useCreateAdmissionIntakeProfileMutation();
   const [updateProfile, updateState] = useUpdateAdmissionIntakeProfileMutation();
   const saving = createState.isLoading || updateState.isLoading;
@@ -202,7 +205,9 @@ export function AdmissionIntakeProfileEditor({ profile, onClose }: Props) {
       kind: values.kind,
       name: values.name.trim(),
       code: values.code.trim().toUpperCase(),
-      configurationJson: JSON.stringify(values.kind === 0 ? values.inquiry : values.assignment),
+      configurationJson: JSON.stringify(
+        values.kind === 0 ? withStandardInquiryBehavior(values.inquiry) : values.assignment
+      ),
       concurrencyStamp: profile?.concurrencyStamp ?? '',
     };
     try {
@@ -373,7 +378,7 @@ function ProfileTypeFields({ formik }: { formik: FormikProps<IntakeProfileValues
                   <Typography variant="subtitle2">{profileKindLabel(kind)}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     {kind === 0
-                      ? 'Set duplicate checks, required details, and follow-up timing.'
+                      ? 'Set inquiry sources and follow-up timing.'
                       : 'Choose counsellors, workload limits, and a fallback manager.'}
                   </Typography>
                 </Box>
@@ -437,32 +442,6 @@ function InquiryFields({
   return (
     <>
       <Typography variant="subtitle1">Inquiry rules</Typography>
-      <TextField
-        select
-        fullWidth
-        size="small"
-        label="Duplicate inquiry"
-        value={value.duplicateRule}
-        onChange={(event) => set('duplicateRule', Number(event.target.value) as 0 | 1 | 2)}
-      >
-        <MenuItem value={0}>Warn and allow</MenuItem>
-        <MenuItem value={1}>Require a reason</MenuItem>
-        <MenuItem value={2}>Block duplicate</MenuItem>
-      </TextField>
-      <TextField
-        select
-        fullWidth
-        size="small"
-        label="Before application starts"
-        value={value.applicationStartRequirement}
-        onChange={(event) =>
-          set('applicationStartRequirement', Number(event.target.value) as 0 | 1 | 2)
-        }
-      >
-        <MenuItem value={0}>Inquiry captured</MenuItem>
-        <MenuItem value={1}>First contact recorded</MenuItem>
-        <MenuItem value={2}>Inquiry qualified</MenuItem>
-      </TextField>
       <Autocomplete
         multiple
         size="small"
@@ -472,38 +451,19 @@ function InquiryFields({
         value={INQUIRY_SOURCE_OPTIONS.filter((option) =>
           value.allowedSources.includes(option.value)
         )}
-        onChange={(_, selected) => {
-          const allowedSources: number[] = selected.map((option) => option.value);
-          onChange({
-            ...value,
-            allowedSources,
-            requireSourceDetailFor: allowedSources.length
-              ? value.requireSourceDetailFor.filter((source) => allowedSources.includes(source))
-              : value.requireSourceDetailFor,
-          });
-        }}
-        renderInput={(params) => <TextField {...params} size="small" label="Allowed sources" />}
-      />
-      <Autocomplete
-        multiple
-        size="small"
-        slotProps={{ chip: { color: 'default', variant: 'soft', size: 'small' } }}
-        options={INQUIRY_SOURCE_OPTIONS.filter(
-          (option) =>
-            value.allowedSources.length === 0 || value.allowedSources.includes(option.value)
-        )}
-        getOptionLabel={(option) => option.label}
-        value={INQUIRY_SOURCE_OPTIONS.filter((option) =>
-          value.requireSourceDetailFor.includes(option.value)
-        )}
         onChange={(_, selected) =>
           set(
-            'requireSourceDetailFor',
+            'allowedSources',
             selected.map((option) => option.value)
           )
         }
         renderInput={(params) => (
-          <TextField {...params} size="small" label="Sources needing details" />
+          <TextField
+            {...params}
+            size="small"
+            label="Allowed sources"
+            helperText="Leave empty to accept all sources. Source details are optional."
+          />
         )}
       />
       <Grid container spacing={1.5}>
@@ -556,24 +516,6 @@ function InquiryFields({
           />
         </Grid>
       </Grid>
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={value.requireGuardianEmail}
-            onChange={(_, checked) => set('requireGuardianEmail', checked)}
-          />
-        }
-        label="Require guardian email"
-      />
-      <FormControlLabel
-        control={
-          <Checkbox
-            checked={value.requireApplicantDateOfBirth}
-            onChange={(_, checked) => set('requireApplicantDateOfBirth', checked)}
-          />
-        }
-        label="Require applicant birth date"
-      />
     </>
   );
 }
@@ -611,7 +553,7 @@ function AssignmentFields({
         <Alert
           severity="error"
           action={
-            <Button size="small" onClick={onRetry}>
+            <Button size="small" onClick={onRetry} loading={loading}>
               Retry
             </Button>
           }
@@ -627,8 +569,10 @@ function AssignmentFields({
       <Autocomplete
         multiple
         loading={loading}
+        disabled={loading || loadError}
         options={counsellors}
-        getOptionLabel={(option) => option.name}
+        getOptionLabel={(option) => option.name || option.userName}
+        isOptionEqualToValue={(option, selected) => option.id === selected.id}
         value={counsellors.filter((option) => value.counsellorUserIds.includes(option.id))}
         onChange={(_, selected) =>
           onChange({ ...value, counsellorUserIds: selected.map((option) => option.id) })
@@ -660,6 +604,7 @@ function AssignmentFields({
         fullWidth
         size="small"
         label="Fallback manager"
+        disabled={loading || loadError}
         value={value.fallbackManagerUserId ?? ''}
         onChange={(event) =>
           onChange({ ...value, fallbackManagerUserId: event.target.value || null })
@@ -668,7 +613,7 @@ function AssignmentFields({
         <MenuItem value="">No fallback</MenuItem>
         {counsellors.map((person) => (
           <MenuItem key={person.id} value={person.id}>
-            {person.name}
+            {person.name || person.userName}
           </MenuItem>
         ))}
       </TextField>

@@ -37,7 +37,7 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
   {
     id: 'standard',
     name: 'Standard admission',
-    bestFor: 'Most K–12 schools and regular fresh admissions',
+
     icon: 'mdi:school-outline',
     recommended: true,
     stages: [
@@ -67,12 +67,13 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
       },
     ],
     description: '',
+    bestFor: ''
   },
   {
     id: 'simple',
     name: 'Simple direct admission',
 
-    bestFor: 'Small schools, pre-primary intake, transfers, and straightforward admissions',
+
     icon: 'mdi:lightning-bolt-outline',
     stages: [
       {
@@ -95,6 +96,7 @@ export const ADMISSION_WORKFLOW_TEMPLATES: readonly AdmissionWorkflowTemplateDef
       },
     ],
     description: '',
+    bestFor: ''
   },
   {
     id: 'assessment',
