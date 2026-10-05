@@ -49,7 +49,7 @@ export default function OperationalDashboardFilters({ value, options, onChange }
     shift: options?.shifts || [],
   };
   const name = (key: keyof StaffFilters, selected: string) =>
-    choices[key].find((item) => item.id === selected)?.name || `${selected} (unavailable)`;
+    choices[key].find((item) => item.id === selected)?.name || `Unavailable: ${selected}`;
   const field = (
     key: keyof StaffFilters,
     values: StaffFilters,
@@ -103,7 +103,7 @@ export default function OperationalDashboardFilters({ value, options, onChange }
   if (value.search) chips.push({ key: 'search', label: `Search: ${value.search}` });
 
   return (
-    <Box component="section" aria-label="Dashboard filters">
+    <Box component="section" aria-label="Dashboard filters" sx={{ px: 1 }}>
       <Stack direction="row" spacing={1.5} alignItems="center">
         <Stack
           direction="row"

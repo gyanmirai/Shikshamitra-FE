@@ -231,7 +231,7 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
         <Alert severity="info">Your account does not have HR dashboard access.</Alert>
       ) : (
         <>
-          <Stack component="section" aria-label="Dashboard context" spacing={0.5}>
+          <Stack component="section" aria-label="Dashboard context" spacing={0.5} sx={{ px: 1 }}>
             <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
               <TextField
                 type="date"

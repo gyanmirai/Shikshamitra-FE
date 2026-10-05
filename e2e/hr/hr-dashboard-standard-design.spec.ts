@@ -432,9 +432,11 @@ test.describe('HR staff-first dashboard', () => {
 
   test('flags unavailable selections and never silently widens staff scope', async ({ page }) => {
     await mockDashboard(page);
-    await page.goto('/hr/dashboard?date=2026-10-01&stage=revoked-stage');
+    const unavailableStage = 'd9d90810-7214-4489-87e4-60c9ae9b8b70';
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`/hr/dashboard?date=2026-10-01&stage=${unavailableStage}`);
     await expect(
-      page.getByRole('button', { name: /Remove Medium \/ stage: revoked-stage \(unavailable\)/ })
+      page.getByRole('button', { name: `Remove Medium / stage: Unavailable: ${unavailableStage}` })
     ).toBeVisible();
     await expect(
       page.getByRole('button', { name: 'Staff in scope: 0', exact: true })
@@ -442,10 +444,13 @@ test.describe('HR staff-first dashboard', () => {
     await page.getByRole('button', { name: /^Filters/ }).click();
     const drawer = page.getByRole('dialog', { name: 'Staff filters' });
     await expect(drawer.getByRole('combobox', { name: 'Medium / stage', exact: true })).toHaveText(
-      'revoked-stage (unavailable)'
+      `Unavailable: ${unavailableStage}`
     );
+    await expect.poll(async () => Math.round((await drawer.boundingBox())!.x)).toBe(0);
+    expect(Math.round((await drawer.boundingBox())!.width)).toBe(390);
+    await page.screenshot({ path: '.artifacts/hr-dashboard-review/unavailable-filter-390.png' });
     await drawer.getByRole('button', { name: 'Apply filters' }).click();
-    await expect(page).toHaveURL(/stage=revoked-stage/);
+    await expect(page).toHaveURL(new RegExp(`stage=${unavailableStage}`));
     await expect(
       page.getByRole('button', { name: 'Staff in scope: 0', exact: true })
     ).toBeVisible();
