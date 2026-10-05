@@ -8,7 +8,7 @@ import {
 } from './useHrReportSchedules';
 
 const definition: HrReportRequest = {
-  reportType: 'Employee List',
+  reportType: 'Staff Directory',
   dataSource: 'employee',
   format: 'excel',
   page: 1,
@@ -19,8 +19,8 @@ const definition: HrReportRequest = {
 
 describe('useHrReportSchedules helpers', () => {
   it('creates schedule dialog defaults with the current user implicit', () => {
-    expect(createDefaultHrReportScheduleForm('Employee List')).toEqual({
-      name: 'Employee List Schedule',
+    expect(createDefaultHrReportScheduleForm('Staff Directory')).toEqual({
+      name: 'Staff Directory Schedule',
       frequency: 'monthly',
       deliveryMode: 'inApp',
       firstRunAt: '',

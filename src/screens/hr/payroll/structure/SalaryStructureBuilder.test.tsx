@@ -219,7 +219,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       expect(screen.getByLabelText('Monthly salary')).toHaveValue(55_000);
     });
 
-    await user.click(screen.getByRole('button', { name: 'Activate employee' }));
+    await user.click(screen.getByRole('button', { name: 'Activate staff' }));
 
     expect(mocks.activate).toHaveBeenCalledWith({
       id: 'employee-1',
@@ -231,11 +231,11 @@ describe('SalaryStructureBuilder initialization and activation', () => {
     });
   });
 
-  it('lets HR enter ESIC details for an inactive employee before salary setup', async () => {
+  it('lets HR enter ESIC details for an inactive staff before salary setup', async () => {
     const user = userEvent.setup();
     mocks.readiness = { canActivate: false, blockerCodes: ['ESI_INSURANCE_NUMBER_REQUIRED'] };
     renderBuilder();
-    expect(screen.queryByRole('button', { name: 'Activate employee' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Activate staff' })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'ESIC details' }));
     expect(screen.queryByText('Contribution details')).not.toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
@@ -284,7 +284,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
 it('keeps form-shaped loading and removes the routine salary banner', () => {
   mocks.templatesLoading = true;
   const result = renderBuilder();
-  expect(screen.getByLabelText('Loading employee salary')).toHaveAttribute('aria-busy', 'true');
+  expect(screen.getByLabelText('Loading staff salary')).toHaveAttribute('aria-busy', 'true');
   expect(screen.getByText('Earnings')).toBeVisible();
   expect(screen.getByText('Deductions')).toBeVisible();
   expect(screen.getByRole('button', { name: 'Calculate salary' })).toBeDisabled();

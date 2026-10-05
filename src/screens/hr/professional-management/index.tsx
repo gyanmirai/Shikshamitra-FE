@@ -293,7 +293,7 @@ const setupSteps = [
   },
   {
     label: 'Assign staff',
-    description: 'Publish the cycle and assign eligible employees for review.',
+    description: 'Publish the cycle and assign eligible staff for review.',
   },
   {
     label: 'Check evidence readiness',
@@ -1857,13 +1857,13 @@ function CyclesTab() {
                               activeEmployeesOnly: true,
                             },
                           }).unwrap();
-                          toast.success('Eligible employees assigned to cycle');
+                          toast.success('Eligible staff assigned to cycle');
                         } catch (error) {
-                          showPerformanceError(error, 'Unable to assign employees to cycle');
+                          showPerformanceError(error, 'Unable to assign staff to cycle');
                         }
                       }}
                     >
-                      Assign Employees
+                      Assign Staff
                     </MenuItem>
                     <MenuItem
                       disabled={row.status !== 2}
@@ -2244,7 +2244,7 @@ function ReportsTab() {
           <PerformanceDataTable
             tableId="performance-report-pending-actions"
             columns={[
-              { id: 'employeeName', label: 'Employee', minWidth: '220px' },
+              { id: 'employeeName', label: 'Staff', minWidth: '220px' },
               { id: 'action', label: 'Action', minWidth: '220px' },
               {
                 id: 'dueDate',
@@ -2541,7 +2541,7 @@ function ReviewTable({
     <PerformanceDataTable
       tableId="performance-reviews"
       columns={[
-        { id: 'employeeName', label: 'Employee', minWidth: '220px', sticky: true },
+        { id: 'employeeName', label: 'Staff', minWidth: '220px', sticky: true },
         { id: 'employeeIdentifier', label: 'Code', minWidth: '110px' },
         { id: 'cycleName', label: 'Cycle', minWidth: '200px' },
         { id: 'templateName', label: 'Template', minWidth: '190px' },

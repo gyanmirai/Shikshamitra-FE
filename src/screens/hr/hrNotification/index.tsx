@@ -18,7 +18,7 @@ import AttendanceLeaveNotificationManagement from './Components/AttendanceLeaveN
 const TABS = [
   {
     value: 'employee',
-    label: 'Employee',
+    label: 'Staff',
     icon: <Iconify icon="mdi:account-tie-outline" width={20} />,
     component: (props: any) => <EmployeeNotificationManagement {...props} />,
   },
@@ -55,7 +55,7 @@ const HRNotificationScreen = () => {
       {dialog.value ? (
         <CustomBreadcrumbs
           heading={isViewMode ? 'View Notification' : 'Edit Notification'}
-          description="Configure notifications for employees, attendance, and leave management."
+          description="Configure notifications for staff, attendance, and leave management."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard' },
             {
@@ -74,7 +74,7 @@ const HRNotificationScreen = () => {
       ) : (
         <CustomBreadcrumbs
           heading="Notification"
-          description="Configure notifications for employees, attendance, and leave management."
+          description="Configure notifications for staff, attendance, and leave management."
           links={[
             { name: 'HR/Staff', href: '/hr/dashboard' },
             { name: 'Notification', href: '/hr/notification' },

@@ -11,7 +11,7 @@ const HrEmployeeNotificationManagementScreen = () => (
         <Iconify icon="solar:bell-off-linear" width={24} />
         <Box>
           <Typography variant="subtitle2">
-            Employee notification templates are not configured.
+            Staff notification templates are not configured.
           </Typography>
           <Alert severity="info" sx={{ mt: 1 }}>
             This screen will stay empty until a real HR notification-settings API is available.

@@ -21,7 +21,7 @@ describe('compensation revision API contract', () => {
     expectedRevision: null,
   };
 
-  it('uses the employee-scoped direct-save endpoint', () => {
+  it('uses the staff-scoped direct-save endpoint', () => {
     expect(compensationEndpoint('employee-1')).toBe(
       '/payroll/employees/employee-1/compensation'
     );

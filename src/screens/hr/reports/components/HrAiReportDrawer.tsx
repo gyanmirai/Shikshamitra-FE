@@ -65,7 +65,7 @@ export function HrAiReportDrawer({ open, canBuild, canExport, onClose, onExportQ
       }}
     >
       <AiReportDrawerHeader
-        contextLabel="HR · current tenant and permitted employee scope"
+        contextLabel="HR · current tenant and permitted staff scope"
         disableClose={isWorking}
         onClose={handleClose}
       />
@@ -73,7 +73,7 @@ export function HrAiReportDrawer({ open, canBuild, canExport, onClose, onExportQ
       <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: { xs: 2, sm: 2.5 } }} aria-busy={isWorking}>
         <Stack spacing={2.25}>
           <Typography variant="body2" color="text.secondary">
-            Describe the HR report you need. The agent can design employee, payroll, attendance,
+            Describe the HR report you need. The agent can design staff, payroll, attendance,
             leave, policy/audit, or performance reports and will ask before making a material assumption.
           </Typography>
           {showPrompt ? (
@@ -92,7 +92,7 @@ export function HrAiReportDrawer({ open, canBuild, canExport, onClose, onExportQ
           {isAiReportBusyStage(stage) && (
             <AiReportActivity
               stage={stage}
-              scopeMessage="Using only your tenant, HR permissions, and current employee scope."
+              scopeMessage="Using only your tenant, HR permissions, and current staff scope."
             />
           )}
           {workflow.stage === 'clarifying' && workflow.questions.length > 0 && (

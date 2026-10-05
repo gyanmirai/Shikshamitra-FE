@@ -11,7 +11,7 @@ import {
   assignEmployeeToFirstAcademicScope,
 } from './employee-api';
 
-test.describe('HR Employee status', () => {
+test.describe('HR Staff status', () => {
   const openStatusDropdown = async (page: Page) => {
     await page
       .getByTestId(testIds.statusDialog)
@@ -109,13 +109,13 @@ test.describe('HR Employee status', () => {
     await expect(page.getByRole('heading', { name: 'Cannot Deactivate Manager' })).toBeVisible();
     await expect(
       page.getByText(
-        'This employee is currently assigned as a Reporting Manager for active staff members. Please assign a new manager to their team before making this employee inactive.'
+        'This staff is currently assigned as a Reporting Manager for active staff members. Please assign a new manager to their team before making this staff inactive.'
       )
     ).toBeVisible();
     await expect(page.getByTestId(testIds.statusUpdateButton)).toBeDisabled();
     await expect(page.getByText(/Failed to update status/i)).toHaveCount(0);
     await expect(
-      page.getByText(/HR:Employee:010032|Reporting manager has active reports/i)
+      page.getByText(/HR:Staff:010032|Reporting manager has active reports/i)
     ).toHaveCount(0);
     expect(statusUpdateRequests).toBe(0);
 

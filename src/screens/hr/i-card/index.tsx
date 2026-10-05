@@ -168,13 +168,11 @@ function DebouncedColorPicker({
     setLocalValue(value);
   }, [value]);
 
-  useEffect(() => {
-    return () => {
+  useEffect(() => () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
-    };
-  }, []);
+    }, []);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextColor = event.target.value;
@@ -209,7 +207,7 @@ function DebouncedColorPicker({
   );
 }
 
-const steps = ['Template', 'Designer', 'Review', 'Employees', 'Export'];
+const steps = ['Template', 'Designer', 'Review', 'Employee', 'Export'];
 
 const presets = [
   {
@@ -257,8 +255,8 @@ const CARD_DIMENSIONS = {
 
 const defaultFields: ICardField[] = [
   { name: 'photo', label: 'Photo', enabled: true, important: true },
-  { name: 'name', label: 'Employee Name', enabled: true, important: true },
-  { name: 'employeeCode', label: 'Employee Code', enabled: true, important: true },
+  { name: 'name', label: 'Staff Name', enabled: true, important: true },
+  { name: 'employeeCode', label: 'Staff Code', enabled: true, important: true },
   { name: 'designation', label: 'Designation', enabled: true },
   { name: 'department', label: 'Department', enabled: true },
   { name: 'organization', label: 'Organization', enabled: true },
@@ -269,7 +267,7 @@ const defaultFields: ICardField[] = [
 ];
 
 const initialBuilder = (academicYearName?: string, organization = 'all'): BuilderState => ({
-  name: 'Employee I-Card',
+  name: 'Staff I-Card',
   organization,
   orientation: 'Horizontal',
   width: CARD_DIMENSIONS.Horizontal.width,
@@ -491,7 +489,7 @@ const EmployeeIcardScreen = () => {
 
   const handleDelete = async (row: EmployeeICardTemplate) => {
     const confirmed = await showConfirm({
-      title: 'Delete Employee I-Card Template',
+      title: 'Delete Staff I-Card Template',
       message: `Delete "${row.name}"? This cannot be undone.`,
       icon: 'warning',
     });
@@ -499,9 +497,9 @@ const EmployeeIcardScreen = () => {
 
     try {
       await deleteTemplate(row.id).unwrap();
-      shikshaMitraToast.success({ message: 'Employee I-card template deleted' });
+      shikshaMitraToast.success({ message: 'Staff I-card template deleted' });
     } catch {
-      shikshaMitraToast.error({ message: 'Could not delete Employee I-card template' });
+      shikshaMitraToast.error({ message: 'Could not delete Staff I-card template' });
     }
   };
 
@@ -510,9 +508,9 @@ const EmployeeIcardScreen = () => {
       {form.value ? (
         <Box display="flex" flexDirection="column" height="100%">
           <CustomBreadcrumbs
-            heading={selectedTemplate ? 'Update Employee I-Card' : 'Create Employee I-Card'}
-            description="Create branded, print-ready employee ID cards."
-            links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee I-Card' }]}
+            heading={selectedTemplate ? 'Update Staff I-Card' : 'Create Staff I-Card'}
+            description="Create branded, print-ready staff ID cards."
+            links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Staff I-Card' }]}
             isBack
             onBack={form.onFalse}
           />
@@ -529,9 +527,9 @@ const EmployeeIcardScreen = () => {
       ) : (
         <>
           <CustomBreadcrumbs
-            heading="Employee I-Card"
-            description="Manage templates, check readiness, and export employee cards."
-            links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Employee I-Card' }]}
+            heading="Staff I-Card"
+            description="Manage templates, check readiness, and export staff cards."
+            links={[{ name: 'HR/Staff' }, { name: 'Employee' }, { name: 'Staff I-Card' }]}
             action={
               <Button
                 onClick={handleCreate}
@@ -540,7 +538,7 @@ const EmployeeIcardScreen = () => {
                 size="small"
                 disabled={!academicYearId || !canAdd}
               >
-                Create Employee I-Card
+                Create Staff I-Card
               </Button>
             }
           />
@@ -617,7 +615,7 @@ const EmployeeIcardScreen = () => {
               },
             ]}
             data={rows}
-            noDataText="No Employee I-card templates found."
+            noDataText="No Staff I-card templates found."
           />
         </>
       )}
@@ -625,12 +623,12 @@ const EmployeeIcardScreen = () => {
         maxWidth="sm"
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">Employee I-Card Preview</Typography>
+            <Typography variant="h5">Staff I-Card Preview</Typography>
             <CustomTooltip
               arrow
               placement="right"
               sx={{ textAlign: 'justify' }}
-              title="Preview how the employee ID card will look when printed using a sample employee profile."
+              title="Preview how the staff ID card will look when printed using a sample staff profile."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -976,7 +974,7 @@ const EmployeeICardBuilder = ({
         ),
       },
       {
-        label: 'Employee',
+        label: 'Staff',
         id: 'fullName',
         minWidth: 100,
         sticky: true,
@@ -985,7 +983,7 @@ const EmployeeICardBuilder = ({
         render: (_: unknown, row: any) => (
           <Box>
             <Typography variant="body2">
-              {(row as EmployeeICardRow).fullName || 'Unnamed employee'}
+              {(row as EmployeeICardRow).fullName || 'Unnamed staff'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {(row as EmployeeICardRow).employeeIdentifier || '-'}
@@ -1183,16 +1181,16 @@ const EmployeeICardBuilder = ({
 
       if (savedTemplateId) {
         await updateTemplate({ id: savedTemplateId, body }).unwrap();
-        shikshaMitraToast.success({ message: 'Employee I-card template updated' });
+        shikshaMitraToast.success({ message: 'Staff I-card template updated' });
         return savedTemplateId;
       }
 
       const created: any = await createTemplate(body).unwrap();
       setSavedTemplateId(created.id);
-      shikshaMitraToast.success({ message: 'Employee I-card template created' });
+      shikshaMitraToast.success({ message: 'Staff I-card template created' });
       return created.id;
     } catch {
-      shikshaMitraToast.error({ message: 'Could not save Employee I-card template' });
+      shikshaMitraToast.error({ message: 'Could not save Staff I-card template' });
       return null;
     } finally {
       setIsSaving(false);
@@ -1201,7 +1199,7 @@ const EmployeeICardBuilder = ({
 
   const handleExport = async () => {
     if (state.selectedEmployeeIds.length === 0) {
-      shikshaMitraToast.error({ message: 'Select at least one employee' });
+      shikshaMitraToast.error({ message: 'Select at least one staff' });
       return;
     }
 
@@ -1218,7 +1216,7 @@ const EmployeeICardBuilder = ({
         },
       }).unwrap();
       if (!(await isPdfBlob(blob))) {
-        shikshaMitraToast.error({ message: 'Could not export Employee I-card PDF' });
+        shikshaMitraToast.error({ message: 'Could not export Staff I-card PDF' });
         return;
       }
       const url = window.URL.createObjectURL(blob);
@@ -1227,17 +1225,17 @@ const EmployeeICardBuilder = ({
       link.download = `Employee-I-Cards-${new Date().toISOString().slice(0, 10)}.pdf`;
       link.click();
       window.URL.revokeObjectURL(url);
-      shikshaMitraToast.success({ message: 'Employee I-card PDF downloaded' });
+      shikshaMitraToast.success({ message: 'Staff I-card PDF downloaded' });
       handleClose();
     } catch (error: any) {
       const detail: string = error?.data?.detail || '';
       if (detail.toLowerCase().includes('required') && detail.toLowerCase().includes('employee')) {
         shikshaMitraToast.error({
           message:
-            'No eligible employees after filtering. Uncheck "Exclude" or choose employees with complete data.',
+            'No eligible staff after filtering. Uncheck "Exclude" or choose staff with complete data.',
         });
       } else {
-        shikshaMitraToast.error({ message: 'Could not export Employee I-card PDF' });
+        shikshaMitraToast.error({ message: 'Could not export Staff I-card PDF' });
       }
     }
   };
@@ -1597,7 +1595,7 @@ const EmployeeICardBuilder = ({
                   <Stack spacing={2}>
                     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                       <TextField
-                        label="Search employees"
+                        label="Search staff"
                         value={state.employeeSearch}
                         onChange={(event) => {
                           patchState({ employeeSearch: event.target.value });
@@ -1640,7 +1638,7 @@ const EmployeeICardBuilder = ({
                     <ReadinessBar readiness={readiness} />
                     {isFetchingEmployees && (
                       <Typography variant="caption" color="text.secondary">
-                        Loading employees...
+                        Loading staff...
                       </Typography>
                     )}
                     <CustomizableTable
@@ -1657,7 +1655,7 @@ const EmployeeICardBuilder = ({
                       })}
                       tableContainerProps={{ sx: { maxHeight: 360 } }}
                       wrapperProps={{ sx: { maxHeight: 430 } }}
-                      noDataText="No employees found for this filter."
+                      noDataText="No staff found for this filter."
                     />
                   </Stack>
                 )}
@@ -1721,7 +1719,7 @@ const EmployeeICardBuilder = ({
                           }
                         />
                       }
-                      label="Exclude employees missing photo, phone, or designation"
+                      label="Exclude staff missing photo, phone, or designation"
                     />
                     <Button
                       variant="contained"
@@ -1794,7 +1792,7 @@ const EmployeeICardBuilder = ({
                           fullWidth
                           size="small"
                           name="employee-card-preview-search"
-                          label="Find Selected Employee"
+                          label="Find Selected Staff"
                           placeholder="Search by name, code, role, or department…"
                           value={previewSearch}
                           autoComplete="off"
@@ -1850,7 +1848,7 @@ const EmployeeICardBuilder = ({
                           >
                             <IconButton
                               size="small"
-                              aria-label="Preview previous employee card"
+                              aria-label="Preview previous staff card"
                               disabled={effectivePreviewIndex === 0}
                               onClick={() =>
                                 setPreviewIndex(Math.max(0, effectivePreviewIndex - 1))
@@ -1863,7 +1861,7 @@ const EmployeeICardBuilder = ({
                             </Typography>
                             <IconButton
                               size="small"
-                              aria-label="Preview next employee card"
+                              aria-label="Preview next staff card"
                               disabled={
                                 effectivePreviewIndex >= selectedPreviewEmployees.length - 1
                               }
@@ -2329,7 +2327,7 @@ const resolvePreviewValue = (
     case 'validityYear':
       return academicYearName || '2026-2027';
     case 'address':
-      return employee?.address || 'Employee address';
+      return employee?.address || 'Staff address';
     case 'schoolName':
       return state.schoolName || state.name;
     case 'schoolAddress':
@@ -2640,7 +2638,7 @@ const useRecommendations = (state: BuilderState, employees: any[]) =>
     if (employees.some((employee) => !employee.thumbnailPicture)) {
       recommendations.push({
         id: 'photos',
-        title: 'Some employees are missing photos',
+        title: 'Some staff are missing photos',
         body: 'Cards can still export, but HR should upload photos before final printing.',
       });
     }
@@ -2648,7 +2646,7 @@ const useRecommendations = (state: BuilderState, employees: any[]) =>
       recommendations.push({
         id: 'ready',
         title: 'Template is print ready',
-        body: 'Branding, fields, and employee data look ready for PDF generation.',
+        body: 'Branding, fields, and staff data look ready for PDF generation.',
       });
     }
 

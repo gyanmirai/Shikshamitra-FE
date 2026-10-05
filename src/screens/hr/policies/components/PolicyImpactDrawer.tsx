@@ -99,7 +99,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
     >
       <DrawerHeader
         title="Policy Impact"
-        helpText="Preview how this action affects employees, assignments, versions, and risks before confirming."
+        helpText="Preview how this action affects staff, assignments, versions, and risks before confirming."
         onClose={closeImpactDrawer}
         closeDisabled={isPolicyOperationActive}
       />
@@ -139,7 +139,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                   />
                   <Chip
                     size="small"
-                    label={`${formatNumber(impactPreview.affectedEmployeeCount)} employees`}
+                    label={`${formatNumber(impactPreview.affectedEmployeeCount)} staff`}
                   />
                   <Chip
                     size="small"
@@ -315,12 +315,12 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             <Divider />
             <Box sx={{ flex: 1, overflow: 'auto', px: 2.5, py: 2 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Affected Employees&nbsp;
+                Affected Staff&nbsp;
                 <Typography component="span" variant="caption" color="text.secondary">
                   ({formatNumber(impactPreview.affectedEmployees?.length ?? 0)})
                 </Typography>
               </Typography>
-              <SectionTable columns={['Employee', 'Department', 'Type']}>
+              <SectionTable columns={['Staff', 'Department', 'Type']}>
                 {impactPreview.affectedEmployees?.length ? (
                   impactPreview.affectedEmployees.map((employee) => (
                     <TableRow key={employee.employeeId} hover>
@@ -339,7 +339,7 @@ export function PolicyImpactDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                     </TableRow>
                   ))
                 ) : (
-                  <EmptyRows colSpan={3} message="No employees found in preview." />
+                  <EmptyRows colSpan={3} message="No staff found in preview." />
                 )}
               </SectionTable>
             </Box>

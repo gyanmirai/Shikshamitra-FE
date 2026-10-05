@@ -166,15 +166,15 @@ const AttendanceProblemDetection = () => {
         >
           <SectionHeader
             icon="mdi:clock-alert-outline"
-            title="Frequent Late Employees"
+            title="Frequent Late Staff"
             color="#FF5630"
-            tooltip="Top 5 employees with most late entries this month"
+            tooltip="Top 5 staff with most late entries this month"
           />
           <TableContainer>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Employee</TableCell>
+                  <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Staff</TableCell>
                   <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Department</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700, fontSize: '0.7rem' }}>
                     Late Count
@@ -280,13 +280,13 @@ const AttendanceProblemDetection = () => {
             icon="mdi:timer-sand"
             title="Low Working Hours"
             color="#8E33FF"
-            tooltip="Employees not meeting required working hours"
+            tooltip="Staff not meeting required working hours"
           />
           <TableContainer>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Employee</TableCell>
+                  <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Staff</TableCell>
                   <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Hours</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700, fontSize: '0.7rem' }}>
                     Deficit
@@ -350,13 +350,13 @@ const AttendanceProblemDetection = () => {
             icon="mdi:account-alert-outline"
             title="Repeated Offenders"
             color="#00B8D9"
-            tooltip="Employees frequently requesting corrections"
+            tooltip="Staff frequently requesting corrections"
           />
           <TableContainer>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Employee</TableCell>
+                  <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Staff</TableCell>
                   <TableCell sx={{ fontWeight: 700, fontSize: '0.7rem' }}>Type</TableCell>
                   <TableCell align="right" sx={{ fontWeight: 700, fontSize: '0.7rem' }}>
                     Count

@@ -2,8 +2,8 @@ import { it, expect, describe } from 'vitest';
 
 import { applyEmployeeCreateResponseToFormValues } from './employee-form-state';
 
-describe('employee form state', () => {
-  it('stores employee id and linked user id from the create response', () => {
+describe('staff form state', () => {
+  it('stores staff id and linked user id from the create response', () => {
     const values = applyEmployeeCreateResponseToFormValues(
       { firstName: 'Asha', employeeId: '', userId: null },
       { id: 'employee-1', userId: 'user-1' }

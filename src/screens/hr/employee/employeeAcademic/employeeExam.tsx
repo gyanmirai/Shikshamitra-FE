@@ -10,7 +10,7 @@ const EmployeeExam = () => (
         <Box>
           <Typography variant="subtitle2">Staff exam schedule is not connected.</Typography>
           <Alert severity="info" sx={{ mt: 1 }}>
-            Exam and timetable data will appear here after the employee academic API is connected.
+            Exam and timetable data will appear here after the staff academic API is connected.
           </Alert>
         </Box>
       </Stack>

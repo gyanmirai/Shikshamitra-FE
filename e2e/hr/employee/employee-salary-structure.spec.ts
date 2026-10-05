@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 import { testIds } from './selectors';
 import { gotoEmployeeList, openFirstRowAction } from './employee-page';
 
-test.describe('HR Employee salary structure', () => {
+test.describe('HR Staff salary structure', () => {
   test('opens salary structure, validates fixed amount, saves, and reloads dialog', async ({
     page,
   }) => {

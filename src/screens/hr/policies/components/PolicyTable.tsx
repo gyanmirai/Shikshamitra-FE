@@ -148,11 +148,11 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
       label: (
         <Stack direction="row" spacing={0.5} alignItems="center">
           <span>Integration</span>
-          <InfoTooltipIcon title="Determines how attendance data is pulled - per employee or globally." />
+          <InfoTooltipIcon title="Determines how attendance data is pulled - per staff or globally." />
         </Stack>
       ),
       minWidth: 140,
-      render: () => <Chip size="small" label="Per employee attendance" variant="outlined" />,
+      render: () => <Chip size="small" label="Per staff attendance" variant="outlined" />,
     },
     { id: 'version', label: 'Ver.', width: 70 },
     { id: 'updatedAt', label: 'Updated', minWidth: 140 },
@@ -307,7 +307,7 @@ export function PolicyTable({ type, ctx }: { type: PolicyType; ctx: HRPolicyWork
         : item.captureMode === 'manual_status'
           ? 'Manual status'
           : `${item.captureMode === 'manual_with_time' ? 'Manual with time' : 'Integrated'} / ${item.fullDayThresholdPercentage}%`,
-    integration: 'Per employee attendance',
+    integration: 'Per staff attendance',
     version: `v${item.version}`,
     updatedAt: formatDate(item.lastModificationTime || item.lastUpdatedAt || item.creationTime),
   }));

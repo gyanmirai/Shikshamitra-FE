@@ -76,7 +76,7 @@ export default function SalaryTemplateReview({
         >
           <Typography variant="body2" color="text.secondary" mb={2}>
             Preview the current rules before saving. This sample validates the selected amount;
-            employee eligibility is checked during salary generation.
+            staff eligibility is checked during salary generation.
           </Typography>
           <Grid container spacing={1} alignItems="flex-start">
             <Grid size={{ xs: 12, sm: 6, md: 5 }}>

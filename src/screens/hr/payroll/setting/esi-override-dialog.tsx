@@ -32,7 +32,7 @@ type OverrideType = EsiStatutoryOverride['overrideType'];
 const overrideLabels: Record<OverrideType, string> = {
   ForceCovered: 'Force Covered',
   ForceNotCovered: 'Force Not Covered',
-  EmployeeAmount: 'Employee Amount',
+  EmployeeAmount: 'Staff Amount',
   EmployerAmount: 'Employer Amount',
 };
 
@@ -220,7 +220,7 @@ export default function EsiOverrideDialog({
         {isError ? <Alert severity="error">Exception history could not be loaded.</Alert> : null}
         {!isFetching && !isError && overrides.length === 0 ? (
           <Typography variant="body2" color="text.secondary">
-            No exceptions recorded for this employee.
+            No exceptions recorded for this staff member.
           </Typography>
         ) : null}
         <Box display="grid" gap={1}>

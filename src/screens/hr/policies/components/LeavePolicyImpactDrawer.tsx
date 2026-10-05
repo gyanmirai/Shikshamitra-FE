@@ -53,7 +53,7 @@ export function LeavePolicyImpactDrawer({
               <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
                 <Chip size="small" label="Leave policy" color="primary" variant="outlined" />
                 <Chip size="small" label={review.action.replaceAll('-', ' ')} variant="outlined" />
-                <Chip size="small" label={`${review.affectedEmployeeCount} employees`} />
+                <Chip size="small" label={`${review.affectedEmployeeCount} staff`} />
                 <Chip size="small" label={`${review.affectedRequestCount} requests`} />
                 <Chip size="small" label={`${review.balanceImpactCount} balances`} />
                 <Chip

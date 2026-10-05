@@ -498,12 +498,12 @@ const RenderPayrollFields = (props: any) => {
   const policySourceLabel = isPreviewLoading
     ? 'Resolving...'
     : policyPreview?.policySource === 'employee'
-      ? 'Employee override'
+      ? 'Staff override'
       : policyPreview?.policySource || 'Default policy';
   const organizationPolicyEnabled = !values.policyOverrideEnabled;
   const policyStatusLabel = organizationPolicyEnabled
     ? 'Following Organization Policies'
-    : 'Custom Employee Override Applied';
+    : 'Custom Staff Override Applied';
   const policySourceDetail =
     policyPreview?.matchedTargetDisplayName ||
     policyPreview?.matchedTargetKey ||
@@ -724,7 +724,7 @@ const RenderPayrollFields = (props: any) => {
             </Grid>
             {!policyPreview && !isPreviewLoading ? (
               <Alert severity="info" sx={{ mt: 1.5 }}>
-                Select employee scope fields and joining date to preview effective policies.
+                Select staff member scope fields and joining date to preview effective policies.
               </Alert>
             ) : null}
             <Divider sx={{ my: 1.25 }} />
@@ -737,12 +737,12 @@ const RenderPayrollFields = (props: any) => {
             >
               <Box>
                 <Typography variant="subtitle2" fontWeight={700}>
-                  Employee Override
+                  Staff Override
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
                   {organizationPolicyEnabled
                     ? 'Using the resolved organization policy chain.'
-                    : 'Select employee-specific payroll, attendance, and leave policies.'}
+                    : 'Select staff member-specific payroll, attendance, and leave policies.'}
                 </Typography>
               </Box>
               <FormControlLabel
@@ -1182,7 +1182,7 @@ const RenderPayrollFields = (props: any) => {
             ) : undefined
           }
         >
-          Salary is managed separately. The employee remains inactive until a valid salary is saved and an administrator activates the employee.
+          Salary is managed separately. The staff remains inactive until a valid salary is saved and an administrator activates the staff.
         </Alert>
         <Grid size={{ xs: 12, md: 6 }}>
           <RenderComponents

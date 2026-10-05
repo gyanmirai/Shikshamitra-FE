@@ -102,7 +102,7 @@ export async function findEmployeeBySearch(page: Page, search: string) {
   );
 
   if (!response.ok()) {
-    throw new Error(`Employee search failed: ${response.status()} ${await response.text()}`);
+    throw new Error(`Staff search failed: ${response.status()} ${await response.text()}`);
   }
 
   const body = await response.json();
@@ -123,7 +123,7 @@ export async function getEmployeeOnboardingRoleId(
 ): Promise<string> {
   const response = await employeeApiRequest(page, '/identity/roles/all');
   if (!response.ok()) {
-    throw new Error(`Employee role lookup failed: ${response.status()} ${await response.text()}`);
+    throw new Error(`Staff role lookup failed: ${response.status()} ${await response.text()}`);
   }
 
   const roles = asItems<any>(await response.json());
@@ -137,10 +137,10 @@ export async function getEmployeeOnboardingRoleId(
 
   if (!role?.id) {
     const detail = preferredRoleId
-      ? `Role ${preferredRoleId} is not explicitly approved for teaching-employee onboarding.`
-      : 'No role is explicitly approved for teaching-employee onboarding.';
+      ? `Role ${preferredRoleId} is not explicitly approved for teaching-staff onboarding.`
+      : 'No role is explicitly approved for teaching-staff onboarding.';
     throw new Error(
-      `${detail} Run the DDVS role metadata seeder or create an Employee role marked Available for employee onboarding.`
+      `${detail} Run the DDVS role metadata seeder or create an Staff role marked Available for staff onboarding.`
     );
   }
 
@@ -167,7 +167,7 @@ async function academicYears(page: Page) {
     .filter((year) => year?.id);
 
   if (!years.length) {
-    throw new Error('Unable to resolve academic years for employee scope setup.');
+    throw new Error('Unable to resolve academic years for staff scope setup.');
   }
 
   return years;
@@ -183,7 +183,7 @@ function pickCurrentAcademicYear(years: any[]) {
     }) || years[0];
 
   if (!current?.id) {
-    throw new Error('Unable to resolve current academic year for employee scope setup.');
+    throw new Error('Unable to resolve current academic year for staff scope setup.');
   }
 
   return current;
@@ -268,7 +268,7 @@ async function firstMediumScope(page: Page, academicYearId: string) {
   });
 
   if (!medium?.id) {
-    throw new Error('Unable to resolve an academic medium for employee scope setup.');
+    throw new Error('Unable to resolve an academic medium for staff scope setup.');
   }
 
   const board = boardsById.get(
@@ -276,7 +276,7 @@ async function firstMediumScope(page: Page, academicYearId: string) {
   );
   const boardId = board?.id || medium.educationBoardId || medium.EducationBoardId;
   if (!boardId) {
-    throw new Error('Unable to resolve an academic board for employee scope setup.');
+    throw new Error('Unable to resolve an academic board for staff scope setup.');
   }
 
   return {
@@ -288,7 +288,7 @@ async function firstMediumScope(page: Page, academicYearId: string) {
 export async function assignEmployeeToFirstAcademicScope(page: Page, employee: any) {
   const userId = employee?.userId || employee?.UserId || employee?.identityUserId || employee?.id;
   if (!userId) {
-    throw new Error('Created employee did not expose a userId for employee scope setup.');
+    throw new Error('Created staff did not expose a userId for staff scope setup.');
   }
 
   const years = await academicYears(page);
@@ -316,7 +316,7 @@ export async function assignEmployeeToFirstAcademicScope(page: Page, employee: a
   if (!scope) {
     throw lastScopeError instanceof Error
       ? lastScopeError
-      : new Error('Unable to resolve an academic medium for employee scope setup.');
+      : new Error('Unable to resolve an academic medium for staff scope setup.');
   }
   const response = await employeeApiRequest(page, '/app/user-scope/bulk-assign', {
     method: 'POST',
@@ -330,12 +330,12 @@ export async function assignEmployeeToFirstAcademicScope(page: Page, employee: a
         },
       ],
       clearExisting: false,
-      description: `E2E employee scope setup ${Date.now()}`,
+      description: `E2E staff scope setup ${Date.now()}`,
     }),
   });
 
   if (!response.ok()) {
-    throw new Error(`Employee scope setup failed: ${response.status()} ${await response.text()}`);
+    throw new Error(`Staff scope setup failed: ${response.status()} ${await response.text()}`);
   }
 
   return {
@@ -380,14 +380,14 @@ export async function createEmployeeFromExistingDefaults(
       });
 
       if (!listResponse.ok) {
-        throw new Error(`Employee defaults list failed: ${listResponse.status}`);
+        throw new Error(`Staff defaults list failed: ${listResponse.status}`);
       }
 
       const listBody = await listResponse.json();
       const sourceEmployee = listBody?.items?.[0];
       if (!sourceEmployee?.id) {
         throw new Error(
-          'At least one existing employee is required for E2E default role/shift data.'
+          'At least one existing staff is required for E2E default role/shift data.'
         );
       }
 
@@ -396,7 +396,7 @@ export async function createEmployeeFromExistingDefaults(
         { headers }
       );
       if (!detailResponse.ok) {
-        throw new Error(`Employee defaults detail failed: ${detailResponse.status}`);
+        throw new Error(`Staff defaults detail failed: ${detailResponse.status}`);
       }
 
       const defaults = await detailResponse.json();
@@ -458,7 +458,7 @@ export async function createEmployeeFromExistingDefaults(
       const responseText = await createResponse.text();
       if (!createResponse.ok) {
         throw new Error(
-          `Employee create failed: ${createResponse.status} ${responseText} roleId=${body.roleId} shiftId=${body.shiftId}`
+          `Staff create failed: ${createResponse.status} ${responseText} roleId=${body.roleId} shiftId=${body.shiftId}`
         );
       }
 

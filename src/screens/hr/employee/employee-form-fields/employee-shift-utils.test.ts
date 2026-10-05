@@ -6,7 +6,7 @@ import {
   resolveSelectedShiftOption,
 } from './employee-shift-utils';
 
-describe('employee shift utilities', () => {
+describe('staff shift utilities', () => {
   const shifts = [
     { id: 'shift-1', shiftName: 'Morning' },
     { id: 'shift-2', shiftName: 'Full Day' },

@@ -28,7 +28,7 @@ import {
 
 const exportJob = (overrides: Partial<HrReportExportJob>): HrReportExportJob => ({
   id: overrides.id ?? 'job-1',
-  reportType: overrides.reportType ?? 'Employee Report',
+  reportType: overrides.reportType ?? 'Staff Report',
   format: overrides.format ?? 'excel',
   status: overrides.status ?? 'Completed',
   creationTime: overrides.creationTime ?? '2026-06-01T10:00:00Z',
@@ -39,7 +39,7 @@ const exportJob = (overrides: Partial<HrReportExportJob>): HrReportExportJob => 
 
 const template = (overrides: Partial<HrReportTemplate>): HrReportTemplate => ({
   id: overrides.id ?? 'template-1',
-  name: overrides.name ?? 'Employee Template',
+  name: overrides.name ?? 'Staff Template',
   category: overrides.category ?? 'Employee',
   dataSource: overrides.dataSource ?? 'employee',
   visibility: overrides.visibility ?? 'private',
@@ -47,7 +47,7 @@ const template = (overrides: Partial<HrReportTemplate>): HrReportTemplate => ({
   ownerUserId: overrides.ownerUserId ?? 'user-1',
   creationTime: overrides.creationTime ?? '2026-06-01T10:00:00Z',
   definition: overrides.definition ?? {
-    reportType: 'Employee Template',
+    reportType: 'Staff Template',
     dataSource: 'employee',
     filters: {},
   },
@@ -56,13 +56,13 @@ const template = (overrides: Partial<HrReportTemplate>): HrReportTemplate => ({
 
 const schedule = (overrides: Partial<HrReportSchedule>): HrReportSchedule => ({
   id: overrides.id ?? 'schedule-1',
-  name: overrides.name ?? 'Monthly Employee Report',
+  name: overrides.name ?? 'Monthly Staff Report',
   frequency: overrides.frequency ?? 'monthly',
   deliveryMode: overrides.deliveryMode ?? 'inApp',
   status: overrides.status ?? 'Active',
   recipientUserIds: overrides.recipientUserIds ?? [],
   definition: overrides.definition ?? {
-    reportType: 'Employee Template',
+    reportType: 'Staff Template',
     dataSource: 'employee',
     filters: {},
   },
@@ -299,15 +299,15 @@ describe('HR reports center utils', () => {
     expect(getHrReportRecipientLabel(schedule({ recipientUserIds: ['user-1', 'user-2'] }))).toBe(
       'You + 2'
     );
-    expect(getHrReportExportLineageLabel(exportJob({ templateName: 'Employee Template' }))).toBe(
-      'Generated from template: Employee Template'
+    expect(getHrReportExportLineageLabel(exportJob({ templateName: 'Staff Template' }))).toBe(
+      'Generated from template: Staff Template'
     );
     expect(getHrReportExportLineageLabel(exportJob({ sourceAction: 'scheduleRun' }))).toBe(
       'Scheduled run'
     );
     expect(
       getHrReportExportLineageLabel(
-        exportJob({ sourceAction: 'scheduleRun', templateName: 'Employee Template' })
+        exportJob({ sourceAction: 'scheduleRun', templateName: 'Staff Template' })
       )
     ).toBe('Scheduled run');
   });

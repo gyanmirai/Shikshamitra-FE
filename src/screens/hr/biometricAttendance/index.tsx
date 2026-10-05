@@ -107,7 +107,7 @@ const DEVICE_INTEGRATION_MODES = [
     status: 'Available',
     color: 'success' as LabelColor,
     icon: 'mdi:file-excel-outline',
-    description: 'Use the standard import template to upload employee attendance punches.',
+    description: 'Use the standard import template to upload staff attendance punches.',
   },
   {
     title: 'Biometric Device Sync',
@@ -138,7 +138,7 @@ const DEVICE_INTEGRATION_MODES = [
 const PREVIEW_COLUMNS: import('src/components/customizabaleTable/types').IColumn[] = [
   {
     id: 'employeeName',
-    label: 'Employee Name',
+    label: 'Staff Name',
     minWidth: '12vw',
     align: 'left',
     sticky: true,
@@ -1133,7 +1133,7 @@ const ImportDetailDialog = ({
 
     if (submitReadyRows.length === 0) {
       shikshaMitraToast.error({
-        message: 'No valid rows available to submit. Resolve employee mapping issues first.',
+        message: 'No valid rows available to submit. Resolve staff mapping issues first.',
       });
       return;
     }
@@ -1149,8 +1149,8 @@ const ImportDetailDialog = ({
       shikshaMitraToast.success({
         message:
           unresolvedCount > 0
-            ? `Attendance saved for ${submitReadyRows.length} employee(s). Skipped ${unresolvedCount} unresolved row(s).`
-            : `Attendance saved successfully for ${submitReadyRows.length} employee(s).`,
+            ? `Attendance saved for ${submitReadyRows.length} staff members. Skipped ${unresolvedCount} unresolved row(s).`
+            : `Attendance saved successfully for ${submitReadyRows.length} staff members.`,
       });
     } catch (error: any) {
       console.error('Failed to save attendance:', error);
@@ -1553,7 +1553,7 @@ const ImportDetailDialog = ({
 
           {/* Row Preview Table — API call 3 */}
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-            <Typography variant="h6">Employee Rows</Typography>
+            <Typography variant="h6">Staff Rows</Typography>
             {!isPayrollLocked && (
               <LoadingButton
                 variant="contained"

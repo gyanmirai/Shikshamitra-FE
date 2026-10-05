@@ -13,7 +13,7 @@ const employeeRole = <T extends Record<string, unknown>>(role: T) => ({
   ...role,
 });
 
-describe('employee role options', () => {
+describe('staff role options', () => {
   it.each(['Admin', 'super-admin', 'Student', ' Parent '])(
     'excludes the reserved %s role even when its marker is enabled',
     (name) => {
@@ -21,7 +21,7 @@ describe('employee role options', () => {
     }
   );
 
-  it('keeps explicitly assignable employee roles and preserves their original objects', () => {
+  it('keeps explicitly assignable staff roles and preserves their original objects', () => {
     const teacher = employeeRole({ id: 'teacher-role', name: 'Teacher' });
     const clerk = employeeRole({ id: 'clerk-role', name: 'Clerk' });
     const roles = getEmployeeAssignableRoles([
@@ -104,7 +104,7 @@ describe('employee role options', () => {
     ]);
   });
 
-  it('treats missing group metadata as compatible with both employee groups', () => {
+  it('treats missing group metadata as compatible with both staff groups', () => {
     const role = employeeRole({ id: 'shared-role', name: 'Shared Custom Role' });
 
     expect(isRoleCompatibleWithEmployeeGroup(role, 0)).toBe(true);

@@ -18,15 +18,15 @@ describe('employeeApi contracts', () => {
     );
   });
 
-  it('builds work experience URL from a plain employee id', () => {
+  it('builds work experience URL from a plain staff id', () => {
     expect(buildWorkExperienceUrl('employee-2')).toBe('/employees/employee-2/work-experience');
   });
 
   it('does not place literal undefined in the work experience URL', () => {
-    expect(() => buildWorkExperienceUrl(undefined)).toThrow('Employee id is required');
+    expect(() => buildWorkExperienceUrl(undefined)).toThrow('Staff id is required');
   });
 
-  it('builds employee subresource URLs from employeeId arguments', () => {
+  it('builds staff subresource URLs from employeeId arguments', () => {
     expect(buildEmployeeSubresourceUrl({ employeeId: 'employee-3' }, 'family-info')).toBe(
       '/employees/employee-3/family-info'
     );
@@ -38,15 +38,15 @@ describe('employeeApi contracts', () => {
     );
   });
 
-  it('builds the employee dashboard URL from the employee id contract', () => {
+  it('builds the staff dashboard URL from the staff id contract', () => {
     expect(buildEmployeeDashboardUrl({ employeeId: 'employee-5' })).toBe(
       '/employees/employee-5/dashboard'
     );
   });
 
-  it('does not place literal undefined in employee subresource URLs', () => {
+  it('does not place literal undefined in staff subresource URLs', () => {
     expect(() => buildEmployeeSubresourceUrl({ employeeId: undefined }, 'family-info')).toThrow(
-      'Employee id is required to access family-info.'
+      'Staff id is required to access family-info.'
     );
   });
 
@@ -61,7 +61,7 @@ describe('employeeApi contracts', () => {
     );
   });
 
-  it('builds employee list params with boolean teaching filters and without empty values', () => {
+  it('builds staff directory params with boolean teaching filters and without empty values', () => {
     expect(
       buildEmployeeListQueryParams({
         page: 2,
@@ -87,7 +87,7 @@ describe('employeeApi contracts', () => {
     });
   });
 
-  it('caps employee list page size at the backend contract limit', () => {
+  it('caps staff directory page size at the backend contract limit', () => {
     expect(buildEmployeeListQueryParams({ page: 1, pageSize: 1000 })).toEqual({
       page: 1,
       pageSize: EMPLOYEE_LIST_MAX_PAGE_SIZE,

@@ -158,7 +158,7 @@ export const getPersonalInformationValidationSchema = (
       // eslint-disable-next-line func-names
       .test(
         'age-check',
-        'Employee must be at least 18 years old at the time of joining',
+        'Staff must be at least 18 years old at the time of joining',
         function (value) {
           if (!value) return true;
           const { dob } = this.parent;
@@ -169,7 +169,7 @@ export const getPersonalInformationValidationSchema = (
         }
       )
       .required('Date of Joining is required'),
-    employeeGroup: Yup.string().required('Employee Group is required'),
+    employeeGroup: Yup.string().required('Staff Group is required'),
     // qualification: Yup.string(),
     role: Yup.string().required('Role is required'),
     //   identificationMark1: Yup.string().required('Identification mark is required'),

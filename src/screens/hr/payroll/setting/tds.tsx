@@ -28,7 +28,7 @@ const TDS = () => {
           getOptionLabel={(option: any) => option?.firstName || ''}
           // defaultValue={top100Films.slice(0, 8)}
           renderInput={(params) => (
-            <TextField {...params} size="small" label="Employee" placeholder="Search  Employee" />
+            <TextField {...params} size="small" label="Staff" placeholder="Search  Staff" />
           )}
           renderOption={(props, option) => (
             <li {...props} key={option.id}>

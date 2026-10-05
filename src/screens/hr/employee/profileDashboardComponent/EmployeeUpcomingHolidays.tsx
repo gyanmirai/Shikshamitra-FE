@@ -25,7 +25,7 @@ const EmployeeUpcomingHolidays = ({ data }: { data: EmployeeDashboardData }) => 
     >
       <Typography variant="h6">Upcoming Holidays</Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-        Employee work-calendar holidays
+        Staff work-calendar holidays
       </Typography>
 
       {upcoming.length === 0 ? (

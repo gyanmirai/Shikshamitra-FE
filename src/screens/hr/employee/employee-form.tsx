@@ -7,6 +7,9 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRouter } from 'src/routes/hooks';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
+import { hasNavigationPermission } from 'src/utils/permissions';
 import { useGetBoardsQuery } from 'src/redux/board/boardApi';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { convertBase64Format } from 'src/utils/base64Formate';
@@ -49,6 +52,7 @@ import {
   useGetReportingManagerByEmployeeIdQuery,
   useUpdateReportingManagerByEmployeeIdMutation,
 } from 'src/redux/hr/employeeApi';
+import { getDefaultPolicySetupState } from '../policies/hr-policy-workspace-utils';
 
 import { allFields } from './employee-form-fields';
 import { StepSkeleton } from './employee-form-skeleton';
@@ -394,6 +398,9 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
   const dispatch = useDispatch();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const router = useRouter();
+  const [pendingPolicyRoute, setPendingPolicyRoute] = useState<string | null>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [pendingStep, setPendingStep] = useState<number | null>(null);
@@ -441,7 +448,8 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
   });
   const [previewPolicyAssignmentImpact] = usePreviewPolicyAssignmentImpactMutation();
   const {
-    data: defaultPayrollPolicies,
+    currentData: defaultPayrollPolicies,
+    error: defaultPayrollPoliciesError,
     isLoading: defaultPayrollPoliciesLoading,
     isFetching: defaultPayrollPoliciesFetching,
   } = useGetPayrollPoliciesQuery(
@@ -449,7 +457,8 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     { skip: !currentYear?.id || Boolean(editData?.id) }
   );
   const {
-    data: defaultAttendancePolicies,
+    currentData: defaultAttendancePolicies,
+    error: defaultAttendancePoliciesError,
     isLoading: defaultAttendancePoliciesLoading,
     isFetching: defaultAttendancePoliciesFetching,
   } = useGetAttendancePoliciesQuery(
@@ -457,7 +466,8 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     { skip: !currentYear?.id || Boolean(editData?.id) }
   );
   const {
-    data: defaultLeavePolicies,
+    currentData: defaultLeavePolicies,
+    error: defaultLeavePoliciesError,
     isLoading: defaultLeavePoliciesLoading,
     isFetching: defaultLeavePoliciesFetching,
   } = useGetLeavePoliciesQuery(
@@ -490,29 +500,54 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     getActiveDefaultPolicies(defaultPayrollPolicies?.items || []).length > 1 ||
     getActiveDefaultPolicies(defaultAttendancePolicies?.items || []).length > 1 ||
     getActiveDefaultPolicies(defaultLeavePolicies?.items || [], isActiveLeavePolicy).length > 1;
-  const defaultPolicyAssignment = useMemo(
-    () => ({
-      payrollPolicy: defaultPayrollPolicy,
-      attendancePolicy: defaultAttendancePolicy,
-      leavePolicy: defaultLeavePolicy,
-      missingMessage: getEmployeeCreationDefaultPolicyMessage({
-        currentYearId: currentYear?.id,
-        isLoading: defaultPolicyLookupLoading,
-        hasMultipleDefaults: hasMultipleDefaultPolicies,
-        payrollPolicyId: defaultPayrollPolicy?.id,
-        attendancePolicyId: defaultAttendancePolicy?.id,
-        leavePolicyId: defaultLeavePolicy?.id,
-      }),
+  const setupStates = {
+    payroll: getDefaultPolicySetupState({
+      data: defaultPayrollPolicies,
+      loading: defaultPayrollPoliciesLoading || defaultPayrollPoliciesFetching,
+      error: defaultPayrollPoliciesError,
+      items: getActiveDefaultPolicies(defaultPayrollPolicies?.items || []),
     }),
-    [
-      currentYear?.id,
-      defaultAttendancePolicy,
-      defaultLeavePolicy,
-      defaultPolicyLookupLoading,
-      defaultPayrollPolicy,
-      hasMultipleDefaultPolicies,
-    ]
-  );
+    attendance: getDefaultPolicySetupState({
+      data: defaultAttendancePolicies,
+      loading: defaultAttendancePoliciesLoading || defaultAttendancePoliciesFetching,
+      error: defaultAttendancePoliciesError,
+      items: getActiveDefaultPolicies(defaultAttendancePolicies?.items || []),
+    }),
+    leave: getDefaultPolicySetupState({
+      data: defaultLeavePolicies,
+      loading: defaultLeavePoliciesLoading || defaultLeavePoliciesFetching,
+      error: defaultLeavePoliciesError,
+      items: getActiveDefaultPolicies(defaultLeavePolicies?.items || [], isActiveLeavePolicy),
+    }),
+  };
+  const defaultPolicyAssignment = {
+    payrollPolicy: defaultPayrollPolicy,
+    attendancePolicy: defaultAttendancePolicy,
+    leavePolicy: defaultLeavePolicy,
+    setupStates,
+    canOpen: {
+      leave: hasNavigationPermission(permissions, hrPermissions.policies.leavePolicies),
+      attendance: hasNavigationPermission(permissions, hrPermissions.policies.attendance),
+      payroll: hasNavigationPermission(permissions, hrPermissions.policies.payroll),
+    },
+    onOpen: (policy: 'leave' | 'attendance' | 'payroll') => {
+      const href = policy === 'leave' ? hrPaths.policies.leavePolicies : hrPaths.policies[policy];
+      if (isChanges) setPendingPolicyRoute(href);
+      else {
+        handleClose();
+        router.push(href);
+      }
+    },
+    missingMessage: getEmployeeCreationDefaultPolicyMessage({
+      currentYearId: currentYear?.id,
+      isLoading: defaultPolicyLookupLoading,
+      hasMultipleDefaults: hasMultipleDefaultPolicies,
+      payrollPolicyId: defaultPayrollPolicy?.id,
+      attendancePolicyId: defaultAttendancePolicy?.id,
+      leavePolicyId: defaultLeavePolicy?.id,
+      setupStates,
+    }),
+  };
 
   const [updateEmployee] = useQueryAndMutation({
     type: 'mutation',
@@ -584,8 +619,11 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
   const handleBasicInformation = useCallback(
     async (values: any, formik: any) => {
       if (!values.employeeId) {
+        if (defaultPolicyAssignment.missingMessage) {
+          throw new Error(defaultPolicyAssignment.missingMessage);
+        }
         if (!currentYear?.id) {
-          throw new Error('Current academic year is required before creating an employee.');
+          throw new Error('Select an academic year');
         }
         if (defaultPolicyLookupLoading) {
           throw new Error(EMPLOYEE_CREATION_DEFAULT_POLICY_LOADING_MESSAGE);
@@ -594,9 +632,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
           throw new Error(EMPLOYEE_CREATION_DEFAULT_POLICY_MULTIPLE_MESSAGE);
         }
         if (!defaultPayrollPolicy?.id || !defaultAttendancePolicy?.id || !defaultLeavePolicy?.id) {
-          throw new Error(
-            'Default payroll, attendance, and leave policies are required before creating an employee.'
-          );
+          throw new Error('Default policies could not be verified');
         }
 
         const policyEffectiveFrom = values.dateOfJoining
@@ -635,7 +671,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
             attendancePolicyId: defaultAttendancePolicy.id,
             leavePolicyId: defaultLeavePolicy.id,
             effectiveFrom: policyEffectiveFrom,
-            assignmentReason: 'Employee creation policy assignment',
+            assignmentReason: 'Staff creation policy assignment',
             confirmationToken: EMPLOYEE_CREATION_DEFAULT_POLICY_CONFIRMATION_TOKEN,
           },
         };
@@ -669,6 +705,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
       defaultPayrollPolicy?.id,
       defaultPolicyLookupLoading,
       editData,
+      defaultPolicyAssignment.missingMessage,
       hasMultipleDefaultPolicies,
     ]
   );
@@ -677,7 +714,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     async (values: any, formik: any) => {
       const employeeId = getSavedEmployeeId(values, editData);
       if (!employeeId) {
-        throw new Error('Employee must be saved before family information can be updated.');
+        throw new Error('Staff must be saved before family information can be updated.');
       }
 
       const res = await updateFamilyInfo({
@@ -733,7 +770,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     async (values: any, formik: any) => {
       const employeeId = getSavedEmployeeId(values, editData);
       if (!employeeId) {
-        throw new Error('Employee must be saved before additional details can be updated.');
+        throw new Error('Staff must be saved before additional details can be updated.');
       }
 
       const res = await updateAdditionalInfo({
@@ -755,7 +792,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     async (values: any, formik: any) => {
       const employeeId = getSavedEmployeeId(values, editData);
       if (!employeeId) {
-        throw new Error('Employee must be saved before work experience can be updated.');
+        throw new Error('Staff must be saved before work experience can be updated.');
       }
 
       const res = await updateExperienceInfo({
@@ -805,7 +842,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     async (values: any, formik: any, confirmationToken?: string | null) => {
       const employeeId = getSavedEmployeeId(values, editData);
       if (!employeeId) {
-        throw new Error('Employee must be saved before payroll details can be updated.');
+        throw new Error('Staff must be saved before payroll details can be updated.');
       }
 
       const policyOverride = buildEmployeePolicyOverride(
@@ -826,7 +863,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
               assignmentId: values.policyOverrideAssignmentId || undefined,
               effectiveFrom: policyOverrideDisableEffectiveFrom,
               assignmentReason:
-                values.policyOverrideAssignmentReason || 'Employee payroll step override disabled',
+                values.policyOverrideAssignmentReason || 'Staff payroll step override disabled',
               ...(confirmationToken ? { confirmationToken } : {}),
             }
           : undefined;
@@ -910,7 +947,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
     async (values: any, formik: any, id: any) => {
       const employeeId = getSavedEmployeeId(values, editData);
       if (!employeeId) {
-        throw new Error('Employee must be saved before reporting manager can be updated.');
+        throw new Error('Staff must be saved before reporting manager can be updated.');
       }
 
       const res = await updateReportingManager({
@@ -929,7 +966,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
       const userId = getEmployeeUserId(values, editData);
       if (!userId) {
         shikshaMitraToast.info({
-          message: 'Academic permission was skipped because this employee has no linked user.',
+          message: 'Academic permission was skipped because this staff member has no linked user.',
         });
         return null;
       }
@@ -976,21 +1013,21 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
         if (editData && activeStep === 0) {
           await handelUpdateEmployee(values, formik, editData.id);
           if (isSaveButton) {
-            shikshaMitraToast.success({ message: 'Employee details updated successfully' });
+            shikshaMitraToast.success({ message: 'Staff details updated successfully' });
           }
           saveSucceeded = true;
         } else if (activeStep === 0) {
           if (values.employeeId) {
             await handelUpdateEmployee(values, formik, values.employeeId);
             if (isSaveButton) {
-              shikshaMitraToast.success({ message: 'Employee details updated successfully' });
+              shikshaMitraToast.success({ message: 'Staff details updated successfully' });
             }
           } else {
             const identity = await handleBasicInformation(values, formik);
             resolvedEmployeeId = identity.employeeId;
             resolvedUserId = identity.userId;
             if (isSaveButton) {
-              shikshaMitraToast.success({ message: 'Employee added successfully' });
+              shikshaMitraToast.success({ message: 'Staff added successfully' });
             }
           }
           saveSucceeded = true;
@@ -1041,7 +1078,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
           shikshaMitraToast.success(
             isSaveButton
               ? { message: 'Academic permissions updated successfully' }
-              : { message: `Employee ${editData ? 'updated' : 'added'}  successfully` }
+              : { message: `Staff ${editData ? 'updated' : 'added'}  successfully` }
           );
           saveSucceeded = true;
         }
@@ -1075,7 +1112,7 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
       } catch (error) {
         const parsedError = parseApiProblemDetail(error);
         shikshaMitraToast.error({
-          message: parsedError.detail || 'Failed to save employee details',
+          message: parsedError.detail || 'Failed to save staff details',
         });
         setIsLoading(false);
         return;
@@ -1206,8 +1243,8 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
         content={
           <Box>
             <Typography variant="body2" sx={{ mb: 1 }}>
-              This employee-level policy override affects existing policy resolution. Confirm to
-              save it for this employee.
+              This staff member-level policy override affects existing policy resolution. Confirm to
+              save it for this staff member.
             </Typography>
             {(policyImpactPreview?.warnings || []).slice(0, 4).map((warning: any) => (
               <Typography
@@ -1234,6 +1271,28 @@ const EmployeeFrom = ({ editData, handleClose, onCreated }: any) => {
             onClick={() => policyImpactConfirmationRef.current?.(true)}
           >
             Confirm
+          </Button>
+        }
+      />
+
+      <ConfirmDialog
+        open={pendingPolicyRoute !== null}
+        onClose={() => setPendingPolicyRoute(null)}
+        title="Discard changes?"
+        content="Unsaved staff changes will be lost."
+        action={
+          <Button
+            color="warning"
+            onClick={() => {
+              const href = pendingPolicyRoute;
+              if (!href) return;
+              dispatch(setIsChanges(false));
+              setPendingPolicyRoute(null);
+              handleClose();
+              router.push(href);
+            }}
+          >
+            Discard and open policies
           </Button>
         }
       />
@@ -1559,8 +1618,8 @@ const FormSlider = ({
                         {step === 7 && !accessControlUserId && (
                           <Grid size={{ xs: 12 }}>
                             <Typography variant="body2" color="text.secondary">
-                              Academic permissions can be assigned after this employee is linked to
-                              a user account.
+                              Academic permissions can be assigned after this staff member is linked
+                              to a user account.
                             </Typography>
                           </Grid>
                         )}

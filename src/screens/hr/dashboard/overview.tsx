@@ -7,7 +7,7 @@ const Overview = () => (
   <>
     <Grid size={{ xs: 12, sm: 12, md: 6, lg: 6, xl: 4 }}>
       <EmployeeDashboardCard
-        title="Total Employees"
+        title="Total Staff"
         icon="mdi:account-multiple"
         value={120}
         labels={[

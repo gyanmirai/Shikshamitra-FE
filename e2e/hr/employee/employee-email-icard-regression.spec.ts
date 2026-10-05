@@ -10,8 +10,8 @@ import {
   dismissAcademicYearTour,
 } from './employee-page';
 
-test.describe('HR Employee email and I-card regressions', () => {
-  test('disables email while editing an existing employee', async ({ page }) => {
+test.describe('HR Staff email and I-card regressions', () => {
+  test('disables email while editing an existing staff', async ({ page }) => {
     const employee = createEmployeeFixture('Email Immutable');
 
     await gotoEmployeeList(page);
@@ -31,15 +31,15 @@ test.describe('HR Employee email and I-card regressions', () => {
     await page.goto('/hr/i-card');
     await dismissAcademicYearTour(page);
 
-    await expect(page.getByRole('heading', { name: /^Employee I-Card$/ })).toBeVisible({
+    await expect(page.getByRole('heading', { name: /^Staff I-Card$/ })).toBeVisible({
       timeout: 30_000,
     });
 
-    const createButton = page.getByRole('button', { name: /^Create Employee I-Card$/ });
+    const createButton = page.getByRole('button', { name: /^Create Staff I-Card$/ });
     await expect(createButton).toBeEnabled({ timeout: 30_000 });
     await createButton.click();
 
-    await expect(page.getByRole('heading', { name: /^Create Employee I-Card$/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /^Create Staff I-Card$/ })).toBeVisible();
     await page.getByLabel('Template Name').fill(`E2E I-Card ${Date.now()}`);
 
     const createResponsePromise = page.waitForResponse(

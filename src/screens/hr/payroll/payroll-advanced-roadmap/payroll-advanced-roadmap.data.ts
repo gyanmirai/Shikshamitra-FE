@@ -26,7 +26,7 @@ export const PAYROLL_UX_ROADMAP_PHASES = [
     title: 'Phase 4 — Ecosystem',
     bullets: [
       'Manager approval gates and auditable sign-off on locked runs.',
-      'Employee self-serve: payslip narrative, disputes, and acknowledgement.',
+      'Staff self-serve: payslip narrative, disputes, and acknowledgement.',
       'Cross-module view: leave and attendance changes reflected in the register.',
     ],
   },

@@ -18,15 +18,15 @@ import {
 
 const source: HrReportSource = {
   id: 'employee',
-  category: 'Employee',
-  label: 'Employee Reports',
-  description: 'Employee report source',
+  category: 'Staff',
+  label: 'Staff Reports',
+  description: 'Staff report source',
   defaultColumns: ['employeeCode', 'employeeName'],
   defaultSorts: ['employeeCode'],
   fields: [
     {
       id: 'employeeCode',
-      label: 'Employee Code',
+      label: 'Staff Code',
       type: 'string',
       filterable: true,
       sortable: true,
@@ -62,15 +62,15 @@ const source: HrReportSource = {
 
 const template: HrReportTemplate = {
   id: 'template-1',
-  name: 'Employee Directory',
-  category: 'Employee',
+  name: 'Staff Directory',
+  category: 'Staff',
   dataSource: 'employee',
   visibility: 'organization',
   status: 'Published',
   ownerUserId: 'user-1',
   creationTime: '2026-06-01T10:00:00Z',
   definition: {
-    reportType: 'Employee Directory',
+    reportType: 'Staff Directory',
     dataSource: 'employee',
     columns: ['employeeName'],
     filters: {
@@ -90,7 +90,7 @@ describe('HR report utils', () => {
     expect(mapHrSourcesToCategories([source])).toEqual([
       expect.objectContaining({
         id: 'employee',
-        name: 'Employee',
+        name: 'Staff',
       }),
     ]);
   });
@@ -101,12 +101,12 @@ describe('HR report utils', () => {
     expect(subCategories).toHaveLength(2);
     expect(subCategories[0]).toMatchObject({
       id: 'employee-custom-report',
-      name: 'New Employee Report',
+      name: 'New Staff Report',
       categoryId: 'employee',
     });
     expect(subCategories[1]).toMatchObject({
       id: 'template-1',
-      name: 'Employee Directory',
+      name: 'Staff Directory',
       categoryId: 'employee',
     });
   });
@@ -114,7 +114,7 @@ describe('HR report utils', () => {
   it('creates default builder state from a source', () => {
     expect(createHrReportStateFromSource(source)).toMatchObject({
       selectedSourceId: 'employee',
-      reportName: 'Employee Reports',
+      reportName: 'Staff Reports',
       columns: ['employeeCode', 'employeeName'],
       sortField: 'employeeCode',
       dateField: 'dateOfJoining',
@@ -125,7 +125,7 @@ describe('HR report utils', () => {
   it('creates builder state from a template definition', () => {
     expect(createHrReportStateFromTemplate(template, source)).toMatchObject({
       selectedSourceId: 'employee',
-      reportName: 'Employee Directory',
+      reportName: 'Staff Directory',
       columns: ['employeeName'],
       sortField: 'employeeName',
       sortDirection: 'desc',
@@ -142,11 +142,11 @@ describe('HR report utils', () => {
     const state = createHrReportStateFromTemplate(template, source);
 
     expect(buildHrReportRequest(state, source)).toEqual({
-      reportType: 'Employee Directory',
+      reportType: 'Staff Directory',
       dataSource: 'employee',
       format: 'excel',
       templateId: 'template-1',
-      templateName: 'Employee Directory',
+      templateName: 'Staff Directory',
       sourceAction: 'manualExport',
       page: 1,
       pageSize: DEFAULT_HR_REPORT_PAGE_SIZE,

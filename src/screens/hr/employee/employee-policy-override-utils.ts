@@ -9,7 +9,7 @@ export type EmployeePolicyOverrideValues = {
   policyOverrideAssignmentReason?: string | null;
 };
 
-export const DEFAULT_EMPLOYEE_POLICY_OVERRIDE_REASON = 'Employee payroll step override';
+export const DEFAULT_EMPLOYEE_POLICY_OVERRIDE_REASON = 'Staff payroll step override';
 
 export function clearEmployeePolicyOverrideValues(values: EmployeePolicyOverrideValues) {
   return {
@@ -147,7 +147,7 @@ export function buildEmployeePolicyOverridePreviewRequest(
         effectiveTo: null,
         priority: 100,
         assignmentReason:
-          values.policyOverrideAssignmentReason || 'Employee payroll step override disabled',
+          values.policyOverrideAssignmentReason || 'Staff payroll step override disabled',
         isActive: false,
       },
     };

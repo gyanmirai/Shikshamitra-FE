@@ -74,7 +74,7 @@ const EmployeeSalaryStructureScreen = () => {
     }
     setSelectedEmployee({
       id: requestedEmployeeId,
-      label: requestedEmployee.fullName || requestedEmployee.employeeName || 'Selected employee',
+      label: requestedEmployee.fullName || requestedEmployee.employeeName || 'Selected staff',
       status: requestedEmployee.status ?? requestedEmployee.employeeStatusType,
     });
     if (openRequestedSalarySetup) {
@@ -144,7 +144,7 @@ const EmployeeSalaryStructureScreen = () => {
     <Box>
       <CustomBreadcrumbs
         heading="Payroll Structure"
-        description="View and manage employee salary structures."
+        description="View and manage staff salary structures."
         links={[
           { name: 'HR/Staff' },
           { name: 'Payroll Management' },
@@ -154,7 +154,7 @@ const EmployeeSalaryStructureScreen = () => {
       <Card>
         <Box display="flex" gap={1} flexWrap="wrap" p={1}>
           <PaginatedSearchSelect
-            label="Employee"
+            label="Staff"
             fetchOptions={async (query, page) => {
               if (page > 1) return { data: [], hasMore: false };
               const res = await getEmployees({
@@ -194,7 +194,7 @@ const EmployeeSalaryStructureScreen = () => {
       {!employeeId ? (
         <Paper elevation={3} sx={{ p: 3, mt: 1, borderRadius: 2 }}>
           <Typography variant="body2" color="text.secondary">
-            Select an employee to view salary structure.
+            Select a staff member to view salary structure.
           </Typography>
         </Paper>
       ) : (
@@ -222,7 +222,7 @@ const EmployeeSalaryStructureScreen = () => {
           )}
           {canReadCompensationRevisions && !effectiveRevision && !isRevisionLoading && (
             <Alert severity="warning" sx={{ mb: 1 }}>
-              This employee has no effective compensation revision for the current month. Payroll
+              This staff member has no effective compensation revision for the current month. Payroll
               cannot be locked until salary is saved.
             </Alert>
           )}
@@ -258,7 +258,7 @@ const EmployeeSalaryStructureScreen = () => {
                   arrow
                   placement="right"
                   sx={{ textAlign: 'justify' }}
-                  title="Define the employee's salary structure by assigning fixed or temporary earning and deduction components."
+                  title="Define the staff's salary structure by assigning fixed or temporary earning and deduction components."
                 >
                   <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
                 </CustomTooltip>

@@ -148,11 +148,11 @@ describe('AttendancePolicyDrawer advanced rules', () => {
   it('updates the summary from form state', () => {
     renderWithProviders(<AttendancePolicyDrawerHarness />);
 
-    expect(screen.getByText(/Employees receive 5 minutes grace period/i)).toBeInTheDocument();
+    expect(screen.getByText(/Staff receive 5 minutes grace period/i)).toBeInTheDocument();
 
     fireEvent.change(screen.getByDisplayValue('5'), { target: { value: '10' } });
 
-    expect(screen.getByText(/Employees receive 10 minutes grace period/i)).toBeInTheDocument();
+    expect(screen.getByText(/Staff receive 10 minutes grace period/i)).toBeInTheDocument();
   });
 
   it('renders legacy paid holiday compensation without an invalid empty select', () => {

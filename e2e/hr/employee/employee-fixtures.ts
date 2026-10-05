@@ -11,7 +11,7 @@ const alphaSuffix = (value: string) =>
     .map((digit) => String.fromCharCode(65 + Number(digit)))
     .join('');
 
-export function createEmployeeFixture(prefix = 'Automation Employee') {
+export function createEmployeeFixture(prefix = 'Automation Staff') {
   const suffix = randomSuffix();
   const nameSuffix = alphaSuffix(suffix);
   const panLetters = nameSuffix.slice(-6).padEnd(6, 'A');

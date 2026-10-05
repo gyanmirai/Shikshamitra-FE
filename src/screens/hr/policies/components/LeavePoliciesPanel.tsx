@@ -138,7 +138,7 @@ export function LeavePoliciesPanel() {
   const previewArchive = (policy: ILeavePolicy) => {
     if (policy.isDefault) {
       shikshaMitraToast.error({
-        message: 'Set another active leave policy as default before archiving this one.',
+        message: 'Choose another default before archiving',
       });
       return;
     }

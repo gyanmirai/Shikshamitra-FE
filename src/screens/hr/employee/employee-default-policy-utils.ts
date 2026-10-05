@@ -1,11 +1,9 @@
-export const EMPLOYEE_CREATION_DEFAULT_POLICY_LOADING_MESSAGE =
-  'Loading default payroll, attendance, and leave policies...';
-export const EMPLOYEE_CREATION_DEFAULT_POLICY_MISSING_MESSAGE =
-  'Default payroll, attendance, and leave policies are required before creating an employee.';
-export const EMPLOYEE_CREATION_DEFAULT_POLICY_MULTIPLE_MESSAGE =
-  'Exactly one default payroll, attendance, and leave policy is required before creating an employee.';
-export const EMPLOYEE_CREATION_ACADEMIC_YEAR_MISSING_MESSAGE =
-  'Current academic year is required before creating an employee.';
+import type { DefaultPolicySetupState } from '../policies/hr-policy-workspace-utils';
+
+export const EMPLOYEE_CREATION_DEFAULT_POLICY_LOADING_MESSAGE = 'Loading default policies...';
+export const EMPLOYEE_CREATION_DEFAULT_POLICY_MISSING_MESSAGE = 'Default leave policy missing';
+export const EMPLOYEE_CREATION_DEFAULT_POLICY_MULTIPLE_MESSAGE = 'Multiple default policies';
+export const EMPLOYEE_CREATION_ACADEMIC_YEAR_MISSING_MESSAGE = 'Select an academic year';
 
 export type EmployeeCreationDefaultPolicyMessageInput = {
   currentYearId?: string | null;
@@ -14,6 +12,7 @@ export type EmployeeCreationDefaultPolicyMessageInput = {
   payrollPolicyId?: string | null;
   attendancePolicyId?: string | null;
   leavePolicyId?: string | null;
+  setupStates?: Record<'leave' | 'attendance' | 'payroll', DefaultPolicySetupState>;
 };
 
 export function getEmployeeCreationDefaultPolicyMessage({
@@ -23,6 +22,7 @@ export function getEmployeeCreationDefaultPolicyMessage({
   payrollPolicyId,
   attendancePolicyId,
   leavePolicyId,
+  setupStates,
 }: EmployeeCreationDefaultPolicyMessageInput): string {
   if (!currentYearId) {
     return EMPLOYEE_CREATION_ACADEMIC_YEAR_MISSING_MESSAGE;
@@ -32,12 +32,26 @@ export function getEmployeeCreationDefaultPolicyMessage({
     return EMPLOYEE_CREATION_DEFAULT_POLICY_LOADING_MESSAGE;
   }
 
+  if (setupStates) {
+    if (Object.values(setupStates).includes('unknown'))
+      return 'Default policies could not be verified';
+    const policy = (['leave', 'attendance', 'payroll'] as const).find(
+      (kind) => setupStates[kind] === 'multiple' || setupStates[kind] === 'missing'
+    );
+    if (policy)
+      return setupStates[policy] === 'multiple'
+        ? `Multiple default ${policy} policies`
+        : `Default ${policy} policy missing`;
+    return '';
+  }
+
   if (hasMultipleDefaults) {
     return EMPLOYEE_CREATION_DEFAULT_POLICY_MULTIPLE_MESSAGE;
   }
 
   if (!payrollPolicyId || !attendancePolicyId || !leavePolicyId) {
-    return EMPLOYEE_CREATION_DEFAULT_POLICY_MISSING_MESSAGE;
+    const policy = !leavePolicyId ? 'leave' : !attendancePolicyId ? 'attendance' : 'payroll';
+    return `Default ${policy} policy missing`;
   }
 
   return '';

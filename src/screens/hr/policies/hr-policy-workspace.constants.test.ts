@@ -10,7 +10,6 @@ describe('HR policy workspace tabs', () => {
       'Leave Policies',
       'Payroll Policies',
       'Policy Assignments',
-      'Policy Impact',
     ]);
   });
 

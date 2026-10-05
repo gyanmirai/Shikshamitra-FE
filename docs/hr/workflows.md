@@ -98,7 +98,6 @@ Policy tables query current and archived records independently with server-side 
 The leave-policy workspace can restore an archived policy as a draft, while employee and assignment selectors continue to request active policies only.
 Policy audit entries omit unchanged values and missing editor metadata, render weekly-off numbers as weekday names, and show semantic holiday changes and real holiday-summary counts.
 Audit events show the first eight semantic changes and provide a Show N more control without discarding the remaining differences.
-Changing an effective-policy employee lookup clears the selected employee ID as soon as the visible text diverges, and the prior preview is hidden until the current request resolves.
 The HR dashboard New Joiners metric opens a selected-month employee summary before the user chooses whether to open the full directory.
 The HR dashboard excludes approved leave without stored attendance from the missing-attendance count and attendance-rate denominator.
 Approved half-day leave removes one-half attendance unit while the unrecorded remainder stays visible as missing attendance.
@@ -236,3 +235,16 @@ Superseded payroll previews remain non-actionable and require recalculation and 
 Payroll readiness displays Needs attention when the server reports an ESIC or compensation blocker, and Needs recalculation for stale results.
 Readiness labels and monetary totals wrap without truncation on narrow screens.
 The disclosure uses a labelled keyboard-accessible button with its expanded state exposed.
+
+## Policies & Rules setup guidance
+
+The header reads “Configure staff calendars, policies, and assignments.”
+The selected academic year appears separately, and an absent selection shows “Select an academic year”.
+Missing and multiple-default warnings are derived only from a successful current-year query containing the complete unfiltered policy population.
+Loading, failed queries, and incomplete pages do not establish missing configuration.
+Recovery actions appear only when the user can access the corresponding policy destination.
+Opening Leave Policies from a modified assignment requires discarding the unsaved draft explicitly and retains the selected academic year.
+Secondary guidance remains available under Details.
+An explicit sole-default archive rejection reads “Choose another default before archiving”; reused missing-default and inactive-reference error codes keep their own meaning.
+Saving, archiving, assigning, and changing defaults still use impact previews, confirmation tokens, payroll lock blockers, versions, and audit.
+Attendance templates use Staff Code and Staff Name; imports accept Employee aliases, including mixed aliases for different fields, and reject duplicate aliases for one field.

@@ -8,6 +8,13 @@ import { renderWithProviders } from 'src/test/test-utils';
 
 import { AssignmentPolicyDrawer } from './AssignmentPolicyDrawer';
 
+const { push } = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push }) }));
+
+vi.mock('src/redux/customQueryAndMutation', () => ({
+  default: () => [() => ({ unwrap: async () => ({ items: [] }) })],
+}));
+
 vi.mock('@mui/material', async () => {
   const actual = await vi.importActual('@mui/material');
   return {
@@ -120,7 +127,7 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
       />
     );
 
-    expect(screen.getByText('Precedence: Employee > Group > Default')).toBeInTheDocument();
+    expect(screen.getByText('Precedence: Staff > Group > Default')).toBeInTheDocument();
     expect(screen.getByRole('combobox')).toHaveValue('Asha Teacher');
     expect(screen.queryByText(/Shift > Role > Department/)).not.toBeInTheDocument();
   });
@@ -244,8 +251,9 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
     expect(screen.queryByText('0 members')).not.toBeInTheDocument();
   });
 
-  it('clears a selected employee when the visible search text changes', async () => {
+  it('clears a selected staff member and protects changed assignments during setup recovery', async () => {
     const user = userEvent.setup();
+    push.mockClear();
 
     function Harness() {
       const [assignmentForm, setAssignmentForm] = useState({
@@ -285,6 +293,8 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
                 activeAttendance: [{ id: 'attendance-1', name: 'Teacher Attendance' }],
                 activeLeavePolicies: [{ id: 'leave-1', name: 'Default Leave' }],
                 defaultLeavePolicy: { id: 'leave-1', name: 'Default Leave' },
+                leaveSetupState: 'missing',
+                canOpenLeavePolicies: true,
                 employeeOptions: [
                   { id: 'employee-1', name: 'Asha Teacher' },
                   { id: 'employee-2', name: 'Bina Teacher' },
@@ -327,5 +337,15 @@ describe('AssignmentPolicyDrawer precedence copy', () => {
       expect(screen.getByTestId('selected-target')).toHaveTextContent('employee-2');
       expect(employeePicker).toHaveValue('Bina Teacher');
     });
+
+    await user.click(screen.getByRole('button', { name: 'Open Leave Policies' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Discard changes?');
+    expect(push).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(employeePicker).toHaveValue('Bina Teacher');
+    await user.click(screen.getByRole('button', { name: 'Open Leave Policies' }));
+    await user.click(screen.getByRole('button', { name: 'Discard and open Leave Policies' }));
+    expect(push).toHaveBeenCalledWith('/hr/leave-policies');
   });
 });

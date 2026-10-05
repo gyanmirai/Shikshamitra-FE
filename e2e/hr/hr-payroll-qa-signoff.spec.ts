@@ -190,7 +190,7 @@ function employeeName(item: any) {
       (parts.length > 0 ? parts.join(' ') : '') ||
       item?.email ||
       item?.id ||
-      'Unknown employee'
+      'Unknown staff'
   );
 }
 
@@ -256,7 +256,7 @@ async function attachReport(testInfo: TestInfo, report: QaAuditReport) {
 test.describe('HR payroll QA sign-off data health', () => {
   test.skip(!fullCycleEnabled, 'Set E2E_HR_FULL_CYCLE=1 to run payroll QA sign-off checks.');
 
-  test('audits DDVS policy defaults, assignments, and effective employee policies', async ({
+  test('audits DDVS policy defaults, assignments, and effective staff policies', async ({
     page,
   }, testInfo) => {
     test.setTimeout(900_000);
@@ -439,7 +439,7 @@ test.describe('HR payroll QA sign-off data health', () => {
           recordFailure(
             report,
             'employee-sample-empty',
-            'No active employees were available for effective-policy sampling.'
+            'No active staff were available for effective-policy sampling.'
           );
         }
 
@@ -450,7 +450,7 @@ test.describe('HR payroll QA sign-off data health', () => {
               recordFailure(
                 report,
                 'employee-id-missing',
-                'Sampled employee row has no id.',
+                'Sampled staff row has no id.',
                 employee
               );
               return;
@@ -497,7 +497,7 @@ test.describe('HR payroll QA sign-off data health', () => {
               recordFailure(
                 report,
                 'effective-policy-missing',
-                'Employee did not resolve all required policy types.',
+                'Staff did not resolve all required policy types.',
                 {
                   employeeId,
                   employeeName: summary.name,

@@ -21,8 +21,7 @@ export type WorkspaceTab =
   | 'attendance'
   | 'leave'
   | 'assignments'
-  | 'holiday'
-  | 'effective';
+  | 'holiday';
 
 // --- Drawer -------------------------------------------------------------------
 

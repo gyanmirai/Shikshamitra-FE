@@ -132,7 +132,7 @@ export const getSaveIssues = (rules: SalaryTemplateRule[]) => {
 
   if (basicCount !== 1) issues.push('Add exactly one Basic earning.');
   if (balanceCount > 1) issues.push('Keep at most one auto-balancing earning.');
-  if (pfCount > 1) issues.push('Only one Employee PF deduction is allowed.');
+  if (pfCount > 1) issues.push('Only one Staff PF deduction is allowed.');
   if (ptCount > 1) issues.push('Only one Professional Tax deduction is allowed.');
 
   rules.forEach((rule) => {

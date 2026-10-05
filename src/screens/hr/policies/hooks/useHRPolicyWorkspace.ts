@@ -22,14 +22,11 @@ import { toDateOnly } from 'src/utils/date-only';
 import { useSearchParams } from 'next/navigation';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { shikshaMitraToast } from 'src/components/toast';
-import { hasGrantedPermission } from 'src/utils/permissions';
+import { hasGrantedPermission, hasNavigationPermission } from 'src/utils/permissions';
 import { useGetLeavePoliciesQuery } from 'src/redux/hr/leaveApi';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import { useGetEmployeeQuery, EMPLOYEE_LIST_MAX_PAGE_SIZE } from 'src/redux/hr/employeeApi';
-import {
-  useGetGroupsQuery,
-  useGetGroupMembersQuery,
-} from 'src/redux/calendar/GroupManagement/groupManagementApi';
+import { useGetGroupsQuery } from 'src/redux/calendar/GroupManagement/groupManagementApi';
 import {
   getHolidayToDate,
   getHolidayFromDate,
@@ -124,6 +121,7 @@ import {
   payrollManualMonthDaysToMap,
   formatHolidayOverlapMessage,
   selectSingleActiveDefaultPolicy,
+  getDefaultPolicySetupState,
   getAssignmentFormValidationError,
   assignmentMatchesLeavePolicyFilter,
   normalizePayrollDayCalculationType,
@@ -223,9 +221,6 @@ export function useHRPolicyWorkspace({
   const muiTheme = useTheme();
   const searchParams = useSearchParams();
   const queryTab = searchParams.get('tab') as WorkspaceTab | null;
-  const queryEffectiveEmployeeId = searchParams.get('employeeId') || '';
-  const queryEffectiveGroupId = queryEffectiveEmployeeId ? '' : searchParams.get('groupId') || '';
-  const queryEffectiveDate = searchParams.get('date') || '';
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const academicYearId = currentYear?.id;
@@ -305,7 +300,7 @@ export function useHRPolicyWorkspace({
   // --- Operation overlay state -----------------------------------------------
   const [activePolicyOperation, setActivePolicyOperation] = useState<PolicyOperationState>(null);
 
-  // --- Holiday Impact + Effective Preview filters ----------------------------
+  // --- Holiday service filters -----------------------------------------------
   const [holidayFilters, setHolidayFilters] = useState({
     workCalendarPolicyId: '',
     payrollPolicyId: '',
@@ -314,15 +309,6 @@ export function useHRPolicyWorkspace({
     fromDate: '',
     toDate: '',
   });
-  const [effectiveFilters, setEffectiveFilters] = useState({
-    employeeId: queryEffectiveEmployeeId,
-    groupId: queryEffectiveGroupId,
-    date:
-      toDateInput(queryEffectiveDate) ||
-      toDateInput(currentYear?.startDate) ||
-      dayjs().format('YYYY-MM-DD'),
-  });
-
   // --- API Queries ----------------------------------------------------------
   const listArgs = { academicYearId, maxResultCount: 200, isArchived: false };
   const assignmentListArgs = { academicYearId, maxResultCount: 1000 };
@@ -350,17 +336,17 @@ export function useHRPolicyWorkspace({
     error: calendarsError,
   } = useGetWorkCalendarPoliciesQuery(listArgs, { skip: !academicYearId });
   const {
-    data: payrollPolicies,
+    currentData: payrollPolicies,
     isFetching: payrollLoading,
     error: payrollError,
   } = useGetPayrollPoliciesQuery(listArgs, { skip: !academicYearId });
   const {
-    data: attendancePolicies,
+    currentData: attendancePolicies,
     isFetching: attendanceLoading,
     error: attendanceError,
   } = useGetAttendancePoliciesQuery(listArgs, { skip: !academicYearId });
   const {
-    data: leavePolicyData,
+    currentData: leavePolicyData,
     isFetching: leavePoliciesLoading,
     error: leavePoliciesError,
   } = useGetLeavePoliciesQuery(
@@ -454,28 +440,6 @@ export function useHRPolicyWorkspace({
         !academicYearId || !holidayFilters.payrollPolicyId || !holidayFilters.attendancePolicyId,
     }
   );
-
-  const {
-    currentData: effectivePreview,
-    isFetching: effectiveLoading,
-    error: effectiveError,
-  } = useGetPolicyAssignmentPreviewQuery(
-    {
-      academicYearId,
-      date: effectiveFilters.date,
-      employeeId: effectiveFilters.employeeId || undefined,
-      groupId: effectiveFilters.groupId || undefined,
-    },
-    {
-      skip:
-        !academicYearId ||
-        !effectiveFilters.date ||
-        (!effectiveFilters.employeeId && !effectiveFilters.groupId),
-    }
-  );
-
-  const { data: selectedGroupMemberUserIds, isFetching: selectedGroupMembersLoading } =
-    useGetGroupMembersQuery(effectiveFilters.groupId, { skip: !effectiveFilters.groupId });
 
   const {
     data: assignmentPreview,
@@ -604,6 +568,38 @@ export function useHRPolicyWorkspace({
   const defaultPayroll = selectSingleActiveDefaultPolicy(activePayroll);
   const defaultAttendancePolicy = selectSingleActiveDefaultPolicy(activeAttendance);
   const defaultLeavePolicy = selectSingleActiveDefaultPolicy(activeLeavePolicies);
+  const getSetupState = (data: any, loading: boolean, error: unknown, items: any[]) =>
+    getDefaultPolicySetupState({ data, loading, error, items });
+  const leaveSetupState = getSetupState(
+    leavePolicyData,
+    leavePoliciesLoading,
+    leavePoliciesError,
+    activeLeavePolicies
+  );
+  const payrollSetupState = getSetupState(
+    payrollPolicies,
+    payrollLoading,
+    payrollError,
+    activePayroll
+  );
+  const attendanceSetupState = getSetupState(
+    attendancePolicies,
+    attendanceLoading,
+    attendanceError,
+    activeAttendance
+  );
+  const canOpenLeavePolicies = hasNavigationPermission(
+    permissions,
+    hrPermissions.policies.leavePolicies
+  );
+  const canOpenPayrollPolicies = hasNavigationPermission(
+    permissions,
+    hrPermissions.policies.payroll
+  );
+  const canOpenAttendancePolicies = hasNavigationPermission(
+    permissions,
+    hrPermissions.policies.attendance
+  );
 
   const employeeOptions = useMemo(() => {
     const options = [
@@ -634,7 +630,7 @@ export function useHRPolicyWorkspace({
           item.targetType === 'employee' ? employeeById.get(item.targetKey) : undefined;
         const target =
           item.targetType === 'employee'
-            ? item.targetDisplayName || optionLabel(employeeOption) || 'Unknown employee'
+            ? item.targetDisplayName || optionLabel(employeeOption) || 'Unknown staff'
             : item.targetDisplayName || item.targetKey;
         const organization =
           item.targetType === 'employee'
@@ -703,7 +699,7 @@ export function useHRPolicyWorkspace({
           item.targetType === 'employee' ? employeeById.get(item.targetKey) : undefined;
         const target =
           item.targetType === 'employee'
-            ? item.targetDisplayName || optionLabel(employeeOption) || 'Unknown employee'
+            ? item.targetDisplayName || optionLabel(employeeOption) || 'Unknown staff'
             : item.targetDisplayName || item.targetKey;
         const organization =
           item.targetType === 'employee'
@@ -718,7 +714,7 @@ export function useHRPolicyWorkspace({
           target,
           targetKey: item.targetKey,
           organization,
-          sourceType: item.targetType === 'employee' ? 'Employee' : 'Group',
+          sourceType: item.targetType === 'employee' ? 'Staff' : 'Group',
           payrollPolicyName: payrollNameById.get(item.payrollPolicyId) || item.payrollPolicyId,
           attendancePolicyName:
             attendanceNameById.get(item.attendancePolicyId) || item.attendancePolicyId,
@@ -742,69 +738,6 @@ export function useHRPolicyWorkspace({
     leavePolicies,
     payroll,
   ]);
-
-  /**
-   * Memoization Justification:
-   * Builds a Set of group IDs from potentially long resolution chains. Used as a
-   * dependency for effectiveGroupOptions - without memoization, every parent
-   * re-render would create a new Set object, causing effectiveGroupOptions to
-   * re-filter even when effective preview data has not changed.
-   */
-  const effectiveEmployeeGroupIds = useMemo(() => {
-    if (!effectiveFilters.employeeId || !effectivePreview?.resolutionSteps?.length) return null;
-    return new Set(
-      effectivePreview.resolutionSteps
-        .filter((step) => step.targetType === 'group' && step.targetKey)
-        .map((step) => step.targetKey as string)
-    );
-  }, [effectiveFilters.employeeId, effectivePreview?.resolutionSteps]);
-
-  /**
-   * Memoization Justification:
-   * Converts the group member user-id array to a Set for O(1) membership lookups
-   * inside effectiveEmployeeOptions filter. Without memoization, a new Set would
-   * be allocated on every render, making it an unstable dependency.
-   */
-  const effectiveGroupMemberUserIdSet = useMemo(
-    () => new Set((selectedGroupMemberUserIds || []).map((item) => String(item).toLowerCase())),
-    [selectedGroupMemberUserIds]
-  );
-
-  /**
-   * Memoization Justification:
-   * Filters the full employee list (potentially 200+ records) based on group
-   * membership. Without memoization this filter runs on every render including
-   * unrelated form interactions in the assignment drawer.
-   */
-  const effectiveEmployeeOptions = useMemo(() => {
-    if (!effectiveFilters.groupId || selectedGroupMembersLoading) return employeeOptions;
-    return employeeOptions.filter((employee) => {
-      const employeeId = employee.id?.toLowerCase();
-      const userId = employee.userId?.toLowerCase();
-      return (
-        (employeeId && effectiveGroupMemberUserIdSet.has(employeeId)) ||
-        (userId && effectiveGroupMemberUserIdSet.has(userId))
-      );
-    });
-  }, [
-    effectiveFilters.groupId,
-    effectiveGroupMemberUserIdSet,
-    employeeOptions,
-    selectedGroupMembersLoading,
-  ]);
-
-  /**
-   * Memoization Justification:
-   * Filters the group list based on the employee's active group memberships derived
-   * from the effective preview. Avoids redundant filtering when unrelated state
-   * (holiday filters, assignment form) changes.
-   */
-  const effectiveGroupOptions = useMemo(() => {
-    if (!effectiveFilters.employeeId || !effectiveEmployeeGroupIds || effectiveLoading) {
-      return groupOptions;
-    }
-    return groupOptions.filter((group) => group.id && effectiveEmployeeGroupIds.has(group.id));
-  }, [effectiveEmployeeGroupIds, effectiveFilters.employeeId, effectiveLoading, groupOptions]);
 
   // --- Permissions -----------------------------------------------------------
   const canCreatePolicy = hasGrantedPermission(permissions, hrPermissions.policyActions.create);
@@ -1207,7 +1140,7 @@ export function useHRPolicyWorkspace({
           key: 'preview-impact',
           title: 'Checking impact',
           message:
-            'Finding employees, assignments, and locked payroll periods affected by this action...',
+            'Finding staff, assignments, and locked payroll periods affected by this action...',
         },
         async () => {
           try {
@@ -1983,7 +1916,7 @@ export function useHRPolicyWorkspace({
       {
         key: 'preview-impact',
         title: 'Checking assignment impact',
-        message: 'Finding affected employees and policy conflicts for this assignment...',
+        message: 'Finding affected staff and policy conflicts for this assignment...',
       },
       async () => {
         try {
@@ -2021,23 +1954,6 @@ export function useHRPolicyWorkspace({
     openImpactDrawerLoading,
     previewPolicyAssignmentImpact,
   ]);
-
-  /**
-   * Memoization Justification:
-   * Stable reference prevents AssignmentsTab and AssignmentPolicyDrawer conflict buttons
-   * from re-rendering on unrelated state changes.
-   */
-  const previewAssignment = useCallback(
-    (item: HrPolicyAssignment) => {
-      setEffectiveFilters({
-        employeeId: item.targetType === 'employee' ? item.targetKey : '',
-        groupId: item.targetType === 'group' ? item.targetKey : '',
-        date: toDateInput(item.effectiveFrom) || dayjs().format('YYYY-MM-DD'),
-      });
-      setTab('effective');
-    },
-    [setEffectiveFilters, setTab]
-  );
 
   // --- Holiday form actions --------------------------------------------------
 
@@ -2336,6 +2252,12 @@ export function useHRPolicyWorkspace({
     defaultPayroll,
     defaultAttendancePolicy,
     defaultLeavePolicy,
+    leaveSetupState,
+    payrollSetupState,
+    attendanceSetupState,
+    canOpenLeavePolicies,
+    canOpenPayrollPolicies,
+    canOpenAttendancePolicies,
 
     // Permissions
     canCreatePolicy,
@@ -2486,15 +2408,6 @@ export function useHRPolicyWorkspace({
     holidayImpactLoading,
     holidayImpactError,
 
-    // Effective Preview tab
-    effectiveFilters,
-    setEffectiveFilters,
-    effectivePreview,
-    effectiveLoading,
-    effectiveError,
-    effectiveEmployeeOptions,
-    effectiveGroupOptions,
-
     // Handlers
     saveCalendar,
     savePayroll,
@@ -2511,7 +2424,6 @@ export function useHRPolicyWorkspace({
     openEntityAudit,
     restoreVersionAsDraft,
     previewCurrentAssignmentImpact,
-    previewAssignment,
     importCentralHolidays,
     openManualHolidayDialog,
     closeManualHolidayDialog,

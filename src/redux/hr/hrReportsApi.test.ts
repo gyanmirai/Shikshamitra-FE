@@ -4,8 +4,8 @@ import { buildHrReportDownloadUrl, normalizeHrReportRequest } from './hrReportsA
 
 describe('hrReportsApi helpers', () => {
   it('normalizes preview paging defaults', () => {
-    expect(normalizeHrReportRequest({ reportType: 'Employee List' })).toMatchObject({
-      reportType: 'Employee List',
+    expect(normalizeHrReportRequest({ reportType: 'Staff Directory' })).toMatchObject({
+      reportType: 'Staff Directory',
       page: 1,
       pageSize: 50,
       filters: {},
@@ -15,7 +15,7 @@ describe('hrReportsApi helpers', () => {
   it('preserves valid paging and filters', () => {
     expect(
       normalizeHrReportRequest({
-        reportType: 'Employee List',
+        reportType: 'Staff Directory',
         page: 3,
         pageSize: 100,
         filters: { departments: ['HR'] },
@@ -30,7 +30,7 @@ describe('hrReportsApi helpers', () => {
   it('normalizes invalid paging values', () => {
     expect(
       normalizeHrReportRequest({
-        reportType: 'Employee List',
+        reportType: 'Staff Directory',
         page: 0,
         pageSize: -1,
       })
@@ -66,15 +66,15 @@ describe('hrReportsApi helpers', () => {
   it('preserves optional export lineage metadata while normalizing requests', () => {
     expect(
       normalizeHrReportRequest({
-        reportType: 'Employee List',
+        reportType: 'Staff Directory',
         templateId: 'template-1',
-        templateName: 'Employee Template',
+        templateName: 'Staff Template',
         parentJobId: 'job-1',
         sourceAction: 'regenerate',
       })
     ).toMatchObject({
       templateId: 'template-1',
-      templateName: 'Employee Template',
+      templateName: 'Staff Template',
       parentJobId: 'job-1',
       sourceAction: 'regenerate',
     });

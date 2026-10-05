@@ -85,7 +85,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
 
   if (assignmentFilters.targetType !== 'all')
     activeFilterChips.push({
-      label: `Source -> ${assignmentFilters.targetType === 'employee' ? 'Employee' : 'Group'}`,
+      label: `Source -> ${assignmentFilters.targetType === 'employee' ? 'Staff' : 'Group'}`,
       key: 'targetType',
       reset: { targetType: 'all' },
     });
@@ -167,7 +167,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       label: 'Source',
       filterType: 'enum',
       enumOptions: [
-        { label: 'Employee', value: 'Employee' },
+        { label: 'Staff', value: 'Employee' },
         { label: 'Group', value: 'Group' },
       ],
       render: (value) => <Chip size="small" label={value} variant="outlined" />,
@@ -381,7 +381,7 @@ export function AssignmentsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
                 }
               >
                 <MenuItem value="all">All</MenuItem>
-                <MenuItem value="employee">Employee</MenuItem>
+                <MenuItem value="employee">Staff</MenuItem>
                 <MenuItem value="group">Group</MenuItem>
               </Select>
             </FormControl>

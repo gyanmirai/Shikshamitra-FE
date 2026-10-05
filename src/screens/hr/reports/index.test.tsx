@@ -11,7 +11,7 @@ import { hrReportToast } from './hr-report-notifications';
 const mocks = vi.hoisted(() => ({
   template: {
     id: 'template-1',
-    name: 'Employee Template',
+    name: 'Staff Template',
     category: 'Employee',
     dataSource: 'employee',
     visibility: 'private',
@@ -198,7 +198,7 @@ vi.mock('src/redux/hr/hrReportsApi', () => ({
 
 const exportJob = (overrides: Partial<HrReportExportJob>): HrReportExportJob => ({
   id: overrides.id ?? 'job-1',
-  reportType: overrides.reportType ?? 'Employee Report',
+  reportType: overrides.reportType ?? 'Staff Report',
   format: overrides.format ?? 'excel',
   status: overrides.status ?? 'Completed',
   creationTime: overrides.creationTime ?? '2026-06-01T10:00:00Z',
@@ -257,11 +257,11 @@ describe('ReportsScreen template run workflow', () => {
     await waitFor(() =>
       expect(mocks.createExport).toHaveBeenCalledWith(
         expect.objectContaining({
-          reportType: 'Employee Template',
+          reportType: 'Staff Template',
           dataSource: 'employee',
           format: 'excel',
           templateId: 'template-1',
-          templateName: 'Employee Template',
+          templateName: 'Staff Template',
         })
       )
     );

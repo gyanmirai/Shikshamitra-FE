@@ -18,7 +18,7 @@ const employeeActivities = [
     statusColor: 'success',
   },
   {
-    title: 'New non-teaching employee added',
+    title: 'New non-teaching staff added',
     timeAgo: '1 day ago',
     date: '05-07-2025',
     status: 'Sunil Thakur',

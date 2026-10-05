@@ -276,7 +276,7 @@ const LeaveApprovals = ({ showBreadcrumbs = true }: LeaveApprovalsProps) => {
             { name: 'Leave Management', href: hrPaths.leaveManagement.applyLeave },
             { name: 'Leave Approvals' },
           ]}
-          description="Review and approve or reject employee leave requests."
+          description="Review and approve or reject staff leave requests."
         />
       )}
       <Card

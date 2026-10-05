@@ -69,7 +69,7 @@ function FatherAddressComponent(props: any) {
               name="sameAsEmployeeAddressForFather"
             />
           }
-          label="Same as Employee Address"
+          label="Same as Staff Address"
         />
       </Grid>
 
@@ -247,7 +247,7 @@ function MotherAddressComponent(props: any) {
               name="sameAsFatherAddressForMother"
             />
           }
-          label="Same as Employee Address"
+          label="Same as Staff Address"
         />
       </Grid>
 
@@ -420,7 +420,7 @@ function SpouseAddressComponent(props: any) {
               name="sameAsFatherAddressForSpouse"
             />
           }
-          label="Same as Employee Address"
+          label="Same as Staff Address"
         />
       </Grid>
 

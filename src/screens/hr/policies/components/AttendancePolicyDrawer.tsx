@@ -78,7 +78,7 @@ function buildAttendanceSummary(form: HRPolicyWorkspaceContext['attendanceForm']
       ? `${penaltyLabel} applies after ${Number(form.penaltyCountThreshold || 0)} violations at INR ${penaltyAmount} each`
       : `${penaltyLabel} applies after ${Number(form.penaltyCountThreshold || 0)} violations`;
   const summary = [
-    `Employees receive ${Number(form.graceTime || 0)} minutes grace period`,
+    `Staff receive ${Number(form.graceTime || 0)} minutes grace period`,
     `${Number(form.maxLateAllowedPerMonth || 0)} late arrivals allowed per month`,
     form.penaltyType === 'none' ? 'No late-arrival penalty configured' : penaltySummary,
     earlyExitSummary,
@@ -267,7 +267,7 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
           {!isManualStatusMode && (
             <DrawerSelectField
               label="Missing Punch"
-              help="Controls what happens when an employee has incomplete punch data for the day."
+              help="Controls what happens when a staff member has incomplete punch data for the day."
               value={attendanceForm.missingPunchBehavior}
               onChange={(event) =>
                 setAttendanceForm((current) => ({
@@ -358,7 +358,7 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   <Typography variant="subtitle2">Late Arrival Policy</Typography>
                   <DrawerField
                     label="Grace Period"
-                    help="Late arrival minutes ignored before the employee is counted as late."
+                    help="Late arrival minutes ignored before the staff is counted as late."
                   >
                     <TextField {...getAttendanceNumericFieldProps('graceTime')} />
                   </DrawerField>
@@ -414,7 +414,7 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   <DrawerSwitchField
                     compact
                     label="Track Early Exit"
-                    help="Tracks employees leaving before the scheduled end time."
+                    help="Tracks staff leaving before the scheduled end time."
                     checked={attendanceForm.earlyExitEnabled}
                     onChange={(checked) =>
                       setAttendanceForm((current) => ({ ...current, earlyExitEnabled: checked }))
@@ -437,7 +437,7 @@ export function AttendancePolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                   <DrawerSwitchField
                     compact
                     label="Enable Overtime"
-                    help="Enables overtime calculation when employees work beyond the scheduled time."
+                    help="Enables overtime calculation when staff work beyond the scheduled time."
                     checked={attendanceForm.overtimeEnabled}
                     onChange={(checked) =>
                       setAttendanceForm((current) => ({

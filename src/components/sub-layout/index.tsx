@@ -26,6 +26,7 @@ const SubLayout = ({ children }: any) => {
   const removeLastSlash = pathname.replace(/\/$/, '');
   const isFullWidthWorkspace = isFullWidthSubLayoutRoute(removeLastSlash);
   const [currentModule] = removeLastSlash.split('/').filter((x) => x);
+  const navigationLabel = currentModule === 'hr' ? 'HR navigation' : 'Student navigation';
   const currentData: Array<any> = navSubData(user?.profile?.email === 'ddvs@gmail.com')?.[
     `/${currentModule}` as keyof typeof navSubData
   ];
@@ -101,9 +102,9 @@ const SubLayout = ({ children }: any) => {
             borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}`,
           }}
         >
-          <Typography variant="subtitle1">Student navigation</Typography>
+          <Typography variant="subtitle1">{navigationLabel}</Typography>
           <IconButton
-            aria-label="Close Student navigation"
+            aria-label={`Close ${navigationLabel}`}
             onClick={() => setMobileNavOpen(false)}
             size="small"
           >
@@ -147,9 +148,9 @@ const SubLayout = ({ children }: any) => {
               borderBottom: (theme) => `1px solid ${theme.vars.palette.divider}`,
             }}
           >
-            <Tooltip title="Open Student navigation" placement="right">
+            <Tooltip title={`Open ${navigationLabel}`} placement="right">
               <IconButton
-                aria-label="Open Student navigation"
+                aria-label={`Open ${navigationLabel}`}
                 onClick={() => setMobileNavOpen(true)}
                 size="small"
               >

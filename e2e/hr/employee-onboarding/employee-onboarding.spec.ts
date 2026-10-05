@@ -247,7 +247,7 @@ async function getAcademicYearJoiningDate(page: Page) {
     }) || items.find((year) => year.name.includes(String(new Date().getFullYear())));
 
   if (!current?.id) {
-    throw new Error('No academic year is available for employee onboarding E2E.');
+    throw new Error('No academic year is available for staff onboarding E2E.');
   }
 
   const yearsToProbe = [
@@ -329,7 +329,7 @@ async function ensureDefaultLeavePolicy(page: Page, academicYear: AcademicYear) 
         status: 'Active',
         effectiveFrom: academicYear.startDate || getInAcademicYearDate(academicYear),
         effectiveTo: academicYear.endDate || null,
-        description: 'Created by employee onboarding E2E setup',
+        description: 'Created by staff onboarding E2E setup',
         isDefault: true,
         rules: [
           {
@@ -845,7 +845,7 @@ async function finalizeApplication(
 
   await clickStepperNext(dialog);
   await expect(dialog.getByLabel('Use submitted photo as profile picture')).toBeChecked();
-  await expect(dialog.getByLabel('Attach submitted resume to employee documents')).toBeChecked();
+  await expect(dialog.getByLabel('Attach submitted resume to staff documents')).toBeChecked();
 
   const finalizeRequestPromise = page.waitForRequest(
     (request) =>
@@ -896,7 +896,7 @@ async function expectEmployeeCreated(page: Page, candidate: CandidateFixture, em
       page,
       `/employees?page=1&pageSize=10&search=${encodeURIComponent(candidate.email)}`
     ),
-    'employee search'
+    'staff search'
   );
   const employee = (list.items || []).find((item: any) => item.email === candidate.email);
   expect(employee?.id).toBe(employeeId);
@@ -917,7 +917,7 @@ async function expectFinalizedApiState(
 
   const workExperience = await jsonFromWhenAuthorized(
     await employeeApiRequest(page, `/employees/${employeeId}/work-experience`),
-    'employee work experience'
+    'staff work experience'
   );
   if (workExperience) {
     expect(JSON.stringify(workExperience)).toContain(candidate.experience.organization);
@@ -926,7 +926,7 @@ async function expectFinalizedApiState(
 
   const familyInfo = await jsonFromWhenAuthorized(
     await employeeApiRequest(page, `/employees/${employeeId}/family-info`),
-    'employee family info'
+    'staff family info'
   );
   if (familyInfo) {
     expect(JSON.stringify(familyInfo)).toContain(candidate.fatherName);
@@ -934,7 +934,7 @@ async function expectFinalizedApiState(
 
   const additionalInfo = await jsonFromWhenAuthorized(
     await employeeApiRequest(page, `/employees/${employeeId}/additional-info`),
-    'employee additional info'
+    'staff additional info'
   );
   if (additionalInfo) {
     expect(JSON.stringify(additionalInfo)).toContain(candidate.secondLanguage);
@@ -950,8 +950,8 @@ async function expectFinalizedApiState(
   }
 }
 
-test.describe('HR Employee onboarding E2E', () => {
-  test('creates invite, accepts anonymous application, finalizes employee, and verifies employee record', async ({
+test.describe('HR Staff onboarding E2E', () => {
+  test('creates invite, accepts anonymous application, finalizes staff, and verifies staff record', async ({
     browser,
     page,
   }) => {

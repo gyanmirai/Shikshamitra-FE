@@ -13,8 +13,8 @@ import {
   fillRequiredPersonalInformation,
 } from './employee-page';
 
-test.describe('HR Employee create', () => {
-  test('creates an employee from the Personal Information step', async ({ page }) => {
+test.describe('HR Staff create', () => {
+  test('creates a staff member from the Personal Information step', async ({ page }) => {
     const employee = createEmployeeFixture();
 
     await gotoEmployeeList(page);

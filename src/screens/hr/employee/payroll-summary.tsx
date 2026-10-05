@@ -148,7 +148,7 @@ const PayrollSummary = ({ employee }: any) => {
               <PayrollSummarySkeleton />
             ) : isError ? (
               <Alert severity="info">
-                No finalized salary slip found for this employee and month.
+                No finalized salary slip found for this staff member and month.
               </Alert>
             ) : hasSalarySlip ? (
               <>

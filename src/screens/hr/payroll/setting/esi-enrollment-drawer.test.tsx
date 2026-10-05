@@ -46,7 +46,7 @@ function setup(onSaved = async () => undefined) {
         open
         employee={{
           employeeId: 'employee-1',
-          employeeName: 'Review Employee',
+          employeeName: 'Review Staff',
           employeeIdentifier: 'E1',
         }}
         canManageEnrollment
@@ -64,7 +64,7 @@ function edit() {
     target: { value: '9876543210' },
   });
 }
-it.each(['Close employee ESIC details', 'Cancel'])(
+it.each(['Close staff ESIC details', 'Cancel'])(
   'guards %s and retains edits when discard is declined',
   (name) => {
     const { close } = setup();
@@ -88,7 +88,7 @@ it('blocks dismissal during initial loading', () => {
   mocks.fetching = true;
   const { close } = setup();
   expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Close employee ESIC details' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Close staff ESIC details' })).toBeDisabled();
   fireEvent.click(document.querySelector('.MuiBackdrop-root')!);
   expect(close).not.toHaveBeenCalled();
 });

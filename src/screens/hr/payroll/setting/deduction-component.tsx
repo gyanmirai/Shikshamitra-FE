@@ -133,7 +133,7 @@ const DeductionComponent = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Deduction Component"
-        description="Manage the various deduction components that are subtracted from employee salaries, including fixed and variable deductions."
+        description="Manage the various deduction components that are subtracted from staff salaries, including fixed and variable deductions."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
@@ -179,8 +179,8 @@ const DeductionComponent = () => {
           ) : deleteImpactPreview?.previewHash ? (
             <>
               <DialogContentText sx={{ mb: 2 }}>
-                This component is linked to {deleteImpactPreview.linkedEmployeeCount} employee
-                payroll profiles. It will be removed from employee payroll profiles going forward.
+                This component is linked to {deleteImpactPreview.linkedEmployeeCount} staff
+                payroll profiles. It will be removed from staff payroll profiles going forward.
                 Finalized salary slips will not change. Draft salary slips will update only after
                 regeneration.
               </DialogContentText>
@@ -192,7 +192,7 @@ const DeductionComponent = () => {
                 }}
               >
                 <Alert severity="info">
-                  Synced employees: {deleteImpactPreview?.syncedEmployeeCount ?? 0}
+                  Synced staff: {deleteImpactPreview?.syncedEmployeeCount ?? 0}
                 </Alert>
                 <Alert severity="warning">
                   Manual overrides: {deleteImpactPreview?.manualOverrideEmployeeCount ?? 0}
@@ -210,7 +210,7 @@ const DeductionComponent = () => {
           )}
           {!!deleteImpactPreview?.previewHash && !!deleteImpactPreview?.syncedEmployees?.length && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Sample linked employees:{' '}
+              Sample linked staff:{' '}
               {deleteImpactPreview.syncedEmployees
                 .map((employee: any) => employee.employeeName)
                 .join(', ')}
@@ -623,7 +623,7 @@ const DeductionComponentForm = ({
               <CustomTooltip
                 arrow
                 placement="right"
-                title="Deduction components define how amount is deducted from employee salary, such as PF or Tax."
+                title="Deduction components define how amount is deducted from staff salary, such as PF or Tax."
               >
                 <Iconify
                   icon="lucide:info"
@@ -981,7 +981,7 @@ const DeductionComponentForm = ({
                       <strong>{formik.values.amount || 'X'}</strong>
                       <br />
                       Example: If amount is ₹2,000, the same deduction will be applied to all
-                      employees.
+                      staff.
                     </>
                   )}
                 </Typography>
@@ -991,7 +991,7 @@ const DeductionComponentForm = ({
                     ? formik.values.calculationType === 'Percentage'
                       ? 'The percentage is fixed; the amount follows the calculation base.'
                       : 'The configured amount is fixed.'
-                    : 'The amount can vary for each employee.'}
+                    : 'The amount can vary for each staff.'}
                 </Typography>
 
                 <Typography
@@ -1001,7 +1001,7 @@ const DeductionComponentForm = ({
                     visibility: formik.values.showOnPayslip ? 'hidden' : 'visible',
                   }}
                 >
-                  ⚠️ This deduction will <strong>not</strong> appear on employee payslips.
+                  ⚠️ This deduction will <strong>not</strong> appear on staff payslips.
                 </Typography>
               </Alert>
             </Box>
@@ -1050,7 +1050,7 @@ const DeductionComponentForm = ({
             }}
           >
             <Alert severity="info">
-              Synced employees: {impactPreview?.syncedEmployeeCount ?? 0}
+              Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}
             </Alert>
             <Alert severity="warning">
               Manual overrides: {impactPreview?.manualOverrideEmployeeCount ?? 0}
@@ -1061,8 +1061,8 @@ const DeductionComponentForm = ({
             </Alert>
           </Box>
           <Typography variant="body2" color="text.secondary">
-            Effective month: {impactPreview?.effectiveMonth}. Normal save updates only employees
-            still following the master value. Force apply overwrites manual employee overrides for
+            Effective month: {impactPreview?.effectiveMonth}. Normal save updates only staff
+            still following the master value. Force apply overwrites manual staff overrides for
             this component and makes them follow the master again.
           </Typography>
         </DialogContent>

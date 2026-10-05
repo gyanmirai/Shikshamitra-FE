@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 import { test, expect } from '@playwright/test';
 
-import { employeeColumns } from './selectors';
+import { employeeColumns, testIds } from './selectors';
 import {
   table,
   firstDataRow,
@@ -11,7 +11,7 @@ import {
   expectNoRuntimeErrors,
 } from './employee-page';
 
-test.describe('HR Employee list', () => {
+test.describe('HR Staff list', () => {
   test('loads list, columns, search, pagination, and profile query state', async ({ page }) => {
     const assertNoErrors = await expectNoRuntimeErrors(page);
 
@@ -42,7 +42,7 @@ test.describe('HR Employee list', () => {
     }
 
     await openFirstRowProfile(page);
-    await expect(page.getByRole('heading', { name: /Profile/i })).toBeVisible();
+    await expect(page.getByTestId(testIds.profileHeader)).toBeVisible();
 
     await assertNoErrors();
   });
@@ -51,7 +51,8 @@ test.describe('HR Employee list', () => {
     await gotoEmployeeList(page);
     await searchEmployee(page, `NO_MATCH_${Date.now()}`);
 
-    await expect(table(page).getByText(/No Employee Found/i)).toBeVisible();
-    await expect(table(page).getByText(/Add Employee/i)).toBeVisible();
+    await expect(table(page).getByText(/No results found for/)).toBeVisible();
+    await table(page).getByRole('button', { name: 'Clear search', exact: true }).click();
+    await firstDataRow(page);
   });
 });

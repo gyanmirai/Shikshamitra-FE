@@ -108,7 +108,7 @@ export default function PayrollComponentDialog({
             sx={{ textAlign: 'justify' }}
             arrow
             placement="right"
-            title={`Add ${type === 'earning' ? 'Earning' : 'Deduction'} Components to the employee's payroll`}
+            title={`Add ${type === 'earning' ? 'Earning' : 'Deduction'} Components to the staff's payroll`}
           >
             <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
           </CustomTooltip>

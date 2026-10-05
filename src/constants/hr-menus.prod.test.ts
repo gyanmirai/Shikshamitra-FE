@@ -18,10 +18,14 @@ describe('HR production menu', () => {
     expect(titles).toContain('I-card');
     expect(titles).toContain('Performance Management');
 
+    expect(titles).toContain('Staff Directory');
+    expect(titles).not.toContain('Employee List');
+    expect(titles).not.toContain('Policy Impact');
+    expect(titles).not.toContain('Holiday Impact');
     const items = flattenItems(navItems);
     expect(items.find((item) => item.title === 'I-card')).toMatchObject({
       path: '/hr/i-card',
-      permissionName: 'HR.Employee.ICard.View',
+      permissionName: hrPermissions.employee.iCard,
     });
     expect(items.find((item) => item.title === 'Performance Management')).toMatchObject({
       path: '/hr/professional-management/overview',
@@ -91,7 +95,6 @@ describe('HR production menu', () => {
       'Leave Policies',
       'Payroll Policies',
       'Policy Assignments',
-      'Policy Impact',
     ]);
     expect(policyMenu?.children?.map((item: any) => item.shortcutKeyName)).toEqual([
       'Alt+H+Y+1',
@@ -99,7 +102,6 @@ describe('HR production menu', () => {
       'Alt+H+Y+3',
       'Alt+H+Y+4',
       'Alt+H+Y+5',
-      'Alt+H+Y+6',
     ]);
     expect(items.find((item) => item.title === 'Leave Policies')).toMatchObject({
       path: hrPaths.policies.leavePolicies,

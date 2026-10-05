@@ -269,7 +269,7 @@ const LeaveCalender = () => {
             <CustomTooltip
               arrow
               placement="right"
-              title="Displays detailed information about the employeeâ€™s leave request, including type, dates, reason, and approval status."
+              title="Displays detailed information about the staffâ€™s leave request, including type, dates, reason, and approval status."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -487,11 +487,11 @@ export const LeaveRequestForm = ({
 
       {/*  Section: Employee Information  */}
       <Box sx={{ px: 3, py: 2.5 }}>
-        <SectionHeader icon="mdi:account-outline" label="Employee Information" />
+        <SectionHeader icon="mdi:account-outline" label="Staff Information" />
         <Stack spacing={1.5}>
           <InfoRow label="Academic year" value={academicYearLabel} />
           <InfoRow label="Organization" value={organizationLabel} />
-          <InfoRow label="Employee code" value={detail?.employeeCode || '-'} />
+          <InfoRow label="Staff code" value={detail?.employeeCode || '-'} />
           <InfoRow label="Submitted by" value={submittedByLabel} />
         </Stack>
       </Box>

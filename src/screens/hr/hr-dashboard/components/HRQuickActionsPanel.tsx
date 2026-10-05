@@ -12,7 +12,7 @@ import { Box, Card, Stack, Button, CardHeader, IconButton, Typography } from '@m
 
 const QUICK_ACTIONS = [
   {
-    label: 'Add Employee',
+    label: 'Add Staff',
     icon: 'mdi:account-plus-outline',
     color: 'primary',
     href: hrPaths.employee.list,

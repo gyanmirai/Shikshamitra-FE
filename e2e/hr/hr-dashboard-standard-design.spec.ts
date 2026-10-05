@@ -115,7 +115,7 @@ const summary = {
     missingSalaryStructureCount: 2,
     policyConfigurationIssueCount: 1,
     blockingIssues: ['Three staff records have missing attendance.'],
-    recommendedActions: ['Review pending employee payroll records.'],
+    recommendedActions: ['Review pending staff payroll records.'],
   },
   celebrations: {
     today: [
@@ -331,9 +331,9 @@ test.describe('HR dashboard standard design', () => {
       await expect(breadcrumbs.getByText('HR Dashboard')).toBeVisible();
       await expect(page.getByRole('link', { name: 'Active Staff: 126' })).toHaveAttribute(
         'href',
-        /\/hr\/employee\/?$/
+        /\/hr\/staff\/?$/
       );
-      await expect(dashboard.getByRole('link', { name: 'Onboard Employee' })).toHaveCount(0);
+      await expect(dashboard.getByRole('link', { name: 'Onboard Staff' })).toHaveCount(0);
       await expect(dashboard.getByRole('link', { name: 'Reports' })).toHaveCount(0);
       await expect(dashboard.getByRole('separator')).toHaveCount(0);
       await expect(dashboard.getByText("7-day trend and today's attendance status")).toBeVisible();
@@ -416,7 +416,7 @@ test.describe('HR dashboard standard design', () => {
     await expect(page.getByText('126').first()).toBeVisible();
     await expect(page.getByRole('link', { name: 'Active Staff: 126' })).toHaveCount(0);
     const dashboard = page.getByTestId('hr-dashboard-shell');
-    await expect(dashboard.getByRole('link', { name: 'Onboard Employee' })).toHaveCount(0);
+    await expect(dashboard.getByRole('link', { name: 'Onboard Staff' })).toHaveCount(0);
     await expect(dashboard.getByRole('link', { name: 'Reports' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /Approve leave for/i })).toHaveCount(0);
     await expect(page.getByRole('link', { name: 'Run Payroll' })).toHaveCount(0);

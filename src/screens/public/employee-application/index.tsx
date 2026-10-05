@@ -1887,7 +1887,7 @@ export default function PublicEmployeeApplicationScreen({ token }: { token: stri
             <Stack spacing={2}>
               <Iconify icon="mdi:account-tie-outline" width={42} />
               <Box>
-                <Typography variant="h5">Employee Application</Typography>
+                <Typography variant="h5">Staff Application</Typography>
                 <Typography variant="body2" color="text.secondary">
                   {application?.applicationNumber}
                 </Typography>
