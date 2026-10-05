@@ -3,27 +3,29 @@
 /**
  * HRPolicyWorkspace - Thin orchestrator.
  *
- * All state, queries, and mutations are encapsulated in `useHRPolicyWorkspace`.
+ * Data state, queries, and mutations are encapsulated in `useHRPolicyWorkspace`.
  * Each tab and drawer is a dedicated component importing from this hook's context type.
  *
- * Governance compliance: no logic here, purely composition.
+ * The workspace registers drawer drafts with the shared navigation guard.
  */
 
-import React from 'react';
-import { useSelector } from 'react-redux';
-import { useRouter } from 'src/routes/hooks';
-import { hasNavigationPermission } from 'src/utils/permissions';
-import { hrPermissions , hrPaths } from 'src/constants/hr-menus';
 import type { RootState } from 'src/redux/store';
+
+import { useRouter } from 'src/routes/hooks';
+import React, { useRef, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
+import { useDispatch, useSelector } from 'react-redux';
 import { CustomTabs } from 'src/components/custom-tabs';
+import { hasNavigationPermission } from 'src/utils/permissions';
+import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { Box, Tab, Alert, Paper, Drawer, Typography, LinearProgress } from '@mui/material';
 
-import { PolicySetupAlert } from './components/PolicySetupAlert';
 import { PolicyTable } from './components/PolicyTable';
 import { CalendarsTab } from './components/CalendarsTab';
 import { AssignmentsTab } from './components/AssignmentsTab';
+import { PolicySetupAlert } from './components/PolicySetupAlert';
 import { HR_POLICY_TABS } from './hr-policy-workspace.constants';
 import { PolicyAuditDrawer } from './components/PolicyAuditDrawer';
 import { useHRPolicyWorkspace } from './hooks/useHRPolicyWorkspace';
@@ -64,6 +66,38 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       hasNavigationPermission(permissions, destinations[item.value].permission)
   );
   const ctx = useHRPolicyWorkspace({ focus, tabs });
+  const dispatch = useDispatch();
+  const draftForms = {
+    calendar: ctx.calendarForm,
+    attendance: ctx.attendanceForm,
+    payroll: ctx.payrollForm,
+    assignment: ctx.assignmentForm,
+  };
+  const draftSnapshot = ctx.drawer ? JSON.stringify(draftForms[ctx.drawer.kind]) : undefined;
+  const draftBaseline = useRef<{
+    drawer: typeof ctx.drawer;
+    snapshot: string | undefined;
+  } | null>(null);
+
+  // Register drafts with the existing tab, link, refresh and browser-back guards.
+  useEffect(() => {
+    if (!ctx.drawer || ctx.drawer.mode === 'view') {
+      if (draftBaseline.current) dispatch(setIsChanges(false));
+      draftBaseline.current = null;
+      return;
+    }
+    if (draftBaseline.current?.drawer !== ctx.drawer) {
+      draftBaseline.current = { drawer: ctx.drawer, snapshot: draftSnapshot };
+    }
+    dispatch(setIsChanges(draftBaseline.current.snapshot !== draftSnapshot));
+  }, [ctx.drawer, draftSnapshot, dispatch]);
+
+  useEffect(
+    () => () => {
+      dispatch(setIsChanges(false));
+    },
+    [dispatch]
+  );
 
   const {
     tab,
