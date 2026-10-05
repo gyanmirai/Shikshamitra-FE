@@ -5,10 +5,11 @@ import { FormSectionCard } from 'src/components/form-section-card';
 
 import { SeatingMetrics } from './seating-metrics';
 import { SeatingPreviewGrid } from './seating-preview-grid';
+import { SeatingClassroomPreview } from './seating-classroom-preview';
 
 import type { GuidedStepProps } from '../types';
 
-export function ReviewStep({ workflow }: GuidedStepProps) {
+export function ReviewStep({ workspace, workflow }: GuidedStepProps) {
   const plan = workflow.selectedPlan;
   const { preview, validation } = workflow;
   if (!plan) return <Alert severity="warning">Choose a seating plan before reviewing.</Alert>;
@@ -62,7 +63,16 @@ export function ReviewStep({ workflow }: GuidedStepProps) {
               Configure and add usable capacity or change the rules.
             </Alert>
           )}
-          <SeatingPreviewGrid assignments={preview.assignments} />
+          {workflow.formik.values.allocationMode === 'automatic' ? (
+            <SeatingClassroomPreview
+              workspace={workspace}
+              plan={plan}
+              roomIds={workflow.formik.values.selectedRoomIds}
+              preview={preview}
+            />
+          ) : (
+            <SeatingPreviewGrid assignments={preview.assignments} />
+          )}
         </>
       )}
     </Stack>

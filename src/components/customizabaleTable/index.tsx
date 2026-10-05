@@ -77,6 +77,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
   onSendNotification = () => {},
   searchFieldProps = {},
   noDataText = <>No data available</>,
+  errorContent,
   wrapperProps = {},
 }) => {
   const { sx, ...other } = tableContainerProps;
@@ -463,7 +464,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                 aria-label={`${tableTitle} table`}
                 size={dense ? 'small' : 'medium'}
                 sx={{
-                  height: data.length > 0 || isLoading ? 'auto' : '100%',
+                  height: !errorContent && (data.length > 0 || isLoading) ? 'auto' : '100%',
                   '&:focus-visible': {
                     outline: '2px solid',
                     outlineColor: 'primary.main',
@@ -498,6 +499,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
                   expandedRows={expandedRows}
                   onExpandRow={handleExpandRow}
                   noDataText={noDataText}
+                  errorContent={errorContent}
                   tableRef={tableRef}
                   rowsPerPage={rowsPerPage}
                   searchTerm={searchTerm}
@@ -597,6 +599,7 @@ const CustomizableTable: React.FC<ICustomizableTableProps> = ({
       expandedRows,
       handleExpandRow,
       noDataText,
+      errorContent,
       tableRef,
       rowsPerPage,
       isShowedDense,

@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-02
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -79,7 +79,11 @@ Profile tabs use a horizontally scrollable, consistently aligned tab list on nar
 Reset on manual attendance restores the last loaded day state, including an approved leave status, instead of inventing a new pending state.
 Changing the selected attendance date clears the prior date's rows and lock state until the new response arrives, and row, save, reset, and lock actions stay disabled during that transition.
 Manual Present and Half Day clock values are retained independently when a user switches between those statuses before saving.
-Saving manual attendance invalidates cached attendance, payroll, and HR dashboard data after the day data is persisted.
+Saving manual attendance invalidates cached attendance, payroll, HR dashboard, and substitution availability/suggestion data after the day data is persisted.
+
+Teaching employees marked Absent or Half Day have an Arrange substitution row action when the user holds both Timetable Management View and Add. When the page has unsaved changes, Save attendance & arrange substitution persists those changes first; a failed save leaves the drawer closed. The date and attendance grid stay disabled during this transition.
+The shared quick-substitution drawer is also used from Academic teacher availability. It loads the saved attendance absence window, scoped published periods, and current substitute suggestions. Staff assign one period at a time; unavailable or partial-only candidates are disabled, failures preserve the selection for retry, and successful assignment refreshes period coverage without closing the drawer. Acknowledgement remains a separate state.
+Locked saved attendance may still be used to arrange cover. Approved-leave rows, non-teaching employees, Present/Pending rows, holidays, future dates, and dates outside the selected year do not offer this manual-attendance action. Approved-leave synchronization and batch assignment remain separate follow-up work.
 The device attendance screen starts with the current month and keeps the empty-state icon and message in the shared empty-state layout.
 Payslip content is keyed by both employee and payroll month, and a previous response is not rendered while a new selection is loading.
 Only a 404 response is shown as a missing payslip, while access, server, and network failures provide a retry action.

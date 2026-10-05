@@ -19,6 +19,8 @@ export default function GuidedSeatingPage() {
     examId: params.examId,
     seatingPlanId,
   });
+  /** Memoization Justification: preserve plan and room references while step query parameters
+   * change, so editor effects do not reload or overwrite an in-progress draft. */
   const normalizedWorkspace = useMemo(
     () => (currentData ? normalizeWorkspace(currentData) : undefined),
     [currentData]

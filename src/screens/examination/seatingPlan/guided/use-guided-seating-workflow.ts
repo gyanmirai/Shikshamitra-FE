@@ -1,15 +1,14 @@
-import type {
-  SeatingPlanGroupDto,
-  SeatingPlanWorkspaceDto,
-} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
+import type { SeatingPlanWorkspaceDto } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
 
 import { useRef } from 'react';
 import { useFormik } from 'formik';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 
 import { createGuidedSeatingNext } from './workflow-next';
+import { createWorkflowNavigation } from './workflow-navigation';
 import { createGuidedPlanActions } from './workflow-plan-actions';
 import { buildSeatingPlanListUrl } from '../utils/seating-plan-navigation';
+import { getAutomaticPreviewKey } from './hooks/use-guided-seating-preview';
 import { useGuidedSeatingOperations } from './use-guided-seating-operations';
 import { useGuidedSeatingPermissions } from './use-guided-seating-permissions';
 import {
@@ -17,7 +16,6 @@ import {
   getInitialPlan,
   getNextDisabled,
   getStepFromQuery,
-  buildWorkflowUrl,
   getInitialValues,
   getWorkflowValidationSchema,
 } from './workflow-config';
@@ -51,32 +49,14 @@ export function useGuidedSeatingWorkflow(workspace: SeatingPlanWorkspaceDto): Gu
     readiness === workspace.readiness ? workspace : { ...workspace, readiness };
   const isPublished = operations.isPublished || readiness.isPublished;
 
-  const navigate = (step: number, planId: string | null = seatingPlanId ?? null) => {
-    router.replace(buildWorkflowUrl(pathname, searchParams.toString(), step, planId), {
-      scroll: false,
-    });
-  };
-
-  const openPlan = (plan: SeatingPlanGroupDto) => {
-    manualPreviousRoomIds.current = plan.selectedRoomIds;
-    formik.setFieldValue('selectedPlanId', plan.seatingPlanId);
-    formik.setFieldValue('selectedExamSubjectIds', []);
-    formik.setFieldValue('selectedRoomIds', plan.selectedRoomIds);
-    formik.setFieldValue('acknowledgeWarnings', false);
-    operations.resetPreview();
-    navigate(1, plan.seatingPlanId);
-  };
-
-  const startNewPlan = () => {
-    manualPreviousRoomIds.current = [];
-    formik.setFieldValue('selectedPlanId', '');
-    formik.setFieldValue('selectedExamSubjectIds', []);
-    formik.setFieldValue('planName', '');
-    formik.setFieldValue('selectedRoomIds', []);
-    formik.setFieldValue('acknowledgeWarnings', false);
-    operations.resetPreview();
-    navigate(0, null);
-  };
+  const { navigate, openPlan, startNewPlan } = createWorkflowNavigation({
+    pathname,
+    query: searchParams.toString(),
+    seatingPlanId,
+    formik,
+    manualPreviousRoomIds,
+    resetPreview: operations.resetPreview,
+  });
 
   const planActions = createGuidedPlanActions(operations, startNewPlan);
   const handleNext = createGuidedSeatingNext({
@@ -139,7 +119,12 @@ export function useGuidedSeatingWorkflow(workspace: SeatingPlanWorkspaceDto): Gu
       formik.values.allocationMode,
       readiness.isReadyToPublish
     ),
-    nextDisabled,
+    nextDisabled:
+      nextDisabled ||
+      (activeStep === 1 &&
+        formik.values.allocationMode === 'automatic' &&
+        seatingPlanId !== undefined &&
+        operations.previewKey !== getAutomaticPreviewKey(seatingPlanId, formik.values)),
     handleNext,
     handleBack: () => navigate(Math.max(0, activeStep - 1)),
     openStep: (step) => navigate(step),
@@ -147,6 +132,8 @@ export function useGuidedSeatingWorkflow(workspace: SeatingPlanWorkspaceDto): Gu
     startNewPlan,
     ...planActions,
     resetPreview: operations.resetPreview,
+    generatePreview: operations.generatePreview,
+    previewKey: operations.previewKey,
     setManualPreview: operations.setManualPreview,
   };
 }

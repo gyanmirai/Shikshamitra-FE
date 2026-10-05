@@ -3,7 +3,8 @@ import type {
   RubricEvaluationDto,
   RubricEvaluationScoreInputDto,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
-import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+
+import { RubricScoringModel , getRubricCriterionMaximum } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import type { CriterionEvaluationValues } from './rubricEvaluationTypes';
 
@@ -43,12 +44,12 @@ export const validateCriterionValues = (
     if (marks === undefined || marks.trim() === '') return criterion.isRequired;
 
     const numericMarks = Number(marks);
-    if (!Number.isFinite(numericMarks) || numericMarks < 0 || numericMarks > Math.min(criterion.maxMarks, 1000)) return true;
+    if (!Number.isFinite(numericMarks) || numericMarks < 0 || numericMarks > Math.min(getRubricCriterionMaximum(rubric, criterion), 1000)) return true;
     if (rubric.scoringModel === RubricScoringModel.Checklist && !rubric.performanceLevels.length) {
       return numericMarks !== 0 && numericMarks !== 1;
     }
     if (usesPerformanceLevels(rubric)) {
-      return !rubric.performanceLevels.some((level) => level.score === numericMarks && level.score <= criterion.maxMarks);
+      return !rubric.performanceLevels.some((level) => level.score === numericMarks && level.score <= getRubricCriterionMaximum(rubric, criterion));
     }
     return false;
   });
@@ -58,18 +59,22 @@ export const buildEvaluationScores = (
   values: CriterionEvaluationValues
 ): RubricEvaluationScoreInputDto[] =>
   rubric.criteria
-    .filter((criterion) => values[criterion.id]?.marks.trim() !== '')
+    .filter((criterion) => values[criterion.id]?.marks?.trim())
     .map((criterion) => ({
       criterionId: criterion.id,
-      marks: Number(values[criterion.id]?.marks),
+      marks: roundRubricMarks(Number(values[criterion.id]?.marks)),
       comments: values[criterion.id]?.comments.trim() || null,
     }));
+
+// Round stored scores first, matching numeric(10,2) and backend away-from-zero rounding.
+export const roundRubricMarks = (marks: number) =>
+  Math.round((marks + Number.EPSILON * Math.max(1, Math.abs(marks))) * 100) / 100;
 
 export const calculateTotalMarks = (values: CriterionEvaluationValues) =>
   Object.values(values).reduce((total, value) => {
     const marks = Number(value.marks);
-    return total + (Number.isFinite(marks) ? marks : 0);
-  }, 0);
+    return total + (Number.isFinite(marks) ? Math.round(roundRubricMarks(marks) * 100) : 0);
+  }, 0) / 100;
 
 export const isMissingEvaluationResponse = (error: unknown) => {
   if (!error || typeof error !== 'object') return false;

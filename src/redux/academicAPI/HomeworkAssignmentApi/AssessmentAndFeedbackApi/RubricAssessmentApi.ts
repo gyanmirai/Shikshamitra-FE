@@ -43,7 +43,8 @@ export type RubricCriterionInputDto = {
   studentDescription?: string | null;
   teacherGuidance?: string | null;
   isRequired: boolean;
-  maxMarks: number;
+  points?: number | null;
+  weight?: number | null;
   displayOrder: number;
 };
 
@@ -94,7 +95,8 @@ export type AssessmentRubricCriterionDto = {
   studentDescription?: string | null;
   teacherGuidance?: string | null;
   isRequired: boolean;
-  maxMarks: number;
+  points?: number | null;
+  weight?: number | null;
   displayOrder: number;
 };
 
@@ -327,3 +329,12 @@ export const {
   useSubmitRubricEvaluationMutation,
   useApproveRubricEvaluationMutation,
 } = rubricAssessmentApi;
+
+export const getRubricCriterionMaximum = (
+  rubric: Pick<AssessmentRubricDto, 'scoringModel' | 'performanceLevels'>,
+  criterion: Pick<AssessmentRubricCriterionDto, 'points' | 'weight'>
+) => rubric.scoringModel === RubricScoringModel.PerformanceLevels
+  ? Math.max(0, ...rubric.performanceLevels.map((level) => level.score))
+  : rubric.scoringModel === RubricScoringModel.WeightedPercentage
+    ? criterion.weight ?? 0
+    : criterion.points ?? (rubric.scoringModel === RubricScoringModel.Checklist ? 1 : 0);

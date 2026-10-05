@@ -9,7 +9,8 @@ export type RubricCriterionFormValue = {
   id: string;
   title: string;
   description: string;
-  maxMarks: string;
+  points?: string;
+  weight?: string;
   studentDescription: string;
   teacherGuidance: string;
   isRequired: boolean;
@@ -44,6 +45,9 @@ export type RubricConfigFormProps = {
 export type RubricConfigTableProps = {
   data: Array<AssessmentRubricDto & { usageCount?: number }>;
   isLoading: boolean;
+  isError?: boolean;
+  hasMedium?: boolean;
+  onRetry?: () => unknown;
   canAdd: boolean;
   canDelete: boolean;
   onEdit: (row: AssessmentRubricDto) => void;

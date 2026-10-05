@@ -44,6 +44,8 @@ export function RoomsStep({ workflow }: GuidedStepProps) {
                             )
                           : [...workflow.formik.values.selectedRoomIds, room.roomId];
                         workflow.formik.setFieldValue('selectedRoomIds', roomIds);
+                        if (workflow.formik.values.allocationMode === 'automatic')
+                          workflow.resetPreview();
                       }}
                     />
                   }

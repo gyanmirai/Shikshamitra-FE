@@ -58,7 +58,7 @@ const rubric = {
       rubricId: 'rubric-1',
       title: 'Understanding',
       isRequired: true,
-      maxMarks: 4,
+      points: 4,
       displayOrder: 1,
     },
   ],
@@ -146,10 +146,10 @@ describe('homework approved evaluation navigation', () => {
     renderForm();
     await screen.findByText(/This evaluation is approved and locked/);
     expect(screen.getByRole('spinbutton', { name: 'Marks' })).toBeDisabled();
-    expect(screen.getByRole('textbox', { name: 'Understanding Feedback' })).toBeDisabled();
+    expect(screen.queryByRole('textbox', { name: 'Understanding Feedback' })).not.toBeInTheDocument();
     expect(
-      screen.getByRole('textbox', { name: 'Overall rubric feedback (optional)' })
-    ).toBeDisabled();
+      screen.queryByRole('textbox', { name: 'Overall rubric feedback (optional)' })
+    ).not.toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Feedback *' })).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Quick Templates' })).toBeDisabled();
     expect(screen.getByRole('button', { name: /^Submit$/ })).toBeDisabled();

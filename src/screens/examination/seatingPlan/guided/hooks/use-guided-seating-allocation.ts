@@ -1,7 +1,4 @@
-import type {
-  SeatingValidationDto,
-  GuidedAllocationPreviewDto,
-} from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
+import type { SeatingValidationDto } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocation-v2.types';
 
 import { useState } from 'react';
 import { useSaveSeatingPlanBulkMutation } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/seat-allocationApi';
@@ -9,25 +6,20 @@ import {
   useSaveGuidedSeatingDraftMutation,
   useApplyGuidedSeatAllocationMutation,
   useValidateGuidedSeatingPlanMutation,
-  usePreviewGuidedSeatAllocationMutation,
 } from 'src/redux/academicAPI/ExaminationApi/ScheduleExamApi/guided-seat-allocationApi';
 
+import { useGuidedSeatingPreview } from './use-guided-seating-preview';
 import { showSeatingValidationWarnings } from '../seating-validation-toast';
-import {
-  buildApplyPayload,
-  buildDraftPayload,
-  buildPreviewPayload,
-  buildManualApplyPayload,
-} from '../guided-payloads';
+import { buildApplyPayload, buildDraftPayload, buildManualApplyPayload } from '../guided-payloads';
 
 import type { GuidedSeatingValues } from '../types';
 
 export function useGuidedSeatingAllocation(examId: string, clearReadiness: () => void) {
-  const [preview, setPreview] = useState<GuidedAllocationPreviewDto>();
+  const previewState = useGuidedSeatingPreview(examId);
+  const { preview, generatePreview, setManualPreview } = previewState;
   const [validation, setValidation] = useState<SeatingValidationDto>();
   const [version, setVersion] = useState<string>();
   const [saveDraft, saveState] = useSaveGuidedSeatingDraftMutation();
-  const [previewAllocation, previewState] = usePreviewGuidedSeatAllocationMutation();
   const [applyAllocation, applyState] = useApplyGuidedSeatAllocationMutation();
   const [saveManualAllocation, manualSaveState] = useSaveSeatingPlanBulkMutation();
   const [validatePlan, validateState] = useValidateGuidedSeatingPlanMutation();
@@ -42,16 +34,8 @@ export function useGuidedSeatingAllocation(examId: string, clearReadiness: () =>
       body: buildDraftPayload(seatingPlanId, values, currentVersion),
     }).unwrap();
     setVersion(result.version);
+    setValidation(undefined);
     clearReadiness();
-    return result;
-  };
-
-  const generatePreview = async (seatingPlanId: string, values: GuidedSeatingValues) => {
-    const result = await previewAllocation({
-      examId,
-      body: buildPreviewPayload(seatingPlanId, values),
-    }).unwrap();
-    setPreview(result);
     return result;
   };
 
@@ -101,11 +85,12 @@ export function useGuidedSeatingAllocation(examId: string, clearReadiness: () =>
 
   return {
     preview,
+    previewKey: previewState.previewKey,
     validation,
     version,
-    isBusy: [saveState, previewState, applyState, manualSaveState, validateState].some(
-      (state) => state.isLoading
-    ),
+    isBusy:
+      [saveState, applyState, manualSaveState, validateState].some((state) => state.isLoading) ||
+      previewState.isLoading,
     saveRooms,
     generatePreview,
     applyPreview,
@@ -113,9 +98,9 @@ export function useGuidedSeatingAllocation(examId: string, clearReadiness: () =>
     runValidation,
     resetVersion: () => setVersion(undefined),
     resetPreview: () => {
-      setPreview(undefined);
+      setManualPreview(undefined);
       setValidation(undefined);
     },
-    setManualPreview: setPreview,
+    setManualPreview,
   };
 }

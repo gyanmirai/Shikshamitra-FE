@@ -29,6 +29,7 @@ interface TableBodyProps {
   expandedRows: Record<number, boolean>;
   onExpandRow: (index: number) => void;
   noDataText?: React.ReactNode;
+  errorContent?: React.ReactNode;
   tableRef: number;
   rowsPerPage?: number;
   searchTerm?: string;
@@ -48,6 +49,7 @@ export const TableBody = ({
   expandedRows,
   onExpandRow,
   noDataText = 'No data available',
+  errorContent,
   tableRef,
   rowsPerPage = 10,
   searchTerm = '',
@@ -55,6 +57,32 @@ export const TableBody = ({
   onClearCriteria,
 }: TableBodyProps) => {
   const theme = useTheme();
+
+  if (errorContent) {
+    return (
+      <MuiTableBody>
+        <TableRow>
+          <TableCell colSpan={columns.length} sx={{ p: 0 }}>
+            <Box
+              sx={{
+                width: tableRef || '100%',
+                position: 'sticky',
+                left: 0,
+                height: '100%',
+                minHeight: 240,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                p: 2,
+              }}
+            >
+              {errorContent}
+            </Box>
+          </TableCell>
+        </TableRow>
+      </MuiTableBody>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -97,6 +97,7 @@ export interface ICustomizableTableProps {
   onSendNotification?: (data: any) => void;
   searchFieldProps?: TextFieldProps;
   noDataText?: React.ReactNode;
+  errorContent?: ReactNode;
   wrapperProps?: BoxProps;
 }
 

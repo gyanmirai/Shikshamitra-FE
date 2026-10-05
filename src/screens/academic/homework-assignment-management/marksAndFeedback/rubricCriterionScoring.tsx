@@ -1,68 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
-import { Card, Stack, TextField, Typography, IconButton, ToggleButton, ToggleButtonGroup } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { Iconify } from 'src/components/iconify';
-import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Card, Stack, Checkbox, TextField, Typography, IconButton, FormControlLabel } from '@mui/material';
+import { RubricScoringModel , getRubricCriterionMaximum } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import RubricPerformanceCards from './rubricPerformanceCards';
+import WeightedPercentageInput from './weightedPercentageInput';
 import { usesPerformanceLevels } from './rubricEvaluationUtils';
 
 import type { RubricCriterionScoringProps } from './rubricEvaluationTypes';
 
-const percentageFromMarks = (marks: string, weight: number) =>
-  marks === '' || !weight ? '' : String(Number(((Number(marks) / weight) * 100).toFixed(2)));
-
-function WeightedPercentageInput({
-  marks,
-  weight,
-  required,
-  readOnly,
-  onChange,
-}: {
-  marks: string;
-  weight: number;
-  required: boolean;
-  readOnly?: boolean;
-  onChange: (marks: string) => void;
-}) {
-  const [percentage, setPercentage] = useState(() => percentageFromMarks(marks, weight));
-  const focused = useRef(false);
-  useEffect(() => {
-    if (!focused.current) setPercentage(percentageFromMarks(marks, weight));
-  }, [marks, weight]);
-  const numeric = Number(percentage);
-  const invalid = percentage !== '' && (!Number.isFinite(numeric) || numeric < 0 || numeric > 100);
-
-  return (
-    <TextField
-      size="small"
-      type="number"
-      label="Achievement %"
-      required={required}
-      value={percentage}
-      inputProps={{ min: 0, max: 100, step: 0.01 }}
-      onFocus={() => { focused.current = true; }}
-      onBlur={() => {
-        focused.current = false;
-        if (!invalid) setPercentage(percentageFromMarks(marks, weight));
-      }}
-      onChange={(event) => {
-        const next = event.target.value;
-        setPercentage(next);
-        onChange(next === '' ? '' : Number.isFinite(Number(next))
-          ? String(Number(((Number(next) / 100) * weight).toFixed(4)))
-          : next);
-      }}
-      error={invalid}
-      helperText={invalid ? 'Enter a percentage from 0 to 100' : `${weight}% of the total`}
-      sx={{ width: { xs: '100%', sm: 190 } }}
-      disabled={readOnly}
-    />
-  );
-}
-
 const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
-  const { rubric, values, onMarksChange, onCommentsChange, readOnly, compact } = props;
+  const {
+    rubric, values, onMarksChange, onCommentsChange, showFeedback = true, readOnly, compact,
+  } = props;
   if (usesPerformanceLevels(rubric)) {
     return <RubricPerformanceCards {...props} />;
   }
@@ -71,7 +21,7 @@ const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
     <Stack spacing={1}>
       {rubric.criteria.map((criterion) => {
         const criterionValue = values[criterion.id] ?? { marks: '', comments: '' };
-        const maxAllowed = Math.min(criterion.maxMarks, 1000);
+        const maxAllowed = Math.min(getRubricCriterionMaximum(rubric, criterion), 1000);
         const numericMarks = Number(criterionValue.marks);
         const invalidMarks = criterionValue.marks !== '' &&
           (!Number.isFinite(numericMarks) || numericMarks < 0 || numericMarks > maxAllowed);
@@ -110,10 +60,10 @@ const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
                 </Stack>
                 <Typography variant="caption" color="text.secondary">
                   {rubric.scoringModel === RubricScoringModel.WeightedPercentage
-                    ? `Weight ${criterion.maxMarks}%`
+                    ? `Weight ${getRubricCriterionMaximum(rubric, criterion)}%`
                     : rubric.scoringModel === RubricScoringModel.Checklist
-                      ? '1 point'
-                      : `Max ${criterion.maxMarks}`}
+                      ? 'Checklist item'
+                      : `Max ${getRubricCriterionMaximum(rubric, criterion)}`}
                 </Typography>
               </Stack>
 
@@ -124,23 +74,22 @@ const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
               ) : null}
 
               {rubric.scoringModel === RubricScoringModel.Checklist ? (
-                <ToggleButtonGroup
-                  exclusive
-                  size="small"
-                  value={criterionValue.marks}
-                  onChange={(_event, value: string | null) => {
-                    if (value !== null) onMarksChange(criterion.id, value);
-                  }}
-                  aria-label={`${criterion.title} checklist result`}
-                  disabled={readOnly}
-                >
-                  <ToggleButton value="1" aria-label={`${criterion.title}: Met`}>Met</ToggleButton>
-                  <ToggleButton value="0" aria-label={`${criterion.title}: Not met`}>Not met</ToggleButton>
-                </ToggleButtonGroup>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={criterionValue.marks === '1'}
+                      indeterminate={criterionValue.marks === ''}
+                      disabled={readOnly}
+                      onChange={(_event, checked) => onMarksChange(criterion.id, checked ? '1' : '0')}
+                      inputProps={{ 'aria-label': `${criterion.title}: Met` }}
+                    />
+                  }
+                  label={criterionValue.marks === '' ? 'Not assessed' : criterionValue.marks === '1' ? 'Met' : 'Not met'}
+                />
               ) : rubric.scoringModel === RubricScoringModel.WeightedPercentage ? (
                 <WeightedPercentageInput
                   marks={criterionValue.marks}
-                  weight={criterion.maxMarks}
+                  weight={getRubricCriterionMaximum(rubric, criterion)}
                   required={criterion.isRequired}
                   readOnly={readOnly}
                   onChange={(marks) => onMarksChange(criterion.id, marks)}
@@ -149,7 +98,7 @@ const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
                 <TextField
                   size="small"
                   type="number"
-                  label="Marks"
+                  label="Points earned"
                   required={criterion.isRequired}
                   value={criterionValue.marks}
                   onChange={(event) => onMarksChange(criterion.id, event.target.value)}
@@ -161,16 +110,18 @@ const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
                 />
               )}
 
-              <TextField
-                size="small"
-                label={`${criterion.title} Feedback`}
-                value={criterionValue.comments}
-                onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
-                placeholder="Add criterion-specific feedback"
-                multiline
-                minRows={1}
-                disabled={readOnly}
-              />
+              {showFeedback && (
+                <TextField
+                  size="small"
+                  label={`${criterion.title} Feedback`}
+                  value={criterionValue.comments}
+                  onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
+                  placeholder="Add criterion-specific feedback"
+                  multiline
+                  minRows={1}
+                  disabled={readOnly}
+                />
+              )}
             </Stack>
           </Card>
         );

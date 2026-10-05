@@ -20,6 +20,8 @@ interface GuidedClassroomPanelProps {
   activeRoomId: string;
   selectedStudent?: SeatingStudent;
   isReadOnly: boolean;
+  hideRoomSwitcher?: boolean;
+  readOnlyDescription?: string;
   includeProtectedAssignmentsInCount?: boolean;
   onSwitchRoom: (roomId: string) => void;
   onAssign: (student: SeatingStudent, roomId: string, seat: SeatingSeat) => void;
@@ -34,6 +36,8 @@ export function GuidedClassroomPanel({
   activeRoomId,
   selectedStudent,
   isReadOnly,
+  hideRoomSwitcher = false,
+  readOnlyDescription = 'Published seating is read-only. Seats from simultaneous plans are combined and labelled in this room view.',
   includeProtectedAssignmentsInCount = false,
   onSwitchRoom,
   onAssign,
@@ -80,12 +84,14 @@ export function GuidedClassroomPanel({
 
   return (
     <Box sx={{ minWidth: 0, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-      <RoomSwitcher
-        rooms={roomSummaries}
-        activeRoomId={activeRoom.roomId}
-        onSwitch={onSwitchRoom}
-      />
-      {selectedStudent && (
+      {!hideRoomSwitcher && (
+        <RoomSwitcher
+          rooms={roomSummaries}
+          activeRoomId={activeRoom.roomId}
+          onSwitch={onSwitchRoom}
+        />
+      )}
+      {selectedStudent && !isReadOnly && (
         <Alert severity="info" sx={{ m: 1.5, mb: 0 }}>
           Select an empty seat for {selectedStudent.studentName}. Press Escape on the student card
           to cancel keyboard dragging.
@@ -105,7 +111,7 @@ export function GuidedClassroomPanel({
       </Box>
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.5, pb: 1.5 }}>
         {isReadOnly
-          ? 'Published seating is read-only. Seats from simultaneous plans are combined and labelled in this room view.'
+          ? readOnlyDescription
           : 'Drag occupied seats to move or swap students. Use the seat menu to remove an assignment or reserve an empty seat.'}
       </Typography>
     </Box>
