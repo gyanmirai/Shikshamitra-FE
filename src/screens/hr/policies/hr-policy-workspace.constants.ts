@@ -23,13 +23,6 @@ export const HR_POLICY_TABS: Array<{
   { value: 'leave', label: 'Leave Policies', icon: 'mdi:calendar-text-outline' },
   { value: 'payroll', label: 'Payroll Policies', icon: 'mdi:cash-sync' },
   { value: 'assignments', label: 'Policy Assignments', icon: 'mdi:account-switch-outline' },
-  { value: 'effective', label: 'Policy Impact', icon: 'mdi:source-branch-check' },
-  {
-    value: 'holiday',
-    label: 'Holiday Impact',
-    icon: 'mdi:calendar-search-outline',
-    disabled: true,
-  },
 ];
 
 export const getHRPolicyTab = (value: WorkspaceTab) => {

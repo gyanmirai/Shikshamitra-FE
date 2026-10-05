@@ -109,7 +109,7 @@ export function CalendarsTab({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
       label: (
         <Stack direction="row" spacing={0.5} alignItems="center">
           <span>Weekly Rule</span>
-          <InfoTooltipIcon title="The recurring weekly off pattern applied to employees using this calendar." />
+          <InfoTooltipIcon title="The recurring weekly off pattern applied to staff using this calendar." />
         </Stack>
       ),
       minWidth: 160,

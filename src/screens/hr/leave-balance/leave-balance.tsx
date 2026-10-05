@@ -593,7 +593,7 @@ const LeaveBalance = ({
           <Stack spacing={1}>
             <LeaveSectionHeader
               icon="solar:history-bold-duotone"
-              title={isEmployeeProfileMode ? 'Employee Leave History' : 'My Leave History'}
+              title={isEmployeeProfileMode ? 'Staff Leave History' : 'My Leave History'}
               meta={
                 <Chip
                   size="small"

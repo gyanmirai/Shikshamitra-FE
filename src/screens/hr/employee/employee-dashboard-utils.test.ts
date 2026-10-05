@@ -41,7 +41,7 @@ const dashboard = {
   ],
 };
 
-describe('employee dashboard presentation', () => {
+describe('staff dashboard presentation', () => {
   it('formats finite, unlimited, and unavailable leave balances honestly', () => {
     expect(formatEmployeeLeaveBalance(dashboard)).toBe('7.5');
     expect(

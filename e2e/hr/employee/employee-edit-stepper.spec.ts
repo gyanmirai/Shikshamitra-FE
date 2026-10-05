@@ -238,7 +238,7 @@ async function firstShiftId(page: Page) {
   const shift = asItems<any>(shiftsBody).find((candidate) => candidate?.id);
 
   if (!shift?.id) {
-    throw new Error('Unable to resolve an employee shift for edit-stepper E2E');
+    throw new Error('Unable to resolve a staff member shift for edit-stepper E2E');
   }
 
   return shift.id as string;
@@ -264,7 +264,7 @@ async function employeeUserId(
     listedEmployee?.identityUserId ||
     listedEmployee?.IdentityUserId;
   if (!userId) {
-    throw new Error('Created employee did not expose a userId for Academic Permission assignment');
+    throw new Error('Created staff did not expose a userId for Academic Permission assignment');
   }
 
   return userId;
@@ -486,7 +486,7 @@ async function prepareAndCheckMediumParentNode(page: Page) {
   await expect(checkbox).toBeChecked();
 }
 
-test.describe('HR Employee edit stepper', () => {
+test.describe('HR Staff edit stepper', () => {
   test('4762 parent Academic Permission medium payload saves and reads back full child access', async ({
     page,
   }) => {
@@ -635,7 +635,7 @@ test.describe('HR Employee edit stepper', () => {
     expect(payload).not.toHaveProperty('educationMediumIds');
     expect(payload).not.toHaveProperty('educationMediumStageIds');
     expect(payload.clearExisting).toBe(false);
-    await expect(page.getByText(/Failed to save employee details/i)).toHaveCount(0);
+    await expect(page.getByText(/Failed to save staff details/i)).toHaveCount(0);
   });
 
   test('submits existing parent Academic Permission access as parent-only payload', async ({
@@ -673,7 +673,7 @@ test.describe('HR Employee edit stepper', () => {
     expect(payload).not.toHaveProperty('standardIds');
     expect(payload).not.toHaveProperty('divisionIds');
     expect(payload.clearExisting).toBe(false);
-    await expect(page.getByText(/Failed to save employee details/i)).toHaveCount(0);
+    await expect(page.getByText(/Failed to save staff details/i)).toHaveCount(0);
   });
 
   test('clears empty Academic Permission selection with clearExisting', async ({ page }) => {
@@ -711,7 +711,7 @@ test.describe('HR Employee edit stepper', () => {
     expect(payload).not.toHaveProperty('standardIds');
     expect(payload).not.toHaveProperty('divisionIds');
     expect(payload.clearExisting).toBe(true);
-    await expect(page.getByText(/Failed to save employee details/i)).toHaveCount(0);
+    await expect(page.getByText(/Failed to save staff details/i)).toHaveCount(0);
   });
 
   test('validates work experience date ordering and payroll bank fields', async ({ page }) => {

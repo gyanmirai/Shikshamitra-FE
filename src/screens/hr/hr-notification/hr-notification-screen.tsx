@@ -14,7 +14,7 @@ import HrEventHolidayNotificationManagementScreen from './component/hr-event-hol
 const HRStaticNotificationScreen = () => {
   const TABS = [
     {
-      label: 'Employee',
+      label: 'Staff',
       value: 'employee',
       icon: <Iconify icon="clarity:employee-line" width={20} />,
       component: () => <HrEmployeeNotificationManagementScreen />,

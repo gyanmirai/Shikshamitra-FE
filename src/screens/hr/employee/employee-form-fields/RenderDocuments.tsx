@@ -73,14 +73,14 @@ const ViewDocuments = ({ employeeId, docId, fileName }: ViewDocumentsProps) => {
           component="iframe"
           src={objectUrl}
           sx={{ width: '100%', height: '100%', border: 'none' }}
-          title={fileName || 'Employee Document'}
+          title={fileName || 'Staff Document'}
         />
       ) : (
         // Image (jpeg, png, etc.) — render as <img>
         <Box
           component="img"
           src={objectUrl}
-          alt={fileName || 'Employee Document'}
+          alt={fileName || 'Staff Document'}
           sx={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }}
         />
       )}

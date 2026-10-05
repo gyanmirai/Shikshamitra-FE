@@ -84,7 +84,7 @@ const preview = {
           code: 'COMPENSATION_REVISION_REQUIRED',
           severity: 'blocking',
           title: 'Approve compensation revisions',
-          message: 'Approve this employee revision.',
+          message: 'Approve this staff member revision.',
           resolutionTarget: 'compensationRevision',
           affectedEmployeeCount: 1,
         },
@@ -93,7 +93,7 @@ const preview = {
   ],
 };
 
-describe('ESI employees panel', () => {
+describe('ESI staff panel', () => {
   it('sends debounced table state to the URL query and presents server-authored issues', () => {
     const onQueryChange = vi.fn();
     render(

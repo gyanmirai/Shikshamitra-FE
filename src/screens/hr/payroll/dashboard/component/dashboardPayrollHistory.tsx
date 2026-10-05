@@ -8,7 +8,7 @@ const DashboardPayrollHistory = () => (
       tableId="payroll-history-table"
       columns={[
         { id: 'month', label: 'Month' },
-        { id: 'totalEmployee', label: 'Total Employee', align: 'center' },
+        { id: 'totalEmployee', label: 'Total Staff', align: 'center' },
         { id: 'totalNetPayble', label: 'Total Net Payble', align: 'center' },
         { id: 'fixPay', label: 'Fix Pay', align: 'center' },
         { id: 'bonus', label: 'Bonus', align: 'center' },

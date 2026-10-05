@@ -48,7 +48,7 @@ const LateArrivalPolicy = () => {
         >
           {' '}
           <Iconify icon="mdi:arrow-right-bold" />
-          Assign Employee
+          Assign Staff
         </MenuItem>
       </MenuList>
     ),
@@ -180,7 +180,7 @@ const LateArrivalPolicy = () => {
       <CustomDialog
         open={assignEmployeeDialog.value}
         handleClose={assignEmployeeDialog.onFalse}
-        title="Assign Employees"
+        title="Assign Staff"
       >
         <AssignEmployeeForm />
       </CustomDialog>
@@ -343,8 +343,8 @@ const AssignEmployeeForm = () => (
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Employees"
-                  placeholder="Search Employees"
+                  label="Staff"
+                  placeholder="Search Staff"
                   size="small"
                   fullWidth
                   sx={{ width: '100%', minWidth: '200px' }}

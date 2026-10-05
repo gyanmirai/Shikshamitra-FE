@@ -310,7 +310,7 @@ async function setEmployeeSalaryStructure(
         deductionComponents: [deductionLine],
       }),
     }),
-    'set employee payroll details'
+    'set staff payroll details'
   );
 
   await expectOk(
@@ -323,7 +323,7 @@ async function setEmployeeSalaryStructure(
         ],
       }),
     }),
-    'set employee salary structure'
+    'set staff salary structure'
   );
 }
 
@@ -495,7 +495,7 @@ test.describe('HR policy payroll edge cases', () => {
       const runMonth = monthKey(targetMonthDate);
       const slipMonth = payslipMonth(targetMonthDate);
 
-      const employeeFixture = createEmployeeFixture('Policy Edge Employee');
+      const employeeFixture = createEmployeeFixture('Policy Edge Staff');
       const employee = await createEmployeeFromExistingDefaults(page, employeeFixture, {
         dateOfJoining: yyyyMmDd(targetMonthDate),
       });
@@ -584,7 +584,7 @@ test.describe('HR policy payroll edge cases', () => {
       const lockedMonthPreview = await previewEmployeeOverride(page, lockedMonthAssignment);
       expect(
         (lockedMonthPreview.blockingWarnings || []).map((warning: any) => warning.code),
-        'locked-month employee override warnings'
+        'locked-month staff override warnings'
       ).toContain('ShikshaMitra:LockedPayrollImpact');
 
       const lockedMonthOverride = await employeeApiRequest(
@@ -610,7 +610,7 @@ test.describe('HR policy payroll edge cases', () => {
         lockedMonthOverride.ok(),
         `locked-month override should fail but returned ${lockedMonthOverride.status()} ${lockedMonthOverrideBody}`
       ).toBe(false);
-      expectLockedPayrollImpactBody(lockedMonthOverrideBody, 'locked employee override response');
+      expectLockedPayrollImpactBody(lockedMonthOverrideBody, 'locked staff override response');
 
       const futureAssignment = buildEmployeeOverridePayload(
         employeeId,
@@ -637,16 +637,9 @@ test.describe('HR policy payroll edge cases', () => {
             confirmationToken: futurePreview.confirmationToken ?? null,
           }),
         }),
-        'save future employee policy override'
+        'save future staff policy override'
       );
 
-      await openHrPage(
-        page,
-        `/hr/effective-preview?employeeId=${encodeURIComponent(employeeId)}&date=${encodeURIComponent(
-          futureEffectiveDate
-        )}`,
-        /Policy Impact|Source:/i
-      );
       const futureEffectivePolicies = await getJson<any>(
         page,
         `/hr/employees/${employeeId}/effective-policies?date=${futureEffectiveDate}`

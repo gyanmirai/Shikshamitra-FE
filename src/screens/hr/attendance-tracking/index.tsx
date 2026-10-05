@@ -815,7 +815,7 @@ const AttendanceTrackingScreen = () => {
             height: '100%',
           },
         }}
-        noDataText="No daily attendance found for this employee."
+        noDataText="No daily attendance found for this staff member."
       />
     </Box>
   );
@@ -865,7 +865,7 @@ const AttendanceTrackingScreen = () => {
     },
     {
       id: 'employeeName',
-      label: 'Employee',
+      label: 'Staff',
       width: 220,
       minWidth: 220,
       sticky: true,
@@ -1011,7 +1011,7 @@ const AttendanceTrackingScreen = () => {
         boxShadow: '-4px 0 8px rgba(0,0,0,0.08)',
       },
       render: (_value, row: any) => (
-        <CustomTooltip title="Bulk adjust editable days for this employee" arrow>
+        <CustomTooltip title="Bulk adjust editable days for this staff member" arrow>
           <span>
             <IconButton
               size="small"
@@ -1320,7 +1320,7 @@ const AttendanceTrackingScreen = () => {
                 </Label>
               </Stack>
               <Typography variant="caption" color="text.secondary">
-                {data?.totalCount || 0} employees found
+                {data?.totalCount || 0} staff found
                 {editableSelectedIds.length
                   ? ` / ${editableSelectedIds.length} editable selected`
                   : ''}
@@ -1477,7 +1477,7 @@ const AttendanceTrackingScreen = () => {
                   setEmployeeSearch(value ? getEmployeeOptionLabel(value) : '');
                   setFilter('employeeId', value?.id || '');
                 }}
-                renderInput={(params) => <TextField {...params} label="Employee" />}
+                renderInput={(params) => <TextField {...params} label="Staff" />}
               />
             </Box>
 
@@ -1643,7 +1643,7 @@ const AttendanceTrackingScreen = () => {
             },
           },
         }}
-        noDataText="No employee attendance found for the selected filters."
+        noDataText="No staff attendance found for the selected filters."
       />
 
       {renderAdjustmentDialog(false)}

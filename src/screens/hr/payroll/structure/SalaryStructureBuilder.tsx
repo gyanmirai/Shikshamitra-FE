@@ -245,7 +245,7 @@ export function SalaryStructureBuilder({
   const save = async () => {
     if (!employeeId || !selectedVersion || !calculationCurrent || !calculation) return;
     if (customizing && overrides.length > 0 && !customizationReason.trim()) {
-      toast.error('Add a reason for the employee-specific salary customization.');
+      toast.error('Add a reason for the staff-specific salary customization.');
       return;
     }
     operationKeyRef.current ||= newKey();
@@ -301,7 +301,7 @@ export function SalaryStructureBuilder({
         },
       }).unwrap();
       setActivationCompleted(true);
-      toast.success('Employee activated.');
+      toast.success('Staff activated.');
       if (canActivate) {
         await refetchReadiness();
       }
@@ -327,7 +327,7 @@ export function SalaryStructureBuilder({
 
   if (templatesLoading || revisionsLoading) {
     return (
-      <Box aria-busy="true" aria-label="Loading employee salary" display="grid" gap={2.5}>
+      <Box aria-busy="true" aria-label="Loading staff salary" display="grid" gap={2.5}>
         <Grid container spacing={2}>
           {[6, 3, 3].map((width, index) => (
             <Grid key={index} size={{ xs: 12, md: width }}>
@@ -371,14 +371,14 @@ export function SalaryStructureBuilder({
   if (!templates.length) {
     return (
       <Alert severity="warning">
-        Create an active salary template before setting up employee salary.
+        Create an active salary template before setting up staff salary.
       </Alert>
     );
   }
   if (!employeeId) {
     return (
       <Alert severity="info">
-        Save the employee first. The employee will be created as Inactive, then salary can be set up
+        Save the staff first. The staff will be created as Inactive, then salary can be set up
         separately.
       </Alert>
     );
@@ -407,7 +407,7 @@ export function SalaryStructureBuilder({
       >
         {readiness?.blockerCodes.includes('ESI_INSURANCE_NUMBER_REQUIRED') && (
           <Typography variant="body2" color="error.main">
-            Enter the employee’s ESIC insurance number before activation.
+            Enter the staff’s ESIC insurance number before activation.
           </Typography>
         )}
         <EmployeeEsiDetails
@@ -502,7 +502,7 @@ export function SalaryStructureBuilder({
                     setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
                   setCalculation(null);
                 }}
-                inputProps={{ 'aria-label': 'PF applicable for employee' }}
+                inputProps={{ 'aria-label': 'PF applicable for staff' }}
               />
             }
             label="PF applicable"
@@ -540,7 +540,7 @@ export function SalaryStructureBuilder({
       >
         <Box>
           <Box display="flex" gap={1} alignItems="center">
-            <Typography variant="subtitle1">Employee-specific customization</Typography>
+            <Typography variant="subtitle1">Staff-specific customization</Typography>
             {customizing && overrides.length ? (
               <Chip size="small" color="warning" label="Customized" />
             ) : null}
@@ -770,11 +770,11 @@ export function SalaryStructureBuilder({
               disabled={activationState.isLoading}
               size="small"
             >
-              Activate employee
+              Activate staff
             </Button>
           }
         >
-          Salary is ready. Activate the employee when the remaining onboarding checks are complete.
+          Salary is ready. Activate the staff when the remaining onboarding checks are complete.
         </Alert>
       ) : null}
 

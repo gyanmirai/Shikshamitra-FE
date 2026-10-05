@@ -220,8 +220,8 @@ const generateClientPreviewPdf = async (
   const period = monthYear?.format('MMMM YYYY') || '-';
   const employeeName = slip.employeeName || employee?.label || '-';
   const headerRows = [
-    ['Employee', employeeName],
-    ['Employee Code', slip.employeeCode || '-'],
+    ['Staff', employeeName],
+    ['Staff Code', slip.employeeCode || '-'],
     ['Department', slip.department || '-'],
     ['Designation', slip.designation || '-'],
     ['Pay Period', period],

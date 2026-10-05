@@ -228,7 +228,7 @@ describe('HR policy workspace date-only academic year handling', () => {
     const form = {
       targetType: 'employee' as const,
       targetKey: 'employee-1',
-      targetDisplayName: 'Employee One',
+      targetDisplayName: 'Staff One',
       payrollPolicyId: 'payroll-1',
       attendancePolicyId: 'attendance-1',
       leavePolicyId: 'leave-1',

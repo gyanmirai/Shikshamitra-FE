@@ -634,7 +634,7 @@ async function setEmployeeSalaryStructure(page: Page, employeeId: string, employ
         deductionComponents: [deductionLine],
       }),
     }),
-    'set employee payroll details'
+    'set staff payroll details'
   );
 
   await expectOk(
@@ -659,7 +659,7 @@ async function setEmployeeSalaryStructure(page: Page, employeeId: string, employ
         ],
       }),
     }),
-    'set employee salary structure'
+    'set staff salary structure'
   );
 }
 
@@ -692,9 +692,9 @@ async function upsertEmployeePolicyOverride(
         assignment,
       }),
     }),
-    'preview employee policy override impact'
+    'preview staff policy override impact'
   );
-  expect(impactPreview?.blockingWarnings ?? [], 'employee override blocking warnings').toEqual([]);
+  expect(impactPreview?.blockingWarnings ?? [], 'staff override blocking warnings').toEqual([]);
 
   const response = await employeeApiRequest(
     page,
@@ -714,7 +714,7 @@ async function upsertEmployeePolicyOverride(
       }),
     }
   );
-  return jsonFrom(response, 'save employee policy override');
+  return jsonFrom(response, 'save staff policy override');
 }
 
 function assertEffectivePolicies(body: any, policies: TestPolicies, source = 'employee') {
@@ -724,23 +724,9 @@ function assertEffectivePolicies(body: any, policies: TestPolicies, source = 'em
   expect(String(body?.policySource || '').toLowerCase(), 'effective policy source').toBe(source);
 }
 
-async function verifyEffectivePreviewPage(
-  page: Page,
-  employeeId: string,
-  effectiveDate: string,
-  policies: TestPolicies
-) {
-  await openHrPage(
-    page,
-    `/hr/effective-preview?employeeId=${encodeURIComponent(employeeId)}&date=${encodeURIComponent(effectiveDate)}`,
-    /Policy Impact|Source:/i
-  );
-
-  await expect(page.getByText(/Source:\s*employee/i)).toBeVisible({ timeout: 60_000 });
-  await expect(page.getByText(new RegExp(escapeRegExp(policies.payroll.name), 'i'))).toBeVisible();
-  await expect(
-    page.getByText(new RegExp(escapeRegExp(policies.attendance.name), 'i'))
-  ).toBeVisible();
+async function verifyEffectivePoliciesApi(page: Page, employeeId: string, effectiveDate: string, policies: TestPolicies) {
+  const result = await getJson<any>(page, `/hr/employees/${employeeId}/effective-policies?date=${encodeURIComponent(effectiveDate)}`);
+  assertEffectivePolicies(result, policies);
 }
 
 async function createEmployeeThroughListUi(page: Page, prefix: string, joiningDate: Date) {
@@ -757,13 +743,13 @@ async function createEmployeeThroughListUi(page: Page, prefix: string, joiningDa
   );
   await saveAndNext(page);
   const saveResponse = await saveResponsePromise;
-  await expectOk(saveResponse, 'create employee through Employee List form');
+  await expectOk(saveResponse, 'create staff through Staff Directory form');
   await expect(page.getByText(/Father Details|Family Details/i).first()).toBeVisible({
     timeout: 60_000,
   });
 
   const created = await findEmployeeBySearch(page, employee.email);
-  expect(created?.id, `created employee ${employee.email}`).toBeTruthy();
+  expect(created?.id, `created staff ${employee.email}`).toBeTruthy();
 
   await gotoEmployeeList(page);
   await searchEmployee(page, employee.email);
@@ -886,7 +872,7 @@ async function lockPayrollAndVerifySlip(
     (item) => item.employeeId === employeeId
   );
   if (!lockedRow) {
-    throw new Error(`Locked payroll row not found for employee ${employeeId}`);
+    throw new Error(`Locked payroll row not found for staff ${employeeId}`);
   }
   expect(Boolean(lockedRow.isLocked ?? lockedRow.locked ?? lockedRow.isFinalized)).toBe(true);
 
@@ -952,7 +938,7 @@ async function lockPayrollAndVerifySlip(
 test.describe('HR policies to payroll golden path', () => {
   test.skip(!fullCycleEnabled, 'Set E2E_HR_FULL_CYCLE=1 against local DDVS before running.');
 
-  test('configures default policies, creates an employee, locks payroll, and verifies salary slip', async ({
+  test('configures default policies, creates a staff member, locks payroll, and verifies salary slip', async ({
     page,
   }) => {
     test.setTimeout(900_000);
@@ -991,7 +977,7 @@ test.describe('HR policies to payroll golden path', () => {
       guard.assertClean();
 
       const { fixture: employeeFixture, record: employeeRecord } =
-        await createEmployeeThroughListUi(page, 'Policy Payroll Employee', targetMonthDate);
+        await createEmployeeThroughListUi(page, 'Policy Payroll Staff', targetMonthDate);
       await assignEmployeeToFirstAcademicScope(page, employeeRecord);
       const employeeId = employeeRecord.id as string;
 
@@ -1013,7 +999,7 @@ test.describe('HR policies to payroll golden path', () => {
         policies,
         attendanceDate
       );
-      await verifyEffectivePreviewPage(page, employeeId, attendanceDate, policies);
+      await verifyEffectivePoliciesApi(page, employeeId, attendanceDate, policies);
 
       const [previewAfterOverride, effectivePolicies] = await Promise.all([
         getJson<any>(

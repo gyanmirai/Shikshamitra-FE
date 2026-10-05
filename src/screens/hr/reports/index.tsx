@@ -169,7 +169,7 @@ const ReportsScreen = () => {
         description={
           openGenerateReport.value
             ? 'Configure, preview, save, publish, and export HR reports.'
-            : 'Generate and view HR reports across employee, payroll, attendance, leave, policy, and performance data.'
+            : 'Generate and view HR reports across staff, payroll, attendance, leave, policy, and performance data.'
         }
         links={[{ name: 'HR/Staff', href: '/hr/dashboard/' }, { name: 'Reports Center' }]}
         isBack={openGenerateReport.value}

@@ -7,7 +7,7 @@ describe('HrReportBuilderReview', () => {
   it('summarizes builder state and warns when preview is stale', () => {
     render(
       <HrReportBuilderReview
-        sourceLabel="Employee Reports"
+        sourceLabel="Staff Reports"
         isPreviewStale
         state={{
           selectedSourceId: 'employee',

@@ -121,7 +121,7 @@ export function buildLeavePolicyImpactReview(
     risks.push({
       severity: 'confirmation',
       label: 'Needs confirmation',
-      message: `${policyName} currently grants ${leaveCount} total leave day${leaveCount === 1 ? '' : 's'} across ${activeRules.length || 1} rule${activeRules.length === 1 ? '' : 's'}. Balance changes can affect assigned employees.`,
+      message: `${policyName} currently grants ${leaveCount} total leave day${leaveCount === 1 ? '' : 's'} across ${activeRules.length || 1} rule${activeRules.length === 1 ? '' : 's'}. Balance changes can affect assigned staff.`,
     });
   }
 

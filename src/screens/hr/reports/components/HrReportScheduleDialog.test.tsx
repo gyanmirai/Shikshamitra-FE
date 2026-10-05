@@ -30,7 +30,7 @@ describe('HrReportScheduleDialog', () => {
       <HrReportScheduleDialog
         open
         defaultValue={{
-          name: 'Employee Report Schedule',
+          name: 'Staff Report Schedule',
           frequency: 'monthly',
           deliveryMode: 'inApp',
           firstRunAt: '',
@@ -70,7 +70,7 @@ describe('HrReportScheduleDialog', () => {
       <HrReportScheduleDialog
         open={false}
         defaultValue={{
-          name: 'Employee Report Schedule',
+          name: 'Staff Report Schedule',
           frequency: 'monthly',
           deliveryMode: 'inApp',
           firstRunAt: '',

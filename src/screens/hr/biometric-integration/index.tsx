@@ -160,7 +160,7 @@ const BiometricIntegrationScreen = () => {
     () => [
       { id: 'rowNumber', label: 'Row', minWidth: '4vw', align: 'left' },
       { id: 'employeeName', label: 'Name', minWidth: '12vw', align: 'left', sticky: true },
-      { id: 'employeeCode', label: 'Employee Code', align: 'left', minWidth: '10vw' },
+      { id: 'employeeCode', label: 'Staff Code', align: 'left', minWidth: '10vw' },
       { id: 'attendanceDate', label: 'Date', align: 'left', minWidth: '8vw' },
       { id: 'timeIn', label: 'In-Time', align: 'left', minWidth: '6vw' },
       { id: 'timeOut', label: 'Out-Time', align: 'left', minWidth: '6vw' },
@@ -339,7 +339,7 @@ const BiometricIntegrationScreen = () => {
             <CustomTooltip
               arrow
               placement="right"
-              title="Edit and update an employee’s in-time and out-time for the selected date."
+              title="Edit and update a staff member’s in-time and out-time for the selected date."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>

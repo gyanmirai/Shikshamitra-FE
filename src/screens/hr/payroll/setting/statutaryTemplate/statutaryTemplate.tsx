@@ -35,7 +35,7 @@ const StatutoryTemplate = () => {
         <MenuList>
           <MenuItem>
             <Iconify icon="mdi:arrow-right-circle" />
-            <ListItemText>Assign Employee</ListItemText>
+            <ListItemText>Assign Staff</ListItemText>
           </MenuItem>
         </MenuList>
       </>
@@ -77,7 +77,7 @@ const StatutoryTemplate = () => {
         columns={[
           { id: 'templateName', label: 'Template Name' },
           { id: 'templateType', label: 'Template Type' },
-          { id: 'employeePercentage', label: 'Employee Percentage' },
+          { id: 'employeePercentage', label: 'Staff Percentage' },
           {
             id: 'actions',
             label: 'Actions',
@@ -280,7 +280,7 @@ const AddStatutoryComponent = ({
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="employeePercentage"
-                label="Employee Percentage"
+                label="Staff Percentage"
                 value={values.employeePercentage}
                 onChange={handleChange}
                 size="small"

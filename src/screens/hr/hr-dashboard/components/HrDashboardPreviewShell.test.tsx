@@ -49,7 +49,7 @@ describe('HrDashboardPreviewShell', () => {
     expect(screen.getByRole('button', { name: 'Page description' })).toBeVisible();
     expect(screen.getByLabelText('Dashboard freshness')).toHaveTextContent('Last refreshed:');
     expect(screen.getByLabelText('Dashboard freshness')).toHaveTextContent('Saved snapshot');
-    expect(within(shell).queryByRole('link', { name: 'Onboard Employee' })).not.toBeInTheDocument();
+    expect(within(shell).queryByRole('link', { name: 'Onboard Staff' })).not.toBeInTheDocument();
     expect(within(shell).queryByRole('link', { name: 'Reports' })).not.toBeInTheDocument();
     expect(within(shell).queryByRole('separator')).not.toBeInTheDocument();
 

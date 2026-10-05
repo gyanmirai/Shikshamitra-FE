@@ -406,7 +406,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     async (values: any, formik: any, id: any) => {
       const employeeId = values.employeeId || id;
       if (!employeeId) {
-        throw new Error('Employee must be saved before reporting manager can be updated.');
+        throw new Error('Staff must be saved before reporting manager can be updated.');
       }
 
       const res = await updateReportingManager({
@@ -425,7 +425,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     try {
       if (activeTabIndex === 0) {
         await handleUpdateEmployee(formik.values, formik, editData?.id);
-        shikshaMitraToast.success({ message: 'Employee details updated successfully' });
+        shikshaMitraToast.success({ message: 'Staff details updated successfully' });
       } else if (activeTabIndex === 1) {
         await handleFamilyInformation(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Family Details updated successfully' });
@@ -448,7 +448,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
         message:
           (error as any)?.data?.message ||
           (error as any)?.error ||
-          'Failed to save employee details',
+          'Failed to save staff details',
       });
     }
   };

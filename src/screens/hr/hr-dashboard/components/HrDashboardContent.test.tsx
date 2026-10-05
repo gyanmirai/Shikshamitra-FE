@@ -121,7 +121,7 @@ const data: HRDashboardSummary = {
     missingSalaryStructureCount: 2,
     policyConfigurationIssueCount: 1,
     blockingIssues: ['Three staff records have missing attendance.'],
-    recommendedActions: ['Review pending employee payroll records.'],
+    recommendedActions: ['Review pending staff payroll records.'],
   },
   celebrations: {
     today: [

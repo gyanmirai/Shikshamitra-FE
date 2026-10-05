@@ -23,7 +23,7 @@ import {
   hasPersistedEmployeeICardTemplate,
 } from './i-card-builder-utils';
 
-describe('Employee I-Card builder utilities', () => {
+describe('Staff I-Card builder utilities', () => {
   it('clamps cards per page into the backend-supported range', () => {
     expect(clampCardsPerPage(0)).toBe(1);
     expect(clampCardsPerPage(8)).toBe(8);
@@ -179,7 +179,7 @@ describe('Employee I-Card builder utilities', () => {
     );
   });
 
-  it('filters selected-card previews by employee identity fields', () => {
+  it('filters selected-card previews by staff identity fields', () => {
     const employees = [
       {
         fullName: 'Asha Patel',

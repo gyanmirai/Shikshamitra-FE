@@ -63,7 +63,7 @@ export function EsiStatutoryEmployees({
     () => [
       {
         id: 'employeeName',
-        label: 'Employee',
+        label: 'Staff',
         minWidth: 190,
         isFilter: false,
         render: (_value, row) => (
@@ -72,7 +72,7 @@ export function EsiStatutoryEmployees({
               {row.employeeName}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {row.employeeIdentifier || 'No employee code'}
+              {row.employeeIdentifier || 'No staff code'}
             </Typography>
           </Box>
         ),
@@ -105,7 +105,7 @@ export function EsiStatutoryEmployees({
       },
       {
         id: 'employeeContribution',
-        label: 'Employee deduction',
+        label: 'Staff deduction',
         minWidth: 145,
         align: 'right',
         isFilter: false,
@@ -208,7 +208,7 @@ export function EsiStatutoryEmployees({
   return (
     <Box sx={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 2, minWidth: 0 }}>
       <Box>
-        <Typography variant="h6">Employee coverage</Typography>
+        <Typography variant="h6">Staff coverage</Typography>
         <Typography variant="body2" color="text.secondary">
           Review coverage, enrollment, statutory wages, and exceptions for the selected payroll
           month.
@@ -275,13 +275,13 @@ export function EsiStatutoryEmployees({
 
       {isError ? (
         <Alert severity="error" action={<Button onClick={onRetry}>Retry</Button>}>
-          The employee ESI preview could not be loaded.
+          The staff ESI preview could not be loaded.
         </Alert>
       ) : null}
 
       <CustomizableTable
         tableId="esi-employee-impact"
-        tableTitle="ESI employee impact"
+        tableTitle="ESI staff impact"
         columns={columns}
         data={(preview?.items || []).map((item) => ({ ...item, id: item.employeeId }))}
         totalCount={preview?.totalCount || 0}
@@ -298,7 +298,7 @@ export function EsiStatutoryEmployees({
         searchTerm={query.search}
         filters={tableFilters}
         sorts={tableSorts}
-        searchFieldProps={{ placeholder: 'Search employee name or code' }}
+        searchFieldProps={{ placeholder: 'Search staff name or code' }}
         onServerSearch={(search) => onQueryChange({ search: search.trim() || null, page: 0 })}
         onServerPagination={(page, rowsPerPage) =>
           onQueryChange({ page: page - 1, pageSize: rowsPerPage })
@@ -324,7 +324,7 @@ export function EsiStatutoryEmployees({
         })}
         tableContainerProps={{ sx: { maxWidth: '100%', overflowX: 'auto' } }}
         wrapperProps={{ sx: { minWidth: 0, maxWidth: '100%' } }}
-        noDataText="No employees match these filters"
+        noDataText="No staff match these filters"
       />
     </Box>
   );

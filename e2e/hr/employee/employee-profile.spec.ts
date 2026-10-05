@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 import { testIds, profileTabs } from './selectors';
 import { gotoEmployeeList, openFirstRowProfile, expectNoRuntimeErrors } from './employee-page';
 
-test.describe('HR Employee profile', () => {
+test.describe('HR Staff profile', () => {
   test('opens profile and renders every profile tab without runtime errors', async ({ page }) => {
     const assertNoErrors = await expectNoRuntimeErrors(page);
 
@@ -19,7 +19,7 @@ test.describe('HR Employee profile', () => {
     expect(dashboardResponse.ok()).toBeTruthy();
 
     await expect(page.getByTestId(testIds.profileHeader)).toBeVisible();
-    await expect(page.getByText(/Employee Code/i)).toBeVisible();
+    await expect(page.getByText(/Staff Code/i)).toBeVisible();
     await expect(page.getByText(/Role/i)).toBeVisible();
     await expect(page.getByText(/Organization/i)).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Attendance Calendar' })).toBeVisible();

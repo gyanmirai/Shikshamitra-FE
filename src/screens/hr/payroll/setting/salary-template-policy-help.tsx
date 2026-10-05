@@ -13,12 +13,12 @@ const policies: Record<ProtectionPolicy, { title: string; protects: string; mayC
   },
   PROTECT_GROSS: {
     title: 'Protect gross salary',
-    protects: 'Gross salary before employee deductions.',
+    protects: 'Gross salary before staff deductions.',
     mayChange: 'Take-home salary and total school cost may change.',
   },
   PROTECT_TAKE_HOME: {
     title: 'Protect take-home salary',
-    protects: 'Net salary after employee deductions.',
+    protects: 'Net salary after staff deductions.',
     mayChange: 'Gross salary and total school cost may change.',
   },
 };

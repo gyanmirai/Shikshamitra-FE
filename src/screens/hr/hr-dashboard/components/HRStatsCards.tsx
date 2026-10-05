@@ -109,7 +109,7 @@ const KPI_DATA = [
     icon: 'mdi:account-plus-outline',
     path: hrPaths.employee.list,
     status: 'info' as const,
-    tooltip: 'New employees joined this month',
+    tooltip: 'New staff joined this month',
   },
   {
     id: 8,

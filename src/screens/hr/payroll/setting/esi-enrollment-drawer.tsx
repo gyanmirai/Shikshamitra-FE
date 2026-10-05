@@ -56,7 +56,7 @@ const EMPTY_FORM: EnrollmentForm = {
 const overrideLabels: Record<EsiStatutoryOverride['overrideType'], string> = {
   ForceCovered: 'Forced covered',
   ForceNotCovered: 'Forced not covered',
-  EmployeeAmount: 'Employee amount',
+  EmployeeAmount: 'Staff amount',
   EmployerAmount: 'Employer amount',
 };
 
@@ -172,7 +172,7 @@ export function EsiEnrollmentDrawer({
         await onSaved();
       } catch {
         shikshaMitraToast.error({
-          message: 'Enrollment saved. Refresh the employee details to see the latest status.',
+          message: 'Enrollment saved. Refresh the staff details to see the latest status.',
         });
       }
     } catch {
@@ -209,14 +209,14 @@ export function EsiEnrollmentDrawer({
           }}
         >
           <Box minWidth={0}>
-            <Typography variant="h6">Employee ESIC details</Typography>
+            <Typography variant="h6">Staff ESIC details</Typography>
             <Typography variant="body2" color="text.secondary" noWrap>
               {employee?.employeeName}
               {employee?.employeeIdentifier ? ` · ${employee.employeeIdentifier}` : ''}
             </Typography>
           </Box>
           <IconButton
-            aria-label="Close employee ESIC details"
+            aria-label="Close staff ESIC details"
             disabled={busy}
             onClick={close}
             sx={{ width: 44, height: 44 }}
@@ -235,7 +235,7 @@ export function EsiEnrollmentDrawer({
                 {[
                   ['Coverage', employee?.coverageDecisionLabel || 'Not available'],
                   ['ESI wages', formatEsiCurrency(employee?.statutoryWages || 0)],
-                  ['Employee deduction', formatEsiCurrency(employee?.employeeContribution || 0)],
+                  ['Staff deduction', formatEsiCurrency(employee?.employeeContribution || 0)],
                   ['Employer contribution', formatEsiCurrency(employee?.employerContribution || 0)],
                 ].map(([label, value]) => (
                   <Grid key={label} size={{ xs: 6 }}>
@@ -462,7 +462,7 @@ export function EsiEnrollmentDrawer({
                 !overridesQuery.isError &&
                 !overridesQuery.data?.length ? (
                   <Typography variant="body2" color="text.secondary">
-                    No audited overrides for this employee.
+                    No audited overrides for this staff member.
                   </Typography>
                 ) : null}
                 <Box display="grid" gap={1} mt={1}>

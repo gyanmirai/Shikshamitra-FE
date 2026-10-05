@@ -8,7 +8,7 @@ import {
   changeStatusValidationSchema,
 } from './change-status-utils';
 
-describe('employee change status form', () => {
+describe('staff change status form', () => {
   it('requires remarks for Left or Retired status', async () => {
     await expect(
       changeStatusValidationSchema.validate({

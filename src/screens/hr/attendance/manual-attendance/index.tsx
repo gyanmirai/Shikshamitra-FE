@@ -332,7 +332,7 @@ const ManualAttendanceScreen = () => {
         );
         shikshaMitraToast.error({
           message: hasShiftIssue
-            ? 'Shift start and end time are required for Present or Half Day time-based attendance. Please fix the employee shift or enter both times.'
+            ? 'Shift start and end time are required for Present or Half Day time-based attendance. Please fix the staff shift or enter both times.'
             : 'In-Time and Out-Time are required for Present or Half Day time-based attendance. Please enter both times.',
         });
         return false;
@@ -1375,7 +1375,7 @@ const ManualAttendanceScreen = () => {
           { name: 'Attendance Management', href: '/hr/attendance-tracking' },
           { name: 'Mark Attendance' },
         ]}
-        description="Quickly record employee attendance manually: Choose the date, then mark each employee as Present, Pending, or Absent."
+        description="Quickly record staff attendance manually: Choose the date, then mark each staff as Present, Pending, or Absent."
       />
 
       {/* ── Top toolbar ── */}
@@ -1488,12 +1488,12 @@ const ManualAttendanceScreen = () => {
 
       {/* ── Table ── */}
       <CustomizableTable
-        tableTitle="Employee List"
+        tableTitle="Staff Directory"
         tableId="hr-manual-attendance"
         isLoading={isLoading || isFetching || substitution.opening}
         columns={columns}
         noDataText={
-          isError ? 'Failed to load employee data' : 'No employees found for the selected date'
+          isError ? 'Failed to load staff data' : 'No staff found for the selected date'
         }
         data={isError ? [] : employeeData}
         rowProps={rowProps}

@@ -858,7 +858,7 @@ const EmployeeRow = ({ employee }: { employee: HRDashboardEmployeeSnapshot }) =>
         {employee.name}
       </Typography>
       <Typography variant="caption" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
-        {employee.employeeIdentifier || 'No employee code'} ·{' '}
+        {employee.employeeIdentifier || 'No staff code'} ·{' '}
         {employee.department ||
           employee.roleName ||
           (employee.isTeaching ? 'Teaching' : 'Non-teaching')}
@@ -900,10 +900,10 @@ const PeopleUpdates = ({ data, permissions }: Props) => {
   const celebrations = [...data.celebrations.today, ...data.celebrations.upcoming];
 
   return (
-    <SectionCard title="People Updates" subheader="Recent employees, new joiners, and celebrations">
+    <SectionCard title="People Updates" subheader="Recent staff, new joiners, and celebrations">
       <Grid container spacing={{ xs: 2.5, lg: 3 }}>
         <PeopleColumn
-          title="Recent Employees"
+          title="Recent Staff"
           action={
             permissions.canViewEmployees ? (
               <Button component={Link} href={hrPaths.employee.list} sx={{ minHeight: 44 }}>
@@ -919,7 +919,7 @@ const PeopleUpdates = ({ data, permissions }: Props) => {
               ))}
             </Stack>
           ) : (
-            <EmptyRow>No recent active employee records.</EmptyRow>
+            <EmptyRow>No recent active staff records.</EmptyRow>
           )}
         </PeopleColumn>
         <PeopleColumn
@@ -941,7 +941,7 @@ const PeopleUpdates = ({ data, permissions }: Props) => {
               ))}
             </Stack>
           ) : (
-            <EmptyRow>No employees joined during this month.</EmptyRow>
+            <EmptyRow>No staff joined during this month.</EmptyRow>
           )}
         </PeopleColumn>
         <PeopleColumn
@@ -1045,7 +1045,7 @@ const NewJoinersDialog = ({
           ))}
         </Stack>
       ) : (
-        <Alert severity="info">No employees joined during the selected month.</Alert>
+        <Alert severity="info">No staff joined during the selected month.</Alert>
       )}
     </DialogContent>
     <DialogActions>

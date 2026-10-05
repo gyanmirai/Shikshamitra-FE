@@ -9,14 +9,14 @@ import { useHrReportBuilderState } from './useHrReportBuilderState';
 const source: HrReportSource = {
   id: 'employee',
   category: 'Employee',
-  label: 'Employee Reports',
-  description: 'Employee report source',
+  label: 'Staff Reports',
+  description: 'Staff report source',
   defaultColumns: ['employeeCode', 'employeeName'],
   defaultSorts: ['employeeCode'],
   fields: [
     {
       id: 'employeeCode',
-      label: 'Employee Code',
+      label: 'Staff Code',
       type: 'string',
       filterable: true,
       sortable: true,
@@ -27,7 +27,7 @@ const source: HrReportSource = {
     },
     {
       id: 'employeeName',
-      label: 'Employee Name',
+      label: 'Staff Name',
       type: 'string',
       filterable: true,
       sortable: true,
@@ -52,7 +52,7 @@ const source: HrReportSource = {
 
 const template: HrReportTemplate = {
   id: 'template-1',
-  name: 'Saved Employee Report',
+  name: 'Saved Staff Report',
   category: 'Employee',
   dataSource: 'employee',
   visibility: 'organization',
@@ -60,7 +60,7 @@ const template: HrReportTemplate = {
   ownerUserId: 'user-1',
   creationTime: '2026-06-01T10:00:00Z',
   definition: {
-    reportType: 'Saved Employee Report',
+    reportType: 'Saved Staff Report',
     dataSource: 'employee',
     columns: ['employeeName'],
     filters: {
@@ -78,7 +78,7 @@ describe('useHrReportBuilderState', () => {
     const { result } = renderHook(() => useHrReportBuilderState(source));
 
     expect(result.current.requestFor()).toMatchObject({
-      reportType: 'Employee Reports',
+      reportType: 'Staff Reports',
       dataSource: 'employee',
       format: 'excel',
       page: 1,
@@ -95,12 +95,12 @@ describe('useHrReportBuilderState', () => {
       { initialProps: { currentTemplate: template } as HookProps }
     );
 
-    expect(result.current.state.reportName).toBe('Saved Employee Report');
+    expect(result.current.state.reportName).toBe('Saved Staff Report');
     expect(result.current.state.conditions).toHaveLength(1);
 
     rerender({});
 
-    expect(result.current.state.reportName).toBe('Employee Reports');
+    expect(result.current.state.reportName).toBe('Staff Reports');
     expect(result.current.state.conditions).toEqual([]);
     expect(result.current.lastRequest).toBeNull();
   });

@@ -67,7 +67,7 @@ const HREmployeeDirectory = () => {
           gap: 2,
         }}
       >
-        <Typography variant="h6">Employee Directory</Typography>
+        <Typography variant="h6">Staff Directory</Typography>
 
         <Stack direction="row" spacing={2} sx={{ flexGrow: 1, justifyContent: 'flex-end' }}>
           <TextField

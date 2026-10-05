@@ -183,17 +183,17 @@ describe('leave request balance warning', () => {
 });
 
 describe('leave request effective policy filtering', () => {
-  it('uses the selected employee id for HR-created non-self leave', () => {
+  it('uses the selected staff id for HR-created non-self leave', () => {
     expect(
       resolveLeavePolicyPreviewEmployeeId(
-        { id: 'employee-1', label: 'Employee One' },
+        { id: 'employee-1', label: 'Staff One' },
         'auth-employee',
         'hr'
       )
     ).toBe('employee-1');
   });
 
-  it('uses authenticated employee id for self leave preview', () => {
+  it('uses authenticated staff id for self leave preview', () => {
     expect(resolveLeavePolicyPreviewEmployeeId(SELF_OPTION, 'auth-employee', 'hr')).toBe(
       'auth-employee'
     );
@@ -202,7 +202,7 @@ describe('leave request effective policy filtering', () => {
     );
   });
 
-  it('blocks self leave preview while authenticated employee id is unresolved', () => {
+  it('blocks self leave preview while authenticated staff id is unresolved', () => {
     expect(isLeavePolicyPreviewEmployeeResolutionBlocked(null, undefined, 'self')).toBe(true);
     expect(isLeavePolicyPreviewEmployeeResolutionBlocked(SELF_OPTION, null, 'hr')).toBe(true);
     expect(isLeavePolicyPreviewEmployeeResolutionBlocked(null, 'auth-employee', 'self')).toBe(
@@ -210,7 +210,7 @@ describe('leave request effective policy filtering', () => {
     );
   });
 
-  it('does not block HR preview while no employee has been selected yet', () => {
+  it('does not block HR preview while no staff has been selected yet', () => {
     expect(isLeavePolicyPreviewEmployeeResolutionBlocked(null, undefined, 'hr')).toBe(false);
   });
 
@@ -280,7 +280,7 @@ describe('leave request effective policy filtering', () => {
     ).toEqual([]);
   });
 
-  it('keeps both paid type buckets only while no employee/date preview target is resolved', () => {
+  it('keeps both paid type buckets only while no staff/date preview target is resolved', () => {
     expect(getVisiblePaidTypeOptionsForEffectivePolicy(null, false)).toEqual([
       { id: 'Paid', name: 'Paid', color: '#2E7D32' },
       { id: 'Unpaid', name: 'Unpaid', color: '#ED6C02' },
@@ -336,17 +336,17 @@ describe('leave notice period helpers', () => {
   it('enforces notice only for self-created leave requests', () => {
     expect(shouldEnforceLeaveNoticePeriod('self', false, SELF_OPTION)).toBe(true);
     expect(shouldEnforceLeaveNoticePeriod('self', true, SELF_OPTION)).toBe(true);
-    expect(shouldEnforceLeaveNoticePeriod('hr', true, { id: 'emp-1', label: 'Employee' })).toBe(
+    expect(shouldEnforceLeaveNoticePeriod('hr', true, { id: 'emp-1', label: 'Staff' })).toBe(
       false
     );
-    expect(shouldEnforceLeaveNoticePeriod('hr', false, { id: 'emp-1', label: 'Employee' })).toBe(
+    expect(shouldEnforceLeaveNoticePeriod('hr', false, { id: 'emp-1', label: 'Staff' })).toBe(
       false
     );
     expect(shouldEnforceLeaveNoticePeriod('hr', false, SELF_OPTION)).toBe(true);
   });
 });
 
-describe('leave request employee options', () => {
+describe('leave request staff options', () => {
   const employees = [
     { id: 'emp-1', label: 'Emp 1', status: EmployeeStatusType.Active },
     { id: 'emp-2', label: 'Emp 2', status: 'Active' },
@@ -364,7 +364,7 @@ describe('leave request employee options', () => {
     expect(options).toHaveLength(3);
   });
 
-  it('filters inactive employees out of leave target options', () => {
+  it('filters inactive staff out of leave target options', () => {
     const options = buildEmployeeSelectOptions(
       [
         { id: 'active-number', label: 'Active Number', status: EmployeeStatusType.Active },
@@ -388,7 +388,7 @@ describe('leave request employee options', () => {
     expect(isActiveEmployeeOption(SELF_OPTION)).toBe(true);
   });
 
-  it('validates admin and non-admin employee selection rules', () => {
+  it('validates admin and non-admin staff selection rules', () => {
     expect(isEmployeeSelectionValidForCreate({ id: 'emp-1', label: 'Emp 1' }, true)).toBe(true);
     expect(isEmployeeSelectionValidForCreate({ id: SELF_EMPLOYEE_ID, label: 'Self' }, true)).toBe(
       false
@@ -471,12 +471,12 @@ describe('problem details parsing', () => {
   it('prefers detail over legacy nested message', () => {
     const parsed = parseApiProblemDetail({
       data: {
-        detail: 'Please select an employee to create leave.',
+        detail: 'Please select a staff member to create leave.',
         error: { message: 'Legacy message' },
       },
     });
 
-    expect(parsed.detail).toBe('Please select an employee to create leave.');
+    expect(parsed.detail).toBe('Please select a staff member to create leave.');
   });
 
   it('detects admin role from profile payload', () => {
@@ -542,7 +542,7 @@ describe('leave center tab visibility', () => {
 });
 
 describe('leave overview builder', () => {
-  it('fetches HR overview only when an employee target is available', () => {
+  it('fetches HR overview only when a staff member target is available', () => {
     expect(
       shouldFetchHrEmployeeLeaveOverview({
         enabled: true,

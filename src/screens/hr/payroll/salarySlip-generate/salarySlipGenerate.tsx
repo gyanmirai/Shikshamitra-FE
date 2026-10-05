@@ -183,7 +183,7 @@ const PaySlipGenerationScreen = () => {
               sx={{ flex: 1 }}
             >
               <PaginatedSearchSelect
-                label="Select Employee"
+                label="Select Staff Member"
                 fetchOptions={async (query, page) => {
                   const res = await getEmployees(buildPayslipEmployeeSearch(query, page)).unwrap();
                   const hasMore = res.currentPage !== res.totalPages;
@@ -381,8 +381,8 @@ const PaySlipGenerationScreen = () => {
                   payslipLoadFailed
                     ? 'Payslip could not be loaded'
                     : payslipNotFound && payslipSelection
-                      ? 'No payslip found for the selected employee and pay period'
-                      : 'Search an employee to view a finalized payslip'
+                      ? 'No payslip found for the selected staff and pay period'
+                      : 'Search a staff member to view a finalized payslip'
                 }
                 description={
                   payslipLoadFailed
@@ -1066,8 +1066,8 @@ const PayslipDocumentPreview = ({ employee, monthYear, slip }: PayslipDocumentPr
   const status = formatStatus(slip?.status);
   const isPreview = !isOfficialPayslipStatus(slip?.status);
   const employeeRows: Array<[string, string]> = [
-    ['Employee Name', getEmployeeName(employee, slip)],
-    ['Employee Code', slip?.employeeCode || '-'],
+    ['Staff Name', getEmployeeName(employee, slip)],
+    ['Staff Code', slip?.employeeCode || '-'],
     ['Department', slip?.department || '-'],
     ['Designation', slip?.designation || '-'],
     ['Date of Joining', formatDate(slip?.dateOfJoining)],
@@ -1163,7 +1163,7 @@ const PayslipDocumentPreview = ({ employee, monthYear, slip }: PayslipDocumentPr
           ) : null}
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <DocumentInfoSection title="Employee Details" rows={employeeRows} />
+            <DocumentInfoSection title="Staff Details" rows={employeeRows} />
             <DocumentInfoSection title="Payment & Statutory" rows={paymentRows} />
           </Stack>
 
@@ -1277,7 +1277,7 @@ const PayslipHeader = ({
 
     <Grid container spacing={1.5} sx={{ mt: 1 }}>
       <Grid size={{ xs: 12, sm: 6 }}>
-        <DocumentKeyValue label="Employee" value={employeeName} />
+        <DocumentKeyValue label="Staff" value={employeeName} />
       </Grid>
       <Grid size={{ xs: 12, sm: 6 }}>
         <DocumentKeyValue label="Pay Period" value={period} alignRight />

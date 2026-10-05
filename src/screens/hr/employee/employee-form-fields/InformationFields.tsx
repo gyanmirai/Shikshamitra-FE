@@ -1,5 +1,6 @@
 'use client';
 
+
 import type { GridProps, PaperProps } from '@mui/material';
 import type { UseBooleanReturn } from 'src/hooks/use-boolean';
 
@@ -48,6 +49,7 @@ import {
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
+import { PolicySetupAlert } from '../../policies/components/PolicySetupAlert';
 
 import RenderShift from './RenderShift';
 import { RenderRole } from './RenderRole';
@@ -134,45 +136,45 @@ const OtpInputField: React.FC<{
   disabled = false,
   pasteTransformer,
 }) => (
-    <Box sx={{ position: 'relative' }}>
-      <FormLabel
-        error={error}
-        sx={{
-          fontSize: '0.75rem',
-          display: 'block',
-          mb: 0.5,
-          color: error ? 'error.main' : 'text.secondary',
-        }}
-      >
-        {label}
-      </FormLabel>
-      <OTPInput
-        maxLength={maxLength}
-        value={value}
-        onChange={onChange}
-        onBlur={onBlur}
-        pattern={pattern}
-        disabled={disabled}
-        pasteTransformer={pasteTransformer}
-        containerClassName=""
-        render={({ slots }) => (
-          <Box display="flex" gap={1} alignItems="center" flexWrap="nowrap">
-            {slots.map((slot, i) => (
-              <React.Fragment key={i}>
-                <OtpSlot {...slot} error={error} disabled={disabled} />
-                {groupBy && i < maxLength - 1 && (i + 1) % groupBy === 0 && <OtpSep />}
-              </React.Fragment>
-            ))}
-          </Box>
-        )}
-      />
-      {helperText && (
-        <FormHelperText error={error} sx={{ mx: '14px', mt: '3px' }}>
-          {helperText}
-        </FormHelperText>
+  <Box sx={{ position: 'relative' }}>
+    <FormLabel
+      error={error}
+      sx={{
+        fontSize: '0.75rem',
+        display: 'block',
+        mb: 0.5,
+        color: error ? 'error.main' : 'text.secondary',
+      }}
+    >
+      {label}
+    </FormLabel>
+    <OTPInput
+      maxLength={maxLength}
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      pattern={pattern}
+      disabled={disabled}
+      pasteTransformer={pasteTransformer}
+      containerClassName=""
+      render={({ slots }) => (
+        <Box display="flex" gap={1} alignItems="center" flexWrap="nowrap">
+          {slots.map((slot, i) => (
+            <React.Fragment key={i}>
+              <OtpSlot {...slot} error={error} disabled={disabled} />
+              {groupBy && i < maxLength - 1 && (i + 1) % groupBy === 0 && <OtpSep />}
+            </React.Fragment>
+          ))}
+        </Box>
       )}
-    </Box>
-  );
+    />
+    {helperText && (
+      <FormHelperText error={error} sx={{ mx: '14px', mt: '3px' }}>
+        {helperText}
+      </FormHelperText>
+    )}
+  </Box>
+);
 
 export const SectionCard = ({
   title,
@@ -249,8 +251,8 @@ const actionButtonsVariant = {
 };
 export const CardActions = ({
   isEdit,
-  onCancel = () => { },
-  onSave = async () => { },
+  onCancel = () => {},
+  onSave = async () => {},
   isLoading = false,
 }: {
   isEdit: UseBooleanReturn;
@@ -899,7 +901,7 @@ const InformationAllFields = ({
               error={!!formik.errors.employeeGroup && formik.touched.employeeGroup}
             >
               <InputLabel id="employee-group-label" size="small">
-                Employee Group *
+                Staff Group *
               </InputLabel>
               <Select
                 labelId="employee-group-label"
@@ -907,7 +909,7 @@ const InformationAllFields = ({
                 value={formik.values.employeeGroup ?? ''}
                 onChange={formik.handleChange}
                 size="small"
-                label="Employee Group *"
+                label="Staff Group *"
                 name="employeeGroup"
               >
                 {EmployeeGroupTypeArray.map((item, index) => (
@@ -982,7 +984,24 @@ const InformationAllFields = ({
         <SectionCard title={EMPLOYEE_CREATION_POLICY_SECTION_TITLE}>
           <Grid size={{ xs: 12 }}>
             {defaultPolicyAssignment?.missingMessage ? (
-              <Alert severity="warning">{defaultPolicyAssignment.missingMessage}</Alert>
+              <>
+                {defaultPolicyAssignment.setupStates &&
+                Object.values(defaultPolicyAssignment.setupStates).some(
+                  (state) => state === 'missing' || state === 'multiple'
+                ) ? (
+                  (['leave', 'attendance', 'payroll'] as const).map((policy) => (
+                    <PolicySetupAlert
+                      key={policy}
+                      policy={policy}
+                      state={defaultPolicyAssignment.setupStates[policy]}
+                      canOpen={defaultPolicyAssignment.canOpen[policy]}
+                      onOpen={() => defaultPolicyAssignment.onOpen(policy)}
+                    />
+                  ))
+                ) : (
+                  <Alert severity="warning">{defaultPolicyAssignment.missingMessage}</Alert>
+                )}
+              </>
             ) : (
               <Paper
                 elevation={0}

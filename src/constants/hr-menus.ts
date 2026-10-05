@@ -15,7 +15,6 @@ export const hrPaths = {
     attendance: '/hr/attendance',
     assignments: '/hr/assignments',
     holiday: '/hr/holiday',
-    effectivePreview: '/hr/effective-preview',
   },
   policyActions: {
     view: `${defaultHrPermissionName}Policies.View`,
@@ -235,7 +234,7 @@ const hrModule = (isDdvs: boolean) => ({
           icon: menuIconView('mdi:view-dashboard-outline'),
         },
         {
-          title: 'Employee',
+          title: 'Staff',
           path: hrPaths.employee.root,
           _action: 'employee',
           shortcutKey: 'Alt+H+E',
@@ -244,7 +243,7 @@ const hrModule = (isDdvs: boolean) => ({
           icon: menuIconView('mdi:account-tie-outline'),
           children: [
             {
-              title: 'Employee List',
+              title: 'Staff Directory',
               path: hrPaths.employee.list,
               _action: 'employee-list',
               shortcutKey: 'Alt+H+E+1',
@@ -253,7 +252,7 @@ const hrModule = (isDdvs: boolean) => ({
               icon: menuIconView('mdi:format-list-bulleted'),
             },
             {
-              title: 'Employee Onboarding',
+              title: 'Staff Onboarding',
               path: hrPaths.employee.onboarding,
               _action: 'employee-onboarding',
               shortcutKey: 'Alt+H+E+2',
@@ -645,15 +644,6 @@ const hrModule = (isDdvs: boolean) => ({
             //   permissionName: hrPermissions.policies.holiday,
             //   icon: menuIconView('mdi:calendar-search-outline'),
             // },
-            {
-              title: 'Policy Impact',
-              path: hrPaths.policies.effectivePreview,
-              _action: 'hr-policies-effective-preview',
-              shortcutKey: 'Alt+H+Y+6',
-              shortcutKeyName: 'Alt+H+Y+6',
-              permissionName: hrPermissions.policies.effectivePreview,
-              icon: menuIconView('mdi:source-branch-check'),
-            },
           ],
         },
         {

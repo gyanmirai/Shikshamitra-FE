@@ -330,7 +330,7 @@ export default function SalaryTemplateSettings() {
           breadcrumbs: { minWidth: 0, '& .MuiBreadcrumbs-li': { whiteSpace: 'nowrap' } },
         }}
         heading="Salary Templates"
-        description="Create reusable salary defaults. Changes apply to future salary setups; existing employee salaries stay unchanged."
+        description="Create reusable salary defaults. Changes apply to future salary setups; existing staff salaries stay unchanged."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.root },
@@ -396,7 +396,7 @@ export default function SalaryTemplateSettings() {
       >
         <DialogScrollContent>
           <Typography mb={2}>
-            Existing employee salary revisions will remain unchanged. This template will no longer
+            Existing staff salary revisions will remain unchanged. This template will no longer
             be available for new salary setups.
           </Typography>
           {archiveTarget?.isDefault ? (

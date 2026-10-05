@@ -120,7 +120,7 @@ const PF = () => {
     >
       <CustomBreadcrumbs
         heading="PF Rule"
-        description="Configure PF rule for employees"
+        description="Configure PF rule for staff"
         links={[
           { name: 'HR/Staff', href: '/hr/dashboard' },
           {
@@ -217,7 +217,7 @@ const PF = () => {
         columns={[
           { id: 'name', label: 'Name', sticky: true, minWidth: '140px', align: 'left' },
           { id: 'code', label: 'Code' },
-          { id: 'employeePercentage', label: 'Employee Percentage', filterType: 'number' },
+          { id: 'employeePercentage', label: 'Staff Percentage', filterType: 'number' },
           { id: 'employerPercentage', label: 'Employer Percentage', filterType: 'number' },
           {
             id: 'contributionBasis',
@@ -288,7 +288,7 @@ const PF = () => {
             <CustomTooltip
               arrow
               placement="right"
-              title="In this section, you can create a new Provident Fund (PF) entry by specifying the percentage to be deducted from the employee's salary."
+              title="In this section, you can create a new Provident Fund (PF) entry by specifying the percentage to be deducted from the staff's salary."
             >
               <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
             </CustomTooltip>
@@ -338,10 +338,10 @@ const PFForm = ({
       code: Yup.string().required('Code is required'),
       name: Yup.string().required('Name is required'),
       employeePercentage: Yup.number()
-        .typeError('Employee Percentage must be a number')
-        .required('Employee Percentage is required')
-        .min(0, 'Employee Percentage cannot be less than 0')
-        .max(100, 'Employee Percentage cannot be more than 100'),
+        .typeError('Staff Percentage must be a number')
+        .required('Staff Percentage is required')
+        .min(0, 'Staff Percentage cannot be less than 0')
+        .max(100, 'Staff Percentage cannot be more than 100'),
       employerPercentage: Yup.number()
         .typeError('Employer Percentage must be a number')
         .required('Employer Percentage is required')
@@ -435,7 +435,7 @@ const PFForm = ({
               <TextField
                 size="small"
                 fullWidth
-                label="Employee Percentage *"
+                label="Staff Percentage *"
                 name="employeePercentage"
                 type="number"
                 value={formik.values.employeePercentage}

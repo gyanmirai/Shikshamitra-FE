@@ -72,7 +72,7 @@ vi.mock('src/components/customizabaleTable', () => ({
 
 const exportJob = (overrides: Partial<HrReportExportJob> = {}): HrReportExportJob => ({
   id: overrides.id ?? 'job-1',
-  reportType: overrides.reportType ?? 'Employee Report',
+  reportType: overrides.reportType ?? 'Staff Report',
   format: overrides.format ?? 'excel',
   status: overrides.status ?? 'Completed',
   progressPercent: overrides.progressPercent ?? 100,
@@ -85,7 +85,7 @@ const exportJob = (overrides: Partial<HrReportExportJob> = {}): HrReportExportJo
 
 const template = (overrides: Partial<HrReportTemplate> = {}): HrReportTemplate => ({
   id: overrides.id ?? 'template-1',
-  name: overrides.name ?? 'Employee Template',
+  name: overrides.name ?? 'Staff Template',
   category: overrides.category ?? 'Employee',
   dataSource: overrides.dataSource ?? 'employee',
   visibility: overrides.visibility ?? 'private',
@@ -93,7 +93,7 @@ const template = (overrides: Partial<HrReportTemplate> = {}): HrReportTemplate =
   ownerUserId: overrides.ownerUserId ?? 'user-1',
   creationTime: overrides.creationTime ?? '2026-06-01T10:00:00Z',
   definition: overrides.definition ?? {
-    reportType: 'Employee Template',
+    reportType: 'Staff Template',
     dataSource: 'employee',
     columns: ['employeeCode', 'employeeName'],
     groups: ['department'],
@@ -107,13 +107,13 @@ const template = (overrides: Partial<HrReportTemplate> = {}): HrReportTemplate =
 
 const schedule = (overrides: Partial<HrReportSchedule> = {}): HrReportSchedule => ({
   id: overrides.id ?? 'schedule-1',
-  name: overrides.name ?? 'Monthly Employee Report',
+  name: overrides.name ?? 'Monthly Staff Report',
   frequency: overrides.frequency ?? 'monthly',
   deliveryMode: overrides.deliveryMode ?? 'inApp',
   status: overrides.status ?? 'Active',
   recipientUserIds: overrides.recipientUserIds ?? [],
   definition: overrides.definition ?? {
-    reportType: 'Employee Report',
+    reportType: 'Staff Report',
     dataSource: 'employee',
     filters: {},
   },
@@ -153,9 +153,9 @@ describe('HR report center enhancements', () => {
         job={exportJob({
           fileSizeBytes: 2048,
           rowCount: 12,
-          templateName: 'Employee Template',
+          templateName: 'Staff Template',
           requestSnapshot: {
-            reportType: 'Employee Report',
+            reportType: 'Staff Report',
             dataSource: 'employee',
             columns: ['employeeCode', 'employeeName'],
             filters: {
@@ -174,7 +174,7 @@ describe('HR report center enhancements', () => {
       />
     );
 
-    expect(screen.getByText('Generated from template: Employee Template')).toBeVisible();
+    expect(screen.getByText('Generated from template: Staff Template')).toBeVisible();
     expect(screen.getByText('Request Snapshot')).toBeVisible();
     expect(
       within(screen.getByTestId('hr-report-export-request-columns')).getByText('2 selected')
@@ -187,7 +187,7 @@ describe('HR report center enhancements', () => {
     ).toBeVisible();
 
     await user.click(screen.getByRole('button', { name: 'Download' }));
-    expect(onDownload).toHaveBeenCalledWith('job-1', 'Employee Report');
+    expect(onDownload).toHaveBeenCalledWith('job-1', 'Staff Report');
   });
 
   it('lets view-only shared recipients download completed exports', async () => {
@@ -210,7 +210,7 @@ describe('HR report center enhancements', () => {
     expect(downloadButton).toBeEnabled();
 
     await user.click(downloadButton);
-    expect(onDownload).toHaveBeenCalledWith('job-1', 'Employee Report');
+    expect(onDownload).toHaveBeenCalledWith('job-1', 'Staff Report');
   });
 
   it('keeps owner-only actions hidden for shared export rows', () => {
@@ -513,7 +513,7 @@ describe('HR report center enhancements', () => {
     expect(downloadButton).toBeEnabled();
 
     await user.click(downloadButton);
-    expect(onDownload).toHaveBeenCalledWith('shared-completed', 'Employee Report');
+    expect(onDownload).toHaveBeenCalledWith('shared-completed', 'Staff Report');
   });
 
   it('keeps drawer actions in parity with export row ownership rules', () => {
@@ -736,7 +736,7 @@ describe('HR report center enhancements', () => {
     );
 
     expect(screen.getByRole('dialog', { name: 'Run report' })).toBeVisible();
-    expect(screen.getByText('Employee Template')).toBeVisible();
+    expect(screen.getByText('Staff Template')).toBeVisible();
     expect(
       within(screen.getByTestId('hr-report-run-template-summary-columns')).getByText('2 selected')
     ).toBeVisible();

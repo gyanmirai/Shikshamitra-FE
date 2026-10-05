@@ -3,10 +3,33 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-09-16
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
+
+## Staff terminology and policy setup regression coverage
+
+Run `e2e/hr/hr-staff-policy-navigation.spec.ts` and `e2e/hr/employee/employee-list.spec.ts` with the authenticated Chromium project.
+The navigation suite verifies the five ordered setup tabs, keyboard route changes, academic-year preservation, mobile Staff Directory and Staff Onboarding labels, and the standard not-found page at `/hr/effective-preview`.
+Policy-resolution precedence and retroactive-lock assertions now use authenticated APIs in the existing policy golden, precedence, and edge-case suites.
+Keep mutation impact previews, version history, audit, and payroll lock checks in those suites.
+
+Run the changed HR Vitest suites with `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run --pool=forks --maxWorkers=1` and the relevant file paths.
+The setup-state and alert suites cover loading, request failure, incomplete pages, missing defaults, multiple defaults, permission-gated recovery, and the explicit sole-default archive reason.
+The assignment drawer suite covers preserving an edited draft, declining discard, and navigating after confirmed discard.
+Staff creation uses current-year responses and blocks submission when defaults cannot be verified.
+The last completed broad run passed 393 of 395 tests across 52 files.
+The two failing cases were corrected and passed in a focused rerun of 28 tests.
+A subsequent full rerun stalled after startup on Windows and was stopped.
+Scoped lint passed after the final changes.
+
+On 2026-10-05, signed-in Codex browser checks verified desktop and 390 px mobile setup navigation, Staff labels, keyboard tab changes, academic-year context, and the removed URL's standard 404.
+The two new navigation Playwright tests passed before the local preview was interrupted.
+After the interruption, the local backend could not restore its database configuration and returned HTTP 500 during authenticated setup.
+The final directory rerun and signed-in restricted-role acceptance remain blocked by that environment issue.
+Global typecheck reports only the two unchanged `exact` option errors in `src/screens/student/admissions/admission-intake-assignment.test.tsx` at lines 178 and 195.
+The existing deployment security-workflow assertion also fails on the baseline and is outside this change's deployment-file exclusion.
 
 # Validate HR frontend changes
 

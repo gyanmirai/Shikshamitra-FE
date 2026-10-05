@@ -11,7 +11,7 @@ import {
   canCopyEmployeeApplicationLink,
 } from './status';
 
-describe('employee application status utilities', () => {
+describe('staff application status utilities', () => {
   it('normalizes numeric and string status values', () => {
     expect(normalizeEmployeeApplicationStatus(1)).toBe(EmployeeApplicationStatus.Applied);
     expect(normalizeEmployeeApplicationStatus('1')).toBe(EmployeeApplicationStatus.Applied);

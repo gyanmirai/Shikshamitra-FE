@@ -15,7 +15,7 @@ describe('HR AI report workspace', () => {
     expect(screenSource).toContain('reportPermissions.canBuild');
     expect(screenSource).toContain('reportPermissions.canExport');
     expect(drawerSource).toContain('Approve &amp; generate');
-    expect(drawerSource).toContain('current tenant and permitted employee scope');
+    expect(drawerSource).toContain('current tenant and permitted staff scope');
     expect(apiSource).toContain("url: '/hr/reports/ai/plan'");
     expect(apiSource).toContain("url: '/hr/reports/preview'");
     expect(apiSource).toContain("url: '/hr/reports/exports'");

@@ -38,7 +38,7 @@ import {
 } from './change-status-utils';
 
 const MANAGER_DEACTIVATION_WARNING =
-  'This employee is currently assigned as a Reporting Manager for active staff members. Please assign a new manager to their team before making this employee inactive.';
+  'This staff member is currently assigned as a Reporting Manager for active staff members. Please assign a new manager to their team before making this staff member inactive.';
 
 const MANAGER_DEACTIVATION_CHECK_ERROR =
   'Unable to verify reporting-manager assignments. Please try again.';

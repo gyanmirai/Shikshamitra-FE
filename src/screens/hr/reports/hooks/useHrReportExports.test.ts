@@ -32,7 +32,7 @@ describe('useHrReportExports', () => {
     const refetchExports = vi.fn();
     const onExportQueued = vi.fn();
     const requestFor = vi.fn().mockReturnValue({
-      reportType: 'Employee Report',
+      reportType: 'Staff Report',
       dataSource: 'employee',
       filters: {},
     });
@@ -52,7 +52,7 @@ describe('useHrReportExports', () => {
 
     expect(requestFor).toHaveBeenCalledWith(1, 25, 'excel');
     expect(mocks.createExport).toHaveBeenCalledWith({
-      reportType: 'Employee Report',
+      reportType: 'Staff Report',
       dataSource: 'employee',
       filters: {},
     });
@@ -71,7 +71,7 @@ describe('useHrReportExports', () => {
     const refetchExports = vi.fn().mockRejectedValue(new Error('network drift'));
     const onExportQueued = vi.fn();
     const requestFor = vi.fn().mockReturnValue({
-      reportType: 'Employee Report',
+      reportType: 'Staff Report',
       dataSource: 'employee',
       filters: {},
     });
@@ -103,7 +103,7 @@ describe('useHrReportExports', () => {
     const refetchExports = vi.fn().mockResolvedValue({ error: { status: 500 } });
     const onExportQueued = vi.fn();
     const requestFor = vi.fn().mockReturnValue({
-      reportType: 'Employee Report',
+      reportType: 'Staff Report',
       dataSource: 'employee',
       filters: {},
     });
@@ -135,7 +135,7 @@ describe('useHrReportExports', () => {
     const refetchExports = vi.fn();
     const onExportQueued = vi.fn();
     const requestFor = vi.fn().mockReturnValue({
-      reportType: 'Employee Report',
+      reportType: 'Staff Report',
       dataSource: 'employee',
       filters: {},
     });

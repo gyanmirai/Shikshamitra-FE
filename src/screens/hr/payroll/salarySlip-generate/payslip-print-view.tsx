@@ -216,8 +216,8 @@ const PaySlipPrintView = React.forwardRef<HTMLDivElement, PaySlipPrintViewProps>
     const status = formatStatus(slip.status);
     const isPreview = !isOfficialPayslipStatus(slip.status);
     const employeeRows: Array<[string, string]> = [
-      ['Employee Name', employeeName],
-      ['Employee Code', slip.employeeCode || '-'],
+      ['Staff Name', employeeName],
+      ['Staff Code', slip.employeeCode || '-'],
       ['Department', slip.department || '-'],
       ['Designation', slip.designation || '-'],
       ['Date of Joining', formatDate(slip.dateOfJoining)],
@@ -287,7 +287,7 @@ const PaySlipPrintView = React.forwardRef<HTMLDivElement, PaySlipPrintViewProps>
           <h1 style={{ margin: '14px 0 10px', textAlign: 'center', fontSize: 20 }}>Salary Slip</h1>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', rowGap: 8 }}>
-            <HeaderValue label="Employee" value={employeeName} />
+            <HeaderValue label="Staff" value={employeeName} />
             <HeaderValue label="Pay Period" value={period} alignRight />
             <HeaderValue label="Slip Number" value={slip.slipNumber || '-'} />
             <HeaderValue label="Generated On" value={formatDate(slip.generatedAt)} alignRight />
@@ -310,7 +310,7 @@ const PaySlipPrintView = React.forwardRef<HTMLDivElement, PaySlipPrintViewProps>
         ) : null}
 
         <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-          <Section title="Employee Details" rows={employeeRows} />
+          <Section title="Staff Details" rows={employeeRows} />
           <Section title="Payment & Statutory" rows={paymentRows} />
         </div>
 

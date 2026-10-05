@@ -690,7 +690,7 @@ const RunPayroll = () => {
       },
       {
         id: 'employeeName',
-        label: 'Employee',
+        label: 'Staff',
         minWidth: 220,
         align: 'left',
         sticky: true,
@@ -940,7 +940,7 @@ const RunPayroll = () => {
   const totalForProgress = stats.total || Number(previewReadiness?.employeeCount || 0);
   const readinessMetrics = [
     {
-      label: 'Employees',
+      label: 'Staff',
       value: readinessBusy && !previewReadiness ? '...' : stats.total || '-',
     },
     {
@@ -1374,7 +1374,7 @@ const RunPayroll = () => {
             {activeRow ? (
               <Stack sx={{ height: '100%', minHeight: 0 }}>
                 <DrawerHeader
-                  title={activeRow.employeeName || 'Employee payroll details'}
+                  title={activeRow.employeeName || 'Staff payroll details'}
                   subtitle={`${activeRow.employeeIdentifier} • ${activeRow.employeeGroup}`}
                   helpText="Track who changed this policy, what fields were updated, and when each change occurred."
                   onClose={() => setActiveRow(null)}
@@ -1753,7 +1753,7 @@ const RunPayroll = () => {
                         {activeRow.compensationTargetDifference ? (
                           <Alert severity="warning" sx={{ mt: 1.5 }}>
                             Review this variance before locking. Payroll has not changed the
-                            employee&apos;s effective salary automatically.
+                            staff&apos;s effective salary automatically.
                           </Alert>
                         ) : null}
                       </Card>

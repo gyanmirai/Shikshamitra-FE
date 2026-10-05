@@ -15,7 +15,7 @@ vi.mock('../hr-report-notifications', () => ({
 
 const exportJob = (overrides: Partial<HrReportExportJob>): HrReportExportJob => ({
   id: overrides.id ?? 'job-1',
-  reportType: overrides.reportType ?? 'Employee Report',
+  reportType: overrides.reportType ?? 'Staff Report',
   format: overrides.format ?? 'excel',
   status: overrides.status ?? 'Completed',
   creationTime: overrides.creationTime ?? '2026-06-01T10:00:00Z',

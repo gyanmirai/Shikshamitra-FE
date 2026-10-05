@@ -17,8 +17,8 @@ const DashboardDonutPieChart = () => {
           subheader=""
           chart={{
             series: [
-              { label: 'Employee Payroll Run', value: 1224 },
-              { label: 'Employee Payroll Remain', value: 53345 },
+              { label: 'Staff Payroll Run', value: 1224 },
+              { label: 'Staff Payroll Remain', value: 53345 },
             ],
             colors: [theme.vars.palette.primary.light, theme.vars.palette.primary.darker],
           }}

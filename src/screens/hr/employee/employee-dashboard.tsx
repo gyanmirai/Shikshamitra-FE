@@ -24,7 +24,7 @@ const slideUpItem = {
 };
 
 const EmployeeDashboardSkeleton = () => (
-  <Stack spacing={1.5} aria-label="Loading employee dashboard">
+  <Stack spacing={1.5} aria-label="Loading staff dashboard">
     <Grid container spacing={1.5}>
       {Array.from({ length: 5 }).map((_, index) => (
         <Grid key={index} size={{ xs: 12, sm: 6, lg: 2.4 }}>
@@ -68,7 +68,7 @@ const EmployeeProfileDashboard = ({ editData }: { editData: any }) => {
   }
 
   if (isCurrentEmployeeError || !employeeId) {
-    return <EmptyContent title="Employee profile could not be loaded" />;
+    return <EmptyContent title="Staff profile could not be loaded" />;
   }
 
   if (isError || !data) {
@@ -81,7 +81,7 @@ const EmployeeProfileDashboard = ({ editData }: { editData: any }) => {
           </Button>
         }
       >
-        Employee dashboard data could not be loaded.
+        Staff dashboard data could not be loaded.
       </Alert>
     );
   }

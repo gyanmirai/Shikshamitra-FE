@@ -23,7 +23,7 @@ const ALERTS: HRAlert[] = [
   {
     id: 1,
     title: 'Low Attendance',
-    description: '3 employees have attendance below 75% this month.',
+    description: '3 staff have attendance below 75% this month.',
     severity: 'error',
     icon: 'mdi:account-off-outline',
     count: 3,
@@ -39,7 +39,7 @@ const ALERTS: HRAlert[] = [
   {
     id: 3,
     title: 'Missing Documents',
-    description: '6 employees have incomplete document submissions.',
+    description: '6 staff have incomplete document submissions.',
     severity: 'warning',
     icon: 'mdi:file-remove-outline',
     count: 6,

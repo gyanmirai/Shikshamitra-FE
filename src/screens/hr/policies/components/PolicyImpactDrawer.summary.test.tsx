@@ -69,7 +69,7 @@ describe('PolicyImpactDrawer summary rendering', () => {
               blockingWarnings: [],
               effectiveAssignmentConflicts: [],
               requiresConfirmation: false,
-              resolutionSummary: '3 employee(s) and 1 assignment(s) may be affected.',
+              resolutionSummary: '3 staff members and 1 assignment(s) may be affected.',
               riskSummary: 'No policy risks detected for this action.',
               recommendedAction: 'This action can be saved after normal review.',
             },
@@ -78,7 +78,7 @@ describe('PolicyImpactDrawer summary rendering', () => {
       />
     );
 
-    expect(screen.getByText(/3 employee\(s\)/)).toBeInTheDocument();
+    expect(screen.getByText(/3 staff members/)).toBeInTheDocument();
     expect(screen.getByText(/No policy risks detected/)).toBeInTheDocument();
     expect(screen.getByText(/normal review/)).toBeInTheDocument();
   });

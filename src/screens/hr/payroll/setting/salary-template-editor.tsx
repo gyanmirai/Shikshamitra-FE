@@ -423,7 +423,7 @@ function SalaryTemplateWorkflow({
       toast.success(
         isCreate
           ? 'Salary template is active for new salary setups.'
-          : `Version ${result.activeVersion} is active for new salary setups. Existing employees are unchanged.`
+          : `Version ${result.activeVersion} is active for new salary setups. Existing staff are unchanged.`
       );
       onSaved();
     } catch (error: any) {
