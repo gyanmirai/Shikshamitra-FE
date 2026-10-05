@@ -42,6 +42,7 @@ export type RubricCriterionScoringProps = {
   values: CriterionEvaluationValues;
   onMarksChange: (criterionId: string, marks: string) => void;
   onCommentsChange: (criterionId: string, comments: string) => void;
+  showFeedback?: boolean;
   readOnly?: boolean;
   compact?: boolean;
 };

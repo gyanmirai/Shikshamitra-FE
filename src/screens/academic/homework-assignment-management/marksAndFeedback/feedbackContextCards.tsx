@@ -1,4 +1,5 @@
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { sanitizeHtml } from 'src/utils/sanitize-html';
 import { Box, Card, Stack, Avatar, Typography } from '@mui/material';
 
@@ -78,15 +79,23 @@ export const HomeworkFeedbackContext = ({
         <Typography variant="caption" color="text.secondary">
           Homework
         </Typography>
-        <Typography
-          variant="subtitle1"
-          fontWeight={600}
-          noWrap={compact}
+        <CustomTooltip
           title={title || 'Untitled homework'}
-          sx={{ minWidth: 0 }}
+          placement="right"
+          slotProps={{ tooltip: { sx: { maxWidth: 320, overflowWrap: 'anywhere' } } }}
+          arrow
+          describeChild
         >
-          {title || 'Untitled homework'}
-        </Typography>
+          <Typography
+            variant="subtitle1"
+            fontWeight={600}
+            noWrap={compact}
+            tabIndex={0}
+            sx={{ minWidth: 0 }}
+          >
+            {title || 'Untitled homework'}
+          </Typography>
+        </CustomTooltip>
         {!compact && description ? (
           <Box
             sx={{

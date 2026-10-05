@@ -62,7 +62,9 @@ function WeightedPercentageInput({
 }
 
 const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
-  const { rubric, values, onMarksChange, onCommentsChange, readOnly, compact } = props;
+  const {
+    rubric, values, onMarksChange, onCommentsChange, showFeedback = true, readOnly, compact,
+  } = props;
   if (usesPerformanceLevels(rubric)) {
     return <RubricPerformanceCards {...props} />;
   }
@@ -161,16 +163,18 @@ const RubricCriterionScoring = (props: RubricCriterionScoringProps) => {
                 />
               )}
 
-              <TextField
-                size="small"
-                label={`${criterion.title} Feedback`}
-                value={criterionValue.comments}
-                onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
-                placeholder="Add criterion-specific feedback"
-                multiline
-                minRows={1}
-                disabled={readOnly}
-              />
+              {showFeedback && (
+                <TextField
+                  size="small"
+                  label={`${criterion.title} Feedback`}
+                  value={criterionValue.comments}
+                  onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
+                  placeholder="Add criterion-specific feedback"
+                  multiline
+                  minRows={1}
+                  disabled={readOnly}
+                />
+              )}
             </Stack>
           </Card>
         );

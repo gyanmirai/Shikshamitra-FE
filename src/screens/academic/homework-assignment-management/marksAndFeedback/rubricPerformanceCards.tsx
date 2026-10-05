@@ -10,6 +10,7 @@ const RubricPerformanceCards = ({
   values,
   onMarksChange,
   onCommentsChange,
+  showFeedback,
   readOnly,
   compact,
 }: RubricCriterionScoringProps) => {
@@ -28,6 +29,7 @@ const RubricPerformanceCards = ({
           value={values[criterion.id] ?? { marks: '', comments: '' }}
           onMarksChange={onMarksChange}
           onCommentsChange={onCommentsChange}
+          showFeedback={showFeedback}
           readOnly={readOnly}
           compact={compact}
           isRatingScale={rubric.scoringModel === RubricScoringModel.RatingScale}

@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Card,
@@ -111,14 +112,17 @@ export default function AssignmentRubricEvaluationContent({
                     <Typography variant="caption" color="text.secondary">
                       Assignment
                     </Typography>
-                    <Typography
-                      variant="subtitle1"
-                      fontWeight={600}
-                      noWrap
+                    <CustomTooltip
                       title={assignmentTitle || 'Untitled assignment'}
+                      placement="right"
+                      slotProps={{ tooltip: { sx: { maxWidth: 320, overflowWrap: 'anywhere' } } }}
+                      arrow
+                      describeChild
                     >
-                      {assignmentTitle || 'Untitled assignment'}
-                    </Typography>
+                      <Typography variant="subtitle1" fontWeight={600} noWrap tabIndex={0}>
+                        {assignmentTitle || 'Untitled assignment'}
+                      </Typography>
+                    </CustomTooltip>
                   </Box>
                 </Stack>
               </Card>
