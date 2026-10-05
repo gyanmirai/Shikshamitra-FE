@@ -45,6 +45,10 @@ import {
   MANUAL_ATTENDANCE_STATUS_FILTER_OPTIONS,
 } from 'src/screens/hr/attendance/manual-attendance/status-mapper';
 
+import { useHrSubstitution } from './substitution/use-hr-substitution';
+import { HrSubstitutionAction } from './substitution/HrSubstitutionAction';
+import { HrSubstitutionDrawer } from './substitution/HrSubstitutionDrawer';
+
 // ---------------------------------------------------------------------------
 // Status constants (mirroring AttendanceStatus enum from student module)
 // ---------------------------------------------------------------------------
@@ -450,6 +454,10 @@ const ManualAttendanceScreen = () => {
   // -------------------------------------------------------------------------
   // Columns
   // -------------------------------------------------------------------------
+  const substitution = useHrSubstitution(date, isDirty, handleSave);
+
+  // Memoization Justification: keep column definitions stable for the attendance table
+  // while unrelated dialogs change; renderers depend on the current row/editing state.
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -1273,6 +1281,35 @@ const ManualAttendanceScreen = () => {
               },
             },
           ]),
+      ...(substitution.allowed
+        ? [
+            {
+              id: 'substitution',
+              label: 'Substitution',
+              sticky: true,
+              minWidth: 190,
+              isSort: false,
+              isFilter: false,
+              excludeFromExport: true,
+              render: (_: unknown, row: Parameters<typeof substitution.open>[0]) => (
+                <HrSubstitutionAction
+                  employee={row}
+                  dirty={isDirty}
+                  disabled={
+                    !canMutateCurrentDay ||
+                    isUpdating ||
+                    substitution.opening ||
+                    isHoliday ||
+                    isFutureDate ||
+                    isOutsideAcademicYear ||
+                    (isLocked && isDirty)
+                  }
+                  onArrange={substitution.open}
+                />
+              ),
+            },
+          ]
+        : []),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [
@@ -1295,6 +1332,11 @@ const ManualAttendanceScreen = () => {
       updateRow,
       isBulkStatusDisabled,
       canMutateCurrentDay,
+      isDirty,
+      isUpdating,
+      substitution.allowed,
+      substitution.opening,
+      substitution.open,
     ]
   );
 
@@ -1354,6 +1396,7 @@ const ManualAttendanceScreen = () => {
       >
         <DatePicker
           label="Date"
+          disabled={isUpdating || substitution.opening}
           value={date}
           onChange={handleDateChange}
           format="DD-MM-YYYY"
@@ -1447,7 +1490,7 @@ const ManualAttendanceScreen = () => {
       <CustomizableTable
         tableTitle="Employee List"
         tableId="hr-manual-attendance"
-        isLoading={isLoading || isFetching}
+        isLoading={isLoading || isFetching || substitution.opening}
         columns={columns}
         noDataText={
           isError ? 'Failed to load employee data' : 'No employees found for the selected date'
@@ -1464,6 +1507,15 @@ const ManualAttendanceScreen = () => {
           }));
         }}
       />
+
+      {substitution.selected && (
+        <HrSubstitutionDrawer
+          key={`${substitution.selected.employee.id}:${substitution.selected.date}`}
+          employee={substitution.selected.employee}
+          date={substitution.selected.date}
+          onClose={substitution.close}
+        />
+      )}
 
       {/* ── Lock / Unlock confirmation ── */}
       <ConfirmDialog

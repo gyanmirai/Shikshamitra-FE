@@ -45,6 +45,9 @@ export type RubricConfigFormProps = {
 export type RubricConfigTableProps = {
   data: Array<AssessmentRubricDto & { usageCount?: number }>;
   isLoading: boolean;
+  isError?: boolean;
+  hasMedium?: boolean;
+  onRetry?: () => unknown;
   canAdd: boolean;
   canDelete: boolean;
   onEdit: (row: AssessmentRubricDto) => void;

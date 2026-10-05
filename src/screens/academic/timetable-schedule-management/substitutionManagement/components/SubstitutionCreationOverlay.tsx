@@ -12,6 +12,8 @@ type SubstitutionCreationOverlayProps = {
   title: ReactNode;
   children: ReactNode;
   onClose: () => void;
+  disableClose?: boolean;
+  closeLabel?: string;
 };
 
 export function SubstitutionCreationOverlay({
@@ -20,10 +22,18 @@ export function SubstitutionCreationOverlay({
   title,
   children,
   onClose,
+  disableClose = false,
+  closeLabel = 'Close create substitution drawer',
 }: SubstitutionCreationOverlayProps) {
   if (!displayAsDrawer) {
     return (
-      <CustomDialog open={open} title={title} maxWidth="md" handleClose={onClose}>
+      <CustomDialog
+        open={open}
+        title={title}
+        maxWidth="md"
+        handleClose={onClose}
+        disableClose={disableClose}
+      >
         {children}
       </CustomDialog>
     );
@@ -33,7 +43,7 @@ export function SubstitutionCreationOverlay({
     <Drawer
       anchor="right"
       open={open}
-      onClose={onClose}
+      onClose={disableClose ? undefined : onClose}
       aria-labelledby="create-substitution-drawer-title"
       sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}
       PaperProps={{
@@ -64,7 +74,7 @@ export function SubstitutionCreationOverlay({
           }}
         >
           <Box id="create-substitution-drawer-title">{title}</Box>
-          <IconButton aria-label="Close create substitution drawer" onClick={onClose}>
+          <IconButton aria-label={closeLabel} onClick={onClose} disabled={disableClose}>
             <Close sx={{ fontSize: 20 }} />
           </IconButton>
         </Box>
