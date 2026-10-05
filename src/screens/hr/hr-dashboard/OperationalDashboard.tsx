@@ -110,6 +110,9 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
     >
       <CustomBreadcrumbs
         slotProps={{
+          action: {},
+          heading: {},
+          moreLink: {},
           breadcrumbs: { '& .MuiBreadcrumbs-li:last-child > div': { color: 'text.primary' } },
         }}
         heading="HR Dashboard"
