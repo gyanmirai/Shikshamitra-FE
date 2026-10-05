@@ -15,6 +15,10 @@ The navigation suite verifies the five ordered setup tabs, keyboard route change
 Policy-resolution precedence and retroactive-lock assertions now use authenticated APIs in the existing policy golden, precedence, and edge-case suites.
 Keep mutation impact previews, version history, audit, and payroll lock checks in those suites.
 
+Run `HRPolicyWorkspace.navigation.test.tsx` to cover dirty calendar, attendance, payroll, and assignment drafts with the real shared tab and browser-history guards.
+Verify declined navigation preserves drafts, confirmed navigation clears the guard, and closing, resetting, reopening, or unmounting a workspace resets its dirty state.
+View-only drawers and background updates without a workspace drawer must not overwrite another form's guard.
+
 Run the changed HR Vitest suites with `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run --pool=forks --maxWorkers=1` and the relevant file paths.
 The setup-state and alert suites cover loading, request failure, incomplete pages, missing defaults, multiple defaults, permission-gated recovery, and the explicit sole-default archive reason.
 The assignment drawer suite covers preserving an edited draft, declining discard, and navigating after confirmed discard.
