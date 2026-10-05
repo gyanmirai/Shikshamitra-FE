@@ -9,7 +9,7 @@ import { Card, Grid, Button, CardHeader } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 
 const actions = [
-  { label: 'Add Employee', icon: <PersonAddIcon /> },
+  { label: 'Add Staff', icon: <PersonAddIcon /> },
   { label: 'Salary Slip', icon: <ReceiptIcon /> },
   { label: 'Approve Leave', icon: <EventAvailableIcon /> },
   { label: 'Fix Attendance', icon: <AccessTimeIcon /> },

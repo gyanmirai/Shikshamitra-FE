@@ -21,7 +21,7 @@ const HRDashboardHeader = () => (
 
     <Stack direction="row" spacing={3} alignItems="center">
       <TextField
-        placeholder="Search Employee"
+        placeholder="Search Staff"
         size="small"
         slotProps={{
           input: {

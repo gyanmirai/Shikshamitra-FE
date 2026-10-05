@@ -91,6 +91,29 @@ export function selectSingleActiveDefaultPolicy<T extends { status?: string; isD
   return activeDefaults.length === 1 ? activeDefaults[0] : undefined;
 }
 
+export type DefaultPolicySetupState = 'unknown' | 'ready' | 'missing' | 'multiple';
+
+export function getDefaultPolicySetupState({
+  data,
+  loading,
+  error,
+  items,
+}: {
+  data?: { items?: unknown[]; data?: unknown[]; totalCount?: number; totalRecords?: number };
+  loading: boolean;
+  error?: unknown;
+  items: Array<{ isDefault?: boolean }>;
+}): DefaultPolicySetupState {
+  if (!data || loading || error) return 'unknown';
+  const rows = data.items || data.data;
+  const total = data.totalCount ?? data.totalRecords;
+  // A truncated page cannot establish absence or uniqueness of a default.
+  if (!rows || typeof total !== 'number' || total > rows.length) return 'unknown';
+  const count = items.filter((item) => item.isDefault).length;
+  if (count > 1) return 'multiple';
+  return count === 1 ? 'ready' : 'missing';
+}
+
 export function getEffectiveAssignmentLeavePolicyId(
   assignment: { leavePolicyId?: string | null },
   defaultLeavePolicyId?: string | null
@@ -559,7 +582,6 @@ export function optionLabel(item: any): string {
   return String(label ?? '');
 }
 
-
 export function getLookupOrganizationNames(item: LookupOption | null | undefined): string[] {
   if (!item) return [];
   if (Array.isArray(item.organizationNames) && item.organizationNames.length > 0) {
@@ -597,6 +619,9 @@ export function getErrorMessage(error: unknown, fallback: string): string {
       }
     | undefined;
   const errorCode = value?.data?.error?.code || '';
+  if (value?.data?.error?.data?.reason === 'sole-default') {
+    return 'Choose another default before archiving';
+  }
   if (
     errorCode.endsWith('PolicyNameAlreadyExists') ||
     errorCode.endsWith('LeavePolicyNameAlreadyExists')

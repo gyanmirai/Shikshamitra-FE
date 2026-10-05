@@ -2,7 +2,7 @@ import { it, expect, describe } from 'vitest';
 import { emptyAccessSelection } from 'src/utils/academicHierarchyUtils';
 import { buildUserScopeBulkAssignPayload } from 'src/utils/userScopeBulkAssignPayload';
 
-describe('employee academic permission payload', () => {
+describe('staff academic permission payload', () => {
   const allBoards = [
     {
       id: 'board-1',

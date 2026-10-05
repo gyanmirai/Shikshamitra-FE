@@ -64,7 +64,7 @@ describe('hrPolicyApi contracts', () => {
     });
   });
 
-  it('builds scoped assignment preview params from employee or group fields', () => {
+  it('builds scoped assignment preview params from staff or group fields', () => {
     expect(
       buildPolicyAssignmentPreviewParams({
         academicYearId: 'year-1',

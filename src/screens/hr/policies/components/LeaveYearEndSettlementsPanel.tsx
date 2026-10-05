@@ -262,7 +262,7 @@ export function LeaveYearEndSettlementsPanel() {
                     <Table size="small" stickyHeader>
                       <TableHead>
                         <TableRow>
-                          <TableCell>Employee</TableCell>
+                          <TableCell>Staff</TableCell>
                           <TableCell>Status</TableCell>
                           <TableCell align="right">Accrued</TableCell>
                           <TableCell align="right">Carry In</TableCell>

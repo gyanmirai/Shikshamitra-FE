@@ -47,8 +47,8 @@ const validValues = (): FinalizeFormState => ({
   attachResumeAsDocument: true,
 });
 
-describe('employee application finalization validation', () => {
-  it('accepts a complete employee record', () => {
+describe('staff application finalization validation', () => {
+  it('accepts a complete staff record', () => {
     expect(finalizeEmployeeFieldsSchema.isValidSync(validValues(), { abortEarly: false })).toBe(
       true
     );
@@ -69,7 +69,7 @@ describe('employee application finalization validation', () => {
     expect(finalizeEmployeeFieldsSchema.isValidSync(values, { abortEarly: false })).toBe(false);
   });
 
-  it('keeps explicit errors after marking every employee field touched', async () => {
+  it('keeps explicit errors after marking every staff field touched', async () => {
     const values = validValues();
     values.familyCaste = '';
     let renderedErrors = {};

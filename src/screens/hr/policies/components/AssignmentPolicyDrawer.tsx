@@ -1,7 +1,5 @@
 'use client';
 
-import type { HrPolicyAssignment } from 'src/redux/hr/hr-policy-api';
-
 import React from 'react';
 import dayjs from 'dayjs';
 import { DatePicker } from '@mui/x-date-pickers';
@@ -22,7 +20,19 @@ import {
   Typography,
   Autocomplete,
   FormControlLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
+
+import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
+import { EmployeeStatusType } from 'src/enums/employee-status-type';
+import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
+import { useRouter } from 'src/routes/hooks';
+import { hrPaths } from 'src/constants/hr-menus';
+import { PolicySetupAlert } from './PolicySetupAlert';
 
 import {
   toLabel,
@@ -41,11 +51,6 @@ import {
 
 import type { HRPolicyWorkspaceContext } from '../hooks/useHRPolicyWorkspace';
 import type { PolicyAssignmentTargetType } from '../types/hr-policy-workspace.types';
-
-import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useLazyGetEmployeeQuery } from 'src/redux/hr/employeeApi';
-import { EmployeeStatusType } from 'src/enums/employee-status-type';
-import { PaginatedSearchSelect } from 'src/components/paginated-search-select';
 
 function getLeavePolicyName(item: any): string {
   return item?.policyTitle || item?.name || item?.title || item?.id || '-';
@@ -101,24 +106,27 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         <Stack direction="row" spacing={1} flexWrap="wrap">
           <Chip
             size="small"
-            label={`Payroll: ${payroll.find((item) => item.id === assignmentForm.payrollPolicyId)?.name || '-'
-              }`}
+            label={`Payroll: ${
+              payroll.find((item) => item.id === assignmentForm.payrollPolicyId)?.name || '-'
+            }`}
             color="primary"
             variant="outlined"
           />
           <Chip
             size="small"
-            label={`Attendance: ${attendance.find((item) => item.id === assignmentForm.attendancePolicyId)?.name || '-'
-              }`}
+            label={`Attendance: ${
+              attendance.find((item) => item.id === assignmentForm.attendancePolicyId)?.name || '-'
+            }`}
             color="success"
             variant="outlined"
           />
           <Chip
             size="small"
-            label={`Leave: ${getLeavePolicyName(
-              leavePolicies.find((item: any) => item.id === assignmentForm.leavePolicyId)
-            ) || '-'
-              }`}
+            label={`Leave: ${
+              getLeavePolicyName(
+                leavePolicies.find((item: any) => item.id === assignmentForm.leavePolicyId)
+              ) || '-'
+            }`}
             color="info"
             variant="outlined"
           />
@@ -169,7 +177,7 @@ function AssignmentPreviewPanel({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
         ) : null}
         <Divider />
         <Typography variant="caption" color="text.secondary">
-          Precedence: Employee &gt; Group &gt; Default
+          Precedence: Staff &gt; Group &gt; Default
         </Typography>
       </Stack>
     </Paper>
@@ -185,12 +193,7 @@ function AssignmentTargetPicker({
   ctx: HRPolicyWorkspaceContext;
   disabled?: boolean;
 }) {
-  const {
-    assignmentForm,
-    setAssignmentForm,
-    employeeOptions,
-    groupOptions,
-  } = ctx;
+  const { assignmentForm, setAssignmentForm, employeeOptions, groupOptions } = ctx;
 
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
@@ -218,10 +221,10 @@ function AssignmentTargetPicker({
 
   if (assignmentForm.targetType === 'employee') {
     return (
-      <DrawerField label="Employee *">
+      <DrawerField label="Staff *">
         <PaginatedSearchSelect
           label=""
-          placeholder="Search employee..."
+          placeholder="Search staff..."
           fetchOptions={async (query, page) => {
             if (page > 1) return { data: [], hasMore: false };
             try {
@@ -243,8 +246,8 @@ function AssignmentTargetPicker({
               // fallback
             }
             const q = query.trim().toLowerCase();
-            const fallback = employeeOptions.filter((item) =>
-              !q || optionLabel(item).toLowerCase().includes(q)
+            const fallback = employeeOptions.filter(
+              (item) => !q || optionLabel(item).toLowerCase().includes(q)
             );
             return { data: fallback, hasMore: false };
           }}
@@ -294,7 +297,9 @@ function AssignmentTargetPicker({
             </Box>
           );
         }}
-        renderInput={(params) => <TextField {...params} size="small" placeholder="Select group..." />}
+        renderInput={(params) => (
+          <TextField {...params} size="small" placeholder="Select group..." />
+        )}
       />
     </DrawerField>
   );
@@ -315,7 +320,8 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     activePayroll = [],
     activeAttendance = [],
     activeLeavePolicies = [],
-    defaultLeavePolicy,
+    leaveSetupState,
+    canOpenLeavePolicies,
     academicYearId,
     activePolicyOperation,
     isPolicyOperationActive,
@@ -327,8 +333,20 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     closeDrawer,
     saveAssignment,
     previewCurrentAssignmentImpact,
-    previewAssignment,
   } = ctx;
+
+  const originalForm = React.useRef(JSON.stringify(assignmentForm));
+  const router = useRouter();
+  const [confirmDiscard, setConfirmDiscard] = React.useState(false);
+  const openLeavePolicies = () => {
+    if (!canOpenLeavePolicies || isPolicyOperationActive) return;
+    if (drawer?.mode !== 'view' && originalForm.current !== JSON.stringify(assignmentForm)) {
+      setConfirmDiscard(true);
+      return;
+    }
+    closeDrawer();
+    router.push(hrPaths.policies.leavePolicies);
+  };
 
   if (!drawer || drawer.kind !== 'assignment') return null;
   const isViewMode = drawer.mode === 'view';
@@ -336,25 +354,6 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     drawer.mode === 'view'
       ? 'View Assignment'
       : `${drawer.mode === 'edit' ? 'Edit' : 'New'} Assignment`;
-
-  const handleConflictPreview = () => {
-    if (!assignmentConflict) return;
-    previewAssignment({
-      id: assignmentConflict.assignmentId,
-      academicYearId: academicYearId || '',
-      targetType: assignmentConflict.targetType as PolicyAssignmentTargetType,
-      targetKey: assignmentConflict.targetKey,
-      targetDisplayName: assignmentConflict.targetDisplayName,
-      payrollPolicyId: assignmentConflict.payrollPolicyId,
-      attendancePolicyId: assignmentConflict.attendancePolicyId,
-      leavePolicyId: assignmentConflict.leavePolicyId || '',
-      effectiveFrom: assignmentConflict.effectiveFrom,
-      effectiveTo: assignmentConflict.effectiveTo,
-      priority: assignmentConflict.priority,
-      isActive: true,
-      assignmentReason: null,
-    } as HrPolicyAssignment);
-  };
 
   return (
     <Box
@@ -368,7 +367,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
     >
       <DrawerHeader
         title={title}
-        helpText="Assign payroll, attendance, and leave policies to an employee or group. Groups cover role, department, employment type, and mixed dynamic targeting."
+        helpText="Assign payroll, attendance, and leave policies to a staff member or group. Groups cover role, department, employment type, and mixed dynamic targeting."
         onClose={closeDrawer}
         closeDisabled={isPolicyOperationActive}
       />
@@ -395,15 +394,17 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
                 setEmployeeLookupSearch('');
               }}
             >
-              <MenuItem value="employee">Employee</MenuItem>
+              <MenuItem value="employee">Staff</MenuItem>
               <MenuItem value="group">Group</MenuItem>
             </DrawerSelectField>
             <AssignmentTargetPicker ctx={ctx} disabled={isViewMode} />
-            {!isViewMode && !defaultLeavePolicy ? (
-              <Alert severity="warning">
-                Exactly one active default leave policy is required before new assignments can be
-                prefilled.
-              </Alert>
+            {!isViewMode ? (
+              <PolicySetupAlert
+                state={leaveSetupState}
+                policy="leave"
+                canOpen={canOpenLeavePolicies && !isPolicyOperationActive}
+                onOpen={openLeavePolicies}
+              />
             ) : null}
             <DrawerSelectField
               label="Payroll Policy *"
@@ -505,14 +506,7 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
               </DrawerField>
             </DrawerFormGrid>
             {assignmentConflict ? (
-              <Alert
-                severity="error"
-                action={
-                  <Button size="small" onClick={handleConflictPreview}>
-                    Preview
-                  </Button>
-                }
-              >
+              <Alert severity="error">
                 <Stack spacing={0.5}>
                   <Typography variant="body2" fontWeight={700}>
                     Conflicts with{' '}
@@ -642,6 +636,24 @@ export function AssignmentPolicyDrawer({ ctx }: { ctx: HRPolicyWorkspaceContext 
           </Button>
         ) : null}
       </Stack>
+      <Dialog open={confirmDiscard} onClose={() => setConfirmDiscard(false)}>
+        <DialogTitle>Discard changes?</DialogTitle>
+        <DialogContent>Unsaved assignment changes will be lost.</DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDiscard(false)}>Keep editing</Button>
+          <Button
+            color="warning"
+            disabled={isPolicyOperationActive}
+            onClick={() => {
+              setConfirmDiscard(false);
+              closeDrawer();
+              router.push(hrPaths.policies.leavePolicies);
+            }}
+          >
+            Discard and open Leave Policies
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

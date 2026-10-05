@@ -178,7 +178,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
       docs: editData?.attachmentUrl || '',
     },
     validationSchema: Yup.object().shape({
-      employee: Yup.object().nullable().required('Employee is required'),
+      employee: Yup.object().nullable().required('Staff is required'),
       startDate: Yup.mixed()
         .required('Start Date is required')
         .test(
@@ -255,7 +255,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               shouldUseAdminSelectionRules
             )
           ) {
-            setFieldError('employee', 'Please select an employee to create leave.');
+            setFieldError('employee', 'Please select a staff member to create leave.');
             return;
           }
 
@@ -286,14 +286,14 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           if (isEffectivePreviewEmployeeResolutionBlocked) {
             setFieldError(
               'paidType',
-              'Resolving employee profile for leave policy preview. Please wait.'
+              'Resolving staff profile for leave policy preview. Please wait.'
             );
             return;
           }
           if (hasBlockingEffectivePolicyState) {
             setFieldError(
               'paidType',
-              'No effective leave policy is assigned to this employee for the selected date.'
+              'No effective leave policy is assigned to this staff member for the selected date.'
             );
             return;
           }
@@ -339,7 +339,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
           if (createResult?.error) {
             const parsedError = parseApiProblemDetail(createResult.error);
             if (parsedError.errorCode === LEAVE_TARGET_EMPLOYEE_REQUIRED) {
-              setFieldError('employee', 'Please select an employee to create leave.');
+              setFieldError('employee', 'Please select a staff member to create leave.');
             }
             if (
               parsedError.errorCode === LEAVE_PAST_DATE ||
@@ -561,7 +561,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
               <Grid size={{ xs: 12 }}>
                 <ShakingTextField error={!!touched.employee && !!errors.employee}>
                   <PaginatedSearchSelect
-                    label="Employee *"
+                    label="Staff *"
                     fetchOptions={async (query, page) => {
                       if (page > 1) return { data: [], hasMore: false };
                       const res = await getEmployees({
@@ -608,7 +608,7 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                 <Stack spacing={1}>
                   {isEffectivePreviewEmployeeResolutionBlocked ? (
                     <Alert severity="warning">
-                      Resolving employee profile for leave policy preview. Please wait.
+                      Resolving staff profile for leave policy preview. Please wait.
                     </Alert>
                   ) : null}
                   {effectivePolicyPreview?.leavePolicy ? (
@@ -627,12 +627,12 @@ const AddLeaveRequest = (props: AddLeaveRequestProps) => {
                   ) : null}
                   {hasBlockingEffectivePolicyState ? (
                     <Alert severity="warning">
-                      No effective leave policy is assigned to this employee for the selected date.
+                      No effective leave policy is assigned to this staff member for the selected date.
                     </Alert>
                   ) : null}
                   {effectivePolicyError ? (
                     <Alert severity="warning">
-                      Could not resolve the employee leave policy. Resolve the effective leave
+                      Could not resolve the staff leave policy. Resolve the effective leave
                       policy before submitting.
                     </Alert>
                   ) : null}

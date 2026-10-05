@@ -410,7 +410,7 @@ const ApplyLeave = ({ mode = 'hr', showBreadcrumbs = true }: ApplyLeaveProps) =>
                 },
                 { name: 'Leave Calendar' },
               ]}
-              description="The Leave Calendar visually displays employees leave requests and their statuses—approved, pending, or rejected—on specific dates."
+              description="The Leave Calendar visually displays staff leave requests and their statuses—approved, pending, or rejected—on specific dates."
               isBack
               onBack={viewCalendarView.onFalse}
             />

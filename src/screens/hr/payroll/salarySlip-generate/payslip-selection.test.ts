@@ -10,7 +10,7 @@ import {
 } from './payslip-selection';
 
 describe('payslip selection', () => {
-  it('sends the typed employee search to the paginated employee API', () => {
+  it('sends the typed staff search to the paginated staff API', () => {
     expect(buildPayslipEmployeeSearch('  Keyur Siddhapura  ', 2)).toEqual({
       page: 2,
       pageSize: 10,
@@ -18,7 +18,7 @@ describe('payslip selection', () => {
     });
   });
 
-  it('keys the query by both employee and pay period', () => {
+  it('keys the query by both staff and pay period', () => {
     expect(buildPayslipSelection('employee-1', dayjs('2026-07-15'))).toEqual({
       employeeId: 'employee-1',
       monthYear: '2026-07',

@@ -7,7 +7,7 @@ import { CurriculumReportPreviewTable } from 'src/screens/academic/curriculum-ma
 import type { HrAiReportReview } from '../hooks/useHrAiReport';
 
 const SOURCE_LABELS: Record<string, string> = {
-  employee: 'Employees',
+  employee: 'Staff',
   payroll: 'Payroll',
   attendance: 'Attendance',
   leave: 'Leave',

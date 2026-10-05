@@ -90,7 +90,7 @@ async function firstEmployeeIdBySearch(page: Page, search: string) {
     (item: any) => String(item.email || '').toLowerCase() === search.toLowerCase()
   );
   if (!employee?.id) {
-    throw new Error(`Unable to resolve employee id for ${search}`);
+    throw new Error(`Unable to resolve staff id for ${search}`);
   }
 
   return employee.id as string;
@@ -330,9 +330,9 @@ async function upsertEmployeePolicyOverride(
       method: 'POST',
       body: JSON.stringify({ action: 'create', assignment }),
     }),
-    `preview employee override for ${academicYear.name || academicYear.id}`
+    `preview staff override for ${academicYear.name || academicYear.id}`
   );
-  expect(preview?.blockingWarnings ?? [], 'employee override blocking warnings').toEqual([]);
+  expect(preview?.blockingWarnings ?? [], 'staff override blocking warnings').toEqual([]);
 
   return jsonFrom<any>(
     await employeeApiRequest(page, '/hr/policy-assignments', {
@@ -342,7 +342,7 @@ async function upsertEmployeePolicyOverride(
         confirmationToken: preview?.confirmationToken ?? null,
       }),
     }),
-    `save employee override for ${academicYear.name || academicYear.id}`
+    `save staff override for ${academicYear.name || academicYear.id}`
   );
 }
 
@@ -433,7 +433,7 @@ async function setEmployeeSalaryStructure(page: Page, employeeId: string, employ
         deductionComponents: [deductionLine],
       }),
     }),
-    'set employee payroll details'
+    'set staff payroll details'
   );
 
   await expectOk(
@@ -458,7 +458,7 @@ async function setEmployeeSalaryStructure(page: Page, employeeId: string, employ
         ],
       }),
     }),
-    'set employee salary structure'
+    'set staff salary structure'
   );
 }
 
@@ -519,7 +519,7 @@ async function getPayrollRunRow(page: Page, employeeId: string, month: string) {
   await expectOk(response, `GET payroll run ${month}`);
   const body = await response.json();
   const row = asItems(body).find((item: any) => item.employeeId === employeeId);
-  expect(row, `payroll row for generated employee ${employeeId}`).toBeTruthy();
+  expect(row, `payroll row for generated staff ${employeeId}`).toBeTruthy();
   return row;
 }
 
@@ -603,7 +603,7 @@ test.describe('leave year-end settlement full cycle', () => {
         encashmentAllowed: false,
       });
 
-      const fixture = createEmployeeFixture('LPYE Employee');
+      const fixture = createEmployeeFixture('LPYE Staff');
       const employee = await createEmployeeFromExistingDefaults(page, fixture, {
         dateOfBirth: '1965-01-01',
         dateOfJoining: yyyyMmDd(new Date(source.startDate)),
@@ -647,9 +647,9 @@ test.describe('leave year-end settlement full cycle', () => {
       );
       const item = asItems(preview.items).find((entry: any) => entry.employeeId === employeeId);
       if (!item) {
-        throw new Error(`Generated employee settlement item was not created for ${employeeId}`);
+        throw new Error(`Generated staff settlement item was not created for ${employeeId}`);
       }
-      expect(item.issueCodes ?? [], 'generated employee item issues').toEqual([]);
+      expect(item.issueCodes ?? [], 'generated staff item issues').toEqual([]);
       expect(Number(item.approvedUsedDays), 'approved leave reduces unused').toBeCloseTo(1, 2);
       expect(Number(item.carriedDays), 'carry-forward applies first').toBeCloseTo(4, 2);
       expect(Number(item.encashedDays), 'encashment applies after carry-forward').toBeCloseTo(7, 2);
@@ -659,13 +659,13 @@ test.describe('leave year-end settlement full cycle', () => {
       const unrelatedIssueFreeItems = asItems(preview.items).filter(
         (entry: any) =>
           entry.employeeId !== employeeId &&
-          !String(entry.employeeName || '').startsWith('LPYE Employee') &&
+          !String(entry.employeeName || '').startsWith('LPYE Staff') &&
           String(entry.status).toLowerCase() === 'draft' &&
           asItems(entry.issueCodes).length === 0
       );
       expect(
         unrelatedIssueFreeItems,
-        'refusing to finalize if unrelated DDVS employees would be settled'
+        'refusing to finalize if unrelated DDVS staff would be settled'
       ).toEqual([]);
 
       const finalized = await jsonFrom<any>(
@@ -742,7 +742,7 @@ test.describe('leave year-end settlement full cycle', () => {
           }),
           timeout: 120_000,
         }),
-        'lock generated employee payroll'
+        'lock generated staff payroll'
       );
 
       const slip = await getJson<any>(

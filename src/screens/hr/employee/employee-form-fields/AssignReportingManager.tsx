@@ -149,7 +149,7 @@ const RightManagerProfile = ({ employee }: { employee: any }) => {
     },
     {
       icon: 'solar:user-id-bold',
-      label: 'Employee ID',
+      label: 'Staff ID',
       value: employee?.employeeIdentifier,
     },
   ];

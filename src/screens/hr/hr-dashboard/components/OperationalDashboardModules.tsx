@@ -162,7 +162,7 @@ export default function OperationalDashboardModules({
           count={data?.workforce?.activeStaff}
           label="active staff"
           href={hrPaths.employee.list}
-          action="Open Employees"
+          action="Open Staff Directory"
         >
           <Stack component="dl" spacing={0.5} sx={{ m: 0 }}>
             <ModuleDetail label="Teaching" value={data?.workforce?.teaching ?? 0} />

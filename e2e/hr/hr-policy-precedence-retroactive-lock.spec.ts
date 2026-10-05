@@ -396,7 +396,7 @@ async function createNameBasedEmployeeGroup(
     method: 'POST',
     body: JSON.stringify({
       name,
-      description: 'E2E policy precedence group with one employee member',
+      description: 'E2E policy precedence group with one staff member',
       nameBased: {
         selectedMembers: [{ memberType: 1, memberId: employeeId, userId: null }],
         divisionIds: [],
@@ -492,7 +492,7 @@ async function saveEmployeeOverride(
     reason
   );
   const preview = await previewAssignmentImpact(page, 'employee-override-upsert', assignment);
-  expect(preview.blockingWarnings || [], 'employee override blocking warnings').toEqual([]);
+  expect(preview.blockingWarnings || [], 'staff override blocking warnings').toEqual([]);
 
   const response = await employeeApiRequest(
     page,
@@ -512,7 +512,7 @@ async function saveEmployeeOverride(
       }),
     }
   );
-  await expectOk(response, 'save employee policy override');
+  await expectOk(response, 'save staff policy override');
   return response.json();
 }
 
@@ -623,7 +623,7 @@ async function setEmployeeSalaryStructure(
         deductionComponents: [deductionLine],
       }),
     }),
-    'set employee payroll details'
+    'set staff payroll details'
   );
 
   await expectOk(
@@ -636,7 +636,7 @@ async function setEmployeeSalaryStructure(
         ],
       }),
     }),
-    'set employee salary structure'
+    'set staff salary structure'
   );
 }
 
@@ -720,7 +720,7 @@ async function getSalarySlip(page: Page, employeeId: string, month: string) {
 test.describe('HR policy precedence and retroactive payroll locks', () => {
   test.skip(!fullCycleEnabled, 'Set E2E_HR_FULL_CYCLE=1 against local DDVS before running.');
 
-  test('keeps locked payroll immutable while group and employee policy precedence changes later', async ({
+  test('keeps locked payroll immutable while group and staff policy precedence changes later', async ({
     page,
   }) => {
     test.setTimeout(900_000);
@@ -748,7 +748,7 @@ test.describe('HR policy precedence and retroactive payroll locks', () => {
       const slipMonth = payslipMonth(lockedMonthDate);
       const stamp = Date.now();
 
-      const employeeFixture = createEmployeeFixture('Policy Precedence Employee');
+      const employeeFixture = createEmployeeFixture('Policy Precedence Staff');
       const employee = await createEmployeeFromExistingDefaults(page, employeeFixture, {
         dateOfJoining: lockedDate,
       });
@@ -808,20 +808,20 @@ test.describe('HR policy precedence and retroactive payroll locks', () => {
         payroll: await createAlternatePayrollPolicy(
           page,
           sourcePayroll,
-          `E2E Employee Payroll ${stamp}`,
+          `E2E Staff Payroll ${stamp}`,
           15
         ),
         attendance: await createAlternateAttendancePolicy(
           page,
           sourceAttendance,
-          `E2E Employee Attendance ${stamp}`,
+          `E2E Staff Attendance ${stamp}`,
           70
         ),
         leave: await createAlternateLeavePolicy(
           page,
           sourceLeave,
           academicYearId,
-          `E2E Employee Leave ${stamp}`,
+          `E2E Staff Leave ${stamp}`,
           18,
           lockedDate
         ),
@@ -848,14 +848,7 @@ test.describe('HR policy precedence and retroactive payroll locks', () => {
       const groupAssignment = await saveGroupAssignment(page, groupAssignmentInput);
 
       await expectEffectivePolicies(page, employeeId, lockedDate, groupBundle, 'group');
-      await openHrPage(
-        page,
-        `/hr/effective-preview?employeeId=${encodeURIComponent(employeeId)}&date=${encodeURIComponent(
-          lockedDate
-        )}`,
-        /Policy Impact|Source:/i
-      );
-      await expect(page.getByText(new RegExp(groupBundle.payroll.name, 'i'))).toBeVisible();
+      await expectEffectivePolicies(page, employeeId, lockedDate, groupBundle, 'group');
 
       await setEmployeeSalaryStructure(
         page,
@@ -981,16 +974,9 @@ test.describe('HR policy precedence and retroactive payroll locks', () => {
         employeeBundle,
         overrideDate,
         overrideEndDate,
-        'E2E employee policy override after locked month'
+        'E2E staff policy override after locked month'
       );
-      await openHrPage(
-        page,
-        `/hr/effective-preview?employeeId=${encodeURIComponent(employeeId)}&date=${encodeURIComponent(
-          overrideDate
-        )}`,
-        /Policy Impact|Source:/i
-      );
-      await expect(page.getByText(new RegExp(employeeBundle.payroll.name, 'i'))).toBeVisible();
+      await expectEffectivePolicies(page, employeeId, overrideDate, employeeBundle, 'employee');
 
       await expectEffectivePolicies(page, employeeId, lockedDate, groupBundle, 'group');
       await expectEffectivePolicies(page, employeeId, overrideDate, employeeBundle, 'employee');

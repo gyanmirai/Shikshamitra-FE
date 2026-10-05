@@ -82,7 +82,7 @@ async function firstEmployeeIdBySearch(page: Page, search: string) {
     (item: any) => String(item.email || '').toLowerCase() === search.toLowerCase()
   );
   if (!employee?.id) {
-    throw new Error(`Unable to resolve employee id for ${search}`);
+    throw new Error(`Unable to resolve staff id for ${search}`);
   }
 
   return employee.id as string;
@@ -253,7 +253,7 @@ async function setSalaryStructureWithTemporaryEarning(
         deductionComponents: [fixedDeductionLine],
       }),
     }),
-    'set employee payroll details'
+    'set staff payroll details'
   );
 
   await expectOk(
@@ -269,7 +269,7 @@ async function setSalaryStructureWithTemporaryEarning(
         ],
       }),
     }),
-    'set employee salary structure'
+    'set staff salary structure'
   );
 
   return tempLine;
@@ -318,7 +318,7 @@ async function setSalaryStructureWithPfRule(
         deductionComponents: [],
       }),
     }),
-    'set employee payroll details with PF rule'
+    'set staff payroll details with PF rule'
   );
 
   await expectOk(
@@ -329,7 +329,7 @@ async function setSalaryStructureWithPfRule(
         deductionComponents: [],
       }),
     }),
-    'set employee salary structure with PF rule'
+    'set staff salary structure with PF rule'
   );
 }
 
@@ -572,9 +572,9 @@ async function upsertEmployeePolicyPackageOverride(
       },
     }),
   });
-  await expectOk(previewResponse, 'preview employee policy override impact');
+  await expectOk(previewResponse, 'preview staff policy override impact');
   const preview = await previewResponse.json();
-  expect(preview.blockingWarnings || [], 'employee override blocking warnings').toEqual([]);
+  expect(preview.blockingWarnings || [], 'staff override blocking warnings').toEqual([]);
 
   const response = await employeeApiRequest(
     page,
@@ -594,7 +594,7 @@ async function upsertEmployeePolicyPackageOverride(
       }),
     }
   );
-  await expectOk(response, 'upsert employee policy override');
+  await expectOk(response, 'upsert staff policy override');
 }
 
 async function createLeaveRequest(
@@ -731,7 +731,7 @@ async function lockPayroll(page: Page, employeeId: string, academicYearId: strin
 test.describe('HR current sprint bug regressions', () => {
   test.skip(!fullCycleEnabled, 'Set E2E_HR_FULL_CYCLE=1 against local DDVS before running.');
 
-  test('4927 employee list searches multi-word full names with whitespace and case folding', async ({
+  test('4927 staff directory searches multi-word full names with whitespace and case folding', async ({
     page,
   }) => {
     await page.goto('/dashboard/');
@@ -748,7 +748,7 @@ test.describe('HR current sprint bug regressions', () => {
         `  aKsHaY    ${target.lastName.toUpperCase()}  `
       )}`
     );
-    await expectOk(searchResponse, 'search employees by full name');
+    await expectOk(searchResponse, 'search staff by full name');
     const results = asItems(await searchResponse.json());
     const emails = results.map((item: any) => item.email);
 
@@ -756,7 +756,7 @@ test.describe('HR current sprint bug regressions', () => {
     expect(emails).not.toContain(unrelated.email);
   });
 
-  test('4975 employee creation shows assigned system policies with all policy chips', async ({
+  test('4975 staff creation shows assigned system policies with all policy chips', async ({
     page,
   }) => {
     await gotoEmployeeList(page);
@@ -775,7 +775,7 @@ test.describe('HR current sprint bug regressions', () => {
     await page.goto('/dashboard/');
     await dismissAcademicYearTour(page);
 
-    const fixture = createEmployeeFixture('Profile Identity Employee');
+    const fixture = createEmployeeFixture('Profile Identity Staff');
     const employee = await createEmployeeFromExistingDefaults(page, fixture);
     await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id as string;
@@ -799,12 +799,12 @@ test.describe('HR current sprint bug regressions', () => {
     expect(after.adharNo).toBe(before.adharNo);
   });
 
-  test('5181 future DOJ employee is shown as Upcoming instead of Active', async ({ page }) => {
+  test('5181 future DOJ staff is shown as Upcoming instead of Active', async ({ page }) => {
     await gotoEmployeeList(page);
 
     const futureDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 14);
     const futureDoj = yyyyMmDd(futureDate);
-    const fixture = createEmployeeFixture('Future DOJ Employee');
+    const fixture = createEmployeeFixture('Future DOJ Staff');
     await createEmployeeFromExistingDefaults(page, fixture, { dateOfJoining: futureDoj });
 
     await page.getByPlaceholder('Search...').fill(fixture.email);
@@ -865,7 +865,7 @@ test.describe('HR current sprint bug regressions', () => {
     await expect(page.getByText(/404|not found/i)).toHaveCount(0);
   });
 
-  test('5199 and 5190 employee policy package drives attendance and removed holidays stay editable', async ({
+  test('5199 and 5190 staff policy package drives attendance and removed holidays stay editable', async ({
     page,
   }) => {
     await page.goto('/dashboard/');
@@ -874,7 +874,7 @@ test.describe('HR current sprint bug regressions', () => {
     const attendanceDate = yyyyMmDd(
       firstWeekdayInMonth(new Date(today.getFullYear(), today.getMonth() + 1, 1))
     );
-    const fixture = createEmployeeFixture('Policy Removed Holiday Employee');
+    const fixture = createEmployeeFixture('Policy Removed Holiday Staff');
     const employee = await createEmployeeFromExistingDefaults(page, fixture, {
       dateOfJoining: attendanceDate,
     });
@@ -927,7 +927,7 @@ test.describe('HR current sprint bug regressions', () => {
     const leaveDate = yyyyMmDd(
       firstWeekdayInMonth(new Date(today.getFullYear(), today.getMonth() + 2, 1))
     );
-    const fixture = createEmployeeFixture('Auto Approval Leave Employee');
+    const fixture = createEmployeeFixture('Auto Approval Leave Staff');
     const employee = await createEmployeeFromExistingDefaults(page, fixture, {
       dateOfJoining: leaveDate,
     });
@@ -978,7 +978,7 @@ test.describe('HR current sprint bug regressions', () => {
       );
       const attendanceDate = yyyyMmDd(payrollDate);
       const runMonth = monthKey(payrollDate);
-      const fixture = createEmployeeFixture('PF Rule Payroll Employee');
+      const fixture = createEmployeeFixture('PF Rule Payroll Staff');
       const employee = await createEmployeeFromExistingDefaults(page, fixture, {
         dateOfJoining: attendanceDate,
       });
@@ -1016,7 +1016,7 @@ test.describe('HR current sprint bug regressions', () => {
       const applicableMonth = `${runMonth}-01`;
 
       const shift = await createShift(page, '09:00:00', '17:00:00');
-      const fixture = createEmployeeFixture('Late Temp Payroll Employee');
+      const fixture = createEmployeeFixture('Late Temp Payroll Staff');
       const employee = await createEmployeeFromExistingDefaults(page, fixture, {
         dateOfJoining: attendanceDate,
         shiftId: shift.id,

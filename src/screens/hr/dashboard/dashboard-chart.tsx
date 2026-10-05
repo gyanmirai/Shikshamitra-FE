@@ -15,7 +15,7 @@ const DashboardChart = () => {
     <>
       <Grid size={{ xs: 12, md: 6 }}>
         <AppCurrentDownload
-          title="Employee Count by Group"
+          title="Staff Count by Group"
           subheader=""
           chart={{
             series: [
@@ -113,7 +113,7 @@ const DashboardChart = () => {
       <Grid size={{ xs: 12, md: 6 }}>
         <Card sx={{ height: '100%' }}>
           <CardContent sx={{ height: '100%' }}>
-            <Typography variant="h6">Employee Retention Ratio</Typography>
+            <Typography variant="h6">Staff Retention Ratio</Typography>
             <Chart
               type="area"
               series={[{ name: 'Turnover Rate', data: [3, 5, 2, 4, 3, 2, 6] }]}

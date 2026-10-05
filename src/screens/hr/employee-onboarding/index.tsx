@@ -371,7 +371,7 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
             arrow
             placement="right"
             sx={{ textAlign: 'justify' }}
-            title="Create an invite link to onboard a new employee."
+            title="Create an invite link to onboard a new staff."
           >
             <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
           </CustomTooltip>
@@ -601,11 +601,11 @@ function EmployeeOnboardingDetailView({
         sx={{ height: '100%', minWidth: 0, overflowX: 'hidden' }}
       >
         <CustomBreadcrumbs
-          heading="Employee Onboarding"
+          heading="Staff Onboarding"
           links={[
             { name: 'HR/Staff', href: hrPaths.dashboard },
-            { name: 'Employee' },
-            { name: 'Employee Onboarding', onClick: onBack },
+            { name: 'Staff' },
+            { name: 'Staff Onboarding', onClick: onBack },
             { name: 'Application details' },
           ]}
           // sx={onboardingBreadcrumbSx}
@@ -713,8 +713,8 @@ function EmployeeOnboardingDetailView({
         heading={`${candidateName} Application`}
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Employee' },
-          { name: 'Employee Onboarding', onClick: onBack },
+          { name: 'Staff' },
+          { name: 'Staff Onboarding', onClick: onBack },
         ]}
         description={application.applicationNumber || 'Candidate onboarding application details.'}
         // sx={onboardingBreadcrumbSx}
@@ -1300,10 +1300,10 @@ function FinalizeDialog({
         result.employee.id || result.application.finalizedEmployeeId || ''
       );
       if (!employeeId) {
-        throw new Error('The employee was created, but the employee id was not returned.');
+        throw new Error('The staff was created, but the staff id was not returned.');
       }
 
-      shikshaMitraToast.success({ message: 'Employee created as inactive' });
+      shikshaMitraToast.success({ message: 'Staff created as inactive' });
       onFinalized({
         id: employeeId,
         name: String(result.employee.fullName || application.fullName || 'Employee'),
@@ -1317,7 +1317,7 @@ function FinalizeDialog({
     }
   };
 
-  const steps = ['Review', 'Employee fields', 'Academic Permission', 'Confirm'];
+  const steps = ['Review', 'Staff fields', 'Academic Permission', 'Confirm'];
 
   return (
     <CustomDialog
@@ -2247,14 +2247,14 @@ function FinalizeDialog({
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6, md: 6, lg: 4 }}>
                       <FormControl fullWidth size="small">
-                        <InputLabel id="fin-emp-group-label">Employee Group *</InputLabel>
+                        <InputLabel id="fin-emp-group-label">Staff Group *</InputLabel>
                         <Select
                           labelId="fin-emp-group-label"
                           value={formik.values.isTeaching ? '0' : '1'}
                           onChange={(e) =>
                             formik.setFieldValue('isTeaching', e.target.value === '0')
                           }
-                          label="Employee Group *"
+                          label="Staff Group *"
                         >
                           {EmployeeGroupTypeArray.map((_, index) => (
                             <MenuItem key={index} value={String(index)}>
@@ -2485,7 +2485,7 @@ function FinalizeDialog({
                     <Grid size={{ xs: 12 }}>
                       {!form.isTeaching ? (
                         <Alert severity="info">
-                          Academic Permission is not required for non-teaching employees.
+                          Academic Permission is not required for non-teaching staff.
                         </Alert>
                       ) : !currentYear?.id ? (
                         <Alert severity="warning">
@@ -2500,7 +2500,7 @@ function FinalizeDialog({
                       ) : (
                         <Box>
                           <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                            Select the organizations this employee should have access to:
+                            Select the organizations this staff member should have access to:
                           </Typography>
                           {academicTouched && selectedStageIds?.length === 0 && (
                             <FormHelperText error sx={{ mb: 1, ml: 0 }}>
@@ -2599,7 +2599,7 @@ function FinalizeDialog({
                 <Stack spacing={2}>
                   <Typography variant="subtitle2">Final review</Typography>
                   <Typography variant="body2">
-                    Employee/user creation will happen now for {form.firstName} {form.lastName}.
+                    Staff/user creation will happen now for {form.firstName} {form.lastName}.
                   </Typography>
                   <Stack>
                     <FormControlLabel
@@ -2624,14 +2624,14 @@ function FinalizeDialog({
                           }
                         />
                       }
-                      label="Attach submitted resume to employee documents"
+                      label="Attach submitted resume to staff documents"
                     />
                   </Stack>
                   {!canSubmit && (
                     <Typography variant="body2" color="error">
                       {form.isTeaching
-                        ? 'Complete required employee fields and Academic Permission before finalizing.'
-                        : 'Complete required employee fields before finalizing.'}
+                        ? 'Complete required staff fields and Academic Permission before finalizing.'
+                        : 'Complete required staff fields before finalizing.'}
                     </Typography>
                   )}
                 </Stack>
@@ -2780,7 +2780,7 @@ export default function EmployeeOnboardingScreen() {
     <CustomDialog
       open={Boolean(finalizedEmployee)}
       handleClose={() => setFinalizedEmployee(undefined)}
-      title="Employee created"
+      title="Staff created"
       maxWidth="sm"
       hasForm={false}
     >
@@ -2789,7 +2789,7 @@ export default function EmployeeOnboardingScreen() {
           <Alert severity="warning">
             <Typography variant="subtitle2">Payroll setup required</Typography>
             <Typography variant="body2">
-              {finalizedEmployee?.name || 'The employee'} is inactive. Set up a valid salary, then activate the employee as a separate action.
+              {finalizedEmployee?.name || 'The staff'} is inactive. Set up a valid salary, then activate the staff as a separate action.
             </Typography>
           </Alert>
         </Stack>
@@ -2799,7 +2799,7 @@ export default function EmployeeOnboardingScreen() {
           href={finalizedEmployee ? `${hrPaths.employee.list}?employee=${finalizedEmployee.id}` : undefined}
           sx={{ minHeight: 44 }}
         >
-          View employee
+          View staff
         </Button>
         <Button
           href={finalizedEmployee ? `${hrPaths.payroll.structure}?employeeId=${finalizedEmployee.id}&setup=salary` : undefined}
@@ -3077,11 +3077,11 @@ export default function EmployeeOnboardingScreen() {
       }}
     >
       <CustomBreadcrumbs
-        heading="Employee Onboarding"
+        heading="Staff Onboarding"
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Employee' },
-          { name: 'Employee Onboarding' },
+          { name: 'Staff' },
+          { name: 'Staff Onboarding' },
         ]}
         // sx={onboardingBreadcrumbSx}
         // slotProps={onboardingBreadcrumbSlotProps}
@@ -3097,7 +3097,7 @@ export default function EmployeeOnboardingScreen() {
             Create invite
           </Button>
         }
-        description="Candidate applications and final employee enrollment."
+        description="Candidate applications and final staff enrollment."
       />
 
       <Stack sx={{ flex: 1, minHeight: 0, minWidth: 0, overflowX: 'hidden' }}>

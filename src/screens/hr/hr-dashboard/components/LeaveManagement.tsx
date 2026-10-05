@@ -197,7 +197,7 @@ const LeaveManagement = () => {
   );
 
   const leaveColumns: any[] = [
-    { id: 'name', label: 'Employee Name', align: 'left', sticky: true },
+    { id: 'name', label: 'Staff Name', align: 'left', sticky: true },
     {
       id: 'type',
       label: 'Leave Type',
@@ -245,7 +245,7 @@ const LeaveManagement = () => {
           <Typography variant="h6" fontWeight="bold">
             Leave Management
           </Typography>
-          <CustomTooltip title="Manage and track employee leave requests" placement="top">
+          <CustomTooltip title="Manage and track staff leave requests" placement="top">
             <IconButton size="small" sx={{ p: 0 }}>
               <Iconify icon="solar:info-circle-linear" width={18} sx={{ color: 'text.disabled' }} />
             </IconButton>

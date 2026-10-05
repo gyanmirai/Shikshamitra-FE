@@ -10,7 +10,7 @@ const dayResponse = {
   items: [
     {
       employeeId: 'employee-present',
-      fullName: 'Present Employee',
+      fullName: 'Present Staff',
       employeeCode: 'EMP-PRESENT',
       department: 'HR',
       dateIso: '2026-06-10T00:00:00Z',
@@ -25,7 +25,7 @@ const dayResponse = {
     },
     {
       employeeId: 'employee-half-day',
-      fullName: 'Half Day Employee',
+      fullName: 'Half Day Staff',
       employeeCode: 'EMP-HALF',
       department: 'HR',
       dateIso: '2026-06-10T00:00:00Z',
@@ -40,7 +40,7 @@ const dayResponse = {
     },
     {
       employeeId: 'employee-absent',
-      fullName: 'Absent Employee',
+      fullName: 'Absent Staff',
       employeeCode: 'EMP-ABSENT',
       department: 'HR',
       dateIso: '2026-06-10T00:00:00Z',
@@ -62,7 +62,7 @@ const invalidShiftDayResponse = {
   items: [
     {
       employeeId: 'employee-invalid-shift',
-      fullName: 'Invalid Shift Employee',
+      fullName: 'Invalid Shift Staff',
       employeeCode: 'EMP-BAD-SHIFT',
       department: 'HR',
       dateIso: '2026-06-10T00:00:00Z',
@@ -84,7 +84,7 @@ const approvedLeaveDayResponse = {
   items: [
     {
       employeeId: 'employee-on-leave',
-      fullName: 'Approved Leave Employee',
+      fullName: 'Approved Leave Staff',
       employeeCode: 'EMP-LEAVE',
       department: 'HR',
       dateIso: '2026-06-10T00:00:00Z',
@@ -129,7 +129,7 @@ test.describe('HR manual attendance shift time automation', () => {
     });
     await gotoManualAttendance(page);
     await expect(page.getByRole('button', { name: /Apply Shift Time/i })).toHaveCount(0);
-    await expect(page.getByText('Present Employee')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText('Present Staff')).toBeVisible({ timeout: 60_000 });
 
     await page.getByTestId('manual-attendance-employee-present-present').click();
     await page.getByTestId('manual-attendance-employee-half-day-half-day').click();
@@ -179,7 +179,7 @@ test.describe('HR manual attendance shift time automation', () => {
     });
 
     await gotoManualAttendance(page);
-    await expect(page.getByText('Approved Leave Employee')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText('Approved Leave Staff')).toBeVisible({ timeout: 60_000 });
     await expect(page.getByText('On Leave')).toBeVisible();
 
     await page.getByTestId('manual-attendance-employee-on-leave-present').click();
@@ -201,7 +201,7 @@ test.describe('HR manual attendance shift time automation', () => {
     });
 
     await gotoManualAttendance(page);
-    await expect(page.getByText('Present Employee')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText('Present Staff')).toBeVisible({ timeout: 60_000 });
 
     await page.getByTestId('manual-attendance-employee-present-half-day').click();
     await page.getByTestId('manual-attendance-employee-present-timeOut-edit').click();
@@ -221,7 +221,7 @@ test.describe('HR manual attendance shift time automation', () => {
     });
 
     await gotoManualAttendance(page);
-    await expect(page.getByText('Present Employee')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText('Present Staff')).toBeVisible({ timeout: 60_000 });
 
     await page.getByTestId('manual-attendance-employee-present-present').click();
     await expect(page.getByText('09:00')).toBeVisible();
@@ -248,7 +248,7 @@ test.describe('HR manual attendance shift time automation', () => {
     });
 
     await gotoManualAttendance(page);
-    await expect(page.getByText('Present Employee')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText('Present Staff')).toBeVisible({ timeout: 60_000 });
 
     await page.getByTestId('manual-attendance-mark-all-present').click();
 
@@ -301,7 +301,7 @@ test.describe('HR manual attendance shift time automation', () => {
     });
 
     await gotoManualAttendance(page);
-    await expect(page.getByText('Invalid Shift Employee')).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText('Invalid Shift Staff')).toBeVisible({ timeout: 60_000 });
 
     await page.getByTestId('manual-attendance-employee-invalid-shift-present').click();
     await expect(page.getByText('25:00')).toHaveCount(0);

@@ -67,7 +67,7 @@ const HRDashboardOverview = () => {
     {
       id: '6',
       icon: 'mdi:account-group-outline',
-      title: 'Total Employees',
+      title: 'Total Staff',
       count: fNumber(156),
       color: 'success.main',
       bgColor: 'success',

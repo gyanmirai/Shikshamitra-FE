@@ -194,12 +194,12 @@ const HrSetting = () => {
         heading="Document Types"
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Employee', href: hrPaths.employee.list },
+          { name: 'Staff', href: hrPaths.employee.list },
           { name: 'Settings', href: hrPaths.employee.setting.documentTypes },
           { name: 'Document Types' },
         ]}
         sx={{ px: 1 }}
-        description="Add, update or delete documents associated with an employee."
+        description="Add, update or delete documents associated with a staff member."
         action={
           <Button
             sx={{ px: '32px' }}

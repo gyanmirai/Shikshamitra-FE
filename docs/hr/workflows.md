@@ -98,7 +98,6 @@ Policy tables query current and archived records independently with server-side 
 The leave-policy workspace can restore an archived policy as a draft, while employee and assignment selectors continue to request active policies only.
 Policy audit entries omit unchanged values and missing editor metadata, render weekly-off numbers as weekday names, and show semantic holiday changes and real holiday-summary counts.
 Audit events show the first eight semantic changes and provide a Show N more control without discarding the remaining differences.
-Changing an effective-policy employee lookup clears the selected employee ID as soon as the visible text diverges, and the prior preview is hidden until the current request resolves.
 The reports center filters export history by requested-date presets or a custom range and offers removal only for an owned failed export when the user has delete permission.
 An inverted custom export-history range pauses the query instead of loading unfiltered history.
 Changing export-history filters clears open details and delete confirmation state, hides prior-query rows, and disables row actions until the current response arrives.
@@ -113,7 +112,7 @@ Workforce, Leave approvals, Onboarding, and Appraisals form the primary module g
 The grid uses four columns on desktop, two on tablet, and one on mobile, with neutral leading icons, outlined MUI Paper surfaces, theme typography, and consistent section spacing.
 Module details use aligned labels and values, and workflow links use the shared small outlined button style without local height or padding overrides.
 Attendance day selectors retain 44 px touch targets and visible keyboard focus, with one shared Present / total explanation beneath the graph.
-Employees and existing module workflows own detailed tables and decisions.
+Staff Directory and existing module workflows own detailed tables and decisions.
 Current scope, current IST date, and the backend generation timestamp appear above the grid.
 Only the attendance date changes through the date field, Previous day, and Today controls, with its selected date retained in the URL.
 All other module summaries remain current even when attendance shows a historical date.
@@ -246,3 +245,16 @@ Superseded payroll previews remain non-actionable and require recalculation and 
 Payroll readiness displays Needs attention when the server reports an ESIC or compensation blocker, and Needs recalculation for stale results.
 Readiness labels and monetary totals wrap without truncation on narrow screens.
 The disclosure uses a labelled keyboard-accessible button with its expanded state exposed.
+
+## Policies & Rules setup guidance
+
+The header reads “Configure staff calendars, policies, and assignments.”
+The selected academic year appears separately, and an absent selection shows “Select an academic year”.
+Missing and multiple-default warnings are derived only from a successful current-year query containing the complete unfiltered policy population.
+Loading, failed queries, and incomplete pages do not establish missing configuration.
+Recovery actions appear only when the user can access the corresponding policy destination.
+Opening Leave Policies from a modified assignment requires discarding the unsaved draft explicitly and retains the selected academic year.
+Secondary guidance remains available under Details.
+An explicit sole-default archive rejection reads “Choose another default before archiving”; reused missing-default and inactive-reference error codes keep their own meaning.
+Saving, archiving, assigning, and changing defaults still use impact previews, confirmation tokens, payroll lock blockers, versions, and audit.
+Attendance templates use Staff Code and Staff Name; imports accept Employee aliases, including mixed aliases for different fields, and reject duplicate aliases for one field.

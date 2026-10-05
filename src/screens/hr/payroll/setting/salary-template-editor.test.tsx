@@ -236,7 +236,7 @@ describe('SalaryTemplateEditor', () => {
     renderEditor(<SalaryTemplateEditor templateId="template-1" mode="edit" onClose={onClose} />);
 
     expect(screen.getByRole('textbox', { name: 'Template name' })).toHaveValue('Flexible Salary');
-    expect(screen.getByText(/existing employee salary revisions stay unchanged/i)).toBeVisible();
+    expect(screen.getByText(/existing staff salary revisions stay unchanged/i)).toBeVisible();
 
     expect(screen.getByRole('button', { name: 'Save Changes' })).toBeDisabled();
     await user.click(screen.getByRole('button', { name: 'Calculate' }));
@@ -446,7 +446,7 @@ describe('SalaryTemplateEditor', () => {
       mocks.template.editableVersion.rules.push({
         code:
           index === 14
-            ? 'Additional voluntary employee contribution with a very long component name'
+            ? 'Additional voluntary staff contribution with a very long component name'
             : `Rule ${index}`,
         componentId: `rule-${index}`,
         lineKind: index < 8 ? 'EARNING' : 'DEDUCTION',
@@ -459,7 +459,7 @@ describe('SalaryTemplateEditor', () => {
     expect(screen.getAllByRole('button', { name: /^Expand / })).toHaveLength(15);
     expect(
       screen.getByRole('button', {
-        name: 'Expand Additional voluntary employee contribution with a very long component name',
+        name: 'Expand Additional voluntary staff contribution with a very long component name',
       })
     ).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Expand Basic Salary' }));
@@ -496,7 +496,8 @@ describe('SalaryTemplateEditor', () => {
     const onSaved = vi.fn();
     mocks.createTemplate.mockReturnValue({ unwrap: async () => mocks.template });
     renderEditor(<SalaryTemplateEditor mode="create" onSaved={onSaved} />);
-    await user.type(screen.getByRole('textbox', { name: 'Template name' }), 'New template');
+    await user.click(screen.getByRole('textbox', { name: 'Template name' }));
+    await user.paste('New template');
     await user.click(screen.getByRole('button', { name: 'Add Earning' }));
     expect(screen.queryByText('Add exactly one Basic earning.')).not.toBeInTheDocument();
     await user.click(screen.getByRole('combobox', { name: 'Payroll component' }));

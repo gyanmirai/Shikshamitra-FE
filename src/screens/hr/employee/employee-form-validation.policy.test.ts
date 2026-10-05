@@ -13,14 +13,14 @@ import {
 const validPayroll = {
   bankName: 'State Bank of India',
   branchName: 'Main Branch',
-  accountHolderName: 'Test Employee',
+  accountHolderName: 'Test Staff',
   accountNumber: '1234567890',
   ifscCode: 'SBIN0001234',
   tdsPercentage: null,
   tdsAmount: null,
 };
 
-describe('employee payroll policy override validation', () => {
+describe('staff payroll policy override validation', () => {
   it('does not require override fields when override is disabled', async () => {
     await expect(
       payrollValidationSchema.validate({
@@ -58,7 +58,7 @@ describe('employee payroll policy override validation', () => {
   });
 });
 
-describe('employee form contract validation', () => {
+describe('staff form contract validation', () => {
   it('validates profile photo size without Node Buffer', async () => {
     await expect(
       personalInformationValidationSchema.validateAt('photo', {
@@ -73,7 +73,7 @@ describe('employee form contract validation', () => {
     ).rejects.toThrow('Photo size must be less than 3MB');
   });
 
-  it('still requires a profile photo for new employees', async () => {
+  it('still requires a profile photo for new staff', async () => {
     await expect(
       getPersonalInformationValidationSchema({ requirePhoto: true }).validateAt('photo', {
         photo: '',
@@ -81,7 +81,7 @@ describe('employee form contract validation', () => {
     ).rejects.toThrow('Profile Photo is required');
   });
 
-  it('allows missing profile photo when editing existing employees', async () => {
+  it('allows missing profile photo when editing existing staff', async () => {
     await expect(
       getPersonalInformationValidationSchema({ requirePhoto: false }).validateAt('photo', {
         photo: '',
@@ -89,7 +89,7 @@ describe('employee form contract validation', () => {
     ).resolves.toBe('');
   });
 
-  it('still validates profile photo size when editing existing employees', async () => {
+  it('still validates profile photo size when editing existing staff', async () => {
     await expect(
       getPersonalInformationValidationSchema({ requirePhoto: false }).validateAt('photo', {
         photo: `data:image/png;base64,${'a'.repeat(4 * 1024 * 1024 + 8)}`,
@@ -162,7 +162,7 @@ describe('employee form contract validation', () => {
     ).resolves.toBeTruthy();
   });
 
-  it('allows blank PAN and Aadhaar numbers when editing existing employees', async () => {
+  it('allows blank PAN and Aadhaar numbers when editing existing staff', async () => {
     const editSchema = getPersonalInformationValidationSchema({
       requirePhoto: false,
       requireIdentity: false,
@@ -172,7 +172,7 @@ describe('employee form contract validation', () => {
     await expect(editSchema.validateAt('adharNo', { adharNo: '' })).resolves.toBe('');
   });
 
-  it('rejects invalid nonblank PAN and Aadhaar numbers when editing existing employees', async () => {
+  it('rejects invalid nonblank PAN and Aadhaar numbers when editing existing staff', async () => {
     const editSchema = getPersonalInformationValidationSchema({
       requirePhoto: false,
       requireIdentity: false,
@@ -210,7 +210,7 @@ describe('employee form contract validation', () => {
     ).resolves.toBeTruthy();
   });
 
-  it('requires reporting manager in employee creation flow', async () => {
+  it('requires reporting manager in staff creation flow', async () => {
     await expect(
       reportingManagerValidationSchema.validateAt('reportingManager', {
         reportingManager: '',
@@ -218,7 +218,7 @@ describe('employee form contract validation', () => {
     ).rejects.toThrow('Reporting manager is required');
   });
 
-  it('requires reporting manager in employee edit flow because managers can only be swapped', async () => {
+  it('requires reporting manager in staff edit flow because managers can only be swapped', async () => {
     await expect(
       reportingManagerValidationSchema.validateAt('reportingManager', {
         reportingManager: '',

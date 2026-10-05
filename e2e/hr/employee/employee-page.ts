@@ -125,7 +125,7 @@ export async function searchEmployee(page: Page, value: string) {
 }
 
 export async function firstDataRow(page: Page) {
-  const rows = table(page).locator('tbody tr').filter({ hasNotText: 'No Employee Found' });
+  const rows = table(page).locator('tbody tr').filter({ hasNotText: 'No Staff Found' });
   await expect(rows.first()).toBeVisible();
   return rows.first();
 }
@@ -279,7 +279,7 @@ export async function fillRequiredPersonalInformation(page: Page, employee: Empl
   await fillOtpByLabel(page, 'Aadhaar No.', employee.adharNo);
   await fillOtpByLabel(page, 'PAN No.', employee.panNo);
   await fillDate(page, 'Date of Joining', employee.doj);
-  await pickOption(page, 'Employee Group');
+  await pickOption(page, 'Staff Group');
   await pickFirstAutocompleteOption(page, 'Role');
   await fillTextByLabel(form, 'Building', employee.addressLine1);
   await fillTextByLabel(form, 'Area', employee.addressLine2);

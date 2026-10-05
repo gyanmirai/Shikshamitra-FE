@@ -261,15 +261,15 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                     </Alert>
                   ) : rules.data ? (
                     <Typography variant="body2">
-                      Employee: {rules.data.employeePercentage}%. Employer:{' '}
+                      Staff: {rules.data.employeePercentage}%. Employer:{' '}
                       {rules.data.employerPercentage}%. Monthly eligibility ceiling:{' '}
                       {formatEsiCurrency(rules.data.standardWageCeiling)}; persons with disability:{' '}
                       {formatEsiCurrency(rules.data.disabilityWageCeiling)}. Eligibility and
-                      contribution-period continuity are determined from employee facts and payroll
-                      history. Each share is rounded up to the next rupee. Employees with average
+                      contribution-period continuity are determined from staff facts and payroll
+                      history. Each share is rounded up to the next rupee. Staff with average
                       daily wages up to{' '}
                       {formatEsiCurrency(rules.data.employeeShareDailyWageExemption)} are exempt
-                      from the employee share; the employer share still applies.
+                      from the staff share; the employer share still applies.
                     </Typography>
                   ) : (
                     <Skeleton />
@@ -376,7 +376,7 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                       setEmployees(employees === 'needsAttention' ? null : 'needsAttention')
                     }
                   >
-                    Employees needing attention ({attention.data?.summary.employeesNeedingAttention}
+                    Staff needing attention ({attention.data?.summary.employeesNeedingAttention}
                     )
                   </Button>
                 )}
@@ -384,7 +384,7 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                   size="small"
                   onClick={() => setEmployees(employees === 'all' ? null : 'all')}
                 >
-                  View employees
+                  View staff
                 </Button>
               </Stack>
               {attention.isError && (
@@ -396,7 +396,7 @@ function ConfigurationForm({ settings }: { settings: EsiConfigurationSettings })
                     </Button>
                   }
                 >
-                  Employee details could not be loaded.
+                  Staff details could not be loaded.
                 </Alert>
               )}
               {employees && (

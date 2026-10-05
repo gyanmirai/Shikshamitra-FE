@@ -302,7 +302,7 @@ function RestoreVersionDialog({ ctx }: { ctx: HRPolicyWorkspaceContext }) {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
               <Chip
                 size="small"
-                label={`${formatNumber(restorePreview.affectedEmployeeCount)} employees`}
+                label={`${formatNumber(restorePreview.affectedEmployeeCount)} staff`}
                 variant="outlined"
               />
               <Chip

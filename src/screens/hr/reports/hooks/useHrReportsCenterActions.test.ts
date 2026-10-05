@@ -62,7 +62,7 @@ const unwrapError = () => ({
 
 const exportJob = (overrides: Partial<HrReportExportJob> = {}): HrReportExportJob => ({
   id: overrides.id ?? 'job-1',
-  reportType: overrides.reportType ?? 'Employee Report',
+  reportType: overrides.reportType ?? 'Staff Report',
   format: overrides.format ?? 'excel',
   status: overrides.status ?? 'Completed',
   creationTime: overrides.creationTime ?? '2026-06-01T10:00:00Z',
@@ -73,13 +73,13 @@ const exportJob = (overrides: Partial<HrReportExportJob> = {}): HrReportExportJo
 
 const schedule = (): HrReportSchedule => ({
   id: 'schedule-1',
-  name: 'Monthly Employee Report',
+  name: 'Monthly Staff Report',
   frequency: 'monthly',
   deliveryMode: 'inApp',
   status: 'Active',
   recipientUserIds: [],
   definition: {
-    reportType: 'Employee Report',
+    reportType: 'Staff Report',
     dataSource: 'employee',
     filters: {},
   },
@@ -90,7 +90,7 @@ const schedule = (): HrReportSchedule => ({
 
 const template = (): HrReportTemplate => ({
   id: 'template-1',
-  name: 'Employee Template',
+  name: 'Staff Template',
   category: 'Employee',
   dataSource: 'employee',
   visibility: 'private',
@@ -98,7 +98,7 @@ const template = (): HrReportTemplate => ({
   ownerUserId: 'user-1',
   creationTime: '2026-06-01T10:00:00Z',
   definition: {
-    reportType: 'Employee Template',
+    reportType: 'Staff Template',
     dataSource: 'employee',
     columns: ['employeeCode'],
   },
@@ -157,7 +157,7 @@ describe('useHrReportsCenterActions', () => {
     const { result } = renderActions();
 
     await act(async () => {
-      await result.current.handleDownload('job-1', 'Employee Report');
+      await result.current.handleDownload('job-1', 'Staff Report');
     });
 
     expect(hrReportToast.error).toHaveBeenCalledWith(

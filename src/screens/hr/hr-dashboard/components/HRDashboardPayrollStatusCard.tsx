@@ -34,7 +34,7 @@ const PayrollStatusCard = () => (
           148
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Employees Paid
+          Staff Paid
         </Typography>
       </Box>
     </Stack>

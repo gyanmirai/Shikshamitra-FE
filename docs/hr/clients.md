@@ -87,3 +87,9 @@ ESIC exception month inputs serialize to the first day of Start month and the in
 The existing EffectiveFrom and EffectiveTo contract remains date-based, with server validation of month boundaries.
 Completed SUPERSEDED payroll runs may return their previous rows with IsCurrent false and CanLock false.
 Cached rows never override the status response when determining whether payroll actions are available.
+
+## HR display and import contracts
+
+Staff wording is presentation-only; RTK Query URLs, field keys, tags, enums, and permission keys retain their employee identifiers.
+Policy lookup APIs remain available to assignment previews and authenticated regression tests after removal of the standalone lookup page.
+Attendance download columns are Staff Code and Staff Name, while the backend normalizes Staff and Employee header aliases into the existing employee fields.

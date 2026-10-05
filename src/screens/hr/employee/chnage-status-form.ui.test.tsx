@@ -108,7 +108,7 @@ describe('ChangeStatusForm manager deactivation warning', () => {
     expect(screen.getByText('Cannot Deactivate Manager')).toBeVisible();
     expect(
       screen.getByText(
-        'This employee is currently assigned as a Reporting Manager for active staff members. Please assign a new manager to their team before making this employee inactive.'
+        'This staff member is currently assigned as a Reporting Manager for active staff members. Please assign a new manager to their team before making this staff member inactive.'
       )
     ).toBeVisible();
     expect(screen.getByTestId('hr-employee-status-update-button')).toBeDisabled();

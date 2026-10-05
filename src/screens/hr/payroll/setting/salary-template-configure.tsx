@@ -138,7 +138,7 @@ export default function SalaryTemplateConfigure({
               </Grid>
               <Grid size={{ xs: 12 }}>
                 <Typography variant="body2" color="text.secondary">
-                  Saving creates a new active version for future salary setups. Existing employee
+                  Saving creates a new active version for future salary setups. Existing staff
                   salary revisions stay unchanged.
                 </Typography>
               </Grid>

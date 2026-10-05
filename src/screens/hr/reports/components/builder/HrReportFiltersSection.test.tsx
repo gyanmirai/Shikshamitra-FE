@@ -17,7 +17,7 @@ vi.mock('src/components/iconify', () => ({
 const fields: HrReportField[] = [
   {
     id: 'employeeCode',
-    label: 'Employee Code',
+    label: 'Staff Code',
     type: 'string',
     filterable: true,
     sortable: true,

@@ -5,7 +5,7 @@ import {
   buildOnboardingAcademicPermissionScopeRows,
 } from './employeeOnboardingAcademicPermission';
 
-describe('employee onboarding academic permission payload', () => {
+describe('staff onboarding academic permission payload', () => {
   it('builds complete V2 scope rows from valid stage ids', () => {
     const result = buildOnboardingAcademicPermissionScopeRows(
       ['stage-1', 'stage-2'],
@@ -81,7 +81,7 @@ describe('employee onboarding academic permission payload', () => {
     expect(result.isValid).toBe(false);
   });
 
-  it('requires complete academic scope only for teaching employees', () => {
+  it('requires complete academic scope only for teaching staff', () => {
     const invalidScope = {
       scopeRows: [],
       unresolvedStageIds: [],

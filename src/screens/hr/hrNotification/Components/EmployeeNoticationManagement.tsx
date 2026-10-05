@@ -9,7 +9,7 @@ const EmployeeNotificationManagement = () => (
         <Iconify icon="solar:bell-off-linear" width={24} />
         <Box>
           <Typography variant="subtitle2">
-            Employee notification templates are not connected.
+            Staff notification templates are not connected.
           </Typography>
           <Alert severity="info" sx={{ mt: 1 }}>
             This screen is disabled until the HR notification-template API is available. Delivery

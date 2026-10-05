@@ -153,7 +153,7 @@ const PayrollDashboard = () => {
             <Grid container spacing={1.5}>
               <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                 <PayrollMetric
-                  label="Employees"
+                  label="Staff"
                   value={data.employeeCount}
                   helper="Included in payroll"
                 />

@@ -7,11 +7,11 @@ import {
 } from './InformationFields';
 
 describe('InformationFields email editing', () => {
-  it('keeps email editable while creating an employee', () => {
+  it('keeps email editable while creating a staff member', () => {
     expect(shouldDisableEmployeeEmailField(true, null)).toBe(false);
   });
 
-  it('disables email while updating an existing employee', () => {
+  it('disables email while updating an existing staff', () => {
     expect(shouldDisableEmployeeEmailField(true, { id: 'employee-1' })).toBe(true);
   });
 
@@ -20,11 +20,11 @@ describe('InformationFields email editing', () => {
   });
 });
 
-describe('InformationFields employee creation policy overview', () => {
+describe('InformationFields staff creation policy overview', () => {
   it('uses system-policy wording instead of the old leave-only assignment label', () => {
     expect(EMPLOYEE_CREATION_POLICY_SECTION_TITLE).toBe('Assigned System Policies');
     expect(EMPLOYEE_CREATION_POLICY_SECTION_TITLE).not.toBe('Leave Policy Assignment');
     expect(EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL).toBe('Default assignment');
-    expect(EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL).not.toBe('Employee creation policy assignment');
+    expect(EMPLOYEE_CREATION_POLICY_SUMMARY_LABEL).not.toBe('Staff creation policy assignment');
   });
 });

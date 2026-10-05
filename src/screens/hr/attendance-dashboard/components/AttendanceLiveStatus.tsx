@@ -11,7 +11,7 @@ import { Box, Card, Grid, Stack, Typography } from '@mui/material';
 const LIVE_STATS = [
   {
     id: 1,
-    label: 'Total Employees',
+    label: 'Total Staff',
     value: 118,
     icon: 'mdi:account-group-outline',
     color: '#637381',

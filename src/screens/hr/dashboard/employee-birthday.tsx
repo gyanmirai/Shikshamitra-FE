@@ -47,7 +47,7 @@ const EmployeeBirthDay = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
           <Iconify icon="mdi:cake-variant" width={32} height={32} sx={{ color: 'primary.main' }} />
           <Typography variant="h5" sx={{ ml: 2, fontWeight: 'bold' }}>
-            Employee Birthdays & Anniversary
+            Staff Birthdays & Anniversary
           </Typography>
         </Box>
 

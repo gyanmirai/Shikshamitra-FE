@@ -218,7 +218,7 @@ async function setEmployeeSalaryStructure(
       bankDetails: {
         bankName: 'State Bank of India',
         branchName: 'Automation Branch',
-        accountHolderName: 'Full Cycle Employee',
+        accountHolderName: 'Full Cycle Staff',
         accountNumber: '123456789012',
         ifscCode: 'SBIN0001234',
       },
@@ -233,7 +233,7 @@ async function setEmployeeSalaryStructure(
       deductionComponents: [deductionLine],
     }),
   });
-  await expectOk(payrollResponse, 'set employee payroll details');
+  await expectOk(payrollResponse, 'set staff payroll details');
 
   const response = await employeeApiRequest(
     page,
@@ -260,7 +260,7 @@ async function setEmployeeSalaryStructure(
       }),
     }
   );
-  await expectOk(response, 'set employee salary structure');
+  await expectOk(response, 'set staff salary structure');
 }
 
 async function createShift(
@@ -369,7 +369,7 @@ async function upsertEmployeePolicyOverride(
       },
     }),
   });
-  expect(impactPreview?.blockingWarnings ?? [], 'employee override blocking warnings').toEqual([]);
+  expect(impactPreview?.blockingWarnings ?? [], 'staff override blocking warnings').toEqual([]);
 
   const response = await employeeApiRequest(
     page,
@@ -382,14 +382,14 @@ async function upsertEmployeePolicyOverride(
       }),
     }
   );
-  await expectOk(response, 'upsert employee overtime policy override');
+  await expectOk(response, 'upsert staff overtime policy override');
   return response.json();
 }
 
 test.describe('HR module full cycle', () => {
   test.skip(!fullCycleEnabled, 'Set E2E_HR_FULL_CYCLE=1 against a seeded local backend.');
 
-  test('creates employee context, marks attendance, runs payroll, and verifies salary slip', async ({
+  test('creates staff context, marks attendance, runs payroll, and verifies salary slip', async ({
     page,
   }) => {
     test.setTimeout(420_000);
@@ -398,7 +398,7 @@ test.describe('HR module full cycle', () => {
 
     const employee = await createEmployeeFromExistingDefaults(
       page,
-      createEmployeeFixture('Full Cycle Employee')
+      createEmployeeFixture('Full Cycle Staff')
     );
     await assignEmployeeToFirstAcademicScope(page, employee);
     const employeeId = employee.id;
@@ -490,7 +490,7 @@ test.describe('HR module full cycle', () => {
     const shift = await createShift(page, '07:00:00', '17:30:00');
     const employee = await createEmployeeFromExistingDefaults(
       page,
-      createEmployeeFixture('Payroll Overtime Employee'),
+      createEmployeeFixture('Payroll Overtime Staff'),
       { shiftId: shift.id }
     );
     await assignEmployeeToFirstAcademicScope(page, employee);
@@ -517,7 +517,7 @@ test.describe('HR module full cycle', () => {
     );
     expect(
       resolvedOvertimePolicies.attendancePolicy?.id,
-      'employee overtime policy override should be effective on the payroll date'
+      'staff overtime policy override should be effective on the payroll date'
     ).toBe(overtimePolicy.id);
 
     const attendanceResponse = await employeeApiRequest(page, '/hr/attendance/register/adjust', {
@@ -540,7 +540,7 @@ test.describe('HR module full cycle', () => {
     expect(payrollRow, `payroll row for ${employee.email}`).toBeTruthy();
     expect(
       payrollRow.attendancePolicyId,
-      'payroll snapshot should use the employee overtime policy override'
+      'payroll snapshot should use the staff overtime policy override'
     ).toBe(overtimePolicy.id);
 
     const overtimeLine = componentByName(payrollRow.earningComponents, overtimeComponentName);

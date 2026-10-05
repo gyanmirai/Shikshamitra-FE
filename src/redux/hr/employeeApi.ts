@@ -114,7 +114,7 @@ export const resolveEmployeeIdParam = (input: any): string | null => {
 export const buildWorkExperienceUrl = (input: any): string => {
   const id = resolveEmployeeIdParam(input);
   if (!id) {
-    throw new Error('Employee id is required to fetch work experience.');
+    throw new Error('Staff id is required to fetch work experience.');
   }
 
   return `/employees/${id}/work-experience`;
@@ -123,7 +123,7 @@ export const buildWorkExperienceUrl = (input: any): string => {
 export const buildEmployeeSubresourceUrl = (input: any, resourceName: string): string => {
   const id = resolveEmployeeIdParam(input);
   if (!id) {
-    throw new Error(`Employee id is required to access ${resourceName}.`);
+    throw new Error(`Staff id is required to access ${resourceName}.`);
   }
 
   return `/employees/${id}/${resourceName}`;

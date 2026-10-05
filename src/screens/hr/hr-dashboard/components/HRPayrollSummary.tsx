@@ -66,7 +66,7 @@ const HRPayrollSummary = () => {
     legend: { show: false },
     tooltip: {
       y: {
-        formatter: (value: number) => `${value} Employees`,
+        formatter: (value: number) => `${value} Staff`,
         title: { formatter: () => '' },
       },
     },

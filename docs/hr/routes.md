@@ -3,7 +3,7 @@ module: hr
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-02
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -20,7 +20,7 @@ The route map is frontend integration truth, not backend product truth:
 | Area                      | Routes                                                                                                  | Frontend permission                                                        |
 | ------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 | Dashboard                 | `/hr/dashboard`                                                                                         | `HR.Dashboard.View`                                                             |
-| Employee list             | `/hr/employee`                                                                                          | `HR.Employee.EmployeeList`                                                 |
+| Staff Directory           | `/hr/employee`                                                                                          | `HR.Employee.EmployeeList`                                                 |
 | I-card                    | `/hr/i-card`                                                                                            | `HR.Employee.ICard.View`                                                   |
 | Document settings         | `/hr/setting`                                                                                           | `HR.Employee.Setting.DocumentTypes`                                        |
 | Payroll overview          | `/hr/payroll`                                                                                           | `HR.PayrollManagement.Overview`                                            |
@@ -38,7 +38,7 @@ The route map is frontend integration truth, not backend product truth:
 | Shift management          | `/hr/attendance-setting/shiftManagement`                                                                | `HR.AttendanceAndLeave.Setting.ShiftManagement`                            |
 | Leave center and requests | `/hr/leave-center`, `/hr/apply-leave`, `/hr/leave-approvals`, `/hr/leave-balance`                       | `HR.LeaveManagement.LeaveCenter`                                           |
 | Leave policies            | `/hr/leave-policies`                                                                                    | `HR.LeaveManagement.Setting.LeavePolicy`                                   |
-| Policies                  | `/hr/calendars`, `/hr/payrollPolicies`, `/hr/attendance`, `/hr/assignments`, `/hr/effective-preview`    | `HR.Policies.*`                                                            |
+| Policies                  | `/hr/calendars`, `/hr/payrollPolicies`, `/hr/attendance`, `/hr/assignments`    | `HR.Policies.*`                                                            |
 | Professional management   | `/hr/professional-management/**`                                                                        | `HR.ProfessionalManagement.View` and action constants                      |
 | Reports                   | `/hr/reports`                                                                                           | `HR.Reports`                                                               |
 | Notifications             | `/hr/hr-notification`                                                                                   | `HR.Notification`                                                          |
@@ -59,3 +59,11 @@ These routes require source verification before product claims:
 Frontend permission names are gates for navigation and actions.
 Backend permission constants remain canonical for security.
 Compare with `../../../Shikshamitra-BE/docs/modules/hr/references/permissions.md` before changing permission names.
+
+## Staff terminology and policy navigation
+
+HR labels use Staff, including Staff Directory, Staff Onboarding, Staff Profile, and Staff Code.
+Technical routes, API fields, and permission keys keep their employee identifiers.
+Policies & Rules contains Work Calendars, Attendance Policies, Leave Policies, Payroll Policies, and Policy Assignments in that order.
+The standalone `/hr/effective-preview` page is removed and returns the standard not-found response without a redirect.
+Holiday Impact is not a visible workspace tab; holiday services and backend permissions remain available.

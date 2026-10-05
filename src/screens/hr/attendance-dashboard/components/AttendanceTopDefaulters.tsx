@@ -160,7 +160,7 @@ const AttendanceTopDefaulters = () => {
             <Stack direction="row" alignItems="center" spacing={1}>
               <Typography variant="h6">Top Attendance Defaulters</Typography>
               <CustomTooltip
-                title="Employees with the most absences, late marks, or missing punches this month. Use this to identify at-risk staff for HR action."
+                title="Staff with the most absences, late marks, or missing punches this month. Use this to identify at-risk staff for HR action."
                 placement="top"
               >
                 <IconButton size="small" sx={{ p: 0 }}>

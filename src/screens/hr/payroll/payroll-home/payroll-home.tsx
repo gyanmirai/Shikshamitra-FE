@@ -134,7 +134,7 @@ const PayrollHome = () => {
               <Stack spacing={0.75}>
                 <Stack direction="row" justifyContent="space-between">
                   <Typography variant="body2" color="text.secondary">
-                    Employees
+                    Staff
                   </Typography>
                   <Typography variant="subtitle2" fontWeight={700}>
                     {isLoading ? '...' : stats.total}

@@ -12,7 +12,7 @@ function writeFixtureFile(name: string, contents: Buffer | string) {
   return filePath;
 }
 
-test.describe('HR Employee documents', () => {
+test.describe('HR Staff documents', () => {
   test('uploads and lists a valid PDF document from the profile Documents tab', async ({
     page,
   }) => {
@@ -22,7 +22,7 @@ test.describe('HR Employee documents', () => {
 
     const fileInput = page.locator('input[type="file"]').first();
     if (!(await fileInput.count())) {
-      test.skip(true, 'Document upload input is not available for the current employee/profile.');
+      test.skip(true, 'Document upload input is not available for the current staff/profile.');
     }
 
     const fileName = `employee-e2e-${Date.now()}.pdf`;
@@ -39,14 +39,14 @@ test.describe('HR Employee documents', () => {
     await expect(page.getByText(fileName)).toBeVisible({ timeout: 20_000 });
   });
 
-  test('rejects missing or unsupported employee document file', async ({ page }) => {
+  test('rejects missing or unsupported staff document file', async ({ page }) => {
     await gotoEmployeeList(page);
     await openFirstRowProfile(page);
     await page.getByRole('tab', { name: 'Documents' }).click();
 
     const submit = page.getByRole('button', { name: /Save|Submit|Upload/i }).first();
     if (!(await submit.isVisible())) {
-      test.skip(true, 'Document submit control is not available for the current employee/profile.');
+      test.skip(true, 'Document submit control is not available for the current staff/profile.');
     }
 
     await submit.click();

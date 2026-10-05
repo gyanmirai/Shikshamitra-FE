@@ -3,8 +3,8 @@ import { EmployeeStatusType } from 'src/enums/employee-status-type';
 
 import { getEmployeeStatusDisplayValue } from './employee-status-display';
 
-describe('employee status display', () => {
-  it('shows active employees with future DOJ as upcoming', () => {
+describe('staff status display', () => {
+  it('shows active staff with future DOJ as upcoming', () => {
     const futureDoj = new Date();
     futureDoj.setDate(futureDoj.getDate() + 7);
 

@@ -168,7 +168,7 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
           {legacyNotice && (
             <Alert severity="info" onClose={() => setLegacyNotice(false)}>
               Staff filters are no longer used on this dashboard. Find and filter records in
-              Employees or Attendance.
+              Staff Directory or Attendance.
             </Alert>
           )}
           {overview.isError && (

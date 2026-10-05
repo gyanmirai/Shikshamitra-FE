@@ -42,7 +42,7 @@ describe('salary template API contract', () => {
     });
   });
 
-  it('sends the salary basis, effective month, employee context, and Gujarat statutory profile', () => {
+  it('sends the salary basis, effective month, staff context, and Gujarat statutory profile', () => {
     expect(
       buildSalaryTemplateCalculationRequest({
         templateVersionId: 'version-1',

@@ -7,7 +7,7 @@ import { Card, List, ListItem, CardHeader, ListItemIcon, ListItemText } from '@m
 const alerts = [
   { id: 1, text: '2 staff missing biometric punch', icon: <WarningIcon color="warning" /> },
   { id: 2, text: '1 contract expiring this month', icon: <ErrorIcon color="error" /> },
-  { id: 3, text: 'Payroll reminders for 4 employees', icon: <InfoIcon color="info" /> },
+  { id: 3, text: 'Payroll reminders for 4 staff', icon: <InfoIcon color="info" /> },
 ];
 
 const HRAlerts = () => (

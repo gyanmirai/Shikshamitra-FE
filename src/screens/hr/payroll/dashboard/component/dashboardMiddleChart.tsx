@@ -36,7 +36,7 @@ const DashboardMiddleChart = () => (
     </Grid>
     <Grid size={{ xs: 12, md: 4 }}>
       <EcommerceWidgetSummary
-        title="Total Employees"
+        title="Total Staff"
         percent={8.2}
         total={200}
         chart={{

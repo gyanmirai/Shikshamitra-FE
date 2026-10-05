@@ -12,7 +12,7 @@ async function login(page: Page, email: string, password: string) {
   await expect(page).not.toHaveURL(/\/login(?:\?|$)/, { timeout: 30_000 });
 }
 
-test.describe('HR Employee permissions', () => {
+test.describe('HR Staff permissions', () => {
   test('HR Manager can see write actions', async ({ page, browser }) => {
     const context = await browser.newContext({
       storageState: 'playwright/.auth/hr-manager.json',
@@ -27,7 +27,7 @@ test.describe('HR Employee permissions', () => {
     await context.close();
   });
 
-  test('lower-permission teacher cannot perform Employee write workflow', async ({ page }) => {
+  test('lower-permission teacher cannot perform Staff write workflow', async ({ page }) => {
     await login(
       page,
       process.env.E2E_LIMITED_EMAIL || 'teacher-demo-1@ddvs.com',

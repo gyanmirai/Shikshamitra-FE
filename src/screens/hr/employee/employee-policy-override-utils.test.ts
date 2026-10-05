@@ -10,7 +10,7 @@ import {
   getEmployeePolicyOverrideAssignmentIdFromPreview,
 } from './employee-policy-override-utils';
 
-describe('employee policy override helpers', () => {
+describe('staff policy override helpers', () => {
   const values = {
     policyOverrideEnabled: true,
     policyOverrideAssignmentId: 'assignment-1',
@@ -21,7 +21,7 @@ describe('employee policy override helpers', () => {
     policyOverrideAssignmentReason: 'Use direct payroll rules',
   };
 
-  it('builds a create impact preview payload for a new employee override', () => {
+  it('builds a create impact preview payload for a new staff override', () => {
     expect(
       buildEmployeePolicyOverridePreviewRequest(
         { ...values, policyOverrideAssignmentId: '' },
@@ -47,7 +47,7 @@ describe('employee policy override helpers', () => {
     });
   });
 
-  it('builds a repair impact preview payload for an existing employee override', () => {
+  it('builds a repair impact preview payload for an existing staff override', () => {
     expect(buildEmployeePolicyOverridePreviewRequest(values, 'year-1', 'employee-1')).toEqual({
       action: 'employee-override-upsert',
       assignmentId: 'assignment-1',
@@ -154,7 +154,7 @@ describe('employee policy override helpers', () => {
     });
   });
 
-  it('builds a disable impact preview without assignment id when disable can be resolved by employee and date', () => {
+  it('builds a disable impact preview without assignment id when disable can be resolved by staff and date', () => {
     expect(
       buildEmployeePolicyOverridePreviewRequest(
         {
@@ -223,7 +223,7 @@ describe('employee policy override helpers', () => {
     expect(resolveEmployeePolicyPreviewDate({}, '2026-06-01')).toBe('2026-06-01');
   });
 
-  it('hydrates override fields from an effective employee assignment', () => {
+  it('hydrates override fields from an effective staff assignment', () => {
     expect(
       hydrateEmployeePolicyOverrideFromPreview(
         {
@@ -251,7 +251,7 @@ describe('employee policy override helpers', () => {
     });
   });
 
-  it('resolves the employee override assignment id from preview assignment or matched id', () => {
+  it('resolves the staff override assignment id from preview assignment or matched id', () => {
     expect(
       getEmployeePolicyOverrideAssignmentIdFromPreview({
         policySource: 'employee',
@@ -273,7 +273,7 @@ describe('employee policy override helpers', () => {
     ).toBe('');
   });
 
-  it('hydrates disabled override fields from a non-employee effective assignment', () => {
+  it('hydrates disabled override fields from a non-staff effective assignment', () => {
     expect(
       hydrateEmployeePolicyOverrideFromPreview({ policySource: 'default' }, '2026-06-01')
     ).toEqual({

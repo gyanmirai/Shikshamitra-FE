@@ -10,23 +10,26 @@
  */
 
 import React from 'react';
+import { useSelector } from 'react-redux';
+import { useRouter } from 'src/routes/hooks';
+import { hasNavigationPermission } from 'src/utils/permissions';
+import { hrPermissions , hrPaths } from 'src/constants/hr-menus';
+import type { RootState } from 'src/redux/store';
 import { Iconify } from 'src/components/iconify';
-import { hrPaths } from 'src/constants/hr-menus';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Tab, Alert, Paper, Drawer, LinearProgress } from '@mui/material';
+import { Box, Tab, Alert, Paper, Drawer, Typography, LinearProgress } from '@mui/material';
 
+import { PolicySetupAlert } from './components/PolicySetupAlert';
 import { PolicyTable } from './components/PolicyTable';
 import { CalendarsTab } from './components/CalendarsTab';
 import { AssignmentsTab } from './components/AssignmentsTab';
 import { HR_POLICY_TABS } from './hr-policy-workspace.constants';
-import { HolidayImpactTab } from './components/HolidayImpactTab';
 import { PolicyAuditDrawer } from './components/PolicyAuditDrawer';
 import { useHRPolicyWorkspace } from './hooks/useHRPolicyWorkspace';
 import { PolicyImpactDrawer } from './components/PolicyImpactDrawer';
 import { LeavePoliciesPanel } from './components/LeavePoliciesPanel';
 import { PolicyVersionDrawer } from './components/PolicyVersionDrawer';
-import { EffectivePreviewTab } from './components/EffectivePreviewTab';
 import { ManualHolidayDialog } from './components/ManualHolidayDialog';
 import { PayrollPolicyDrawer } from './components/PayrollPolicyDrawer';
 import { PolicyOperationOverlay } from './components/HRPolicySharedUI';
@@ -37,7 +40,30 @@ import { AssignmentPolicyDrawer } from './components/AssignmentPolicyDrawer';
 import type { HRPolicyWorkspaceProps } from './types/hr-policy-workspace.types';
 
 export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
-  const ctx = useHRPolicyWorkspace({ focus, tabs: HR_POLICY_TABS });
+  const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const router = useRouter();
+  const destinations = {
+    calendars: { href: hrPaths.policies.calendars, permission: hrPermissions.policies.calendars },
+    attendance: {
+      href: hrPaths.policies.attendance,
+      permission: hrPermissions.policies.attendance,
+    },
+    leave: {
+      href: hrPaths.policies.leavePolicies,
+      permission: hrPermissions.policies.leavePolicies,
+    },
+    payroll: { href: hrPaths.policies.payroll, permission: hrPermissions.policies.payroll },
+    assignments: {
+      href: hrPaths.policies.assignments,
+      permission: hrPermissions.policies.assignments,
+    },
+  };
+  const tabs = HR_POLICY_TABS.filter(
+    (item) =>
+      item.value !== 'holiday' &&
+      hasNavigationPermission(permissions, destinations[item.value].permission)
+  );
+  const ctx = useHRPolicyWorkspace({ focus, tabs });
 
   const {
     tab,
@@ -58,17 +84,42 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <CustomBreadcrumbs
         heading="Policies & Rules"
-        description={currentYear?.name || 'No academic year selected'}
+        description="Configure staff calendars, policies, and assignments."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Policies & Rules', href: hrPaths.policies.root },
           { name: currentTabLabel },
         ]}
       />
-      {!academicYearId ? (
-        <Alert severity="warning">Select an academic year to manage HR policies.</Alert>
+      {currentYear?.name ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          Academic year: {currentYear.name}
+        </Typography>
       ) : null}
+      {!academicYearId ? <Alert severity="warning">Select an academic year</Alert> : null}
       {isLoading ? <LinearProgress /> : null}
+      {academicYearId && !drawer ? (
+        <Box sx={{ mt: 1 }}>
+          <PolicySetupAlert
+            state={ctx.leaveSetupState}
+            policy="leave"
+            canOpen={ctx.canOpenLeavePolicies}
+            onOpen={() => router.push(hrPaths.policies.leavePolicies)}
+          />
+          <PolicySetupAlert
+            state={ctx.attendanceSetupState}
+            policy="attendance"
+            canOpen={ctx.canOpenAttendancePolicies}
+            onOpen={() => router.push(hrPaths.policies.attendance)}
+          />
+          <PolicySetupAlert
+            state={ctx.payrollSetupState}
+            policy="payroll"
+            canOpen={ctx.canOpenPayrollPolicies}
+            onOpen={() => router.push(hrPaths.policies.payroll)}
+          />
+        </Box>
+      ) : null}
 
       <Paper
         sx={{
@@ -78,11 +129,14 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
       >
         <CustomTabs
           value={tab}
-          onChange={(_, value) => setTab(value)}
+          onChange={(_, value: keyof typeof destinations) => {
+            setTab(value);
+            router.push(destinations[value].href);
+          }}
           sx={{ '& .MuiTabs-flexContainer': { gap: 1.5 }, borderRadius: '12px' }}
           role="tablist"
         >
-          {HR_POLICY_TABS.map((item) => (
+          {tabs.map((item) => (
             <Tab
               key={item.value}
               value={item.value}
@@ -101,8 +155,6 @@ export default function HRPolicyWorkspace({ focus }: HRPolicyWorkspaceProps) {
         {tab === 'attendance' ? <PolicyTable type="attendance" ctx={ctx} /> : null}
         {tab === 'leave' ? <LeavePoliciesPanel /> : null}
         {tab === 'assignments' ? <AssignmentsTab ctx={ctx} /> : null}
-        {tab === 'holiday' ? <HolidayImpactTab ctx={ctx} /> : null}
-        {tab === 'effective' ? <EffectivePreviewTab /> : null}
       </Box>
 
       {/* Drawers */}

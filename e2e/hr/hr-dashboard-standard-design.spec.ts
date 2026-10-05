@@ -425,7 +425,7 @@ test.describe('HR module overview dashboard', () => {
   test('module actions use existing workflow links @critical', async ({ page }) => {
     await mockDashboard(page);
     await page.goto('/hr/dashboard');
-    await expect(page.getByRole('link', { name: 'Open Employees' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'Open Staff Directory' })).toHaveAttribute(
       'href',
       '/hr/employee'
     );

@@ -137,7 +137,7 @@ const EarningComponent = () => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <CustomBreadcrumbs
         heading="Earning Component"
-        description="Manage the various earning components that make up employee salaries, including fixed and variable pay elements."
+        description="Manage the various earning components that make up staff salaries, including fixed and variable pay elements."
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
           { name: 'Payroll Management', href: hrPaths.payroll.runPayroll },
@@ -183,8 +183,8 @@ const EarningComponent = () => {
           ) : deleteImpactPreview?.previewHash ? (
             <>
               <DialogContentText sx={{ mb: 2 }}>
-                This component is linked to {deleteImpactPreview.linkedEmployeeCount} employee
-                payroll profiles. It will be removed from employee payroll profiles going forward.
+                This component is linked to {deleteImpactPreview.linkedEmployeeCount} staff
+                payroll profiles. It will be removed from staff payroll profiles going forward.
                 Finalized salary slips will not change. Draft salary slips will update only after
                 regeneration.
               </DialogContentText>
@@ -196,7 +196,7 @@ const EarningComponent = () => {
                 }}
               >
                 <Alert severity="info">
-                  Synced employees: {deleteImpactPreview?.syncedEmployeeCount ?? 0}
+                  Synced staff: {deleteImpactPreview?.syncedEmployeeCount ?? 0}
                 </Alert>
                 <Alert severity="warning">
                   Manual overrides: {deleteImpactPreview?.manualOverrideEmployeeCount ?? 0}
@@ -214,7 +214,7 @@ const EarningComponent = () => {
           )}
           {!!deleteImpactPreview?.previewHash && !!deleteImpactPreview?.syncedEmployees?.length && (
             <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              Sample linked employees:{' '}
+              Sample linked staff:{' '}
               {deleteImpactPreview.syncedEmployees
                 .map((employee: any) => employee.employeeName)
                 .join(', ')}
@@ -613,7 +613,7 @@ const EarningComponentForm = ({
               <CustomTooltip
                 arrow
                 placement="right"
-                title="Earning components define how employee salary is structured, such as Basic Pay or HRA."
+                title="Earning components define how staff salary is structured, such as Basic Pay or HRA."
               >
                 <Iconify
                   icon="lucide:info"
@@ -965,7 +965,7 @@ const EarningComponentForm = ({
                       <strong>{formik.values.amount || 'X'}</strong>
                       <br />
                       Example: If amount is ₹5,000, the same amount will be applied to all
-                      employees.
+                      staff.
                     </>
                   )}
                 </Typography>
@@ -975,7 +975,7 @@ const EarningComponentForm = ({
                     ? formik.values.calculationType === 'Percentage'
                       ? 'The percentage is fixed; the amount follows the calculation base.'
                       : 'The configured amount is fixed.'
-                    : 'The amount can vary for each employee.'}
+                    : 'The amount can vary for each staff.'}
                 </Typography>
 
                 <Typography
@@ -985,7 +985,7 @@ const EarningComponentForm = ({
                     visibility: formik.values.showOnPayslip ? 'hidden' : 'visible',
                   }}
                 >
-                  ⚠️ This earning will <strong>not</strong> appear on employee payslips.
+                  ⚠️ This earning will <strong>not</strong> appear on staff payslips.
                 </Typography>
               </Alert>
             </Box>
@@ -1034,7 +1034,7 @@ const EarningComponentForm = ({
             }}
           >
             <Alert severity="info">
-              Synced employees: {impactPreview?.syncedEmployeeCount ?? 0}
+              Synced staff: {impactPreview?.syncedEmployeeCount ?? 0}
             </Alert>
             <Alert severity="warning">
               Manual overrides: {impactPreview?.manualOverrideEmployeeCount ?? 0}
@@ -1045,8 +1045,8 @@ const EarningComponentForm = ({
             </Alert>
           </Box>
           <Typography variant="body2" color="text.secondary">
-            Effective month: {impactPreview?.effectiveMonth}. Normal save updates only employees
-            still following the master value. Force apply overwrites manual employee overrides for
+            Effective month: {impactPreview?.effectiveMonth}. Normal save updates only staff
+            still following the master value. Force apply overwrites manual staff overrides for
             this component and makes them follow the master again.
           </Typography>
         </DialogContent>

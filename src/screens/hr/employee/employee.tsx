@@ -457,13 +457,13 @@ const HrEmployee = () => {
       {open ? (
         <Box data-testid="hr-employee-form" display="flex" flexDirection="column" height="100%">
           <CustomBreadcrumbs
-            heading={`${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`}
+            heading={`${editData?.id ? 'Update' : 'Add'} Staff ${editData?.fullName ? `(${editData?.fullName})` : ''}`}
             links={[
               { name: 'HR/Staff', href: hrPaths.dashboard },
-              { name: 'Employee', onClick: () => handleClose() },
-              { name: 'Employee List', onClick: () => handleClose() },
+              { name: 'Staff', onClick: () => handleClose() },
+              { name: 'Staff Directory', onClick: () => handleClose() },
               {
-                name: `${editData?.id ? 'Update' : 'Add'} Employee ${editData?.fullName ? `(${editData?.fullName})` : ''}`,
+                name: `${editData?.id ? 'Update' : 'Add'} Staff ${editData?.fullName ? `(${editData?.fullName})` : ''}`,
               },
             ]}
             description="Fill out the form below with personal, contact, and employment details. Required fields are marked with an asterisk (*)."
@@ -483,11 +483,11 @@ const HrEmployee = () => {
         <>
           {' '}
           <CustomBreadcrumbs
-            heading="Employee List"
+            heading="Staff Directory"
             links={[
               { name: 'HR/Staff', href: hrPaths.dashboard },
-              { name: 'Employee' },
-              { name: 'Employee List' },
+              { name: 'Staff' },
+              { name: 'Staff Directory' },
             ]}
             action={
               <Button
@@ -498,10 +498,10 @@ const HrEmployee = () => {
                 onClick={() => setOpen(true)}
                 sx={{ px: '32px' }}
               >
-                Employee
+                Add Staff
               </Button>
             }
-            description="This section displays the employees list. Click 'View' to see their detailed profile information."
+            description="This section displays the staff list. Click 'View' to see their detailed profile information."
           />
           <Card
             data-testid="hr-employee-list-filters"
@@ -577,7 +577,7 @@ const HrEmployee = () => {
           <CustomizableTable
             noDataText={
               <>
-                No Employee Found{' '}
+                No Staff Found{' '}
                 <Box
                   onClick={() => {
                     setOpen(true);
@@ -592,7 +592,7 @@ const HrEmployee = () => {
                     },
                   }}
                 >
-                  Add Employee
+                  Add Staff
                 </Box>
               </>
             }
@@ -620,7 +620,7 @@ const HrEmployee = () => {
                   arrow
                   placement="right"
                   sx={{ textAlign: 'justify' }}
-                  title="You can update the employee's current status to reflect their employment situation, such as active, inactive, left or retired"
+                  title="You can update the staff's current status to reflect their employment situation, such as active, inactive, left or retired"
                 >
                   <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
                 </CustomTooltip>
@@ -650,7 +650,7 @@ const HrEmployee = () => {
                     arrow
                     placement="right"
                     sx={{ textAlign: 'justify' }}
-                    title="Define the employee's salary structure by assigning fixed or temporary earning and deduction components."
+                    title="Define the staff's salary structure by assigning fixed or temporary earning and deduction components."
                   >
                     <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
                   </CustomTooltip>
@@ -676,7 +676,7 @@ const HrEmployee = () => {
       <CustomDialog
         open={Boolean(createdEmployee)}
         handleClose={() => setCreatedEmployee(undefined)}
-        title="Employee created"
+        title="Staff created"
         maxWidth="sm"
         hasForm={false}
       >
@@ -685,7 +685,7 @@ const HrEmployee = () => {
             <Alert severity="warning">
               <Typography variant="subtitle2">Payroll setup required</Typography>
               <Typography variant="body2">
-                {createdEmployee?.name || 'The employee'} is inactive. Set up salary, then activate the employee as a separate action.
+                {createdEmployee?.name || 'The staff'} is inactive. Set up salary, then activate the staff as a separate action.
               </Typography>
             </Alert>
           </Stack>
@@ -695,7 +695,7 @@ const HrEmployee = () => {
             href={createdEmployee ? `${hrPaths.employee.list}?employee=${createdEmployee.id}` : undefined}
             sx={{ minHeight: 44 }}
           >
-            View employee
+            View staff
           </Button>
           <Button
             href={createdEmployee ? `${hrPaths.payroll.structure}?employeeId=${createdEmployee.id}&setup=salary` : undefined}

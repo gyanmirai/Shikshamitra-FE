@@ -625,7 +625,7 @@ async function savePresentAttendanceForDates(
     const day = await getTakeAttendanceDay(page, attendanceDate, employeeSearch);
     const row = findAttendanceRow(day, employeeId);
     if (!row) {
-      failures.push(`${attendanceDate}: employee was not returned by Mark Attendance`);
+      failures.push(`${attendanceDate}: staff was not returned by Mark Attendance`);
       continue;
     }
 
@@ -705,7 +705,7 @@ async function verifyGroupedAttendanceRegister(
   );
 
   expect(grouped.totalCount, 'grouped register total count').toBeGreaterThanOrEqual(1);
-  expect(group, `grouped register row for employee ${employeeId}`).toBeTruthy();
+  expect(group, `grouped register row for staff ${employeeId}`).toBeTruthy();
   expect(Number(group.present ?? group.Present ?? 0), 'grouped register Present count').toBe(
     savedDates.length
   );
@@ -810,7 +810,7 @@ async function setEmployeeSalaryStructure(page: Page, employeeId: string, employ
         deductionComponents: [deductionLine],
       }),
     }),
-    'set employee payroll details'
+    'set staff payroll details'
   );
 
   await expectOk(
@@ -835,7 +835,7 @@ async function setEmployeeSalaryStructure(page: Page, employeeId: string, employ
         ],
       }),
     }),
-    'set employee salary structure'
+    'set staff salary structure'
   );
 }
 
@@ -866,28 +866,28 @@ async function verifyAttendanceRegisterUiFilters(page: Page, employeeCode: strin
   await searchInput.fill(employeeCode);
   await expect(
     page.getByText(codePattern).first(),
-    'register search finds employee code'
+    'register search finds staff code'
   ).toBeVisible({
     timeout: 30_000,
   });
 
   await searchInput.fill('');
   const employeeInputId = await page
-    .locator('label', { hasText: /^Employee$/ })
+    .locator('label', { hasText: /^Staff$/ })
     .first()
     .getAttribute('for');
-  expect(employeeInputId, 'attendance register employee input id').toBeTruthy();
+  expect(employeeInputId, 'attendance register staff input id').toBeTruthy();
   const employeeInput = page.locator(`input[id="${employeeInputId}"]`);
   await employeeInput.click();
   await employeeInput.fill(employeeCode);
   const option = page.getByRole('option', { name: codePattern }).first();
-  await expect(option, 'employee filter option finds employee identifier').toBeVisible({
+  await expect(option, 'staff filter option finds staff identifier').toBeVisible({
     timeout: 30_000,
   });
   await option.click();
   await expect(
     page.getByText(codePattern).first(),
-    'register employee filter finds selected employee'
+    'register staff filter finds selected staff'
   ).toBeVisible({ timeout: 30_000 });
 }
 
@@ -897,7 +897,7 @@ test.describe('HR Academic Permission attendance sync', () => {
     'Set E2E_HR_ATTENDANCE_SYNC=1 to run the local DDVS Academic Permission attendance sync regression.'
   );
 
-  test('creates employee, syncs Academic Permission, marks attendance, verifies register and payroll preview', async ({
+  test('creates staff, syncs Academic Permission, marks attendance, verifies register and payroll preview', async ({
     page,
     browser,
   }) => {
@@ -966,9 +966,9 @@ test.describe('HR Academic Permission attendance sync', () => {
           `/employees/${employeeId}/personal-info`
         );
         const employeeUserId = String(employee.userId || personalInfoBeforePermission.userId || '');
-        expect(employeeId, 'created employee id').toBeTruthy();
-        expect(employeeCode, 'created employee code').toBeTruthy();
-        expect(employeeUserId, 'created employee linked user id').toBeTruthy();
+        expect(employeeId, 'created staff id').toBeTruthy();
+        expect(employeeCode, 'created staff code').toBeTruthy();
+        expect(employeeUserId, 'created staff linked user id').toBeTruthy();
         expect(
           personalInfoBeforePermission.organizationIds || [],
           'new personal-info organization projection before Academic Permission'
@@ -981,7 +981,7 @@ test.describe('HR Academic Permission attendance sync', () => {
         );
         expect(
           findAttendanceRow(beforePermissionDay, employeeId),
-          'employee should not be eligible for scoped Mark Attendance before Academic Permission'
+          'staff should not be eligible for scoped Mark Attendance before Academic Permission'
         ).toBeFalsy();
 
         const beforeRegisterParams = new URLSearchParams({
@@ -1000,7 +1000,7 @@ test.describe('HR Academic Permission attendance sync', () => {
         );
         expect(
           asItems(beforeRegister),
-          'employee should not be in scoped grouped register before Academic Permission'
+          'staff should not be in scoped grouped register before Academic Permission'
         ).toHaveLength(0);
 
         const academicPermission = await assignAcademicPermission(
@@ -1031,7 +1031,7 @@ test.describe('HR Academic Permission attendance sync', () => {
         const afterPermissionRow = findAttendanceRow(afterPermissionDay, employeeId);
         expect(
           afterPermissionRow,
-          'employee appears in scoped Mark Attendance after Academic Permission'
+          'staff appears in scoped Mark Attendance after Academic Permission'
         ).toBeTruthy();
         expect(afterPermissionRow?.captureMode, 'Mark Attendance capture mode').toBeTruthy();
         expect(

@@ -90,7 +90,7 @@ const LeaveCenter = ({ context, initialTab = 'balance' }: LeaveCenterProps) => {
   const pageTitle = isSelfContext ? 'My Leave' : 'Leave Center';
   const pageDescription = isSelfContext
     ? 'Track leave balance and request history for the current academic year.'
-    : 'Track employee leave balance, requests, and approvals from one workspace.';
+    : 'Track staff leave balance, requests, and approvals from one workspace.';
 
   const breadcrumbItems = isSelfContext
     ? [{ name: 'Dashboard', href: '/dashboard/' }, { name: 'My Leave' }]

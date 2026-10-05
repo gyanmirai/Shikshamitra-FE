@@ -403,7 +403,7 @@ export function EmployeeCard({
                 <motion.div variants={staggerItem}>
                   <Box>
                     <Typography variant="caption" color="text.secondary">
-                      Employee Code
+                      Staff Code
                     </Typography>
                     <Typography fontWeight={500} variant="body2">
                       {employee?.employeeIdentifier}
@@ -450,7 +450,7 @@ export function EmployeeCard({
             variant="scrollable"
             scrollButtons="auto"
             allowScrollButtonsMobile
-            aria-label="Employee profile sections"
+            aria-label="Staff profile sections"
             onChange={(...rest) => {
               const newIndex = TABS.findIndex((tab) => tab.value === rest[1]);
               if (currentIndex > newIndex) {
@@ -541,15 +541,15 @@ const EmployeeView = ({ setSearchParams, searchParams }: EmployeeViewProps) => {
   return isLoading || (!employee && !!searchParams?.employee) ? (
     <EmployeeViewSkeleton />
   ) : isError ? (
-    <EmptyContent title="Employee not found" />
+    <EmptyContent title="Staff not found" />
   ) : (
     <>
       <CustomBreadcrumbs
         heading={`${employee?.fullName} Profile`}
         links={[
           { name: 'HR/Staff', href: hrPaths.dashboard },
-          { name: 'Employee', onClick: () => setSearchParams('employee', '') },
-          { name: 'Employee List', onClick: () => setSearchParams('employee', '') },
+          { name: 'Staff', onClick: () => setSearchParams('employee', '') },
+          { name: 'Staff Directory', onClick: () => setSearchParams('employee', '') },
           { name: `${employee?.fullName} Profile` },
         ]}
         description={`View and manage ${employee?.fullName} information including personal details, documents, payroll, transportation, academic records and communications`}

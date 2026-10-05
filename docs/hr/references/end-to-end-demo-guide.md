@@ -3,7 +3,7 @@ module: hr
 domain: demo
 content_type: How-to
 status: active
-updated_on: 2026-08-04
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,7 +16,7 @@ The main path follows active HR navigation from `src/constants/hr-menus.ts`, use
 ## Demo goal
 
 Show HR as one connected operating module, not separate screens.
-The story is: configure HR rules, onboard an employee, maintain the employee profile, capture attendance and leave, process payroll, run performance management, publish reports, and review notifications.
+The story is: configure HR rules, onboard an staff, maintain the staff profile, capture attendance and leave, process payroll, run performance management, publish reports, and review notifications.
 
 ## Demo account and data
 
@@ -28,8 +28,8 @@ Prepare this before the meeting:
 | Demo viewer | `Jayesh Bhagat` |
 | Demo HR user | `hr.admin@ddvs.edu` with HR, payroll, attendance, leave, policy, report, and performance permissions |
 | Academic year | `2026-2027` |
-| Teaching employee | `Aarav Sharma`, Mathematics Teacher, Teaching group |
-| Non-teaching employee | `Meera Iyer`, Admin Executive, Non Teaching group |
+| Teaching staff | `Aarav Sharma`, Mathematics Teacher, Teaching group |
+| Non-teaching staff | `Meera Iyer`, Admin Executive, Non Teaching group |
 | Reporting manager | `Priya Nair`, HR Manager |
 | Payroll month | `July-2026` or another unlocked past month |
 | Attendance demo date | A working day in the payroll month, such as `2026-07-15` |
@@ -37,7 +37,7 @@ Prepare this before the meeting:
 | Salary example | Basic `30000`, HRA `12000`, Transport Allowance `2000`, PF deduction `1800` |
 
 Do not use the current live payroll month if background jobs or real users may change the data during the demo.
-Use a disposable tenant or a clearly marked demo employee whenever payroll lock or report export is shown.
+Use a disposable tenant or a clearly marked demo staff whenever payroll lock or report export is shown.
 
 ## Presenter rule
 
@@ -49,7 +49,7 @@ For every screen, say three things:
 | Input | What HR user enters or reviews |
 | Output | Which downstream area is affected |
 
-Keep repeating the link: employee profile feeds attendance, leave, payroll, reports, and dashboard summaries.
+Keep repeating the link: staff profile feeds attendance, leave, payroll, reports, and dashboard summaries.
 
 ## Full demo checklist
 
@@ -58,10 +58,10 @@ Use this as the top-level sequence:
 | Step | Demo area | Route |
 |---|---|---|
 | 1 | HR dashboard | `/hr/dashboard` |
-| 2 | Policy setup | `/hr/calendars`, `/hr/attendance`, `/hr/leave-policies`, `/hr/payrollPolicies`, `/hr/assignments`, `/hr/effective-preview` |
-| 3 | Employee document settings | `/hr/setting` |
-| 4 | Employee onboarding | `/hr/employee/onboarding` |
-| 5 | Employee list and profile | `/hr/employee` |
+| 2 | Policy setup | `/hr/calendars`, `/hr/attendance`, `/hr/leave-policies`, `/hr/payrollPolicies`, `/hr/assignments` |
+| 3 | Staff document settings | `/hr/setting` |
+| 4 | Staff onboarding | `/hr/employee/onboarding` |
+| 5 | Staff Directory and profile | `/hr/employee` |
 | 6 | I-card | `/hr/i-card` |
 | 7 | Attendance dashboard | `/hr/attendance-dashboard` |
 | 8 | Device attendance | `/hr/biometric-attendance` |
@@ -85,7 +85,7 @@ Demo steps:
 1. Open the HR module from the main navigation.
 2. Show workforce summary, attendance trend, payroll status, leave requests, alerts, birthdays, anniversaries, and recent activities.
 3. Filter or refresh the dashboard if controls are available.
-4. Open the New Joiners or employee summary drilldown if demo data exists.
+4. Open the New Joiners or staff summary drilldown if demo data exists.
 
 Example narration:
 
@@ -101,13 +101,13 @@ This is one of the strongest sections in the HR demo because it proves the syste
 
 Use this presenter line before opening the screens:
 
-`Policies and Rules decide how the school calendar, attendance, leave, and payroll behave for each employee. I will create the rules first, assign them to a staff group, and then prove the result with Policy Impact.`
+`Policies and Rules decide how the school calendar, attendance, leave, and payroll behave for each employee. I will create the rules first, assign them to a staff group, and then review the assignment preview and confirm the change impact.`
 
 ### Policy demo story
 
 Use one teaching group and one non-teaching group example:
 
-| Group | Example employee | Rule difference to show |
+| Group | Example staff | Rule difference to show |
 |---|---|---|
 | Teaching staff | `Aarav Sharma`, Mathematics Teacher | School teaching calendar, teaching attendance rules, staff leave, monthly payroll |
 | Non-teaching staff | `Meera Iyer`, Admin Executive | Same payroll policy, but an attendance policy with office-shift timing |
@@ -118,9 +118,9 @@ Explain this model:
 |---|---|---|
 | Work Calendar | Which dates are working days, weekly offs, and holidays | Profile dashboard, attendance calendar, policy preview |
 | Attendance Policy | How punches, late arrivals, missing punches, and holiday work are treated | Attendance dashboard, manual attendance, register, payroll warnings |
-| Leave Policy | Which paid and unpaid leave buckets employees can use | Leave center, leave approvals, leave balance, payroll paid/unpaid days |
+| Leave Policy | Which paid and unpaid leave buckets staff can use | Leave center, leave approvals, leave balance, payroll paid/unpaid days |
 | Payroll Policy | How pay days, holidays, Saturdays, and month days are calculated | Payroll preview, payroll lock, payslip basis |
-| Policy Assignment | Which employee or group receives each policy from an effective date | Effective policy preview, payroll readiness, attendance behavior |
+| Policy Assignment | Which staff or group receives each policy from an effective date | Effective policy preview, payroll readiness, attendance behavior |
 
 ### Work calendars
 
@@ -347,7 +347,7 @@ Demo steps:
 4. Use effective date `2026-06-01`.
 5. Save the assignment.
 6. Create a second group-level assignment for Non Teaching staff if you have time.
-7. Create an employee-level override for `Aarav Sharma` only if you want to show precedence.
+7. Create an staff-level override for `Aarav Sharma` only if you want to show precedence.
 8. Show conflict, priority, or effective-date messaging if it appears.
 
 Example:
@@ -357,11 +357,11 @@ Example:
 | Teaching group | `DDVS Standard Calendar 2026-2027` | `Teaching Staff Attendance Policy` | `DDVS Staff Leave Policy 2026-2027` | `Monthly Staff Payroll Policy 2026-2027` | `2026-06-01` |
 | Non Teaching group | `DDVS Admin Office Calendar 2026-2027` | `Admin Office Attendance Policy` | `DDVS Staff Leave Policy 2026-2027` | `Monthly Staff Payroll Policy 2026-2027` | `2026-06-01` |
 
-Employee override example:
+Staff override example:
 
 | Target | Override | Effective from | Why show it |
 |---|---|---|---|
-| Aarav Sharma | `Teaching Staff Attendance Policy - Relaxed Demo` | `2026-07-01` | Employee-level assignment beats group assignment |
+| Aarav Sharma | `Teaching Staff Attendance Policy - Relaxed Demo` | `2026-07-01` | Staff-level assignment beats group assignment |
 
 Best thing to show:
 
@@ -369,30 +369,22 @@ Best thing to show:
 |---|---|---|
 | Assign policies to Teaching group | All four policies from above | New teachers inherit rules automatically |
 | Assign different attendance to Non Teaching group | Office timing policy | Different staff groups can follow different attendance expectations |
-| Add employee override | Aarav relaxed policy | Specific employee rules beat group rules |
+| Add staff override | Aarav relaxed policy | Specific staff rules beat group rules |
 | Try overlapping assignment | Same target and date range | System warns or blocks conflicting effective rules |
 
 Presenter example:
 
 `Policies are reusable. Assignment is where the school decides who gets which rule. Group assignment keeps setup fast, and employee override handles exceptions without changing everyone else.`
 
-### Effective policy preview
+### Verify effective policies
 
-Route: `/hr/effective-preview`.
-
-Demo steps:
-
-1. Search `Aarav Sharma`.
-2. Pick date `2026-07-15`.
-3. Show resolved work calendar, attendance policy, leave policy, and payroll policy.
-4. Explain assignment precedence.
-5. Change the date to before the effective date if useful.
-6. Search `Meera Iyer` to show the non-teaching policy difference.
-7. Clear or change the employee lookup text and show that the preview no longer displays stale results.
+Use the preview inside the assignment drawer and the change-impact confirmation before saving.
+For automated precedence and date checks, use the authenticated effective-policies API documented in the backend HR API guide.
+There is no standalone Policy Impact screen.
 
 Example result to expect:
 
-| Employee | Date | Resolved calendar | Resolved attendance | Resolved leave | Resolved payroll |
+| Staff | Date | Resolved calendar | Resolved attendance | Resolved leave | Resolved payroll |
 |---|---|---|---|---|---|
 | Aarav Sharma | `2026-07-15` | `DDVS Standard Calendar 2026-2027` | `Teaching Staff Attendance Policy` | `DDVS Staff Leave Policy 2026-2027` | `Monthly Staff Payroll Policy 2026-2027` |
 | Meera Iyer | `2026-07-15` | `DDVS Admin Office Calendar 2026-2027` | `Admin Office Attendance Policy` | `DDVS Staff Leave Policy 2026-2027` | `Monthly Staff Payroll Policy 2026-2027` |
@@ -401,11 +393,11 @@ Resolution order to explain:
 
 | Priority | Source | Demo explanation |
 |---|---|---|
-| 1 | Employee assignment | Direct employee override wins |
+| 1 | Staff assignment | Direct staff override wins |
 | 2 | Group assignment | Teaching or Non Teaching group rule applies |
 | 3 | Default policy | Used only when no specific assignment applies |
 
-This is the best place to prove that policy setup has actually connected to an employee.
+This is the best place to prove that policy setup has actually connected to an staff.
 
 ### Policy demo close
 
@@ -417,19 +409,19 @@ Use this quick proof chain:
 
 | Later screen | Policy proof to mention |
 |---|---|
-| Employee profile dashboard | Resolved calendar shows holidays and attendance context |
+| Staff profile dashboard | Resolved calendar shows holidays and attendance context |
 | Manual attendance | Attendance policy decides late, half-day, missing-punch, and lock behavior |
 | Leave center | Leave policy decides available balance and paid or unpaid impact |
 | Payroll run | Payroll policy and leave/attendance facts decide payable days and net pay |
 | Payslip | Locked payroll snapshot preserves the final policy basis |
 
-## 3. Configure employee document settings
+## 3. Configure staff document settings
 
 Route: `/hr/setting`.
 
 Demo steps:
 
-1. Open Employee, Settings, Document Types.
+1. Open Staff, Settings, Document Types.
 2. Create or review document types such as `Aadhaar Card`, `PAN Card`, `Qualification Certificate`, and `Experience Letter`.
 3. Mark required documents if the screen supports it.
 4. Save and show active or inactive status if visible.
@@ -438,16 +430,16 @@ Example narration:
 
 `Before onboarding staff, HR defines which documents the school wants to collect. The employee profile document tab uses these configured document types.`
 
-## 4. Demo employee onboarding
+## 4. Demo staff onboarding
 
 Route: `/hr/employee/onboarding`.
 
 Demo steps:
 
-1. Open Employee Onboarding.
+1. Open Staff Onboarding.
 2. Create a new invitation for `Aarav Sharma`.
 3. Select Teaching group.
-4. Select only an Employee-audience role that is approved for onboarding.
+4. Select only an Staff-audience role that is approved for onboarding.
 5. Enter email `aarav.sharma.demo@ddvs.edu` and mobile `9876501234`.
 6. Send the invitation.
 7. Show status `Invitation sent`.
@@ -462,7 +454,7 @@ Example invitation data:
 | Field | Value |
 |---|---|
 | Name | `Aarav Sharma` |
-| Employee group | Teaching |
+| Staff group | Teaching |
 | Role | `Teacher` |
 | Email | `aarav.sharma.demo@ddvs.edu` |
 | Mobile | `9876501234` |
@@ -484,19 +476,19 @@ Avoid these mistakes:
 
 | Mistake | Why it fails |
 |---|---|
-| Selecting Admin or Super Admin as the employee role | Reserved roles are not assignable to employees |
-| Finalizing a Teaching employee without academic year and academic scope | Teaching employees require academic scope |
+| Selecting Admin or Super Admin as the staff role | Reserved roles are not assignable to staff |
+| Finalizing a Teaching staff without academic year and academic scope | Teaching staff require academic scope |
 | Adding family details without a family-member name | Public application validation blocks incomplete family rows |
 | Uploading unsafe or oversized files | Backend file validation checks size, extension, MIME, filename, and signature |
 
-## 5. Demo employee list and profile
+## 5. Demo Staff Directory and profile
 
 Route: `/hr/employee`.
 
 Demo steps:
 
 1. Search for `Aarav Sharma`.
-2. Open the employee profile.
+2. Open the staff profile.
 3. Show profile overview and dashboard tab.
 4. Edit personal information.
 5. Edit family information.
@@ -524,16 +516,16 @@ Call out:
 For the profile dashboard, show attendance, leave balance, pending leaves, and upcoming holidays.
 If data is missing, say the system shows explicit unavailable or not-marked states instead of fake sample values.
 
-## 6. Demo employee I-card
+## 6. Demo staff I-card
 
 Route: `/hr/i-card`.
 
 Demo steps:
 
 1. Open I-card.
-2. Select employee `Aarav Sharma`.
+2. Select staff `Aarav Sharma`.
 3. Choose an I-card template or create a template.
-4. Show field palette, QR code, barcode, orientation, layout preview, and selected employee navigation.
+4. Show field palette, QR code, barcode, orientation, layout preview, and selected staff navigation.
 5. Generate or download the PDF if the environment supports it.
 
 Example narration:
@@ -573,11 +565,11 @@ Demo steps:
 
 Example file row:
 
-| Employee code | Date | In time | Out time | Status |
+| Staff code | Date | In time | Out time | Status |
 |---|---|---|---|---|
 | `EMP-DEMO-001` | `2026-07-15` | `08:02` | `15:35` | Present |
 
-Call out that import preview validates headers, employee matching, month consistency, and warnings before confirmation.
+Call out that import preview validates headers, staff matching, month consistency, and warnings before confirmation.
 
 ## 9. Demo attendance register
 
@@ -588,7 +580,7 @@ Demo steps:
 1. Open Attendance Register.
 2. Filter the date range to the payroll month.
 3. Search `Aarav Sharma`.
-4. Show date-wise or employee-wise rows.
+4. Show date-wise or staff-wise rows.
 5. Open row details if available.
 6. Show adjustment action only if the row is not locked.
 
@@ -605,14 +597,14 @@ Demo steps:
 1. Select date `2026-07-15`.
 2. Search or filter to `Aarav Sharma`.
 3. Mark Present with in time `08:05` and out time `15:30`.
-4. Change another disposable employee to Half Day to show status-specific clock handling.
+4. Change another disposable staff to Half Day to show status-specific clock handling.
 5. Save.
 6. Reset before save if you want to show the day returning to last loaded state.
 7. Lock the day only if this is disposable demo data.
 
 Example statuses to show:
 
-| Employee | Status | In | Out |
+| Staff | Status | In | Out |
 |---|---|---|---|
 | Aarav Sharma | Present | `08:05` | `15:30` |
 | Meera Iyer | Half Day | `09:10` | `12:30` |
@@ -641,7 +633,7 @@ Example request:
 
 | Field | Value |
 |---|---|
-| Employee | Aarav Sharma |
+| Staff | Aarav Sharma |
 | Leave type | Casual leave |
 | Dates | `2026-07-18` to `2026-07-18` |
 | Duration | Full day |
@@ -700,14 +692,14 @@ Demo steps:
 
 1. Open PF Rule.
 2. Create or review `Standard PF Rule`.
-3. Show employer and employee contribution settings if available.
+3. Show employer and staff contribution settings if available.
 
 Example:
 
 | Field | Value |
 |---|---|
 | Rule name | `Standard PF Rule` |
-| Employee contribution | `12%` |
+| Staff contribution | `12%` |
 | Employer contribution | `12%` |
 
 TDS and professional tax pages exist, but the active HR menu comments them out.
@@ -755,10 +747,10 @@ Run payroll steps:
 2. Load readiness or preview.
 3. Search `Aarav Sharma`.
 4. Show attendance days, paid leave, unpaid leave, gross, deductions, net pay, and warnings.
-5. Mark the employee row reviewed.
+5. Mark the staff row reviewed.
 6. Add an adjustment, such as `Demo arrears +1000`, if safe.
 7. Refresh preview if prompted.
-8. Lock payroll only for the disposable demo employee or demo month.
+8. Lock payroll only for the disposable demo staff or demo month.
 
 Example adjustment:
 
@@ -782,7 +774,7 @@ Route: `/hr/payroll/payslip-generation`.
 
 Demo steps:
 
-1. Select employee `Aarav Sharma`.
+1. Select staff `Aarav Sharma`.
 2. Select month `July-2026`.
 3. Load payslip.
 4. Show earnings, deductions, gross, net, attendance or policy basis, and generated date.
@@ -829,7 +821,7 @@ Example cycle:
 | Cycle | `Term 1 Staff Review 2026` |
 | Period | `2026-07-01` to `2026-09-30` |
 | Template | `Teaching Staff Review` |
-| Employee | Aarav Sharma |
+| Staff | Aarav Sharma |
 
 Narration:
 
@@ -843,8 +835,8 @@ Demo steps:
 
 1. Open Reports.
 2. Show report catalog.
-3. Pick an employee, attendance, leave, payroll, policy, or performance report.
-4. Select filters, such as academic year, date range, department, employee group, or payroll month.
+3. Pick an staff, attendance, leave, payroll, policy, or performance report.
+4. Select filters, such as academic year, date range, department, staff group, or payroll month.
 5. Preview the report.
 6. Save as a template if useful.
 7. Export to PDF or Excel if the environment supports background export.
@@ -858,7 +850,7 @@ Example report:
 |---|---|
 | Source | Attendance summary |
 | Date range | `2026-07-01` to `2026-07-31` |
-| Employee group | Teaching |
+| Staff group | Teaching |
 | Format | PDF preview, Excel for full data |
 
 Call out:
@@ -874,7 +866,7 @@ Route: `/hr/hr-notification`.
 Demo steps:
 
 1. Open Notification.
-2. Show employee notification settings.
+2. Show staff notification settings.
 3. Show attendance and leave notification settings.
 4. Show event and holiday notification settings if visible.
 5. Review notification history or delivery status if available.
@@ -883,7 +875,7 @@ Example settings to mention:
 
 | Notification area | Example |
 |---|---|
-| Employee | New employee finalized |
+| Staff | New staff finalized |
 | Attendance and leave | Missing attendance, leave approval |
 | Event and holiday | Upcoming staff holiday |
 
@@ -924,13 +916,13 @@ Use this table when demo data is not perfect:
 
 | Problem | What to say or do |
 |---|---|
-| Dashboard is empty | Explain that widgets show live tenant data and move to policy or employee setup |
-| Employee cannot be finalized | Check employee group, role approval, category, family caste, academic year, and teaching academic scope |
-| Role dropdown is empty | Use a role marked as Employee audience and explicitly approved for onboarding |
+| Dashboard is empty | Explain that widgets show live tenant data and move to policy or staff setup |
+| Staff cannot be finalized | Check staff group, role approval, category, family caste, academic year, and teaching academic scope |
+| Role dropdown is empty | Use a role marked as Staff audience and explicitly approved for onboarding |
 | Attendance row is locked | Do not edit it; show that locks protect payroll facts |
 | Leave balance is unavailable | Explain that leave policy assignment is required for balance calculation |
 | Payroll preview says not ready | Check salary structure, policy assignment, attendance facts, and selected month |
-| Payslip is missing | Confirm payroll has been locked for that employee and month |
+| Payslip is missing | Confirm payroll has been locked for that staff and month |
 | Report export takes time | Show preview first, then export history and queued status |
 | Partial route is requested | State that the page exists but is not active main navigation unless product confirms it |
 

@@ -54,11 +54,11 @@ async function openEmployeeReportBuilder(page: Page) {
   await page.getByTestId('hr-reports-generate-button').click();
   await expect(page.getByRole('textbox', { name: 'Search categories' })).toBeVisible();
   await page
-    .getByText(/^Employee$/)
+    .getByText(/^Staff$/)
     .first()
     .click();
   await page
-    .getByText(/New Employee Report/i)
+    .getByText(/New Staff Report/i)
     .first()
     .click();
   await expect(page.getByTestId('hr-report-builder')).toBeVisible();
@@ -252,7 +252,7 @@ test.describe('HR Reports enterprise E2E', () => {
     );
   });
 
-  test('builds, previews, exports, schedules, and downloads an employee report', async ({
+  test('builds, previews, exports, schedules, and downloads a staff member report', async ({
     page,
   }) => {
     test.setTimeout(240_000);
@@ -264,9 +264,9 @@ test.describe('HR Reports enterprise E2E', () => {
     await page.getByLabel('Chart Category').click();
     await page.getByRole('option', { name: /Department/i }).click();
     await page.getByTestId('hr-report-preview-button').click();
-    await expect(page.getByText(/rows - Employee/i)).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByText(/rows - Staff/i)).toBeVisible({ timeout: 60_000 });
 
-    const reportName = `E2E Employee Report ${Date.now()}`;
+    const reportName = `E2E Staff Report ${Date.now()}`;
     const request = {
       reportType: reportName,
       dataSource: 'employee',
