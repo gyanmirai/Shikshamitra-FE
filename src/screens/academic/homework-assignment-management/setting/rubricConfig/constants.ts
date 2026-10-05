@@ -66,10 +66,6 @@ export const RUBRIC_SCORING_MODEL_OPTIONS = [
     value: RubricScoringModel.Checklist,
     label: RUBRIC_SCORING_MODEL_LABELS[RubricScoringModel.Checklist],
   },
-  {
-    value: RubricScoringModel.RatingScale,
-    label: RUBRIC_SCORING_MODEL_LABELS[RubricScoringModel.RatingScale],
-  },
 ];
 
 export const DEFAULT_PERFORMANCE_LEVELS = [

@@ -47,7 +47,10 @@ export function useGuidedManualData({
   previewRef.current = inProgressPreview;
   const selectedRoomKey = [...selectedRoomIds].sort().join('|');
   const previousRoomKey = [...plan.selectedRoomIds].sort().join('|');
-  const divisionKey = plan.divisions.map((division) => division.id).sort().join('|');
+  const divisionKey = plan.divisions
+    .map((division) => division.id)
+    .sort()
+    .join('|');
 
   useEffect(() => {
     let isCurrent = true;
@@ -60,24 +63,30 @@ export function useGuidedManualData({
         const [studentResponses, layoutResponses] = await Promise.all([
           Promise.all(
             plan.divisions.map((division) =>
-              loadStudents({
-                examId,
-                divisionId: division.id,
-                standardId,
-                seatingPlanId: plan.seatingPlanId,
-                pageSize: 1000,
-              }).unwrap()
+              loadStudents(
+                {
+                  examId,
+                  divisionId: division.id,
+                  standardId,
+                  seatingPlanId: plan.seatingPlanId,
+                  pageSize: 1000,
+                },
+                true
+              ).unwrap()
             )
           ) as Promise<ManualStudentResponseDto[]>,
           Promise.all(
             roomIds.map((roomId) =>
-              loadLayout({
-                examId,
-                divisionId: plan.divisions[0]?.id ?? '',
-                roomId,
-                seatingPlanId: plan.seatingPlanId,
-                pageSize: 1000,
-              }).unwrap()
+              loadLayout(
+                {
+                  examId,
+                  divisionId: plan.divisions[0]?.id ?? '',
+                  roomId,
+                  seatingPlanId: plan.seatingPlanId,
+                  pageSize: 1000,
+                },
+                true
+              ).unwrap()
             )
           ) as Promise<ManualLayoutResponseDto[]>,
         ]);
@@ -85,7 +94,10 @@ export function useGuidedManualData({
         const data = mapGuidedManualEditorData(
           plan,
           studentResponses,
-          layoutResponses.map((layout, index) => ({ ...layout, roomId: layout.roomId ?? roomIds[index] }))
+          layoutResponses.map((layout, index) => ({
+            ...layout,
+            roomId: layout.roomId ?? roomIds[index],
+          }))
         );
         setDraft({
           ...buildEmptyDraft(examId),

@@ -5,6 +5,7 @@ import { RoomsStep } from './rooms-step';
 import { AllocationStep } from './allocation-step';
 import { AllocationModeStep } from './allocation-mode-step';
 import { GuidedManualEditor } from '../manual/guided-manual-editor';
+import { AutomaticSeatingPreview } from './automatic-seating-preview';
 
 import type { GuidedStepProps } from '../types';
 
@@ -15,6 +16,9 @@ export function ConfigureStep(props: GuidedStepProps) {
       <RoomsStep {...props} />
       <AllocationModeStep {...props} />
       <AllocationStep {...props} />
+      {workflow.formik.values.allocationMode === 'automatic' && (
+        <AutomaticSeatingPreview {...props} />
+      )}
       {workflow.formik.values.allocationMode === 'manual' && (
         <FormSectionCard
           icon="mdi:seat"

@@ -43,6 +43,11 @@ export interface GuidedWorkflowState {
   selectedPlan?: SeatingPlanGroupDto;
   seatingPlanId?: string;
   preview?: GuidedAllocationPreviewDto;
+  previewKey?: string;
+  generatePreview: (
+    planId: string,
+    values: GuidedSeatingValues
+  ) => Promise<GuidedAllocationPreviewDto>;
   validation?: SeatingValidationDto;
   readiness: ExaminationSeatingReadinessDto;
   publication?: SeatingPlanWorkspaceDto;

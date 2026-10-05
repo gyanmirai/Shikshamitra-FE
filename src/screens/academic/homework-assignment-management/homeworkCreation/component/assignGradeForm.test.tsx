@@ -58,7 +58,7 @@ const rubric = {
       rubricId: 'rubric-1',
       title: 'Understanding',
       isRequired: true,
-      maxMarks: 4,
+      points: 4,
       displayOrder: 1,
     },
   ],

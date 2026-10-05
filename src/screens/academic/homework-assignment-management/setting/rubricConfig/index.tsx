@@ -38,6 +38,7 @@ import {
 
 import RubricConfigForm from './rubricConfigForm';
 import RubricConfigTable from './rubricConfigTable';
+import { getRubricMaximumLabel } from './rubricScoreLabels';
 import { RubricTemplatePreview } from './components/RubricTemplatePreview';
 import {
   RUBRIC_STATUS_LABELS,
@@ -134,7 +135,8 @@ const RubricConfigScreen = () => {
           studentDescription: criterion.studentDescription,
           teacherGuidance: criterion.teacherGuidance,
           isRequired: criterion.isRequired,
-          maxMarks: criterion.maxMarks,
+          points: criterion.points,
+          weight: criterion.weight,
           displayOrder: index + 1,
         })),
       }).unwrap();
@@ -378,7 +380,7 @@ const RubricConfigScreen = () => {
                 sx={{ py: 1.5, px: 1.5, borderRadius: 1 }}
                 startIcon={<Iconify icon="solar:medal-ribbon-star-bold" />}
               >
-                {selectedData?.totalMarks || 0} Points Max
+                {selectedData ? getRubricMaximumLabel(selectedData) : '0 points max'}
               </Label>
             </Stack>
 

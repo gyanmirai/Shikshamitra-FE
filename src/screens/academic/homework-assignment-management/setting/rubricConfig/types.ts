@@ -9,7 +9,8 @@ export type RubricCriterionFormValue = {
   id: string;
   title: string;
   description: string;
-  maxMarks: string;
+  points?: string;
+  weight?: string;
   studentDescription: string;
   teacherGuidance: string;
   isRequired: boolean;

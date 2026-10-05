@@ -41,7 +41,7 @@ const existingRubric: AssessmentRubricDto = {
       id: 'criterion-one',
       rubricId: 'template-one',
       title: 'Accuracy',
-      maxMarks: 4,
+      points: 4,
       displayOrder: 1,
       isRequired: true,
     },
@@ -108,7 +108,7 @@ describe('Rubric template visibility', () => {
         title: 'Writing rubric',
         visibility: RubricVisibility.Institution,
         performanceLevels: [],
-        criteria: [expect.objectContaining({ title: 'Accuracy', maxMarks: 10 })],
+        criteria: [expect.objectContaining({ title: 'Accuracy', points: 10 })],
       },
     });
   }, 60000);
@@ -169,4 +169,31 @@ describe('Rubric template step navigation', () => {
     await user.click(screen.getByRole('button', { name: 'Step 2: Criteria & Scoring' }));
     expect(await screen.findByLabelText('Criterion *')).toHaveValue('Accuracy');
   });
+});
+
+
+describe('Shared performance level scoring', () => {
+  it('edits and saves a Performance Levels template without a criterion score field', async () => {
+    const { user, requests } = setup({ ...existingRubric,
+      scoringModel: RubricScoringModel.PerformanceLevels,
+      performanceLevels: [
+        { level: 1, label: 'Good', score: 2, studentLabel: 'Good' },
+        { level: 2, label: 'Excellent', score: 5, studentLabel: 'Excellent' },
+      ],
+      criteria: existingRubric.criteria.map(({ points, ...criterion }) => criterion),
+    });
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await screen.findByLabelText('Criterion *');
+    expect(screen.queryByLabelText(/Max Score|Max Points/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(await screen.findByText('Excellent')).toBeInTheDocument();
+    expect(screen.queryByText(/maximum score/i)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /^Save$/ }));
+    await waitFor(() => expect(requests).toHaveLength(1));
+    const criteria = requests[0].body.criteria as Record<string, unknown>[];
+    expect(criteria[0]).toMatchObject({ title: 'Accuracy', isRequired: true });
+    expect(criteria[0]).not.toHaveProperty('maxMarks');
+    expect(criteria[0]).not.toHaveProperty('points');
+    expect(criteria[0]).not.toHaveProperty('weight');
+  }, 60000);
 });

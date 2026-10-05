@@ -2,22 +2,19 @@ import type { FormikProps } from 'formik';
 
 import { getIn } from 'formik';
 import { useRef } from 'react';
-import CustomSelect from 'src/components/custom-select';
 import { Iconify } from 'src/components/iconify';
-import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 import {
-  Box,
+  Chip,
   Stack,
   Button,
-  Chip,
-  TextField,
   Typography,
   FormHelperText,
 } from '@mui/material';
-import { RubricFormSection } from './RubricFormSection';
-import { RubricCriterionActions } from './RubricCriterionActions';
+import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
+
 import { CRITERION_BANK } from '../constants';
-import { rubricRowNumberAt } from '../performance-level-order';
+import { RubricFormSection } from './RubricFormSection';
+import { RubricCriterionRow } from './RubricCriterionRow';
 import {
   canDeleteCriterion,
   addCriterionFromChip,
@@ -26,202 +23,19 @@ import {
 import type {
   RubricConfigFormValues,
   RubricCriterionFormValue,
-  RubricPerformanceLevelFormValue,
-} from '../types';
+  } from '../types';
 
 type Formik = FormikProps<RubricConfigFormValues>;
 let nextCriterionRowId = 0;
 
-const fieldError = (formik: Formik, path: string) =>
-  getIn(formik.touched, path) ? String(getIn(formik.errors, path) || '') : '';
-
-function CriterionRow({
-  formik,
-  criterion,
-  index,
-  onDelete,
-  criterionInputRef,
-}: {
-  formik: Formik;
-  criterion: RubricCriterionFormValue;
-  index: number;
-  onDelete: () => void;
-  criterionInputRef: (node: HTMLInputElement | null) => void;
-}) {
-  const path = (name: keyof RubricCriterionFormValue) => `criteria[${index}].${name}`;
-  const rowNumber = rubricRowNumberAt(index);
-  const isChecklist = formik.values.scoringModel === RubricScoringModel.Checklist;
-  const hasScoringLevels = formik.values.performanceLevels.length > 0;
-  const scoreError = fieldError(formik, path('maxMarks'));
-  const titleError = fieldError(formik, path('title'));
-
-  const criterionField = (
-    <TextField
-      fullWidth
-      size="small"
-      label="Criterion *"
-      name={path('title')}
-      value={criterion.title}
-      inputRef={criterionInputRef}
-      onBlur={formik.handleBlur}
-      onChange={(event) => formik.setFieldValue(path('title'), event.target.value)}
-      error={Boolean(titleError)}
-      helperText={titleError || ' '}
-      sx={{
-        gridArea: 'title',
-        minWidth: 0,
-        '& .MuiFormHelperText-root': { minHeight: '1.25em', mx: 0, whiteSpace: 'nowrap' },
-      }}
-    />
-  );
-
-  const scoreField =
-    isChecklist && !hasScoringLevels ? null : hasScoringLevels ? (
-      <CustomSelect
-        label="Max Score *"
-        options={formik.values.performanceLevels
-          .filter((level: RubricPerformanceLevelFormValue) => level.score !== '')
-          .map((level: RubricPerformanceLevelFormValue) => ({
-            label: level.label ? `${level.label} (${level.score})` : level.score,
-            value: level.score,
-          }))}
-        labelKey="label"
-        valueKey="value"
-        value={criterion.maxMarks}
-        onBlur={() => formik.setFieldTouched(path('maxMarks'), true)}
-        onChange={(value) => formik.setFieldValue(path('maxMarks'), String(value))}
-        error={Boolean(scoreError)}
-        helperText={scoreError || ' '}
-        formControlProps={{
-          fullWidth: true,
-          sx: {
-            maxWidth: 'unset',
-            gridArea: 'max',
-            minWidth: 0,
-            '& .MuiFormHelperText-root': { minHeight: '1.25em' },
-          },
-        }}
-      />
-    ) : (
-      <TextField
-        fullWidth
-        size="small"
-        type="number"
-        label={
-          formik.values.scoringModel === RubricScoringModel.WeightedPercentage
-            ? 'Weight % *'
-            : 'Max Points *'
-        }
-        name={path('maxMarks')}
-        value={criterion.maxMarks}
-        inputProps={{
-          min: formik.values.scoringModel === RubricScoringModel.WeightedPercentage ? 0.01 : 0.5,
-          max: formik.values.scoringModel === RubricScoringModel.WeightedPercentage ? 100 : 1000,
-          step: formik.values.scoringModel === RubricScoringModel.WeightedPercentage ? 0.01 : 0.5,
-        }}
-        onBlur={formik.handleBlur}
-        onChange={(event) => formik.setFieldValue(path('maxMarks'), event.target.value)}
-        error={Boolean(scoreError)}
-        helperText={scoreError || ' '}
-        sx={{ gridArea: 'max', minWidth: 0, '& .MuiFormHelperText-root': { minHeight: '1.25em' } }}
-      />
-    );
-
-  return (
-    <Box
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: '36px minmax(0, 1fr) 44px',
-          sm: '36px minmax(130px, 1fr) minmax(130px, 1fr) minmax(130px, 1fr) minmax(164px, auto)',
-          lg: '36px minmax(150px, 1.1fr) minmax(150px, 1fr) minmax(150px, 0.9fr) minmax(164px, auto)',
-        },
-        gridTemplateAreas: {
-          xs: '"number title actions" ". description ." ". max ." ". student ." ". teacher ."',
-          sm: '"number title description max actions" ". student teacher . ."',
-          lg: '"number title description max actions" ". student teacher . ."',
-        },
-        alignItems: 'start',
-        columnGap: 1,
-        rowGap: 1.25,
-        py: 1,
-      }}
-    >
-      <Box
-        component="span"
-        sx={{
-          gridArea: 'number',
-          width: 28,
-          height: 28,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          justifySelf: 'center',
-          borderRadius: '50%',
-          border: 1,
-          borderColor: 'divider',
-          bgcolor: 'action.selected',
-          color: 'text.primary',
-          typography: 'subtitle2',
-        }}
-      >
-        {rowNumber}
-      </Box>
-      {criterionField}
-      <TextField
-        fullWidth
-        size="small"
-        label="Description"
-        name={path('description')}
-        value={criterion.description}
-        onBlur={formik.handleBlur}
-        onChange={(event) => formik.setFieldValue(path('description'), event.target.value)}
-        sx={{ gridArea: 'description', minWidth: 0 }}
-      />
-      {scoreField}
-      <Box sx={{ gridArea: 'student', minWidth: 0 }}>
-        <TextField
-          fullWidth
-          size="small"
-          label="Student-Facing Description"
-          name={path('studentDescription')}
-          value={criterion.studentDescription}
-          onBlur={formik.handleBlur}
-          onChange={(event) => formik.setFieldValue(path('studentDescription'), event.target.value)}
-        />
-      </Box>
-      <Box sx={{ gridArea: 'teacher', minWidth: 0 }}>
-        <TextField
-          fullWidth
-          size="small"
-          label="Teacher Guidance"
-          name={path('teacherGuidance')}
-          value={criterion.teacherGuidance}
-          onBlur={formik.handleBlur}
-          onChange={(event) => formik.setFieldValue(path('teacherGuidance'), event.target.value)}
-        />
-      </Box>
-      <Box sx={{ gridArea: 'actions', minWidth: 0, display: 'flex', justifyContent: 'flex-end' }}>
-        <RubricCriterionActions
-          criterionNumber={rowNumber}
-          isRequired={criterion.isRequired}
-          canDelete={canDeleteCriterion(formik.values.criteria.length)}
-          onRequiredChange={(isRequired) => formik.setFieldValue(path('isRequired'), isRequired)}
-          onDelete={onDelete}
-        />
-      </Box>
-    </Box>
-  );
-}
-
 export function RubricCriteriaBuilder({ formik }: { formik: Formik }) {
   const pendingFocusId = useRef<string | null>(null);
-  const criteria = formik.values.criteria;
+  const {criteria} = formik.values;
   const isChecklist = formik.values.scoringModel === RubricScoringModel.Checklist;
   const clearTouchedCriteria = () => formik.setTouched({ ...formik.touched, criteria: [] }, false);
 
   const createCriterion = (title = ''): RubricCriterionFormValue => {
-    const maxMarks = isChecklist
+    const points = isChecklist
       ? '1'
       : formik.values.scoringModel === RubricScoringModel.WeightedPercentage
         ? ''
@@ -238,7 +52,8 @@ export function RubricCriteriaBuilder({ formik }: { formik: Formik }) {
       id: `new-criterion-${nextCriterionRowId}`,
       title,
       description: '',
-      maxMarks,
+      ...(formik.values.scoringModel === RubricScoringModel.PerformanceLevels ? {} :
+        formik.values.scoringModel === RubricScoringModel.WeightedPercentage ? { weight: points } : { points }),
       studentDescription: '',
       teacherGuidance: '',
       isRequired: true,
@@ -319,13 +134,13 @@ export function RubricCriteriaBuilder({ formik }: { formik: Formik }) {
         {formik.values.scoringModel === RubricScoringModel.WeightedPercentage && (
           <Typography variant="body2" color="text.secondary">
             Total weight:{' '}
-            {criteria.reduce((sum, item) => sum + (Number(item.maxMarks) || 0), 0).toFixed(2)}% /
+            {criteria.reduce((sum, item) => sum + (Number(item.weight) || 0), 0).toFixed(2)}% /
             100%
           </Typography>
         )}
         <Stack spacing={0.5}>
           {criteria.map((criterion, index) => (
-            <CriterionRow
+            <RubricCriterionRow
               key={criterion.id}
               formik={formik}
               criterion={criterion}

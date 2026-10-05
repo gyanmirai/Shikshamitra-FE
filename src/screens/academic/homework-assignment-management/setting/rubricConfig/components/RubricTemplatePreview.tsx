@@ -8,7 +8,8 @@ type Criterion = {
   description?: string | null;
   studentDescription?: string | null;
   teacherGuidance?: string | null;
-  maxMarks: number | string;
+  points?: number | string | null;
+  weight?: number | string | null;
 };
 
 type Level = {
@@ -41,9 +42,17 @@ export function RubricTemplatePreview({ scoringModel, criteria, performanceLevel
 
   return (
     <Stack spacing={1.5}>
+      <Typography variant="subtitle2">
+        {scoringModel === RubricScoringModel.WeightedPercentage
+          ? `Total weight: ${Number(criteria.reduce((sum, criterion) => sum + (Number(criterion.weight) || 0), 0).toFixed(2))} / 100%`
+          : scoringModel === RubricScoringModel.Checklist && !showsLevels
+            ? `Checklist items: ${criteria.length}`
+            : null}
+      </Typography>
       {criteria.map((criterion, index) => {
         const name = criterion.title.trim() || `Criterion ${index + 1}`;
-        const max = Number(criterion.maxMarks);
+        const max = scoringModel === RubricScoringModel.PerformanceLevels
+          ? Math.max(0, ...levels.map((level) => Number(level.score))) : Number(criterion.points ?? criterion.weight);
         const availableLevels = levels.filter((level) => Number(level.score) <= max);
 
         return (
@@ -117,8 +126,8 @@ export function RubricTemplatePreview({ scoringModel, criteria, performanceLevel
               ) : (
                 <Typography variant="body2" color="text.secondary">
                   {scoringModel === RubricScoringModel.WeightedPercentage
-                    ? 'Teacher enters achievement from 0 to 100%.'
-                    : `Teacher enters points earned from 0 to ${criterion.maxMarks || 0}.`}
+                    ? `Weight ${criterion.weight}%. Teacher enters achievement from 0 to 100%.`
+                    : `Teacher enters points earned from 0 to ${criterion.points || 0}.`}
                 </Typography>
               )}
 

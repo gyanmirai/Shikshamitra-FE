@@ -65,7 +65,7 @@ export function GuidedSeatingStepper(props: GuidedStepProps) {
         open={automaticReplacementDialog.value}
         onClose={workflow.isBusy ? () => undefined : automaticReplacementDialog.onFalse}
         icon="warning"
-        title="Generate a new automatic arrangement?"
+        title="Review the automatic replacement arrangement?"
         content={
           <>
             This plan already has <strong>{allocatedStudents}</strong> saved seat assignment
@@ -81,7 +81,7 @@ export function GuidedSeatingStepper(props: GuidedStepProps) {
             loading={workflow.isBusy}
             onClick={continueWithAutomaticPreview}
           >
-            Generate new preview
+            Review automatic preview
           </LoadingButton>
         }
       />
