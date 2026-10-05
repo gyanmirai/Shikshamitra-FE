@@ -343,18 +343,18 @@ export const professionalManagementApi = api.injectEndpoints({
       keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
     getPerformanceReviews: builder.query<any, any>({
-      query: (params = {}) => ({
+      query: ({ accessKey, ...params } = {}) => ({
         url: '/hr/professional-management/reviews',
         method: 'GET',
         params: compactParams(params),
       }),
       providesTags: [employeeType.professionalReview],
-      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
+      keepUnusedDataFor: 0,
     }),
-    getPerformanceReview: builder.query<ProfessionalReview, string>({
-      query: (id) => `/hr/professional-management/reviews/${id}`,
+    getPerformanceReview: builder.query<ProfessionalReview, { id: string; accessKey: string }>({
+      query: ({ id }) => `/hr/professional-management/reviews/${id}`,
       providesTags: [employeeType.professionalReview],
-      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
+      keepUnusedDataFor: 0,
     }),
     savePerformanceSelfAppraisal: builder.mutation<ProfessionalReview, any>({
       query: ({ id, body }) => ({
@@ -401,11 +401,13 @@ export const professionalManagementApi = api.injectEndpoints({
       providesTags: [employeeType.professionalReview],
       keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
     }),
-    getPerformanceEvidence: builder.query<PerformanceEvidence[], string>({
-      query: (id) => `/hr/professional-management/reviews/${id}/evidence`,
-      providesTags: [employeeType.professionalReview],
-      keepUnusedDataFor: PERFORMANCE_CACHE_SECONDS,
-    }),
+    getPerformanceEvidence: builder.query<PerformanceEvidence[], { id: string; accessKey: string }>(
+      {
+        query: ({ id }) => `/hr/professional-management/reviews/${id}/evidence`,
+        providesTags: [employeeType.professionalReview],
+        keepUnusedDataFor: 0,
+      }
+    ),
     addPerformanceObservation: builder.mutation<any, any>({
       query: ({ id, body }) => ({
         url: `/hr/professional-management/reviews/${id}/observations`,

@@ -13,6 +13,11 @@ export const dashboardPermissions = {
   leave: `${hrPermissions.leaveManagement.leaveCenter}.View`,
   payroll: `${hrPermissions.payroll.dashboard}.View`,
   openPayroll: `${hrPermissions.payroll.runPayroll}.View`,
+  onboarding: `${hrPermissions.employee.onboarding}.View`,
+  appraisals: 'HR.PerformanceManagement.View',
+  legacyAppraisals: hrPermissions.professionalManagement,
+  addEmployees: `${hrPermissions.employee.list}.Add`,
+  reports: hrPermissions.reportActions.view,
 } as const;
 
 export const dailyStatus: Record<DailyStaffStatus, { label: string; color: LabelColor }> = {
@@ -79,30 +84,21 @@ export const parseDashboardState = (params: URLSearchParams, today = indiaToday(
     requestedDate <= today
       ? requestedDate
       : today;
-  const selectedStatus = params.get('status') || '';
-  const status =
-    selectedStatus === 'Review' || Object.hasOwn(dailyStatus, selectedStatus) ? selectedStatus : '';
-  const size = Number(params.get('pageSize') || 25);
-  const page = Number(params.get('page') || 1);
-  const requestedSort = params.get('sort') || 'name';
-  return {
-    date,
-    trendView: params.get('trendView') === 'counts' ? ('counts' as const) : ('chart' as const),
-    status: status as DailyStaffStatus | 'Review' | '',
-    group: ['teaching', 'nonTeaching'].includes(params.get('group') || '')
-      ? params.get('group')!
-      : '',
-    stage: params.get('stage') || '',
-    department: params.get('department') || '',
-    shift: params.get('shift') || '',
-    search: (params.get('search') || '').slice(0, 150),
-    sorting: ['name', 'name desc', 'status', 'status desc'].includes(requestedSort)
-      ? requestedSort
-      : 'name',
-    pageSize: [25, 50, 100].includes(size) ? size : 25,
-    page: Number.isSafeInteger(page) && page > 0 && page <= 100000 ? page : 1,
-  };
+  return { date };
 };
+
+export const obsoleteDashboardKeys = [
+  'group',
+  'stage',
+  'department',
+  'shift',
+  'search',
+  'status',
+  'sort',
+  'page',
+  'pageSize',
+  'trendView',
+];
 
 export const attendanceHref = (employeeId: string, date: string) =>
   `${hrPaths.attendance.attendanceTracking}?employeeId=${encodeURIComponent(employeeId)}&startDate=${date}&endDate=${date}`;

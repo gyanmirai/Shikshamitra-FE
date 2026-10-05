@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-02
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -60,13 +60,13 @@ npm run build
 
 ## Coverage map
 
-For the operational dashboard, run `operational-dashboard-state.test.ts`, the permission and role catalogue tests, and `e2e/hr/hr-dashboard-standard-design.spec.ts`.
-The browser suite covers status filtering, deterministic attention shortcuts, IST payroll timestamps, drawer Apply/Cancel/Reset, filter chips, unavailable selections, date shortcuts, chart/count reconciliation, stage assignments, and server pagination beyond 100 staff.
-It also covers read-only refresh, long names, unavailable data, real empty results, revoked access, exact-grant denial for an admin role, four viewport widths, and light/dark themes.
-The 390 by 844 viewport check requires the first staff name and status to appear before scrolling with normal data and no actionable exceptions.
-Keyboard checks cover drawer and popover dismissal, restored focus, attention shortcuts, mobile sorting, reduced motion, and contained horizontal scrolling.
-Finish with signed-in local Codex browser checks against the real backend for HR, principal, and restricted supervisor access.
-Mocked browser contracts supplement backend scope and classification tests rather than proving database authorization.
+For the module overview dashboard, run `operational-dashboard-state.test.ts`, professional-management utilities, permission catalogue tests, and `e2e/hr/hr-dashboard-standard-design.spec.ts`.
+The browser suite covers four primary modules, exact partial grants, scoped onboarding, workflow shortcuts, date changes and reload, retired URL keys, complete IST payroll timestamps, empty and failed sections, read-only refresh, and revoked access.
+Verify the actual active light or dark theme at 390, 768, 1366, and 1440 pixels, with keyboard attendance tooltips, reduced motion, and no page overflow.
+Module counts come from overview data and must not request or depend on a staff page.
+Backend tests prove counts beyond 100 records, distinct appraisal deadlines, tenant isolation, and review drill-down scope.
+Finish with signed-in local Codex browser checks against the real backend for existing authorized HR, principal, and supervisor accounts.
+Mocked browser contracts supplement API scope tests rather than proving database authorization.
 
 Use this table to choose validation:
 

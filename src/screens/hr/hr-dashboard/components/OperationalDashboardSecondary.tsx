@@ -2,308 +2,372 @@
 
 import type { OperationalOverview } from 'src/redux/hr/hrOperationalDashboardApi';
 
+import { useTheme } from '@mui/material/styles';
 import { hrPaths } from 'src/constants/hr-menus';
+import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
+import { Chart, useChart } from 'src/components/chart';
 import {
   Box,
   Card,
   Stack,
   Alert,
-  Table,
   Button,
   Tooltip,
-  Divider,
-  TableRow,
-  TableBody,
-  TableCell,
-  TableHead,
+  Skeleton,
+  TextField,
+  IconButton,
   Typography,
-  ToggleButton,
-  TableContainer,
-  ToggleButtonGroup,
+  useMediaQuery,
+  LinearProgress,
 } from '@mui/material';
 
 import {
+  indiaToday,
   dailyStatus,
   formatCount,
   formatUpdatedAt,
   formatSchoolDate,
+  previousSchoolDay,
 } from '../operational-dashboard-state';
 
+const statusKeys = [
+  'present',
+  'absent',
+  'onLeave',
+  'halfDay',
+  'notMarked',
+  'notScheduled',
+  'needsSetup',
+] as const;
 type Props = {
-  data: OperationalOverview;
+  data?: OperationalOverview;
+  date: string;
+  onDate: (date: string) => void;
+  canViewAttendance: boolean;
   canViewPayroll: boolean;
   canOpenPayroll: boolean;
-  canViewAttendance: boolean;
-  trendView: 'chart' | 'counts';
-  onView: (view: 'chart' | 'counts') => void;
-  onDate: (date: string) => void;
+  canMarkAttendance: boolean;
 };
 
-export default function OperationalDashboardSecondary(props: Props) {
-  const { data, canViewPayroll, canOpenPayroll, canViewAttendance, trendView, onView, onDate } =
-    props;
-  const chartColors = {
-    present: 'success.main',
-    absent: 'error.main',
-    onLeave: 'info.main',
-    halfDay: 'warning.main',
-    notMarked: 'action.disabled',
-    notScheduled: 'action.hover',
-    needsSetup: 'warning.light',
-  };
+export default function OperationalDashboardSecondary({
+  data,
+  date,
+  onDate,
+  canViewAttendance,
+  canViewPayroll,
+  canOpenPayroll,
+  canMarkAttendance,
+}: Props) {
+  const theme = useTheme();
+  const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)');
+  const trend = data?.trend || [];
+  const colours = [
+    theme.palette.success.main,
+    theme.palette.error.main,
+    theme.palette.info.main,
+    theme.palette.warning.main,
+    theme.palette.text.disabled,
+    theme.palette.divider,
+    theme.palette.warning.light,
+  ];
+  const statuses = Object.values(dailyStatus);
+  const chartOptions = useChart({
+    chart: { height: 210, stacked: true, animations: { enabled: !reducedMotion } },
+    highcharts: {
+      accessibility: { enabled: false },
+      chart: { animation: !reducedMotion },
+      yAxis: { title: { text: null } },
+      plotOptions: {
+        series: { animation: !reducedMotion },
+        column: { dataLabels: { enabled: false } },
+      },
+    },
+    colors: colours,
+    legend: { show: false },
+    stroke: { width: 0 },
+    dataLabels: { enabled: false },
+    plotOptions: { bar: { columnWidth: '48%', borderRadius: 2 } },
+    xaxis: {
+      categories: trend.map((day) => formatSchoolDate(day.date).split(' ').slice(0, 2).join(' ')),
+    },
+    yaxis: { min: 0, decimalsInFloat: 0 },
+    tooltip: { shared: true, intersect: false },
+  });
+  const series = statusKeys.map((key, i) => ({
+    name: statuses[i].label,
+    data: trend.map((day) => day[key]),
+  }));
+  const payroll = data?.payroll;
+  const completed = payroll ? payroll.reviewedCount + payroll.lockedCount : 0;
+  const sectionStyle = { p: 2, minWidth: 0 };
+
   return (
-    <Stack spacing={2.5}>
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            lg: canViewPayroll ? 'minmax(0, 1.7fr) minmax(0, 1fr)' : '1fr',
-          },
-          gap: 2.5,
-        }}
-      >
-        {canViewAttendance && data.trend ? (
-          <Card
-            component="section"
-            aria-label="Seven-day staff attendance"
-            sx={{ p: 2.5, minWidth: 0 }}
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: 'minmax(0, 1fr)',
+          lg:
+            canViewAttendance && canViewPayroll
+              ? 'minmax(0, 1.7fr) minmax(0, 1fr)'
+              : 'minmax(0, 1fr)',
+        },
+        gap: 2,
+      }}
+    >
+      {canViewAttendance && (
+        <Card
+          component="section"
+          aria-label="Seven-day staff attendance"
+          variant="outlined"
+          sx={sectionStyle}
+        >
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            useFlexGap
+            flexWrap="wrap"
+            gap={1}
           >
-            <Stack
-              direction="row"
-              justifyContent="space-between"
-              alignItems="center"
-              spacing={1}
-              useFlexGap
-              flexWrap="wrap"
-            >
-              <Typography variant="h6" component="h2">
-                Seven-day attendance
-              </Typography>
-              <ToggleButtonGroup
-                size="small"
-                exclusive
-                value={trendView}
-                onChange={(_, next) => {
-                  if (next) onView(next);
-                }}
-                aria-label="Attendance trend view"
-              >
-                <ToggleButton value="chart">Chart</ToggleButton>
-                <ToggleButton value="counts">Counts</ToggleButton>
-              </ToggleButtonGroup>
-            </Stack>
-            <Typography variant="caption" color="text.secondary">
-              Daily counts for eligible staff in the selected filters.
+            <Typography variant="h6" component="h2">
+              Seven-day attendance
             </Typography>
-            {trendView === 'counts' ? (
-              <TableContainer
-                tabIndex={0}
-                role="region"
-                aria-label="Seven-day attendance counts, scroll horizontally for all statuses"
+            <Button
+              component={RouterLink}
+              href={`${hrPaths.attendance.dashboard}?date=${date}`}
+              size="small"
+            >
+              Open attendance
+            </Button>
+          </Stack>
+          <Stack
+            direction="row"
+            alignItems="center"
+            useFlexGap
+            flexWrap="wrap"
+            gap={0.75}
+            sx={{ mt: 1.5 }}
+          >
+            <Tooltip title="Previous day">
+              <IconButton
+                aria-label="Previous attendance day"
+                onClick={() => onDate(previousSchoolDay(date))}
+                sx={{ width: 44, height: 44 }}
+              >
+                <Iconify icon="mdi:chevron-left" />
+              </IconButton>
+            </Tooltip>
+            <TextField
+              label="Attendance date"
+              type="date"
+              size="small"
+              value={date}
+              onChange={(event) => {
+                const { value } = event.target;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(value) && value <= indiaToday()) onDate(value);
+              }}
+              slotProps={{
+                inputLabel: { shrink: true },
+                htmlInput: { max: indiaToday(), 'aria-label': 'Attendance date' },
+              }}
+              sx={{ width: 175 }}
+            />
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => onDate(indiaToday())}
+              disabled={date === indiaToday()}
+            >
+              Today
+            </Button>
+            {canMarkAttendance && (
+              <Button
+                component={RouterLink}
+                href={`${hrPaths.attendance.markAttendance}?date=${date}`}
+                size="small"
+                variant="contained"
+                sx={{ ml: { sm: 'auto' } }}
+              >
+                Mark attendance
+              </Button>
+            )}
+          </Stack>
+          {!data ? (
+            <Skeleton variant="rounded" height={300} sx={{ mt: 2 }} />
+          ) : data.attendanceState !== 'Available' || !data.summary || !data.trend ? (
+            <Alert severity="info" sx={{ mt: 2 }}>
+              Attendance summary is unavailable. Refresh to retry.
+            </Alert>
+          ) : (
+            <>
+              <Box sx={{ mt: 1 }} aria-hidden="true">
+                <Chart type="bar" series={series} options={chartOptions} height={210} />
+              </Box>
+              <Box
                 sx={{
-                  mt: 2,
-                  overflowX: 'auto',
-                  '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' },
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(7, minmax(0, 1fr))',
+                  gap: 0.25,
                 }}
               >
-                <Table size="small" aria-label="Seven-day attendance counts" sx={{ minWidth: 790 }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Date</TableCell>
-                      {Object.values(dailyStatus).map((item) => (
-                        <TableCell key={item.label} align="right">
-                          {item.label}
-                        </TableCell>
-                      ))}
-                      <TableCell align="right">Total staff</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {data.trend.map((day) => (
-                      <TableRow key={day.date} selected={day.date === data.date}>
-                        <TableCell component="th" scope="row">
-                          <Button
-                            size="small"
-                            onClick={() => onDate(day.date)}
-                            aria-label={`View ${formatSchoolDate(day.date)}`}
-                            aria-pressed={day.date === data.date}
-                          >
-                            {formatSchoolDate(day.date)}
-                          </Button>
-                        </TableCell>
-                        {Object.keys(chartColors).map((key) => (
-                          <TableCell
-                            key={key}
-                            align="right"
-                            sx={{ fontVariantNumeric: 'tabular-nums' }}
-                          >
-                            {formatCount(Number(day[key as keyof typeof day]))}
-                          </TableCell>
-                        ))}
-                        <TableCell
-                          align="right"
-                          sx={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}
+                {trend.map((day) => {
+                  const description = `${formatSchoolDate(day.date)}: ${statusKeys.map((key, i) => `${formatCount(day[key])} ${statuses[i].label.toLowerCase()}`).join(', ')}, ${formatCount(day.staffCount)} total staff`;
+                  return (
+                    <Tooltip key={day.date} title={description}>
+                      <Button
+                        size="small"
+                        onClick={() => onDate(day.date)}
+                        aria-label={description}
+                        aria-pressed={day.date === date}
+                        sx={{
+                          minWidth: 0,
+                          minHeight: 44,
+                          p: 0.25,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          color: 'text.secondary',
+                          border: 1,
+                          borderColor: day.date === date ? 'primary.main' : 'transparent',
+                          bgcolor: day.date === date ? 'action.selected' : 'transparent',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{ fontVariantNumeric: 'tabular-nums', lineHeight: 1.4 }}
                         >
-                          {formatCount(day.staffCount)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                          {formatCount(day.present)} / {formatCount(day.staffCount)}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: 10 }}>
+                          present / total
+                        </Typography>
+                      </Button>
+                    </Tooltip>
+                  );
+                })}
+              </Box>
+              <Stack direction="row" flexWrap="wrap" useFlexGap gap={1.25} sx={{ mt: 1.5 }}>
+                {statusKeys.map((key, i) => (
+                  <Stack key={key} direction="row" gap={0.5} alignItems="center">
+                    <Box
+                      aria-hidden="true"
+                      sx={{ width: 8, height: 8, borderRadius: 0.25, bgcolor: colours[i] }}
+                    />
+                    <Typography variant="caption">
+                      {statuses[i].label} <strong>{formatCount(data.summary![key])}</strong>
+                    </Typography>
+                  </Stack>
+                ))}
+              </Stack>
+              <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 1 }}>
+                {formatSchoolDate(date)} · Daily counts in your permitted scope. Not marked means
+                attendance has not been recorded.
+              </Typography>
+              {data.summary.needsSetup + data.summary.needsReview > 0 && (
+                <Typography variant="caption" color="warning.main" component="p" sx={{ mt: 0.75 }}>
+                  {formatCount(data.summary.needsSetup)} need setup ·{' '}
+                  {formatCount(data.summary.needsReview)} need review
+                </Typography>
+              )}
+            </>
+          )}
+        </Card>
+      )}
+      {canViewPayroll && (
+        <Card
+          component="section"
+          aria-label="Payroll progress"
+          variant="outlined"
+          sx={sectionStyle}
+        >
+          <Stack spacing={2}>
+            <Typography variant="h6" component="h2">
+              Payroll progress
+            </Typography>
+            {!data ? (
+              <Skeleton variant="rounded" height={260} />
+            ) : data.payrollState !== 'Available' || !payroll ? (
+              <Alert severity="info">Payroll progress is unavailable. Refresh to retry.</Alert>
             ) : (
               <>
-                <Stack spacing={0.75} sx={{ mt: 2 }}>
-                  {data.trend.map((day) => {
-                    const description = `${formatSchoolDate(day.date)}: ${day.present} present, ${day.absent} absent, ${day.onLeave} on leave, ${day.halfDay} half day, ${day.notMarked} not marked, ${day.notScheduled} not scheduled, ${day.needsSetup} need setup, ${day.staffCount} total staff`;
-                    return (
-                      <Tooltip key={day.date} title={description}>
-                        <Box
-                          component="button"
-                          onClick={() => onDate(day.date)}
-                          aria-label={`View ${description}`}
-                          aria-pressed={day.date === data.date}
-                          sx={{
-                            display: 'flex',
-                            gap: 1,
-                            alignItems: 'center',
-                            width: 1,
-                            p: 0.75,
-                            border: 1,
-                            borderColor: day.date === data.date ? 'primary.main' : 'transparent',
-                            borderRadius: 0.75,
-                            bgcolor: day.date === data.date ? 'action.selected' : 'transparent',
-                            color: 'text.primary',
-                            cursor: 'pointer',
-                            '&:hover': { bgcolor: 'action.hover' },
-                            '&:focus-visible': {
-                              outline: '2px solid',
-                              outlineColor: 'primary.main',
-                              outlineOffset: 2,
-                            },
-                          }}
-                        >
-                          <Typography
-                            variant="caption"
-                            sx={{ flex: '0 0 44px', textAlign: 'left' }}
-                          >
-                            {formatSchoolDate(day.date).split(' ').slice(0, 2).join(' ')}
-                          </Typography>
-                          <Stack
-                            direction="row"
-                            sx={{
-                              flex: 1,
-                              height: 14,
-                              overflow: 'hidden',
-                              borderRadius: 0.5,
-                              bgcolor: 'action.hover',
-                            }}
-                          >
-                            {Object.entries(chartColors).map(([key, color]) => (
-                              <Box
-                                key={key}
-                                sx={{
-                                  width: `${day.staffCount ? (Number(day[key as keyof typeof day]) / day.staffCount) * 100 : 0}%`,
-                                  bgcolor: color,
-                                }}
-                              />
-                            ))}
-                          </Stack>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              textAlign: 'right',
-                              fontVariantNumeric: 'tabular-nums',
-                              flex: '0 0 104px',
-                            }}
-                          >
-                            {formatCount(day.present)} present / {formatCount(day.staffCount)} total
-                          </Typography>
-                        </Box>
-                      </Tooltip>
-                    );
-                  })}
-                </Stack>
-                <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1.5} sx={{ mt: 2 }}>
-                  {Object.entries(dailyStatus).map(([status, item]) => (
-                    <Stack key={status} direction="row" spacing={0.5} alignItems="center">
-                      <Box
-                        sx={{
-                          width: 10,
-                          height: 10,
-                          borderRadius: 0.25,
-                          bgcolor:
-                            chartColors[
-                              `${status[0].toLowerCase()}${status.slice(1)}` as keyof typeof chartColors
-                            ],
-                        }}
-                      />
-                      <Typography variant="caption" color="text.secondary">
-                        {item.label}
-                      </Typography>
-                    </Stack>
-                  ))}
-                </Stack>
-              </>
-            )}
-          </Card>
-        ) : null}
-        {canViewPayroll ? (
-          <Card component="section" aria-label="Payroll cycle" sx={{ p: 2.5 }}>
-            <Stack spacing={1.5}>
-              <Typography variant="h6" component="h2">
-                Payroll cycle
-              </Typography>
-              {data.payrollState !== 'Available' || !data.payroll ? (
-                <Alert severity="info">Payroll cycle data is unavailable.</Alert>
-              ) : (
-                <>
-                  <Typography variant="subtitle2">
-                    {new Intl.DateTimeFormat('en-IN', {
-                      month: 'long',
-                      year: 'numeric',
-                      timeZone: 'Asia/Kolkata',
-                    }).format(new Date(`${data.payroll.month}-01T00:00:00+05:30`))}
+                <Typography variant="body2" color="text.secondary">
+                  {new Intl.DateTimeFormat('en-IN', {
+                    month: 'long',
+                    year: 'numeric',
+                    timeZone: 'Asia/Kolkata',
+                  }).format(new Date(`${payroll.month}-01T00:00:00+05:30`))}
+                </Typography>
+                <Box>
+                  <Typography
+                    variant="h3"
+                    component="p"
+                    sx={{ fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {formatCount(completed)}{' '}
+                    <Typography component="span" variant="h6" color="text.secondary">
+                      of {formatCount(payroll.savedStaffCount)}
+                    </Typography>
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {data.payroll.savedStaffCount
-                      ? `${formatCount(data.payroll.savedStaffCount)} staff in the saved payroll preview.`
-                      : 'No saved payroll preview for this month.'}
+                    staff reviewed or locked
                   </Typography>
-                  <Divider />
-                  {[
-                    ['Reviewed', data.payroll.reviewedCount],
-                    ['Locked', data.payroll.lockedCount],
-                    ['Pending review', data.payroll.pendingCount],
-                  ].map(([label, value]) => (
-                    <Stack direction="row" key={String(label)} justifyContent="space-between">
-                      <Typography variant="body2">{label}</Typography>
-                      <Typography variant="subtitle2">{formatCount(Number(value))}</Typography>
-                    </Stack>
-                  ))}
-                  {data.payroll.lastUpdatedAt ? (
-                    <Typography variant="caption" color="text.secondary">
-                      Saved {formatUpdatedAt(data.payroll.lastUpdatedAt)} IST
-                    </Typography>
-                  ) : null}
-                </>
-              )}
-              {canOpenPayroll ? (
-                <Button
-                  component={RouterLink}
-                  href={`${hrPaths.payroll.runPayroll}?month=${data.date.slice(0, 7)}`}
-                  variant="outlined"
-                  size="small"
+                </Box>
+                {payroll.savedStaffCount ? (
+                  <LinearProgress
+                    variant="determinate"
+                    value={(completed / payroll.savedStaffCount) * 100}
+                    aria-label="Saved payroll reviewed or locked"
+                    sx={{ height: 8, borderRadius: 1 }}
+                  />
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    No saved payroll records for this month.
+                  </Typography>
+                )}
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  useFlexGap
+                  flexWrap="wrap"
+                  gap={1}
                 >
-                  Open payroll
-                </Button>
-              ) : null}
-            </Stack>
-          </Card>
-        ) : null}
-      </Box>
-    </Stack>
+                  {[
+                    ['Reviewed', payroll.reviewedCount],
+                    ['Locked', payroll.lockedCount],
+                    ['Pending', payroll.pendingCount],
+                  ].map(([label, count]) => (
+                    <Box key={String(label)}>
+                      <Typography variant="h6" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+                        {formatCount(Number(count))}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {label}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Stack>
+                <Typography variant="caption" color="text.secondary">
+                  {payroll.lastUpdatedAt
+                    ? `Saved ${formatUpdatedAt(payroll.lastUpdatedAt)} IST`
+                    : 'No saved timestamp'}
+                </Typography>
+              </>
+            )}
+            {canOpenPayroll && payroll && (
+              <Button
+                component={RouterLink}
+                href={`${hrPaths.payroll.runPayroll}?month=${payroll.month}`}
+                size="small"
+                variant="outlined"
+                sx={{ alignSelf: 'flex-start' }}
+              >
+                Open payroll
+              </Button>
+            )}
+          </Stack>
+        </Card>
+      )}
+    </Box>
   );
 }

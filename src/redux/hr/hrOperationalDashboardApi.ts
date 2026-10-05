@@ -49,9 +49,14 @@ export type DashboardCapabilities = {
   canViewLeave: boolean;
   canViewPayroll: boolean;
   canOpenPayroll: boolean;
+  canViewOnboarding: boolean;
+  canOpenOnboarding: boolean;
+  canViewAppraisals: boolean;
+  canAddEmployees: boolean;
 };
 export type OperationalOverview = {
   date: string;
+  asOfDate: string;
   generatedAt: string;
   scopeLabel: string;
   capabilities: DashboardCapabilities;
@@ -59,12 +64,20 @@ export type OperationalOverview = {
   workforceState: DashboardSectionState;
   leaveState: DashboardSectionState;
   payrollState: DashboardSectionState;
-  staffCount?: number | null;
+  onboardingState: DashboardSectionState;
+  appraisalState: DashboardSectionState;
+  onboardingUnavailableReason?: string | null;
+  workforce?: {
+    activeStaff: number;
+    teaching: number;
+    nonTeaching: number;
+    joinedThisMonth: number;
+  } | null;
+  leave?: { pendingRequests: number } | null;
+  onboarding?: { readyCount: number; inProgressCount: number } | null;
+  appraisal?: { pendingCount: number; overdueCount: number; nextDeadline?: string | null } | null;
   summary?: DashboardCounts | null;
   trend?: DashboardCounts[] | null;
-  filters: { departments: string[]; stages: DashboardOption[]; shifts: DashboardOption[] };
-  attention: { kind: string; title: string; count: number; action: string }[];
-  pendingLeaveRequests?: number | null;
   payroll?: {
     month: string;
     savedStaffCount: number;
@@ -106,6 +119,9 @@ export const operationalDashboardApi = api.injectEndpoints({
         employeeType.employee,
         employeeType.attendance,
         employeeType.runPayroll,
+        employeeType.employeeLeavePolicy,
+        employeeType.employeeApplication,
+        employeeType.professionalReview,
       ],
       keepUnusedDataFor: 0,
     }),
