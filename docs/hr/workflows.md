@@ -110,6 +110,9 @@ Custom report empty states render directly, so the reports center shows one icon
 The English-only `/hr/dashboard` requires the exact `HR.Dashboard.View` grant for every role.
 The shared HR heading and breadcrumbs remain visible during loading, empty results, failed reads, and refreshes.
 Workforce, Leave approvals, Onboarding, and Appraisals form the primary module grid, followed by one seven-day attendance chart and saved payroll progress.
+The grid uses four columns on desktop, two on tablet, and one on mobile, with neutral leading icons, outlined MUI Paper surfaces, theme typography, and consistent section spacing.
+Module details use aligned labels and values, and workflow links use the shared small outlined button style without local height or padding overrides.
+Attendance day selectors retain 44 px touch targets and visible keyboard focus, with one shared Present / total explanation beneath the graph.
 Employees and existing module workflows own detailed tables and decisions.
 Current scope, current IST date, and the backend generation timestamp appear above the grid.
 Only the attendance date changes through the date field, Previous day, and Today controls, with its selected date retained in the URL.

@@ -9,7 +9,7 @@ import type {
 import { hrPaths } from 'src/constants/hr-menus';
 import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
-import { Box, Card, Stack, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
 
 import { formatCount, formatSchoolDate } from '../operational-dashboard-state';
 
@@ -19,6 +19,23 @@ export type ModuleVisibility = {
   onboarding: boolean;
   appraisal: boolean;
 };
+
+function ModuleDetail({ label, value }: { label: string; value: string | number }) {
+  return (
+    <Box component="div" sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
+      <Typography component="dt" variant="body2" color="text.secondary">
+        {label}
+      </Typography>
+      <Typography
+        component="dd"
+        variant="body2"
+        sx={{ m: 0, fontWeight: 600, fontVariantNumeric: 'tabular-nums', textAlign: 'right' }}
+      >
+        {typeof value === 'number' ? formatCount(value) : value}
+      </Typography>
+    </Box>
+  );
+}
 
 function ModuleCard({
   title,
@@ -44,24 +61,34 @@ function ModuleCard({
   if (state === 'Forbidden') return null;
   const available = state === 'Available' && count !== undefined;
   return (
-    <Card
+    <Paper
       component="section"
       aria-label={title}
       variant="outlined"
-      sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1.5, minWidth: 0 }}
+      sx={{
+        p: 2,
+        borderRadius: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1.5,
+        minWidth: 0,
+      }}
     >
-      <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
+      <Stack direction="row" alignItems="center" gap={1}>
+        <Iconify icon={icon} width={20} sx={{ color: 'text.secondary' }} aria-hidden="true" />
         <Typography variant="h6" component="h2">
           {title}
         </Typography>
-        <Iconify icon={icon} width={22} sx={{ color: 'text.secondary' }} aria-hidden="true" />
       </Stack>
       {state === undefined ? (
-        <Skeleton variant="rounded" height={74} aria-label={`Loading ${title}`} />
+        <Box aria-label={`Loading ${title}`}>
+          <Skeleton width="40%" height={36} />
+          <Skeleton width="80%" />
+        </Box>
       ) : (
         <Box>
           <Typography
-            variant={available ? 'h3' : 'h6'}
+            variant={available ? 'h4' : 'h6'}
             component="p"
             sx={{ fontVariantNumeric: 'tabular-nums' }}
           >
@@ -76,19 +103,34 @@ function ModuleCard({
           </Typography>
         </Box>
       )}
-      <Box sx={{ flex: 1, minWidth: 0 }}>{available && children}</Box>
-      {state !== undefined && href && (
-        <Button
-          component={RouterLink}
-          href={href}
-          size="small"
-          endIcon={<Iconify icon="mdi:arrow-right" width={16} />}
-          sx={{ alignSelf: 'flex-start', px: 0.5 }}
-        >
-          {action}
-        </Button>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        {state === undefined ? (
+          <Stack spacing={0.5}>
+            <Skeleton />
+            <Skeleton width="70%" />
+          </Stack>
+        ) : available ? (
+          children
+        ) : null}
+      </Box>
+      {(state === undefined || href) && (
+        <Box sx={{ borderTop: 1, borderColor: 'divider', pt: 1.5 }}>
+          {state === undefined ? (
+            <Skeleton variant="rounded" width={130} height={30} />
+          ) : href ? (
+            <Button
+              component={RouterLink}
+              href={href}
+              size="small"
+              variant="outlined"
+              endIcon={<Iconify icon="mdi:arrow-right" width={16} />}
+            >
+              {action}
+            </Button>
+          ) : null}
+        </Box>
       )}
-    </Card>
+    </Paper>
   );
 }
 
@@ -104,8 +146,12 @@ export default function OperationalDashboardModules({
       data-testid="hr-module-overview"
       sx={{
         display: 'grid',
-        gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))' },
-        gap: 2,
+        gridTemplateColumns: {
+          xs: 'minmax(0, 1fr)',
+          sm: 'repeat(2, minmax(0, 1fr))',
+          lg: 'repeat(4, minmax(0, 1fr))',
+        },
+        gap: 1.5,
       }}
     >
       {visible.workforce && (
@@ -116,19 +162,12 @@ export default function OperationalDashboardModules({
           count={data?.workforce?.activeStaff}
           label="active staff"
           href={hrPaths.employee.list}
-          action="Open employees"
+          action="Open Employees"
         >
-          <Stack direction="row" flexWrap="wrap" useFlexGap gap={1.5}>
-            <Typography variant="body2">
-              Teaching <strong>{formatCount(data?.workforce?.teaching ?? 0)}</strong>
-            </Typography>
-            <Typography variant="body2">
-              Non-teaching <strong>{formatCount(data?.workforce?.nonTeaching ?? 0)}</strong>
-            </Typography>
-            <Typography variant="body2">
-              Joined this month{' '}
-              <strong>{formatCount(data?.workforce?.joinedThisMonth ?? 0)}</strong>
-            </Typography>
+          <Stack component="dl" spacing={0.5} sx={{ m: 0 }}>
+            <ModuleDetail label="Teaching" value={data?.workforce?.teaching ?? 0} />
+            <ModuleDetail label="Non-teaching" value={data?.workforce?.nonTeaching ?? 0} />
+            <ModuleDetail label="Joined this month" value={data?.workforce?.joinedThisMonth ?? 0} />
           </Stack>
         </ModuleCard>
       )}
@@ -140,10 +179,12 @@ export default function OperationalDashboardModules({
           count={data?.leave?.pendingRequests}
           label="requests awaiting a decision"
           href={hrPaths.leaveManagement.approvals}
-          action="Review requests"
+          action="Review Requests"
         >
           <Typography variant="body2" color="text.secondary">
-            Current requests within your permitted approval scope.
+            {data?.leave?.pendingRequests === 0
+              ? 'No requests awaiting a decision.'
+              : 'Current requests within your permitted approval scope.'}
           </Typography>
         </ModuleCard>
       )}
@@ -155,12 +196,15 @@ export default function OperationalDashboardModules({
           count={data?.onboarding?.readyCount}
           label="ready for onboarding"
           href={data?.capabilities.canOpenOnboarding ? hrPaths.employee.onboarding : undefined}
-          action="Open onboarding"
+          action="Open Onboarding"
           reason={data?.onboardingUnavailableReason}
         >
-          <Typography variant="body2" color="text.secondary">
-            {formatCount(data?.onboarding?.inProgressCount ?? 0)} applications in progress
-          </Typography>
+          <Stack component="dl" sx={{ m: 0 }}>
+            <ModuleDetail
+              label="Applications in progress"
+              value={data?.onboarding?.inProgressCount ?? 0}
+            />
+          </Stack>
         </ModuleCard>
       )}
       {visible.appraisal && (
@@ -171,21 +215,18 @@ export default function OperationalDashboardModules({
           count={data?.appraisal?.pendingCount}
           label="appraisals to complete"
           href={`${hrPaths.professionalManagement.reviews}?cycleId=all`}
-          action="Open appraisals"
+          action="Open Appraisals"
         >
-          <Stack direction="row" useFlexGap flexWrap="wrap" gap={1.5}>
-            <Typography
-              variant="body2"
-              color={data?.appraisal?.overdueCount ? 'text.primary' : 'text.secondary'}
-              sx={{ fontWeight: data?.appraisal?.overdueCount ? 600 : 400 }}
-            >
-              {formatCount(data?.appraisal?.overdueCount ?? 0)} overdue
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {data?.appraisal?.nextDeadline
-                ? `Next deadline ${formatSchoolDate(data.appraisal.nextDeadline)}`
-                : 'No upcoming deadline'}
-            </Typography>
+          <Stack component="dl" spacing={0.5} sx={{ m: 0 }}>
+            <ModuleDetail label="Overdue" value={data?.appraisal?.overdueCount ?? 0} />
+            <ModuleDetail
+              label="Next deadline"
+              value={
+                data?.appraisal?.nextDeadline
+                  ? formatSchoolDate(data.appraisal.nextDeadline)
+                  : 'None scheduled'
+              }
+            />
           </Stack>
         </ModuleCard>
       )}

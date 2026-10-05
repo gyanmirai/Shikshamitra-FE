@@ -339,6 +339,28 @@ test.describe('HR module overview dashboard', () => {
         await expect(
           page.getByRole('region', { name: 'Workforce' }).getByText('126', { exact: true })
         ).toBeVisible();
+        const modules = page.getByTestId('hr-module-overview').getByRole('region');
+        const moduleBounds = await Promise.all(
+          (await modules.all()).map((module) => module.boundingBox())
+        );
+        const rowPositions = new Set(moduleBounds.map((bounds) => Math.round(bounds!.y)));
+        expect(rowPositions.size).toBe(width >= 1200 ? 1 : width >= 600 ? 2 : 4);
+        for (const module of await modules.all()) {
+          expect(await module.evaluate((element) => getComputedStyle(element).boxShadow)).toBe(
+            'none'
+          );
+        }
+        for (const action of await modules.getByRole('link').all()) {
+          const bounds = await action.boundingBox();
+          expect(Math.round(bounds!.height)).toBe(30);
+          await expect(action).toHaveClass(/MuiButton-outlined/);
+        }
+        if (width >= 1200) {
+          const payrollBounds = await page
+            .getByRole('region', { name: 'Payroll progress' })
+            .boundingBox();
+          expect(payrollBounds!.y + payrollBounds!.height).toBeLessThan(844);
+        }
         await expect(
           page
             .getByRole('region', { name: 'Payroll progress' })
@@ -403,23 +425,23 @@ test.describe('HR module overview dashboard', () => {
   test('module actions use existing workflow links @critical', async ({ page }) => {
     await mockDashboard(page);
     await page.goto('/hr/dashboard');
-    await expect(page.getByRole('link', { name: 'Open employees' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'Open Employees' })).toHaveAttribute(
       'href',
       '/hr/employee'
     );
-    await expect(page.getByRole('link', { name: 'Review requests' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'Review Requests' })).toHaveAttribute(
       'href',
       '/hr/leave-approvals'
     );
-    await expect(page.getByRole('link', { name: 'Open appraisals' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'Open Appraisals' })).toHaveAttribute(
       'href',
       '/hr/professional-management/reviews?cycleId=all'
     );
-    await expect(page.getByRole('link', { name: 'Open payroll' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'Open Payroll' })).toHaveAttribute(
       'href',
       '/hr/payroll/run-payroll?month=2026-10'
     );
-    await expect(page.getByRole('link', { name: 'Add staff' })).toHaveAttribute(
+    await expect(page.getByRole('link', { name: 'Add Staff' })).toHaveAttribute(
       'href',
       '/hr/employee?mode=form'
     );
@@ -445,12 +467,12 @@ test.describe('HR module overview dashboard', () => {
     await expect(
       page.getByText('Onboarding summary requires school-wide HR access.')
     ).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Open onboarding' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Open Onboarding' })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: 'Leave approvals', exact: true })).toHaveCount(
       0
     );
     await expect(page.getByRole('heading', { name: 'Appraisals', exact: true })).toHaveCount(0);
-    await expect(page.getByRole('link', { name: 'Add staff' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Add Staff' })).toHaveCount(0);
   });
 
   test('refresh failure preserves stale data and performs reads only @critical', async ({

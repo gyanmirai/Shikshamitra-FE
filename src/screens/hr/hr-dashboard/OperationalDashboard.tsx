@@ -106,11 +106,11 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
   return (
     <Box
       data-testid="hr-dashboard-shell"
-      sx={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0, pb: 3 }}
+      sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0, pb: 2 }}
     >
       <CustomBreadcrumbs
         slotProps={{
-          action: {},
+          action: { alignSelf: { xs: 'flex-end', md: 'center' } },
           heading: {},
           moreLink: {},
           breadcrumbs: { '& .MuiBreadcrumbs-li:last-child > div': { color: 'text.primary' } },
@@ -130,39 +130,41 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
               aria-label="Refresh HR dashboard"
               sx={{ minWidth: 110 }}
             >
-              {overview.isFetching ? 'Refreshing...' : 'Refresh'}
+              {overview.isFetching ? 'Refreshing…' : 'Refresh'}
             </Button>
           )
         }
       />
-      <Box sx={{ height: 3 }}>
-        {overview.isFetching && canView && (
-          <LinearProgress aria-label="Refreshing dashboard data" />
-        )}
-      </Box>
       {!canView || accessDenied ? (
         <Alert severity="warning">You do not have permission to view the HR dashboard.</Alert>
       ) : (
         <>
-          <Stack direction="row" useFlexGap flexWrap="wrap" gap={1.5} sx={{ px: 1 }}>
-            <Typography variant="body2">
-              {formatSchoolDate(data?.asOfDate || indiaToday())} · IST
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {data?.scopeLabel || 'Your permitted staff scope'}
-            </Typography>
-            <Typography
-              variant="caption"
-              color={overview.isError ? 'warning.main' : 'text.secondary'}
-              sx={{ ml: { sm: 'auto' } }}
-            >
-              {data
-                ? `${overview.isError ? 'Stale · ' : ''}Updated ${formatUpdatedAt(data.generatedAt)} IST`
-                : loading
-                  ? 'Loading current data...'
-                  : 'Update time unavailable'}
-            </Typography>
-          </Stack>
+          <Box>
+            <Stack direction="row" useFlexGap flexWrap="wrap" gap={1.5} sx={{ px: 1, py: 0.5 }}>
+              <Typography variant="body2">
+                {formatSchoolDate(data?.asOfDate || indiaToday())} · IST
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {data?.scopeLabel || 'Your permitted staff scope'}
+              </Typography>
+              <Typography
+                variant="caption"
+                color={overview.isError ? 'text.primary' : 'text.secondary'}
+                sx={{ ml: { sm: 'auto' } }}
+              >
+                {data
+                  ? `${overview.isError ? 'Stale · ' : ''}Updated ${formatUpdatedAt(data.generatedAt)} IST`
+                  : loading
+                    ? 'Loading current data…'
+                    : 'Update time unavailable'}
+              </Typography>
+            </Stack>
+            <Box sx={{ height: 2 }}>
+              {overview.isFetching && canView && (
+                <LinearProgress aria-label="Refreshing dashboard data" sx={{ height: 2 }} />
+              )}
+            </Box>
+          </Box>
           {legacyNotice && (
             <Alert severity="info" onClose={() => setLegacyNotice(false)}>
               Staff filters are no longer used on this dashboard. Find and filter records in
@@ -226,7 +228,7 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
                         variant="outlined"
                         startIcon={<Iconify icon="mdi:plus" />}
                       >
-                        Add staff
+                        Add Staff
                       </Button>
                     )}
                   {granted(dashboardPermissions.reports) && (
@@ -236,7 +238,7 @@ export default function OperationalDashboard({ cacheIdentity }: { cacheIdentity:
                       size="small"
                       variant="outlined"
                     >
-                      HR reports
+                      HR Reports
                     </Button>
                   )}
                 </Stack>

@@ -9,13 +9,14 @@ import { RouterLink } from 'src/routes/components';
 import { Chart, useChart } from 'src/components/chart';
 import {
   Box,
-  Card,
+  Paper,
   Stack,
   Alert,
   Button,
   Tooltip,
   Skeleton,
   TextField,
+  ButtonBase,
   IconButton,
   Typography,
   useMediaQuery,
@@ -100,12 +101,13 @@ export default function OperationalDashboardSecondary({
   }));
   const payroll = data?.payroll;
   const completed = payroll ? payroll.reviewedCount + payroll.lockedCount : 0;
-  const sectionStyle = { p: 2, minWidth: 0 };
+  const sectionStyle = { p: 2, borderRadius: 2, minWidth: 0 };
 
   return (
     <Box
       sx={{
         display: 'grid',
+        alignItems: 'start',
         gridTemplateColumns: {
           xs: 'minmax(0, 1fr)',
           lg:
@@ -113,11 +115,11 @@ export default function OperationalDashboardSecondary({
               ? 'minmax(0, 1.7fr) minmax(0, 1fr)'
               : 'minmax(0, 1fr)',
         },
-        gap: 2,
+        gap: 1.5,
       }}
     >
       {canViewAttendance && (
-        <Card
+        <Paper
           component="section"
           aria-label="Seven-day staff attendance"
           variant="outlined"
@@ -131,15 +133,25 @@ export default function OperationalDashboardSecondary({
             flexWrap="wrap"
             gap={1}
           >
-            <Typography variant="h6" component="h2">
-              Seven-day attendance
-            </Typography>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Iconify
+                icon="mdi:calendar-check-outline"
+                width={20}
+                sx={{ color: 'text.secondary' }}
+                aria-hidden="true"
+              />
+              <Typography variant="h6" component="h2">
+                Seven-day attendance
+              </Typography>
+            </Stack>
             <Button
               component={RouterLink}
               href={`${hrPaths.attendance.dashboard}?date=${date}`}
               size="small"
+              variant="outlined"
+              endIcon={<Iconify icon="mdi:arrow-right" width={16} />}
             >
-              Open attendance
+              Open Attendance
             </Button>
           </Stack>
           <Stack
@@ -148,7 +160,7 @@ export default function OperationalDashboardSecondary({
             useFlexGap
             flexWrap="wrap"
             gap={0.75}
-            sx={{ mt: 1.5 }}
+            sx={{ mt: 1.5, pb: 1.5, borderBottom: 1, borderColor: 'divider' }}
           >
             <Tooltip title="Previous day">
               <IconButton
@@ -190,7 +202,7 @@ export default function OperationalDashboardSecondary({
                 variant="contained"
                 sx={{ ml: { sm: 'auto' } }}
               >
-                Mark attendance
+                Mark Attendance
               </Button>
             )}
           </Stack>
@@ -216,8 +228,7 @@ export default function OperationalDashboardSecondary({
                   const description = `${formatSchoolDate(day.date)}: ${statusKeys.map((key, i) => `${formatCount(day[key])} ${statuses[i].label.toLowerCase()}`).join(', ')}, ${formatCount(day.staffCount)} total staff`;
                   return (
                     <Tooltip key={day.date} title={description}>
-                      <Button
-                        size="small"
+                      <ButtonBase
                         onClick={() => onDate(day.date)}
                         aria-label={description}
                         aria-pressed={day.date === date}
@@ -227,10 +238,16 @@ export default function OperationalDashboardSecondary({
                           p: 0.25,
                           display: 'flex',
                           flexDirection: 'column',
-                          color: 'text.secondary',
+                          color: 'text.primary',
                           border: 1,
                           borderColor: day.date === date ? 'primary.main' : 'transparent',
                           bgcolor: day.date === date ? 'action.selected' : 'transparent',
+                          borderRadius: 1,
+                          '&.Mui-focusVisible': {
+                            outline: '2px solid',
+                            outlineColor: 'primary.main',
+                            outlineOffset: 2,
+                          },
                         }}
                       >
                         <Typography
@@ -239,14 +256,14 @@ export default function OperationalDashboardSecondary({
                         >
                           {formatCount(day.present)} / {formatCount(day.staffCount)}
                         </Typography>
-                        <Typography variant="caption" sx={{ fontSize: 10 }}>
-                          present / total
-                        </Typography>
-                      </Button>
+                      </ButtonBase>
                     </Tooltip>
                   );
                 })}
               </Box>
+              <Typography variant="caption" color="text.secondary" component="p" sx={{ mt: 0.5 }}>
+                Present / total staff. Select a day to view its attendance.
+              </Typography>
               <Stack direction="row" flexWrap="wrap" useFlexGap gap={1.25} sx={{ mt: 1.5 }}>
                 {statusKeys.map((key, i) => (
                   <Stack key={key} direction="row" gap={0.5} alignItems="center">
@@ -265,26 +282,37 @@ export default function OperationalDashboardSecondary({
                 attendance has not been recorded.
               </Typography>
               {data.summary.needsSetup + data.summary.needsReview > 0 && (
-                <Typography variant="caption" color="warning.main" component="p" sx={{ mt: 0.75 }}>
-                  {formatCount(data.summary.needsSetup)} need setup ·{' '}
-                  {formatCount(data.summary.needsReview)} need review
-                </Typography>
+                <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.75 }}>
+                  <Iconify icon="mdi:alert-circle-outline" width={16} aria-hidden="true" />
+                  <Typography variant="caption" color="text.primary">
+                    {formatCount(data.summary.needsSetup)} need setup ·{' '}
+                    {formatCount(data.summary.needsReview)} need review
+                  </Typography>
+                </Stack>
               )}
             </>
           )}
-        </Card>
+        </Paper>
       )}
       {canViewPayroll && (
-        <Card
+        <Paper
           component="section"
           aria-label="Payroll progress"
           variant="outlined"
           sx={sectionStyle}
         >
-          <Stack spacing={2}>
-            <Typography variant="h6" component="h2">
-              Payroll progress
-            </Typography>
+          <Stack spacing={1.5}>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Iconify
+                icon="mdi:wallet-outline"
+                width={20}
+                sx={{ color: 'text.secondary' }}
+                aria-hidden="true"
+              />
+              <Typography variant="h6" component="h2">
+                Payroll progress
+              </Typography>
+            </Stack>
             {!data ? (
               <Skeleton variant="rounded" height={260} />
             ) : data.payrollState !== 'Available' || !payroll ? (
@@ -300,7 +328,7 @@ export default function OperationalDashboardSecondary({
                 </Typography>
                 <Box>
                   <Typography
-                    variant="h3"
+                    variant="h4"
                     component="p"
                     sx={{ fontVariantNumeric: 'tabular-nums' }}
                   >
@@ -331,6 +359,7 @@ export default function OperationalDashboardSecondary({
                   useFlexGap
                   flexWrap="wrap"
                   gap={1}
+                  sx={{ py: 1.5, borderTop: 1, borderBottom: 1, borderColor: 'divider' }}
                 >
                   {[
                     ['Reviewed', payroll.reviewedCount],
@@ -360,13 +389,14 @@ export default function OperationalDashboardSecondary({
                 href={`${hrPaths.payroll.runPayroll}?month=${payroll.month}`}
                 size="small"
                 variant="outlined"
+                endIcon={<Iconify icon="mdi:arrow-right" width={16} />}
                 sx={{ alignSelf: 'flex-start' }}
               >
-                Open payroll
+                Open Payroll
               </Button>
             )}
           </Stack>
-        </Card>
+        </Paper>
       )}
     </Box>
   );
