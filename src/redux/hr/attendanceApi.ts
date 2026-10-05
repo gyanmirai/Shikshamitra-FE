@@ -1,4 +1,4 @@
-import { employeeType } from 'src/redux/tagTypes';
+import { academicType, employeeType } from 'src/redux/tagTypes';
 
 import { employeeApi } from './employeeApi';
 
@@ -27,6 +27,7 @@ export interface TakeAttendanceDayResponse {
   holidayReason?: string | null;
   items: Array<{
     employeeId: string;
+    isTeaching?: boolean;
     isHoliday?: boolean;
     holidayName?: string | null;
     holidayReason?: string | null;
@@ -77,6 +78,10 @@ export const attendancePayrollInvalidationTags = [
   employeeType.attendance,
   employeeType.runPayroll,
   employeeType.hrDashboard,
+  academicType.substitutionAvailability,
+  academicType.substitutionAffectedLectures,
+  academicType.substitutionSuggestions,
+  academicType.substitutionDashboard,
 ];
 
 export const buildGetDayAttendanceQueryParams = ({

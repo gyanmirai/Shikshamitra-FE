@@ -17,20 +17,9 @@ import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { academicPermissions } from 'src/constants/academic-menu';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
+import { Box, Card, Grid, Paper, Stack, Button, Typography, DialogActions } from '@mui/material';
 import { TimetableSettingsSummaryCards } from 'src/screens/academic/components/AcademicSummaryInsights';
 import {
-  Box,
-  Card,
-  Grid,
-  Paper,
-  Stack,
-  Button,
-  Typography,
-  DialogActions,
-} from '@mui/material';
-import {
-  RubricStatus,
-  useGetRubricsQuery,
   useAddRubricMutation,
   useArchiveRubricMutation,
   usePublishRubricMutation,
@@ -39,6 +28,7 @@ import {
 import RubricConfigForm from './rubricConfigForm';
 import RubricConfigTable from './rubricConfigTable';
 import { getRubricMaximumLabel } from './rubricScoreLabels';
+import { useRubricTemplateList } from './hooks/useRubricTemplateList';
 import { RubricTemplatePreview } from './components/RubricTemplatePreview';
 import {
   RUBRIC_STATUS_LABELS,
@@ -53,7 +43,6 @@ const RubricConfigScreen = () => {
   const previewDialog = useBoolean();
   const usageDialog = useBoolean();
   const [selectedData, setSelectedData] = useState<AssessmentRubricDto | null>(null);
-  const [statusFilter, setStatusFilter] = useState<RubricStatus | 'all'>('all');
 
   const { currentMedium } = useSelector((state: RootState) => state.globalState);
   const { permissions } = useSelector((state: RootState) => state.auth);
@@ -68,17 +57,18 @@ const RubricConfigScreen = () => {
   );
 
   const {
-    data: rubricData = [],
+    rubricData,
+    activeRubrics,
+    draftRubrics,
+    archivedRubrics,
+    linkedRubrics,
+    usageCountByTemplate,
+    tableData,
     isLoading,
-    isFetching,
-  } = useGetRubricsQuery(
-    { academicMediumId: currentMedium?.id, isTemplate: true },
-    { skip: !currentMedium?.id }
-  );
-  const { data: allRubrics = [] } = useGetRubricsQuery(
-    { academicMediumId: currentMedium?.id },
-    { skip: !currentMedium?.id }
-  );
+    isError,
+    hasMedium,
+    retry,
+  } = useRubricTemplateList();
 
   const [addRubric, { isLoading: isDuplicating }] = useAddRubricMutation();
   const [publishRubric, { isLoading: isPublishing }] = usePublishRubricMutation();
@@ -88,26 +78,6 @@ const RubricConfigScreen = () => {
     addDialog.onFalse();
     setSelectedData(null);
   };
-
-  const activeRubrics = rubricData.filter((rubric) => rubric.status === RubricStatus.Published);
-  const draftRubrics = rubricData.filter((rubric) => rubric.status === RubricStatus.Draft);
-  const archivedRubrics = rubricData.filter((rubric) => rubric.status === RubricStatus.Archived);
-  const linkedRubrics = allRubrics.filter(
-    (rubric) => !rubric.isTemplate && rubric.sourceTemplateId
-  );
-  const usageCountByTemplate = linkedRubrics.reduce<Record<string, number>>((usageMap, rubric) => {
-    if (!rubric.sourceTemplateId) return usageMap;
-    return {
-      ...usageMap,
-      [rubric.sourceTemplateId]: (usageMap[rubric.sourceTemplateId] || 0) + 1,
-    };
-  }, {});
-  const tableData = rubricData
-    .filter((rubric) => statusFilter === 'all' || rubric.status === statusFilter)
-    .map((rubric) => ({
-      ...rubric,
-      usageCount: usageCountByTemplate[rubric.id] || 0,
-    }));
 
   const duplicateRubric = async (rubric: AssessmentRubricDto, title: string) => {
     try {
@@ -191,6 +161,7 @@ const RubricConfigScreen = () => {
                 color="inherit"
                 startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
                 onClick={insightsDrawer.onTrue}
+                disabled={isLoading || isError || !hasMedium}
               >
                 View full insights
               </Button>
@@ -265,7 +236,10 @@ const RubricConfigScreen = () => {
 
           <RubricConfigTable
             data={tableData}
-            isLoading={isLoading || isFetching}
+            isLoading={isLoading}
+            isError={isError}
+            hasMedium={hasMedium}
+            onRetry={retry}
             canAdd={canAdd}
             canDelete={canDelete}
             onEdit={(row) => {
@@ -345,7 +319,7 @@ const RubricConfigScreen = () => {
                 }
               >
                 {selectedData?.appliesToWorkType !== undefined &&
-                  selectedData?.appliesToWorkType !== null
+                selectedData?.appliesToWorkType !== null
                   ? RUBRIC_WORK_TYPE_LABELS[selectedData.appliesToWorkType]
                   : 'Homework & Assignment'}
               </Label>
@@ -357,7 +331,7 @@ const RubricConfigScreen = () => {
               >
                 {selectedData
                   ? RUBRIC_SCORING_MODEL_LABELS[selectedData.scoringModel] ||
-                  selectedData.scoringModel
+                    selectedData.scoringModel
                   : 'Points-Based'}
               </Label>
               <Label

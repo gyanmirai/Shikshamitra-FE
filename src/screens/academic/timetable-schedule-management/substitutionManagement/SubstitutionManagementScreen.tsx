@@ -90,6 +90,7 @@ import { AffectedLecturePicker } from './components/AffectedLecturePicker';
 import { getAvailabilityCoverageState } from './services/availability-coverage';
 import { TeacherFirstOriginFields } from './components/TeacherFirstOriginFields';
 import { CreateSubstitutionModeTabs } from './components/CreateSubstitutionModeTabs';
+import { QuickSubstitutionDrawer } from './quick-substitution/QuickSubstitutionDrawer';
 import { SubstitutionCreationOverlay } from './components/SubstitutionCreationOverlay';
 import {
   createSubstitutionSegments,
@@ -151,6 +152,7 @@ import {
   useSuggestedTeachersByContextDataQuery,
 } from './substitutionManagement.hooks';
 
+import type { QuickSubstitutionContext } from './quick-substitution/types';
 import type {
   ConflictStatus,
   SubstitutionRow,
@@ -697,6 +699,7 @@ const SubstitutionManagementScreen = () => {
   const [substitutions, setSubstitutions] = useState<SubstitutionRow[]>([]);
   const [teacherAvailability, setTeacherAvailability] = useState<TeacherAvailabilityRow[]>([]);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [quickSubstitution, setQuickSubstitution] = useState<QuickSubstitutionContext | null>(null);
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
   const [auditDialogOpen, setAuditDialogOpen] = useState(false);
@@ -1834,22 +1837,20 @@ const SubstitutionManagementScreen = () => {
     }
 
     const origin = createTeacherOriginFromAvailability(row);
-    setFormError('');
-    setCreateOriginMode('teacher');
-    setCreateTeacherOrigin(origin);
-    setSubstitutionForm({
-      ...defaultSubstitutionForm,
-      date: origin.date,
-      originalTeacherId: origin.teacherId,
-      originalTeacherName: origin.teacherName,
-      reason: origin.reason,
+    setQuickSubstitution({
+      teacherId: origin.teacherId,
+      teacherName: origin.teacherName,
+      departmentName: origin.departmentName,
+      date: toDateTimeOffset(origin.date),
       startTime: origin.startTime,
       endTime: origin.endTime,
+      isFullDay: origin.isFullDay,
+      reason: origin.reason,
       remarks: origin.remarks,
-      assignmentSource: toAssignmentSourceFromAvailability(origin.sourceType),
+      source: sourceValueMap[toAssignmentSourceFromAvailability(origin.sourceType)],
+      academicYearId: currentYear?.id || undefined,
+      academicMediumId: medium?.id || undefined,
     });
-    setCameFromAvailability(false);
-    setCreateDialogOpen(true);
   };
 
   const handleCreateOriginModeChange = (mode: CreateSubstitutionOriginMode) => {
@@ -3359,6 +3360,12 @@ const SubstitutionManagementScreen = () => {
           </MenuItem>
         </Menu>
 
+        {quickSubstitution && (
+          <QuickSubstitutionDrawer
+            context={quickSubstitution}
+            onClose={() => setQuickSubstitution(null)}
+          />
+        )}
         <SubstitutionCreationOverlay
           open={createDialogOpen}
           displayAsDrawer={cameFromAvailability}

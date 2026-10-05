@@ -89,6 +89,7 @@ export type ManualAttendanceApiDayResponse = {
 
 export type ManualAttendanceApiEmployeeRow = {
   employeeId: string;
+  isTeaching?: boolean;
   fullName?: string;
   employeeCode?: string;
   department?: string;
@@ -118,6 +119,7 @@ export const mapManualAttendanceDayResponseToRows = (
   (data?.items ?? []).map((item) => ({
     id: item.employeeId,
     employeeId: item.employeeId,
+    isTeaching: item.isTeaching === true,
     fullName: item.fullName,
     employeeCode: item.employeeCode,
     department: item.department,

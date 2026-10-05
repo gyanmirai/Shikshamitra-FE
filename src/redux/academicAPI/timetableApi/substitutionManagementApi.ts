@@ -281,6 +281,8 @@ export const substitutionCreateInvalidationTags = [
   academicType.substitutionAvailability,
   academicType.substitutionDailySheet,
   academicType.substitutionAnalytics,
+  academicType.substitutionAffectedLectures,
+  academicType.substitutionSuggestions,
 ] as const;
 
 export const substitutionStatusInvalidationTags = substitutionCreateInvalidationTags;
