@@ -20,6 +20,7 @@ import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
@@ -96,14 +97,12 @@ const statusColor = (status: SetupRow['statusLabel']) => {
 
 function getSetupColumns({
   canEdit,
-  onView,
   onEdit,
   onUseInOffering,
   onCreateLink,
   onArchive,
 }: {
   canEdit: boolean;
-  onView: (setup: AdmissionIntakeSetup) => void;
   onEdit: (setup: AdmissionIntakeSetup) => void;
   onUseInOffering: (setup: AdmissionIntakeSetup) => void;
   onCreateLink: (setup: AdmissionIntakeSetup) => void;
@@ -169,43 +168,44 @@ function getSetupColumns({
       minWidth: 92,
       render: (_value, row) => {
         const setup = row as SetupRow;
-        const actions = [
-          {
-            id: 'view',
-            label: `View ${setup.name}`,
-            icon: 'mdi:eye-outline',
-            onClick: () => onView(setup),
-          },
-        ];
-        if (canEdit && !setup.isArchived) {
-          actions.push(
-            {
-              id: 'edit',
-              label: `Edit ${setup.name}`,
-              icon: 'solar:pen-bold',
-              onClick: () => onEdit(setup),
-            },
-            {
-              id: 'offering',
-              label: `Use ${setup.name} in an Offering`,
-              icon: 'mdi:school-outline',
-              onClick: () => onUseInOffering(setup),
-            },
-            {
-              id: 'link',
-              label: `Create inquiry link with ${setup.name}`,
-              icon: 'mdi:link-variant-plus',
-              onClick: () => onCreateLink(setup),
-            },
-            {
-              id: 'archive',
-              label: `Archive ${setup.name}`,
-              icon: 'mdi:archive-arrow-down-outline',
-              onClick: () => onArchive(setup),
-            }
-          );
-        }
-        return <AdaptiveThreeDotsActions mobileDirectActionLimit={0} actions={actions} />;
+        const actions =
+          canEdit && !setup.isArchived
+            ? [
+                {
+                  id: 'edit',
+                  label: `Edit `,
+                  icon: 'solar:pen-bold',
+                  onClick: () => onEdit(setup),
+                },
+                {
+                  id: 'offering',
+                  label: `Use  in an Offering`,
+                  icon: 'mdi:school-outline',
+                  onClick: () => onUseInOffering(setup),
+                },
+                {
+                  id: 'link',
+                  label: `Create inquiry link `,
+                  icon: 'mdi:link-variant-plus',
+                  onClick: () => onCreateLink(setup),
+                },
+                {
+                  id: 'archive',
+                  label: `Archive `,
+                  icon: 'mdi:archive-arrow-down-outline',
+                  onClick: () => onArchive(setup),
+                },
+              ]
+            : [];
+        return (
+          <AdaptiveThreeDotsActions
+            mobileDirectActionLimit={0}
+            actions={actions}
+            placement="top-right"
+            moreLabel={`More actions for ${setup.name}`}
+            sx={{ justifyContent: 'flex-end' }}
+          />
+        );
       },
     },
   ];
@@ -321,7 +321,6 @@ export default function AdmissionIntakeAssignmentScreen() {
 
   const columns = getSetupColumns({
     canEdit,
-    onView: setViewSetup,
     onEdit: setEditorSetup,
     onUseInOffering: useInOffering,
     onCreateLink: createLink,
@@ -363,7 +362,16 @@ export default function AdmissionIntakeAssignmentScreen() {
         }
       />
 
-      <Box sx={{ border: 1, borderColor: 'divider', borderRadius: 2, flexShrink: 0 }}>
+      <Box
+        sx={{
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 2,
+          bgcolor: 'background.paper',
+          overflow: 'hidden',
+          flexShrink: 0,
+        }}
+      >
         <CustomTabs
           value={view}
           aria-label="Admission intake settings"
@@ -441,53 +449,53 @@ export default function AdmissionIntakeAssignmentScreen() {
             </Alert>
           ) : (
             <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                <CustomizableTable
-                  tableId="admission-intake-setups"
-                  tableTitle="Admission intake setups"
-                  wrapperProps={{ sx: { height: 1 } }}
-                  tableContainerProps={{ sx: { height: 1 } }}
-                  columns={columns}
-                  data={rows}
-                  handleRowClick={(row) => setViewSetup(row as SetupRow)}
-                  rowProps={(row) => ({
-                    tabIndex: 0,
-                    sx: { cursor: 'pointer' },
-                    onKeyDown: (event) => {
-                      if (
-                        event.target === event.currentTarget &&
-                        (event.key === 'Enter' || event.key === ' ')
-                      ) {
-                        event.preventDefault();
-                        setViewSetup(row as SetupRow);
-                      }
-                    },
-                  })}
-                  isLoading={setupListState === 'loading'}
-                  isPagination
-                  isSearch
-                  isFilter
-                  noDataText={
-                    <Stack spacing={1.5} alignItems="center" sx={{ py: 3 }}>
-                      <Iconify icon="mdi:account-switch-outline" width={40} color="text.disabled" />
-                      <Box textAlign="center">
-                        <Typography variant="subtitle2">No admission intake setups yet</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          Create inquiry handling and counsellor routing together.
-                        </Typography>
-                      </Box>
-                      {canEdit && (
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={() => setEditorSetup(null)}
-                        >
-                          Create intake setup
-                        </Button>
-                      )}
-                    </Stack>
-                  }
-                />
-              </Box>
+              <CustomizableTable
+                tableId="admission-intake-setups"
+                tableTitle="Admission intake setups"
+                wrapperProps={{ sx: { height: 1 } }}
+                tableContainerProps={{ sx: { height: 1 } }}
+                columns={columns}
+                data={rows}
+                handleRowClick={(row) => setViewSetup(row as SetupRow)}
+                rowProps={(row) => ({
+                  tabIndex: 0,
+                  sx: { cursor: 'pointer' },
+                  onKeyDown: (event) => {
+                    if (
+                      event.target === event.currentTarget &&
+                      (event.key === 'Enter' || event.key === ' ')
+                    ) {
+                      event.preventDefault();
+                      setViewSetup(row as SetupRow);
+                    }
+                  },
+                })}
+                isLoading={setupListState === 'loading'}
+                isPagination
+                isSearch
+                isFilter
+                // noDataText={
+                //   <Stack spacing={1.5} alignItems="center" sx={{ py: 3 }}>
+                //     <Iconify icon="mdi:account-switch-outline" width={40} color="text.disabled" />
+                //     <Box textAlign="center">
+                //       <Typography variant="subtitle2">No admission intake setups yet</Typography>
+                //       <Typography variant="body2" color="text.secondary">
+                //         Create inquiry handling and counsellor routing together.
+                //       </Typography>
+                //     </Box>
+                //     {canEdit && (
+                //       <Button
+                //         size="small"
+                //         variant="contained"
+                //         onClick={() => setEditorSetup(null)}
+                //       >
+                //         Create intake setup
+                //       </Button>
+                //     )}
+                //   </Stack>
+                // }
+              />
+            </Box>
           )}
         </Box>
       ) : (
@@ -629,7 +637,7 @@ function SetupDetailsDrawer({
     >
       <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ px: 2, py: 1.5 }}>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center" useFlexGap flexWrap="wrap">
             <Typography id="intake-setup-details-title" variant="h6">
               {setup.name}
             </Typography>
@@ -639,32 +647,55 @@ function SetupDetailsDrawer({
             Admission intake setup
           </Typography>
         </Box>
-        <IconButton size="small" aria-label={`Close ${setup.name} details`} onClick={onClose}>
+        <IconButton
+          size="small"
+          aria-label={`Close ${setup.name} details`}
+          onClick={onClose}
+          sx={{ width: { xs: 44, sm: 32 }, height: { xs: 44, sm: 32 } }}
+        >
           <Iconify icon="mdi:close" />
         </IconButton>
       </Stack>
       <Divider />
-      <Stack spacing={2} sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}>
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-            Inquiry handling
-          </Typography>
+      <Stack
+        spacing={2}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: 'auto',
+          p: 2,
+          '& > .MuiCard-root': { flexShrink: 0 },
+        }}
+      >
+        <FormSectionCard
+          icon="mdi:clipboard-text-outline"
+          title="Inquiry handling"
+          titleTypographyProps={{
+            sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+          }}
+        >
           <Typography variant="body2" color="text.secondary">
             {row.inquirySummary}
           </Typography>
-        </Box>
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-            Counsellor routing
-          </Typography>
+        </FormSectionCard>
+        <FormSectionCard
+          icon="mdi:account-switch-outline"
+          title="Counsellor routing"
+          titleTypographyProps={{
+            sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+          }}
+        >
           <Typography variant="body2" color="text.secondary">
             {row.routingSummary}
           </Typography>
-        </Box>
-        <Box>
-          <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-            Dependencies & usage
-          </Typography>
+        </FormSectionCard>
+        <FormSectionCard
+          icon="mdi:link-variant"
+          title="Dependencies & usage"
+          titleTypographyProps={{
+            sx: { fontSize: { xs: '1rem', sm: '1.05rem' }, fontWeight: 700 },
+          }}
+        >
           {usage.isLoading && (
             <Typography variant="body2" color="text.secondary">
               Loading usage…
@@ -706,17 +737,28 @@ function SetupDetailsDrawer({
               ))}
             </Stack>
           )}
-        </Box>
+        </FormSectionCard>
       </Stack>
       <Divider />
-      <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ p: 2 }}>
-        <Button size="small" variant="outlined" onClick={onClose}>
+      <Stack
+        direction="row"
+        justifyContent="flex-end"
+        spacing={1}
+        sx={{ p: 2, '& .MuiButton-root': { minHeight: { xs: 44, sm: 30 } } }}
+      >
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<Iconify icon="mdi:close" />}
+          onClick={onClose}
+        >
           Close
         </Button>
         {onEdit && !setup.isArchived && (
           <Button
             size="small"
             variant="contained"
+            startIcon={<Iconify icon="solar:pen-bold" />}
             onClick={() => {
               onClose();
               onEdit(setup);

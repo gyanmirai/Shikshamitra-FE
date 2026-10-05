@@ -3,7 +3,7 @@
 import type { RootState } from 'src/redux/store';
 import type { AdmissionWorkflow } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -32,6 +32,7 @@ export type PendingWorkflowConfirmation = {
 export function useWorkflowListActions() {
   const router = useRouter();
   const createDialog = useBoolean();
+  const createCloseRef = useRef<(() => void) | null>(null);
   const cloneDialog = useBoolean();
   const [cloneSource, setCloneSource] = useState<AdmissionWorkflow | null>(null);
   const [openingCreatedWorkflow, setOpeningCreatedWorkflow] = useState(false);
@@ -92,7 +93,7 @@ export function useWorkflowListActions() {
       }).unwrap();
       shikshaMitraToast.success({ message: 'Workflow draft created' });
       setOpeningCreatedWorkflow(true);
-      router.push(`${studentPaths.enrollment.settings.workflows}/${result.id}`);
+      router.push(`${studentPaths.enrollment.settings.workflows}/${result.id}?setup=1`);
     } catch (error) {
       setOpeningCreatedWorkflow(false);
       shikshaMitraToast.error({
@@ -176,6 +177,7 @@ export function useWorkflowListActions() {
   return {
     allowed,
     createDialog,
+    createCloseRef,
     cloneDialog,
     cloneSource,
     setCloneSource,

@@ -13,10 +13,9 @@ import { shikshaMitraToast } from 'src/components/toast';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
-import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetFeeHeadModulesQuery } from 'src/redux/feeHeadModule/feeHeadModuleApi';
+import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import { Grid, Switch, Button, TextField, DialogActions, FormControlLabel } from '@mui/material';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
@@ -47,32 +46,18 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
     params: { academicYearId: currentYear?.id },
   });
 
-  // Custom hook to fetch the fee head module lookup
-  const { data: moduleData } = useQueryAndMutation({
-    type: 'query',
-    currentQueryAndMutation: useGetFeeHeadModulesQuery,
-    options: {
-      skip: !open?.value,
-    },
-  });
-
-  const moduleOptions = useMemo(
-    () => (moduleData || []).map((m: any) => ({ label: m.displayName, value: m.value })),
-    [moduleData]
-  );
-
   const {
     data: incomeCategoryData,
     isLoading: isIncomeCategoryLoading,
     isFetching: isIncomeCategoryFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetIncomeCategoriesQuery,
+    currentQueryAndMutation: useGetFinanceRoutingOptionsQuery,
     params: {
       academicYearId: currentYear?.id,
       page: 1,
       pageSize: 100,
-      includeInactive: false,
+      operation: 'fee-head',
     },
     options: {
       skip: !currentYear?.id || !open?.value,
@@ -83,9 +68,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
     () =>
       (incomeCategoryData?.items ?? []).map((category: any) => ({
         id: category.id,
-        displayName: `${category.name} → ${
-          category.defaultAccountHeadName || 'No account head'
-        }`,
+        displayName: category.name,
       })),
     [incomeCategoryData]
   );
@@ -142,7 +125,6 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
       const payload = {
         feeCategoryId: values.feeCategoryId,
         name: values.name,
-        module: values.module === '' ? null : values.module,
         isConcessionApplied: values.isConcessionApplied,
         description: values.description || '',
         incomeCategoryId: values.incomeCategoryId,
@@ -236,31 +218,6 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
             </ShakingTextField>
           </Grid>
 
-          {/* Module */}
-          <Grid size={{ xs: 12 }}>
-            <ShakingTextField error={!!(formik.touched.module && formik.errors.module) || false}>
-              <CustomSelect
-                name="module"
-                label="Module"
-                options={moduleOptions}
-                value={formik.values.module ?? ''}
-                labelKey="label"
-                valueKey="value"
-                onChange={(value) => {
-                  formik.setFieldValue('module', value);
-                  formik.setFieldTouched('module', false);
-                }}
-                error={!!(formik.touched.module && formik.errors.module) || false}
-                helperText={
-                  formik.touched.module && typeof formik.errors.module === 'string'
-                    ? formik.errors.module
-                    : ''
-                }
-                formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
-              />
-            </ShakingTextField>
-          </Grid>
-
           {/* Concession Applicable Switch */}
           <Grid size={{ xs: 12 }}>
             <FormControlLabel
@@ -299,7 +256,7 @@ const FeeHeadForm: React.FC<IFeeHeadFormProps> = ({ open, onClose, editData }) =
                     ? (formik.errors.incomeCategoryId as string)
                     : editData?.isUsedInDownstream
                       ? 'Locked because this Fee Head is already used in a locked Fee Structure.'
-                      : 'The selected category determines the Income Account Head used for posting.'
+                      : 'Collections are recorded under the selected Income Category.'
                 }
                 formControlProps={{ fullWidth: true, sx: { maxWidth: 'unset' } }}
               />

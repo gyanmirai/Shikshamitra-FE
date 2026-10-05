@@ -5,6 +5,7 @@ import { Grid, Stack, TextField } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
 
 import { RUBRIC_WORK_TYPE_OPTIONS } from '../constants';
+import { RubricTagsField } from './RubricTagsField';
 import { RubricFormSection } from './RubricFormSection';
 
 import type { RubricConfigFormValues } from '../types';
@@ -99,15 +100,9 @@ export const RubricBasicInformation = ({
           />
         </Grid>
         <Grid size={{ xs: 12 }}>
-          <TextField
-            fullWidth
-            size="small"
-            name="tags"
-            label="Tags"
-            placeholder="project, creativity, grade 8"
+          <RubricTagsField
             value={formik.values.tags}
-            onChange={formik.handleChange}
-            helperText="Separate tags with commas."
+            onChange={(tags) => formik.setFieldValue('tags', tags)}
           />
         </Grid>
       </Grid>

@@ -16,6 +16,7 @@ export function AcademicInsights({
   description,
   metrics,
   chart,
+  afterChart,
   focus,
   isLoading = false,
   buttonSx,
@@ -96,6 +97,7 @@ export function AcademicInsights({
         <Scrollbar sx={{ flex: 1 }}>
           <Stack spacing={2} sx={{ p: 2.5 }}>
             {!isLoading && chart && <AcademicInsightChart config={chart} />}
+            {!isLoading && afterChart}
 
             <Box>
               <Typography

@@ -214,16 +214,16 @@ describe('admission inquiry model', () => {
     });
   });
 
-  it('requires and sends source details when the saved policy requires them', () => {
+  it('ignores retired source-detail requirements while preserving allowed sources and entered details', () => {
     const policy = {
       ...DEFAULT_INQUIRY_POLICY,
       allowedSources: [0, 3],
       requireSourceDetailFor: [3],
     };
 
-    expect(validateAdmissionInquiry({ ...values, source: 3 }, fields, policy, offering)).toMatchObject({
-      sourceDetail: 'Source details are required for this source',
-    });
+    expect(
+      validateAdmissionInquiry({ ...values, source: 3 }, fields, policy, offering)
+    ).not.toHaveProperty('sourceDetail');
     expect(
       validateAdmissionInquiry(
         { ...values, source: 3, sourceDetail: 'September open house' },
@@ -244,13 +244,10 @@ describe('admission inquiry model', () => {
     });
   });
 
-  it('requires source details for QR-code and school-fair inquiries', () => {
-    expect(validateAdmissionInquiry({ ...values, source: 10 }, fields, null, offering)).toMatchObject({
-      sourceDetail: 'Source details are required for this source',
-    });
-    expect(validateAdmissionInquiry({ ...values, source: 11 }, fields, null, offering)).toMatchObject({
-      sourceDetail: 'Source details are required for this source',
-    });
+  it.each([10, 11] as const)('allows source %s without optional source details', (source) => {
+    expect(
+      validateAdmissionInquiry({ ...values, source }, fields, null, offering)
+    ).not.toHaveProperty('sourceDetail');
   });
 
   it('filters offerings to the selected board, medium, and class', () => {

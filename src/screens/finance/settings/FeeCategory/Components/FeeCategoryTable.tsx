@@ -1,11 +1,9 @@
 import type { RootState } from 'src/redux/store';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import React, { useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
-
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -16,9 +14,9 @@ import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
 import { usePatchFeeHeadMutation } from 'src/redux/feeHeadManage/feeHeadManageApi';
-import { getFeeHeadModuleDisplayName } from 'src/redux/feeHeadModule/feeHeadModuleApi';
 import { Box, Chip, Stack, Drawer, Switch, Divider, TextField, Typography } from '@mui/material';
 import {
   feeCategoryApi,
@@ -146,20 +144,7 @@ const FeeCategoryTable: React.FC<IFeeCategoryTableProps> = ({
         render: (value, row: any) => (
           <Stack spacing={0.25}>
             <Typography variant="caption">{value || '-'}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {row.incomeAccountHeadName || 'No account head'}
-            </Typography>
           </Stack>
-        ),
-      },
-      {
-        id: 'module',
-        label: 'Module',
-        align: 'left',
-        render: (value) => (
-          <Typography variant="caption" fontSize="13px">
-            {getFeeHeadModuleDisplayName(value)}
-          </Typography>
         ),
       },
       {

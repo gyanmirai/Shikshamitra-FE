@@ -48,6 +48,8 @@ export const ReconciliationApi = api.injectEndpoints({
       invalidatesTags: [
         reconciliationType.reconciliation,
         financeModuleType.charges,
+        financeModuleType.incomeTracking,
+        financeModuleType.feeCollection,
         financeModuleType.feeDetails,
       ],
     }),
@@ -65,6 +67,8 @@ export const ReconciliationApi = api.injectEndpoints({
       invalidatesTags: [
         reconciliationType.reconciliation,
         financeModuleType.charges,
+        financeModuleType.incomeTracking,
+        financeModuleType.feeCollection,
         financeModuleType.feeDetails,
       ],
     }),

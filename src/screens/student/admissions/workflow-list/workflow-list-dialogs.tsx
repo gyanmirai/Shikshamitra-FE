@@ -10,20 +10,18 @@ import type { useWorkflowListActions } from './use-workflow-list-actions';
 type Actions = ReturnType<typeof useWorkflowListActions>;
 
 export function WorkflowListDialogs({ actions }: { actions: Actions }) {
-  const { fetchInquiryForms, fetchRegistrationForms } = useAdmissionDefinitionOptions(
-    actions.createDialog.value
-  );
+  const { fetchRegistrationForms } = useAdmissionDefinitionOptions(actions.createDialog.value);
   const pending = actions.pendingConfirmation;
   const deleting = pending?.action === 'delete';
   return (
     <>
       <AdmissionWorkflowDialog
         open={actions.createDialog.value}
+        closeRequestRef={actions.createCloseRef}
         onClose={actions.createDialog.onFalse}
         saving={actions.createState.isLoading || actions.openingCreatedWorkflow}
         showStarterJourney
         closeOnSave={false}
-        fetchInquiryForms={fetchInquiryForms}
         fetchRegistrationForms={fetchRegistrationForms}
         onSave={actions.create}
       />

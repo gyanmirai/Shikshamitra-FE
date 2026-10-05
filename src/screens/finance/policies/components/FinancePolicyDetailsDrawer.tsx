@@ -253,7 +253,8 @@ export default function FinancePolicyDetailsDrawer({
                 )}
               </Stack>
               <Typography variant="caption" color="text.secondary">
-                {formatEnumValue(policy.policyType)} Policy · {policy.academicYearName || 'All Years'}
+                {formatEnumValue(policy.policyType)} Policy ·{' '}
+                {policy.academicYearName || 'All Years'}
               </Typography>
             </Box>
           </Stack>
@@ -376,14 +377,15 @@ export default function FinancePolicyDetailsDrawer({
                             value={policyDetails.considerAsIncome}
                           />
                         </Grid>
-                        {policyDetails.considerAsIncome && policyDetails.lateFeeIncomeHeadName && (
-                          <Grid size={{ xs: 12, sm: 6 }}>
-                            <DetailField
-                              label="Late-Fee Income Head"
-                              value={policyDetails.lateFeeIncomeHeadName}
-                            />
-                          </Grid>
-                        )}
+                        {policyDetails.considerAsIncome &&
+                          policyDetails.lateFeeIncomeCategoryName && (
+                            <Grid size={{ xs: 12, sm: 6 }}>
+                              <DetailField
+                                label="Late Fee Income Category"
+                                value={policyDetails.lateFeeIncomeCategoryName}
+                              />
+                            </Grid>
+                          )}
                       </Grid>
                     </DetailSection>
 
@@ -515,24 +517,16 @@ export default function FinancePolicyDetailsDrawer({
                                       bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08),
                                     }}
                                   >
-                                    <TableCell
-                                      sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
-                                    >
+                                    <TableCell sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}>
                                       From Day
                                     </TableCell>
-                                    <TableCell
-                                      sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
-                                    >
+                                    <TableCell sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}>
                                       To Day
                                     </TableCell>
-                                    <TableCell
-                                      sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
-                                    >
+                                    <TableCell sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}>
                                       Calculation
                                     </TableCell>
-                                    <TableCell
-                                      sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}
-                                    >
+                                    <TableCell sx={{ fontWeight: 700, fontSize: '11px', py: 0.75 }}>
                                       Charge Value
                                     </TableCell>
                                   </TableRow>
@@ -565,7 +559,6 @@ export default function FinancePolicyDetailsDrawer({
                         </Box>
                       )}
                     </DetailSection>
-
                   </>
                 )}
 
@@ -783,7 +776,10 @@ export default function FinancePolicyDetailsDrawer({
                 {type === 'refund' && (
                   <>
                     {/* Scope & Eligibility */}
-                    <DetailSection title="Refund Scope & Eligibility" icon="solar:shield-check-bold-duotone">
+                    <DetailSection
+                      title="Refund Scope & Eligibility"
+                      icon="solar:shield-check-bold-duotone"
+                    >
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>
                           <DetailField
@@ -818,8 +814,16 @@ export default function FinancePolicyDetailsDrawer({
                       {/* Fee Heads chip list if applicable */}
                       {policyDetails.feeHeadScope === 'SelectedFeeHeads' &&
                         (policyDetails.applicableFeeHeadIds ?? []).length > 0 && (
-                          <Box sx={{ mt: 2, pt: 1.5, borderTop: '1px dashed', borderColor: 'divider' }}>
-                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block" sx={{ mb: 1 }}>
+                          <Box
+                            sx={{ mt: 2, pt: 1.5, borderTop: '1px dashed', borderColor: 'divider' }}
+                          >
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              fontWeight={600}
+                              display="block"
+                              sx={{ mb: 1 }}
+                            >
                               APPLICABLE FEE HEADS ({policyDetails.applicableFeeHeadIds.length})
                             </Typography>
                             <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
@@ -839,7 +843,10 @@ export default function FinancePolicyDetailsDrawer({
                     </DetailSection>
 
                     {/* Calculation & Ceilings */}
-                    <DetailSection title="Refund Calculation & Ceilings" icon="solar:calculator-minimalistic-bold-duotone">
+                    <DetailSection
+                      title="Refund Calculation & Ceilings"
+                      icon="solar:calculator-minimalistic-bold-duotone"
+                    >
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>
                           <DetailField
@@ -898,7 +905,10 @@ export default function FinancePolicyDetailsDrawer({
                     </DetailSection>
 
                     {/* Deductions & Payout Methods */}
-                    <DetailSection title="Deductions & Allowed Disbursement" icon="solar:tag-price-bold-duotone">
+                    <DetailSection
+                      title="Deductions & Allowed Disbursement"
+                      icon="solar:tag-price-bold-duotone"
+                    >
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>
                           <DetailField
@@ -927,7 +937,10 @@ export default function FinancePolicyDetailsDrawer({
                             <Grid size={{ xs: 12 }}>
                               <DetailField
                                 label="Deduction Justification"
-                                value={policyDetails.deductionExplanation || 'Standard administrative fee'}
+                                value={
+                                  policyDetails.deductionExplanation ||
+                                  'Standard administrative fee'
+                                }
                               />
                             </Grid>
                           </>
@@ -944,20 +957,27 @@ export default function FinancePolicyDetailsDrawer({
                         </Grid>
                         <Grid size={{ xs: 12 }}>
                           <Box sx={{ mb: 0.5 }}>
-                            <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: '0.72rem', mb: 0.5 }}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              display="block"
+                              sx={{ fontSize: '0.72rem', mb: 0.5 }}
+                            >
                               Permitted Payout Channels
                             </Typography>
                             <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-                              {(policyDetails.allowedPayoutMethods ?? ['Cash']).map((method: string, i: number) => (
-                                <Chip
-                                  key={i}
-                                  label={method}
-                                  size="small"
-                                  color="info"
-                                  variant="outlined"
-                                  sx={{ height: 24, fontSize: '0.75rem', fontWeight: 600 }}
-                                />
-                              ))}
+                              {(policyDetails.allowedPayoutMethods ?? ['Cash']).map(
+                                (method: string, i: number) => (
+                                  <Chip
+                                    key={i}
+                                    label={method}
+                                    size="small"
+                                    color="info"
+                                    variant="outlined"
+                                    sx={{ height: 24, fontSize: '0.75rem', fontWeight: 600 }}
+                                  />
+                                )
+                              )}
                             </Stack>
                           </Box>
                         </Grid>
@@ -965,7 +985,10 @@ export default function FinancePolicyDetailsDrawer({
                     </DetailSection>
 
                     {/* Guarantees & Settlement Callout */}
-                    <DetailSection title="Settlement Guarantees & Constraints" icon="solar:shield-check-bold">
+                    <DetailSection
+                      title="Settlement Guarantees & Constraints"
+                      icon="solar:shield-check-bold"
+                    >
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12 }}>
                           <Paper
@@ -986,8 +1009,15 @@ export default function FinancePolicyDetailsDrawer({
                               height={20}
                               sx={{ color: 'info.main', flexShrink: 0 }}
                             />
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.74rem' }}>
-                              <strong>Settled Money Only Invariant:</strong> Refunds can only be created from verified settled money. Prior processed refunds and active reservations are permanently subtracted from the eligible base before calculating payout amounts.
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ fontSize: '0.74rem' }}
+                            >
+                              <strong>Settled Money Only Invariant:</strong> Refunds can only be
+                              created from verified settled money. Prior processed refunds and
+                              active reservations are permanently subtracted from the eligible base
+                              before calculating payout amounts.
                             </Typography>
                           </Paper>
                         </Grid>
@@ -1008,14 +1038,20 @@ export default function FinancePolicyDetailsDrawer({
                             label="Downstream Fee Structure Attachment"
                             value={
                               policy.isUsedInDownstream || policyDetails.isUsedInDownstream ? (
-                                <Label color="info" sx={{ height: 22 }}>Attached to Fee Structures</Label>
+                                <Label color="info" sx={{ height: 22 }}>
+                                  Attached to Fee Structures
+                                </Label>
                               ) : (
-                                <Label color="default" sx={{ height: 22 }}>Not Attached</Label>
+                                <Label color="default" sx={{ height: 22 }}>
+                                  Not Attached
+                                </Label>
                               )
                             }
                           />
                         </Grid>
-                        {(policy.updatedAt || policy.lastModificationTime || (policyDetails as any)?.lastModificationTime) && (
+                        {(policy.updatedAt ||
+                          policy.lastModificationTime ||
+                          (policyDetails as any)?.lastModificationTime) && (
                           <Grid size={{ xs: 12, sm: 6 }}>
                             <DetailField
                               label="Last Modified"
@@ -1040,7 +1076,8 @@ export default function FinancePolicyDetailsDrawer({
                                 policy.creationTime || (policyDetails as any)?.creationTime
                               ).format('DD-MM-YYYY hh:mm A')}
                               secondary={
-                                (policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy
+                                (policyDetails as any)?.creatorName ||
+                                (policyDetails as any)?.createdBy
                                   ? `By: ${(policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy}`
                                   : undefined
                               }
@@ -1056,14 +1093,26 @@ export default function FinancePolicyDetailsDrawer({
                 {type === 'proration' && (
                   <>
                     {/* Strategy & Overview */}
-                    <DetailSection title="Proration Strategy & Scope" icon="solar:calculator-bold-duotone">
+                    <DetailSection
+                      title="Proration Strategy & Scope"
+                      icon="solar:calculator-bold-duotone"
+                    >
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12, sm: 6 }}>
                           <DetailField
                             label="Default Academic Policy"
                             value={
-                              <Label color={policyDetails.isDefault || policy.isDefault ? 'primary' : 'default'} sx={{ height: 22 }}>
-                                {policyDetails.isDefault || policy.isDefault ? 'Default Policy' : 'Standard Policy'}
+                              <Label
+                                color={
+                                  policyDetails.isDefault || policy.isDefault
+                                    ? 'primary'
+                                    : 'default'
+                                }
+                                sx={{ height: 22 }}
+                              >
+                                {policyDetails.isDefault || policy.isDefault
+                                  ? 'Default Policy'
+                                  : 'Standard Policy'}
                               </Label>
                             }
                             secondary="Assigned to new fee structures by default"
@@ -1074,12 +1123,20 @@ export default function FinancePolicyDetailsDrawer({
                             label="Downstream Attachment"
                             value={
                               policy.isUsedInDownstream || policyDetails.isUsedInDownstream ? (
-                                <Label color="info" sx={{ height: 22 }}>Attached to Fee Structures</Label>
+                                <Label color="info" sx={{ height: 22 }}>
+                                  Attached to Fee Structures
+                                </Label>
                               ) : (
-                                <Label color="default" sx={{ height: 22 }}>Not Attached</Label>
+                                <Label color="default" sx={{ height: 22 }}>
+                                  Not Attached
+                                </Label>
                               )
                             }
-                            secondary={policy.isUsedInDownstream ? 'Active in student demand calculations' : undefined}
+                            secondary={
+                              policy.isUsedInDownstream
+                                ? 'Active in student demand calculations'
+                                : undefined
+                            }
                           />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6 }}>
@@ -1093,10 +1150,17 @@ export default function FinancePolicyDetailsDrawer({
                             label="Active Proration Rules"
                             value={
                               <Label color="primary" sx={{ height: 22 }}>
-                                {(policyDetails.feeHeadRules ?? []).filter((r: any) => {
-                                  const rt = r.ruleType;
-                                  return rt !== 'NoProration' && rt !== 'FullCharge' && rt !== 'FullMonthCharge';
-                                }).length} Prorated Fee Head(s)
+                                {
+                                  (policyDetails.feeHeadRules ?? []).filter((r: any) => {
+                                    const rt = r.ruleType;
+                                    return (
+                                      rt !== 'NoProration' &&
+                                      rt !== 'FullCharge' &&
+                                      rt !== 'FullMonthCharge'
+                                    );
+                                  }).length
+                                }{' '}
+                                Prorated Fee Head(s)
                               </Label>
                             }
                           />
@@ -1105,7 +1169,10 @@ export default function FinancePolicyDetailsDrawer({
                     </DetailSection>
 
                     {/* Fee Head Rules Table */}
-                    <DetailSection title="Fee Head Proration Rules" icon="solar:widget-bold-duotone">
+                    <DetailSection
+                      title="Fee Head Proration Rules"
+                      icon="solar:widget-bold-duotone"
+                    >
                       {(policyDetails.feeHeadRules ?? []).length === 0 ? (
                         <Paper
                           variant="outlined"
@@ -1128,7 +1195,9 @@ export default function FinancePolicyDetailsDrawer({
                         >
                           <Table size="small">
                             <TableHead>
-                              <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08) }}>
+                              <TableRow
+                                sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08) }}
+                              >
                                 <TableCell sx={{ fontWeight: 700, fontSize: '11px', py: 1 }}>
                                   Fee Head
                                 </TableCell>
@@ -1147,8 +1216,10 @@ export default function FinancePolicyDetailsDrawer({
                               {(policyDetails.feeHeadRules as any[]).map((rule, idx) => {
                                 const rawType = rule.ruleType;
                                 const isDaily = rawType === 'Daily' || rawType === 'DailyProration';
-                                const isMonthly = rawType === 'MonthlyCutoff' || rawType === 'MonthlyProration';
-                                const isFull = rawType === 'FullCharge' || rawType === 'FullMonthCharge';
+                                const isMonthly =
+                                  rawType === 'MonthlyCutoff' || rawType === 'MonthlyProration';
+                                const isFull =
+                                  rawType === 'FullCharge' || rawType === 'FullMonthCharge';
                                 const isNone = rawType === 'NoProration' || !rawType;
 
                                 const ruleLabel = isDaily
@@ -1159,26 +1230,36 @@ export default function FinancePolicyDetailsDrawer({
                                       ? 'Full Month Charge'
                                       : 'No Proration';
 
-                                const ruleColor: 'primary' | 'info' | 'warning' | 'default' = isDaily
-                                  ? 'primary'
-                                  : isMonthly
-                                    ? 'info'
-                                    : isFull
-                                      ? 'warning'
-                                      : 'default';
+                                const ruleColor: 'primary' | 'info' | 'warning' | 'default' =
+                                  isDaily
+                                    ? 'primary'
+                                    : isMonthly
+                                      ? 'info'
+                                      : isFull
+                                        ? 'warning'
+                                        : 'default';
 
                                 const cutoffDay = rule.cutoffDay ?? rule.configuration?.cutOffDay;
-                                const afterCutoff = rule.afterCutoffAction ?? rule.configuration?.monthlyRule;
-                                const minDays = rule.minimumChargeDays ?? rule.configuration?.minimumChargeDays;
-                                const rounding = rule.roundingMode ?? rule.configuration?.roundOff ?? 'Currency';
+                                const afterCutoff =
+                                  rule.afterCutoffAction ?? rule.configuration?.monthlyRule;
+                                const minDays =
+                                  rule.minimumChargeDays ?? rule.configuration?.minimumChargeDays;
+                                const rounding =
+                                  rule.roundingMode ?? rule.configuration?.roundOff ?? 'Currency';
 
                                 return (
-                                  <TableRow key={idx} sx={{ '&:hover': { bgcolor: 'action.hover' } }}>
+                                  <TableRow
+                                    key={idx}
+                                    sx={{ '&:hover': { bgcolor: 'action.hover' } }}
+                                  >
                                     <TableCell sx={{ fontSize: '12px', fontWeight: 600, py: 1 }}>
                                       {rule.feeHeadName || rule.feeHeadId || `Head #${idx + 1}`}
                                     </TableCell>
                                     <TableCell sx={{ py: 1 }}>
-                                      <Label color={ruleColor} sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}>
+                                      <Label
+                                        color={ruleColor}
+                                        sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}
+                                      >
                                         {ruleLabel}
                                       </Label>
                                     </TableCell>
@@ -1191,7 +1272,8 @@ export default function FinancePolicyDetailsDrawer({
                                       {isMonthly && (
                                         <Typography variant="caption" color="text.secondary">
                                           Cut-off: <strong>Day {cutoffDay ?? 15}</strong> ·{' '}
-                                          {afterCutoff === 'HalfCharge' || afterCutoff === 'HalfMonthRule'
+                                          {afterCutoff === 'HalfCharge' ||
+                                          afterCutoff === 'HalfMonthRule'
                                             ? '50% Half Month'
                                             : 'Charge Next Month'}
                                         </Typography>
@@ -1222,7 +1304,10 @@ export default function FinancePolicyDetailsDrawer({
                     </DetailSection>
 
                     {/* Zero Refund & Demand Guarantee Callout */}
-                    <DetailSection title="Application Guarantees & Constraints" icon="solar:shield-check-bold">
+                    <DetailSection
+                      title="Application Guarantees & Constraints"
+                      icon="solar:shield-check-bold"
+                    >
                       <Grid container spacing={2}>
                         <Grid size={{ xs: 12 }}>
                           <Paper
@@ -1243,8 +1328,15 @@ export default function FinancePolicyDetailsDrawer({
                               height={20}
                               sx={{ color: 'info.main', flexShrink: 0 }}
                             />
-                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.74rem' }}>
-                              <strong>Demand Generation Only:</strong> Proration policies strictly compute initial installment demand amounts for mid-term joiners. They never adjust historical ledger entries, existing receipts, or posted student transactions.
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ fontSize: '0.74rem' }}
+                            >
+                              <strong>Demand Generation Only:</strong> Proration policies strictly
+                              compute initial installment demand amounts for mid-term joiners. They
+                              never adjust historical ledger entries, existing receipts, or posted
+                              student transactions.
                             </Typography>
                           </Paper>
                         </Grid>
@@ -1260,7 +1352,9 @@ export default function FinancePolicyDetailsDrawer({
                             value={`Version ${policy.version || policyDetails.version || 1}`}
                           />
                         </Grid>
-                        {(policy.updatedAt || policy.lastModificationTime || (policyDetails as any)?.lastModificationTime) && (
+                        {(policy.updatedAt ||
+                          policy.lastModificationTime ||
+                          (policyDetails as any)?.lastModificationTime) && (
                           <Grid size={{ xs: 12, sm: 6 }}>
                             <DetailField
                               label="Last Modified"
@@ -1285,7 +1379,8 @@ export default function FinancePolicyDetailsDrawer({
                                 policy.creationTime || (policyDetails as any)?.creationTime
                               ).format('DD-MM-YYYY hh:mm A')}
                               secondary={
-                                (policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy
+                                (policyDetails as any)?.creatorName ||
+                                (policyDetails as any)?.createdBy
                                   ? `By: ${(policyDetails as any)?.creatorName || (policyDetails as any)?.createdBy}`
                                   : undefined
                               }

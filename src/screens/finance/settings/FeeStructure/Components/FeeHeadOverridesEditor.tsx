@@ -231,7 +231,7 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
           feeHeadOverrides,
           roundingMethod: policy.roundingMethod,
           considerAsIncome: policy.considerAsIncome,
-          lateFeeIncomeHeadId: policy.lateFeeIncomeHeadId,
+          lateFeeIncomeCategoryId: policy.lateFeeIncomeCategoryId,
           maximumLateFeeAmount: policy.maximumLateFeeAmount,
           maximumChargingDays: policy.maximumChargingDays,
           allowOnlineCollection: policy.allowOnlineCollection,

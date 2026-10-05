@@ -93,34 +93,46 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         align: 'left',
         minWidth: '150px',
       },
-      ...(onEdit || onDelete ? [{
-        id: 'actions',
-        label: 'Actions',
-        align: 'left',
-        isSort: false,
-        isFilter: false,
-        sticky: true,
-        minWidth: 100,
-        render: (_value: unknown, row: unknown) => (
-          <AdaptiveThreeDotsActions
-            actions={[
-              ...(onEdit ? [{
-                id: 'edit',
-                label: 'Edit',
-                icon: 'solar:pen-bold',
-                onClick: () => onEdit(row as IExpenseFormValues),
-              }] : []),
-              ...(onDelete ? [{
-                id: 'delete',
-                label: 'Delete',
-                icon: 'solar:trash-bin-trash-bold',
-                onClick: () => onDelete(row as IExpenseFormValues),
-                color: 'error.main',
-              }] : []),
-            ]}
-          />
-        ),
-      } as IColumn] : []),
+      ...(onEdit || onDelete
+        ? [
+            {
+              id: 'actions',
+              label: 'Actions',
+              align: 'left',
+              isSort: false,
+              isFilter: false,
+              sticky: true,
+              minWidth: 100,
+              render: (_value: unknown, row: unknown) => (
+                <AdaptiveThreeDotsActions
+                  actions={[
+                    ...(onEdit && !(row as any).isAutomatic
+                      ? [
+                          {
+                            id: 'edit',
+                            label: 'Edit',
+                            icon: 'solar:pen-bold',
+                            onClick: () => onEdit(row as IExpenseFormValues),
+                          },
+                        ]
+                      : []),
+                    ...(onDelete && !(row as any).isAutomatic
+                      ? [
+                          {
+                            id: 'delete',
+                            label: 'Delete',
+                            icon: 'solar:trash-bin-trash-bold',
+                            onClick: () => onDelete(row as IExpenseFormValues),
+                            color: 'error.main',
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+              ),
+            } as IColumn,
+          ]
+        : []),
     ],
     [onDelete, onEdit] // Added dependencies to ensure closures are updated
   );
@@ -132,23 +144,25 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
       noDataText={
         <>
           No Expense data found
-          {canAdd && <Box
-            onClick={() => {
-              addExpenseCategory.onTrue();
-              setEditData(null);
-            }}
-            color="primary.main"
-            fontWeight={600}
-            sx={{
-              '&:hover': {
-                cursor: 'pointer',
-                color: 'primary.main',
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            Add Expense
-          </Box>}
+          {canAdd && (
+            <Box
+              onClick={() => {
+                addExpenseCategory.onTrue();
+                setEditData(null);
+              }}
+              color="primary.main"
+              fontWeight={600}
+              sx={{
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: 'primary.main',
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              Add Expense
+            </Box>
+          )}
         </>
       }
       columns={columns}

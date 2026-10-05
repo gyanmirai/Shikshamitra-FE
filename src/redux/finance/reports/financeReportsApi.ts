@@ -66,6 +66,9 @@ export const normalizeFinanceReportRequest = (
 
 export const financeReportsApi = financeModuleApi.injectEndpoints({
   endpoints: (builder) => ({
+    getPayableAgeing: builder.query<any[], string>({
+      query: (academicYearId) => ({ url: '/reports/payable-ageing', params: { academicYearId } }),
+    }),
     createFinanceAiPlan: builder.mutation<
       FinanceAiPlanResponse,
       { prompt: string; clarificationAnswers: FinanceAiClarificationAnswer[] }
@@ -94,6 +97,7 @@ export const financeReportsApi = financeModuleApi.injectEndpoints({
 });
 
 export const {
+  useGetPayableAgeingQuery,
   useCreateFinanceAiPlanMutation,
   usePreviewFinanceReportMutation,
   useCreateFinanceReportExportMutation,

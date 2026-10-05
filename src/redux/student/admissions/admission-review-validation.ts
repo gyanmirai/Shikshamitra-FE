@@ -30,7 +30,10 @@ export function getReviewConfigurationError(json?: string): string | undefined {
     return 'Choose a valid reviewer or approver role.';
   if (
     policy.assignedReviewerId != null &&
-    !Yup.string().uuid().isValidSync(policy.assignedReviewerId)
+    (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      policy.assignedReviewerId
+    ) ||
+      policy.assignedReviewerId === '00000000-0000-0000-0000-000000000000')
   )
     return 'Choose a valid assigned reviewer.';
   if (

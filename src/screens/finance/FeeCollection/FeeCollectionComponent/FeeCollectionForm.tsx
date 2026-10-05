@@ -26,16 +26,17 @@ import { alpha, useTheme } from '@mui/material/styles';
 import CustomDialog from 'src/components/customDialog';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
+import { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, Fragment, useEffect } from 'react';
 import ShakingTextField from 'src/components/shaking-text-field';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
 import { PaymentMethodLabels } from 'src/enums/finance-payment-method';
-import { FeeMonth } from 'src/enums/fee-collection-type';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
+import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
+import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
 import { useSensor, DndContext, useSensors, closestCenter, PointerSensor } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -63,14 +64,18 @@ import {
 } from '@mui/material';
 
 import FeeLedgerList from './FeeLedgerList';
-import { normalizeLedgerStatus } from './feeLedgerStatus';
 import { toPeriod } from './FeeLedgerShared';
-import UnifiedReceiptDisplay from './UnifiedReceiptDisplay';
+import { normalizeLedgerStatus } from './feeLedgerStatus';
 import {
-  allocatePayment,
-  roundUpToRupee,
-  safeRoundingDifference,
-} from './preview/paymentAllocationUtils';
+  applySelectionFilter,
+  academicYearMonthsFromDates,
+  createSelectionOwnership,
+  isLedgerItemCollectible,
+  recordManualSelection,
+  selectionFilterState,
+  selectionItemKey,
+} from './feeLedgerSelection';
+import UnifiedReceiptDisplay from './UnifiedReceiptDisplay';
 import FeeCollectionFormSkeleton from './FeeCollectionFormSkeleton';
 import FeeCollectionOutcomePanel from './FeeCollectionOutcomePanel';
 import { paymentMethodsConfig } from '../Components/paymentConfigMethods';
@@ -78,8 +83,14 @@ import FinalPaymentReviewDialog from './preview/FinalPaymentReviewDialog';
 import { StudentFeeSummaryCard } from '../Components/StudentFeesSummaryCard';
 import FeeCollectionPreviewDialog from './preview/FeeCollectionPreviewDialog';
 import FeeLedgerFilterBar, { FEE_LEDGER_INITIAL_FILTERS } from './FeeLedgerFilterBar';
+import {
+  roundUpToRupee,
+  allocatePayment,
+  safeRoundingDifference,
+} from './preview/paymentAllocationUtils';
 
 import type { FeeLedgerFilters } from './FeeLedgerFilterBar';
+import type { SelectionFilterKey, LedgerSelection } from './feeLedgerSelection';
 import type { AllocatedFeeRow, AllocatedChargeRow } from './preview/paymentAllocationUtils';
 import type {
   IFeeCharge,
@@ -300,7 +311,8 @@ const normalizeMonth = (month: string | number): FeeMonth =>
     ? month
     : ((FeeMonth[month as keyof typeof FeeMonth] as unknown as FeeMonth) ?? 0);
 
-const isChargeSelectable = (charge: IFeeCharge): boolean => charge.amount > 0;
+const isChargeSelectable = (charge: IFeeCharge): boolean =>
+  isLedgerItemCollectible({ due: charge.amount, status: charge.status });
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
@@ -314,6 +326,7 @@ const FeeCollectComponentForm = ({
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [filters, setFilters] = useState<FeeLedgerFilters>(FEE_LEDGER_INITIAL_FILTERS);
+  const selectionOwnership = useRef(createSelectionOwnership());
   const [previewOpen, setPreviewOpen] = useState(false);
   const [finalReviewOpen, setFinalReviewOpen] = useState(false);
   const [feeStructureDialogOpen, setFeeStructureDialogOpen] = useState(false);
@@ -353,8 +366,8 @@ const FeeCollectComponentForm = ({
     isFetching: bankAccountsFetching,
   } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetBankAccountQuery,
-    params: { academicYearId: currentYear?.id ?? '' },
+    currentQueryAndMutation: useGetFinanceRoutingOptionsQuery,
+    params: { academicYearId: currentYear?.id ?? '', operation: 'collection' },
     options: { skip: !currentYear?.id },
   });
 
@@ -421,6 +434,29 @@ const FeeCollectComponentForm = ({
       : undefined;
 
   const formData = collectFormData;
+
+  const academicMonthsFromContext = useMemo(
+    () =>
+      academicYearMonthsFromDates({
+        startDate: currentYear?.startDate,
+        endDate: currentYear?.endDate,
+      }),
+    [currentYear?.startDate, currentYear?.endDate]
+  );
+
+  const {
+    data: academicMonthsFromQuery,
+    isLoading: academicMonthsLoading,
+    isFetching: academicMonthsFetching,
+  } = useQueryAndMutation({
+    type: 'query',
+    currentQueryAndMutation: useGetAcademicYearMonthsQuery,
+    params: { academicYearId: currentYear?.id },
+    options: { skip: !currentYear?.id || Boolean(academicMonthsFromContext) },
+  });
+  const academicYearMonths = academicMonthsFromContext ?? academicMonthsFromQuery;
+  const isAcademicCalendarLoading =
+    !academicMonthsFromContext && (academicMonthsLoading || academicMonthsFetching);
 
   // Map V2 API ledger → FeeLedgerData shape used by existing UI components
   const ledgerData = useMemo((): FeeLedgerData => {
@@ -650,12 +686,10 @@ const FeeCollectComponentForm = ({
 
   const bankAccountOptions = useMemo(
     () =>
-      bankAccountsData?.items.map(
-        (account: { bankName: string; accountNumber: string; id: string }) => ({
-          name: `${account.bankName} - ${account.accountNumber}`,
-          id: account.id,
-        })
-      ) ?? [],
+      bankAccountsData?.bankAccounts.map((account: { label: string; id: string }) => ({
+        name: account.label,
+        id: account.id,
+      })) ?? [],
     [bankAccountsData]
   );
 
@@ -701,6 +735,11 @@ const FeeCollectComponentForm = ({
         ]?.filter((field: IPaymentFieldConfig) => field.name !== 'amount') ?? [];
 
       const detailErrors: Record<string, string> = {};
+      if (
+        (values.payment.paymentMethod !== 'Cash' || values.charges.length > 0) &&
+        !values.payment.details?.bankAccount
+      )
+        detailErrors.bankAccount = 'Select the receiving school bank account';
 
       activeMethodFields.forEach((field: IPaymentFieldConfig) => {
         const rawValue = values.payment.details?.[field.name];
@@ -739,6 +778,13 @@ const FeeCollectComponentForm = ({
       }
 
       return errors;
+    },
+    onReset: () => {
+      selectionOwnership.current = createSelectionOwnership();
+      setFilters((previous) => ({
+        ...previous,
+        selectionFilters: FEE_LEDGER_INITIAL_FILTERS.selectionFilters,
+      }));
     },
     onSubmit: () => {
       setPreviewOpen(true);
@@ -793,17 +839,42 @@ const FeeCollectComponentForm = ({
     balancePaise < 0 && (Boolean(formik.touched.payment?.amount) || formik.submitCount > 0);
 
   // ── Handlers ───────────────────────────────────────────────────────────────
-  const handleSelectionChange = (items: SelectedItem[]) =>
+  const handleSelectionChange = (items: SelectedItem[]) => {
+    recordManualSelection(
+      selectionOwnership.current,
+      { items: formik.values.selectedItems, charges: formik.values.charges },
+      { items, charges: formik.values.charges }
+    );
     formik.setFieldValue('selectedItems', items, false);
+  };
 
-  const handleChargesChange = (chargeIds: string[]) =>
+  const handleChargesChange = (chargeIds: string[]) => {
+    recordManualSelection(
+      selectionOwnership.current,
+      { items: formik.values.selectedItems, charges: formik.values.charges },
+      { items: formik.values.selectedItems, charges: chargeIds }
+    );
     formik.setFieldValue('charges', chargeIds, false);
+    const selectedBanks = [
+      ...new Set(
+        (formData?.charges ?? [])
+          .filter((x: ChargeDetail) => chargeIds.includes(x.chargeId))
+          .map((x: ChargeDetail) => x.receivingBankAccountId)
+          .filter(Boolean)
+      ),
+    ];
+    if (selectedBanks.length === 1)
+      formik.setFieldValue('payment.details.bankAccount', selectedBanks[0], false);
+  };
 
   const handlePaymentMethodChange = (method: string) => {
     formik.setFieldValue('payment', {
       paymentMethod: method,
       amount: formik.values.payment.amount,
-      details: buildDetailsForMethod(method),
+      details: {
+        ...buildDetailsForMethod(method),
+        bankAccount: formik.values.payment.details.bankAccount || '',
+      },
     });
   };
 
@@ -813,6 +884,7 @@ const FeeCollectComponentForm = ({
   const buildPaymentPayload = (paymentMethodNum: number, receivedAmount: number) => [
     {
       paymentMethod: paymentMethodNum,
+      bankAccountId: String(formik.values.payment.details.bankAccount || '') || undefined,
       amount: receivedAmount,
       details: Object.fromEntries(
         Object.entries(formik.values.payment.details)
@@ -1066,8 +1138,12 @@ const FeeCollectComponentForm = ({
   };
 
   const handleRemoveAll = () => {
-    formik.setFieldValue('selectedItems', [], false);
-    formik.setFieldValue('charges', [], false);
+    selectionOwnership.current = createSelectionOwnership();
+    setFilters((previous) => ({
+      ...previous,
+      selectionFilters: FEE_LEDGER_INITIAL_FILTERS.selectionFilters,
+    }));
+    formik.setValues((values) => ({ ...values, selectedItems: [], charges: [] }), false);
   };
 
   const entryCount = useMemo(
@@ -1077,151 +1153,100 @@ const FeeCollectComponentForm = ({
     [filteredLedgerData, filteredChargesData]
   );
 
-  const orderedFilteredPeriods = useMemo(() => {
-    const uniquePeriods = new Map<string, number>();
-
-    (filteredLedgerData.monthWise ?? []).forEach((group) => {
-      if (!group.items.some((item) => item.due > 0 || (item.lateFeeAmount ?? 0) > 0)) {
-        return;
-      }
-
-      const period = toPeriod(
-        FeeMonth[group.month] as string,
-        group.year ?? currentYear?.year ?? new Date().getFullYear()
-      );
-
-      uniquePeriods.set(period, (group.year ?? 0) * 12 + Number(group.month));
-    });
-
-    return [...uniquePeriods.entries()].sort((a, b) => a[1] - b[1]).map(([period]) => period);
-  }, [filteredLedgerData, currentYear]);
-
-  const { selectionFilters } = filters;
-  const hasSelectionFilters = Object.values(selectionFilters).some(Boolean);
-
-  const firstSixPeriodSet = useMemo(
-    () => new Set(orderedFilteredPeriods.slice(0, 6)),
-    [orderedFilteredPeriods]
+  // Academic halves include paid and absent ledger months. Display filters
+  // never redefine which half a month belongs to.
+  const orderedAcademicPeriods = useMemo(
+    () =>
+      [...(academicYearMonths ?? [])]
+        .sort((a, b) => a.year * 12 + a.month - (b.year * 12 + b.month))
+        .map((month) => toPeriod(FeeMonth[month.month] as string, month.year)),
+    [academicYearMonths]
   );
+  const firstSixPeriodSet = new Set(orderedAcademicPeriods.slice(0, 6));
+  const lastSixPeriodSet = new Set(orderedAcademicPeriods.slice(-6));
 
-  const lastSixPeriodSet = useMemo(
-    () => new Set(orderedFilteredPeriods.slice(-6)),
-    [orderedFilteredPeriods]
-  );
-
-  // ── Select-All helpers (based on filtered ledger + charges) ────────────────
-  const allSelectableItems = useMemo((): SelectedItem[] => {
-    const items: SelectedItem[] = [];
-    (filteredLedgerData.monthWise ?? []).forEach((g) => {
-      const period = toPeriod(
-        FeeMonth[g.month] as string,
-        g.year ?? currentYear?.year ?? new Date().getFullYear()
-      );
-      g.items
-        .filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0)
-        .forEach((i) => {
-          if (
-            hasSelectionFilters &&
-            !(
-              selectionFilters.allPending ||
-              (selectionFilters.firstSixMonths && firstSixPeriodSet.has(period)) ||
-              (selectionFilters.lastSixMonths && lastSixPeriodSet.has(period))
-            )
-          ) {
-            return;
-          }
-
-          const roundedDue = roundUpToRupee(i.due);
-          items.push({
-            dueFeeId: i.dueFeeId,
-            feeHeadId: i.feeHeadId,
-            period,
-            dueAmount: roundedDue,
-            originalDueAmount: i.due,
-            roundingAdjustment: safeRoundingDifference(i.due, roundedDue),
-            lateFeeAmount: i.lateFeeAmount,
-            installmentLabel: i.installmentLabel,
-          });
-        });
-    });
-    return items;
-  }, [
-    filteredLedgerData,
-    currentYear,
-    hasSelectionFilters,
-    selectionFilters,
-    firstSixPeriodSet,
-    lastSixPeriodSet,
-  ]);
-
-  const allSelectableChargeIds = useMemo(() => {
-    const selectableCharges = filteredChargesData
-      .filter((charge) => isChargeSelectable(charge))
-      .map((charge) => charge.chargeId);
-
-    if (!hasSelectionFilters) {
-      return selectableCharges;
-    }
-
-    return selectionFilters.allCharges ? selectableCharges : [];
-  }, [filteredChargesData, hasSelectionFilters, selectionFilters.allCharges]);
-
-  const totalSelectableCount = allSelectableItems.length + allSelectableChargeIds.length;
-
-  const isAllSelected =
-    totalSelectableCount > 0 &&
-    allSelectableItems.every((si) =>
-      formik.values.selectedItems.some(
-        (s) => s.feeHeadId === si.feeHeadId && s.period === si.period
-      )
-    ) &&
-    allSelectableChargeIds.every((id) => formik.values.charges.includes(id));
-
-  const prevSelectionFilters = useRef(selectionFilters);
-  // ── Auto-apply selection when filter checkboxes are toggled ───────────────
-  useEffect(() => {
-    if (prevSelectionFilters.current === selectionFilters) {
-      return;
-    }
-    prevSelectionFilters.current = selectionFilters;
-
-    // Items to add (not already selected)
-    const existingKeys = new Set(
-      formik.values.selectedItems.map((s) => `${s.feeHeadId}|${s.period}`)
+  const pendingItems: SelectedItem[] = ledgerData.monthWise.flatMap((group) => {
+    const period = toPeriod(
+      FeeMonth[group.month] as string,
+      group.year ?? currentYear?.year ?? new Date().getFullYear()
     );
-    const itemsToAdd = hasSelectionFilters
-      ? allSelectableItems.filter((i) => !existingKeys.has(`${i.feeHeadId}|${i.period}`))
-      : [];
+    return group.items
+      .filter(
+        (item) =>
+          isLedgerItemCollectible(item) &&
+          [
+            FeeCollectionStatusType.Pending,
+            FeeCollectionStatusType.Overdue,
+            FeeCollectionStatusType.Partial,
+          ].includes(item.status)
+      )
+      .map((item) => {
+        const roundedDue = roundUpToRupee(item.due);
+        return {
+          dueFeeId: item.dueFeeId,
+          feeHeadId: item.feeHeadId,
+          period,
+          dueAmount: roundedDue,
+          originalDueAmount: item.due,
+          roundingAdjustment: safeRoundingDifference(item.due, roundedDue),
+          lateFeeAmount: item.lateFeeAmount,
+          installmentLabel: item.installmentLabel,
+        };
+      });
+  });
+  const selectableChargeIds = chargesData
+    .filter(isChargeSelectable)
+    .map((charge) => charge.chargeId);
+  const filterMatches: Record<SelectionFilterKey, LedgerSelection> = {
+    allPending: { items: pendingItems, charges: [] },
+    allCharges: { items: [], charges: selectableChargeIds },
+    firstSixMonths: {
+      items: pendingItems.filter((item) => firstSixPeriodSet.has(item.period)),
+      charges: [],
+    },
+    lastSixMonths: {
+      items: pendingItems.filter((item) => lastSixPeriodSet.has(item.period)),
+      charges: [],
+    },
+  };
+  const currentSelection = { items: formik.values.selectedItems, charges: formik.values.charges };
+  const selectionStates = Object.fromEntries(
+    Object.entries(filterMatches).map(([key, matches]) => [
+      key,
+      filters.selectionFilters[key as SelectionFilterKey]
+        ? selectionFilterState(matches, currentSelection)
+        : { checked: false, indeterminate: false },
+    ])
+  );
 
-    // Charges to add (not already selected)
-    const existingChargeIds = new Set(formik.values.charges);
-    const chargesToAdd = hasSelectionFilters
-      ? allSelectableChargeIds.filter((id) => !existingChargeIds.has(id))
-      : [];
-
-    // Items to remove: any item that was in a now-unchecked filter scope
-    const shouldKeepItem = (item: SelectedItem): boolean => {
-      if (selectionFilters.allPending) return true;
-      if (selectionFilters.firstSixMonths && firstSixPeriodSet.has(item.period)) return true;
-      if (selectionFilters.lastSixMonths && lastSixPeriodSet.has(item.period)) return true;
-      return false;
-    };
-
-    const nextItems = hasSelectionFilters
-      ? [...formik.values.selectedItems.filter(shouldKeepItem), ...itemsToAdd]
-      : [];
-
-    const shouldKeepCharge = selectionFilters.allCharges;
-    const nextCharges = hasSelectionFilters
-      ? shouldKeepCharge
-        ? [...new Set([...formik.values.charges, ...chargesToAdd])]
-        : formik.values.charges.filter((id) => !allSelectableChargeIds.includes(id))
-      : [];
-
-    formik.setFieldValue('selectedItems', nextItems, false);
-    formik.setFieldValue('charges', nextCharges, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectionFilters]);
+  const handleSelectionFilterChange = (key: SelectionFilterKey, checked: boolean) => {
+    const next = applySelectionFilter(
+      selectionOwnership.current,
+      currentSelection,
+      key,
+      checked,
+      filterMatches[key]
+    );
+    setFilters((previous) => ({
+      ...previous,
+      selectionFilters: { ...previous.selectionFilters, [key]: checked },
+    }));
+    // One Formik update keeps fee and charge selections consistent with totals.
+    formik.setValues(
+      (values) => ({ ...values, selectedItems: next.items, charges: next.charges }),
+      false
+    );
+  };
+  const handleFilterChange = (nextFilters: FeeLedgerFilters) => {
+    const changedKey = (Object.keys(nextFilters.selectionFilters) as SelectionFilterKey[]).find(
+      (key) => nextFilters.selectionFilters[key] !== filters.selectionFilters[key]
+    );
+    if (changedKey) {
+      handleSelectionFilterChange(changedKey, nextFilters.selectionFilters[changedKey]);
+    } else {
+      setFilters(nextFilters);
+    }
+  };
 
   const feeHeadMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -1451,7 +1476,11 @@ const FeeCollectComponentForm = ({
 
             <FeeLedgerFilterBar
               filters={filters}
-              onFilterChange={setFilters}
+              onFilterChange={handleFilterChange}
+              academicYearMonths={academicYearMonths}
+              isMonthsLoading={isAcademicCalendarLoading}
+              selectionStates={selectionStates}
+              onSelectionFilterChange={handleSelectionFilterChange}
               entryCount={entryCount}
               studentId={String(student?.id ?? '')}
             />
@@ -1589,10 +1618,10 @@ const FeeCollectComponentForm = ({
                             const { active, over } = event;
                             if (over && active.id !== over.id) {
                               const oldIdx = formik.values.selectedItems.findIndex(
-                                (i) => `${i.feeHeadId}-${i.period}` === active.id
+                                (i) => selectionItemKey(i) === active.id
                               );
                               const newIdx = formik.values.selectedItems.findIndex(
-                                (i) => `${i.feeHeadId}-${i.period}` === over.id
+                                (i) => selectionItemKey(i) === over.id
                               );
                               formik.setFieldValue(
                                 'selectedItems',
@@ -1603,33 +1632,29 @@ const FeeCollectComponentForm = ({
                           }}
                         >
                           <SortableContext
-                            items={formik.values.selectedItems.map(
-                              (i) => `${i.feeHeadId}-${i.period}`
-                            )}
+                            items={formik.values.selectedItems.map(selectionItemKey)}
                             strategy={verticalListSortingStrategy}
                           >
                             {formik.values.selectedItems.map((item, idx) => (
-                              <>
+                              <Fragment key={selectionItemKey(item)}>
                                 <SortableFeeRow
-                                  key={`${item.feeHeadId}-${item.period}`}
-                                  id={`${item.feeHeadId}-${item.period}`}
+                                  key={selectionItemKey(item)}
+                                  id={selectionItemKey(item)}
                                   label={feeHeadMap[item.feeHeadId] ?? item.feeHeadId}
                                   sub={dayjs(`${item.period}-01`).format('MMM YYYY')}
                                   amount={
                                     roundUpToRupee(item.dueAmount) + (item.lateFeeAmount ?? 0)
                                   }
                                   onRemove={() => {
-                                    formik.setFieldValue(
-                                      'selectedItems',
-                                      formik.values.selectedItems.filter((_, i) => i !== idx),
-                                      false
+                                    handleSelectionChange(
+                                      formik.values.selectedItems.filter((_, i) => i !== idx)
                                     );
                                   }}
                                 />
                                 {idx < formik.values.selectedItems.length - 1 && (
                                   <Divider sx={{ mx: 0.5 }} />
                                 )}
-                              </>
+                              </Fragment>
                             ))}
                           </SortableContext>
                         </DndContext>
@@ -1659,7 +1684,7 @@ const FeeCollectComponentForm = ({
                               {(chargesData ?? [])
                                 .filter((c) => formik.values.charges.includes(c.chargeId))
                                 .map((charge, idx, arr) => (
-                                  <>
+                                  <Fragment key={charge.chargeId}>
                                     <SortableFeeRow
                                       key={charge.chargeId}
                                       id={charge.chargeId}
@@ -1667,17 +1692,15 @@ const FeeCollectComponentForm = ({
                                       amount={charge.amount}
                                       isCharge
                                       onRemove={() =>
-                                        formik.setFieldValue(
-                                          'charges',
+                                        handleChargesChange(
                                           formik.values.charges.filter(
                                             (id) => id !== charge.chargeId
-                                          ),
-                                          false
+                                          )
                                         )
                                       }
                                     />
                                     {idx < arr.length - 1 && <Divider sx={{ mx: 0.5 }} />}
-                                  </>
+                                  </Fragment>
                                 ))}
                             </SortableContext>
                           </DndContext>
@@ -1828,6 +1851,34 @@ const FeeCollectComponentForm = ({
                       </TextField>
                     </ShakingTextField>
 
+                    <TextField
+                      fullWidth
+                      select
+                      size="small"
+                      label="Receiving School Bank Account"
+                      value={formik.values.payment.details.bankAccount || ''}
+                      disabled={isBankAccountsBusy}
+                      sx={{ mb: 2 }}
+                      onChange={(event) =>
+                        formik.setFieldValue('payment.details.bankAccount', event.target.value)
+                      }
+                      error={Boolean(
+                        formik.touched.payment?.details?.bankAccount &&
+                        formik.errors.payment?.details?.bankAccount
+                      )}
+                      helperText={
+                        formik.touched.payment?.details?.bankAccount
+                          ? String(formik.errors.payment?.details?.bankAccount || '')
+                          : 'Optional for cash fees; required for charges and non-cash payments.'
+                      }
+                    >
+                      <MenuItem value="">Select school bank account</MenuItem>
+                      {bankAccountOptions.map((account: { id: string; name: string }) => (
+                        <MenuItem key={account.id} value={account.id}>
+                          {account.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
                     {/* ── Amount Tendered ── */}
                     {formik.values.payment.paymentMethod && (
                       <Box
@@ -1884,6 +1935,7 @@ const FeeCollectComponentForm = ({
                             .map((field: IPaymentFieldConfig) => {
                               const fieldPath = `payment.details.${field.name}`;
                               const isBankAccountField = field.name === 'bankAccount';
+                              if (isBankAccountField) return null;
                               const selectOptions = isBankAccountField
                                 ? bankAccountOptions
                                 : (field.options ?? []);

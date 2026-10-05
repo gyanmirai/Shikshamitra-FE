@@ -1,5 +1,4 @@
 import * as Yup from 'yup';
-import { FEE_HEAD_MODULE_VALUES } from 'src/redux/feeHeadModule/feeHeadModuleApi';
 
 import type { IFeeHead } from './type';
 
@@ -15,11 +14,5 @@ export const feeHeadValidationSchema = (existingNames: Set<string>, editData?: I
         if (editData && editData.name.trim().toLowerCase() === trimmed) return true;
         return !existingNames.has(trimmed);
       }),
-    module: Yup.number()
-      .transform((value, originalValue) => (originalValue === '' ? null : value))
-      .integer()
-      .oneOf(FEE_HEAD_MODULE_VALUES)
-      .nullable()
-      .notRequired(),
     incomeCategoryId: Yup.string().required('Income Category is required'),
   });

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Theme, SxProps } from '@mui/material/styles';
 
 export type AcademicInsightMetric = {
@@ -6,6 +7,7 @@ export type AcademicInsightMetric = {
   value: string | number;
   helper?: string;
   icon: string;
+  tone?: 'primary' | 'info' | 'success' | 'warning' | 'error';
   selected?: boolean;
   onClick?: () => void;
 };
@@ -18,6 +20,8 @@ export type AcademicInsightChart = {
   seriesName: string;
   valueSuffix?: string;
   max?: number;
+  summary?: { label: string; value: number }[];
+  emptyMessage?: string;
 };
 
 export type AcademicInsightFocus = {
@@ -30,6 +34,7 @@ export type AcademicInsightsProps = {
   description: string;
   metrics: AcademicInsightMetric[];
   chart?: AcademicInsightChart;
+  afterChart?: ReactNode;
   focus?: AcademicInsightFocus;
   isLoading?: boolean;
   buttonSx?: SxProps<Theme>;

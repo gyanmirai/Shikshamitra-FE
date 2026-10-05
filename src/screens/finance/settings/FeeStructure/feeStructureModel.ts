@@ -20,6 +20,7 @@ export const structureCandidate = (source?: Partial<StructureRecord>): Structure
   saveAsDraft: true,
   feeHeads: (source?.feeHeads ?? []).map((line) => ({
     ...line,
+    isVariable: line.isVariable ?? false,
     payableMonth: line.payableMonth ?? 0,
     payableYear: line.payableYear ?? 0,
     paymentTermId: line.paymentTermId ?? null,
@@ -74,7 +75,14 @@ const schedule = (line: StructureLine) => ({
   scheduleMode: line.scheduleMode,
   installmentOverrides: line.installmentOverrides,
 });
-const fields = ['amount', 'isOneTime', 'isOptional', 'payableMonth', 'payableYear'] as const;
+const fields = [
+  'isVariable',
+  'amount',
+  'isOneTime',
+  'isOptional',
+  'payableMonth',
+  'payableYear',
+] as const;
 export function buildStructureChanges(
   before: StructureCandidate,
   after: StructureCandidate
@@ -188,7 +196,8 @@ export const paymentTermError = (
     ? 'Select a published Payment Term for this Fee Head.'
     : '';
 
-export const amountError = (value: number | string) => {
+export const amountError = (value: number | string | null | undefined) => {
+  if (value == null) return 'Enter the total fee for this Fee Head.';
   if (typeof value === 'string' && !value.trim()) return 'Enter the total fee for this Fee Head.';
   const amount = Number(value);
   return !Number.isFinite(amount) ||

@@ -1,7 +1,8 @@
 export type AdmissionFeeHead = {
   feeHeadId: string;
   feeHeadName: string;
-  configuredAmount: number;
+  configuredAmount: number | null;
+  isVariable?: boolean;
   isOptional: boolean;
   isOneTime: boolean;
   paymentTermId: string | null;

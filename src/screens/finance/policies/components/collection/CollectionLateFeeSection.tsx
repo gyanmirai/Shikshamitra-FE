@@ -3,9 +3,11 @@
 import React from 'react';
 import { getIn } from 'formik';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
+import FinanceRoutingFields from 'src/screens/finance/components/FinanceRoutingFields';
 import {
   Box,
   Grid,
@@ -34,10 +36,8 @@ import {
   InputAdornment,
   FormControlLabel,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 
 import SlabTimelinePreview from './SlabTimelinePreview';
-import HeadSelector from '../../../components/HeadSelector';
 import { SectionCard, computeSlabIssues } from './CollectionCommon';
 
 interface CollectionLateFeeSectionProps {
@@ -82,13 +82,9 @@ export default function CollectionLateFeeSection({
                   ? alpha(theme.palette.warning.main, 0.05)
                   : alpha(theme.palette.background.default, 0.4),
               borderColor: (theme) =>
-                isLateFeeEnabled
-                  ? alpha(theme.palette.warning.main, 0.4)
-                  : theme.palette.divider,
+                isLateFeeEnabled ? alpha(theme.palette.warning.main, 0.4) : theme.palette.divider,
               boxShadow: (theme) =>
-                isLateFeeEnabled
-                  ? `0 0 0 1px ${alpha(theme.palette.warning.main, 0.2)}`
-                  : 'none',
+                isLateFeeEnabled ? `0 0 0 1px ${alpha(theme.palette.warning.main, 0.2)}` : 'none',
               transition: 'all 0.2s ease',
               cursor: 'pointer',
               '&:hover': {
@@ -101,12 +97,7 @@ export default function CollectionLateFeeSection({
             <FormControlLabel
               sx={{ m: 0, width: '100%', pointerEvents: 'none' }}
               control={
-                <Switch
-                  size="small"
-                  checked={isLateFeeEnabled}
-                  color="warning"
-                  sx={{ mr: 1 }}
-                />
+                <Switch size="small" checked={isLateFeeEnabled} color="warning" sx={{ mr: 1 }} />
               }
               label={
                 <Box>
@@ -120,8 +111,14 @@ export default function CollectionLateFeeSection({
                       </Label>
                     )}
                   </Stack>
-                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.25 }}>
-                    Automatically calculate late charges on overdue unpaid fee heads once the grace period expires.
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                    sx={{ mt: 0.25 }}
+                  >
+                    Automatically calculate late charges on overdue unpaid fee heads once the grace
+                    period expires.
                   </Typography>
                 </Box>
               }
@@ -327,32 +324,32 @@ export default function CollectionLateFeeSection({
 
             {(formik.values.lateFeeType === 'Percentage' ||
               formik.values.lateFeeType === 'Compound') && (
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <ShakingTextField
+              <Grid size={{ xs: 12, sm: 6 }}>
+                <ShakingTextField
+                  error={formik.touched.percentage && Boolean(formik.errors.percentage)}
+                >
+                  <TextField
+                    fullWidth
+                    size="small"
+                    type="number"
+                    label="Interest Rate Percentage *"
+                    placeholder="0.00"
+                    name="percentage"
+                    value={formik.values.percentage ?? ''}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                    slotProps={{
+                      input: {
+                        endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                      },
+                      htmlInput: { min: 0, max: 100, step: 0.01 },
+                    }}
                     error={formik.touched.percentage && Boolean(formik.errors.percentage)}
-                  >
-                    <TextField
-                      fullWidth
-                      size="small"
-                      type="number"
-                      label="Interest Rate Percentage *"
-                      placeholder="0.00"
-                      name="percentage"
-                      value={formik.values.percentage ?? ''}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      slotProps={{
-                        input: {
-                          endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                        },
-                        htmlInput: { min: 0, max: 100, step: 0.01 },
-                      }}
-                      error={formik.touched.percentage && Boolean(formik.errors.percentage)}
-                      helperText={formik.touched.percentage && (formik.errors.percentage as string)}
-                    />
-                  </ShakingTextField>
-                </Grid>
-              )}
+                    helperText={formik.touched.percentage && (formik.errors.percentage as string)}
+                  />
+                </ShakingTextField>
+              </Grid>
+            )}
 
             {formik.values.lateFeeType === 'Percentage' && (
               <Grid size={{ xs: 12, sm: 6 }}>
@@ -413,7 +410,9 @@ export default function CollectionLateFeeSection({
                       htmlInput: { min: 0 },
                     }}
                     error={formik.touched.amountPerDay && Boolean(formik.errors.amountPerDay)}
-                    helperText={formik.touched.amountPerDay && (formik.errors.amountPerDay as string)}
+                    helperText={
+                      formik.touched.amountPerDay && (formik.errors.amountPerDay as string)
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -442,7 +441,9 @@ export default function CollectionLateFeeSection({
                       htmlInput: { min: 0 },
                     }}
                     error={formik.touched.amountPerWeek && Boolean(formik.errors.amountPerWeek)}
-                    helperText={formik.touched.amountPerWeek && (formik.errors.amountPerWeek as string)}
+                    helperText={
+                      formik.touched.amountPerWeek && (formik.errors.amountPerWeek as string)
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -471,7 +472,9 @@ export default function CollectionLateFeeSection({
                       htmlInput: { min: 0 },
                     }}
                     error={formik.touched.amountPerMonth && Boolean(formik.errors.amountPerMonth)}
-                    helperText={formik.touched.amountPerMonth && (formik.errors.amountPerMonth as string)}
+                    helperText={
+                      formik.touched.amountPerMonth && (formik.errors.amountPerMonth as string)
+                    }
                   />
                 </ShakingTextField>
               </Grid>
@@ -536,7 +539,8 @@ export default function CollectionLateFeeSection({
                         No escalation slabs defined yet.
                       </Typography>
                       <Typography variant="caption" color="text.disabled" display="block">
-                        Click &quot;Add Slab&quot; above to create day ranges (e.g., Days 1–15: ₹50, Days 16–30: ₹100).
+                        Click &quot;Add Slab&quot; above to create day ranges (e.g., Days 1–15: ₹50,
+                        Days 16–30: ₹100).
                       </Typography>
                     </Paper>
                   ) : (
@@ -547,12 +551,25 @@ export default function CollectionLateFeeSection({
                     >
                       <Table size="small">
                         <TableHead>
-                          <TableRow sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08) }}>
-                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>From Day</TableCell>
-                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>To Day</TableCell>
-                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>Type</TableCell>
-                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>Value</TableCell>
-                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }} align="right">
+                          <TableRow
+                            sx={{ bgcolor: (theme) => alpha(theme.palette.grey[500], 0.08) }}
+                          >
+                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>
+                              From Day
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>
+                              To Day
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>
+                              Type
+                            </TableCell>
+                            <TableCell sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}>
+                              Value
+                            </TableCell>
+                            <TableCell
+                              sx={{ fontWeight: 700, fontSize: '12px', py: 1 }}
+                              align="right"
+                            >
                               Action
                             </TableCell>
                           </TableRow>
@@ -809,97 +826,15 @@ export default function CollectionLateFeeSection({
               </ShakingTextField>
             </Grid>
 
-            {/* Consider as Income Switch Card */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <Card
-                variant="outlined"
-                sx={{
-                  p: 1.75,
-                  borderRadius: 1.5,
-                  display: 'flex',
-                  alignItems: 'center',
-                  bgcolor: (theme) =>
-                    formik.values.considerAsIncome
-                      ? alpha(theme.palette.primary.main, 0.05)
-                      : alpha(theme.palette.background.default, 0.4),
-                  borderColor: (theme) =>
-                    formik.values.considerAsIncome
-                      ? alpha(theme.palette.primary.main, 0.4)
-                      : theme.palette.divider,
-                  boxShadow: (theme) =>
-                    formik.values.considerAsIncome
-                      ? `0 0 0 1px ${alpha(theme.palette.primary.main, 0.2)}`
-                      : 'none',
-                  transition: 'all 0.2s ease',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    borderColor: (theme) =>
-                      formik.values.considerAsIncome
-                        ? 'primary.main'
-                        : alpha(theme.palette.text.primary, 0.2),
-                  },
-                }}
-                onClick={() =>
-                  formik.setFieldValue('considerAsIncome', !formik.values.considerAsIncome)
-                }
-              >
-                <FormControlLabel
-                  sx={{ m: 0, width: '100%', pointerEvents: 'none' }}
-                  control={
-                    <Switch
-                      size="small"
-                      checked={Boolean(formik.values.considerAsIncome)}
-                      color="primary"
-                      sx={{ mr: 1 }}
-                    />
-                  }
-                  label={
-                    <Box>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-                          Consider as Income
-                        </Typography>
-                        {formik.values.considerAsIncome && (
-                          <Label color="success" sx={{ height: 18, fontSize: '0.65rem' }}>
-                            Income Accounted
-                          </Label>
-                        )}
-                      </Stack>
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        Treat late fee collections as recognized operational revenue.
-                      </Typography>
-                    </Box>
-                  }
-                />
-              </Card>
+            <Grid size={{ xs: 12 }}>
+              <FinanceRoutingFields
+                formik={formik}
+                academicYearId={formik.values.academicYearId || ''}
+                operation="collection-policy"
+                categoryField="lateFeeIncomeCategoryId"
+                categoryLabel="Late Fee Income Category"
+              />
             </Grid>
-
-            {/* Income Head Selector */}
-            {formik.values.considerAsIncome && (
-              <Grid size={{ xs: 12 }}>
-                <ShakingTextField
-                  error={
-                    formik.touched.lateFeeIncomeHeadId && Boolean(formik.errors.lateFeeIncomeHeadId)
-                  }
-                >
-                  <HeadSelector
-                    headType="Income"
-                    label="Late-Fee Income Head *"
-                    value={formik.values.lateFeeIncomeHeadId}
-                    onChange={(val) => formik.setFieldValue('lateFeeIncomeHeadId', val)}
-                    error={
-                      formik.touched.lateFeeIncomeHeadId &&
-                      Boolean(formik.errors.lateFeeIncomeHeadId)
-                    }
-                    helperText={
-                      (formik.touched.lateFeeIncomeHeadId &&
-                        (formik.errors.lateFeeIncomeHeadId as string)) ||
-                      'Accounting income ledger head to credit for collected late fees.'
-                    }
-                  />
-                </ShakingTextField>
-              </Grid>
-            )}
           </>
         )}
       </Grid>

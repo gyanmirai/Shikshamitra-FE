@@ -25,10 +25,10 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import React, { useRef, useMemo, useState, useCallback } from 'react';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
-import { useGetIncomeCategoriesQuery } from 'src/redux/finance/incomeCategory';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
+import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import DownstreamUsageWarning from 'src/screens/finance/settings/components/DownstreamUsageWarning';
 import {
   Box,
@@ -209,9 +209,7 @@ const FinanceChargeCategory = () => {
         minWidth: '220px',
         align: 'left',
         render: (_value: unknown, row: any) =>
-          row.isAccountingReady
-            ? `${row.incomeCategoryName || '-'} → ${row.incomeAccountHeadName || '-'}`
-            : 'Accounting mapping required',
+          row.isAccountingReady ? row.incomeCategoryName || '-' : 'Income Category required',
       },
       {
         id: 'name',
@@ -540,12 +538,12 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
 
   const { data: incomeCategoryData, isLoading: incomeCategoryLoading } = useQueryAndMutation({
     type: 'query',
-    currentQueryAndMutation: useGetIncomeCategoriesQuery,
+    currentQueryAndMutation: useGetFinanceRoutingOptionsQuery,
     params: {
       academicYearId: currentYear?.id,
       page: 1,
       pageSize: 100,
-      includeInactive: false,
+      operation: 'charge-category',
     },
     options: { skip: !currentYear?.id || !open },
   });
@@ -554,9 +552,7 @@ const ChargeCategoryDialog = ({ open, onClose, editData }: ChargeCategoryDialogP
     () =>
       (incomeCategoryData?.items ?? []).map((category: any) => ({
         id: category.id,
-        displayName: `${category.name} → ${
-          category.defaultAccountHeadName || 'No account head'
-        }`,
+        displayName: category.name,
       })),
     [incomeCategoryData]
   );

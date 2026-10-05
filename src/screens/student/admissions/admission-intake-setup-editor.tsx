@@ -10,23 +10,18 @@ import type {
 } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import * as Yup from 'yup';
-import { useMemo, useRef, useState } from 'react';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
-import { studentPaths } from 'src/constants/student-menu';
-import { FormSectionCard } from 'src/components/form-section-card';
-import CustomTooltip from 'src/components/custom-tooltip';
+import { useRef, useMemo, useState } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { studentPaths } from 'src/constants/student-menu';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
-import {
-  useGetAdmissionIntakeCounsellorsQuery,
-  useCreateAdmissionIntakeSetupMutation,
-  useUpdateAdmissionIntakeSetupMutation,
-  useGetAdmissionIntakeSetupUsageQuery,
-} from 'src/redux/student/admissions/admission-intake-profiles-api';
+import { withStandardInquiryBehavior } from 'src/redux/student/admissions/admission-inquiry-policy';
 import {
   Box,
   Grid,
@@ -36,16 +31,20 @@ import {
   Drawer,
   Divider,
   MenuItem,
-  Checkbox,
   TextField,
   IconButton,
   Typography,
   Autocomplete,
-  FormControlLabel,
 } from '@mui/material';
+import {
+  useGetAdmissionIntakeSetupUsageQuery,
+  useGetAdmissionIntakeCounsellorsQuery,
+  useCreateAdmissionIntakeSetupMutation,
+  useUpdateAdmissionIntakeSetupMutation,
+} from 'src/redux/student/admissions/admission-intake-profiles-api';
 
-import { defaultInquiryRules } from './admission-intake-profile-editor';
 import { AdmissionIntakeNotice } from './admission-intake-notice';
+import { defaultInquiryRules } from './admission-intake-profile-editor';
 import { isAdmissionIntakeSetupConcurrencyError } from './admission-intake-setup-state';
 import { INQUIRY_SOURCE_OPTIONS } from './inquiry-management/admission-inquiry-list-options';
 
@@ -70,9 +69,11 @@ export const getInitialAdmissionIntakeSetupValues = (
   setup: AdmissionIntakeSetup | null
 ): AdmissionIntakeSetupValues => ({
   name: setup?.name ?? '',
-  inquiryRules: setup?.inquiryRules
-    ? { ...defaultSetupInquiryRules, ...setup.inquiryRules }
-    : { ...defaultSetupInquiryRules },
+  inquiryRules: withStandardInquiryBehavior(
+    setup?.inquiryRules
+      ? { ...defaultSetupInquiryRules, ...setup.inquiryRules }
+      : { ...defaultSetupInquiryRules }
+  ),
   counsellorAssignmentRules: setup?.counsellorAssignmentRules
     ? { ...defaultSetupAssignmentRules, ...setup.counsellorAssignmentRules }
     : { ...defaultSetupAssignmentRules },
@@ -101,14 +102,6 @@ const inquirySchema = Yup.object({
       .min(1, 'Allow at least 1 follow-up')
       .max(20, 'Allow at most 20 follow-ups')
       .required('Enter a follow-up limit'),
-    requireSourceDetailFor: Yup.array().test(
-      'source-detail-subset',
-      'Sources needing details must also be allowed sources',
-      function validate(value) {
-        const allowed = this.parent.allowedSources as number[];
-        return allowed.length === 0 || (value ?? []).every((source) => allowed.includes(source));
-      }
-    ),
   }),
 });
 
@@ -152,7 +145,9 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
   const [reloadingLatest, setReloadingLatest] = useState(false);
   const formikRef = useRef<FormikProps<AdmissionIntakeSetupValues> | null>(null);
   const pendingValues = useRef<AdmissionIntakeSetupValues | null>(null);
-  const counsellors = useGetAdmissionIntakeCounsellorsQuery();
+  const counsellors = useGetAdmissionIntakeCounsellorsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
   const usage = useGetAdmissionIntakeSetupUsageQuery(setup?.id ?? '', { skip: !setup });
   const [createSetup, createState] = useCreateAdmissionIntakeSetupMutation();
   const [updateSetup, updateState] = useUpdateAdmissionIntakeSetupMutation();
@@ -174,7 +169,7 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
   const persist = async (values: AdmissionIntakeSetupValues) => {
     const body = {
       name: values.name.trim(),
-      inquiryRules: values.inquiryRules,
+      inquiryRules: withStandardInquiryBehavior(values.inquiryRules),
       counsellorAssignmentRules: values.counsellorAssignmentRules,
       concurrencyStamp: setup?.concurrencyStamp,
     };
@@ -367,7 +362,11 @@ export function AdmissionIntakeSetupEditor({ setup, onClose, onReloadLatest }: P
                 nextButtonLabel="Next"
                 finalButtonLabel={setup ? 'Update setup' : 'Create setup'}
                 disableSubmit={Boolean(
-                  staleConflict || (setup && (usage.isLoading || usage.isError))
+                  staleConflict ||
+                  counsellors.isLoading ||
+                  counsellors.isFetching ||
+                  counsellors.isError ||
+                  (setup && (usage.isLoading || usage.isError))
                 )}
                 saveAndNextButtonProps={{ loading: saving }}
                 onCancel={requestClose}
@@ -499,38 +498,6 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
           <Grid container spacing={1}>
             <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
-                select
-                fullWidth
-                size="small"
-                label="Duplicate inquiry"
-                value={rules.duplicateRule}
-                onChange={(event) =>
-                  setRule('duplicateRule', Number(event.target.value) as 0 | 1 | 2)
-                }
-              >
-                <MenuItem value={0}>Warn and allow</MenuItem>
-                <MenuItem value={1}>Require a reason</MenuItem>
-                <MenuItem value={2}>Block duplicate</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
-                select
-                fullWidth
-                size="small"
-                label="Before application starts"
-                value={rules.applicationStartRequirement}
-                onChange={(event) =>
-                  setRule('applicationStartRequirement', Number(event.target.value) as 0 | 1 | 2)
-                }
-              >
-                <MenuItem value={0}>Inquiry captured</MenuItem>
-                <MenuItem value={1}>First contact recorded</MenuItem>
-                <MenuItem value={2}>Inquiry qualified</MenuItem>
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <TextField
                 fullWidth
                 size="small"
                 type="number"
@@ -588,7 +555,7 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
       </FormSectionCard>
       <FormSectionCard
         icon="mdi:source-branch"
-        title="Sources and required details"
+        title="Inquiry sources"
         titleTypographyProps={sectionTitleProps}
         descriptionTooltip="Leave allowed sources empty when every source may create an inquiry."
       >
@@ -602,33 +569,9 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
             value={INQUIRY_SOURCE_OPTIONS.filter((option) =>
               rules.allowedSources.includes(option.value)
             )}
-            onChange={(_, selected) => {
-              const allowedSources: number[] = selected.map((option) => option.value);
-              formik.setFieldValue('inquiryRules', {
-                ...rules,
-                allowedSources,
-                requireSourceDetailFor: allowedSources.length
-                  ? rules.requireSourceDetailFor.filter((source) => allowedSources.includes(source))
-                  : rules.requireSourceDetailFor,
-              });
-            }}
-            renderInput={(params) => <TextField {...params} size="small" label="Allowed sources" />}
-          />
-          <Autocomplete
-            multiple
-            size="small"
-            slotProps={{ chip: { color: 'default', variant: 'soft', size: 'small' } }}
-            options={INQUIRY_SOURCE_OPTIONS.filter(
-              (option) =>
-                rules.allowedSources.length === 0 || rules.allowedSources.includes(option.value)
-            )}
-            getOptionLabel={(option) => option.label}
-            value={INQUIRY_SOURCE_OPTIONS.filter((option) =>
-              rules.requireSourceDetailFor.includes(option.value)
-            )}
             onChange={(_, selected) =>
               setRule(
-                'requireSourceDetailFor',
+                'allowedSources',
                 selected.map((option) => option.value)
               )
             }
@@ -636,33 +579,13 @@ function InquiryHandlingStep({ formik }: { formik: FormikProps<AdmissionIntakeSe
               <TextField
                 {...params}
                 size="small"
-                label="Sources needing details"
-                {...feedback('inquiryRules.requireSourceDetailFor')}
+                label="Allowed sources"
+                helperText="Leave empty to accept all sources. Source details are optional."
               />
             )}
           />
         </Stack>
       </FormSectionCard>
-      {/* <Stack direction={{ xs: 'column', sm: 'row' }} spacing={{ xs: 0, sm: 2 }}>
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={rules.requireGuardianEmail}
-              onChange={(_, checked) => setRule('requireGuardianEmail', checked)}
-            />
-          }
-          label="Require guardian email"
-        />
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={rules.requireApplicantDateOfBirth}
-              onChange={(_, checked) => setRule('requireApplicantDateOfBirth', checked)}
-            />
-          }
-          label="Require applicant birth date"
-        />
-      </Stack> */}
     </>
   );
 }
@@ -705,7 +628,7 @@ function CounsellorRoutingStep({
           <Alert
             severity="error"
             action={
-              <Button size="small" onClick={onRetry}>
+              <Button size="small" onClick={onRetry} loading={loading}>
                 Retry
               </Button>
             }
@@ -722,8 +645,11 @@ function CounsellorRoutingStep({
           multiple
           size="small"
           loading={loading}
+          disabled={loading || loadError}
           options={counsellors}
-          getOptionLabel={(option) => option.name}
+          getOptionLabel={(option) => option.name || option.userName}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          noOptionsText="No eligible admission staff found"
           value={counsellors.filter((option) => rules.counsellorUserIds.includes(option.id))}
           onChange={(_, selected) =>
             setRule(
@@ -762,6 +688,7 @@ function CounsellorRoutingStep({
               fullWidth
               size="small"
               label="Fallback manager *"
+              disabled={loading || loadError}
               value={rules.fallbackManagerUserId ?? ''}
               onChange={(event) => setRule('fallbackManagerUserId', event.target.value || '')}
               onBlur={() =>
@@ -773,7 +700,7 @@ function CounsellorRoutingStep({
               <MenuItem value="">Choose fallback manager</MenuItem>
               {counsellors.map((person) => (
                 <MenuItem key={person.id} value={person.id}>
-                  {person.name}
+                  {person.name || person.userName}
                 </MenuItem>
               ))}
             </TextField>
@@ -871,7 +798,6 @@ function ReviewStep({
           <SummaryRow label="Fallback manager" value={fallback?.name ?? 'Unavailable'} />
         </Stack>
       </FormSectionCard>
-      
     </>
   );
 }

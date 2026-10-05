@@ -7,6 +7,7 @@ import type {
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
 import { formatNumber } from 'src/utils/formate_number';
+import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
 import { useAssignmentTransportSourcesQuery } from 'src/redux/finance/studentFeeAssignment';
 import {
   Box,
@@ -56,6 +57,7 @@ export default function AssignmentStudentInputs({
           feeHeadId: head.feeHeadId,
           source: 'AcademicYear' as const,
         };
+        const variable = request.variableFeeHeads?.find((h) => h.feeHeadId === head.feeHeadId);
         const amount =
           request.feeHeadDetails.find((h) => h.feeHeadId === head.feeHeadId)?.amount ??
           head.configuredAmount;
@@ -78,6 +80,9 @@ export default function AssignmentStudentInputs({
                       servicePeriods: checked
                         ? request.servicePeriods
                         : request.servicePeriods.filter((p) => p.feeHeadId !== head.feeHeadId),
+                      variableFeeHeads: checked
+                        ? request.variableFeeHeads
+                        : request.variableFeeHeads?.filter((h) => h.feeHeadId !== head.feeHeadId),
                       feeHeadDetails: checked
                         ? request.feeHeadDetails
                         : request.feeHeadDetails.filter((h) => h.feeHeadId !== head.feeHeadId),
@@ -88,9 +93,11 @@ export default function AssignmentStudentInputs({
               label={`${head.feeHeadName} · ${head.isOptional ? 'Optional' : 'Mandatory'}`}
             />
             <Typography variant="body2" color="text.secondary">
-              {formatNumber(head.configuredAmount, 'INR')} ·{' '}
-              {head.isOneTime ? 'One-time' : 'Annual service total'} · Payment schedule from the
-              published term
+              {head.isVariable
+                ? 'Variable amount entered per student'
+                : formatNumber(head.configuredAmount ?? 0, 'INR')}{' '}
+              · {head.isOneTime ? 'One-time' : 'Total for Payment Term coverage'} · Payment schedule
+              from the published term
             </Typography>
             {included && (
               <Stack spacing={1.5} sx={{ mt: 2 }}>
@@ -100,7 +107,7 @@ export default function AssignmentStudentInputs({
                   disabled={disabled}
                   options={[
                     { value: 'AcademicYear', label: 'Configured academic year' },
-                    ...(head.supportsTransportSource
+                    ...(head.supportsTransportSource && !head.isVariable
                       ? [{ value: 'TransportService', label: 'Verified transport service' }]
                       : []),
                     ...(canOverrideDates
@@ -196,11 +203,64 @@ export default function AssignmentStudentInputs({
                     />
                   </>
                 )}
-                {canOverrideAmount && (
+                {head.isVariable && (
+                  <>
+                    <TextField
+                      label={`${head.feeHeadName} student amount for term coverage`}
+                      type="number"
+                      required
+                      fullWidth
+                      value={variable?.amount ?? ''}
+                      disabled={disabled}
+                      inputProps={{ min: 0, max: 9999999999.99, step: 0.01 }}
+                      error={variable !== undefined && !!amountError(variable.amount)}
+                      helperText={
+                        variable !== undefined && amountError(variable.amount)
+                          ? amountError(variable.amount)
+                          : 'Required when included. Enter the full coverage total before proration; installments split this amount.'
+                      }
+                      onChange={(e) =>
+                        onChange({
+                          ...request,
+                          variableFeeHeads: [
+                            ...(request.variableFeeHeads ?? []).filter(
+                              (h) => h.feeHeadId !== head.feeHeadId
+                            ),
+                            {
+                              feeHeadId: head.feeHeadId,
+                              amount: e.target.value === '' ? null : Number(e.target.value),
+                              zeroAmountReason: variable?.zeroAmountReason,
+                            },
+                          ],
+                        })
+                      }
+                    />
+                    {variable?.amount === 0 && (
+                      <TextField
+                        label="Reason for zero amount"
+                        required
+                        value={variable.zeroAmountReason ?? ''}
+                        disabled={disabled}
+                        inputProps={{ maxLength: 500 }}
+                        onChange={(e) =>
+                          onChange({
+                            ...request,
+                            variableFeeHeads: (request.variableFeeHeads ?? []).map((h) =>
+                              h.feeHeadId === head.feeHeadId
+                                ? { ...h, zeroAmountReason: e.target.value }
+                                : h
+                            ),
+                          })
+                        }
+                      />
+                    )}
+                  </>
+                )}
+                {!head.isVariable && canOverrideAmount && (
                   <TextField
                     label={`Authorized ${head.isOneTime ? 'one-time' : 'annual total'} amount`}
                     type="number"
-                    value={amount}
+                    value={amount ?? ''}
                     disabled={disabled}
                     inputProps={{ min: 0, step: 0.01 }}
                     onChange={(e) =>

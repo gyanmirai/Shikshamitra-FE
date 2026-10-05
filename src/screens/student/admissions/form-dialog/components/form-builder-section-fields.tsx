@@ -9,7 +9,7 @@ import Typography from '@mui/material/Typography';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderField } from '../form-builder-field';
-import { newField, nextFieldOrder } from '../form-dialog-model';
+import { newField, nextFieldOrder, nextFieldDisplayOrder } from '../form-dialog-model';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -34,6 +34,7 @@ export function FormBuilderSectionFields({
     );
   const addField = () => {
     const field = newField(section.id, nextFieldOrder(formik.values.sections));
+    field.displayOrder = nextFieldDisplayOrder(formik.values.sections);
     formik.setFieldValue(`sections[${sectionIndex}].fields`, [...section.fields, field]);
     onSelectField(field.id);
   };

@@ -8,7 +8,6 @@ import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Grid, Paper, Divider, Typography } from '@mui/material';
 import { useGetRoomsQuery } from 'src/redux/InstituteSetup/RoomApi/RoomApi';
 
-import { ExamReviewInfoItem } from './ExamReviewInfoItem';
 import { ExamReviewAccordion } from './ExamReviewAccordion';
 import { buildReviewSubjectRoomEntries } from './room-allocation-review-utils';
 
@@ -78,7 +77,6 @@ const RoomAllocationReview = ({
       <Grid container spacing={2} alignItems="stretch">
         {activeReviewSubjects.map((entry) => {
           const { subjectId, subjectName, electiveGroupName, divisionMap } = entry;
-          const divisionCount = Object.keys(divisionMap).length;
 
           return (
             <Grid key={subjectId} size={{ xs: 12, lg: activeReviewSubjects.length === 1 ? 12 : 6 }}>
@@ -92,7 +90,14 @@ const RoomAllocationReview = ({
                   )}
                 </Box>
                 <Divider sx={{ my: 1.5 }} />
-                <Grid container columnSpacing={2} rowSpacing={2}>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
+                    columnGap: 2,
+                    rowGap: 1,
+                  }}
+                >
                   {Object.entries(divisionMap).map(([divisionName, divisionData]) => {
                     if (!divisionData.roomIds || divisionData.roomIds.length === 0) return null;
 
@@ -101,35 +106,43 @@ const RoomAllocationReview = ({
                       divisionName;
 
                     return (
-                      <Grid
-                        size={{ xs: 12, sm: divisionCount === 1 ? 12 : 6 }}
-                        key={`${subjectId}-${divisionName}`}
-                      >
-                        <ExamReviewInfoItem
-                          label={`Division ${divisionLabel}`}
-                          value={
-                            <Box display="flex" flexWrap="wrap" gap={0.75}>
-                              {divisionData.roomIds.map((roomId: string) => (
-                                <Chip
-                                  key={roomId}
-                                  label={String(roomLabelById.get(roomId) ?? roomId)}
-                                  size="small"
-                                  variant="outlined"
-                                  sx={{
-                                    maxWidth: '100%',
-                                    height: 'auto',
-                                    minHeight: 24,
-                                    '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 },
-                                  }}
-                                />
-                              ))}
-                            </Box>
-                          }
-                        />
-                      </Grid>
+                      <Box sx={{ minWidth: 0 }} key={`${subjectId}-${divisionName}`}>
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: 0.75,
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            color="text.secondary"
+                            sx={{ flexShrink: 0 }}
+                          >
+                            Division {divisionLabel} :
+                          </Typography>
+                          <Box display="flex" flexWrap="wrap" gap={0.75} sx={{ minWidth: 0 }}>
+                            {divisionData.roomIds.map((roomId: string) => (
+                              <Chip
+                                key={roomId}
+                                label={String(roomLabelById.get(roomId) ?? roomId)}
+                                size="small"
+                                variant="outlined"
+                                sx={{
+                                  maxWidth: '100%',
+                                  height: 'auto',
+                                  minHeight: 24,
+                                  '& .MuiChip-label': { whiteSpace: 'normal', py: 0.5 },
+                                }}
+                              />
+                            ))}
+                          </Box>
+                        </Box>
+                      </Box>
                     );
                   })}
-                </Grid>
+                </Box>
               </Paper>
             </Grid>
           );

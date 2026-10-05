@@ -1,10 +1,14 @@
-import { it, expect, describe } from 'vitest';
+import { it, vi, expect, describe } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import { AcademicInsights } from './AcademicInsights';
+
+vi.mock('src/components/iconify', () => ({
+  Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} aria-hidden="true" />,
+}));
 
 describe('AcademicInsights', () => {
   it('opens the full insights drawer and explains its purpose in the header tooltip', async () => {
@@ -36,5 +40,12 @@ describe('AcademicInsights', () => {
 
     fireEvent.mouseOver(screen.getByRole('button', { name: 'About Subject allocation insights' }));
     expect(await screen.findByRole('tooltip')).toHaveTextContent('Current subject readiness.');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close insights' }));
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: 'Subject allocation insights' })
+      ).not.toBeInTheDocument()
+    );
   });
 });

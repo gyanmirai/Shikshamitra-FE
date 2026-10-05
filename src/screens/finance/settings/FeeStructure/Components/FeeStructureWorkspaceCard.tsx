@@ -20,10 +20,10 @@ import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { useRef, useMemo, useState, useEffect } from 'react';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import { useDeleteClassWiseFeeStructureMutation } from 'src/redux/finance/financeFeeStructure';
 import {
@@ -38,6 +38,7 @@ import {
   Stack,
   Alert,
   Button,
+  Switch,
   Checkbox,
   Skeleton,
   TextField,
@@ -102,8 +103,10 @@ const families: {
     empty: 'No refund policy attached',
   },
 ];
-const money = (value: number) =>
-  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
+const money = (value: number | null) =>
+  value == null
+    ? 'Calculated during assignment'
+    : new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
 
 export default function FeeStructureWorkspaceCard({
   initialData,
@@ -144,7 +147,9 @@ export default function FeeStructureWorkspaceCard({
     JSON.stringify(candidate) !== baseline ||
     candidate.feeHeads.some(
       (line) =>
-        amountInputs[line.feeHeadId] !== undefined && !!amountError(amountInputs[line.feeHeadId])
+        !line.isVariable &&
+        amountInputs[line.feeHeadId] !== undefined &&
+        !!amountError(amountInputs[line.feeHeadId])
     );
   const scope = {
     feeStructureMetadataId: initialData.feeStructureMetaDataId,
@@ -359,7 +364,9 @@ export default function FeeStructureWorkspaceCard({
     if (
       nameError ||
       candidate.feeHeads.some(
-        (line) => amountError(amountInputs[line.feeHeadId] ?? line.amount) || paymentTermError(line)
+        (line) =>
+          (!line.isVariable && amountError(amountInputs[line.feeHeadId] ?? line.amount)) ||
+          paymentTermError(line)
       )
     ) {
       setTab('heads');
@@ -637,9 +644,20 @@ export default function FeeStructureWorkspaceCard({
                   </ShakingTextField>
                 </Stack>
                 <Alert severity="info">
-                  Each amount is the total fee for the selected Payment Term&apos;s service
-                  coverage. The selected Payment Term determines the installment amounts and dates.
+                  Fixed amounts are totals for the selected Payment Term coverage. Variable amounts
+                  are entered per student during assignment. Payment Terms apply to both types.
                 </Alert>
+                <Typography variant="body2" color="text.secondary">
+                  Fixed fees subtotal:{' '}
+                  {money(
+                    candidate.feeHeads
+                      .filter((h) => !h.isVariable)
+                      .reduce((total, h) => total + (h.amount ?? 0), 0)
+                  )}
+                  {' · '}
+                  {candidate.feeHeads.filter((h) => h.isVariable).length} variable fee heads priced
+                  during assignment. Optional fees apply only when selected for a student.
+                </Typography>
                 {(!settings.permissions.headsRead || heads.isError) && (
                   <Alert
                     severity="warning"
@@ -717,6 +735,7 @@ export default function FeeStructureWorkspaceCard({
                               feeHeadId: head.id,
                               feeHeadName: head.name,
                               amount: 0,
+                              isVariable: false,
                               isOneTime: false,
                               isOptional: false,
                               payableMonth: 0,
@@ -752,19 +771,53 @@ export default function FeeStructureWorkspaceCard({
                       minWidth: 160,
                     },
                     {
+                      id: 'isVariable',
+                      label: 'Variable fee',
+                      minWidth: 140,
+                      isSort: false,
+                      isFilter: false,
+                      render: (_v, row) => (
+                        <FormControlLabel
+                          label="Variable"
+                          control={
+                            <Switch
+                              size="small"
+                              checked={!!row.isVariable}
+                              disabled={!writable}
+                              slotProps={{
+                                input: { 'aria-label': `${row.feeHeadName} variable fee` },
+                              }}
+                              onChange={(_event, checked) => {
+                                setAmountInputs((old) => {
+                                  const next = { ...old };
+                                  delete next[row.feeHeadId];
+                                  return next;
+                                });
+                                changeLine(row.feeHeadId, { isVariable: checked, amount: null });
+                              }}
+                            />
+                          }
+                        />
+                      ),
+                    },
+                    {
                       id: 'amount',
                       label: 'Total fee',
                       minWidth: 140,
                       isSort: false,
                       isFilter: false,
                       render: (_v, row) =>
-                        writable ? (
+                        row.isVariable ? (
+                          <Typography variant="body2" color="text.secondary">
+                            Entered during student assignment
+                          </Typography>
+                        ) : writable ? (
                           <TextField
                             type="number"
                             size="small"
                             required
                             label="Total fee"
-                            value={amountInputs[row.feeHeadId] ?? row.amount}
+                            value={amountInputs[row.feeHeadId] ?? row.amount ?? ''}
                             onBlur={() => touch(row.feeHeadId)}
                             error={Boolean(
                               (touched[row.feeHeadId] || submitted) &&
@@ -787,7 +840,9 @@ export default function FeeStructureWorkspaceCard({
                                 ...old,
                                 [row.feeHeadId]: e.target.value,
                               }));
-                              changeLine(row.feeHeadId, { amount: Number(e.target.value) });
+                              changeLine(row.feeHeadId, {
+                                amount: e.target.value === '' ? null : Number(e.target.value),
+                              });
                             }}
                           />
                         ) : (
@@ -1274,7 +1329,10 @@ export default function FeeStructureWorkspaceCard({
                           id: 'calculatedAmount',
                           label: 'Amount',
                           minWidth: 130,
-                          render: (v) => money(Number(v)),
+                          render: (_v, row) =>
+                            money(
+                              row.calculatedAmount == null ? null : Number(row.calculatedAmount)
+                            ),
                         },
                       ]}
                     />

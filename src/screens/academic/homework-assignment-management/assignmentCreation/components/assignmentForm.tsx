@@ -878,9 +878,6 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                           : file.url || file.filePath || '';
                       setPreviewDoc(url);
                     }}
-                    primaryText="Upload Reference File"
-                    secondaryText="Supports PDF, PNG, JPG/JPEG (Max 5MB)"
-                    dragProps={{ sx: { flexDirection: 'column', gap: 1 } }}
                   />
                 </Grid>
               </SectionCard>

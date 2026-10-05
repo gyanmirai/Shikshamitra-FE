@@ -85,6 +85,14 @@ export const DEFAULT_PERFORMANCE_LEVELS = [
   },
 ];
 
+export const DEFAULT_RATING_LEVELS = [
+  { level: 5, label: 'Excellent', score: 5, description: '', studentLabel: 'Excellent' },
+  { level: 4, label: 'Very Good', score: 4, description: '', studentLabel: 'Very Good' },
+  { level: 3, label: 'Good', score: 3, description: '', studentLabel: 'Good' },
+  { level: 2, label: 'Fair', score: 2, description: '', studentLabel: 'Fair' },
+  { level: 1, label: 'Needs Improvement', score: 1, description: '', studentLabel: 'Needs Improvement' },
+];
+
 export const CRITERION_BANK = [
   'Accuracy',
   'Completeness',

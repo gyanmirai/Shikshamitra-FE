@@ -502,8 +502,26 @@ const CalendarManagement = () => {
         </Box>
       </Paper>
 
-      {/* Class Filter + Tabs */}
-      <Stack direction="row" alignItems="center" gap={1}>
+      {/* View Tabs */}
+      <Paper
+        sx={{
+          flexShrink: 0,
+          '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
+        }}
+      >
+        <CustomTabs
+          value={activeTab}
+          onChange={(_, val) => setParam('tab', val)}
+          sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
+        >
+          {TABS.map((tab) => (
+            <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+          ))}
+        </CustomTabs>
+      </Paper>
+
+      {/* Class Filter */}
+      <Box sx={{ width: { xs: 1, sm: 180 }, flexShrink: 0 }}>
         <CustomSelect
           label="Class"
           options={classFilterOptions}
@@ -514,23 +532,7 @@ const CalendarManagement = () => {
           size="small"
           formControlProps={{ size: 'small', sx: { minWidth: 180 } }}
         />
-        <Paper
-          sx={{
-            flex: 1,
-            '& *': { fontSize: '13px !important', '& svg': { fontSize: '18px !important' } },
-          }}
-        >
-          <CustomTabs
-            value={activeTab}
-            onChange={(_, val) => setParam('tab', val)}
-            sx={{ '& .MuiTabs-flexContainer': { gap: 1 }, borderRadius: '12px' }}
-          >
-            {TABS.map((tab) => (
-              <Tab key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
-            ))}
-          </CustomTabs>
-        </Paper>
-      </Stack>
+      </Box>
 
       {/* Tab Content */}
       <Box sx={{ flex: 1, overflow: 'auto' }}>

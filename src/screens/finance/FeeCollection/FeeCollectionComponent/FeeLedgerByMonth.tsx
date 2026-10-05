@@ -8,6 +8,7 @@ import { FeeMonth } from 'src/enums/fee-collection-type';
 import { Box, Card, Chip, Divider, Checkbox, Collapse, Typography } from '@mui/material';
 
 import { FeeRow, toPeriod, ColHeader } from './FeeLedgerShared';
+import { isLedgerItemCollectible, selectionItemKey } from './feeLedgerSelection';
 
 import type { SelectedItem, MonthWiseGroup } from '../Components/type';
 
@@ -58,12 +59,12 @@ const MonthGroup = ({
   const theme = useTheme();
 
   const period = toPeriod(FeeMonth[group.month] as string, group.year ?? year);
-  const selectableItems = group.items.filter((i) => i.due > 0 || (i.lateFeeAmount ?? 0) > 0);
+  const selectableItems = group.items.filter(isLedgerItemCollectible);
   const selectedCount = selectableItems.filter((i) =>
-    selectedItems.some((s) => s.feeHeadId === i.feeHeadId && s.period === period)
+    selectedItems.some((s) => selectionItemKey(s) === selectionItemKey({ ...i, period }))
   ).length;
 
-  const isAllSelected = group.items.length > 0 && selectedCount === selectableItems.length;
+  const isAllSelected = selectableItems.length > 0 && selectedCount === selectableItems.length;
   const isPartialSelected = selectedCount > 0 && !isAllSelected;
 
   return (
@@ -147,7 +148,7 @@ const MonthGroup = ({
         <Divider />
         <ColHeader firstLabel="Fee Head" showStatus />
         {group.items.map((item, idx) => {
-          const isCollectible = item.due > 0 || (item.lateFeeAmount ?? 0) > 0;
+          const isCollectible = isLedgerItemCollectible(item);
           const isSelected =
             !isCollectible ||
             selectedItems.some(

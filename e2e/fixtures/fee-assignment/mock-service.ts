@@ -1,12 +1,13 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { financeModuleType, studentAdmissionType, classType } from 'src/redux/tagTypes';
 import type {
+  AssignmentCommit,
+  AssignmentPolicy,
   AssignmentRequest,
   AssignmentPreview,
-  AssignmentCommit,
   AssignmentCandidate,
-  AssignmentPolicy,
 } from 'src/redux/finance/studentFeeAssignment';
+
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { classType, financeModuleType, studentAdmissionType } from 'src/redux/tagTypes';
 
 const policyOptions: AssignmentPolicy[] = [
   {
@@ -92,18 +93,40 @@ export const candidate: AssignmentCandidate = {
     },
   ],
 };
+// Keep existing fixed fixtures stable; opt into variable pricing for browser checks.
+if (new URLSearchParams(window.location.search).has('variableFees')) {
+  candidate.heads[1] = {
+    ...candidate.heads[1],
+    isVariable: true,
+    configuredAmount: null,
+    effectiveAmount: null,
+    supportsTransportSource: false,
+  };
+  candidate.heads.push({
+    ...candidate.heads[0],
+    feeHeadId: 'hostel',
+    feeHeadName: 'Hostel',
+    isVariable: true,
+    configuredAmount: null,
+    effectiveAmount: null,
+  });
+}
 const saved = new Map<string, AssignmentCommit>();
 function preview(input: AssignmentRequest): AssignmentPreview {
   const heads = candidate.heads.map((head) => {
     const included = !head.isOptional || input.selectedOptionalFeeHeadIds.includes(head.feeHeadId);
-    const effectiveAmount =
-      input.feeHeadDetails.find((h) => h.feeHeadId === head.feeHeadId)?.amount ??
-      head.configuredAmount;
+    const effectiveAmount = head.isVariable
+      ? input.variableFeeHeads?.find((h) => h.feeHeadId === head.feeHeadId)?.amount
+      : (input.feeHeadDetails.find((h) => h.feeHeadId === head.feeHeadId)?.amount ??
+        head.configuredAmount);
+    if (included && effectiveAmount == null) throw new Error('Included head requires an amount');
     return {
       ...head,
       included,
-      effectiveAmount,
-      obligation: included ? effectiveAmount : 0,
+      effectiveAmount: included ? (effectiveAmount ?? null) : null,
+      obligation: included ? effectiveAmount! : 0,
+      zeroAmountReason: input.variableFeeHeads?.find((h) => h.feeHeadId === head.feeHeadId)
+        ?.zeroAmountReason,
       paymentTermName: 'Two installments',
       paymentTermVersionNumber: 3,
       servicePeriod: input.servicePeriods.find((p) => p.feeHeadId === head.feeHeadId) ?? {
@@ -125,7 +148,7 @@ function preview(input: AssignmentRequest): AssignmentPreview {
         dueDate: i === 0 ? '2026-04-10' : '2026-10-10',
         demandDate: i === 0 ? '2026-04-01' : '2026-10-01',
         allocationPercentage: share,
-        scheduledAmount: (h.effectiveAmount * share) / 100,
+        scheduledAmount: (h.effectiveAmount! * share) / 100,
         proratedAmount: (h.obligation * share) / 100,
         paidAmount: 0,
         outstandingAmount: (h.obligation * share) / 100,

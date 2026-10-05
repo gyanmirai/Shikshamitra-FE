@@ -13,16 +13,8 @@ import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import {
-  Box,
-  Chip,
-  Alert,
-  Stack,
-  Drawer,
-  Button,
-  Typography,
-  IconButton,
-} from '@mui/material';
+import FinanceRoutingFields from 'src/screens/finance/components/FinanceRoutingFields';
+import { Box, Chip, Alert, Stack, Drawer, Button, Typography, IconButton } from '@mui/material';
 
 import RefundFooterActions from './refund/RefundFooterActions';
 import RefundGeneralSection from './refund/RefundGeneralSection';
@@ -242,6 +234,15 @@ export default function RefundPolicyDrawer({
               )}
 
               {/* Section 1: General Information */}
+              <FinanceRoutingFields
+                formik={formik}
+                academicYearId={formik.values.academicYearId || academicYearId}
+                operation="refund-policy"
+                categoryField="expenseCategoryId"
+                categoryLabel="Expense Category"
+                bankField="defaultPayingBankAccountId"
+                bankLabel="Default Paying Bank Account"
+              />
               <RefundGeneralSection
                 formik={formik}
                 activeEdit={activeEdit}

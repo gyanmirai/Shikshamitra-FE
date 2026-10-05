@@ -1,14 +1,17 @@
 'use client';
 
 import * as Yup from 'yup';
-import { useState } from 'react';
 import { useFormik } from 'formik';
+import { useState, useEffect } from 'react';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { useResponsive } from 'src/hooks/use-responsive';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomAccordion from 'src/components/custom-accordian';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { FormSectionCard } from 'src/components/form-section-card';
 import { Box, Alert, Stack, Button, Drawer, Divider, IconButton, Typography } from '@mui/material';
 
 import { WorkflowTemplateSelector } from './workflow-template-selector';
@@ -63,7 +66,12 @@ export function WorkflowStandardTemplateDialog({
   onOpenFormBuilder,
 }: Props) {
   const previewOpen = useBoolean(false);
+  const isMobile = useResponsive('down', 'sm');
+  const [warningDismissed, setWarningDismissed] = useState(false);
   const [discardAction, setDiscardAction] = useState<'close' | 'forms' | null>(null);
+  useEffect(() => {
+    if (open) setWarningDismissed(false);
+  }, [open]);
   const initialValues = {
     templateId: initialTemplateId,
     registrationFormDefinitionId: initialRegistrationFormDefinitionId ?? '',
@@ -122,15 +130,21 @@ export function WorkflowStandardTemplateDialog({
           'aria-labelledby': 'workflow-template-drawer-title',
         }}
       >
-        <Stack direction="row" spacing={1} alignItems="flex-start" sx={{ px: 2, py: 1.5 }}>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 2, py: 1.5 }}>
+          <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
             <Typography id="workflow-template-drawer-title" variant="h6">
               Choose a workflow template
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Replace this draft’s journey and select the published forms it uses.
-            </Typography>
-          </Box>
+            <CustomTooltip
+              title="Replace this draft’s journey and select the published forms it uses."
+              arrow
+              placement={isMobile ? 'bottom' : 'right'}
+            >
+              <IconButton size="small" color="info" aria-label="Workflow template information">
+                <Iconify icon="mdi:information-outline" width={18} />
+              </IconButton>
+            </CustomTooltip>
+          </Stack>
           <IconButton
             size="small"
             aria-label="Close workflow template"
@@ -144,93 +158,103 @@ export function WorkflowStandardTemplateDialog({
         <Box
           component="form"
           onSubmit={formik.handleSubmit}
-          sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2 }}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            overflowY: 'auto',
+            overflowX: 'hidden',
+            p: 2,
+            bgcolor: 'background.neutral',
+          }}
         >
           <Stack spacing={2}>
-            <Alert severity="warning" icon={<Iconify icon="mdi:alert-outline" />}>
-              This replaces the current stages and routes when you apply it. Save the draft to keep
-              the change.
-            </Alert>
-            <Box>
-              <Typography variant="subtitle2">Starting journey</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Select the closest process. You can edit every stage after applying it.
-              </Typography>
-            </Box>
-            <WorkflowTemplateSelector
-              value={formik.values.templateId}
-              onChange={(value) => formik.setFieldValue('templateId', value)}
-              columns={1}
-            />
-            <CustomAccordion
-              title="Preview selected journey"
-              expanded={previewOpen.value}
-              onChange={previewOpen.onToggle}
-              content={
-                <Stack spacing={1.5}>
-                  <Stack direction="row" spacing={0.75}>
-                    <Label variant="outlined">{selectedTemplate.stages.length} stages</Label>
-                    <Label variant="outlined">
-                      {Math.max(selectedTemplate.stages.length - 1, 0)} routes
-                    </Label>
+            {!warningDismissed && (
+              <Alert
+                severity="warning"
+                icon={<Iconify icon="mdi:alert-outline" />}
+                closeText="Dismiss template replacement warning"
+                onClose={() => setWarningDismissed(true)}
+              >
+                This replaces the current stages and routes when you apply it. Save the draft to
+                keep the change.
+              </Alert>
+            )}
+            <FormSectionCard icon="mdi:sitemap-outline" title="Starting journey">
+              <WorkflowTemplateSelector
+                value={formik.values.templateId}
+                onChange={(value) => formik.setFieldValue('templateId', value)}
+                columns={1}
+              />
+            </FormSectionCard>
+            <FormSectionCard icon="mdi:eye-outline" title="Journey preview">
+              <CustomAccordion
+                title="Preview selected journey"
+                expanded={previewOpen.value}
+                onChange={previewOpen.onToggle}
+                content={
+                  <Stack spacing={1.5}>
+                    <Stack direction="row" spacing={0.75}>
+                      <Label variant="outlined">{selectedTemplate.stages.length} stages</Label>
+                      <Label variant="outlined">
+                        {Math.max(selectedTemplate.stages.length - 1, 0)} routes
+                      </Label>
+                    </Stack>
+                    {selectedTemplate.stages.map((stage, index) => (
+                      <Typography key={stage.code} variant="body2">
+                        {index + 1}. {stage.name}
+                      </Typography>
+                    ))}
                   </Stack>
-                  {selectedTemplate.stages.map((stage, index) => (
-                    <Typography key={stage.code} variant="body2">
-                      {index + 1}. {stage.name}
-                    </Typography>
-                  ))}
-                </Stack>
-              }
-            />
-            <Divider />
-            <Box>
-              <Typography variant="subtitle2">Published forms</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Registration is attached to the Form stage. Inquiry is the default offered when
-                configuring an inquiry intake.
-              </Typography>
-            </Box>
-            <AdmissionDefinitionSelect
-              label="Published inquiry form (optional)"
-              valueId={formik.values.inquiryFormDefinitionId}
-              initialOption={initialInquiryForm}
-              fetchOptions={fetchInquiryForms}
-              onChange={(id) => formik.setFieldValue('inquiryFormDefinitionId', id)}
-              noOptionsText="No published inquiry forms found"
-            />
-            <ShakingTextField
-              error={Boolean(
-                formik.touched.registrationFormDefinitionId &&
-                formik.errors.registrationFormDefinitionId
-              )}
-            >
-              <AdmissionDefinitionSelect
-                label="Published registration form *"
-                valueId={formik.values.registrationFormDefinitionId}
-                initialOption={initialRegistrationForm}
-                fetchOptions={fetchRegistrationForms}
-                onChange={(id) => formik.setFieldValue('registrationFormDefinitionId', id ?? '')}
-                noOptionsText="No published registration forms found"
-                error={Boolean(
-                  formik.touched.registrationFormDefinitionId &&
-                  formik.errors.registrationFormDefinitionId
-                )}
-                helperText={
-                  (formik.touched.registrationFormDefinitionId &&
-                    formik.errors.registrationFormDefinitionId) ||
-                  'Required for the generated Form stage.'
                 }
               />
-            </ShakingTextField>
-            <Button
-              size="small"
-              variant="text"
-              startIcon={<Iconify icon="mdi:open-in-new" />}
-              onClick={() => requestExit('forms')}
-              sx={{ alignSelf: 'flex-start' }}
-            >
-              Open Admission Form
-            </Button>
+            </FormSectionCard>
+            <FormSectionCard icon="mdi:form-select" title="Published forms">
+              <Stack spacing={2}>
+                <AdmissionDefinitionSelect
+                  label="Published inquiry form (optional)"
+                  valueId={formik.values.inquiryFormDefinitionId}
+                  initialOption={initialInquiryForm}
+                  fetchOptions={fetchInquiryForms}
+                  onChange={(id) => formik.setFieldValue('inquiryFormDefinitionId', id)}
+                  noOptionsText="No published inquiry forms found"
+                />
+                <ShakingTextField
+                  error={Boolean(
+                    formik.touched.registrationFormDefinitionId &&
+                    formik.errors.registrationFormDefinitionId
+                  )}
+                >
+                  <AdmissionDefinitionSelect
+                    label="Published registration form *"
+                    valueId={formik.values.registrationFormDefinitionId}
+                    initialOption={initialRegistrationForm}
+                    fetchOptions={fetchRegistrationForms}
+                    onChange={(id) =>
+                      formik.setFieldValue('registrationFormDefinitionId', id ?? '')
+                    }
+                    noOptionsText="No published registration forms found"
+                    error={Boolean(
+                      formik.touched.registrationFormDefinitionId &&
+                      formik.errors.registrationFormDefinitionId
+                    )}
+                    helperText={
+                      (formik.touched.registrationFormDefinitionId &&
+                        formik.errors.registrationFormDefinitionId) ||
+                      undefined
+                    }
+                  />
+                </ShakingTextField>
+                <Button
+                  size="small"
+                  variant="text"
+                  startIcon={<Iconify icon="mdi:open-in-new" />}
+                  onClick={() => requestExit('forms')}
+                  sx={{ alignSelf: 'flex-start' }}
+                >
+                  Open Admission Form
+                </Button>
+              </Stack>
+            </FormSectionCard>
           </Stack>
         </Box>
         <Divider />
@@ -240,7 +264,6 @@ export function WorkflowStandardTemplateDialog({
             variant="outlined"
             startIcon={<Iconify icon="mdi:close" />}
             onClick={() => requestExit('close')}
-            sx={{ minHeight: { xs: 44, sm: 36 } }}
           >
             Cancel
           </Button>
@@ -249,7 +272,6 @@ export function WorkflowStandardTemplateDialog({
             variant="contained"
             startIcon={<Iconify icon="mdi:auto-fix" />}
             onClick={() => formik.handleSubmit()}
-            sx={{ minHeight: { xs: 44, sm: 36 } }}
           >
             Replace journey
           </Button>

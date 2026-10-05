@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-09-29
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,44 @@ audience: humans-and-agents
 # Validate Student Enrollment Admissions changes
 
 TL;DR: run the documentation check first, then focused lint, formatting, type, unit, and browser checks for the Enrollment Admissions surface that changed.
+
+## Shared stepper restoration (2026-10-05)
+
+The shared `custom-stepper/index.tsx` was restored to HEAD. Workflow consumers no longer pass the removed modern/clickable-progress, native-validation, validation-preservation, or footer-alignment options. Setup progress is read-only, with no separate Back-to-details button, as requested; a replacement details control is deferred.
+
+The focused run passed 42 tests across seven files, covering shared validation, loading locks, Back/Next value retention, stage validation, workflow creation/update/retry, and Intake compatibility. After the final Back-button cleanup, the two affected suites passed all 19 tests again. A focused TypeScript check of the restored component and all its screen consumers passed with zero diagnostics across 38 files. Changed-file lint, formatting, Student documentation validation, and diff checks passed.
+
+Authenticated desktop browser checks verified required-field feedback, stage Basics/Settings navigation, retained values through Back, dirty-close protection, and the final read-only progress without a details Back button or document overflow. Browser edits were discarded; no workflow was saved or published. Mobile checks and full-project acceptance were not performed for this restoration.
+
+Full-project TypeScript remains blocked by unrelated Academic upload `primaryText` props and Intake-assignment test selector typing errors. Its later incremental retry was stopped under memory pressure; the focused check above is separate evidence. Earlier clickable-progress descriptions below record previous UI iterations and no longer describe the current setup progress.
+
+## Workflow background cards (2026-10-05)
+
+Create/edit parity now uses the same details workspace, template selector and journey preview. Edit opens with the real current journey, retaining stages/routes until an explicit template replacement is confirmed. Registration changes use the shared Form-stage writer; inquiry defaults are retained. Both breadcrumb Back controls reuse the owning dirty-close guard. The focused command covered four test files with 26 passing cases, including same-draft PUT, fresh template IDs, form-only changes, replacement confirmation/cancel, save failure preservation, nullable descriptions and busy navigation. Changed-file lint and formatting passed. Authenticated in-app browser checks covered the edit layout at 1440 × 900, 768 × 1024 and 390 × 844, prefilled registration, replacement confirmation and create/edit dirty Back guards; browser checks did not persist or publish a workflow. Full repository type-check was not completed: the default heap exhausted memory and the larger-heap retry was stopped after prolonged resource pressure.
+
+The compact-header follow-up removes the inline edit title/information row, duplicate step-count text, and separate Back to details button. The completed Workflow details step still opens the same draft editor, and Close/Cancel retain their guards. Three focused test files passed all 15 tests; changed-file lint, formatting, and Student docs validation passed. Authenticated in-app browser checks covered details and journey at 1440 × 900, 768 × 1024, and 390 × 844 with no document horizontal overflow. Browser checks did not save, publish, or delete workflows; save/retry contracts were checked in focused tests.
+
+Create details, inline edit details, and Build journey reuse the existing themed Card and stepper components. The create desktop layout places Workflow details on the left and Journey preview on the right; tablet and mobile layouts stack them. The journey workspace groups progress, tools, and the canvas in one background card without changing graph state or lifecycle actions.
+
+The focused run passed 20 tests, including workspace containment, details-before-preview order, existing validation and dirty-close handling, and same-draft updates. Changed-file lint passed. Repository-wide TypeScript still reports seven existing errors outside this layout change (Academic upload props and Admissions test selector options).
+
+Authenticated browser checks verified the create card, required-field feedback, footer reachability, and absence of document horizontal overflow at 1440 × 900, 768 × 1024, and 390 × 844. The newly grouped second-step card and inline edit card still require refreshed browser checks: the prior session displayed an older builder bundle, and the resumed browser encountered a localhost connection/error-page failure. The local frontend was restarted successfully, but its session refresh could not reach the local API and the server redirected to login. No saved workflow, publication, or database changes were made during these UI checks. The complete E2E suite was not rerun.
+
+## Workflow setup workspace UI (2026-10-04)
+
+The create-details and edit-details forms now render inside the Admission Stage workspace with the desktop navigation retained, rather than a fullscreen modal. The two-step progress uses aligned icons and a compact secondary Back action. Existing clone drawers, permissions, payloads, stage/route ownership, and lifecycle actions remain unchanged.
+
+The focused run passed 18 tests across workflow details, setup progress, shared Formik navigation, and shared stepper button props. Cases include required name/form validation, one-create submission locking, failed-save retry, unsaved close confirmation, edit-details update callbacks, nullable optional descriptions, and updating the same draft while preserving unsaved graph changes. The existing workflow E2E selectors were updated from modal dialogs to named workspace regions; the complete Playwright suite was not rerun.
+
+Authenticated local browser checks covered create/edit layout at 1440 × 900, 768 × 1024, and 390 × 844, plus the two-column create layout on a wider desktop. Required-field errors remain visible, compact form actions stay reachable, no document horizontal overflow occurs, and both journey-step icons have the same vertical position. Browser checks used unsaved edits only: no workflow was published, deleted, or changed in persistent storage. Repository-wide TypeScript still reports unrelated Academic upload props and pre-existing test selector typing errors; none are in the files changed for this UI work.
+
+## Student Records return screen verification
+
+The 2026-10-03 authenticated in-app browser check used the existing school Admin account. Persisted Transitions grants were absent, explaining the denial independently of missing Student data. After explicit approval, temporary View/Create/Approve/Apply grants were saved through the existing grouped Security UI. The Transitions and Annual renewals lists rendered their zero-row empty states; Returning students displayed the permanent-profile notice, target year, school return route, date and reason fields, with submission disabled until an eligible student is chosen. The Student chooser returned no eligible matches. Prepare batch displayed its preview requirement and disabled preview/submit actions without a student.
+
+All four temporary Transitions grants were restored to their original absent state afterward. The original denial returned after refresh. Backend read-only verification confirmed all other 9,431 grant rows retained the same digest. No live Student, return, policy or enrollment mutations were performed. This check covers authorized desktop empty/form states; populated return journeys, latest closure behavior in the shared host, and tablet/mobile acceptance remain unverified. Backend behavior and automated closure evidence are in [Student testing](../../../Shikshamitra-BE/docs/modules/student/testing.md).
+
+A follow-up on 2026-10-03 searched the signed-in DDVS Student Directory with Former students and All enrollment years, no academic-path or search filters. The settled table showed zero records without an error, so the absence of a return verification candidate is not explained solely by the current-year filter. The shared API process and its Application binary still predate the closure changes; the new behavior must be verified after an external backend refresh with an eligible test student. Read-only permission verification again confirmed the restored original grants and unchanged remaining rows.
 
 ## Onboarding integration checks
 
@@ -26,7 +64,7 @@ npx eslint "src/screens/student/admissions/admission-cycle*.ts" "src/screens/stu
 ```
 
 The focused rules cover code normalization and lifecycle-specific edit, publish, close, reopen, archive, and unused-Draft delete availability.
-Browser acceptance must cover future Academic Year selection, date errors, dirty-close protection, readiness feedback, close dependencies and acknowledgement, reopen extension, archive denial, clone, schedule, window dialogs, server paging, search, filters, history, and View-only/Add/Delete permission combinations.
+Browser acceptance must cover future Academic Year selection, date errors, dirty-close protection, readiness feedback, simple Close confirmation with dependency loading/error guards and the existing API acknowledgement, reopen extension, archive denial, clone, hidden scheduling actions, unchanged existing schedules, window dialogs, server paging, search, filters, history, and View-only/Add/Delete permission combinations.
 Verify at 390 × 844, 768 × 1024, and 1440 × 900 with no horizontal overflow and reachable dialog actions.
 An older running backend cannot prove these commands until migration `20260915103120_ImplementAdmissionCycleGovernance` is applied and the current Host is restarted.
 
@@ -38,7 +76,7 @@ Run the focused workflow editor checks with the repository Windows runner:
 node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/student/admissions/workflow-builder/workflow-route-improvements.test.ts src/screens/student/admissions/workflow-builder/workflow-route-simulator.test.ts src/screens/student/admissions/workflow-builder/workflow-transition-safety.test.tsx src/screens/student/admissions/workflow-builder/workflow-outcome-route.test.tsx src/screens/student/admissions/workflow-builder/workflow-stage-type-select.test.tsx src/screens/student/admissions/workflow-builder/workflow-form-stage-drawer.test.tsx --pool=threads --maxWorkers=1
 ```
 
-Coverage includes ancestor form fields, numeric and list comparisons, duplicate conditions, managed outcome gates, automatic paths only for simple new journeys, configured-type-change cancellation/confirmation, custom-copy preservation, tab draft retention, and invalid-save tab selection. Icon rendering is mocked locally in editor tests to avoid third-party icon requests during teardown.
+Coverage includes ancestor form fields, numeric and list comparisons, duplicate conditions, managed outcome gates, automatic paths only for simple new journeys, configured-type-change cancellation/confirmation, and custom-copy preservation. Configure stage uses the shared two-step wizard: Basics validates identity and published-form selection; Settings contains process rules, stage behavior, completion, and next steps. Check draft retention through Back/Next, invalid-save feedback, read-only navigation, dirty-close confirmation, form-detail failure/retry, shared section cards, and the shared stepper's default Back/Next footer placement. Icon rendering is mocked locally in editor tests to avoid third-party icon requests during teardown.
 
 Browser acceptance remains required at 390 × 844, 768 × 1024, and 1440 × 900. Verify class lookup failure/retry, class-specific document visibility, linked Form uploads reused in Document verification, dirty-answer upload blocking, replacement requiring fresh review, type-change cancellation, readable Offer fields, typed condition choices, missing/overlapping paths, and disabled outcomes. Unit tests do not prove a complete live admission journey or Student/Onboarding handoff.
 
@@ -222,26 +260,28 @@ npx eslint src/screens/student/admissions/admission-form-dialog.tsx src/screens/
 Run automated checks first, then perform the final smoke test in the Codex in-app browser when an authenticated tenant is available.
 Validate at 390 × 844, 768 × 1024, and 1440 × 900; confirm the footer actions remain reachable and the editor does not create horizontal page overflow.
 
-| Surface            | Browser acceptance checks                                                                                                                                                                       |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Wizard navigation  | **Form details**, **Build form**, and **Review & save** use the shared stepper's single Formik state; **Back** and review edit links retain values, and **Next** never sends a save request.    |
-| Stage validation   | Invalid name/code blocks leaving details without validating unfinished fields; invalid section/field schema blocks leaving the builder; final **Save draft** validates the complete draft.      |
-| Form details       | **Blank form**, **Admission application**, and **Student registration** are visible quick starts. The complete library supports search, category filtering, preview, and school-form reuse.     |
+| Surface            | Browser acceptance checks                                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wizard navigation  | **Form details**, **Build form**, and **Review & save** use the shared stepper's single Formik state; **Back** and review edit links retain values, and **Next** never sends a save request.                              |
+| Stage validation   | Invalid name/code blocks leaving details without validating unfinished fields; invalid section/field schema blocks leaving the builder; final **Save draft** validates the complete draft.                                |
+| Form details       | **Blank form**, **Admission application**, and **Student registration** are visible quick starts. The complete library supports search, category filtering, preview, and school-form reuse.                               |
 | Form purpose       | Inquiry and Registration views are URL-backed; new drafts inherit the active purpose and offering selectors reject the wrong published purpose. Correction and Consent are no longer offered as standalone form purposes. |
-| Document rules     | Conditional requirements expose Admission type, Class, Category, RTE status, Transfer admission, Scholarship, and Assessment outcome and still save on the workflow Document stage.          |
-| Parent messages    | The nine admission lifecycle messages create or update `Admissions lifecycle` Communication templates; channel, active state, variables, and permission failures remain Communication-owned. |
-| Template catalogue | Every system template passes the admission-form schema, reports accurate section and field counts, creates fresh IDs, and avoids duplicate system bindings.                                     |
-| Starter choice     | Replacing dirty content requires confirmation, while every selected template remains editable. Reusing a school form creates a new copy without mutating the source.                            |
-| Workspace          | Desktop shows the outline, focused section canvas, and field settings; narrow-screen tabs preserve section/field selection and entered values.                                                  |
-| Field editing      | Open **Add field** above the full-screen builder, confirm its destination, add a field, and verify the drawer closes with the new field selected for editing.                                   |
-| Choice editing     | Add, rename, reorder, delete, and paste choices without entering JSON; reopen the field and verify stable stored values. Confirm incompatible legacy data is warned about rather than replaced. |
-| Form structure     | Open **Manage structure**, add blank or ready-made sections, reorder fields and sections, confirm deletion, and verify step membership and selection remain correct.                            |
-| Section packs      | Search and add a pack into the selected step; verify new IDs/codes, duplicate custom-code suffixing, and linked student-field deduplication.                                                    |
-| Draft protection   | Reject discard and template-replacement confirmations and verify entered values remain; accept replacement and verify the template appears.                                                     |
-| Review             | The final stage displays identity, layout, counts, and ordered structure; publishing checks are advisory and do not block a schema-valid draft save.                                            |
-| Save recovery      | A failed request retains the editor and values; retry saves the same draft successfully and closes the editor.                                                                                  |
+| Document rules     | Conditional requirements expose Admission type, Class, Category, RTE status, Transfer admission, Scholarship, and Assessment outcome and still save on the workflow Document stage.                                       |
+| Parent messages    | The nine admission lifecycle messages create or update `Admissions lifecycle` Communication templates; channel, active state, variables, and permission failures remain Communication-owned.                              |
+| Template catalogue | Every system template passes the admission-form schema, reports accurate section and field counts, creates fresh IDs, and avoids duplicate system bindings.                                                               |
+| Starter choice     | Replacing dirty content requires confirmation, while every selected template remains editable. Reusing a school form creates a new copy without mutating the source.                                                      |
+| Workspace          | Desktop shows the outline, focused section canvas, and field settings; narrow-screen tabs preserve section/field selection and entered values.                                                                            |
+| Field editing      | Open **Add field** above the full-screen builder, confirm its destination, add a field, and verify the drawer closes with the new field selected for editing.                                                             |
+| Choice editing     | Add, rename, reorder, delete, and paste choices without entering JSON; reopen the field and verify stable stored values. Confirm incompatible legacy data is warned about rather than replaced.                           |
+| Form structure     | Open **Manage structure**, add blank or ready-made sections, reorder fields and sections, confirm deletion, and verify step membership and selection remain correct.                                                      |
+| Section packs      | Search and add a pack into the selected step; verify new IDs/codes, duplicate custom-code suffixing, and linked student-field deduplication.                                                                              |
+| Draft protection   | Reject discard and template-replacement confirmations and verify entered values remain; accept replacement and verify the template appears.                                                                               |
+| Review             | The final stage displays identity, layout, counts, and ordered structure; publishing checks are advisory and do not block a schema-valid draft save.                                                                      |
+| Save recovery      | A failed request retains the editor and values; retry saves the same draft successfully and closes the editor.                                                                                                            |
 
 Supporting browser automation does not replace the final in-app browser check; record an unavailable session or tool as a validation limitation.
+
+The 2026-10-02 signed-in custom-field walkthrough used an unsaved Inquiry draft and covered all 12 basic field types and all seven presets through Basic, Rules, and Data settings. Radio choice clearing/typing, rename, reorder, delete, paste, and reopen retained the labels; Select and Multi-select edits also retained choices. Preview verified defaults, Radio-driven visibility, India/Gujarat/Ahmedabad dependencies, and clearing dependent values when Country is cleared. Aadhaar/PAN now expose accessible input names and helper/error associations through the shared OTP field; its two focused tests passed. Builder/settings and preview had no document-level horizontal overflow at 390 × 844, 768 × 1024, and 1440 × 900. The temporary draft was discarded without saving or publishing; the existing published form was unchanged. This is not a backend submission/publish certification. A separate runtime-validation gap was observed: an empty Address group serialized as `{}` can satisfy required validation; address completeness semantics need a frontend/backend review before changing that rule.
 
 The 2026-09-18 focused Form Builder run passed 11 files and 62 tests covering the system-template catalogue, school-form cloning, duplicate-safe section packs, registration template, chooser interactions, models, wizard, step grouping, visual choices, visibility rules, validation panel, and admission-form validation; focused ESLint also passed. The signed-in in-app browser verified the three quick starts, template search/category/preview, real tenant school-form loading and unsaved copying, section-pack search/addition, one-group single-page outline, reachable footer actions, and no horizontal page overflow at 390 × 844, 768 × 1024, and 1440 × 900. No draft was saved to the backend, and the existing recovery candidate was not discarded. The repository-wide TypeScript run remains blocked only by the existing `AdmissionCycle.status` fixture type error in `admission-cycle-dialog.test.tsx`. The docs validator reaches pre-existing missing/broken Student and testing-document artifacts outside this Form Builder change. The development console also reports an unrelated Workflow Builder import failure for `workflow-template`; the Form Builder route continued to render and interact normally.
 
@@ -330,3 +370,14 @@ error is reported.
 ## Admission routes, capacity, and counsellor checks (2026-09-25)
 
 The combined focused frontend run passed 19/19 tests across class-capacity caching, offering configuration, applicant start, counsellor filtering and assignment, and managed-offer actions. Focused ESLint and Student documentation validation passed. Class capacity is displayed at inquiry and direct-registration offering selection as a warning-only signal; its source is the room allocation for the class, not a counsellor-entered number. An authenticated browser smoke reached the Applications list, direct-registration dialog, and New Inquiry form after the local API became available. The direct-registration dialog correctly showed that no open direct-registration offering exists for the signed-in school; selecting an Inquiry offering showed the unconfigured-capacity warning. A legacy offering whose name includes `RTE` was present in Inquiry choices because its stored Track and Entry Mode are both General/Inquiry, not because the Inquiry filter ignored Direct Registration. No live capacity/counsellor selection, applicant submission, or live deployment was exercised by this review.
+
+## Simplified inquiry intake and routing checks (2026-10-04)
+
+The focused run passed 41 tests across inquiry policy, validation, form rendering, duplicate handling, and the two intake editors; focused ESLint and Student documentation validation passed.
+`admission-intake-setup-editor.integration.test.tsx` exercises actual editor controls, normalized save payloads, API-selected pool/fallback IDs, and failed-lookup retry without losing the draft.
+Authenticated localhost browser verification loaded eligible staff in both routing fields, created a temporary setup with QR code as an allowed source, and reopened it with the same source, counsellor, and fallback selections.
+The removed selectors and hidden requirement switches were absent; the source-detail helper was optional.
+Desktop, 768px tablet, and 390px mobile drawer checks found no document-level horizontal overflow.
+Full-project TypeScript remains blocked by eight diagnostics in untouched homework and Admissions test files; this change's files reported no diagnostics.
+The all-module documentation gate remains blocked by unrelated Finance and Testing documentation issues; the Student gate passed.
+No production deployment or complete live applicant journey was performed.

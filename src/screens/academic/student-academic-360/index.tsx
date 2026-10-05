@@ -3,16 +3,15 @@
 import type { RootState } from 'src/redux/store';
 import type { Standards, Organization } from 'src/types/school';
 
+import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { Box, Card, Stack } from '@mui/material';
 import { useRef, useState, useEffect } from 'react';
-import CustomSelect from 'src/components/custom-select';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { useStudentAcademic360List } from './hooks/useStudentAcademic360List';
 import { StudentAcademic360Table } from './components/StudentAcademic360Table';
 import { StudentAcademic360Drawer } from './components/StudentAcademic360Drawer';
-import { StudentAcademicSummaryCards } from './components/StudentAcademicSummaryCards';
+import { StudentAcademic360Filters } from './components/StudentAcademic360Filters';
 
 import type { Academic360StudentRow } from './types';
 
@@ -157,31 +156,13 @@ const StudentAcademic360Screen = () => {
         ]}
       />
 
-      <Card sx={{ p: 1, mb: 1 }}>
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
-          <CustomSelect
-            options={[{ id: ALL_OPTION_ID, name: 'All Classes' }, ...allClass]}
-            label="Class"
-            value={effectiveClass}
-            onChange={(value) => handleClassChange(value as string)}
-            labelKey="name"
-            valueKey="id"
-            formControlProps={{ sx: { minWidth: { md: 240 } } }}
-          />
-          <CustomSelect
-            options={[{ id: ALL_OPTION_ID, name: 'All Divisions' }, ...availableDivisions]}
-            label="Division"
-            value={effectiveDivision}
-            onChange={(value) => setSelectedDivision(value as string)}
-            labelKey="name"
-            valueKey="id"
-            disabled={effectiveClass === ALL_OPTION_ID || availableDivisions.length === 0}
-            formControlProps={{ sx: { minWidth: { md: 220 } } }}
-          />
-        </Stack>
-      </Card>
-
-      <StudentAcademicSummaryCards
+      <StudentAcademic360Filters
+        classes={allClass}
+        divisions={availableDivisions}
+        selectedClass={effectiveClass}
+        selectedDivision={effectiveDivision}
+        onClassChange={handleClassChange}
+        onDivisionChange={setSelectedDivision}
         summary={list.data?.summary}
         activeFilter={list.activeFilter}
         onFilterChange={list.changeFilter}

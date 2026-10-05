@@ -11,16 +11,16 @@ import CustomDialog from 'src/components/customDialog';
 import { financeModuleType } from 'src/redux/tagTypes';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
+import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import { Box, Card, Stack, Button, MenuItem, TextField, Typography } from '@mui/material';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
-import { financePermissions } from 'src/constants/finance-menu';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { useGetBankAccountQuery } from 'src/redux/finance/BankAccountManage/bankAccountApi';
 import {
   feeRefundApi,
   useDeleteFeeRefundMutation,
@@ -28,18 +28,17 @@ import {
   useSubmitFeeRefundMutation,
   useRejectFeeRefundMutation,
   useApproveFeeRefundMutation,
-  useRecordRefundPayoutMutation,
-  useConfirmRefundPayoutMutation,
   useFailRefundPayoutMutation,
+  useRecordRefundPayoutMutation,
   useReturnRefundPayoutMutation,
+  useConfirmRefundPayoutMutation,
   useStartReviewFeeRefundMutation,
 } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
-import RefundRemarksForm from './Components/RefundRemarksForm';
 import RefundWorklist from './Components/RefundWorklist';
+import RefundRemarksForm from './Components/RefundRemarksForm';
 import FeeRefundFormComponent from './NewRefundForm/RefundForm';
 import FeeRefundReasonApprovalForm from './Components/FeeRefuncRejectApproveForm';
-import { refundPaymentMethodsConfig } from './NewRefundForm/refundPaymentDetailsConfig';
 
 import type { IStudentFeeData } from './type';
 
@@ -59,8 +58,9 @@ const FeeRefund = () => {
   const dispatch = useDispatch();
   const academicFilters = useFinanceAcademicFilters();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const { data: bankAccountsData } = useGetBankAccountQuery(
-    { academicYearId: currentYear?.id ?? '' }, { skip: !currentYear?.id }
+  const { data: bankAccountsData } = useGetFinanceRoutingOptionsQuery(
+    { academicYearId: currentYear?.id ?? '', operation: 'refund' },
+    { skip: !currentYear?.id || !processDialog.value }
   );
 
   const [approveRefund, { isLoading: isApproving }] = useQueryAndMutation({
@@ -205,21 +205,23 @@ const FeeRefund = () => {
             { name: 'Finance', href: '/finance/dashboard' },
             { name: 'Fee Refund', href: '/finance/fee-refund' },
           ]}
-          action={hasGrantedPermission(permissions, financePermissions.fees.refundActions.add) ?
-            <Button
-              onClick={() => {
-                setSelectedFeeRefund(null);
-                setReplacementRefundId(undefined);
-                setIsEditMode(false);
-                addRefundRequest.onTrue();
-              }}
-              size="small"
-              startIcon={<Add />}
-              variant="contained"
-              sx={{ px: '32px' }}
-            >
-              Fee Refund
-            </Button> : undefined
+          action={
+            hasGrantedPermission(permissions, financePermissions.fees.refundActions.add) ? (
+              <Button
+                onClick={() => {
+                  setSelectedFeeRefund(null);
+                  setReplacementRefundId(undefined);
+                  setIsEditMode(false);
+                  addRefundRequest.onTrue();
+                }}
+                size="small"
+                startIcon={<Add />}
+                variant="contained"
+                sx={{ px: '32px' }}
+              >
+                Fee Refund
+              </Button>
+            ) : undefined
           }
         />
       )}
@@ -247,7 +249,7 @@ const FeeRefund = () => {
             setSettlementMethod(data._refundMethod ?? '');
             setExternalReference('');
             setEvidenceReference('');
-            setBankAccountId('');
+            setBankAccountId(data._payingBankAccountId ?? '');
             setSettlementKey(crypto.randomUUID());
             setSettlementDate(new Date().toISOString());
             processDialog.onTrue();
@@ -385,12 +387,27 @@ const FeeRefund = () => {
         maxWidth="xs"
       >
         <FeeRefundReasonApprovalForm
-          onClose={async (e, isSubmit, notes) => {
+          key={selectedFeeRefund?._refundRequestId}
+          academicYearId={currentYear?.id || ''}
+          defaultCategoryId={
+            selectedFeeRefund?._expenseCategoryId || selectedFeeRefund?._defaultExpenseCategoryId
+          }
+          defaultBankId={
+            selectedFeeRefund?._payingBankAccountId ||
+            selectedFeeRefund?._defaultPayingBankAccountId
+          }
+          defaultMethod={selectedFeeRefund?._refundMethod}
+          onClose={async (e, isSubmit, notes, routing) => {
             if (isSubmit && selectedFeeRefund) {
               try {
                 const refundId = (selectedFeeRefund as any)._refundRequestId;
                 if (selectedMode === 'Approve') {
-                  await approveRefund({ id: refundId, notes: notes ?? undefined }).unwrap();
+                  if (!routing) return;
+                  await approveRefund({
+                    id: refundId,
+                    notes: notes ?? undefined,
+                    ...routing,
+                  }).unwrap();
                 } else if (selectedMode === 'Reject') {
                   await rejectRefund({ id: refundId, notes: notes ?? '' }).unwrap();
                 } else {
@@ -430,7 +447,8 @@ const FeeRefund = () => {
       >
         <Stack spacing={2} sx={{ pt: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Record the payment for <strong>{selectedFeeRefund?.name}</strong>. The refund remains Approved until its outcome is confirmed.
+            Record the payment for <strong>{selectedFeeRefund?.name}</strong>. The refund remains
+            Approved until its outcome is confirmed.
           </Typography>
           <TextField
             label="Approved amount"
@@ -447,15 +465,23 @@ const FeeRefund = () => {
             disabled={!!selectedFeeRefund?._refundMethod}
             required
           >
-            {Object.keys(refundPaymentMethodsConfig).map((method) => (
-              <MenuItem key={method} value={method}>{method}</MenuItem>
+            {['Cash', 'Cheque', 'DemandDraft', 'BankTransfer', 'Upi'].map((method) => (
+              <MenuItem key={method} value={method}>
+                {method}
+              </MenuItem>
             ))}
           </TextField>
           {settlementMethod !== 'Cash' && (
             <TextField
-              label={settlementMethod === 'Cheque' ? 'Cheque number' :
-                settlementMethod === 'Demand Draft (DD)' ? 'DD number' :
-                  settlementMethod === 'UPI' ? 'UPI transaction ID' : 'Bank UTR / transaction reference'}
+              label={
+                settlementMethod === 'Cheque'
+                  ? 'Cheque number'
+                  : settlementMethod === 'Demand Draft (DD)'
+                    ? 'DD number'
+                    : settlementMethod === 'UPI'
+                      ? 'UPI transaction ID'
+                      : 'Bank UTR / transaction reference'
+              }
               value={externalReference}
               onChange={(e) => setExternalReference(e.target.value)}
               size="small"
@@ -464,27 +490,48 @@ const FeeRefund = () => {
             />
           )}
           {settlementMethod !== 'Cash' && (
-            <TextField label="Source school bank account" select size="small" required
-              value={bankAccountId} onChange={(event) => setBankAccountId(event.target.value)}>
-              {(bankAccountsData?.items ?? []).map((account: any) => (
+            <TextField
+              label="Source school bank account"
+              select
+              size="small"
+              required
+              value={bankAccountId}
+              disabled={!!selectedFeeRefund?._payingBankAccountId}
+              onChange={(event) => setBankAccountId(event.target.value)}
+            >
+              {(bankAccountsData?.bankAccounts ?? []).map((account: any) => (
                 <MenuItem key={account.id} value={account.id}>
-                  {account.bankName} - {String(account.accountNumber).slice(-4)}
+                  {account.label}
                 </MenuItem>
               ))}
             </TextField>
           )}
-          <TextField label={settlementMethod === 'Cash' ? 'Signed handover receipt or document reference' : 'Payment evidence reference'}
-            value={evidenceReference} onChange={(event) => setEvidenceReference(event.target.value)}
-            size="small" required inputProps={{ maxLength: 500 }} />
+          <TextField
+            label={
+              settlementMethod === 'Cash'
+                ? 'Signed handover receipt or document reference'
+                : 'Payment evidence reference'
+            }
+            value={evidenceReference}
+            onChange={(event) => setEvidenceReference(event.target.value)}
+            size="small"
+            required
+            inputProps={{ maxLength: 500 }}
+          />
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
             <Button onClick={processDialog.onFalse} color="inherit">
               Cancel
             </Button>
             <Button
               variant="contained"
-              disabled={isProcessing || !selectedFeeRefund?._refundRequestId || !settlementMethod ||
-                !evidenceReference.trim() || (settlementMethod !== 'Cash' && !externalReference.trim()) ||
-                (settlementMethod !== 'Cash' && !bankAccountId)}
+              disabled={
+                isProcessing ||
+                !selectedFeeRefund?._refundRequestId ||
+                !settlementMethod ||
+                !evidenceReference.trim() ||
+                (settlementMethod !== 'Cash' && !externalReference.trim()) ||
+                (settlementMethod !== 'Cash' && !bankAccountId)
+              }
               onClick={async () => {
                 if (!selectedFeeRefund?._refundRequestId) return;
                 try {
@@ -496,11 +543,14 @@ const FeeRefund = () => {
                       amount: selectedFeeRefund._approvedAmount,
                       paymentDate: settlementDate,
                       bankAccountId: bankAccountId || undefined,
-                      externalReference: settlementMethod === 'Cash' ? undefined : externalReference.trim(),
+                      externalReference:
+                        settlementMethod === 'Cash' ? undefined : externalReference.trim(),
                       evidenceReference: evidenceReference.trim(),
                     },
                   }).unwrap();
-                  shikshaMitraToast.success({ message: 'Payment recorded. Confirm its outcome after verification.' });
+                  shikshaMitraToast.success({
+                    message: 'Payment recorded. Confirm its outcome after verification.',
+                  });
                   processDialog.onFalse();
                   setSelectedFeeRefund(null);
                 } catch (err: any) {
@@ -516,49 +566,102 @@ const FeeRefund = () => {
         </Stack>
       </CustomDialog>
 
-      <CustomDialog open={verifyDialog.value} title="Confirm payment outcome"
-        handleClose={verifyDialog.onFalse} maxWidth="xs">
+      <CustomDialog
+        open={verifyDialog.value}
+        title="Confirm payment outcome"
+        handleClose={verifyDialog.onFalse}
+        maxWidth="xs"
+      >
         <Stack spacing={2} sx={{ pt: 1 }}>
           <Typography variant="body2" color="text.secondary">
-            Verify the payment for <strong>{selectedFeeRefund?.name}</strong> offline before choosing an outcome.
+            Verify the payment for <strong>{selectedFeeRefund?.name}</strong> offline before
+            choosing an outcome.
           </Typography>
-          <TextField label="Verification evidence reference" size="small" required
-            value={evidenceReference} onChange={(event) => setEvidenceReference(event.target.value)}
-            inputProps={{ maxLength: 500 }} />
-          <TextField label="Failure reason (required only if failed)" size="small" multiline minRows={2}
-            value={failureReason} onChange={(event) => setFailureReason(event.target.value)}
-            inputProps={{ maxLength: 1000 }} />
+          <TextField
+            label="Verification evidence reference"
+            size="small"
+            required
+            value={evidenceReference}
+            onChange={(event) => setEvidenceReference(event.target.value)}
+            inputProps={{ maxLength: 500 }}
+          />
+          <TextField
+            label="Failure reason (required only if failed)"
+            size="small"
+            multiline
+            minRows={2}
+            value={failureReason}
+            onChange={(event) => setFailureReason(event.target.value)}
+            inputProps={{ maxLength: 1000 }}
+          />
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
-            <Button onClick={verifyDialog.onFalse} color="inherit">Close</Button>
-            <Button color="error" variant="outlined" disabled={isFailing || !evidenceReference.trim() ||
-              !failureReason.trim() || !selectedFeeRefund?._settlementId}
+            <Button onClick={verifyDialog.onFalse} color="inherit">
+              Close
+            </Button>
+            <Button
+              color="error"
+              variant="outlined"
+              disabled={
+                isFailing ||
+                !evidenceReference.trim() ||
+                !failureReason.trim() ||
+                !selectedFeeRefund?._settlementId
+              }
               onClick={async () => {
-                if (!selectedFeeRefund?._refundRequestId || !selectedFeeRefund._settlementId) return;
+                if (!selectedFeeRefund?._refundRequestId || !selectedFeeRefund._settlementId)
+                  return;
                 try {
-                  await failPayout({ id: selectedFeeRefund._refundRequestId,
+                  await failPayout({
+                    id: selectedFeeRefund._refundRequestId,
                     payoutId: selectedFeeRefund._settlementId,
-                    body: { idempotencyKey: settlementKey, evidenceReference: evidenceReference.trim(),
-                      reason: failureReason.trim() } }).unwrap();
-                  shikshaMitraToast.success({ message: 'Payment marked failed. A linked new request can now be created.' });
+                    body: {
+                      idempotencyKey: settlementKey,
+                      evidenceReference: evidenceReference.trim(),
+                      reason: failureReason.trim(),
+                    },
+                  }).unwrap();
+                  shikshaMitraToast.success({
+                    message: 'Payment marked failed. A linked new request can now be created.',
+                  });
                   verifyDialog.onFalse();
                 } catch (error: any) {
-                  shikshaMitraToast.error({ message: error?.data?.error?.message ?? 'Could not record payment failure.' });
+                  shikshaMitraToast.error({
+                    message: error?.data?.error?.message ?? 'Could not record payment failure.',
+                  });
                 }
-              }}>Mark failed</Button>
-            <Button color="success" variant="contained" disabled={isConfirming || !evidenceReference.trim() ||
-              !selectedFeeRefund?._settlementId}
+              }}
+            >
+              Mark failed
+            </Button>
+            <Button
+              color="success"
+              variant="contained"
+              disabled={
+                isConfirming || !evidenceReference.trim() || !selectedFeeRefund?._settlementId
+              }
               onClick={async () => {
-                if (!selectedFeeRefund?._refundRequestId || !selectedFeeRefund._settlementId) return;
+                if (!selectedFeeRefund?._refundRequestId || !selectedFeeRefund._settlementId)
+                  return;
                 try {
-                  await confirmPayout({ id: selectedFeeRefund._refundRequestId,
+                  await confirmPayout({
+                    id: selectedFeeRefund._refundRequestId,
                     payoutId: selectedFeeRefund._settlementId,
-                    body: { idempotencyKey: settlementKey, evidenceReference: evidenceReference.trim() } }).unwrap();
+                    body: {
+                      idempotencyKey: settlementKey,
+                      evidenceReference: evidenceReference.trim(),
+                    },
+                  }).unwrap();
                   shikshaMitraToast.success({ message: 'Refund confirmed paid.' });
                   verifyDialog.onFalse();
                 } catch (error: any) {
-                  shikshaMitraToast.error({ message: error?.data?.error?.message ?? 'Could not confirm payment.' });
+                  shikshaMitraToast.error({
+                    message: error?.data?.error?.message ?? 'Could not confirm payment.',
+                  });
                 }
-              }}>Confirm paid</Button>
+              }}
+            >
+              Confirm paid
+            </Button>
           </Stack>
         </Stack>
       </CustomDialog>
@@ -582,9 +685,14 @@ const FeeRefund = () => {
             onChange={(e) => setReversalReason(e.target.value)}
             inputProps={{ maxLength: 1000 }}
           />
-          <TextField required size="small" label="Return evidence reference"
-            value={evidenceReference} onChange={(event) => setEvidenceReference(event.target.value)}
-            inputProps={{ maxLength: 500 }} />
+          <TextField
+            required
+            size="small"
+            label="Return evidence reference"
+            value={evidenceReference}
+            onChange={(event) => setEvidenceReference(event.target.value)}
+            inputProps={{ maxLength: 500 }}
+          />
           <Stack direction="row" justifyContent="flex-end" spacing={1}>
             <Button onClick={reverseDialog.onFalse} color="inherit">
               Cancel
@@ -592,7 +700,12 @@ const FeeRefund = () => {
             <Button
               color="warning"
               variant="contained"
-              disabled={isReversing || !reversalReason.trim() || !evidenceReference.trim() || !selectedFeeRefund?._settlementId}
+              disabled={
+                isReversing ||
+                !reversalReason.trim() ||
+                !evidenceReference.trim() ||
+                !selectedFeeRefund?._settlementId
+              }
               onClick={async () => {
                 if (!selectedFeeRefund?._refundRequestId || !selectedFeeRefund._settlementId)
                   return;

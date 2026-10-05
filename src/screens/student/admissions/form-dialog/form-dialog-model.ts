@@ -142,6 +142,15 @@ export function nextFieldOrder(sections: CreateUpdateAdmissionForm['sections']) 
   return order;
 }
 
+export function nextFieldDisplayOrder(sections: CreateUpdateAdmissionForm['sections']) {
+  return (
+    Math.max(
+      -1,
+      ...sections.flatMap((section) => section.fields.map((field) => field.displayOrder))
+    ) + 1
+  );
+}
+
 export function hasSystemBinding(
   sections: CreateUpdateAdmissionForm['sections'],
   bindingKey?: string

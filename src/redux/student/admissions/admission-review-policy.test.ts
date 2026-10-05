@@ -9,6 +9,28 @@ import {
 
 const json = (review: unknown) => JSON.stringify({ review });
 describe('managed review policy', () => {
+  it.each([
+    '3a23fde8-e828-85d1-26e0-55e29d527b88',
+    '3A23FDE8-E828-85D1-26E0-55E29D527B88',
+    '11111111-1111-4111-8111-111111111111',
+    null,
+  ])('accepts backend reviewer GUIDs and an unassigned reviewer: %s', (assignedReviewerId) => {
+    expect(
+      getReviewConfigurationError(json({ ...DEFAULT_REVIEW_POLICY, assignedReviewerId }))
+    ).toBeUndefined();
+  });
+
+  it.each([
+    '00000000-0000-0000-0000-000000000000',
+    '3a23fde8-e828-85d1-26e0-55e29d527b8',
+    '3a23fde8-e828-85d1-26e0-55e29d527b8z',
+    '',
+  ])('rejects empty and malformed reviewer GUIDs: %s', (assignedReviewerId) => {
+    expect(
+      getReviewConfigurationError(json({ ...DEFAULT_REVIEW_POLICY, assignedReviewerId }))
+    ).toBe('Choose a valid assigned reviewer.');
+  });
+
   it('round-trips a minimal backend-valid policy using optional defaults', () => {
     const original = JSON.stringify({
       layout: 'compact',

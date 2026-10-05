@@ -3,7 +3,7 @@ module: finance
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-02
+updated_on: 2026-10-03
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -38,6 +38,8 @@ Use these commands as the first validation set.
 | TypeScript impact                 | `npm run ts`                                                                                                                                              |
 | Collections class/division filters | `npm run test -- src/screens/finance/hooks/useFinanceAcademicFilters.test.tsx src/screens/finance/FeeCollection/Components/FeeCollectionTable.filters.test.tsx` |
 | Ledger status, charge filters and counts | `npm run test -- src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx src/screens/finance/FeeCollection/FeeCollectionComponent/feeLedgerStatus.test.ts` |
+| Selection ownership and academic-year boundaries | `npm run test -- src/screens/finance/FeeCollection/FeeCollectionComponent/feeLedgerSelection.test.ts src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx` |
+| Receiving-bank display labels | `npm run test -- src/redux/finance/bankAccountOptionLabel.test.ts src/redux/finance/financeRoutingApi.bankAccounts.test.ts` |
 | Policy default controls and lifecycle | `npm run test -- src/screens/finance/policies/components/DefaultPolicyToggle.test.tsx src/screens/finance/policies/components/PolicyDefaultLifecycle.test.tsx` |
 | Fee Structure default lookups | `npm run test -- src/screens/finance/settings/FeeStructure/hooks/useFeeStructureLookups.test.tsx src/screens/finance/settings/FeeStructure/feeStructureModel.test.ts` |
 | Collections additional charges | `npm run test -- src/redux/feeCollection/feeCollection.charges.test.ts src/screens/finance/FeeCollection/Components/FeeCollectionTable.charges.test.tsx src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx` |
@@ -67,6 +69,22 @@ Finish UI verification with the Codex in-app browser: collect principal alone, r
 
 ## Policy defaults and ledger browser checks
 
+For selection regressions, open the existing `fee-collection-late-fees` fixture and
+choose **Selection regression** before opening Diya's collection dialog.
+The June–May academic year has June–October tuition and Quarter 1 transport paid.
+Verify one click selects 10 installments for All Pending, five unpaid charges for
+All Charges, two installments for First 6 Month, and eight for Last 6 Month.
+Verify overlapping filters, independent unticking, manual row edits, clearing all,
+both grouping views, and display filters preserve consistent selected counts and totals.
+Choose Cheque and inspect the receiving-bank options: malformed `SBI - null` and
+`AXIS - undefined` labels must render only their bank names; masked and named account
+labels must remain usable in both the dropdown and its selected value.
+This fixture supplies synthetic API responses through the actual client/components;
+it does not verify deployed student data or post backend payments.
+Also verify a collector with academic-year dates and no Fee Structure settings
+access can use both six-month controls, and shortened/extended academic years use
+their actual first and last six calendar months.
+
 Use the in-app browser with the isolated fixtures under `e2e/fixtures/fee-structure` and
 `e2e/fixtures/fee-collection-late-fees`; each uses a separate dependency cache.
 Verify default Collection, Proration and Refund selections on a new structure, a manual
@@ -84,3 +102,12 @@ The active assignment drawer, typed client, permissions, retries and verificatio
 ## Charge lifecycle regression checks
 
 Run `npm run test -- src/screens/finance/ChargesManagement src/redux/feeCollection/feeCollection.charges.test.ts` for four-tab counts, server status parameters, pending-only decision actions, field validation and charge cache refresh after collection/waiver. In the in-app browser, open `/finance/charge-management`, switch each tab, inspect detail balances and approval status, and verify the server status after final settlement and reversal. Browser checks are unverified when the browser connection cannot be established.
+
+## Income, expense, and bank routing
+
+The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).
+
+
+## Variable fee assignment checks
+
+See [variable fee assignment](./references/variable-fee-assignment.md) for focused suites and the current workflow acceptance checks.

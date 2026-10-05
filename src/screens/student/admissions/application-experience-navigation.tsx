@@ -13,7 +13,10 @@ const ITEMS: { value: ApplicationExperienceView; label: string; icon: string }[]
 
 export function ApplicationExperienceNavigation({ value }: { value: ApplicationExperienceView }) {
   return (
-    <Paper variant="outlined" sx={{ flexShrink: 0, borderRadius: 1.5 }}>
+    <Paper
+      variant="outlined"
+      sx={{ flexShrink: 0, borderRadius: 2, overflow: 'hidden', bgcolor: 'background.paper' }}
+    >
       <CustomTabs
         value={value}
         variant="scrollable"

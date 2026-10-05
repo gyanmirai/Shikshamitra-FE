@@ -9,6 +9,8 @@ export interface IUpdateChargeFormValues {
   chargeId: string;
   chargeName: string;
   chargeCategoryId: string;
+  incomeCategoryId: string;
+  receivingBankAccountId: string;
   chargeCategoryName: string;
   purposeDescription: string;
   amount: number | string;
@@ -31,7 +33,7 @@ export interface IUpdateChargeFormValues {
   }>;
 
   // Selection state
-	selectionMode: 'selected' | 'all';
+  selectionMode: 'selected' | 'all';
 }
 
 /**
@@ -41,6 +43,8 @@ export interface IChargeDetailResponse {
   chargeId: string;
   chargeName: string;
   chargeCategoryId: string;
+  incomeCategoryId: string;
+  receivingBankAccountId: string;
   categoryName: string;
   purposeDescription: string;
   amount: number;
@@ -141,6 +145,8 @@ export interface IUpdateRestrictions {
 export interface IChargeUpdatePayload {
   chargeId: string;
   chargeCategoryId: string;
+  incomeCategoryId: string;
+  receivingBankAccountId: string;
   purposeDescription: string;
   amount: number;
   dueDate: string; // ISO string

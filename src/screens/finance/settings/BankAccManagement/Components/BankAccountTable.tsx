@@ -3,14 +3,14 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { LoadingButton } from '@mui/lab';
 import React, { useMemo, useState } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { Box, Chip, Stack, Switch, TextField, Typography } from '@mui/material';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
+import { useAccountSettingPermissions } from 'src/hooks/useAccountSettingPermissions';
 import AccountSettingVersionDialog from 'src/screens/finance/settings/components/AccountSettingVersionDialog';
 import {
   useGetBankAccountVersionsQuery,
@@ -130,12 +130,6 @@ const BankAccountTable: React.FC<IBankAccountTableProps> = ({
             {value}
           </Typography>
         ),
-      },
-      {
-        id: 'accountHeadName',
-        label: 'Asset Account Head',
-        minWidth: 160,
-        render: (value) => value || 'Migration required',
       },
       {
         id: 'purpose',

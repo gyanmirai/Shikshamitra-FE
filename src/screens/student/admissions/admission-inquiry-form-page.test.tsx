@@ -199,15 +199,16 @@ describe('New inquiry form', () => {
     expect(shikshaMitraToast.warning).toHaveBeenCalledWith({ message: preferredClassMessage });
   });
 
-  it('shows the saved-policy source detail requirement', () => {
+  it('keeps source details optional even when a saved policy required them', () => {
     const fixture = controller({ policy: { requireSourceDetailFor: [0] } });
     vi.mocked(useAdmissionInquiryDialog).mockReturnValue(
       fixture as unknown as ReturnType<typeof useAdmissionInquiryDialog>
     );
     render(<AdmissionInquiryFormPage />);
 
-    expect(screen.getByRole('textbox', { name: 'Source details' })).toBeRequired();
-    expect(screen.getByText('Enter the website, event, person, or campaign that led to this inquiry.'))
-      .toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Source details' })).not.toBeRequired();
+    expect(
+      screen.getByText('Optional context to help staff trace this inquiry.')
+    ).toBeInTheDocument();
   });
 });

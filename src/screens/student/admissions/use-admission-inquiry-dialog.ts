@@ -17,6 +17,7 @@ import {
 import {
   DEFAULT_INQUIRY_POLICY,
   readAdmissionInquiryPolicy,
+  withStandardInquiryBehavior,
 } from 'src/redux/student/admissions/admission-inquiry-policy';
 import {
   useGetAdmissionOfferingQuery,
@@ -137,7 +138,10 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     (item) => item.id === offeringDetail?.inquiryIntakeProfileId
   );
   const policy = profile
-    ? { ...DEFAULT_INQUIRY_POLICY, ...JSON.parse(profile.configurationJson) }
+    ? withStandardInquiryBehavior({
+        ...DEFAULT_INQUIRY_POLICY,
+        ...JSON.parse(profile.configurationJson),
+      })
     : readAdmissionInquiryPolicy(inquiryStage?.configurationJson);
   const allowedSources = policy?.allowedSources.length
     ? policy.allowedSources

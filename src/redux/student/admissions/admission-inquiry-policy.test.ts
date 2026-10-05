@@ -31,7 +31,6 @@ describe('managed inquiry policy', () => {
     { qualificationDueInDays: 366 },
     { followUpDueInDays: 91 },
     { maxOpenFollowUps: 21 },
-    { allowedSources: [0], requireSourceDetailFor: [3] },
     { qualificationChecklist: [{ code: 'bad code', name: 'Identity', required: true }] },
   ])('rejects invalid managed settings %j', (change) => {
     expect(
@@ -60,5 +59,30 @@ describe('managed inquiry policy', () => {
     const value = json({ ...DEFAULT_INQUIRY_POLICY, allowedSources: null });
     expect(getInquiryConfigurationError(value)).toContain('preserved');
     expect(() => writeAdmissionInquiryPolicy(value, DEFAULT_INQUIRY_POLICY)).toThrow('unsupported');
+  });
+
+  it('retires legacy intake gates without changing timing, assignment, or allowed sources', () => {
+    const original = json({
+      ...DEFAULT_INQUIRY_POLICY,
+      applicationStartRequirement: 2,
+      duplicateRule: 2,
+      requireGuardianEmail: true,
+      requireApplicantDateOfBirth: true,
+      allowedSources: [0],
+      requireSourceDetailFor: [3],
+      firstContactDueInHours: 12,
+    });
+    const policy = readAdmissionInquiryPolicy(original)!;
+    expect(policy).toMatchObject({
+      applicationStartRequirement: 0,
+      duplicateRule: 1,
+      requireGuardianEmail: false,
+      requireApplicantDateOfBirth: false,
+      requireSourceDetailFor: [],
+      allowedSources: [0],
+      firstContactDueInHours: 12,
+    });
+    expect(getInquiryConfigurationError(original)).toBeUndefined();
+    expect(JSON.parse(writeAdmissionInquiryPolicy(original, policy)).inquiry).toMatchObject(policy);
   });
 });
