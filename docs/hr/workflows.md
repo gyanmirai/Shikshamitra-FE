@@ -105,14 +105,31 @@ Custom report empty states render directly, so the reports center shows one icon
 
 The English-only `/hr/dashboard` requires the exact `HR.Dashboard.View` grant for every role.
 The shared HR heading and inline breadcrumbs remain visible during loading, empty results, failed reads, and refreshes.
-Six staff signals precede the searchable staff overview, Needs attention, seven-day attendance chart, and permitted saved payroll cycle counts.
-Date defaults to today in IST, and date, group, stage, department, shift, search, status, sorting, page, and page size remain in the URL.
+Date, authorized scope, freshness, six staff signals, compact attention shortcuts, filters, and the searchable staff overview precede seven-day attendance and permitted saved payroll cycle counts.
+Date defaults to today in IST, with Previous day and Today shortcuts that preserve selections and reset pagination.
+Date, group, stage, department, shift, search, status, sorting, page, page size, and optional `trendView=chart|counts` remain in the URL.
+The default trend view is Chart, preserving existing dashboard URLs.
 Summary signals cover date and staff filters, while search and status narrow only the staff list.
+Desktop shows group and stage controls inline, while the right-side filter drawer contains all four staff filters.
+Below the desktop breakpoint, all staff filters move into the drawer.
+Apply commits draft selections together, Reset selections clears only the draft, and Cancel or dismissal discards unapplied edits.
+Applied filter chips can be removed individually, and Clear filters preserves date, sorting, page size, and chart view.
+Unavailable selected options remain visibly flagged until explicitly removed, without widening the selection.
+Unmarked attendance remains neutral and does not enter the attention strip.
+Nonzero setup, review, and current leave-request items appear separately without summing overlapping counts.
+Attention shortcuts apply their intended status deterministically and focus the staff heading, while metric buttons retain toggle behavior.
 Staff pagination defaults to 25 with 50 and 100 options, and mobile rows expand to show shift, stages, punches, review explanations, and actions.
+Desktop stage summaries show the selected assignment first or the first alphabetically, with remaining assignments in a keyboard-accessible popover.
+Attendance source and punch details expand within rows, and permitted desktop actions remain sticky.
+The status selector sits beside the staff heading, search remains in the shared table toolbar, and mobile sorting uses a labelled menu.
+The seven-day chart highlights the selected date and shows explicit Present and total counts from overview data.
+The Counts view displays all seven statuses and total staff in a compact table with contained horizontal scrolling.
+Saved payroll dates and times convert the complete timestamp to IST together.
 Attendance links retain the employee and selected date, and profile links open the existing employee panel.
 Mark attendance and leave decisions use their existing authorized workflows.
 Operational reads refresh every 60 seconds while focused, on focus return, after relevant invalidations, and through the read-only Refresh button.
 The UI displays the backend generation timestamp and marks retained data stale after a refresh failure.
+Refresh progress reserves space, and screen-reader announcements cover explicit selection and refresh results without repeating background polling updates.
 Identity, organization, or grant changes remount the dashboard with a separate cache identity and zero unused cache retention.
 Role names never substitute for a permission, and backend capabilities further constrain every displayed section.
 Backend attendance definitions and authorization remain canonical in [HR API documentation](../../../Shikshamitra-BE/docs/modules/hr/api.md#operational-hr-dashboard).

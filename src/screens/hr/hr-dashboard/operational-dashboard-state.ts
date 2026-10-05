@@ -49,6 +49,11 @@ export const formatSchoolTime = (value: string) =>
     minute: '2-digit',
   }).format(new Date(value));
 export const formatCount = (value: number) => new Intl.NumberFormat('en-IN').format(value);
+export const previousSchoolDay = (date: string) => {
+  const day = new Date(`${date}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() - 1);
+  return day.toISOString().slice(0, 10);
+};
 export const isDashboardAccessError = (error: unknown) =>
   typeof error === 'object' &&
   error !== null &&
@@ -82,6 +87,7 @@ export const parseDashboardState = (params: URLSearchParams, today = indiaToday(
   const requestedSort = params.get('sort') || 'name';
   return {
     date,
+    trendView: params.get('trendView') === 'counts' ? ('counts' as const) : ('chart' as const),
     status: status as DailyStaffStatus | 'Review' | '',
     group: ['teaching', 'nonTeaching'].includes(params.get('group') || '')
       ? params.get('group')!

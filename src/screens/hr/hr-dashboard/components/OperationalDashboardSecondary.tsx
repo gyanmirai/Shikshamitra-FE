@@ -4,40 +4,45 @@ import type { OperationalOverview } from 'src/redux/hr/hrOperationalDashboardApi
 
 import { hrPaths } from 'src/constants/hr-menus';
 import { RouterLink } from 'src/routes/components';
-import { Box, Card, Stack, Alert, Button, Tooltip, Divider, Typography } from '@mui/material';
+import {
+  Box,
+  Card,
+  Stack,
+  Alert,
+  Table,
+  Button,
+  Tooltip,
+  Divider,
+  TableRow,
+  TableBody,
+  TableCell,
+  TableHead,
+  Typography,
+  ToggleButton,
+  TableContainer,
+  ToggleButtonGroup,
+} from '@mui/material';
 
 import {
   dailyStatus,
   formatCount,
+  formatUpdatedAt,
   formatSchoolDate,
-  formatSchoolTime,
 } from '../operational-dashboard-state';
 
 type Props = {
   data: OperationalOverview;
-  canViewStaff: boolean;
-  canViewLeave: boolean;
   canViewPayroll: boolean;
   canOpenPayroll: boolean;
   canViewAttendance: boolean;
-  onStatus: (status: string) => void;
+  trendView: 'chart' | 'counts';
+  onView: (view: 'chart' | 'counts') => void;
   onDate: (date: string) => void;
 };
 
 export default function OperationalDashboardSecondary(props: Props) {
-  const {
-    data,
-    canViewStaff,
-    canViewLeave,
-    canViewPayroll,
-    canOpenPayroll,
-    canViewAttendance,
-    onStatus,
-    onDate,
-  } = props;
-  const attention = data.attention.filter((item) =>
-    item.kind === 'Leave' ? canViewLeave : canViewAttendance
-  );
+  const { data, canViewPayroll, canOpenPayroll, canViewAttendance, trendView, onView, onDate } =
+    props;
   const chartColors = {
     present: 'success.main',
     absent: 'error.main',
@@ -49,59 +54,6 @@ export default function OperationalDashboardSecondary(props: Props) {
   };
   return (
     <Stack spacing={2.5}>
-      <Card component="section" aria-label="Needs attention" sx={{ p: 2.5 }}>
-        <Stack spacing={2}>
-          <Typography variant="h6" component="h2">
-            Needs attention
-          </Typography>
-          {attention.length === 0 ? (
-            <Typography variant="body2" color="text.secondary">
-              {data.attendanceState === 'Available'
-                ? 'No outstanding items in the available dashboard sections.'
-                : 'Attention items are unavailable for your current access or data state.'}
-            </Typography>
-          ) : (
-            attention.map((item) => (
-              <Stack
-                key={item.kind}
-                direction="row"
-                spacing={2}
-                alignItems="center"
-                justifyContent="space-between"
-              >
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle2">{item.title}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {formatCount(item.count)}{' '}
-                    {item.kind === 'Leave'
-                      ? 'pending requests now'
-                      : 'staff in the selected date and scope'}
-                  </Typography>
-                </Box>
-                {item.action === 'Leave' ? (
-                  <Button
-                    component={RouterLink}
-                    href={hrPaths.leaveManagement.approvals}
-                    size="small"
-                  >
-                    Open requests
-                  </Button>
-                ) : canViewStaff ? (
-                  <Button size="small" onClick={() => onStatus(item.action)}>
-                    View staff
-                  </Button>
-                ) : null}
-              </Stack>
-            ))
-          )}
-          {canViewLeave && ['Failed', 'Unavailable'].includes(data.leaveState) ? (
-            <Alert severity="info">
-              Pending leave requests are unavailable. Open Leave Center to review your access and
-              requests.
-            </Alert>
-          ) : null}
-        </Stack>
-      </Card>
       <Box
         sx={{
           display: 'grid',
@@ -118,90 +70,184 @@ export default function OperationalDashboardSecondary(props: Props) {
             aria-label="Seven-day staff attendance"
             sx={{ p: 2.5, minWidth: 0 }}
           >
-            <Typography variant="h6" component="h2">
-              Staff attendance over seven days
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={1}
+              useFlexGap
+              flexWrap="wrap"
+            >
+              <Typography variant="h6" component="h2">
+                Seven-day attendance
+              </Typography>
+              <ToggleButtonGroup
+                size="small"
+                exclusive
+                value={trendView}
+                onChange={(_, next) => {
+                  if (next) onView(next);
+                }}
+                aria-label="Attendance trend view"
+              >
+                <ToggleButton value="chart">Chart</ToggleButton>
+                <ToggleButton value="counts">Counts</ToggleButton>
+              </ToggleButtonGroup>
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              Daily counts for eligible staff in the selected filters.
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Daily staff counts, using each date’s eligible staff and calendar.
-            </Typography>
-            <Stack spacing={1.5} sx={{ mt: 2 }}>
-              {data.trend.map((day) => (
-                <Tooltip
-                  key={day.date}
-                  title={`${formatSchoolDate(day.date)}: ${day.present} present, ${day.absent} absent, ${day.onLeave} on leave, ${day.halfDay} half day, ${day.notMarked} not marked, ${day.notScheduled} not scheduled, ${day.needsSetup} need setup`}
-                >
-                  <Box
-                    component="button"
-                    onClick={() => onDate(day.date)}
-                    aria-label={`View ${formatSchoolDate(day.date)}: ${day.present} present, ${day.absent} absent, ${day.onLeave} on leave, ${day.halfDay} half day, ${day.notMarked} not marked, ${day.notScheduled} not scheduled, ${day.needsSetup} need setup`}
-                    sx={{
-                      display: 'flex',
-                      gap: 1.5,
-                      alignItems: 'center',
-                      width: 1,
-                      py: 0.5,
-                      px: 0,
-                      border: 0,
-                      bgcolor: 'transparent',
-                      color: 'text.primary',
-                      cursor: 'pointer',
-                      '&:focus-visible': {
-                        outline: '2px solid',
-                        outlineColor: 'primary.main',
-                        outlineOffset: 3,
-                      },
-                    }}
-                  >
-                    <Typography variant="caption" sx={{ flex: '0 0 56px', textAlign: 'left' }}>
-                      {formatSchoolDate(day.date).split(' ').slice(0, 2).join(' ')}
-                    </Typography>
-                    <Stack
-                      direction="row"
-                      sx={{
-                        flex: 1,
-                        height: 14,
-                        overflow: 'hidden',
-                        borderRadius: 0.5,
-                        bgcolor: 'action.hover',
-                      }}
-                    >
-                      {Object.entries(chartColors).map(([key, color]) => (
-                        <Box
-                          key={key}
-                          sx={{
-                            width: `${day.staffCount ? (Number(day[key as keyof typeof day]) / day.staffCount) * 100 : 0}%`,
-                            bgcolor: color,
-                          }}
-                        />
+            {trendView === 'counts' ? (
+              <TableContainer
+                tabIndex={0}
+                role="region"
+                aria-label="Seven-day attendance counts, scroll horizontally for all statuses"
+                sx={{
+                  mt: 2,
+                  overflowX: 'auto',
+                  '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' },
+                }}
+              >
+                <Table size="small" aria-label="Seven-day attendance counts" sx={{ minWidth: 790 }}>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Date</TableCell>
+                      {Object.values(dailyStatus).map((item) => (
+                        <TableCell key={item.label} align="right">
+                          {item.label}
+                        </TableCell>
                       ))}
-                    </Stack>
-                    <Typography variant="caption" sx={{ minWidth: 24, textAlign: 'right' }}>
-                      {formatCount(day.staffCount)}
-                    </Typography>
-                  </Box>
-                </Tooltip>
-              ))}
-            </Stack>
-            <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1.5} sx={{ mt: 2 }}>
-              {Object.entries(dailyStatus).map(([status, item]) => (
-                <Stack key={status} direction="row" spacing={0.5} alignItems="center">
-                  <Box
-                    sx={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 0.25,
-                      bgcolor:
-                        chartColors[
-                          `${status[0].toLowerCase()}${status.slice(1)}` as keyof typeof chartColors
-                        ],
-                    }}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    {item.label}
-                  </Typography>
+                      <TableCell align="right">Total staff</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {data.trend.map((day) => (
+                      <TableRow key={day.date} selected={day.date === data.date}>
+                        <TableCell component="th" scope="row">
+                          <Button
+                            size="small"
+                            onClick={() => onDate(day.date)}
+                            aria-label={`View ${formatSchoolDate(day.date)}`}
+                            aria-pressed={day.date === data.date}
+                          >
+                            {formatSchoolDate(day.date)}
+                          </Button>
+                        </TableCell>
+                        {Object.keys(chartColors).map((key) => (
+                          <TableCell
+                            key={key}
+                            align="right"
+                            sx={{ fontVariantNumeric: 'tabular-nums' }}
+                          >
+                            {formatCount(Number(day[key as keyof typeof day]))}
+                          </TableCell>
+                        ))}
+                        <TableCell
+                          align="right"
+                          sx={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}
+                        >
+                          {formatCount(day.staffCount)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            ) : (
+              <>
+                <Stack spacing={0.75} sx={{ mt: 2 }}>
+                  {data.trend.map((day) => {
+                    const description = `${formatSchoolDate(day.date)}: ${day.present} present, ${day.absent} absent, ${day.onLeave} on leave, ${day.halfDay} half day, ${day.notMarked} not marked, ${day.notScheduled} not scheduled, ${day.needsSetup} need setup, ${day.staffCount} total staff`;
+                    return (
+                      <Tooltip key={day.date} title={description}>
+                        <Box
+                          component="button"
+                          onClick={() => onDate(day.date)}
+                          aria-label={`View ${description}`}
+                          aria-pressed={day.date === data.date}
+                          sx={{
+                            display: 'flex',
+                            gap: 1,
+                            alignItems: 'center',
+                            width: 1,
+                            p: 0.75,
+                            border: 1,
+                            borderColor: day.date === data.date ? 'primary.main' : 'transparent',
+                            borderRadius: 0.75,
+                            bgcolor: day.date === data.date ? 'action.selected' : 'transparent',
+                            color: 'text.primary',
+                            cursor: 'pointer',
+                            '&:hover': { bgcolor: 'action.hover' },
+                            '&:focus-visible': {
+                              outline: '2px solid',
+                              outlineColor: 'primary.main',
+                              outlineOffset: 2,
+                            },
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{ flex: '0 0 44px', textAlign: 'left' }}
+                          >
+                            {formatSchoolDate(day.date).split(' ').slice(0, 2).join(' ')}
+                          </Typography>
+                          <Stack
+                            direction="row"
+                            sx={{
+                              flex: 1,
+                              height: 14,
+                              overflow: 'hidden',
+                              borderRadius: 0.5,
+                              bgcolor: 'action.hover',
+                            }}
+                          >
+                            {Object.entries(chartColors).map(([key, color]) => (
+                              <Box
+                                key={key}
+                                sx={{
+                                  width: `${day.staffCount ? (Number(day[key as keyof typeof day]) / day.staffCount) * 100 : 0}%`,
+                                  bgcolor: color,
+                                }}
+                              />
+                            ))}
+                          </Stack>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              textAlign: 'right',
+                              fontVariantNumeric: 'tabular-nums',
+                              flex: '0 0 104px',
+                            }}
+                          >
+                            {formatCount(day.present)} present / {formatCount(day.staffCount)} total
+                          </Typography>
+                        </Box>
+                      </Tooltip>
+                    );
+                  })}
                 </Stack>
-              ))}
-            </Stack>
+                <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1.5} sx={{ mt: 2 }}>
+                  {Object.entries(dailyStatus).map(([status, item]) => (
+                    <Stack key={status} direction="row" spacing={0.5} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: 0.25,
+                          bgcolor:
+                            chartColors[
+                              `${status[0].toLowerCase()}${status.slice(1)}` as keyof typeof chartColors
+                            ],
+                        }}
+                      />
+                      <Typography variant="caption" color="text.secondary">
+                        {item.label}
+                      </Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              </>
+            )}
           </Card>
         ) : null}
         {canViewPayroll ? (
@@ -239,8 +285,7 @@ export default function OperationalDashboardSecondary(props: Props) {
                   ))}
                   {data.payroll.lastUpdatedAt ? (
                     <Typography variant="caption" color="text.secondary">
-                      Saved {formatSchoolDate(data.payroll.lastUpdatedAt.slice(0, 10))} at{' '}
-                      {formatSchoolTime(data.payroll.lastUpdatedAt)} IST
+                      Saved {formatUpdatedAt(data.payroll.lastUpdatedAt)} IST
                     </Typography>
                   ) : null}
                 </>

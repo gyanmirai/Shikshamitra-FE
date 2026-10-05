@@ -61,7 +61,10 @@ npm run build
 ## Coverage map
 
 For the operational dashboard, run `operational-dashboard-state.test.ts`, the permission and role catalogue tests, and `e2e/hr/hr-dashboard-standard-design.spec.ts`.
-The browser suite covers status filtering, URL reload, read-only refresh, long names, unavailable data, real empty results, exact-grant denial for an admin role, four viewport widths, and light/dark themes.
+The browser suite covers status filtering, deterministic attention shortcuts, IST payroll timestamps, drawer Apply/Cancel/Reset, filter chips, unavailable selections, date shortcuts, chart/count reconciliation, stage assignments, and server pagination beyond 100 staff.
+It also covers read-only refresh, long names, unavailable data, real empty results, revoked access, exact-grant denial for an admin role, four viewport widths, and light/dark themes.
+The 390 by 844 viewport check requires the first staff name and status to appear before scrolling with normal data and no actionable exceptions.
+Keyboard checks cover drawer and popover dismissal, restored focus, attention shortcuts, mobile sorting, reduced motion, and contained horizontal scrolling.
 Finish with signed-in local Codex browser checks against the real backend for HR, principal, and restricted supervisor access.
 Mocked browser contracts supplement backend scope and classification tests rather than proving database authorization.
 

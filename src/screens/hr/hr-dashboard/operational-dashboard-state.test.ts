@@ -1,10 +1,29 @@
 import { it, expect, describe } from 'vitest';
 
-import { indiaToday, attendanceHref, parseDashboardState } from './operational-dashboard-state';
+import {
+  indiaToday,
+  attendanceHref,
+  formatUpdatedAt,
+  previousSchoolDay,
+  parseDashboardState,
+} from './operational-dashboard-state';
 
 describe('operational dashboard URL state', () => {
   it('uses IST when the UTC date is still the previous day', () => {
     expect(indiaToday(new Date('2026-10-01T19:00:00Z'))).toBe('2026-10-02');
+    expect(formatUpdatedAt('2026-10-01T22:45:00Z')).toBe('2 Oct 2026, 4:15 am');
+  });
+
+  it('moves to the previous calendar day across month and year boundaries', () => {
+    expect(previousSchoolDay('2026-10-01')).toBe('2026-09-30');
+    expect(previousSchoolDay('2026-01-01')).toBe('2025-12-31');
+    expect(previousSchoolDay('2024-03-01')).toBe('2024-02-29');
+  });
+
+  it('supports the counts view while preserving old dashboard URLs', () => {
+    expect(parseDashboardState(new URLSearchParams()).trendView).toBe('chart');
+    expect(parseDashboardState(new URLSearchParams('trendView=counts')).trendView).toBe('counts');
+    expect(parseDashboardState(new URLSearchParams('trendView=unknown')).trendView).toBe('chart');
   });
 
   it('preserves staff filters, page, search and sort on reload', () => {
