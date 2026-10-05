@@ -18,6 +18,7 @@ type RubricCriterionCardProps = {
   value: CriterionEvaluationValue;
   onMarksChange: (criterionId: string, marks: string) => void;
   onCommentsChange: (criterionId: string, comments: string) => void;
+  showFeedback?: boolean;
   readOnly?: boolean;
   compact?: boolean;
   isRatingScale?: boolean;
@@ -30,6 +31,7 @@ const RubricCriterionCard = ({
   value,
   onMarksChange,
   onCommentsChange,
+  showFeedback = true,
   readOnly,
   compact = false,
   isRatingScale = false,
@@ -146,17 +148,19 @@ const RubricCriterionCard = ({
           isRatingScale={isRatingScale}
         />
 
-        <TextField
-          fullWidth
-          size="small"
-          disabled={readOnly}
-          label={`${criterion.title} feedback (optional)`}
-          value={value.comments}
-          onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
-          placeholder="Add a concise note about this criterion"
-          multiline
-          minRows={2}
-        />
+        {showFeedback && (
+          <TextField
+            fullWidth
+            size="small"
+            disabled={readOnly}
+            label={`${criterion.title} feedback (optional)`}
+            value={value.comments}
+            onChange={(event) => onCommentsChange(criterion.id, event.target.value)}
+            placeholder="Add a concise note about this criterion"
+            multiline
+            minRows={2}
+          />
+        )}
       </Stack>
     </Card>
   );

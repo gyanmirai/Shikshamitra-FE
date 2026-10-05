@@ -22,18 +22,19 @@ const RubricEvaluationPanel = React.forwardRef<
 >((props, ref) => {
   const evaluation = useRubricEvaluation(props);
   const compact = props.compactLayout ?? false;
+  const showRubricFeedback = Boolean(props.readOnly);
   const readOnly =
     props.readOnly || evaluation.isLocked || evaluation.isLoading || evaluation.hasEvaluationError;
   const { onStateChange, studentRow } = props;
   const scoringGuidance = evaluation.activeRubric?.scoringModel === RubricScoringModel.Checklist
-    ? 'Mark each item Met or Not met and add focused feedback.'
+    ? 'Mark each item Met or Not met.'
     : evaluation.activeRubric?.scoringModel === RubricScoringModel.WeightedPercentage && !evaluation.activeRubric.performanceLevels.length
       ? 'Enter achievement from 0 to 100% for each weighted criterion.'
       : evaluation.activeRubric?.scoringModel === RubricScoringModel.PointsBased && !evaluation.activeRubric.performanceLevels.length
-        ? 'Enter points earned for each criterion and add focused feedback.'
+        ? 'Enter points earned for each criterion.'
         : evaluation.activeRubric?.scoringModel === RubricScoringModel.RatingScale
-          ? 'Choose a rating for each criterion and add focused feedback.'
-          : 'Select a performance level and add focused feedback for every criterion.';
+          ? 'Choose a rating for each criterion.'
+          : 'Select a performance level for every criterion.';
 
   React.useEffect(() => {
     onStateChange?.({
@@ -137,20 +138,23 @@ const RubricEvaluationPanel = React.forwardRef<
               values={evaluation.criterionValues}
               onMarksChange={evaluation.setCriterionMarks}
               onCommentsChange={evaluation.setCriterionComments}
+              showFeedback={showRubricFeedback}
               readOnly={readOnly}
               compact={compact}
             />
           )}
 
-          <RubricScoreSummary
-            totalMarks={evaluation.totalMarks}
-            maxMarks={evaluation.activeRubric.totalMarks}
-            scoringModel={evaluation.activeRubric.scoringModel}
-            remarks={evaluation.remarks}
-            onRemarksChange={evaluation.setRemarks}
-            readOnly={readOnly}
-            compact={compact}
-          />
+          {showRubricFeedback && (
+            <RubricScoreSummary
+              totalMarks={evaluation.totalMarks}
+              maxMarks={evaluation.activeRubric.totalMarks}
+              scoringModel={evaluation.activeRubric.scoringModel}
+              remarks={evaluation.remarks}
+              onRemarksChange={evaluation.setRemarks}
+              readOnly={readOnly}
+              compact={compact}
+            />
+          )}
         </Stack>
       )}
     </Card>
