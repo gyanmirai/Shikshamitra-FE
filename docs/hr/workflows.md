@@ -20,9 +20,9 @@ Use this map to find the first screen and client:
 | Workflow                   | Screen entry                                                                | Main client                                  |
 | -------------------------- | --------------------------------------------------------------------------- | -------------------------------------------- |
 | Employee onboarding        | `/hr/employee/onboarding`                                                   | `employeeOnboardingApi.ts`                   |
-| HR leadership dashboard    | `/hr/dashboard`                                                             | `hrDashboardApi.ts`, `leaveApi.ts`           |
+| HR leadership dashboard    | `/hr/dashboard`                                                             | `hrOperationalDashboardApi.ts`           |
 | Employee profile update    | Employee list and profile tabs                                              | `employeeApi.ts`                             |
-| Employee profile dashboard | Employee profile Dashboard tab and self-service HR dashboard fallback       | `employeeApi.ts`                             |
+| Employee profile dashboard | Employee profile Dashboard tab       | `employeeApi.ts`                             |
 | Employee documents         | Employee profile documents tab                                              | `employeeApi.ts`                             |
 | I-card generation          | `/hr/i-card`                                                                | `employee-icard-template-api.ts`             |
 | Payroll component setup    | `/hr/payroll/setting/*`                                                     | `employee-payroll-api.ts`                    |
@@ -98,10 +98,6 @@ Policy tables query current and archived records independently with server-side 
 The leave-policy workspace can restore an archived policy as a draft, while employee and assignment selectors continue to request active policies only.
 Policy audit entries omit unchanged values and missing editor metadata, render weekly-off numbers as weekday names, and show semantic holiday changes and real holiday-summary counts.
 Audit events show the first eight semantic changes and provide a Show N more control without discarding the remaining differences.
-The HR dashboard New Joiners metric opens a selected-month employee summary before the user chooses whether to open the full directory.
-The HR dashboard excludes approved leave without stored attendance from the missing-attendance count and attendance-rate denominator.
-Approved half-day leave removes one-half attendance unit while the unrecorded remainder stays visible as missing attendance.
-Stored attendance overrides a same-day approved-leave overlay in HR dashboard totals and trends.
 The reports center filters export history by requested-date presets or a custom range and offers removal only for an owned failed export when the user has delete permission.
 An inverted custom export-history range pauses the query instead of loading unfiltered history.
 Changing export-history filters clears open details and delete confirmation state, hides prior-query rows, and disables row actions until the current response arrives.
@@ -110,16 +106,30 @@ Custom report empty states render directly, so the reports center shows one icon
 
 ## HR leadership dashboard behavior
 
-The permissioned `/hr/dashboard` keeps the standard HR Dashboard heading and stacked breadcrumb visible while its saved snapshot is loading, empty, stale, refreshing, or failed.
-The page presents one summary surface followed by Action Center and Workforce Overview, Attendance Overview and Payroll Readiness, and a full-width People Updates section.
-Summary metrics stay read-only when a user lacks the destination permission, while permitted metrics use normal links to employee, attendance, leave, and payroll workflows.
-The dashboard omits Onboard Employee and Reports shortcuts because those destinations remain available through HR navigation.
-Refresh is the only page-header control and freshness metadata appears below the title without a separate bordered surface.
-Action Center combines deterministic insights with recent leave approvals and keeps explicit approval or rejection confirmation, required rejection remarks, mutation feedback, and the permission-aware View All link.
-Attendance charts include a text summary of each plotted day, and long employee or insight text wraps without causing page-level horizontal overflow.
-The dashboard uses opaque neutral surfaces, low elevation, and spacing for structure, with separators reserved for repeated rows in dialogs.
-Semantic colors remain limited to statuses, icons, progress, chart series, and primary actions.
-Users without the permissioned HR dashboard continue to receive the employee self-service profile dashboard fallback.
+The English-only `/hr/dashboard` requires the exact `HR.Dashboard.View` grant for every role.
+The shared HR heading and breadcrumbs remain visible during loading, empty results, failed reads, and refreshes.
+Workforce, Leave approvals, Onboarding, and Appraisals form the primary module grid, followed by one seven-day attendance chart and saved payroll progress.
+The grid uses four columns on desktop, two on tablet, and one on mobile, with neutral leading icons, outlined MUI Paper surfaces, theme typography, and consistent section spacing.
+Module details use aligned labels and values, and workflow links use the shared small outlined button style without local height or padding overrides.
+Attendance day selectors retain 44 px touch targets and visible keyboard focus, with one shared Present / total explanation beneath the graph.
+Staff Directory and existing module workflows own detailed tables and decisions.
+Current scope, current IST date, and the backend generation timestamp appear above the grid.
+Only the attendance date changes through the date field, Previous day, and Today controls, with its selected date retained in the URL.
+All other module summaries remain current even when attendance shows a historical date.
+Obsolete staff-filter and chart-view URL keys are removed with a dismissible explanation.
+Scoped onboarding shows Unavailable with its backend explanation and no shortcut.
+Unavailable and failed summaries do not display zero, while real empty results do.
+Attendance day buttons expose all seven counts through keyboard-accessible descriptions and tooltips.
+Unmarked attendance stays neutral, and setup and review counts remain separate.
+Payroll progress uses saved counts, and its complete saved timestamp converts to IST before formatting.
+Refresh performs a read, reserves progress space, and announces explicit results without announcing each background poll.
+Operational reads refresh every 60 seconds while focused, on focus return, and after relevant cache invalidations.
+Failed refreshes retain the last successful data with a stale label, while access denial clears displayed data.
+Identity, tenant, or grant changes remount the dashboard with a separate cache identity and zero unused cache retention.
+Module shortcuts use existing authorized workflows, and the appraisal shortcut opens all cycles through `cycleId=all`.
+Appraisal list, detail, and evidence queries use the same access identity and clear results after failed reads.
+Role names never substitute for a permission, and backend capabilities and section states constrain displayed content.
+Backend rules remain canonical in [HR API documentation](../../../Shikshamitra-BE/docs/modules/hr/api.md#operational-hr-dashboard).
 
 ## Integration rules
 

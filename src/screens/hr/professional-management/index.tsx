@@ -4,8 +4,10 @@ import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { DatePicker } from '@mui/x-date-pickers';
 import { Iconify } from 'src/components/iconify';
+import { useSearchParams } from 'next/navigation';
 import CustomDialog from 'src/components/customDialog';
 import React, { useMemo, useState, useEffect } from 'react';
+import { useHRAccessKey } from 'src/hooks/use-hr-access-key';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -180,6 +182,7 @@ type ProfessionalManagementScreenProps = {
 const ProfessionalManagementScreen = ({
   workspace = 'overview',
 }: ProfessionalManagementScreenProps) => {
+  const accessKey = useHRAccessKey();
   const currentWorkspace =
     performanceWorkspaceSubmodules.find((item) => item.value === workspace) ||
     performanceWorkspaceSubmodules[0];
@@ -205,7 +208,7 @@ const ProfessionalManagementScreen = ({
         links={breadcrumbLinks}
       />
 
-      <PerformanceWorkspaceShell>
+      <PerformanceWorkspaceShell key={accessKey}>
         {workspace === 'overview' && <OverviewWorkspace />}
         {workspace === 'setup-readiness' && <SetupReadinessWorkspace />}
         {workspace === 'reviews' && <ReviewsWorkspace />}
@@ -873,7 +876,12 @@ function GuidedSetupTab() {
 function OverviewWorkspace() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data, isLoading, isError } = useGetPerformanceDashboardQuery();
-  const { data: reviewData } = useGetPerformanceReviewsQuery({});
+  const accessKey = useHRAccessKey();
+  const { currentData: currentReviews, isError: reviewsFailed } = useGetPerformanceReviewsQuery(
+    { accessKey },
+    { refetchOnMountOrArgChange: true, refetchOnFocus: true }
+  );
+  const reviewData = reviewsFailed ? undefined : currentReviews;
   const { data: pendingActions } = useGetPerformancePendingActionsQuery({});
   const { data: sqaaAuditPack } = useGetPerformanceSqaaAuditPackQuery({});
   const { data: templateData } = useGetPerformanceTemplatesQuery({});
@@ -1476,11 +1484,11 @@ function TemplateBuilderDialog({
       current.map((section, idx) =>
         idx === sectionIndex
           ? {
-            ...section,
-            criteria: section.criteria.map((criterion: any, cIdx: number) =>
-              cIdx === criterionIndex ? { ...criterion, ...patch } : criterion
-            ),
-          }
+              ...section,
+              criteria: section.criteria.map((criterion: any, cIdx: number) =>
+                cIdx === criterionIndex ? { ...criterion, ...patch } : criterion
+              ),
+            }
           : section
       )
     );
@@ -1972,7 +1980,8 @@ function useReviewTableFilters(rows: ProfessionalReview[]) {
   const { data: cycleData } = useGetProfessionalReviewCyclesQuery({ pageSize: 100 });
   const cycles: ProfessionalReviewCycle[] = cycleData?.items || [];
   const latestCycleId = getLatestActivePerformanceCycle(cycles)?.id || 'all';
-  const [cycleId, setCycleId] = useState('');
+  const reviewParams = useSearchParams();
+  const [cycleId, setCycleId] = useState(reviewParams.get('cycleId') === 'all' ? 'all' : '');
   const [status, setStatus] = useState('all');
   const effectiveCycleId = cycleId || latestCycleId;
 
@@ -2002,7 +2011,12 @@ function useReviewTableFilters(rows: ProfessionalReview[]) {
 }
 
 function ReviewsTab() {
-  const { data, isLoading } = useGetPerformanceReviewsQuery({});
+  const accessKey = useHRAccessKey();
+  const { currentData, isLoading, isError } = useGetPerformanceReviewsQuery(
+    { accessKey },
+    { refetchOnMountOrArgChange: true, refetchOnFocus: true }
+  );
+  const data = isError ? undefined : currentData;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = data?.items || [];
   const filtered = useReviewTableFilters(rows);
@@ -2010,6 +2024,11 @@ function ReviewsTab() {
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
+      {isError && (
+        <Alert severity="warning">
+          Reviews could not be loaded. Your access may have changed. Refresh to retry.
+        </Alert>
+      )}
       {filtered.filters}
       <ReviewTable rows={filtered.rows} onOpen={(row) => setSelectedId(row.id)} />
       <ReviewWorkspace reviewId={selectedId} onClose={() => setSelectedId(null)} mode="review" />
@@ -2018,7 +2037,12 @@ function ReviewsTab() {
 }
 
 function MyReviewTab() {
-  const { data, isLoading } = useGetPerformanceReviewsQuery({});
+  const accessKey = useHRAccessKey();
+  const { currentData, isLoading, isError } = useGetPerformanceReviewsQuery(
+    { accessKey },
+    { refetchOnMountOrArgChange: true, refetchOnFocus: true }
+  );
+  const data = isError ? undefined : currentData;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
   const filtered = useReviewTableFilters(rows);
@@ -2026,6 +2050,11 @@ function MyReviewTab() {
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
+      {isError && (
+        <Alert severity="warning">
+          Reviews could not be loaded. Your access may have changed. Refresh to retry.
+        </Alert>
+      )}
       <TabHeader title="Self-appraisal drafts and submissions" />
       {filtered.filters}
       <ReviewTable
@@ -2039,7 +2068,12 @@ function MyReviewTab() {
 }
 
 function ObservationsTab() {
-  const { data, isLoading } = useGetPerformanceReviewsQuery({});
+  const accessKey = useHRAccessKey();
+  const { currentData, isLoading, isError } = useGetPerformanceReviewsQuery(
+    { accessKey },
+    { refetchOnMountOrArgChange: true, refetchOnFocus: true }
+  );
+  const data = isError ? undefined : currentData;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = (data?.items || []).filter(
     (row: ProfessionalReview) =>
@@ -2051,6 +2085,11 @@ function ObservationsTab() {
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1 }}>
       {isLoading && <LinearProgress />}
+      {isError && (
+        <Alert severity="warning">
+          Reviews could not be loaded. Your access may have changed. Refresh to retry.
+        </Alert>
+      )}
       <TabHeader title="Classroom observations" />
       {filtered.filters}
       <ReviewTable
@@ -2069,7 +2108,12 @@ function ObservationsTab() {
 
 function CalibrationTab() {
   const { data: distribution } = useGetPerformanceRatingDistributionQuery({});
-  const { data, isLoading } = useGetPerformanceReviewsQuery({});
+  const accessKey = useHRAccessKey();
+  const { currentData, isLoading, isError } = useGetPerformanceReviewsQuery(
+    { accessKey },
+    { refetchOnMountOrArgChange: true, refetchOnFocus: true }
+  );
+  const data = isError ? undefined : currentData;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
   const filtered = useReviewTableFilters(rows);
@@ -2077,6 +2121,11 @@ function CalibrationTab() {
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%', overflow: 'hidden' }}>
       {isLoading && <LinearProgress />}
+      {isError && (
+        <Alert severity="warning">
+          Reviews could not be loaded. Your access may have changed. Refresh to retry.
+        </Alert>
+      )}
       <Grid
         container
         spacing={2}
@@ -2146,13 +2195,23 @@ function DevelopmentPlansTab() {
 }
 
 function OutcomesTab() {
-  const { data, isLoading } = useGetPerformanceReviewsQuery({});
+  const accessKey = useHRAccessKey();
+  const { currentData, isLoading, isError } = useGetPerformanceReviewsQuery(
+    { accessKey },
+    { refetchOnMountOrArgChange: true, refetchOnFocus: true }
+  );
+  const data = isError ? undefined : currentData;
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const rows = (data?.items || []).filter((row: ProfessionalReview) => row.status !== 3);
   const filtered = useReviewTableFilters(rows);
   return (
     <Stack spacing={2} sx={{ minHeight: 0, flex: 1, height: '100%' }}>
       {isLoading && <LinearProgress />}
+      {isError && (
+        <Alert severity="warning">
+          Reviews could not be loaded. Your access may have changed. Refresh to retry.
+        </Alert>
+      )}
       <TabHeader title="Calibration and final outcomes" />
       {filtered.filters}
       <ReviewTable
@@ -2666,12 +2725,20 @@ function ReviewWorkspace({
   onClose: () => void;
   mode?: PerformanceWorkspaceMode;
 }) {
-  const { data: review } = useGetPerformanceReviewQuery(reviewId || '', { skip: !reviewId });
+  const accessKey = useHRAccessKey();
+  const { currentData: reviewData, isError: isReviewError } = useGetPerformanceReviewQuery(
+    { id: reviewId || '', accessKey },
+    { skip: !reviewId, refetchOnMountOrArgChange: true, refetchOnFocus: true }
+  );
   const {
-    data: fetchedEvidence,
+    currentData: fetchedEvidence,
     error: evidenceError,
     isError: isEvidenceError,
-  } = useGetPerformanceEvidenceQuery(reviewId || '', { skip: !reviewId });
+  } = useGetPerformanceEvidenceQuery(
+    { id: reviewId || '', accessKey },
+    { skip: !reviewId, refetchOnMountOrArgChange: true, refetchOnFocus: true }
+  );
+  const review = isReviewError ? undefined : reviewData;
   const [saveSelfAppraisal] = useSavePerformanceSelfAppraisalMutation();
   const [saveReviewerStage] = useSavePerformanceReviewerStageMutation();
   const [submitStage] = useSubmitPerformanceStageMutation();
@@ -2738,10 +2805,12 @@ function ReviewWorkspace({
   );
 
   useEffect(() => {
-    if (Array.isArray(fetchedEvidence)) {
+    if (isEvidenceError) {
+      setEvidence([]);
+    } else if (Array.isArray(fetchedEvidence)) {
       setEvidence(fetchedEvidence);
     }
-  }, [fetchedEvidence]);
+  }, [fetchedEvidence, isEvidenceError]);
 
   useEffect(() => {
     if (reviewId && isEvidenceError) {
@@ -2877,6 +2946,14 @@ function ReviewWorkspace({
   };
 
   if (!reviewId) return null;
+  if (isReviewError)
+    return (
+      <CustomDialog open handleClose={onClose} title="Performance review workspace" maxWidth="md">
+        <Alert severity="warning" sx={{ m: 2 }}>
+          This review could not be loaded. Your access may have changed.
+        </Alert>
+      </CustomDialog>
+    );
 
   return (
     <>

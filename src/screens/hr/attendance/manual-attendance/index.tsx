@@ -10,6 +10,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { RestartAlt } from '@mui/icons-material';
 import { Iconify } from 'src/components/iconify';
+import { useSearchParams } from 'next/navigation';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useSelector, useDispatch } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -74,7 +75,13 @@ const segmentBtnBase = {
 const toAttendanceDateParam = (value: Dayjs | null) => (value ? value.format('YYYY-MM-DD') : '');
 
 const ManualAttendanceScreen = () => {
-  const [date, setDate] = useState<Dayjs | null>(dayjs());
+  const dashboardParams = useSearchParams();
+  const [date, setDate] = useState<Dayjs | null>(() => {
+    const requestedDate = dashboardParams.get('date');
+    return requestedDate && dayjs(requestedDate).isValid() &&
+      dayjs(requestedDate).format('YYYY-MM-DD') === requestedDate
+      ? dayjs(requestedDate) : dayjs();
+  });
   const [employeeData, setEmployeeData] = useState<any[]>([]);
   const [isLocked, setIsLocked] = useState(false);
   const [editingCell, setEditingCell] = useState<EditingCell>(null);

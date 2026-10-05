@@ -87,6 +87,14 @@ npm run build
 
 ## Coverage map
 
+For the module overview dashboard, run `operational-dashboard-state.test.ts`, professional-management utilities, permission catalogue tests, and `e2e/hr/hr-dashboard-standard-design.spec.ts`.
+The browser suite covers four primary modules, exact partial grants, scoped onboarding, workflow shortcuts, date changes and reload, retired URL keys, complete IST payroll timestamps, empty and failed sections, read-only refresh, and revoked access.
+Verify the actual active light or dark theme at 390, 768, 1366, and 1440 pixels, with keyboard attendance tooltips, reduced motion, and no page overflow.
+Module counts come from overview data and must not request or depend on a staff page.
+Backend tests prove counts beyond 100 records, distinct appraisal deadlines, tenant isolation, and review drill-down scope.
+Finish with signed-in local Codex browser checks against the real backend for existing authorized HR, principal, and supervisor accounts.
+Mocked browser contracts supplement API scope tests rather than proving database authorization.
+
 Use this table to choose validation:
 
 | Change area                                        | First checks                                                                                                                                                                                                                                                                                                                   |

@@ -19,7 +19,7 @@ The route map is frontend integration truth, not backend product truth:
 
 | Area                      | Routes                                                                                                  | Frontend permission                                                        |
 | ------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Dashboard                 | `/hr/dashboard`                                                                                         | `HR.Dashboard`                                                             |
+| Dashboard                 | `/hr/dashboard`                                                                                         | `HR.Dashboard.View`                                                             |
 | Staff Directory           | `/hr/employee`                                                                                          | `HR.Employee.EmployeeList`                                                 |
 | I-card                    | `/hr/i-card`                                                                                            | `HR.Employee.ICard.View`                                                   |
 | Document settings         | `/hr/setting`                                                                                           | `HR.Employee.Setting.DocumentTypes`                                        |
