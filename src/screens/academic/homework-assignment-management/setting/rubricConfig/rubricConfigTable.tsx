@@ -9,9 +9,11 @@ import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions
 import {
   RubricStatus,
   RubricWorkType,
+  RubricScoringModel,
   type AssessmentRubricDto,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
+import { getRubricMaximumLabel } from './rubricScoreLabels';
 import { getRubricConfigTableActions } from './rubricConfigTableActions';
 import {
   RUBRIC_STATUS_LABELS,
@@ -78,7 +80,7 @@ const RubricConfigTable: React.FC<RubricConfigTableProps> = ({
         align: 'left',
         minWidth: 160,
         filterType: 'enum',
-        enumOptions: RUBRIC_SCORING_MODEL_OPTIONS,
+        enumOptions: [...RUBRIC_SCORING_MODEL_OPTIONS, { value: RubricScoringModel.RatingScale, label: 'Rating Scale' }],
         render: (_value, row) =>
           RUBRIC_SCORING_MODEL_LABELS[toRubricRow(row).scoringModel] || 'Points-Based',
       },
@@ -105,8 +107,9 @@ const RubricConfigTable: React.FC<RubricConfigTableProps> = ({
       {
         id: 'totalMarks',
         label: 'Max Score',
-        minWidth: 120,
+        minWidth: 180,
         filterType: 'number',
+        render: (_value, row) => getRubricMaximumLabel(toRubricRow(row)),
       },
       {
         id: 'usageCount',

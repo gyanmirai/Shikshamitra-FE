@@ -1,7 +1,7 @@
 import { Stack } from '@mui/material';
+import { RubricScoringModel , getRubricCriterionMaximum } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import RubricCriterionCard from './rubricCriterionCard';
-import { RubricScoringModel } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
 import type { RubricCriterionScoringProps } from './rubricEvaluationTypes';
 
@@ -24,7 +24,8 @@ const RubricPerformanceCards = ({
           key={criterion.id}
           criterion={criterion}
           criterionIndex={criterionIndex}
-          levels={orderedLevels.filter((level) => level.score <= criterion.maxMarks)}
+          maximumScore={getRubricCriterionMaximum(rubric, criterion)}
+          levels={orderedLevels.filter((level) => level.score <= getRubricCriterionMaximum(rubric, criterion))}
           value={values[criterion.id] ?? { marks: '', comments: '' }}
           onMarksChange={onMarksChange}
           onCommentsChange={onCommentsChange}

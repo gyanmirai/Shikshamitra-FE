@@ -24,7 +24,7 @@ const rubric = {
   title: 'Evaluation rubric',
   scoringModel: RubricScoringModel.PerformanceLevels,
   visibility: RubricVisibility.Institution,
-  performanceLevels: [],
+  performanceLevels: [{ level: 1, label: 'Good', score: 3 }, { level: 2, label: 'Excellent', score: 4 }],
   tags: [],
   totalMarks: 8,
   version: 1,
@@ -35,7 +35,7 @@ const rubric = {
       rubricId: 'rubric',
       title: 'Accuracy',
       isRequired: true,
-      maxMarks: 4,
+      points: 4,
       displayOrder: 1,
     },
     {
@@ -43,7 +43,7 @@ const rubric = {
       rubricId: 'rubric',
       title: 'Presentation',
       isRequired: true,
-      maxMarks: 4,
+      points: 4,
       displayOrder: 2,
     },
   ],
@@ -66,6 +66,16 @@ describe('rubric evaluation utilities', () => {
         presentation: { marks: '', comments: '' },
       })?.title
     ).toBe('Presentation');
+  });
+
+  it('uses the highest shared level even if old points are lower', () => {
+    const sharedRubric = { ...rubric, criteria: rubric.criteria.map((criterion) => ({ ...criterion, points: 1 })) };
+    expect(validateCriterionValues(sharedRubric, {
+      accuracy: { marks: '4', comments: '' }, presentation: { marks: '3', comments: '' },
+    })).toBeUndefined();
+    expect(validateCriterionValues(sharedRubric, {
+      accuracy: { marks: '5', comments: '' }, presentation: { marks: '3', comments: '' },
+    })?.id).toBe('accuracy');
   });
 
   it('builds score payloads with comments and calculates the total', () => {

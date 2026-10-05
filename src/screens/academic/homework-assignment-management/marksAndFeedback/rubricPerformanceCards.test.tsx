@@ -33,7 +33,7 @@ const rubric: AssessmentRubricDto = {
       description: 'Uses correct facts and clear reasoning.',
       teacherGuidance: 'Check the supporting evidence.',
       isRequired: true,
-      maxMarks: 4,
+      points: 4,
       displayOrder: 1,
     },
   ],

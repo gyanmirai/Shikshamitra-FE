@@ -51,7 +51,7 @@ export default function RubricScoreSummary({
               color: compact ? 'primary.main' : 'text.primary',
             }}
           >
-            {Number(totalMarks.toFixed(2))}{scoringModel === RubricScoringModel.WeightedPercentage ? '%' : ''}
+            {Number(totalMarks.toFixed(2))}
             <Typography component="span" variant="body2" color="text.secondary">
               {' '}
               {scoringModel === RubricScoringModel.WeightedPercentage

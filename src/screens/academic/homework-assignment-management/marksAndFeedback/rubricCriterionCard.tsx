@@ -3,11 +3,10 @@ import type {
   AssessmentRubricCriterionDto,
 } from 'src/redux/academicAPI/HomeworkAssignmentApi/AssessmentAndFeedbackApi/RubricAssessmentApi';
 
-import { Box, Card, Chip, Stack, Divider, TextField, Typography, IconButton } from '@mui/material';
-import CustomTooltip from 'src/components/custom-tooltip';
-import { Iconify } from 'src/components/iconify';
+import { Box, Card, Chip, Stack, Divider, TextField, Typography } from '@mui/material';
 
 import RubricScoreSelector from './rubricScoreSelector';
+import { RubricCriterionHelp } from './rubricCriterionHelp';
 
 import type { CriterionEvaluationValue } from './rubricEvaluationTypes';
 
@@ -15,6 +14,7 @@ type RubricCriterionCardProps = {
   criterion: AssessmentRubricCriterionDto;
   criterionIndex: number;
   levels: RubricPerformanceLevelDto[];
+  maximumScore: number;
   value: CriterionEvaluationValue;
   onMarksChange: (criterionId: string, marks: string) => void;
   onCommentsChange: (criterionId: string, comments: string) => void;
@@ -27,6 +27,7 @@ const RubricCriterionCard = ({
   criterion,
   criterionIndex,
   levels,
+  maximumScore,
   value,
   onMarksChange,
   onCommentsChange,
@@ -58,28 +59,7 @@ const RubricCriterionCard = ({
               <Typography id={headingId} component="h3" variant="subtitle2" fontWeight={700}>
                 {criterion.title}
               </Typography>
-              {compact && (criterion.description || criterion.teacherGuidance) ? (
-                <CustomTooltip
-                  title={
-                    <Stack spacing={0.5} sx={{ p: 1.5, maxWidth: 320 }}>
-                      {criterion.description ? (
-                        <Typography variant="body2">{criterion.description}</Typography>
-                      ) : null}
-                      {criterion.teacherGuidance ? (
-                        <Typography variant="body2">
-                          Teacher guidance: {criterion.teacherGuidance}
-                        </Typography>
-                      ) : null}
-                    </Stack>
-                  }
-                  placement="right"
-                  arrow
-                >
-                  <IconButton size="small" aria-label={`About ${criterion.title}`}>
-                    <Iconify icon="lucide:info" width={18} color="info.main" />
-                  </IconButton>
-                </CustomTooltip>
-              ) : null}
+              <RubricCriterionHelp criterion={criterion} compact={compact} />
               {(!compact || !criterion.isRequired) && (
                 <Chip
                   size="small"
@@ -129,7 +109,7 @@ const RubricCriterionCard = ({
                 color: compact && value.marks ? 'primary.main' : 'text.primary',
               }}
             >
-              {value.marks || '—'} / {criterion.maxMarks}
+              {value.marks || '—'} / {maximumScore}
             </Typography>
           </Box>
         </Stack>

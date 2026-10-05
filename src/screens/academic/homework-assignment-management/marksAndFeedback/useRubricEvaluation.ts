@@ -24,9 +24,9 @@ import type {
 } from './rubricEvaluationTypes';
 
 const defaultCriteria = [
-  { title: 'Concept Understanding', isRequired: true, maxMarks: 10, displayOrder: 1 },
-  { title: 'Accuracy', isRequired: true, maxMarks: 10, displayOrder: 2 },
-  { title: 'Presentation', isRequired: true, maxMarks: 5, displayOrder: 3 },
+  { title: 'Concept Understanding', isRequired: true, points: 10, displayOrder: 1 },
+  { title: 'Accuracy', isRequired: true, points: 10, displayOrder: 2 },
+  { title: 'Presentation', isRequired: true, points: 5, displayOrder: 3 },
 ];
 
 export const useRubricEvaluation = (props: RubricEvaluationPanelProps) => {

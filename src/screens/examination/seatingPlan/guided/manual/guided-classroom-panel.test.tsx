@@ -55,6 +55,50 @@ function ReservationHarness() {
 }
 
 describe('GuidedClassroomPanel seat reservations', () => {
+  it('allows inspecting automatic seats without assignment, removal or reservation actions', () => {
+    const assign = vi.fn();
+    const remove = vi.fn();
+    const reserve = vi.fn();
+    const student = { studentId: 'student-1', studentName: 'Preview Student', rollNo: 7 };
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <DndContext>
+          <GuidedClassroomPanel
+            rooms={initialRooms}
+            students={[student]}
+            assignments={[
+              {
+                studentId: student.studentId,
+                roomId: 'room-1',
+                seatId: 'room-1:1',
+                seatNumber: 1,
+                assignedBy: 'auto',
+              },
+            ]}
+            activeRoomId="room-1"
+            isReadOnly
+            selectedStudent={student}
+            readOnlyDescription="Automatic seating preview is read-only."
+            onSwitchRoom={vi.fn()}
+            onAssign={assign}
+            onUnassign={remove}
+            onToggleReserve={reserve}
+          />
+        </DndContext>
+      </ThemeProvider>
+    );
+    expect(screen.getByText('Preview Student')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Seat .* actions/ })).not.toBeInTheDocument();
+    const emptySeat = screen.getByRole('img', { name: 'Seat 2, empty' });
+    expect(emptySeat).toHaveAttribute('tabindex', '-1');
+    fireEvent.click(emptySeat);
+    fireEvent.keyDown(emptySeat, { key: 'Enter' });
+    expect(assign).not.toHaveBeenCalled();
+    expect(remove).not.toHaveBeenCalled();
+    expect(reserve).not.toHaveBeenCalled();
+    expect(screen.getByText('Automatic seating preview is read-only.')).toBeInTheDocument();
+  });
+
   it('reserves and unreserves an empty seat while updating usable capacity', () => {
     render(<ReservationHarness />);
 
