@@ -3,7 +3,7 @@ module: hr
 domain: workflows
 content_type: Reference
 status: canonical
-updated_on: 2026-10-05
+updated_on: 2026-10-06
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -129,7 +129,7 @@ Identity, tenant, or grant changes remount the dashboard with a separate cache i
 Module shortcuts use existing authorized workflows, and the appraisal shortcut opens all cycles through `cycleId=all`.
 Appraisal list, detail, and evidence queries use the same access identity and clear results after failed reads.
 Role names never substitute for a permission, and backend capabilities and section states constrain displayed content.
-Backend rules remain canonical in [HR API documentation](../../../Shikshamitra-BE/docs/modules/hr/api.md#operational-hr-dashboard).
+Backend rules remain canonical in [HR API documentation](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md#operational-hr-dashboard).
 
 ## Integration rules
 
