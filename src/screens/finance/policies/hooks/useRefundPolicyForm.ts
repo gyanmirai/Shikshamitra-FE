@@ -8,6 +8,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useFormik, setNestedObjectValues } from 'formik';
+import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
@@ -56,7 +57,7 @@ export const emptyValues = (academicYearId: string): IRefundPolicyFormValues => 
   fixedAmount: null,
   maximumPerRequest: null,
   maximumPerStudentYear: null,
-  roundingMethod: 'None',
+  roundingMethod: 'RoundUp',
   deductionType: 'None',
   deductionValue: null,
   maximumDeduction: null,
@@ -272,7 +273,7 @@ export function useRefundPolicyForm({
         fixedAmount: values.amountMode === 'FixedAmount' ? values.fixedAmount : null,
         maximumPerRequest: values.maximumPerRequest,
         maximumPerStudentYear: values.maximumPerStudentYear,
-        roundingMethod: values.roundingMethod,
+        roundingMethod: 'RoundUp',
         deductionType: values.deductionType,
         deductionValue: values.deductionType === 'None' ? null : values.deductionValue,
         maximumDeduction: values.deductionType === 'None' ? null : values.maximumDeduction,
@@ -434,14 +435,10 @@ export function useRefundPolicyForm({
       }
     }
 
-    // Rounding
-    if (values.roundingMethod === 'RoundUp') {
-      netRefund = Math.ceil(netRefund);
-    } else if (values.roundingMethod === 'RoundDown') {
-      netRefund = Math.floor(netRefund);
-    } else if (values.roundingMethod === 'NearestRupee') {
-      netRefund = Math.round(netRefund);
-    }
+    // Whole rupees, bounded by the eligible balance and hard caps.
+    netRefund = roundUpWithinAmount(netRefund, Math.min(remainingEligible,
+      values.maximumPerRequest ?? Number.MAX_SAFE_INTEGER,
+      values.maximumPerStudentYear == null ? Number.MAX_SAFE_INTEGER : Math.max(0, values.maximumPerStudentYear - studentYearUsed)));
 
     return {
       remainingEligible,

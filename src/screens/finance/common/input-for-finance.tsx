@@ -84,8 +84,8 @@ export default FormattedAmountInput;
 //         style: currency ? 'currency' : 'decimal',
 //         currency,
 //         currencyDisplay: 'narrowSymbol',
-//         minimumFractionDigits: 2,
-//         maximumFractionDigits: 2,
+//         minimumFractionDigits: 0,
+//         maximumFractionDigits: 0,
 //     }).format(numericValue);
 // };
 

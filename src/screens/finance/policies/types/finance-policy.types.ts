@@ -280,7 +280,7 @@ export type ProrationRuleType =
 
 export type ProrationCalculationBasis = 'CalendarDays';
 
-export type ProrationRoundOff = 'NoRoundOff' | 'RoundUp' | 'RoundDown';
+export type ProrationRoundOff = 'NoRoundOff' | 'NearestRupee' | 'RoundUp' | 'RoundDown';
 
 export type ProrationMonthlyRule = 'ChargeNextMonth' | 'HalfMonthRule';
 
@@ -301,16 +301,26 @@ export interface IProrationFeeHeadRule {
   feeType: 'Recurring' | 'OneTime'; // stored per rule; displayed read-only
   ruleType: ProrationRuleType;
   configuration: IProrationRuleConfiguration;
+  applyOnAdmission?: boolean;
+  applyOnEarlyWithdrawal?: boolean;
+  earlyWithdrawalRuleType?: ProrationRuleType;
+  earlyWithdrawalConfiguration?: IProrationRuleConfiguration;
 }
 
 export interface IProrationPolicyRule {
   feeHeadId: string;
   feeHeadName?: string | null;
-  ruleType: 'FullCharge' | 'Daily' | 'MonthlyCutoff';
+  ruleType: 'FullCharge' | 'Daily' | 'MonthlyCutoff' | 'FullMonthCharge';
   roundingMode: 'Currency' | 'NearestRupee' | 'RoundUpRupee' | 'RoundDownRupee';
   minimumChargeDays?: number | null;
   cutoffDay?: number | null;
   afterCutoffAction?: 'NoCharge' | 'HalfCharge' | null;
+  applyOnAdmission?: boolean;
+  applyOnEarlyWithdrawal?: boolean;
+  earlyWithdrawalRuleType?: 'FullCharge' | 'Daily' | 'MonthlyCutoff' | 'FullMonthCharge' | null;
+  earlyWithdrawalMinimumChargeDays?: number | null;
+  earlyWithdrawalCutoffDay?: number | null;
+  earlyWithdrawalBeforeCutoffAction?: 'NoCharge' | 'HalfCharge' | null;
 }
 
 export interface IProrationPolicy extends Omit<

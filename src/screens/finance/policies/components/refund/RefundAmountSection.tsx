@@ -3,11 +3,7 @@
 import type { FormikProps } from 'formik';
 
 import React from 'react';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
-import CustomTooltip from 'src/components/custom-tooltip';
 import {
-  Box,
   Grid,
   Select,
   MenuItem,
@@ -38,7 +34,7 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
   return (
     <SectionCard
       title="Refund Calculation & Ceilings"
-      subtitle="Configure refund formula mode, rate values, rounding method, and regulatory hard caps."
+      subtitle="Configure refund formula mode, rate values and regulatory hard caps."
       icon="solar:calculator-minimalistic-bold-duotone"
     >
       <Grid container spacing={2}>
@@ -130,27 +126,7 @@ export default function RefundAmountSection({ formik }: RefundAmountSectionProps
         )}
 
         {/* Rounding Method */}
-        <Grid size={{ xs: 12, md: values.amountMode === 'Percentage' || values.amountMode === 'FixedAmount' ? 4 : 8 }}>
-          <FormControl fullWidth size="small" error={isFieldInvalid('roundingMethod')}>
-            <InputLabel id="rounding-method-label">Rounding Method</InputLabel>
-            <Select
-              labelId="rounding-method-label"
-              label="Rounding Method"
-              name="roundingMethod"
-              value={values.roundingMethod}
-              onChange={handleChange}
-              onBlur={handleBlur}
-            >
-              <MenuItem value="None">No Rounding (Exact decimal)</MenuItem>
-              <MenuItem value="NearestRupee">Nearest Rupee (Standard Math Round)</MenuItem>
-              <MenuItem value="RoundUp">Round Up (Ceiling to next Rupee)</MenuItem>
-              <MenuItem value="RoundDown">Round Down (Floor to integer)</MenuItem>
-            </Select>
-            {getHelperText('roundingMethod') && (
-              <FormHelperText>{getHelperText('roundingMethod')}</FormHelperText>
-            )}
-          </FormControl>
-        </Grid>
+
 
         {/* Maximum Per Request */}
         <Grid size={{ xs: 12, sm: 6 }}>

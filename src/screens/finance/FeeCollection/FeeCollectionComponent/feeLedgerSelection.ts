@@ -122,3 +122,33 @@ export const selectionFilterState = (matches: LedgerSelection, selected: LedgerS
   const total = matches.items.length + matches.charges.length;
   return { checked: total > 0 && count === total, indeterminate: count > 0 && count < total };
 };
+
+// Refetches can settle, remove, or reduce balances while checkout is open.
+// Refresh only existing selections, retaining their order and contributor ownership.
+export const reconcileLedgerSelection = (
+  ownership: SelectionOwnership,
+  selected: LedgerSelection,
+  collectible: LedgerSelection
+): LedgerSelection => {
+  const availableItems = new Map(collectible.items.map((item) => [selectionItemKey(item), item]));
+  const availableCharges = new Set(collectible.charges);
+  Object.values(ownership).forEach((owner) => {
+    owner.items.forEach((key) => {
+      if (!availableItems.has(key)) owner.items.delete(key);
+    });
+    owner.charges.forEach((id) => {
+      if (!availableCharges.has(id)) owner.charges.delete(id);
+    });
+  });
+  return {
+    items: selected.items.flatMap((item) => {
+      const fresh = availableItems.get(selectionItemKey(item));
+      if (!fresh) return [];
+      const unchanged = (Object.keys(fresh) as Array<keyof SelectedItem>).every(
+        (key) => fresh[key] === item[key]
+      );
+      return [unchanged ? item : fresh];
+    }),
+    charges: selected.charges.filter((id) => availableCharges.has(id)),
+  };
+};

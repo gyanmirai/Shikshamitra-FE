@@ -468,7 +468,7 @@ const FeeHeadGroup: React.FC<FeeHeadGroupProps> = ({
               label="Approved Amount"
               value={approvedAmount}
               onChange={(event) => onApprovedAmountChange(Math.max(0, Number(event.target.value)))}
-              inputProps={{ min: 0.01, max: group.liveMaximumConcessionAmount, step: 0.01 }}
+              inputProps={{ min: 1, max: group.liveMaximumConcessionAmount, step: 1 }}
               helperText={`Requested: ₹${formatNumber(group.requestedConcessionAmount)} · Current maximum: ₹${formatNumber(group.liveMaximumConcessionAmount)}. You may approve a lower amount.`}
               sx={{ width: { xs: '100%', sm: 320 } }}
             />

@@ -16,6 +16,7 @@ import { financePermissions } from 'src/constants/finance-menu';
 import FinanceRoutingFields from 'src/screens/finance/components/FinanceRoutingFields';
 import { Box, Chip, Alert, Stack, Drawer, Button, Typography, IconButton } from '@mui/material';
 
+import { SectionCard } from './refund/RefundCommon';
 import RefundFooterActions from './refund/RefundFooterActions';
 import RefundGeneralSection from './refund/RefundGeneralSection';
 import { useRefundPolicyForm } from '../hooks/useRefundPolicyForm';
@@ -234,15 +235,6 @@ export default function RefundPolicyDrawer({
               )}
 
               {/* Section 1: General Information */}
-              <FinanceRoutingFields
-                formik={formik}
-                academicYearId={formik.values.academicYearId || academicYearId}
-                operation="refund-policy"
-                categoryField="expenseCategoryId"
-                categoryLabel="Expense Category"
-                bankField="defaultPayingBankAccountId"
-                bankLabel="Default Paying Bank Account"
-              />
               <RefundGeneralSection
                 formik={formik}
                 activeEdit={activeEdit}
@@ -257,11 +249,28 @@ export default function RefundPolicyDrawer({
                 isFeeHeadsLoading={isFeeHeadsLoading}
               />
 
-              <Alert severity="info" sx={{ borderRadius: 1.25 }}>
+              <Alert severity="info" sx={{ mb: 2.5, borderRadius: 1.25 }}>
                 {editData
                   ? 'Saved calculation behavior is kept automatically. Refund amounts remain limited to the student’s eligible paid balance.'
-                  : 'Refund amounts are entered when a refund is processed and can never exceed the student’s eligible paid balance. New policies use no automatic deduction, cap, or rounding.'}
+                  : 'Refund amounts are entered when a refund is processed and can never exceed the student’s eligible paid balance. Amounts use whole rupees rounded upward within the eligible balance.'}
               </Alert>
+
+              {/* Section 3: Refund Accounting */}
+              <SectionCard
+                title="Refund Accounting"
+                subtitle="Choose the expense category and default bank account for refund payments."
+                icon="solar:card-recive-bold-duotone"
+              >
+                <FinanceRoutingFields
+                  formik={formik}
+                  academicYearId={formik.values.academicYearId || academicYearId}
+                  operation="refund-policy"
+                  categoryField="expenseCategoryId"
+                  categoryLabel="Expense Category"
+                  bankField="defaultPayingBankAccountId"
+                  bankLabel="Default Paying Bank Account"
+                />
+              </SectionCard>
             </Box>
           </Scrollbar>
         </Box>

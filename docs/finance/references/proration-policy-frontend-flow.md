@@ -3,7 +3,7 @@ module: finance
 domain: proration-policy-frontend-flow
 content_type: Reference
 status: implemented
-updated_on: 2026-09-08
+updated_on: 2026-10-06
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -16,11 +16,43 @@ Product rules, calculations, backend architecture, API, persistence, permissions
 
 > This page records both the original review findings and their implemented disposition.
 
+The Proration Policy workspace uses Current Policies and Archived controls, matching Collection and Concession.
+Archived shows a server count scoped to the selected academic year; the archive/restore cache tags refresh this count and the list.
+Current permits Draft and Active status filters; Archived fixes the status and hides creation controls and the status filter.
+Switching views resets pagination and the status query while retaining search.
+Restore returns a policy to Draft, making it visible in Current Policies.
+The focused workspace checks are in `src/screens/finance/policies/workspaces/PolicyArchiveWorkspaces.test.tsx`.
+
+## Admission and early-withdrawal form
+
+General information hides the policy code field and places description beside the shared default-policy option; both stack on narrow screens. Existing policy codes remain in the form model for API compatibility.
+Each recurring fee head has separate Apply on Admission and Apply on Early Withdrawal switches and model selections.
+Collapsed rows show the fee category and both event summaries, distinguishing Off from No proration.
+Expanded rows place each switch before its model and conditional fields in matching sections; these stack on narrow screens.
+Rounding appears once below both events. Admission presets (All daily, All monthly, Reset admission) preserve withdrawal settings and one-time heads.
+Both model dropdowns offer No Proration, Daily Proration, and Monthly Proration. Full month charge is available only in the monthly Cut-off behavior dropdown.
+Daily exposes Calendar Days and minimum charge days; rounding is shared by the head and preserves all four backend modes, including Nearest Rupee.
+Admission monthly exposes Charge Next Month and Half Month Rule with a 1–31 cutoff, plus Full month charge.
+Withdrawal monthly exposes Waive Exit Month and Half Month Rule with its own cutoff, plus Full month charge; helper text explains on/before versus after the cutoff and exclusion of later months.
+Selecting Full month charge keeps Monthly proration selected and displays Full month charge in Cut-off behavior without a cutoff day. It preserves the other event and shared rounding. Save and reopen use the existing FullMonthCharge API rule, displayed as monthly proration in the editor; switching back to another cutoff behavior restores a default cutoff day.
+Disabled event settings do not block saving; withdrawal-only rules count toward the required recurring configuration.
+Field errors appear after blur or a submit attempt. Invalid submissions expand affected rows and focus the first invalid control; the missing-proration condition has a section-level message.
+The checklist uses the same Yup schema as submission and counts Daily/Monthly recurring heads, including withdrawal-only heads. Full Month Charge alone does not satisfy the proration requirement.
+The drawer keeps its header/footer fixed, moves the summary into the scrollable content on narrow screens, and locks inputs and dismissal during blocking loading/saving.
+Save and reopen persist both configurations, and cloning retains them.
+Policy creation does not require student dates.
+Fee Structure creation, editing, defaults and review no longer expose Proration Policy. The attachment-impact client was removed.
+Assignment and assigned-policy editing show only concession, collection and refund selectors; new assignments do not inherit proration; historical assignment and charge evidence remains readable.
+Assignment edits submit three selectable families, and the backend rejects proration overrides.
+
+Focused validation: run `useProrationPolicyForm.test.ts`, `ProrationFeeHeadsSection.test.tsx`, and the policy default lifecycle tests; AssignmentWorkflow tests cover policy selection; backend regression tests cover removal of template inheritance.
+Use the local component fixture at `e2e/fixtures/proration-policy` to inspect both event forms in the in-app browser without backend writes.
+
 ## Implementation status
 
 Completed on 2026-09-08:
 
-- dedicated `prorationPolicy.ts` RTK Query client for lifecycle, history, impact, simulation, and attachment-impact operations;
+- dedicated `prorationPolicy.ts` RTK Query client for lifecycle, history, usage impact and simulation operations;
 - typed proration response/form models and explicit legacy-editor-to-server enum mapping;
 - real active Fee Head lookup with loading/error/empty states and no dummy fallback IDs;
 - Draft-by-default create/edit, Save Draft, separately permission-gated Save & Activate, concurrency stamp, default selection, and active-policy change reason;
@@ -35,16 +67,16 @@ Operational boundary: existing paid or posted dues are deliberately not recalcul
 
 ## Reviewed frontend surfaces
 
-| Surface | Current source |
-|---|---|
-| Route/workspace | `src/app/(auth-route)/finance/(Policies)/proration-policy/**`, `src/screens/finance/policies/workspaces/ProrationPolicyWorkspace.tsx` |
-| Table/drawer | `src/screens/finance/policies/components/FinancePolicyTable.tsx`, `ProrationPolicyDrawer.tsx` |
-| Form state/types | `src/screens/finance/policies/hooks/useProrationPolicyForm.ts`, `src/screens/finance/policies/types/finance-policy.types.ts` |
-| Rule sections | `src/screens/finance/policies/components/proration/**` |
-| API client | `src/redux/finance/financePolicy.ts` |
-| Permissions/menu | `src/constants/finance-menu.ts`, proration route layout |
+| Surface                  | Current source                                                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Route/workspace          | `src/app/(auth-route)/finance/(Policies)/proration-policy/**`, `src/screens/finance/policies/workspaces/ProrationPolicyWorkspace.tsx`                     |
+| Table/drawer             | `src/screens/finance/policies/components/FinancePolicyTable.tsx`, `ProrationPolicyDrawer.tsx`                                                             |
+| Form state/types         | `src/screens/finance/policies/hooks/useProrationPolicyForm.ts`, `src/screens/finance/policies/types/finance-policy.types.ts`                              |
+| Rule sections            | `src/screens/finance/policies/components/proration/**`                                                                                                    |
+| API client               | `src/redux/finance/financePolicy.ts`                                                                                                                      |
+| Permissions/menu         | `src/constants/finance-menu.ts`, proration route layout                                                                                                   |
 | Fee Structure attachment | `src/screens/finance/settings/FeeStructure/Components/FeePoliciesTab.tsx`, `IndependentFeeStructureCard.tsx`, `src/redux/finance/financeFeeStructure.tsx` |
-| Student assignment | `src/screens/finance/FeeStructureAssign/**` |
+| Student assignment       | `src/screens/finance/FeeStructureAssign/**`                                                                                                               |
 
 ## Original flow and breakpoints (resolved)
 
@@ -69,20 +101,20 @@ Student assignment
 
 ### Findings
 
-| Priority | Finding | Evidence/impact | Target correction |
-|---|---|---|---|
-| P0 | Nonexistent generic backend contract | Proration list/create/edit/clone/archive use `/finance-policies`; typed policy backends use dedicated clients | Add `prorationPolicy.ts` and remove proration from generic client paths |
-| P0 | False attachment state | `prorationPolicyId` appears in form/type but is omitted by `createClassWiseFeeStructure` and absent from backend DTO/entity | Send only after backend accepts/returns ID + version; clear optimistic fallback |
-| P0 | No runtime use | Assignment sends no policy/date data and demand generator does no proration | Add preview/commit integration before success |
-| P0 | Wrong permission | Menu/route map Proration Policy to Fee Collections | Use exact Proration Policy View; gate each action separately |
-| P1 | Fake Fee Heads | Hook supplies hard-coded tuition/hostel/transport/etc. when API returns nothing | Show loading, empty, or error state; never submit fabricated IDs |
-| P1 | Wrong fee classification source | Missing API `feeType` defaults every head to Recurring | Use Fee Structure detail `isOneTime` in attachment impact; policy editor selects heads without inventing type |
-| P1 | Lifecycle mismatch | Initial status is Active; footer always calls `handleCustomSubmit('Active')`; form uses Active/Inactive | Use Save Draft and explicit Activate; Archived is command-only |
-| P1 | Ambiguous/redundant rules | `prorationApplicable` plus `NoProration` and `FullMonthCharge` overlap; cutoff equality is not explicit | Use normalized server enums and help text from canonical semantics |
-| P1 | Validation is presentation-only | Readiness checks name + enabled head + rule, not references, schedule, dates, attachment, or runtime inputs | Server validation/simulation is authoritative |
-| P1 | No explanation | Summary counts rules but does not calculate financial impact | Show server line preview and stored demand explanation |
-| P2 | Product copy overclaims | Workspace says admissions, exits, and service changes without source/date controls | Implement those sources or narrow copy to supported v1 |
-| P2 | No focused proration tests | No proration policy unit/contract/browser tests were found | Add tests listed below |
+| Priority | Finding                              | Evidence/impact                                                                                                             | Target correction                                                                                             |
+| -------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| P0       | Nonexistent generic backend contract | Proration list/create/edit/clone/archive use `/finance-policies`; typed policy backends use dedicated clients               | Add `prorationPolicy.ts` and remove proration from generic client paths                                       |
+| P0       | False attachment state               | `prorationPolicyId` appears in form/type but is omitted by `createClassWiseFeeStructure` and absent from backend DTO/entity | Send only after backend accepts/returns ID + version; clear optimistic fallback                               |
+| P0       | No runtime use                       | Assignment sends no policy/date data and demand generator does no proration                                                 | Add preview/commit integration before success                                                                 |
+| P0       | Wrong permission                     | Menu/route map Proration Policy to Fee Collections                                                                          | Use exact Proration Policy View; gate each action separately                                                  |
+| P1       | Fake Fee Heads                       | Hook supplies hard-coded tuition/hostel/transport/etc. when API returns nothing                                             | Show loading, empty, or error state; never submit fabricated IDs                                              |
+| P1       | Wrong fee classification source      | Missing API `feeType` defaults every head to Recurring                                                                      | Use Fee Structure detail `isOneTime` in attachment impact; policy editor selects heads without inventing type |
+| P1       | Lifecycle mismatch                   | Initial status is Active; footer always calls `handleCustomSubmit('Active')`; form uses Active/Inactive                     | Use Save Draft and explicit Activate; Archived is command-only                                                |
+| P1       | Ambiguous/redundant rules            | `prorationApplicable` plus `NoProration` and `FullMonthCharge` overlap; cutoff equality is not explicit                     | Use normalized server enums and help text from canonical semantics                                            |
+| P1       | Validation is presentation-only      | Readiness checks name + enabled head + rule, not references, schedule, dates, attachment, or runtime inputs                 | Server validation/simulation is authoritative                                                                 |
+| P1       | No explanation                       | Summary counts rules but does not calculate financial impact                                                                | Show server line preview and stored demand explanation                                                        |
+| P2       | Product copy overclaims              | Workspace says admissions, exits, and service changes without source/date controls                                          | Implement those sources or narrow copy to supported v1                                                        |
+| P2       | No focused proration tests           | No proration policy unit/contract/browser tests were found                                                                  | Add tests listed below                                                                                        |
 
 ## Implemented staff journey
 
@@ -106,14 +138,14 @@ Policy list for selected academic year
 
 The list is always scoped to the selected academic year and uses the typed backend list endpoint.
 
-| UI element | Behavior |
-|---|---|
-| Columns | Name, code, status, default, configured heads, used by structures, current version, updated by/on |
-| Filters | Search and Draft/Active status; Archived uses the archived view |
-| Primary action | Create Draft when Add permission is granted |
-| Row actions | View, Edit, Simulate, Clone, Activate, Archive, Restore to Draft, Versions; each separately permission-gated |
-| In-use indicator | Opens the affected Fee Structures/assignments summary; never inferred only from list data |
-| Empty/error state | No fake records; explain missing year, no results, or retryable API error separately |
+| UI element        | Behavior                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| Columns           | Name, code, status, default, configured heads, used by structures, current version, updated by/on            |
+| Filters           | Search and Draft/Active status; Archived uses the archived view                                              |
+| Primary action    | Create Draft when Add permission is granted                                                                  |
+| Row actions       | View, Edit, Simulate, Clone, Activate, Archive, Restore to Draft, Versions; each separately permission-gated |
+| In-use indicator  | Opens the affected Fee Structures/assignments summary; never inferred only from list data                    |
+| Empty/error state | No fake records; explain missing year, no results, or retryable API error separately                         |
 
 ### Create/edit drawer
 
@@ -128,34 +160,21 @@ Actions are **Save Draft**, **Activate**, and **Cancel**. Status is not a free d
 
 Conditional validation mirrors the backend for usability, but the server remains authoritative. `NoRoundOff` should be labelled **Currency (2 decimals)** because financial values still require currency precision.
 
-### Fee Structure attachment
+### Fee Structure removal
 
-The policies tab lists only Active policies for the Fee Structure academic year.
-
-1. User selects a policy.
-2. UI requests server attachment impact with structure metadata and current detail IDs.
-3. UI groups:
-   - recurring details covered by a proration rule;
-   - recurring details that remain full charge;
-   - one-time details that always remain full charge;
-   - rules whose Fee Heads are absent from this structure;
-   - missing/incomplete Payment Term coverage blockers.
-4. Save sends the policy ID and optional version assertion.
-5. Response supplies the authoritative saved policy ID/version; Formik is reset from that response only.
-
-Never preserve the submitted `prorationPolicyId` when the response omits it. That creates the current false-saved state.
+The full-screen Fee Structure workspace offers Collection and Refund policy selectors. It sends no proration ID/version, queries no proration catalog, and shows no proration coverage column or setup warning. Existing historical assignment/charge evidence is retained by the backend; the independent policy form and simulation remain available.
 
 ### Student assignment
 
 The assignment form must add a **Charge period** section before submit.
 
-| Field | Behavior |
-|---|---|
-| Start date | Pre-filled from verified admission/assignment date when available |
-| End date | Defaults to academic-year end; may be sourced from exit/service end |
-| Source | Read-only when supplied by Student/Admission/Hostel/Transport; Manual Override requires permission |
-| Per-service interval | Shown only for selected optional/service Fee Structure details |
-| Override reason | Required for a permitted manual change |
+| Field                | Behavior                                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| Start date           | Pre-filled from verified admission/assignment date when available                                  |
+| End date             | Defaults to academic-year end; may be sourced from exit/service end                                |
+| Source               | Read-only when supplied by Student/Admission/Hostel/Transport; Manual Override requires permission |
+| Per-service interval | Shown only for selected optional/service Fee Structure details                                     |
+| Override reason      | Required for a permitted manual change                                                             |
 
 After inputs are valid, call the server preview. Show one row per installment: scheduled amount, coverage, eligible dates/days, rule, factor, rounded final amount, reduction, policy version, and explanation. Submit uses the preview token/version and an idempotency key. Disable double submit and surface per-student errors clearly for bulk assignment.
 
@@ -179,15 +198,15 @@ Concession is shown after proration, late fee is calculated from the remaining/p
 
 The typed Proration Policy client is implemented under `src/redux/finance/prorationPolicy.ts`, patterned after the typed Concession/Collection clients.
 
-| Operation | Cache behavior |
-|---|---|
-| List/detail | Tag policy list by academic year and detail by ID |
-| Create/update/activate/archive/restore/clone | Invalidate affected year list and policy detail/versions |
-| Versions | Tag by policy ID |
-| Simulate | Mutation or uncached request; never mutates policy cache |
-| Attachment impact | Uncached request keyed by policy/version + structure detail fingerprint |
-| Assignment preview | Uncached; short-lived preview token/version |
-| Assignment commit | Invalidate assignment, due, student ledger, outstanding, and structure usage tags |
+| Operation                                    | Cache behavior                                                                    |
+| -------------------------------------------- | --------------------------------------------------------------------------------- |
+| List/detail                                  | Tag policy list by academic year and detail by ID                                 |
+| Create/update/activate/archive/restore/clone | Invalidate affected year list and policy detail/versions                          |
+| Versions                                     | Tag by policy ID                                                                  |
+| Simulate                                     | Mutation or uncached request; never mutates policy cache                          |
+| Attachment impact                            | Uncached request keyed by policy/version + structure detail fingerprint           |
+| Assignment preview                           | Uncached; short-lived preview token/version                                       |
+| Assignment commit                            | Invalidate assignment, due, student ledger, outstanding, and structure usage tags |
 
 Delete proration use of the generic `financePolicy.ts` client once the typed endpoint ships. Do not make the generic table dynamically guess response shapes; use a proration adapter or dedicated list component with typed rows.
 
@@ -205,20 +224,20 @@ Hiding a button is not enforcement. Render structured 403 errors cleanly because
 
 ## Cross-module frontend connections
 
-| Frontend area | Required connection |
-|---|---|
-| Academic-year selector | Drives every list, reference query, create, and clone target |
-| Fee Head settings | Supplies real active IDs/names only |
-| Payment Terms | Shows missing coverage/version blocker and links to fix it |
-| Fee Structure | Attachment impact, policy/version display, locked/in-use behavior |
-| Admission/Student | Displays authoritative charge dates/source |
-| Hostel/Transport | Supplies per-service dates for matching optional fee details |
-| Assignment | Preview + idempotent commit |
-| Concession request | Displays prorated eligible base; no separate proration selector |
-| Collection | Uses final DueFee; calculation details are read-only |
-| Refund/Adjustment | Shows original prorated due and posted allocations |
+| Frontend area          | Required connection                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| Academic-year selector | Drives every list, reference query, create, and clone target                          |
+| Fee Head settings      | Supplies real active IDs/names only                                                   |
+| Payment Terms          | Shows missing coverage/version blocker and links to fix it                            |
+| Fee Structure          | Attachment impact, policy/version display, locked/in-use behavior                     |
+| Admission/Student      | Displays authoritative charge dates/source                                            |
+| Hostel/Transport       | Supplies per-service dates for matching optional fee details                          |
+| Assignment             | Preview + idempotent commit                                                           |
+| Concession request     | Displays prorated eligible base; no separate proration selector                       |
+| Collection             | Uses final DueFee; calculation details are read-only                                  |
+| Refund/Adjustment      | Shows original prorated due and posted allocations                                    |
 | Receipt/Ledger/Reports | Displays scheduled, reduced, due, concession, paid, refunded, and outstanding amounts |
-| Audit | Policy lifecycle, attachment, date override, calculation, and correction history |
+| Audit                  | Policy lifecycle, attachment, date override, calculation, and correction history      |
 
 ## Error and loading behavior
 
@@ -249,8 +268,8 @@ Hiding a button is not enforcement. Render structured 403 errors cleanly because
 - [x] No fake Fee Heads appear during empty/error states.
 - [x] Create defaults to Draft; Activate is explicit and server-validated.
 - [x] Rule editor has no redundant applicable/NoProration state.
-- [x] One-time eligibility comes from Fee Structure impact, not Fee Head guessing.
-- [x] Fee Structure saves and rehydrates policy ID plus version from the response.
+- [x] Standalone policy rules retain their own eligibility checks; structure attachment impact is retired.
+- [x] Fee Structure excludes Proration Policy from selectors, lookups, payloads and review.
 - [x] Assignment captures day-level dates/source and audited override reason.
 - [x] Preview and commit show the same server-calculated line totals.
 - [x] Duplicate submit cannot create duplicate dues.

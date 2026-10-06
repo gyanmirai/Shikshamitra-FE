@@ -1,7 +1,9 @@
 'use client';
 
+import type { RefundPolicySimulationResponse } from 'src/redux/finance/refundPolicy';
+
 import React from 'react';
-import { GlobalIcons } from 'src/utils/icons';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import LoadingButton from '@mui/lab/LoadingButton';
 import {
@@ -10,16 +12,13 @@ import {
   Paper,
   Stack,
   Alert,
-  Divider,
   TextField,
   Typography,
   InputAdornment,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 
 import { SectionCard } from './RefundCommon';
 
-import type { RefundPolicySimulationResponse } from 'src/redux/finance/refundPolicy';
 import type { IRefundPolicyFormValues } from '../../types/finance-policy.types';
 
 interface RefundSimulationSectionProps {
@@ -212,7 +211,7 @@ export default function RefundSimulationSection({
                       Remaining Eligible Base
                     </Typography>
                     <Typography variant="subtitle2" fontWeight={700}>
-                      ₹{serverSimulation.remainingEligible.toFixed(2)}
+                      ₹{Math.ceil(serverSimulation.remainingEligible).toLocaleString('en-IN')}
                     </Typography>
                   </Box>
                 </Grid>
@@ -222,7 +221,7 @@ export default function RefundSimulationSection({
                       Gross Calculated
                     </Typography>
                     <Typography variant="subtitle2" fontWeight={700}>
-                      ₹{serverSimulation.rawRefund.toFixed(2)}
+                      ₹{Math.ceil(serverSimulation.rawRefund).toLocaleString('en-IN')}
                     </Typography>
                   </Box>
                 </Grid>
@@ -232,7 +231,7 @@ export default function RefundSimulationSection({
                       Deduction Applied
                     </Typography>
                     <Typography variant="subtitle2" fontWeight={700} color="error.main">
-                      -₹{serverSimulation.deductionAmount.toFixed(2)}
+                      -₹{Math.ceil(serverSimulation.deductionAmount).toLocaleString('en-IN')}
                     </Typography>
                   </Box>
                 </Grid>
@@ -242,7 +241,7 @@ export default function RefundSimulationSection({
                       Final Net Refund
                     </Typography>
                     <Typography variant="h6" fontWeight={800} color="success.main">
-                      ₹{serverSimulation.finalRefund.toFixed(2)}
+                      ₹{Math.ceil(serverSimulation.finalRefund).toLocaleString('en-IN')}
                     </Typography>
                   </Box>
                 </Grid>

@@ -5,6 +5,8 @@
  * https://gist.github.com/raushankrjha/d1c7e35cf87e69aa8b4208a8171a8416
  */
 
+import { roundUpAmount } from './whole-rupee-amount';
+
 export type InputNumberValue = string | number | null | undefined;
 
 type Options = Intl.NumberFormatOptions | undefined;
@@ -44,10 +46,10 @@ export function fCurrency(inputValue: InputNumberValue, options?: Options) {
   const fm = new Intl.NumberFormat(locale.code, {
     style: 'currency',
     currency: locale.currency,
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
     ...options,
-  }).format(number);
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(roundUpAmount(number));
 
   return fm;
 }

@@ -60,7 +60,7 @@ const DEFAULT_RULE: LateFeeRuleOverrideValue = {
   amountPerMonth: null,
   compoundFrequency: 'Daily',
   escalationRules: [],
-  roundingMethod: 'None',
+  roundingMethod: 'RoundUp',
   maximumLateFeeAmount: null,
   maximumChargingDays: null,
 };
@@ -81,13 +81,6 @@ const LATE_FEE_TYPE_OPTIONS = [
   { label: 'Per Week', value: 'PerWeek' },
   { label: 'Per Month', value: 'PerMonth' },
   { label: 'Compound', value: 'Compound' },
-];
-
-const ROUNDING_METHOD_OPTIONS = [
-  { label: 'None', value: 'None' },
-  { label: 'Round Up', value: 'RoundUp' },
-  { label: 'Round Down', value: 'RoundDown' },
-  { label: 'Nearest Rupee', value: 'NearestRupee' },
 ];
 
 const PERCENTAGE_BASE_OPTIONS = [
@@ -229,7 +222,7 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
           compoundFrequency: policy.compoundFrequency,
           escalationRules: policy.escalationRules,
           feeHeadOverrides,
-          roundingMethod: policy.roundingMethod,
+          roundingMethod: 'RoundUp',
           considerAsIncome: policy.considerAsIncome,
           lateFeeIncomeCategoryId: policy.lateFeeIncomeCategoryId,
           maximumLateFeeAmount: policy.maximumLateFeeAmount,
@@ -463,16 +456,7 @@ const FeeHeadOverridesEditor: React.FC<FeeHeadOverridesEditorProps> = ({
               />
             )}
 
-            <CustomSelect
-              label="Rounding Method"
-              options={ROUNDING_METHOD_OPTIONS}
-              labelKey="label"
-              valueKey="value"
-              value={ruleDialogRow.lateFeeRule.roundingMethod}
-              onChange={(val) => updateRuleField('roundingMethod', val)}
-              size="small"
-              formControlProps={{ sx: { width: '100%' } }}
-            />
+
 
             <TextField
               fullWidth

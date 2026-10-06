@@ -9,6 +9,10 @@ export default defineConfig({
   resolve: {
     alias: [
       { find: /.*hooks\/useFeeStructureLookups$/, replacement: `${here}/mock-lookups.ts` },
+      {
+        find: /.*hooks\/useClassWiseFeeStructureHooks$/,
+        replacement: `${here}/mock-class-structures.ts`,
+      },
       { find: /^src\/redux\/customQueryAndMutation$/, replacement: `${here}/mock-api.ts` },
       {
         find: /^src\/redux\/finance\/(feeStructureWorkspace|financeFeeStructure)$/,

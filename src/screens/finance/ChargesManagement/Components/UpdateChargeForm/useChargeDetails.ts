@@ -81,8 +81,6 @@ export const useChargeDetails = (chargeId?: string) => {
       chargeId: chargeDetail.chargeId || '',
       chargeName: chargeDetail.chargeName || '',
       chargeCategoryId: chargeDetail.chargeCategoryId || '',
-      incomeCategoryId: chargeDetail.incomeCategoryId || '',
-      receivingBankAccountId: chargeDetail.receivingBankAccountId || '',
       chargeCategoryName: chargeDetail.categoryName || '',
       purposeDescription: chargeDetail.purposeDescription || '',
       amount: chargeDetail.amount || '',

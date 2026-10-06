@@ -69,7 +69,7 @@ const ExpenseCategoryTable: React.FC<IExpenseCategoryTableProps> = ({
         label: 'Amount',
         align: 'left',
         filterType: 'number',
-        render: (value) => `₹ ${value?.toLocaleString()}`,
+        render: (value) => `₹ ${Math.ceil(Number(value || 0)).toLocaleString('en-IN')}`,
       },
       {
         id: 'paymentMethod',

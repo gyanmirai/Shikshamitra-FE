@@ -1,12 +1,15 @@
-import type { AssignmentDetails } from 'src/redux/finance/studentFeeAssignment';
+import type {
+  AssignmentDetails,
+  AssignmentPolicySelection,
+} from 'src/redux/finance/studentFeeAssignment';
 
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
-import { useEffect, useRef, useState } from 'react';
-import { Stack, Button, Alert, Typography } from '@mui/material';
 import { Iconify } from 'src/components/iconify';
-import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { useRef, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Stack, Alert, Button, Typography } from '@mui/material';
 import {
   assignmentError,
   assignmentPolicyFamilies,
@@ -32,12 +35,14 @@ export default function AssignedPolicyEditor({
   const [error, setError] = useState('');
   const [confirmCancel, setConfirmCancel] = useState(false);
   const pending = useRef(false);
-  const formik = useFormik({
+  const formik = useFormik<{ policies: AssignmentPolicySelection[]; reason: string }>({
     initialValues: {
-      policies: assignmentPolicyFamilies.map((family) => ({
-        family,
-        versionId: data.assignment.policies.find((p) => p.family === family)?.versionId ?? null,
-      })),
+      policies: assignmentPolicyFamilies
+        .filter((family) => family !== 'proration')
+        .map((family) => ({
+          family,
+          versionId: data.assignment.policies.find((p) => p.family === family)?.versionId ?? null,
+        })),
       reason: '',
     },
     validationSchema: Yup.object({

@@ -277,7 +277,7 @@ const MaintenanceHistoryTable = ({ vehicleId }: { vehicleId: string }) => {
           align: 'left',
           minWidth: '120px',
           filterType: 'number',
-          render: (value) => `Rs. ${Number(value || 0).toLocaleString()}`,
+          render: (value) => `Rs. ${Math.ceil(Number(value || 0)).toLocaleString('en-IN')}`,
         },
         {
           id: 'description',

@@ -126,7 +126,7 @@ const ViewExpenseData = ({
                   {expenseByIdDataLoading ? (
                     <Skeleton width={100} />
                   ) : (
-                    `₹ ${expenseInfo?.totalAmountSpent?.toLocaleString() || expenseDetailedData?.totalExpenseAmount?.toLocaleString() || '0'}`
+                    `₹ ${Math.ceil(Number(expenseInfo?.totalAmountSpent || 0)).toLocaleString('en-IN') || Math.ceil(Number(expenseDetailedData?.totalExpenseAmount || 0)).toLocaleString('en-IN') || '0'}`
                   )}
                 </Typography>
               </Stack>
@@ -193,7 +193,7 @@ const ViewExpenseData = ({
                 align: 'right',
                 render: (value, row) => (
                   <Typography variant="subtitle2" fontWeight="bold">
-                    ₹ {row.amount?.toLocaleString()}
+                    ₹ {Math.ceil(Number(row.amount || 0)).toLocaleString('en-IN')}
                   </Typography>
                 ),
               },

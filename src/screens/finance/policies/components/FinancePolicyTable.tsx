@@ -6,18 +6,18 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-
 import React, { useMemo, useEffect } from 'react';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { Box, Chip, Alert, Button, LinearProgress, Typography } from '@mui/material';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import { Box, Chip, Typography } from '@mui/material';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Iconify } from 'src/components/iconify';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import {
   useGetRefundPoliciesQuery,
   useGetRefundPolicyByIdQuery,
@@ -53,6 +53,14 @@ import {
   useArchiveConcessionPolicyMutation,
   useUnarchiveConcessionPolicyMutation,
 } from 'src/redux/finance/concessionPolicy';
+import {
+  CONCESSION_METHODS,
+  CONCESSION_SCOPES,
+  CONCESSION_VALUE_SOURCES,
+  concessionOptionLabel,
+  concessionValueLabel,
+  policyDateLabel,
+} from './concession/concessionPresentation';
 
 import FinancePolicyAuditDrawer from './FinancePolicyAuditDrawer';
 import FinancePolicyDetailsDrawer from './FinancePolicyDetailsDrawer';
@@ -90,6 +98,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   onEdit,
   archived = false,
 }) => {
+  const lifecycleDialog = useBoolean();
   const deleteDialog = useBoolean();
   const detailsDialog = useBoolean();
   const auditDialog = useBoolean();
@@ -120,7 +129,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   const isConcessionKind = policyType === 'concession';
   const isRefundKind = policyType === 'refund';
   const isProrationKind = policyType === 'proration';
-  const usesArchiveTabs = isCollectionKind || isConcessionKind;
+  const usesArchiveTabs = isCollectionKind || isConcessionKind || isRefundKind || isProrationKind;
   const concessionPermissions = financePermissions.policies.concessionPolicyActions;
   const collectionPermissions = financePermissions.policies.collectionPolicyActions;
   const refundPermissions = financePermissions.policies.refundPolicyActions;
@@ -199,7 +208,9 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   );
 
   const {
-    data: concessionPolicyData,
+    currentData: concessionPolicyData,
+    isError: isConcessionError,
+    refetch: refetchConcessionPolicies,
     isLoading: isConcessionLoading,
     isFetching: isConcessionFetching,
   } = useGetConcessionPoliciesQuery(
@@ -278,9 +289,12 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
   const [unarchiveCollectionPolicy] = useUnarchiveCollectionPolicyMutation();
   const [cloneCollectionPolicy, { isLoading: isCollectionCloning }] =
     useCloneCollectionPolicyMutation();
-  const [archiveConcessionPolicy] = useArchiveConcessionPolicyMutation();
-  const [unarchiveConcessionPolicy] = useUnarchiveConcessionPolicyMutation();
-  const [cloneConcessionPolicy] = useCloneConcessionPolicyMutation();
+  const [archiveConcessionPolicy, { isLoading: isConcessionArchiving }] =
+    useArchiveConcessionPolicyMutation();
+  const [unarchiveConcessionPolicy, { isLoading: isConcessionRestoring }] =
+    useUnarchiveConcessionPolicyMutation();
+  const [cloneConcessionPolicy, { isLoading: isConcessionCloning }] =
+    useCloneConcessionPolicyMutation();
   const [archiveRefundPolicy] = useArchiveRefundPolicyMutation();
   const [unarchiveRefundPolicy] = useUnarchiveRefundPolicyMutation();
   const [cloneRefundPolicy, { isLoading: isRefundCloning }] = useCloneRefundPolicyMutation();
@@ -303,7 +317,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
     useGetCollectionPolicyByIdQuery(selected?.id || '', {
       skip: !selected?.id || !detailsDialog.value || !isCollectionKind,
     });
-  const { data: concessionPolicyDetails, isLoading: isConcessionDetailsLoading } =
+  const { currentData: concessionPolicyDetails, isFetching: isConcessionDetailsLoading } =
     useGetConcessionPolicyByIdQuery(selected?.id || '', {
       skip: !selected?.id || !detailsDialog.value || !isConcessionKind,
     });
@@ -358,9 +372,11 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         label: 'Policy Name',
         align: 'left',
         sticky: true,
+        stickyPosition: 'left',
+        minWidth: 240,
         render: (value, row) => (
-          <Box>
-            <Typography variant="caption" fontWeight={600} fontSize="13px">
+          <Box sx={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 1 }}>
+            <Typography variant="body2" fontWeight={600} sx={{ overflowWrap: 'anywhere' }}>
               {value}
             </Typography>
             {(row as IFinancePolicyRow).isDefault && (
@@ -369,7 +385,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                 size="small"
                 color="primary"
                 variant="outlined"
-                sx={{ ml: 1, height: 18, fontSize: '10px' }}
+                sx={{ height: 20, flexShrink: 0 }}
               />
             )}
           </Box>
@@ -421,53 +437,54 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         ? [
             {
               id: 'valueSource',
-              label: 'Value Source',
+              label: 'Value source',
               align: 'left' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value
-                    ? String(value)
-                        .replace(/([A-Z])/g, ' $1')
-                        .trim()
-                    : '-'}
+              minWidth: 155,
+              render: (value: string) => (
+                <Typography variant="body2">
+                  {concessionOptionLabel(CONCESSION_VALUE_SOURCES, value)}
                 </Typography>
               ),
             },
             {
               id: 'calculationMethod',
-              label: 'Calculation Method',
+              label: 'Calculation',
               align: 'left' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value || '-'}
+              minWidth: 140,
+              render: (value: string) => (
+                <Typography variant="body2">
+                  {concessionOptionLabel(CONCESSION_METHODS, value)}
                 </Typography>
               ),
             },
             {
               id: 'policyLimit',
-              label: 'Value / Limit',
+              label: 'Value / limit',
               align: 'right' as const,
-              render: (_: any, row: any) => (
-                <Typography variant="caption" fontSize="13px" fontWeight="600">
-                  {row.calculationMethod === 'Percentage'
-                    ? `${row.valueSource === 'PolicyFixed' ? row.percentageValue : row.maximumPercentage}%`
-                    : row.calculationMethod === 'FixedAmount'
-                      ? `₹${row.valueSource === 'PolicyFixed' ? row.fixedAmount : row.maximumFixedAmount}`
-                      : '100%'}
-                </Typography>
+              minWidth: 115,
+              render: (_: unknown, row: any) => (
+                <Box>
+                  <Typography
+                    variant="body2"
+                    fontWeight={600}
+                    sx={{ fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {concessionValueLabel(row)}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {row.valueSource === 'PolicyFixed' ? 'Fixed value' : 'Maximum'}
+                  </Typography>
+                </Box>
               ),
             },
             {
               id: 'applyOn',
-              label: 'Apply On',
+              label: 'Apply on',
               align: 'left' as const,
-              render: (value: any) => (
-                <Typography variant="caption" fontSize="13px">
-                  {value
-                    ? String(value)
-                        .replace(/([A-Z])/g, ' $1')
-                        .trim()
-                    : '-'}
+              minWidth: 195,
+              render: (value: string) => (
+                <Typography variant="body2">
+                  {concessionOptionLabel(CONCESSION_SCOPES, value)}
                 </Typography>
               ),
             },
@@ -645,11 +662,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         align: 'left',
         render: (value, row: any) => (
           <Typography variant="caption" fontSize="13px">
-            {value || row.lastModificationTime || row.creationTime
-              ? new Date(value || row.lastModificationTime || row.creationTime).toLocaleDateString(
-                  'en-IN'
-                )
-              : '-'}
+            {policyDateLabel(row.updatedAt || row.lastModificationTime || row.creationTime)}
           </Typography>
         ),
       },
@@ -657,6 +670,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
         id: 'status',
         label: 'Status',
         align: 'left',
+        minWidth: 100,
         filterType: 'enum',
         isFilter: !(usesArchiveTabs && archived),
         sticky: true,
@@ -679,15 +693,17 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       {
         id: 'action',
         label: 'Actions',
-        align: 'left',
+        align: 'right',
+        excludeFromExport: true,
         isSort: false,
         isFilter: false,
         sticky: true,
-        minWidth: 80,
+        minWidth: 160,
         render: (_, row) => {
           const policy = row as IFinancePolicyRow;
           return (
             <AdaptiveThreeDotsActions
+              moreLabel={`Actions for ${policy.policyName}`}
               actions={[
                 {
                   id: 'view',
@@ -732,7 +748,11 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                         label: 'Clone',
                         icon: 'mdi:content-copy',
                         disabled:
-                          isCloning || isCollectionCloning || isRefundCloning || isProrationCloning,
+                          isCloning ||
+                          isCollectionCloning ||
+                          isConcessionCloning ||
+                          isRefundCloning ||
+                          isProrationCloning,
                         onClick: async () => {
                           try {
                             if (isCollectionKind) {
@@ -828,6 +848,11 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                               : undefined,
                         onClick: async () => {
                           const isRestoring = policy.status === 'Archived';
+                          if (isConcessionKind) {
+                            setSelected(policy);
+                            lifecycleDialog.onTrue();
+                            return;
+                          }
                           try {
                             if (isCollectionKind) {
                               if (isRestoring) {
@@ -892,6 +917,7 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
       unarchiveProrationPolicy,
       cloneProrationPolicy,
       isCollectionCloning,
+      isConcessionCloning,
       isRefundCloning,
       isProrationCloning,
       canEditPolicy,
@@ -903,14 +929,54 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
     ]
   );
 
+  const tableColumns = useMemo(
+    () =>
+      isConcessionKind
+        ? columns.map((column) => ({
+            ...column,
+            isSort: false,
+            isFilter: column.id === 'status' && !archived,
+          }))
+        : columns,
+    [columns, isConcessionKind, archived]
+  );
+  const lifecycleBusy = isConcessionArchiving || isConcessionRestoring;
+  const restoring = selected?.status === 'Archived';
+
   // ── Render ────────────────────────────────────────────────────────────────────
 
   return (
     <>
+      {isConcessionKind && isConcessionError && (
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" color="inherit" onClick={() => refetchConcessionPolicies()}>
+              Retry
+            </Button>
+          }
+        >
+          Unable to load concession policies.
+        </Alert>
+      )}
+      {isConcessionKind && isFetching && Boolean(concessionPolicyData) && (
+        <LinearProgress aria-label="Refreshing concession policies" />
+      )}
       <CustomizableTable
         tableId={`finance-${policyType}-policy-table`}
-        isLoading={isLoading || isFetching}
-        columns={columns}
+        isLoading={isLoading || (isFetching && !policyData)}
+        columns={tableColumns}
+        tableTitle={isConcessionKind ? 'Concession policies' : 'Finance policies'}
+        wrapperProps={{ sx: { flex: 1, height: 1, minHeight: 0 } }}
+        tableContainerProps={{
+          'aria-label': isConcessionKind ? 'Concession policies' : 'Finance policies',
+          sx: { height: 1 },
+        }}
+        searchFieldProps={{
+          placeholder: isConcessionKind ? 'Search policies by name…' : 'Search…',
+        }}
+        page={queryParams.page - 1}
+        rowsPerPage={queryParams.pageSize}
         data={policyData?.items || []}
         serverSidePagination
         serverSideSearch
@@ -930,23 +996,31 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
           }));
         }}
         noDataText={
-          usesArchiveTabs && archived ? (
-            `No archived ${isCollectionKind ? 'collection' : 'concession'} policies.`
+          isConcessionKind && isConcessionError ? (
+            'Policies could not be loaded. Use Retry above.'
+          ) : !academicYearId ? (
+            'Select an academic year to view policies.'
+          ) : queryParams.search || queryParams.status ? (
+            'No policies match your search or filters.'
+          ) : usesArchiveTabs && archived ? (
+            'No archived policies.'
           ) : (
-            <>
-              No policy found.{' '}
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                No policies have been created for this academic year.
+              </Typography>
               {canCreatePolicy && (
-                <Box
-                  component="span"
+                <Button
+                  size="small"
+                  variant="contained"
                   onClick={onAdd}
-                  color="primary.main"
-                  fontWeight={600}
-                  sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                  sx={{ mt: 1.5 }}
+                  startIcon={<Iconify icon="mingcute:add-line" />}
                 >
-                  Add Policy
-                </Box>
+                  Create policy
+                </Button>
               )}
-            </>
+            </Box>
           )
         }
       />
@@ -958,7 +1032,15 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
           detailsDialog.onFalse();
           setSelected(null);
         }}
-        policy={selected}
+        policy={
+          selected
+            ? {
+                ...selected,
+                policyType,
+                academicYearName: selected.academicYearName || currentYear?.name || '',
+              }
+            : null
+        }
         policyDetails={policyDetails}
         isLoading={isDetailsLoading}
       />
@@ -996,6 +1078,55 @@ const FinancePolicyTable: React.FC<IFinancePolicyTableProps> = ({
                 academicYearName: selected.academicYearName || currentYear?.name || '',
               }
             : null
+        }
+      />
+
+      <ConfirmDialog
+        open={lifecycleDialog.value}
+        onClose={() => {
+          if (!lifecycleBusy) {
+            lifecycleDialog.onFalse();
+            setSelected(null);
+          }
+        }}
+        disableBackdropClick
+        disableCancel={lifecycleBusy}
+        disableEscapeKeyDown={lifecycleBusy}
+        icon={restoring ? 'info' : 'warning'}
+        title={restoring ? 'Restore concession policy?' : 'Archive concession policy?'}
+        content={
+          <>
+            <strong>{selected?.policyName}</strong>
+            {restoring
+              ? ' will be restored as a draft. Review and activate it before using it on new requests.'
+              : ' will move to Archived and become unavailable for new requests. Existing request history is preserved.'}
+          </>
+        }
+        action={
+          <LoadingButton
+            size="small"
+            variant="contained"
+            loading={lifecycleBusy}
+            startIcon={
+              <Iconify icon={restoring ? 'mdi:archive-arrow-up-outline' : 'mdi:archive-outline'} />
+            }
+            onClick={async () => {
+              if (!selected || lifecycleBusy) return;
+              try {
+                if (restoring) await unarchiveConcessionPolicy(selected.id).unwrap();
+                else await archiveConcessionPolicy(selected.id).unwrap();
+                shikshaMitraToast.success({
+                  message: restoring ? 'Policy restored to Draft.' : 'Policy archived.',
+                });
+                lifecycleDialog.onFalse();
+                setSelected(null);
+              } catch (error) {
+                shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
+              }
+            }}
+          >
+            {restoring ? 'Restore as draft' : 'Archive policy'}
+          </LoadingButton>
         }
       />
 

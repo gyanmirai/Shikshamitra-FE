@@ -9,22 +9,10 @@ import React from 'react';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
+import { Label } from 'src/components/label';
+import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
-import {
-  Box,
-  Grid,
-  Chip,
-  Alert,
-  Stack,
-  Select,
-  Skeleton,
-  MenuItem,
-  TextField,
-  InputLabel,
-  Typography,
-  FormControl,
-  FormHelperText,
-} from '@mui/material';
+import { Box, Grid, Chip, Alert, Stack, Skeleton, TextField, Typography } from '@mui/material';
 
 import DefaultPolicyToggle from '../DefaultPolicyToggle';
 import { ConcessionSectionCard } from './ConcessionCommon';
@@ -56,20 +44,20 @@ export default function ConcessionGeneralSection({
 }: ConcessionGeneralSectionProps) {
   return (
     <ConcessionSectionCard
-      title="General Information"
-      subtitle="Define policy identity, publication status, and core scope."
+      title="General information"
+      subtitle="Name the policy and choose when it is available."
       icon={GlobalIcons.notebook}
     >
-      <Grid container spacing={2.5}>
+      <Grid container spacing={1}>
         {/* Policy Name */}
-        <Grid size={{ xs: 12, sm: 8 }}>
+        <Grid size={{ xs: 12, sm: 7 }}>
           <ShakingTextField error={!!(formik.touched.policyName && formik.errors.policyName)}>
             <TextField
               fullWidth
               size="small"
-              label="Policy Name *"
+              label="Policy name *"
               name="policyName"
-              placeholder="e.g. Sibling Discount Policy, Merit Scholarship Concession"
+              placeholder="e.g. Sibling tuition assistance"
               value={formik.values.policyName}
               onChange={onNameChange || formik.handleChange}
               onBlur={formik.handleBlur}
@@ -83,73 +71,44 @@ export default function ConcessionGeneralSection({
           </ShakingTextField>
         </Grid>
 
-        {/* Status */}
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <ShakingTextField error={!!(formik.touched.status && formik.errors.status)}>
-            <FormControl
+        <Grid size={{ xs: 12, sm: 5 }}>
+          <ShakingTextField error={Boolean(formik.touched.status && formik.errors.status)}>
+            <CustomSelect
               fullWidth
               size="small"
-              error={formik.touched.status && Boolean(formik.errors.status)}
-            >
-              <InputLabel>Status *</InputLabel>
-              <Select
-                label="Status *"
-                name="status"
-                value={formik.values.status}
-                onChange={(event) => {
-                  formik.handleChange(event);
-                  if (event.target.value !== 'Active') formik.setFieldValue('isDefault', false);
-                }}
-                onBlur={formik.handleBlur}
-                renderValue={(val) => {
-                  const opt = STATUS_OPTIONS.find((o) => o.value === val);
-                  return (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip
-                        label={opt?.label || val}
-                        size="small"
-                        color={opt?.color || 'default'}
-                        variant={val === 'Active' ? 'filled' : 'outlined'}
-                        sx={{ height: 22, fontSize: '0.72rem', fontWeight: 700 }}
-                      />
-                    </Box>
-                  );
-                }}
-              >
-                {STATUS_OPTIONS.map((o) => (
-                  <MenuItem
-                    key={o.value}
-                    value={o.value}
-                    disabled={o.value !== 'Active' && Boolean(formik.initialValues.isDefault)}
-                  >
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Chip
-                        label={o.label}
-                        size="small"
-                        color={o.color}
-                        variant={o.value === 'Active' ? 'filled' : 'outlined'}
-                        sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}
-                      />
-                      <Typography variant="body2">{o.label}</Typography>
-                    </Stack>
-                  </MenuItem>
-                ))}
-              </Select>
-              {formik.touched.status && formik.errors.status && (
-                <FormHelperText>{formik.errors.status as string}</FormHelperText>
+              label="Status *"
+              name="status"
+              options={STATUS_OPTIONS}
+              value={formik.values.status}
+              onChange={(value) => {
+                formik.setFieldValue('status', value);
+                if (value !== 'Active') formik.setFieldValue('isDefault', false);
+              }}
+              onBlur={() => formik.setFieldTouched('status', true)}
+              disabledValues={formik.initialValues.isDefault ? ['Draft'] : []}
+              disabledLabel="Choose another default policy first"
+              renderValue={(value) => (
+                <Label color={value === 'Active' ? 'success' : 'warning'}>{String(value)}</Label>
               )}
-            </FormControl>
+              error={Boolean(formik.touched.status && formik.errors.status)}
+              helperText={
+                (formik.touched.status && formik.errors.status) ||
+                (formik.values.status === 'Active'
+                  ? 'Available for concession requests.'
+                  : 'Save for review before making it active.')
+              }
+            />
           </ShakingTextField>
         </Grid>
 
         {/* Description */}
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, sm: 7 }}>
           <ShakingTextField error={!!(formik.touched.description && formik.errors.description)}>
             <TextField
               fullWidth
               size="small"
               multiline
-              rows={2.5}
+              rows={3}
               label="Description"
               name="description"
               value={formik.values.description}
@@ -161,12 +120,12 @@ export default function ConcessionGeneralSection({
                 `${(formik.values.description || '').length}/500 characters`
               }
               inputProps={{ maxLength: 500 }}
-              placeholder="Describe the operational purpose, criteria, and administrative scope of this concession policy..."
+              placeholder="Describe who this policy supports and when to use it."
             />
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12 }}>
+        <Grid size={{ xs: 12, sm: 5 }}>
           <DefaultPolicyToggle
             policyLabel="Concession"
             status={formik.values.status}
@@ -190,7 +149,7 @@ export default function ConcessionGeneralSection({
               }}
             >
               <Typography variant="subtitle2" fontWeight={700} color="warning.dark">
-                Active Policy Revision Notice
+                Updating an active policy
               </Typography>
               <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
                 Modifications to this active policy will generate a new revision version. Historical
@@ -232,9 +191,9 @@ export default function ConcessionGeneralSection({
               <TextField
                 fullWidth
                 size="small"
-                label="Change Reason *"
+                label="Change reason *"
                 name="changeReason"
-                placeholder="Explain the governance reason or operational justification for modifying this active policy..."
+                placeholder="Explain why the policy is changing."
                 value={formik.values.changeReason || ''}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}

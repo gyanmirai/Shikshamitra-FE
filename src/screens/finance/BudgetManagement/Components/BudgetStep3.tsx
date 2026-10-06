@@ -116,8 +116,7 @@ const BudgetInfoCard = (formik: FormikProps<IBudgetFormValues>) => {
                   return new Intl.NumberFormat('en-IN', {
                     style: 'currency',
                     currency: 'INR',
-                    minimumFractionDigits: 2,
-                  }).format(value);
+                    minimumFractionDigits: 0, maximumFractionDigits: 0}).format(Math.ceil(value));
                 },
               },
               { id: 'notes', label: 'Notes', align: 'left' },

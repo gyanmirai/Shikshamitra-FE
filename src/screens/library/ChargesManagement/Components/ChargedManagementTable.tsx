@@ -84,8 +84,7 @@ const LibraryChargesTable = ({
           return new Intl.NumberFormat('en-IN', {
             style: 'currency',
             currency: 'INR',
-            minimumFractionDigits: 2,
-          }).format(value);
+            minimumFractionDigits: 0, maximumFractionDigits: 0}).format(Math.ceil(value));
         },
       },
       { id: 'rollNo', label: 'Roll No.', align: 'left', minWidth: 90 },

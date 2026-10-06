@@ -11,11 +11,12 @@ import { defaultSettings } from 'src/components/settings/config-settings';
 import CustomDialog from 'src/components/customDialog';
 import { useBoolean } from 'src/hooks/use-boolean';
 import confirmPopup, { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
+import { financeModuleType } from 'src/redux/tagTypes';
 import FeeCollectionTable from 'src/screens/finance/FeeCollection/Components/FeeCollectionTable';
 import FeeCollectComponentForm from 'src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm';
 import type { IFeeData, IStudentFee } from 'src/screens/finance/FeeCollection/Components/type';
 import type { UseFinanceAcademicFiltersResult } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
-import { api, requests, resetFixture } from './mock-service';
+import { api, requests, resetFixture, refreshSelectionBalances } from './mock-service';
 import 'simplebar-react/dist/simplebar.min.css';
 
 const boards = [{ id: 'gseb', name: 'GSEB', educationMediums: [{ id: 'english', name: 'English' }] }];
@@ -61,6 +62,7 @@ function Fixture() {
       </Box>
       {showRequests && <Box component="pre" sx={{ maxHeight: 250, overflow: 'auto', fontSize: 12 }}>{JSON.stringify(requests.filter((request) => request.method === 'POST'), null, 2)}</Box>}
       <CustomDialog open={dialog.value} fullScreen title={`Fee Collection - ${student?.name ?? 'Student'} · synthetic fixture`} handleClose={close}>
+        <Button onClick={() => { refreshSelectionBalances(); store.dispatch(api.util.invalidateTags([financeModuleType.feeDetails, financeModuleType.feeCollection])); }}>Refresh selection balances</Button>
         {dialog.value && <FeeCollectComponentForm student={student} onCancel={close} />}
       </CustomDialog>
     </Stack>

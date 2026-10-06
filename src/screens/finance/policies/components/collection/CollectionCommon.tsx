@@ -1,11 +1,12 @@
 'use client';
 
+import type { Theme, SxProps } from '@mui/material/styles';
+
 import React from 'react';
+import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Box, Card, Stack, Typography } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-
 
 import type { ILateFeeEscalationRule } from '../../types/finance-policy.types';
 
@@ -63,24 +64,29 @@ export function SectionCard({
   icon,
   action,
   children,
+  sx = {},
 }: {
   title: string;
   subtitle?: string;
   icon?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
+  sx?: SxProps<Theme>;
 }) {
   return (
     <Card
       variant="outlined"
-      sx={{
-        mb: 2.5,
-        borderRadius: 1.75,
-        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.98),
-        borderColor: (theme) => alpha(theme.palette.divider, 0.9),
-        boxShadow: (theme) => `0 4px 16px -8px ${alpha(theme.palette.grey[500], 0.16)}`,
-        overflow: 'visible',
-      }}
+      sx={[
+        {
+          mb: 2.5,
+          borderRadius: 1.75,
+          bgcolor: 'background.paper',
+          borderColor: 'divider',
+          boxShadow: (theme) => `0 4px 16px -8px ${alpha(theme.palette.grey[500], 0.16)}`,
+          overflow: 'visible',
+        },
+        ...(Array.isArray(sx) ? sx : [sx]),
+      ]}
     >
       <Box
         sx={{
@@ -88,10 +94,7 @@ export function SectionCard({
           py: 1.75,
           borderBottom: '1px solid',
           borderColor: 'divider',
-          bgcolor: (theme) =>
-            theme.palette.mode === 'dark'
-              ? alpha(theme.palette.background.default, 0.4)
-              : alpha(theme.palette.grey[50], 0.8),
+          bgcolor: 'background.neutral',
           borderRadius: '14px 14px 0 0',
           display: 'flex',
           alignItems: 'center',

@@ -148,7 +148,7 @@ const StopManagementTable: React.FC<StopManagementTableProps> = ({
             align: 'left',
             minWidth: 100,
             filterType: 'number',
-            render: (value) => `₹ ${value?.toLocaleString()}`,
+            render: (value) => `₹ ${Math.ceil(Number(value || 0)).toLocaleString('en-IN')}`,
           },
           {
             id: 'approxKmFromSchool',

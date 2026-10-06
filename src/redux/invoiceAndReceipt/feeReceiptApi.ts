@@ -94,6 +94,7 @@ export interface GetFeeReceiptListParams {
   educationMediumId: string;
   standardId?: string;
   divisionId?: string;
+  /** Calendar month (1–12); omitted means all months in the academic year. */
   month?: number;
   receiptKind?: FeeReceiptKind;
   search?: string;

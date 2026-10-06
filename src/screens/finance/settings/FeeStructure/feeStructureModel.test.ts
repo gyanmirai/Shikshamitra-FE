@@ -65,8 +65,6 @@ describe('Fee Structure editor contract', () => {
       concessionPolicyVersionId: 'cnv1',
       refundPolicyId: 'refund',
       refundPolicyVersionId: 'rv1',
-      prorationPolicyId: 'proration',
-      prorationPolicyVersionId: 'pv1',
       concessionApplicableFeeHeadIds: ['head'],
       feeHeads: [
         {
@@ -298,4 +296,12 @@ it('requires both term IDs and preserves pinned versions and customized schedule
   const customized = { ...line, scheduleMode: 'Customized' as const };
   expect(withDefaultPaymentTerm(customized, term)).toBe(customized);
   expect(withDefaultPaymentTerm(line, undefined)).toBe(line);
+});
+
+it('omits retired proration fields when adapting a legacy response', () => {
+  const legacy = { ...structureCandidate(), prorationPolicyId: 'old', prorationPolicyVersionId: 'old-v1' };
+  const adapted = structureCandidate(legacy);
+  expect(adapted).not.toHaveProperty('prorationPolicyId');
+  expect(adapted).not.toHaveProperty('prorationPolicyVersionId');
+  expect(buildStructureChanges(adapted, { ...adapted, name: 'Changed name' })).toEqual({ name: 'Changed name' });
 });

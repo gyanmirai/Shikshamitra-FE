@@ -3,7 +3,7 @@ import { financeModuleType } from 'src/redux/tagTypes';
 import { financeModuleApi } from './financeModuleApi';
 import { financeFeeStructureApi } from './financeFeeStructure';
 
-export type PolicyFamily = 'collection' | 'concession' | 'proration' | 'refund';
+export type PolicyFamily = 'collection' | 'concession' | 'refund';
 export interface StructureInstallment {
   sourcePaymentTermInstallmentId: string;
   sequence: number;
@@ -41,8 +41,6 @@ export interface StructureCandidate {
   collectionPolicyVersionId: string | null;
   concessionPolicyId: string | null;
   concessionPolicyVersionId: string | null;
-  prorationPolicyId: string | null;
-  prorationPolicyVersionId: string | null;
   refundPolicyId: string | null;
   refundPolicyVersionId: string | null;
   concessionFeeHeadScope: 'EntireFeeStructure' | 'SelectedFeeHeads';
@@ -103,7 +101,6 @@ export interface StructurePreview {
     name: string;
     collection: string;
     concession: string;
-    proration: string;
     refund: string;
     accounting: string;
   }[];

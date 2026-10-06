@@ -12,8 +12,6 @@ const candidate = structureCandidate({
   concessionPolicyVersionId: 'v1',
   refundPolicyId: 'refund',
   refundPolicyVersionId: 'v1',
-  prorationPolicyId: 'proration',
-  prorationPolicyVersionId: 'v1',
   concessionFeeHeadScope: 'SelectedFeeHeads',
   concessionApplicableFeeHeadIds: ['tuition'],
   feeHeads: ['tuition', 'bus'].map((feeHeadId) => ({
@@ -72,7 +70,7 @@ it('updates concession coverage from the unsaved selected scope and head capabil
   ).toEqual(['Not eligible', 'Not eligible']);
 });
 
-it('shows selected refund heads and full-charge fallback without computing amounts', () => {
+it('shows selected refund heads without computing amounts', () => {
   expect(
     policyImpactRows('refund', candidate, settings, {
       id: 'refund',
@@ -81,13 +79,6 @@ it('shows selected refund heads and full-charge fallback without computing amoun
       applicableFeeHeadIds: ['bus'],
     })?.map((row) => row.treatment)
   ).toEqual(['Excluded', 'Policy eligible']);
-  expect(
-    policyImpactRows('proration', candidate, settings, {
-      id: 'proration',
-      currentVersionId: 'v1',
-      feeHeadRules: [{ feeHeadId: 'bus', ruleType: 'Daily', roundingMode: 'Currency' }],
-    })?.map((row) => row.treatment)
-  ).toEqual(['Full charge', 'Daily']);
 });
 
 it('never interprets missing data or a newer version as no coverage', () => {
@@ -126,7 +117,6 @@ it('uses saved publication evidence even when the current master differs', () =>
         name: 'Historical tuition',
         collection: '',
         concession: 'Eligible on approval',
-        proration: '',
         refund: '',
         accounting: '',
       },

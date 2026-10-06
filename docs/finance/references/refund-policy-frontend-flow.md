@@ -3,7 +3,7 @@ module: finance
 domain: refund-policy-frontend-flow
 content_type: Conceptual
 status: proposed
-updated_on: 2026-09-07
+updated_on: 2026-10-06
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,6 +17,14 @@ The backend remains authoritative for policy resolution, eligibility, calculatio
 
 This page is the frontend integration and staff-experience specification.
 Typed Refund Policy setup, Collection-style status selection, lifecycle actions, version history, and fee-structure selection are implemented in the current working tree. The receipt-first request and settlement screens remain the target for the existing refund transaction workspace.
+The policy editor groups Expense Category and Default Paying Bank Account in a final Refund Accounting section after general information and refund eligibility.
+
+The Refund Policy workspace uses Current Policies and Archived controls, matching Collection and Concession.
+Archived shows a server count scoped to the selected academic year; the archive/restore cache tags refresh this count and the list.
+Current permits Draft and Active status filters; Archived fixes the status and hides creation controls and the status filter.
+Switching views resets pagination and the status query while retaining search.
+Restore returns a policy to Draft, making it visible in Current Policies.
+The focused workspace checks are in `src/screens/finance/policies/workspaces/PolicyArchiveWorkspaces.test.tsx`.
 
 Product rules, API contracts, statuses, permissions, data integrity, and calculations are canonical in the [backend Refund Policy flow](../../../../Shikshamitra-BE/docs/modules/finance/references/refund-policy-flow.md).
 This page owns visible routes, screen behavior, client wiring, cache behavior, validation feedback, accessibility, and browser acceptance.

@@ -32,8 +32,6 @@ export const createUpdateChargeValidationSchema = (currentYear: any, isEditMode:
       .min(3, 'Charge Name must be at least 3 characters')
       .max(100, 'Charge Name cannot exceed 100 characters'),
 
-    incomeCategoryId: Yup.string().required('Income Category is required'),
-    receivingBankAccountId: Yup.string().required('Receiving Bank Account is required'),
     chargeCategoryId: Yup.string().required('Charge Category is required'),
 
     purposeDescription: Yup.string()

@@ -3,7 +3,7 @@ module: finance
 domain: workflows
 content_type: How-to
 status: canonical
-updated_on: 2026-10-03
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -95,6 +95,14 @@ The current workspace creates and reviews charge batches, while Fee Collection c
 
 Fee collection and receipt flows span Finance and shared fee client folders.
 
+The Receipts workspace opens on **All months** within the selected academic year,
+board, and medium so a newly collected payment is visible regardless of the year's
+starting month. The Month selector can narrow the list to a calendar month or return
+to All months; changing the academic year clears that month filter. Month values follow
+the [backend receipt contract](../../../Shikshamitra-BE/docs/modules/finance/api.md).
+Filter changes reset server pagination. Successful fee collection invalidates the
+shared Receipt cache tag so an already loaded receipt list refreshes.
+
 The Collections status column renders the API's `NoFeeAssigned` status as a neutral **No Fee Assigned** badge and includes it in the status column filter. The [backend product rules](../../../Shikshamitra-BE/docs/modules/finance/product.md) own classification and export semantics. The badge and filter option regression is covered by `src/screens/finance/FeeCollection/Components/FeeCollectionTable.test.tsx`.
 
 | Workflow            | Inspect first                                                                          |
@@ -172,7 +180,7 @@ The four bill-generation rules are: installment start date, X days before due da
 
 ### Fee Structure policy defaults
 
-When a new Fee Structure opens, the Policies form loads the academic year's Active Collection, Refund, and Proration policies. It fills an untouched empty selection with that type's Default before the Policies tab is opened. Staff can choose a different policy; saved structures keep their explicit selections, including intentionally absent optional policies.
+When a new Fee Structure opens, the Policies form loads the academic year's Active Collection and Refund policies. It fills an untouched empty selection with that type's Default before the Policies tab is opened. Staff can choose a different policy; saved structures keep their explicit selections, including intentionally absent optional policies.
 
 All four policy editors use the same Default control. A current Default explains why it cannot
 be cleared or moved to Draft, and the archive action requires staff to designate a replacement
@@ -187,6 +195,28 @@ clears are retained when lookups refresh. The backend owns the
 3. Version History compares each snapshot with its predecessor and shows field-level changes, actor, timestamp, action, status, and reason when present.
 4. Audit Trail presents those same immutable records as create, update, clone, archive, and unarchive lifecycle events, so policy audit evidence cannot drift from version history.
 
+### Concession Policy workspace
+
+The Current policies and Archived tabs share a full-height table with server search and status
+filtering. Values use the same concession labels in the table, form fields and detail view;
+missing or invalid dates display `—`, and amounts use the shared Indian currency formatter.
+Create/edit, details, audit and version drawers share a header and stable footer. The form body
+owns scrolling, stacks fields on narrow screens and locks interaction while saving. Section
+guidance uses accessible info tooltips, and header context appears in an info tooltip after
+the status badge. Policy name and Status share a row; Description and the default toggle
+share the next row on wider screens. The create/edit form has a neutral Submit action, no
+submit shortcut, and no policy-summary, balance-preview or completion-checklist sidebar.
+Archive and restore use focused confirmations; restore returns a policy to Draft.
+
+Policy audit events are grouped by date, newest first, with expandable Before/After field
+comparisons. Version history uses keyboard-accessible snapshot selection and identifies the
+newest snapshot as Latest, independently of policy status. Both drawers use the same neutral
+diff table, resolve policy and academic-year references to names, and offer retry on failure.
+
+Actual request eligibility and amounts remain server-owned. The offline
+[verification fixture](../../e2e/fixtures/concession-policy/README.md)
+mounts the actual components with synthetic data for responsive and lifecycle checks.
+
 ## Student fee assignment
 
 The active assignment drawer, typed client, permissions, retries and verification fixture are documented in [Student fee assignment](./references/student-fee-assignment.md).
@@ -200,3 +230,9 @@ The implemented selectors, retired Account Heads route, lookup permissions, cach
 
 See [variable fee assignment](./references/variable-fee-assignment.md) for the active fixed/variable and required/optional conditions.
 Included variable heads require a student amount before preview and commit; skipped optional heads create no dues.
+
+## Whole-rupee amount display
+
+Collection, concession, refund and proration editors, fee-head overrides and policy details no longer show a selectable rounding field. The client sends the system RoundUp rule (RoundUpRupee for proration), and the server remains authoritative for amounts and caps. Shared monetary formatters round upward and show no decimal places, including receipts, library charges, admission payments, transport amounts and payroll displays. Percentages retain fractional precision.
+
+Installment previews use server amounts: ordinary installments discard fractional shares and the last installment receives the remainder, preserving the rounded fee total. See the [backend monetary rules](../../../Shikshamitra-BE/docs/modules/finance/product.md#whole-rupee-monetary-rules) for calculation order, caps and historical compatibility.

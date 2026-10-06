@@ -5,8 +5,6 @@ import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
 import { alpha, useTheme } from '@mui/material/styles';
 import CustomSelect from 'src/components/custom-select';
-import { hasGrantedPermission } from 'src/utils/permissions';
-import { financePermissions } from 'src/constants/finance-menu';
 import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
 import { Box, Chip, Grid, Alert, Stack, Divider, Typography } from '@mui/material';
 import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
@@ -16,10 +14,6 @@ import {
   type FinancePolicyType,
   useGetFinancePoliciesQuery,
 } from 'src/redux/finance/financePolicy';
-import {
-  useGetProrationPoliciesQuery,
-  useGetProrationAttachmentImpactMutation,
-} from 'src/redux/finance/prorationPolicy';
 
 // ── types ────────────────────────────────────────────────────────────────────
 
@@ -27,7 +21,6 @@ export interface PolicyValues {
   paymentPolicyId: string;
   collectionPolicyId: string;
   refundPolicyId: string;
-  prorationPolicyId: string;
   concessionPolicyId: string;
   concessionFeeHeadScope: 'EntireFeeStructure' | 'SelectedFeeHeads';
   concessionApplicableFeeHeadIds: string[];
@@ -45,7 +38,6 @@ interface FeePoliciesTabProps {
   isLocked: boolean;
   feeHeads?: Array<{ feeHeadId: string; feeHeadName?: string; isOneTime?: boolean }>;
   feeStructureMetadataId: string;
-  feeStructureId?: string;
 }
 
 // ── helper ───────────────────────────────────────────────────────────────────
@@ -86,15 +78,6 @@ const POLICY_CONFIG: Array<{
     required: false,
     description: 'Defines eligible paid amounts, caps, deductions, and allowed payout methods',
   },
-  {
-    key: 'prorationPolicyId',
-    type: 'proration',
-    label: 'Proration Policy',
-    icon: 'solar:calendar-mark-bold-duotone',
-    color: 'info',
-    required: false,
-    description: 'Sets proration rules for mid-session admissions',
-  },
 ];
 
 // ── sub-component: one policy row ────────────────────────────────────────────
@@ -134,12 +117,11 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
   // policy types still use the legacy generic client until their backend slices are migrated.
   const isCollectionPolicy = policyType === 'collection';
   const isRefundPolicy = policyType === 'refund';
-  const isProrationPolicy = policyType === 'proration';
 
   const { data: genericPolicyData, isLoading: isGenericLoading } = useGetFinancePoliciesQuery(
     { policyType, academicYearId, status: 'Active' },
     {
-      skip: !academicYearId || isCollectionPolicy || isRefundPolicy || isProrationPolicy,
+      skip: !academicYearId || isCollectionPolicy || isRefundPolicy,
     }
   );
 
@@ -152,25 +134,17 @@ const PolicyRow: React.FC<PolicyRowProps> = ({
     { academicYearId: academicYearId as string, status: 'Active', page: 1, pageSize: 100 },
     { skip: !academicYearId || !isRefundPolicy }
   );
-  const { data: prorationPolicyData, isLoading: isProrationLoading } = useGetProrationPoliciesQuery(
-    { academicYearId: academicYearId as string, status: 'Active', page: 1, pageSize: 100 },
-    { skip: !academicYearId || !isProrationPolicy }
-  );
 
   const isLoading = isCollectionPolicy
     ? isCollectionLoading
     : isRefundPolicy
       ? isRefundLoading
-      : isProrationPolicy
-        ? isProrationLoading
-        : isGenericLoading;
+      : isGenericLoading;
   const policyData = isCollectionPolicy
     ? collectionPolicyData
     : isRefundPolicy
       ? refundPolicyData
-      : isProrationPolicy
-        ? prorationPolicyData
-        : genericPolicyData;
+      : genericPolicyData;
 
   const options = (policyData?.data ?? policyData?.items ?? policyData ?? []).map((p: any) => ({
     label: p.policyName,
@@ -273,15 +247,9 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
   isLocked,
   feeHeads = [],
   feeStructureMetadataId,
-  feeStructureId,
 }) => {
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canManageProrationAttachment = hasGrantedPermission(
-    permissions,
-    financePermissions.policies.prorationPolicyActions.manageAttachment
-  );
   const { data: collectionPolicyData } = useGetCollectionPoliciesQuery(
     { academicYearId: currentYear?.id as string, status: 'Active' },
     { skip: !currentYear?.id }
@@ -289,19 +257,10 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
   const selectedCollectionPolicy = (collectionPolicyData?.items ?? []).find(
     (p: any) => p.id === values.collectionPolicyId
   );
-  const { data: prorationPolicyData } = useGetProrationPoliciesQuery(
-    { academicYearId: currentYear?.id as string, status: 'Active', page: 1, pageSize: 100 },
-    { skip: !currentYear?.id }
-  );
-  const selectedProrationPolicy = (prorationPolicyData?.items ?? []).find(
-    (policy) => policy.id === values.prorationPolicyId
-  );
 
 
   const [validateAttachment, { data: attachmentImpact, isLoading: impactLoading }] =
     useValidateCollectionPolicyAttachmentMutation();
-  const [getProrationImpact, { data: prorationImpact, isLoading: prorationImpactLoading }] =
-    useGetProrationAttachmentImpactMutation();
   const feeHeadIdsKey = feeHeads
     .map((item) => item.feeHeadId)
     .sort()
@@ -316,10 +275,6 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
     });
   }, [feeStructureMetadataId, values.collectionPolicyId, feeHeadIdsKey, validateAttachment]);
 
-  React.useEffect(() => {
-    if (!feeStructureId || !values.prorationPolicyId) return;
-    getProrationImpact({ id: values.prorationPolicyId, feeStructureId });
-  }, [feeStructureId, getProrationImpact, values.prorationPolicyId]);
   const { data: feeHeadData } = useGetActiveFeeHeadsQuery(currentYear?.id as string, {
     skip: !currentYear?.id,
   });
@@ -334,14 +289,6 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
   const headsWithoutLateFee = feeHeads.filter((x) => !lateFeePolicyHeadIds.has(x.feeHeadId));
   const policyOnlyHeads = (feeHeadData ?? []).filter(
     (x) => applicablePolicyHeadIds.has(x.id) && !structureFeeHeadIds.has(x.id)
-  );
-  const nonFullProrationHeadIds = new Set(
-    (selectedProrationPolicy?.feeHeadRules ?? [])
-      .filter((rule) => rule.ruleType !== 'FullCharge')
-      .map((rule) => rule.feeHeadId)
-  );
-  const invalidOneTimeProrationHeads = feeHeads.filter(
-    (head) => head.isOneTime && nonFullProrationHeadIds.has(head.feeHeadId)
   );
 
   return (
@@ -387,7 +334,7 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
               value={values[cfg.key] ?? ''}
               onChange={(val) => onChange(cfg.key, val)}
               isEditing={isEditing}
-              isLocked={isLocked || (cfg.type === 'proration' && !canManageProrationAttachment)}
+              isLocked={isLocked}
               academicYearId={currentYear?.id}
             />
           </Grid>
@@ -469,45 +416,6 @@ const FeePoliciesTab: React.FC<FeePoliciesTabProps> = ({
         </>
       )}
 
-      {values.prorationPolicyId && feeHeads.length > 0 && (
-        <>
-          <Divider sx={{ my: 2, borderColor: alpha(theme.palette.grey[500], 0.1) }} />
-          <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1.5 }}>
-            <Typography variant="body2" fontWeight={700}>
-              Proration Policy Impact
-            </Typography>
-            <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
-              {selectedProrationPolicy?.policyName} · version{' '}
-              {prorationImpact?.policyVersion ?? selectedProrationPolicy?.version ?? 'current'}
-              {prorationImpactLoading ? ' · checking…' : ''}
-            </Typography>
-
-            {invalidOneTimeProrationHeads.length > 0 && (
-              <Alert severity="error" sx={{ mb: 1 }}>
-                These legacy fee lines require Full charge proration:{' '}
-                {invalidOneTimeProrationHeads
-                  .map((head) => head.feeHeadName || head.feeHeadId)
-                  .join(', ')}
-                .
-              </Alert>
-            )}
-
-            {(prorationImpact?.warnings ?? []).map((warning) => (
-              <Alert severity="warning" sx={{ mb: 1 }} key={warning}>
-                {warning}
-              </Alert>
-            ))}
-
-            {invalidOneTimeProrationHeads.length === 0 &&
-              (prorationImpact?.warnings.length ?? 0) === 0 && (
-                <Alert severity="success">
-                  The selected policy is compatible with this Fee Structure. The current policy
-                  version will be pinned when saved.
-                </Alert>
-              )}
-          </Box>
-        </>
-      )}
     </Box>
   );
 };

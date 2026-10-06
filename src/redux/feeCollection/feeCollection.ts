@@ -1,6 +1,6 @@
 import type { FeeMonth, FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
-import { financeModuleType } from 'src/redux/tagTypes';
+import { receiptType, financeModuleType } from 'src/redux/tagTypes';
 
 import { financeModuleApi } from '../finance/financeModuleApi';
 
@@ -452,6 +452,7 @@ export const feeCollectionApi = financeModuleApi.injectEndpoints({
         body,
       }),
       invalidatesTags: [
+        receiptType.receipt,
         financeModuleType.feeCollection,
         financeModuleType.feeDetails,
         financeModuleType.charges,

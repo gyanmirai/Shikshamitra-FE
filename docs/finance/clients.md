@@ -70,6 +70,7 @@ receive the same safe display text.
 Canonical server labels retain their masked identifier; delimited missing-value tokens
 are omitted, with compatibility fallbacks to `maskedAccountNumber` or
 `accountHolderName` when supplied.
+Bank-only labels also include an available masked identifier or account holder name.
 The mapper never reads a full account number and never changes the bank-account ID.
 
 Fee Collection resolves selection months from the selected academic year's
@@ -77,6 +78,10 @@ server-provided `startDate` and `endDate`.
 The existing academic-month lookup remains a compatibility path for older context
 responses without dates; collectors with dated context do not need Fee Structure
 settings access to use the six-month selection controls.
+Preset and manual selections retain separate ownership, so removing a preset preserves
+rows selected manually or by another preset. Completed ledger refreshes reconcile existing
+selections with current collectible rows: paid/missing items are removed and reduced
+balances replace stale amounts. Refreshing never adds newly arrived obligations to checkout.
 
 Income/Expense manual entry forms send category IDs, and the backend validates active categories of the correct type. Source-linked automatic entries cannot be edited or deleted through those forms. General Accounts journal posting remains unavailable.
 

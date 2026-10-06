@@ -108,7 +108,7 @@ export function ApplicationPaymentStage({
                 Required
               </Typography>
               <Typography variant="h6">
-                {state.currency} {state.requiredAmount.toFixed(2)}
+                {state.currency} {Math.ceil(state.requiredAmount).toLocaleString('en-IN')}
               </Typography>
             </Stack>
             <Stack flex={1}>
@@ -116,7 +116,7 @@ export function ApplicationPaymentStage({
                 Settled
               </Typography>
               <Typography variant="h6" color="success.main">
-                {state.currency} {state.settledAmount.toFixed(2)}
+                {state.currency} {Math.ceil(state.settledAmount).toLocaleString('en-IN')}
               </Typography>
             </Stack>
             <Stack flex={1}>
@@ -124,7 +124,7 @@ export function ApplicationPaymentStage({
                 Outstanding
               </Typography>
               <Typography variant="h6">
-                {state.currency} {state.outstandingAmount.toFixed(2)}
+                {state.currency} {Math.ceil(state.outstandingAmount).toLocaleString('en-IN')}
               </Typography>
             </Stack>
           </Stack>

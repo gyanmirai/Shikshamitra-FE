@@ -37,7 +37,7 @@ const statusLabel = (status: number | string | undefined, fallback?: string) => 
 };
 
 const formatAmount = (amount: number | string | undefined) =>
-  Number(amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+  Math.ceil(Number(amount || 0)).toLocaleString('en-IN', { maximumFractionDigits: 0 });
 
 const FeeRunPanel = ({ academicMediumId, academicYearId }: FeeRunPanelProps) => {
   const [periodFrom, setPeriodFrom] = useState(dayjs().startOf('month').format('YYYY-MM-DD'));

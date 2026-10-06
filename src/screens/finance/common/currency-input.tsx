@@ -25,10 +25,11 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
       style: 'currency',
       currency: currencyCode,
       minimumFractionDigits: 0,
-      //   minimumFractionDigits: 2,
-      //   maximumFractionDigits: 2,
+      maximumFractionDigits: 0,
+      //   minimumFractionDigits: 0,
+      //   maximumFractionDigits: 0,
     })
-      .format(numericValue)
+      .format(Math.ceil(numericValue))
       .replace(/^₹\s?/, '');
   };
 
@@ -55,9 +56,8 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
           <InputAdornment position="start">
             {new Intl.NumberFormat(undefined, {
               style: 'currency',
-              currency: currencyCode,
-            })
-              .format(0)
+              currency: currencyCode, minimumFractionDigits: 0, maximumFractionDigits: 0})
+              .format(Math.ceil(0))
               .replace(/\d/g, '')
               .trim()}
           </InputAdornment>
@@ -94,8 +94,8 @@ export default CurrencyInput;
 //         style: currency ? 'currency' : 'decimal',
 //         currency,
 //         currencyDisplay: 'narrowSymbol',
-//         minimumFractionDigits: 2,
-//         maximumFractionDigits: 2,
+//         minimumFractionDigits: 0,
+//         maximumFractionDigits: 0,
 //     }).format(numericValue);
 // };
 

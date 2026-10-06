@@ -38,6 +38,14 @@ describe('finance policy version formatters', () => {
     });
   });
 
+  it('keeps status labels distinct from record references with matching keys', () => {
+    expect(
+      formatFinancePolicyVersionValue('Status', 'Draft', {
+        labelsById: { draft: 'Financial support policy' },
+      })
+    ).toEqual({ kind: 'status', text: 'Draft' });
+  });
+
   it('uses friendly names for known ids and arrays', () => {
     const context = {
       labelsById: {

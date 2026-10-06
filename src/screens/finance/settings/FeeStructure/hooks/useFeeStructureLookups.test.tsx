@@ -1,21 +1,19 @@
 import { it, vi, expect } from 'vitest';
 import { waitFor, renderHook } from '@testing-library/react';
 import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
-import { useGetProrationPoliciesQuery } from 'src/redux/finance/prorationPolicy';
 import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { useGetStructureContextQuery } from 'src/redux/finance/feeStructureWorkspace';
 import { useGetPaymentTermsQuery, useGetPaymentTermByIdQuery } from 'src/redux/finance/paymentTerm';
 
-import useFeeStructureLookups, { useCatalog } from './useFeeStructureLookups';
 import { defaultPolicy } from '../feeStructureModel';
+import useFeeStructureLookups, { useCatalog } from './useFeeStructureLookups';
 
 vi.mock('src/redux/customQueryAndMutation', () => ({
   default: ({ currentQueryAndMutation, params, options }: any) =>
     currentQueryAndMutation(params, options),
 }));
 vi.mock('src/redux/finance/refundPolicy', () => ({ useGetRefundPoliciesQuery: vi.fn() }));
-vi.mock('src/redux/finance/prorationPolicy', () => ({ useGetProrationPoliciesQuery: vi.fn() }));
 vi.mock('src/redux/finance/concessionPolicy', () => ({ useGetConcessionPoliciesQuery: vi.fn() }));
 vi.mock('src/redux/finance/collectionPolicy', () => ({ useGetCollectionPoliciesQuery: vi.fn() }));
 vi.mock('src/redux/feeHeadManage/feeHeadManageApi', () => ({ useGetActiveFeeHeadsQuery: vi.fn() }));
@@ -87,13 +85,12 @@ it('keeps loaded options available after a failed refresh but does not initializ
   expect(result.current.items).toEqual(data.items);
 });
 
-it('loads all three policy defaults for a new structure before opening its Policies tab', async () => {
+it('loads both policy defaults for a new structure before opening its Policies tab', async () => {
   const context = {
     academicYearId: 'year',
     boardId: 'board',
     permissions: {
       collectionRead: true,
-      prorationRead: true,
       refundRead: true,
       termsRead: true,
       headsRead: true,
@@ -109,7 +106,6 @@ it('loads all three policy defaults for a new structure before opening its Polic
   } as any);
   const queries = {
     collection: useGetCollectionPoliciesQuery,
-    proration: useGetProrationPoliciesQuery,
     refund: useGetRefundPoliciesQuery,
   };
   Object.entries(queries).forEach(([family, query]) => {
@@ -130,7 +126,7 @@ it('loads all three policy defaults for a new structure before opening its Polic
     useFeeStructureLookups({ feeStructureMetadataId: 'metadata', standardId: 'class' }, true)
   );
   await waitFor(() => expect(result.current.catalogs.refund.ready).toBe(true));
-  (['collection', 'proration', 'refund'] as const).forEach((family) => {
+  (['collection', 'refund'] as const).forEach((family) => {
     expect(defaultPolicy(result.current.settings!, family)).toMatchObject({
       id: `${family}-default`,
       versionId: `${family}-version`,

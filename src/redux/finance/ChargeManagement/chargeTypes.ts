@@ -152,8 +152,8 @@ export interface IGetChargeLinesParams {
 export interface ICreateChargeRequest {
   chargeName: string;
   chargeCategoryId: string;
-  incomeCategoryId: string;
-  receivingBankAccountId: string;
+  incomeCategoryId?: string;
+  receivingBankAccountId?: string;
   incomeCategoryName?: string;
   receivingBankLabel?: string;
   purposeDescription: string;

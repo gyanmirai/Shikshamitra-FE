@@ -3,7 +3,7 @@ import { it, vi, expect, beforeEach } from 'vitest';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { defaultSettings } from 'src/components/settings/config-settings';
-import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
+import { act, render, screen, within, waitFor, cleanup, fireEvent } from '@testing-library/react';
 
 import { structureCandidate } from './feeStructureModel';
 import FeeStructureWorkspaceCard from './Components/FeeStructureWorkspaceCard';
@@ -23,17 +23,6 @@ vi.mock('src/redux/finance/financeFeeStructure', () => ({
   useDeleteClassWiseFeeStructureMutation: vi.fn(),
 }));
 vi.mock('./Components/StructureScheduleDialog', () => ({ default: () => null }));
-vi.mock('src/components/custom-tabs', () => ({
-  CustomTabs: ({ children, onChange }: any) => (
-    <div>
-      {React.Children.map(children, (child: any) =>
-        React.cloneElement(child, {
-          onClick: () => onChange(undefined, child.props.value),
-        })
-      )}
-    </div>
-  ),
-}));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <svg aria-hidden="true" /> }));
 // Keep these tests focused on the editor's row interactions and request gating.
 vi.mock('src/components/customizabaleTable', () => ({
@@ -80,6 +69,7 @@ const ui = (record?: any) => (
 
 beforeEach(() => {
   cleanup();
+  window.localStorage.clear();
   state.mutate.mockReset();
   state.lookups = {
     settings: {
@@ -95,7 +85,7 @@ beforeEach(() => {
     context: { isLoading: false, isFetching: false, isError: false },
     heads: { isFetching: false, isError: false },
     terms: { ...catalog },
-    catalogs: { collection: catalog, refund: catalog, proration: catalog },
+    catalogs: { collection: catalog, refund: catalog },
     termDetail: {},
   };
 });
@@ -105,6 +95,109 @@ async function addHead() {
   fireEvent.click(await screen.findByRole('option', { name: 'Tuition' }));
   fireEvent.click(screen.getByRole('button', { name: 'Add head' }));
 }
+
+it('resumes a saved structure at its scoped saved navigation step', () => {
+  window.localStorage.setItem(
+    'fee-structure-progress:metadata:class:saved',
+    JSON.stringify('policies')
+  );
+  render(
+    ui({ ...structureCandidate(), id: 'saved', name: 'Saved fees', status: 1, revisionNumber: 1 })
+  );
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
+    'aria-current',
+    'step'
+  );
+  expect(screen.getByRole('combobox', { name: 'Collection Policy' })).toBeTruthy();
+});
+
+it('ignores an outstanding preview when a newer saved structure arrives', async () => {
+  Object.assign(state.lookups.settings.permissions, { publish: true });
+  let resolvePreview!: (value: any) => void;
+  state.mutate.mockReturnValueOnce({
+    unwrap: () =>
+      new Promise((resolve) => {
+        resolvePreview = resolve;
+      }),
+  });
+  const record = {
+    ...structureCandidate(),
+    id: 'saved',
+    name: 'Original fees',
+    status: 1,
+    revisionNumber: 1,
+    concurrencyStamp: 'old',
+  };
+  const view = render(ui(record));
+  fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
+  view.rerender(ui({ ...record, name: 'Refreshed fees', concurrencyStamp: 'new' }));
+  await act(async () => {
+    resolvePreview({ isReady: true, errors: [], warnings: [], coverage: [], schedules: [] });
+  });
+  expect(screen.queryByText('All configuration checks passed.')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Publish structure' })).toBeDisabled();
+});
+
+it('keeps the current step and entered name when Save & next fails', async () => {
+  state.mutate.mockReturnValue({
+    unwrap: () =>
+      Promise.reject(Object.assign(new Error('Save failed'), { data: { detail: 'Save failed' } })),
+  });
+  render(ui());
+  fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+    target: { value: 'Annual fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & next' }));
+  await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(1));
+  expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue('Annual fees');
+  expect(screen.getByRole('button', { name: /^Step 1: Fee heads & terms$/i })).toHaveAttribute(
+    'aria-current',
+    'step'
+  );
+  expect(screen.queryByRole('combobox', { name: 'Collection Policy' })).toBeNull();
+});
+
+it('advances after a successful save and restores the canonical name when navigating back', async () => {
+  state.mutate.mockReturnValue({
+    unwrap: () =>
+      Promise.resolve({
+        ...structureCandidate(),
+        id: 'saved',
+        name: 'Annual fees (saved)',
+        status: 1,
+        revisionNumber: 1,
+        concurrencyStamp: 'stamp',
+      }),
+  });
+  render(ui());
+  fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+    target: { value: 'Annual fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & next' }));
+  await screen.findByRole('combobox', { name: 'Collection Policy' });
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
+    'aria-current',
+    'step'
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+  expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue(
+    'Annual fees (saved)'
+  );
+  expect(state.mutate).toHaveBeenCalledTimes(1);
+});
+
+it('preserves unsaved input while freely visiting policies and returning with Back', async () => {
+  render(ui());
+  fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
+    target: { value: 'Unsaved school fees' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
+  fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+  expect(screen.getByRole('textbox', { name: /Structure name/i })).toHaveValue(
+    'Unsaved school fees'
+  );
+  expect(state.mutate).not.toHaveBeenCalled();
+});
 
 it('saves the selected collection policy before allowing review and publication of the saved draft', async () => {
   const record = {
@@ -146,19 +239,18 @@ it('saves the selected collection policy before allowing review and publication 
   render(ui(record));
   const publishButton = () =>
     screen.getByRole('button', { name: 'Publish structure' }) as HTMLButtonElement;
-  expect(publishButton().disabled).toBe(true);
-  fireEvent.click(screen.getByRole('tab', { name: /Policies/i }));
+  expect(screen.queryByRole('button', { name: 'Publish structure' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(
     screen.getByRole('combobox', { name: 'Collection Policy' }).getAttribute('aria-disabled')
   ).toBe('true');
   fireEvent.click(screen.getByRole('button', { name: 'Edit draft' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Collection Policy' }));
   fireEvent.click(await screen.findByRole('option', { name: 'collection prerna policy · v1' }));
-  expect(publishButton().disabled).toBe(true);
-  expect(screen.getByText(/Save draft to attach your selected policies/)).toBeTruthy();
+  expect(screen.queryByRole('button', { name: 'Publish structure' })).toBeNull();
   // Reviewing unsaved input must not permit publishing the older server record.
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(ready) });
-  fireEvent.click(screen.getByRole('tab', { name: /Review & Publish/i }));
+  fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
   await screen.findByText('All configuration checks passed.');
   expect(publishButton().disabled).toBe(true);
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve(saved) });
@@ -173,7 +265,11 @@ it('saves the selected collection policy before allowing review and publication 
   await waitFor(() => expect(publishButton().disabled).toBe(false));
   state.mutate.mockReturnValueOnce({ unwrap: () => Promise.resolve({ ...saved, status: 0 }) });
   fireEvent.click(publishButton());
-  fireEvent.click(await screen.findByRole('button', { name: 'Confirm' }));
+  fireEvent.click(
+    await screen
+      .findByRole('dialog')
+      .then((dialog) => within(dialog).getByRole('button', { name: 'Publish structure' }))
+  );
   await waitFor(() => expect(state.mutate).toHaveBeenCalledTimes(4));
   expect(state.mutate.mock.calls[3][0]).toEqual({
     structureId: record.id,
@@ -188,7 +284,7 @@ it.each(['collection', 'collectionRead'])(
     Object.assign(state.lookups.settings.permissions, { collection: true, collectionRead: true });
     state.lookups.settings.permissions[permission] = false;
     render(ui());
-    fireEvent.click(screen.getByRole('tab', { name: /Policies/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
     expect(
       screen.getByRole('combobox', { name: 'Collection Policy' }).getAttribute('aria-disabled')
     ).toBe('true');
@@ -215,9 +311,9 @@ it('offers only structure policies and preserves a legacy concession attachment 
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Renamed fees' },
   });
-  fireEvent.click(screen.getByRole('tab', { name: /Policies/i }));
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
   expect(screen.getByRole('combobox', { name: 'Collection Policy' })).toBeTruthy();
-  expect(screen.getByRole('combobox', { name: 'Proration Policy' })).toBeTruthy();
+  expect(screen.queryByRole('combobox', { name: 'Proration Policy' })).toBeNull();
   expect(screen.getByRole('combobox', { name: 'Refund Policy' })).toBeTruthy();
   expect(
     screen.queryByText(/Concession Policy|Concession eligibility|Concession Fee Heads/)
@@ -391,7 +487,7 @@ it('shows unpriced variable installments as entered at assignment even when the 
         ],
       }),
   });
-  fireEvent.click(screen.getByRole('tab', { name: /Review & Publish/i }));
+  fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
   expect(await screen.findByText('Calculated during assignment')).toBeTruthy();
   expect(screen.queryByText(/NaN/)).toBeNull();
 });

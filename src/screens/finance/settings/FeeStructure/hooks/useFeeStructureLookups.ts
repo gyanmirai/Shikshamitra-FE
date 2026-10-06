@@ -7,7 +7,6 @@ import type {
 import { useRef, useMemo, useState, useEffect } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
-import { useGetProrationPoliciesQuery } from 'src/redux/finance/prorationPolicy';
 import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import { useGetStructureContextQuery } from 'src/redux/finance/feeStructureWorkspace';
@@ -112,11 +111,6 @@ export default function useFeeStructureLookups(
     policyParams,
     !!academicYearId && policiesEnabled && !!permissions.collectionRead
   );
-  const proration = useCatalog(
-    useGetProrationPoliciesQuery,
-    policyParams,
-    !!academicYearId && policiesEnabled && !!permissions.prorationRead
-  );
   const refund = useCatalog(
     useGetRefundPoliciesQuery,
     policyParams,
@@ -151,7 +145,6 @@ export default function useFeeStructureLookups(
             policies: (
               [
                 ['collection', collection.items],
-                ['proration', proration.items],
                 ['refund', refund.items],
               ] as [PolicyFamily, any[]][]
             ).flatMap(([family, items]) =>
@@ -170,7 +163,7 @@ export default function useFeeStructureLookups(
             terms: selectablePaymentTerms(terms.items, data.academicYearId, data.boardId),
           }
         : undefined,
-    [data, heads.currentData, collection.items, proration.items, refund.items, terms.items]
+    [data, heads.currentData, collection.items, refund.items, terms.items]
   );
   const detail = termDetail.currentData;
   const version = detail?.versions.find(
@@ -196,7 +189,7 @@ export default function useFeeStructureLookups(
     context,
     heads,
     terms,
-    catalogs: { collection, proration, refund },
+    catalogs: { collection, refund },
     scheduleTerm,
     termDetail,
   };

@@ -485,6 +485,36 @@ describe('Fee Collection selection presets', () => {
     expect(rowCheckbox('November 2026')).toBeChecked();
     expect(rowCheckbox('Second installment')).not.toBeChecked();
   }, 30_000);
+
+  it('reconciles selected fees and charges to refreshed unpaid balances', async () => {
+    const view = render(<FeeCollectComponentForm student={student} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'All Pending' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: 'All Charges' }));
+    await expectSelection(13, 18511);
+
+    const refreshed = buildSelectionForm();
+    Object.assign(refreshed.ledger[5].items[0], {
+      due: 0,
+      paid: 2000,
+      status: FeeCollectionStatusType.Paid,
+    });
+    Object.assign(refreshed.ledger[6].items[0], { due: 500, paid: 1500 });
+    Object.assign(refreshed.charges[4], {
+      pendingAmount: 0,
+      paidAmount: 1111,
+      status: FeeCollectionStatusType.Paid,
+    });
+    mocks.data = refreshed;
+    view.rerender(<FeeCollectComponentForm student={student} />);
+
+    await expectSelection(11, 13900);
+    expect(screen.getByRole('checkbox', { name: 'All Pending' })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: 'All Charges' })).toBeChecked();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'All Pending' }));
+    await expectSelection(4, 400);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'All Charges' }));
+    expect(screen.getByText('No fee items selected')).toBeVisible();
+  }, 30_000);
 });
 
 describe('Fee Collection independent additional charges', () => {

@@ -55,6 +55,7 @@ export function useFinancePolicyVersion({
     data: auditData,
     isLoading: isAuditLoading,
     isError: isAuditError,
+    refetch: refetchAudit,
   } = useGetFinanceEntityAuditEventsQuery(
     {
       entityType: 'finance_policy',
@@ -68,6 +69,7 @@ export function useFinancePolicyVersion({
     data: concessionVersionData,
     isLoading: isConcessionLoading,
     isError: isConcessionError,
+    refetch: refetchConcession,
   } = useGetConcessionPolicyVersionsQuery(policyId || '', {
     skip: !open || !policyId || !isConcession,
   });
@@ -75,6 +77,7 @@ export function useFinancePolicyVersion({
     data: collectionVersionData,
     isLoading: isCollectionLoading,
     isError: isCollectionError,
+    refetch: refetchCollection,
   } = useGetCollectionPolicyVersionsQuery(
     { id: policyId || '', skipCount: 0, maxResultCount: 100 },
     { skip: !open || !policyId || !isCollection }
@@ -83,6 +86,7 @@ export function useFinancePolicyVersion({
     data: refundVersionData,
     isLoading: isRefundLoading,
     isError: isRefundError,
+    refetch: refetchRefund,
   } = useGetRefundPolicyVersionsQuery(policyId || '', {
     skip: !open || !policyId || !isRefund,
   });
@@ -90,6 +94,7 @@ export function useFinancePolicyVersion({
     data: prorationVersionData,
     isLoading: isProrationLoading,
     isError: isProrationError,
+    refetch: refetchProration,
   } = useGetProrationPolicyVersionsQuery(policyId || '', {
     skip: !open || !policyId || !isProration,
   });
@@ -219,6 +224,15 @@ export function useFinancePolicyVersion({
     selectedVersion,
     selectedVersionId,
     setSelectedVersionId,
+    refetch: isCollection
+      ? refetchCollection
+      : isRefund
+        ? refetchRefund
+        : isProration
+          ? refetchProration
+          : isConcession
+            ? refetchConcession
+            : refetchAudit,
     isLoading: isCollection
       ? isCollectionLoading
       : isRefund
