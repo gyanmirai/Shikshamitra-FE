@@ -381,3 +381,7 @@ Desktop, 768px tablet, and 390px mobile drawer checks found no document-level ho
 Full-project TypeScript remains blocked by eight diagnostics in untouched homework and Admissions test files; this change's files reported no diagnostics.
 The all-module documentation gate remains blocked by unrelated Finance and Testing documentation issues; the Student gate passed.
 No production deployment or complete live applicant journey was performed.
+
+## Credential-email and document-override checks
+
+Focused cases in `student-onboarding-credential-emails.ui.test.tsx`, the onboarding settings UI/context tests, and `student-onboarding-api.test.ts` cover safe legacy defaults, serialized school choices, email/account validation, readiness/permission-denied requests, pending duplicate prevention, retry/error/loading states, and required notes for individual/all-document overrides. Browser acceptance additionally checks saved school settings after reload, authorized account requests, actual mailbox sending, mobile login, sibling preservation, exit revocation, and responsive drawer actions.

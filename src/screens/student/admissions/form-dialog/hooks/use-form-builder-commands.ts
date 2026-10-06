@@ -8,6 +8,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import { nextStepNumber, nextSectionNumber, getAdmissionFormStepGroups } from '../form-step-groups';
+import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
 import {
   newField,
   nextFieldOrder,
@@ -158,10 +159,23 @@ export function useFormBuilderCommands(
       field.bindingKey = metadata.key;
       field.readOnly = metadata.readOnly;
       field.optionsJson = metadata.optionsJson;
+      Object.assign(field, configureStudentField(field, metadata));
     }
-    if (formik.values.sections.length)
-      formik.setFieldValue(`sections[${sectionIndex}].fields`, [...section.fields, field]);
-    else formik.setFieldValue('sections', [{ ...section, fields: [field] }]);
+    const sections = formik.values.sections.length
+      ? formik.values.sections.map((item, index) =>
+          index === sectionIndex ? { ...item, fields: [...item.fields, field] } : item
+        )
+      : [{ ...section, fields: [field] }];
+    const connected = connectStudentAddressFields(sections.flatMap((item) => item.fields));
+    formik.setFieldValue(
+      'sections',
+      sections.map((item) => ({
+        ...item,
+        fields: item.fields.map(
+          (itemField) => connected.find((next) => next.id === itemField.id) ?? itemField
+        ),
+      }))
+    );
     onSelect(section.id, field.id);
   };
 
@@ -211,9 +225,16 @@ export function useFormBuilderCommands(
       field.bindingKey = metadata.key;
       field.readOnly = metadata.readOnly;
       field.optionsJson = metadata.optionsJson;
-      return field;
+      return configureStudentField(field, metadata);
     });
 
+    const connectedFields = connectStudentAddressFields([
+      ...formik.values.sections.flatMap((item) => item.fields),
+      ...fields,
+    ]);
+    const groupFieldsWithDependencies = fields.map(
+      (field) => connectedFields.find((item) => item.id === field.id) ?? field
+    );
     formik.setFieldValue('sections', [
       ...formik.values.sections,
       {
@@ -231,7 +252,7 @@ export function useFormBuilderCommands(
         isRepeatable: false,
         minEntries: 1,
         maxEntries: 1,
-        fields,
+        fields: groupFieldsWithDependencies,
       },
     ]);
     onSelect(id, null);

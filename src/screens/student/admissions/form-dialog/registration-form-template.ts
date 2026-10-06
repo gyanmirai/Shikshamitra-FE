@@ -4,6 +4,8 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { templateStudentBinding } from './template-student-fields';
+
 type FieldInput = Omit<Partial<AdmissionFormField>, 'fieldType'> & {
   code: string;
   label: string;
@@ -43,7 +45,7 @@ const validation = {
     format: 'aadhaar',
     minLength: 12,
     maxLength: 12,
-    regex: '^[0-9]{12}$',
+    regex: '^[2-9][0-9]{11}$',
   }),
   pan: JSON.stringify({
     format: 'pan',
@@ -63,18 +65,21 @@ const validation = {
 function field(sectionId: string, displayOrder: number, input: FieldInput): AdmissionFormField {
   const { system, bindingKey, fieldType = 0, code: inputCode, label: inputLabel, ...rest } = input;
   const code = inputCode.replace(/[^A-Za-z0-9_-]/g, '_').toUpperCase();
+  const linked = system ? undefined : templateStudentBinding(code);
   return {
     id: crypto.randomUUID(),
     sectionId,
     code,
     label: inputLabel,
-    fieldType,
-    bindingType: system ? 0 : 1,
-    bindingKey: bindingKey ?? (system ? inputCode : code),
+    fieldType: linked?.fieldType ?? fieldType,
+    bindingType: system || linked ? 0 : 1,
+    bindingKey: bindingKey ?? linked?.bindingKey ?? (system ? inputCode : code),
     required: false,
     readOnly: false,
     displayOrder,
     ...rest,
+    ...(linked?.fieldType !== undefined ? { fieldType: linked.fieldType } : {}),
+    ...(linked?.optionsJson ? { optionsJson: linked.optionsJson } : {}),
   };
 }
 
@@ -169,7 +174,11 @@ function familyFields(prefix: string): FieldInput[] {
     { code: `${prefix}_AADHAAR_NO`, label: 'Aadhaar No.', validationJson: validation.aadhaar },
     ...addressFields(`${prefix}_OFFICE_ADDRESS`),
     ...addressFields(`${prefix}_LOCAL_ADDRESS`),
-  ];
+  ].filter(
+    (item) =>
+      prefix !== 'PRIMARY_GUARDIAN' ||
+      !['PRIMARY_GUARDIAN_EMAIL', 'PRIMARY_GUARDIAN_CONTACT_NO'].includes(item.code)
+  ) as FieldInput[];
 }
 
 export function getRegistrationFormTemplate(): CreateUpdateAdmissionForm {
@@ -223,6 +232,13 @@ export function getRegistrationFormTemplate(): CreateUpdateAdmissionForm {
       'STUDENT',
       'Student',
       [
+        {
+          code: 'STUDENT_PHOTO',
+          label: 'Student profile photo',
+          system: true,
+          bindingKey: 'Applicant.ProfilePhoto',
+          validationJson: JSON.stringify({ format: 'photo' }),
+        },
         {
           code: 'Applicant.FirstName',
           label: 'First Name',

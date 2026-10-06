@@ -8,6 +8,64 @@ import { render, screen } from '@testing-library/react';
 import { FormPreviewContent } from './form-preview-content';
 
 describe('embedded admission form preview', () => {
+  it('keeps all sections in a step visible and lets applicants return without losing values', async () => {
+    const user = userEvent.setup();
+    const formik = {
+      values: {},
+      errors: {},
+      touched: {},
+      submitForm: vi.fn(),
+      handleSubmit: vi.fn(),
+    } as unknown as FormikProps<Record<string, string>>;
+    const form = {
+      id: 'preview',
+      name: 'Application',
+      version: 1,
+      layoutType: 1,
+      fieldsPerRow: 2,
+      sections: [
+        {
+          id: 'basic',
+          code: 'BASIC',
+          name: 'Basic details',
+          stepId: 'personal',
+          stepName: 'Personal information',
+          stepDisplayOrder: 0,
+          displayOrder: 0,
+          fields: [],
+        },
+        {
+          id: 'contact',
+          code: 'CONTACT',
+          name: 'Contact details',
+          stepId: 'personal',
+          stepName: 'Personal information',
+          stepDisplayOrder: 0,
+          displayOrder: 1,
+          fields: [],
+        },
+        {
+          id: 'health',
+          code: 'HEALTH',
+          name: 'Health details',
+          stepId: 'medical',
+          stepName: 'Medical information',
+          stepDisplayOrder: 1,
+          displayOrder: 2,
+          fields: [],
+        },
+      ],
+    } as unknown as AdmissionForm;
+    render(<FormPreviewContent form={form} formik={formik} resolvedOptions={{}} embedded />);
+    expect(screen.getByText('Basic details')).toBeVisible();
+    expect(screen.getByText('Contact details')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(screen.getByText('Health details')).toBeVisible();
+    await user.click(screen.getByRole('button', { name: 'Previous' }));
+    expect(screen.getByText('Basic details')).toBeVisible();
+    expect(screen.getByText('Contact details')).toBeVisible();
+  });
+
   it('validates from its own action without nesting a form inside the builder form', async () => {
     const user = userEvent.setup();
     const submitForm = vi.fn().mockResolvedValue(undefined);

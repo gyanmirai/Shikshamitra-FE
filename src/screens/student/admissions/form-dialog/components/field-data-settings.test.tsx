@@ -53,6 +53,28 @@ function renderSettings(fieldType: AdmissionFormFieldType, bindingKey?: string) 
 const currentField = () => JSON.parse(screen.getByTestId('field-json').textContent ?? '{}');
 
 describe('custom field student-record mapping', () => {
+  it('configures shared identity controls when a custom question is mapped to the Student Aadhaar field', async () => {
+    catalogueQuery.mockReturnValue({
+      data: [
+        ...systemFields,
+        {
+          key: 'Identity.AadhaarNumber',
+          displayName: 'Student Aadhaar number',
+          fieldType: 0,
+          readOnly: false,
+          destination: 'studentProfile',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+    });
+    const user = userEvent.setup();
+    renderSettings(0, 'Applicant.FirstName');
+    await user.click(screen.getByRole('combobox', { name: 'Student record field' }));
+    await user.click(screen.getByRole('option', { name: 'Student Aadhaar number' }));
+    expect(JSON.parse(currentField().validationJson)).toMatchObject({ format: 'aadhaar' });
+    expect(screen.getByText(/Populates the Student profile/)).toBeVisible();
+  });
   beforeEach(() => {
     catalogueQuery.mockReturnValue({ data: systemFields, isLoading: false, isError: false });
   });

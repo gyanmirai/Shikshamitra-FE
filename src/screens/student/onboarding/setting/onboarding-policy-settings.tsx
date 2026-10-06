@@ -158,7 +158,13 @@ export function ReadinessAccessSettingsScreen() {
       getAcademicApplicabilityScore(applicabilityDraft) &&
     academicTargetsOverlap(profile.applicability, applicabilityDraft)
   );
-  const profileValidationError = !profileNameDraft.trim()
+  const credentialValidationError =
+    draft.sendStudentCredentialEmail && !draft.studentAccount
+      ? 'Enable student account preparation before sending student emails.'
+      : draft.sendGuardianCredentialEmail && !draft.guardianAccount
+        ? 'Enable guardian account preparation before sending guardian emails.'
+        : null;
+  const profileValidationError = credentialValidationError || (!profileNameDraft.trim()
     ? 'Enter a profile name.'
     : !admissionRouteDraft.trim()
       ? 'Choose or enter an admission route.'
@@ -167,7 +173,7 @@ export function ReadinessAccessSettingsScreen() {
       : applicabilityError ||
         (hasApplicabilityConflict
           ? 'Another profile for this admission route already targets the same academic coverage.'
-          : null);
+          : null));
   const setBooleanRule =
     (
       key:
@@ -178,6 +184,8 @@ export function ReadinessAccessSettingsScreen() {
         | 'studentAccount'
         | 'guardianAccount'
         | 'verifiedGuardianContact'
+        | 'sendStudentCredentialEmail'
+        | 'sendGuardianCredentialEmail'
     ) =>
     (value: boolean) =>
       setDraft((current) => ({ ...current, [key]: value }));
@@ -340,7 +348,9 @@ export function ReadinessAccessSettingsScreen() {
       approval: approvalLabel(profile.rules.approvalMode),
       approvalMode: profile.rules.approvalMode,
       accounts: accountSummary(profile.rules),
-      accessRelease: 'Owner password setup',
+      accessRelease: profile.rules.sendStudentCredentialEmail || profile.rules.sendGuardianCredentialEmail
+        ? `${profile.rules.credentialProvisioningMode === 'automatic' ? 'Automatic' : 'Staff sends'} · ${profile.rules.credentialSendingTime === 'completion' ? 'Onboarding completion' : 'Activation'}`
+        : 'Credential emails off',
       statusLabel: 'Applied',
       profile,
     };
@@ -883,7 +893,26 @@ export function ReadinessAccessSettingsScreen() {
                   labelPlacement="start"
                 />
               ))}
-              <Alert severity="info">After enrollment, authorized staff verify the saved contact and create or link each required account. The owner sets a password through Forgot password. This screen does not send credentials automatically.</Alert>
+              {[
+                { key: 'sendStudentCredentialEmail' as const, label: 'Send student credential email' },
+                { key: 'sendGuardianCredentialEmail' as const, label: 'Send parent/guardian credential email' },
+              ].map((rule) => (
+                <FormControlLabel key={rule.key} label={rule.label} labelPlacement="start"
+                  sx={{ m: 0, justifyContent: 'space-between' }}
+                  control={<Switch checked={draft[rule.key]} onChange={(event) => setBooleanRule(rule.key)(event.target.checked)}
+                    inputProps={{ 'aria-label': rule.label }} />} />
+              ))}
+              {credentialValidationError && <Alert severity="error">{credentialValidationError}</Alert>}
+              <CustomSelect label="Send credentials when" size="small" value={draft.credentialSendingTime}
+                options={[{ value: 'activation', label: 'After enrollment activation' }, { value: 'completion', label: 'After full onboarding completion' }]}
+                onChange={(value) => setDraft((current) => ({ ...current, credentialSendingTime: value as ReadinessAccessRules['credentialSendingTime'] }))} />
+              <CustomSelect label="Account creation and sending" size="small" value={draft.credentialProvisioningMode}
+                options={[{ value: 'manual', label: 'Staff creates accounts and sends emails' }, { value: 'automatic', label: 'Automatically when ready' }]}
+                onChange={(value) => setDraft((current) => ({ ...current, credentialProvisioningMode: value as ReadinessAccessRules['credentialProvisioningMode'] }))} />
+              {draft.guardianAccount && draft.credentialProvisioningMode === 'automatic' && <CustomSelect label="Parent/guardian account owner" size="small" value={draft.guardianAccountRelationship}
+                options={[{ value: 'father', label: 'Father' }, { value: 'mother', label: 'Mother' }, { value: 'guardian', label: 'Guardian' }]}
+                onChange={(value) => setDraft((current) => ({ ...current, guardianAccountRelationship: value as ReadinessAccessRules['guardianAccountRelationship'] }))} />}
+              <Alert severity="info">Emails require saved GR and roll numbers, division, and verified required documents or an authorized override. Email is mandatory for account creation. One parent login can access multiple children; linking a sibling preserves its password.</Alert>
             </SettingsSectionCard>
           </Box>
         </Stack>

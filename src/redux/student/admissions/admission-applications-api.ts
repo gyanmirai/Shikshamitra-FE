@@ -1,5 +1,10 @@
 import { api } from 'src/redux/service';
-import { studentOnboardingType, studentAdmissionsCrmType } from 'src/redux/tagTypes';
+import {
+  studentType,
+  studentOnboardingType,
+  studentRegistrationType,
+  studentAdmissionsCrmType,
+} from 'src/redux/tagTypes';
 
 import type { ReviewDecisionCapabilities } from './admission-review-types';
 
@@ -63,10 +68,10 @@ export type AdmissionApplication = {
   submittedAt?: string | null;
 };
 export type AdmissionApplicationListInput = {
-	academicYearId?: string;
-	boardId?: string;
-	mediumId?: string;
-	standardId?: string;
+  academicYearId?: string;
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
   status?: AdmissionApplicationStatus;
   search?: string;
   skipCount?: number;
@@ -245,6 +250,8 @@ export type AdmissionStudentMatch = {
   status: number;
   grNumber?: string | null;
   academicYearId?: string | null;
+  canApplyProfileFieldsDirectly?: boolean;
+  canReviewProfileFields?: boolean;
 };
 export type AdmissionFinalizationPreview = {
   applicationId: string;
@@ -252,6 +259,10 @@ export type AdmissionFinalizationPreview = {
   linkedStudentId?: string | null;
   items: AdmissionFinalizationReadinessItem[];
   possibleMatches: AdmissionStudentMatch[];
+  canApplyProfileFieldsDirectly?: boolean;
+  canReviewProfileFields?: boolean;
+  capturedStudentFields?: { key: string; label: string; value: string }[];
+  profileReviewDescription?: string;
 };
 export type FinalizeAdmissionInput = {
   concurrencyStamp: string;
@@ -259,6 +270,7 @@ export type FinalizeAdmissionInput = {
   existingStudentId?: string | null;
   confirmCreateNew: boolean;
   confirmGuardianContactVerified: boolean;
+  applyStudentProfileFields?: boolean;
 };
 export type AdmissionFinalizationResult = {
   application: AdmissionApplication;
@@ -551,12 +563,22 @@ export const admissionApplicationsApi = api.injectEndpoints({
       transformResponse: (
         response: Result<AdmissionFinalizationResult> | AdmissionFinalizationResult
       ) => unwrap(response),
-      invalidatesTags: [
+      invalidatesTags: (result, _error, { input }) => [
         studentAdmissionsCrmType.admissionApplication,
         studentAdmissionsCrmType.admissionApplicant,
         studentAdmissionsCrmType.admissionOffering,
         { type: studentOnboardingType.onboardingCaseList, id: 'LIST' },
         { type: studentOnboardingType.onboardingAnalytics, id: 'SUMMARY' },
+        ...(result
+          ? [
+              studentRegistrationType.studentRegistration,
+              { type: studentType.student, id: 'RECORDS-DIRECTORY' },
+              { type: studentType.student, id: 'LIST' },
+              ...(input.applyStudentProfileFields
+                ? [{ type: studentType.student, id: 'RECORDS-CHANGES' }]
+                : []),
+            ]
+          : []),
       ],
     }),
     advanceAdmissionApplicationWorkflow: builder.mutation<

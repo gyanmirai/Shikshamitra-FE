@@ -1,19 +1,15 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import { useRef, useEffect } from 'react';
-import Button from '@mui/material/Button';
-import Collapse from '@mui/material/Collapse';
-import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderSection } from './form-builder-section';
 import { FormBuilderStepHeader } from './components/form-builder-step-header';
-import { FormBuilderUnitSettings } from './components/form-builder-unit-settings';
-import { nextSectionNumber, type AdmissionFormStepGroup } from './form-step-groups';
+
+import type { AdmissionFormStepGroup } from './form-step-groups';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
@@ -24,7 +20,6 @@ type Props = {
   onSelectSection: (sectionId: string) => void;
   onSelectField: (sectionId: string, fieldId: string) => void;
   newlyAdded: boolean;
-  onAddStep: () => void;
   onNewStepReady: (stepId: string | null) => void;
 };
 
@@ -37,46 +32,29 @@ export function FormBuilderStep({
   onSelectSection,
   onSelectField,
   newlyAdded,
-  onAddStep,
   onNewStepReady,
 }: Props) {
   const settings = useBoolean(newlyAdded);
   const stepRef = useRef<HTMLDivElement>(null);
+  const firstPath = `sections[${step.sections[0].sectionIndex}].stepName`;
+  const nameMeta = formik.getFieldMeta<string>(firstPath);
+  const nameError = nameMeta.touched ? nameMeta.error : undefined;
   useEffect(() => {
     if (newlyAdded) {
       stepRef.current?.scrollIntoView?.({ block: 'start' });
       onNewStepReady(null);
     }
   }, [newlyAdded, onNewStepReady]);
-  const updateStep = (updates: Partial<CreateUpdateAdmissionForm['sections'][number]>) =>
+  const updateName = (stepName: string) => {
+    settings.onTrue();
     formik.setFieldValue(
       'sections',
       formik.values.sections.map((section) =>
-        (section.stepId ?? section.id) === step.id ? { ...section, ...updates } : section
+        (section.stepId ?? section.id) === step.id
+          ? { ...section, stepId: step.id, stepName }
+          : section
       )
     );
-  const addSection = () => {
-    const number = nextSectionNumber(formik.values.sections);
-    const id = crypto.randomUUID();
-    formik.setFieldValue('sections', [
-      ...formik.values.sections,
-      {
-        id,
-        code: `SECTION_${number}`,
-        name: `Section ${step.sections.length + 1}`,
-        displayOrder: formik.values.sections.length,
-        stepId: step.id,
-        stepCode: step.code,
-        stepName: step.name,
-        stepDisplayOrder: step.displayOrder,
-        stepVisibilityRuleJson: step.visibilityRuleJson,
-        isRepeatable: false,
-        minEntries: 1,
-        maxEntries: 1,
-        fields: [],
-      },
-    ]);
-    onSelectSection(id);
   };
   const deleteStep = () =>
     formik.setFieldValue(
@@ -85,57 +63,33 @@ export function FormBuilderStep({
     );
 
   return (
-    <Card ref={stepRef} variant="outlined" sx={{ borderRadius: 2, overflow: 'visible' }}>
+    <Stack ref={stepRef} spacing={1} sx={{ minWidth: 0 }}>
       <FormBuilderStepHeader
         step={step}
         stepIndex={stepIndex}
-        settingsOpen={settings.value}
+        settingsOpen={settings.value || Boolean(nameError)}
+        nameError={nameError}
+        onNameChange={updateName}
+        onNameBlur={() => formik.setFieldTouched(firstPath, true)}
         onToggleSettings={settings.onToggle}
         onDelete={deleteStep}
-        onAddStep={onAddStep}
       />
-      <Collapse in={settings.value}>
-        <FormBuilderUnitSettings
-          id={`step-settings-${step.id}`}
-          unit="Step"
-          name={step.name}
-          code={step.code}
-          visibilityRule={step.visibilityRuleJson}
-          focusName={newlyAdded}
-          onNameChange={(stepName) => updateStep({ stepId: step.id, stepName })}
-          onCodeChange={(stepCode) => updateStep({ stepId: step.id, stepCode })}
-          onVisibilityChange={(value) =>
-            updateStep({ stepId: step.id, stepVisibilityRuleJson: value || undefined })
-          }
-        />
-      </Collapse>
-      <Stack spacing={1} sx={{ px: 1.5, pb: 1.5 }}>
-        <SortableContext
-          items={step.sections.map(({ section }) => `section:${section.id}`)}
-          strategy={verticalListSortingStrategy}
-        >
-          {step.sections.map(({ section, sectionIndex }) => (
-            <FormBuilderSection
-              key={section.id}
-              formik={formik}
-              sectionIndex={sectionIndex}
-              selectedSectionId={selectedSectionId}
-              selectedFieldId={selectedFieldId}
-              onSelectSection={onSelectSection}
-              onSelectField={(fieldId) => onSelectField(section.id, fieldId)}
-            />
-          ))}
-        </SortableContext>
-        <Button
-          size="small"
-          color="inherit"
-          startIcon={<Iconify icon="mdi:plus" />}
-          onClick={addSection}
-          sx={{ minHeight: 44, alignSelf: 'flex-start' }}
-        >
-          Add section to this step
-        </Button>
-      </Stack>
-    </Card>
+      <SortableContext
+        items={step.sections.map(({ section }) => `section:${section.id}`)}
+        strategy={verticalListSortingStrategy}
+      >
+        {step.sections.map(({ section, sectionIndex }) => (
+          <FormBuilderSection
+            key={section.id}
+            formik={formik}
+            sectionIndex={sectionIndex}
+            selectedSectionId={selectedSectionId}
+            selectedFieldId={selectedFieldId}
+            onSelectSection={onSelectSection}
+            onSelectField={(fieldId) => onSelectField(section.id, fieldId)}
+          />
+        ))}
+      </SortableContext>
+    </Stack>
   );
 }

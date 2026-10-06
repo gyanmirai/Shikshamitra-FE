@@ -16,6 +16,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { fieldTypeIcon } from '../form-dialog-model';
 import { PaletteFieldButton } from './palette-field-button';
 import { groupStudentFields } from '../student-field-groups';
+import { matchesStudentField, studentFieldDestination } from '../student-field-configuration';
 
 type Props = {
   fields: AdmissionFormSystemFieldMetadata[];
@@ -44,13 +45,37 @@ export function StudentFieldPalette({
       ...group,
       allFields: group.fields,
       fields: group.fields.filter((field) =>
-        `${field.displayName} ${field.key} ${group.name}`.toLowerCase().includes(normalizedSearch)
+        matchesStudentField(field, normalizedSearch, group.name)
       ),
     }))
     .filter((group) => group.fields.length > 0);
   const used = new Set(usedBindings.map((key) => key.toLowerCase()));
   const availableCount = fields.filter((field) => !used.has(field.key.toLowerCase())).length;
   const visibleCount = visibleGroups.reduce((count, group) => count + group.fields.length, 0);
+  const addressPacks = [
+    {
+      name: 'Current address',
+      keys: [
+        'Address.AddressLine1',
+        'Address.AddressLine2',
+        'Address.Country',
+        'Address.State',
+        'Address.City',
+        'Address.PostalCode',
+      ],
+    },
+    {
+      name: 'Permanent address',
+      keys: [
+        'PermanentAddress.Line1',
+        'PermanentAddress.Line2',
+        'PermanentAddress.Country',
+        'PermanentAddress.State',
+        'PermanentAddress.City',
+        'PermanentAddress.PostalCode',
+      ],
+    },
+  ];
   return (
     <>
       <TextField
@@ -88,6 +113,28 @@ export function StudentFieldPalette({
         }}
       >
         <Stack spacing={0.75} sx={{ pr: 1, pb: 1 }}>
+          {!loading &&
+            !error &&
+            !normalizedSearch &&
+            onAddSection &&
+            addressPacks.map((pack) => {
+              const packFields = pack.keys
+                .map((key) => fields.find((field) => field.key === key))
+                .filter((field): field is AdmissionFormSystemFieldMetadata => Boolean(field));
+              if (!packFields.length) return null;
+              return (
+                <Button
+                  key={pack.name}
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Iconify icon="mdi:plus" />}
+                  disabled={packFields.every((field) => used.has(field.key.toLowerCase()))}
+                  onClick={() => onAddSection(pack.name, packFields)}
+                >
+                  {pack.name} pack
+                </Button>
+              );
+            })}
           {loading &&
             Array.from({ length: 4 }, (_, index) => (
               <Skeleton key={index} variant="rounded" height={48} />
@@ -159,7 +206,7 @@ export function StudentFieldPalette({
                           key={field.key}
                           label={field.displayName}
                           icon={fieldTypeIcon(field.fieldType)}
-                          description={field.description}
+                          description={`${studentFieldDestination(field)}${field.description ? ` · ${field.description}` : ''}`}
                           disabled={used.has(field.key.toLowerCase())}
                           onClick={() => onAdd(field)}
                         />

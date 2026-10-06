@@ -36,6 +36,7 @@ export function UploadAvatar({
   disabled,
   onDelete,
   helperText,
+  avatarRootProps,
   ...other
 }: UploadProps) {
   const { getRootProps, getInputProps, isDragActive, isDragReject, open } = useDropzone({
@@ -198,7 +199,7 @@ export function UploadAvatar({
             </Tooltip>
           )}
           <Box
-            {...getRootProps()}
+            {...getRootProps(avatarRootProps)}
             onClick={handleOpenOptions}
             sx={{
               p: 1,

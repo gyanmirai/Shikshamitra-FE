@@ -3,6 +3,7 @@ import { studentOnboardingType } from 'src/redux/tagTypes';
 
 import type {
   StudentOnboardingCase,
+  StudentCredentialEmail,
   StudentIdentifierSeries,
   StudentOnboardingPolicy,
   StudentOnboardingCasePage,
@@ -51,6 +52,21 @@ const caseTags = (id: string) => [
 
 export const studentOnboardingApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getStudentCredentialEmails: builder.query<StudentCredentialEmail[], string>({
+      query: id => `/student/onboarding/${id}/credential-emails`,
+      transformResponse: (response: Result<StudentCredentialEmail[]> | StudentCredentialEmail[]) => unwrap(response),
+      providesTags: (_result, _error, id) => [{ type: studentOnboardingType.onboardingCaseDetail, id }],
+    }),
+    sendStudentCredentialEmail: builder.mutation<StudentCredentialEmail, { id: string; accountType: 'student' | 'guardian'; concurrencyStamp?: string | null }>({
+      query: ({ id, ...body }) => ({ url: `/student/onboarding/${id}/credential-emails`, method: 'POST', body }),
+      transformResponse: (response: Result<StudentCredentialEmail> | StudentCredentialEmail) => unwrap(response),
+      invalidatesTags: (_result, _error, { id }) => caseTags(id),
+    }),
+    overrideStudentOnboardingDocuments: builder.mutation<StudentOnboardingDocuments, { caseId: string; documentTypeIds: string[]; overrideAll: boolean; reason: string; concurrencyStamp?: string | null }>({
+      query: ({ caseId, ...body }) => ({ url: `/student/onboarding/${caseId}/documents/override`, method: 'POST', body }),
+      transformResponse: (response: Result<StudentOnboardingDocuments> | StudentOnboardingDocuments) => unwrap(response),
+      invalidatesTags: (_result, _error, { caseId }) => [...caseTags(caseId), { type: studentOnboardingType.onboardingDocuments, id: caseId }],
+    }),
     getStudentPortalAccounts: builder.query<StudentPortalAccount[], string>({
       query: id => `/student/onboarding/${id}/portal-accounts`,
       transformResponse: (response: Result<StudentPortalAccount[]> | StudentPortalAccount[]) => unwrap(response),
@@ -489,6 +505,9 @@ export const studentOnboardingApi = api.injectEndpoints({
 });
 
 export const {
+  useGetStudentCredentialEmailsQuery,
+  useSendStudentCredentialEmailMutation,
+  useOverrideStudentOnboardingDocumentsMutation,
   useGetStudentPortalAccountsQuery,
   useProvisionStudentPortalAccountMutation,
   useGetStudentOnboardingCasesQuery,

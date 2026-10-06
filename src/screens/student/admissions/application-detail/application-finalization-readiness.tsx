@@ -16,6 +16,7 @@ type Props = {
   preview?: AdmissionFinalizationPreview;
   loading: boolean;
   hasError: boolean;
+  disabled?: boolean;
   identityChoice: string;
   onIdentityChoice: (value: string) => void;
   onRetry: () => void;
@@ -26,6 +27,7 @@ export function ApplicationFinalizationReadiness({
   preview,
   loading,
   hasError,
+  disabled = false,
   identityChoice,
   onIdentityChoice,
   onRetry,
@@ -42,7 +44,7 @@ export function ApplicationFinalizationReadiness({
         <Alert
           severity="error"
           action={
-            <Button color="inherit" size="small" onClick={onRetry}>
+            <Button color="inherit" size="small" disabled={disabled} onClick={onRetry}>
               Retry
             </Button>
           }
@@ -63,6 +65,7 @@ export function ApplicationFinalizationReadiness({
             <Button
               href={`/student/admissions/applicants/${applicantId}`}
               size="small"
+              disabled={disabled}
               sx={{ mt: 0.5 }}
             >
               Repair applicant identity
@@ -80,12 +83,14 @@ export function ApplicationFinalizationReadiness({
             {preview.possibleMatches.map((match) => (
               <FormControlLabel
                 key={match.studentId}
+                disabled={disabled}
                 value={match.studentId}
                 control={<Radio />}
                 label={`${match.studentName}${match.grNumber ? ` · GR ${match.grNumber}` : ''}`}
               />
             ))}
             <FormControlLabel
+              disabled={disabled}
               value="new"
               control={<Radio />}
               label="None match — create a new Student identity"

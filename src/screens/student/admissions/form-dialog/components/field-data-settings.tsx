@@ -6,6 +6,8 @@ import CustomSelect from 'src/components/custom-select';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useGetAdmissionFormSystemFieldsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
+import { configureStudentField, connectStudentAddressFields } from '../student-field-configuration';
+
 import type { FieldSettingsProps } from '../types/field-settings';
 
 export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSettingsProps) {
@@ -107,13 +109,27 @@ export function FieldDataSettings({ formik, sectionIndex, fieldIndex }: FieldSet
                   ? selectedField
                     ? 'The linked student record field does not match this answer type. Choose a compatible field.'
                     : 'The linked student record field is unavailable. Choose another field or save in this admission form.'
-                  : 'The answer is linked to this field in the student record.'
+                  : selectedField?.destination === 'studentProfile'
+                    ? 'Populates the Student profile for a new student. Changes to an existing student require review.'
+                    : selectedField?.destination === 'capturedAdmissionDetails'
+                      ? 'Retained in Captured admission details on the Student record.'
+                      : 'The answer is linked to this field in the student record.'
               }
               onChange={(value) => {
                 const selected = compatibleFields.find((item) => item.key === value);
-                formik.setFieldValue(`${path}.bindingKey`, value || undefined);
-                if (selected?.optionsJson)
-                  formik.setFieldValue(`${path}.optionsJson`, selected.optionsJson);
+                if (!selected) {
+                  formik.setFieldValue(`${path}.bindingKey`, value || undefined);
+                  return;
+                }
+                const nextField = configureStudentField(field, selected);
+                const allFields = formik.values.sections.flatMap((section) =>
+                  section.fields.map((item) => (item.id === field.id ? nextField : item))
+                );
+                const connected = connectStudentAddressFields(allFields);
+                formik.setFieldValue(
+                  path,
+                  connected.find((item) => item.id === field.id) ?? nextField
+                );
               }}
             />
           )}

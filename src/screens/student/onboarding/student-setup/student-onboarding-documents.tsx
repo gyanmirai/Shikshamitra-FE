@@ -10,6 +10,8 @@ import {
   useUploadStudentOnboardingDocumentMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import StudentOnboardingDocumentOverrideDialog from './student-onboarding-document-override-dialog';
+
 type StudentOnboardingDocumentsProps = {
   caseId: string;
   enabled: boolean;
@@ -21,9 +23,12 @@ export default function StudentOnboardingDocuments({
   enabled,
   canManage,
 }: StudentOnboardingDocumentsProps) {
-  const documentsQuery = useGetStudentOnboardingDocumentsQuery(caseId, { skip: !enabled });
+  const documentsQuery = useGetStudentOnboardingDocumentsQuery(caseId, { skip: !caseId });
   const [uploadDocument, uploadState] = useUploadStudentOnboardingDocumentMutation();
   const [documentTypeId, setDocumentTypeId] = useState('');
+  const [overrideTarget, setOverrideTarget] = useState<
+    { documentTypeId: string; name: string } | 'all' | null
+  >(null);
   const documents = useMemo(() => documentsQuery.data?.documents ?? [], [documentsQuery.data]);
   const selectedDocument = documents.find((item) => item.documentTypeId === documentTypeId);
 
@@ -41,14 +46,6 @@ export default function StudentOnboardingDocuments({
     );
   }, [documents]);
 
-  if (!enabled) {
-    return (
-      <Typography variant="body2" color="text.secondary">
-        Document uploads are disabled for this case.
-      </Typography>
-    );
-  }
-
   if (documentsQuery.isError) {
     return (
       <Alert
@@ -65,17 +62,24 @@ export default function StudentOnboardingDocuments({
   }
 
   return (
-    <Stack spacing={1.25}>
+    <Stack spacing={1}>
+      {!enabled && (
+        <Typography variant="body2" color="text.secondary">
+          Document uploads are disabled for this case. Required evidence and authorized overrides
+          can still be reviewed.
+        </Typography>
+      )}
       {documents.length ? (
         documents.map((document) => {
-          const available = document.hasStudentUpload || document.hasAcceptedAdmissionEvidence;
+          const satisfied =
+            document.isValidated || document.hasAcceptedAdmissionEvidence || document.isOverridden;
 
           return (
             <Stack
               key={document.documentTypeId}
-              direction="row"
+              direction={{ xs: 'column', sm: 'row' }}
               justifyContent="space-between"
-              alignItems="center"
+              alignItems={{ xs: 'flex-start', sm: 'center' }}
               spacing={1}
               sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
             >
@@ -89,10 +93,33 @@ export default function StudentOnboardingDocuments({
                       ? 'Accepted admission evidence'
                       : `${document.allowedExtensions.join(', ')} · up to ${document.maxSizeMb} MB`)}
                 </Typography>
+                {document.isOverridden && document.overrideReason && (
+                  <Typography variant="caption" color="text.secondary">
+                    Override note: {document.overrideReason}
+                  </Typography>
+                )}
               </Stack>
-              <Label color={available ? 'success' : document.isRequired ? 'warning' : 'default'}>
-                {available ? 'Available' : document.isRequired ? 'Required' : 'Optional'}
+              <Label color={satisfied ? 'success' : document.isRequired ? 'warning' : 'default'}>
+                {document.isOverridden
+                  ? 'Overridden'
+                  : satisfied
+                    ? 'Verified'
+                    : document.hasStudentUpload
+                      ? 'Awaiting verification'
+                      : document.isRequired
+                        ? 'Required'
+                        : 'Optional'}
               </Label>
+              {documentsQuery.data?.canOverride && document.isRequired && !satisfied && (
+                <Button
+                  size="small"
+                  color="warning"
+                  disabled={uploadState.isLoading || documentsQuery.isFetching}
+                  onClick={() => setOverrideTarget(document)}
+                >
+                  Override {document.name}
+                </Button>
+              )}
             </Stack>
           );
         })
@@ -104,7 +131,7 @@ export default function StudentOnboardingDocuments({
         </Typography>
       )}
 
-      {documentsQuery.data?.canUpload && canManage && documents.length ? (
+      {enabled && documentsQuery.data?.canUpload && canManage && documents.length ? (
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
           spacing={1}
@@ -116,6 +143,7 @@ export default function StudentOnboardingDocuments({
             size="small"
             label="Document type"
             value={documentTypeId}
+            disabled={uploadState.isLoading || documentsQuery.isFetching}
             onChange={(event) => setDocumentTypeId(event.target.value)}
           >
             {documents.map((document) => (
@@ -126,10 +154,11 @@ export default function StudentOnboardingDocuments({
           </TextField>
           <Button
             component="label"
+            size="small"
             variant="outlined"
             startIcon={<Iconify icon="mdi:upload" width={18} />}
             disabled={!selectedDocument || uploadState.isLoading}
-            sx={{ minWidth: 150, minHeight: 40 }}
+            sx={{ flexShrink: 0 }}
           >
             {uploadState.isLoading ? 'Uploading...' : 'Upload file'}
             <input
@@ -162,6 +191,33 @@ export default function StudentOnboardingDocuments({
           </Button>
         </Stack>
       ) : null}
+      {documentsQuery.data?.canOverride &&
+        documents.some(
+          (item) =>
+            item.isRequired &&
+            !item.isValidated &&
+            !item.hasAcceptedAdmissionEvidence &&
+            !item.isOverridden
+        ) && (
+          <Button
+            size="small"
+            variant="outlined"
+            color="warning"
+            sx={{ alignSelf: 'flex-start' }}
+            disabled={uploadState.isLoading || documentsQuery.isFetching}
+            onClick={() => setOverrideTarget('all')}
+          >
+            Override all required documents
+          </Button>
+        )}
+      {overrideTarget && documentsQuery.data?.canOverride && (
+        <StudentOnboardingDocumentOverrideDialog
+          caseId={caseId}
+          concurrencyStamp={documentsQuery.data.concurrencyStamp}
+          document={overrideTarget === 'all' ? undefined : overrideTarget}
+          onClose={() => setOverrideTarget(null)}
+        />
+      )}
     </Stack>
   );
 }

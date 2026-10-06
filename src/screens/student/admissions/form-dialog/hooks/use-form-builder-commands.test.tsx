@@ -38,6 +38,23 @@ function Commands({
       <button type="button" onClick={commands.addSection}>
         Add section
       </button>
+      <button
+        type="button"
+        onClick={() =>
+          commands.addGroupSection(
+            'Current address',
+            ['Country', 'State', 'City'].map((suffix) => ({
+              key: `Address.${suffix}`,
+              displayName: suffix,
+              description: '',
+              fieldType: 0 as const,
+              readOnly: false,
+            }))
+          )
+        }
+      >
+        Add address pack
+      </button>
       <button type="button" onClick={() => commands.addCanvasUnit(steps[0]?.id)}>
         Add next step
       </button>
@@ -97,6 +114,34 @@ function renderCommands(empty = false) {
 }
 
 describe('useFormBuilderCommands', () => {
+  it('connects an address pack to an already-added country instead of duplicating it', async () => {
+    const user = userEvent.setup();
+    const template = getSystemAdmissionFormTemplate('admission-application');
+    const country = template.sections
+      .flatMap((section) => section.fields)
+      .find((field) => field.bindingKey === 'Address.Country')!;
+    const firstSection = {
+      ...template.sections[0],
+      fields: [{ ...country, code: 'CURRENT_COUNTRY' }],
+    };
+    render(
+      <Formik initialValues={{ ...template, sections: [firstSection] }} onSubmit={() => undefined}>
+        {(formik) => <Commands formik={formik} selectedSectionId={firstSection.id} />}
+      </Formik>
+    );
+    await user.click(screen.getByRole('button', { name: 'Add address pack' }));
+    const fields = JSON.parse(screen.getByTestId('fields').textContent || '[]') as {
+      bindingKey: string;
+      validationJson: string;
+    }[];
+    expect(fields.filter((field) => field.bindingKey === 'Address.Country')).toHaveLength(1);
+    expect(
+      JSON.parse(fields.find((field) => field.bindingKey === 'Address.State')!.validationJson)
+    ).toMatchObject({ countryField: 'CURRENT_COUNTRY' });
+    expect(
+      JSON.parse(fields.find((field) => field.bindingKey === 'Address.City')!.validationJson)
+    ).toMatchObject({ countryField: 'CURRENT_COUNTRY', stateField: 'ADDRESS_STATE' });
+  });
   it('retains creation order after custom and student fields are sorted on reload', async () => {
     const user = userEvent.setup();
     renderCommands(true);

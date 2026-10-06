@@ -2,8 +2,6 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
 import { Iconify } from 'src/components/iconify';
 import ButtonBase from '@mui/material/ButtonBase';
 import Typography from '@mui/material/Typography';
@@ -15,17 +13,9 @@ type Props = {
   form: CreateUpdateAdmissionForm;
   selectedSectionId: string | null;
   onSelectSection: (sectionId: string) => void;
-  onAddSection: () => void;
-  onAddField: () => void;
 };
 
-export function FormBuilderOutline({
-  form,
-  selectedSectionId,
-  onSelectSection,
-  onAddSection,
-  onAddField,
-}: Props) {
+export function FormBuilderOutline({ form, selectedSectionId, onSelectSection }: Props) {
   const isStepper = form.layoutType === 1;
   const groups = isStepper
     ? getAdmissionFormStepGroups(form.sections)
@@ -134,31 +124,6 @@ export function FormBuilderOutline({
           ))}
         </Stack>
       </Scrollbar>
-
-      <Divider />
-      <Stack spacing={1} sx={{ p: 1.5 }}>
-        <Button
-          fullWidth
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:view-grid-plus-outline" />}
-          onClick={onAddSection}
-          sx={{ minHeight: 44 }}
-        >
-          Section library
-        </Button>
-        <Button
-          fullWidth
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:plus" />}
-          disabled={!selectedSectionId}
-          onClick={onAddField}
-          sx={{ minHeight: 44 }}
-        >
-          Add field
-        </Button>
-      </Stack>
     </Stack>
   );
 }

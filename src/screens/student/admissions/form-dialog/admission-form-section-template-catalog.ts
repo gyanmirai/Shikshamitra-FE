@@ -4,6 +4,7 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { connectStudentAddressFields } from './student-field-configuration';
 import {
   getSystemAdmissionFormTemplate,
   type AdmissionFormTemplateCategory,
@@ -62,10 +63,10 @@ export const ADMISSION_FORM_SECTION_TEMPLATES: AdmissionFormSectionTemplate[] = 
   {
     id: 'home-address',
     title: 'Home address',
-    description: 'Address lines, city, state, and PIN code.',
+    description: 'Address lines, country, state, city, and PIN code.',
     category: 'Student information',
     icon: 'mdi:home-map-marker',
-    fieldCount: 5,
+    fieldCount: 6,
     sourceTemplateId: 'admission-application',
     sourceSectionCode: 'HOME_ADDRESS',
   },
@@ -196,7 +197,7 @@ export function materializeAdmissionFormSectionTemplate(
   );
   const skippedSystemBindings: string[] = [];
   const sectionId = crypto.randomUUID();
-  const fields = source.fields
+  const clonedFields = source.fields
     .filter((field) => {
       if (field.bindingType !== 0 || !field.bindingKey || !usedBindings.has(field.bindingKey)) {
         return true;
@@ -205,6 +206,14 @@ export function materializeAdmissionFormSectionTemplate(
       return false;
     })
     .map((field, fieldIndex) => cloneField(field, sectionId, fieldIndex, usedFieldCodes));
+  // A pack may retain existing parents or receive renamed codes after a collision.
+  const connected = connectStudentAddressFields([
+    ...form.sections.flatMap((section) => section.fields),
+    ...clonedFields,
+  ]);
+  const fields = clonedFields.map(
+    (field) => connected.find((item) => item.id === field.id) ?? field
+  );
 
   const hasTargetStep = form.layoutType === 1 && target?.stepId;
   const stepId = hasTargetStep ? target.stepId : form.layoutType === 1 ? crypto.randomUUID() : null;

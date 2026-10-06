@@ -7,15 +7,16 @@ import type {
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
 import CustomSelect from 'src/components/custom-select';
-import CustomStepper from 'src/components/custom-stepper';
 import { Box, Grid, Alert, Stack, Button, Typography } from '@mui/material';
 import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 import { useLazyGetAdmissionFormOptionsQuery } from 'src/redux/student/admissions/admission-forms-api';
 
 import AdmissionRuntimeField from '../admission-runtime-field';
+import { useAdmissionPhotoReads } from '../use-admission-photo-reads';
 import { isAdmissionRuleVisible } from '../admission-visibility-rules';
 import { getAdmissionFormStepGroups } from '../form-dialog/form-step-groups';
 import { getDependentAdmissionFieldCodes } from '../admission-field-dependencies';
+import { AdmissionFormStepNavigation } from '../components/admission-form-step-navigation';
 import { localizeAdmissionSection, getAdmissionLanguageLabel } from '../form-dialog/form-languages';
 import {
   parseRuntimeOptionsSource,
@@ -98,8 +99,11 @@ export function ApplicationRuntimeForm({
       sections: step.sections.filter(({ section }) => visibleSections.includes(section)),
     }))
     .filter((step) => step.sections.length > 0);
+  const safeActiveStep = Math.min(activeStep, Math.max(0, visibleSteps.length - 1));
+  const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
+  const interactionLocked = saving || submitting || reopening || readingPhoto;
   const currentSections = isStepper
-    ? (visibleSteps[activeStep]?.sections.map(({ section }) => section) ?? [])
+    ? (visibleSteps[safeActiveStep]?.sections.map(({ section }) => section) ?? [])
     : visibleSections;
   const fields = useMemo(
     () => localizedSections.flatMap((section) => section.fields),
@@ -117,7 +121,7 @@ export function ApplicationRuntimeForm({
         .flatMap((section) => section.fields)
         .reduce<RuntimeOptionRequest[]>((requests, field) => {
           const source = parseRuntimeOptionsSource(field.optionsJson);
-          if (source)
+          if (source && source.source !== 'StudentSiblings')
             requests.push({
               code: field.code,
               sourceKey: source.source,
@@ -162,7 +166,7 @@ export function ApplicationRuntimeForm({
       (!alreadyValidated && !currentSections.every((section) => onValidateStep(section.id)))
     )
       return;
-    setActiveStep((step) => Math.min(step + 1, visibleSteps.length - 1));
+    setActiveStep(Math.min(safeActiveStep + 1, visibleSteps.length - 1));
   };
 
   const renderSectionFields = (
@@ -209,7 +213,7 @@ export function ApplicationRuntimeForm({
                 }),
               }}
               value={value}
-              disabled={field.readOnly || application.status !== 0}
+              disabled={interactionLocked || field.readOnly || application.status !== 0}
               error={
                 fieldErrors[`${field.code}[${entryIndex}]`] || fieldErrors[field.code]
                   ? field.translations?.[language]?.validationMessage ||
@@ -218,6 +222,7 @@ export function ApplicationRuntimeForm({
                   : undefined
               }
               onBlur={() => onBlur(field.code)}
+              onBusyChange={(busy) => onPhotoReading(`${field.code}[${entryIndex ?? 0}]`, busy)}
               formValues={rowValues}
               onChange={(nextValue) =>
                 entryIndex === undefined
@@ -297,6 +302,7 @@ export function ApplicationRuntimeForm({
                   size="small"
                   color="error"
                   variant="text"
+                  disabled={interactionLocked}
                   onClick={() =>
                     section.fields.forEach((field) =>
                       onChange(field.code, removeRepeatableEntry(values[field.code], entryIndex))
@@ -314,6 +320,7 @@ export function ApplicationRuntimeForm({
             size="small"
             variant="outlined"
             startIcon={<Iconify icon="mdi:plus" />}
+            disabled={interactionLocked}
             onClick={() =>
               section.fields.forEach((field) =>
                 onChange(field.code, writeRepeatableValue(values[field.code], count, ''))
@@ -348,6 +355,7 @@ export function ApplicationRuntimeForm({
               <CustomSelect
                 size="small"
                 label="Form language"
+                disabled={interactionLocked}
                 value={language}
                 options={supportedLanguages.map((code) => ({
                   value: code,
@@ -358,38 +366,54 @@ export function ApplicationRuntimeForm({
               />
             </Stack>
           )}
-          {isStepper && visibleSteps.length > 1 && (
-            <Box sx={{ mb: 3, overflowX: 'auto', py: 1 }}>
-              <CustomStepper
-                activeStep={activeStep}
-                steps={visibleSteps.map((step) => step.name)}
-              />
-            </Box>
-          )}
-          <Stack spacing={2}>
-            {isStepper ? (
-              currentSections.length ? (
-                currentSections.map(renderSection)
-              ) : (
-                <Typography color="text.secondary">No visible sections are available.</Typography>
-              )
-            ) : (
-              visibleSections.map(renderSection)
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems="stretch">
+            {isStepper && visibleSteps.length > 0 && (
+              <Box sx={{ width: { xs: 1, md: 220 }, flexShrink: 0, minWidth: 0 }}>
+                <AdmissionFormStepNavigation
+                  activeStep={safeActiveStep}
+                  steps={visibleSteps.map((step) => ({ id: step.id, name: step.name }))}
+                  disabled={interactionLocked}
+                  completedSteps={form.status === 1 ? visibleSteps.map((_, index) => index) : []}
+                  onStepChange={(index) => {
+                    if (
+                      index <= safeActiveStep ||
+                      application.status !== 0 ||
+                      visibleSteps
+                        .slice(safeActiveStep, index)
+                        .every((step) =>
+                          step.sections.every(({ section }) => onValidateStep(section.id))
+                        )
+                    )
+                      setActiveStep(index);
+                  }}
+                />
+              </Box>
             )}
+            <Stack spacing={2} sx={{ flex: 1, minWidth: 0 }}>
+              {isStepper ? (
+                currentSections.length ? (
+                  currentSections.map(renderSection)
+                ) : (
+                  <Typography color="text.secondary">No visible sections are available.</Typography>
+                )
+              ) : (
+                visibleSections.map(renderSection)
+              )}
+            </Stack>
           </Stack>
-          {documents && (!isStepper || activeStep === visibleSteps.length - 1) && (
+          {documents && (!isStepper || safeActiveStep === visibleSteps.length - 1) && (
             <Stack sx={{ mt: 2 }}>{documents}</Stack>
           )}
           {isStepper && visibleSteps.length > 1 && (
             <Stack spacing={1} sx={{ mt: 2 }}>
               <Typography variant="caption" color="text.secondary" textAlign="center">
-                Step {activeStep + 1} of {visibleSteps.length}
+                Step {safeActiveStep + 1} of {visibleSteps.length}
               </Typography>
               <Stack direction="row" justifyContent="space-between">
                 <Button
                   size="small"
-                  disabled={activeStep === 0}
-                  onClick={() => setActiveStep((step) => step - 1)}
+                  disabled={interactionLocked || safeActiveStep === 0}
+                  onClick={() => setActiveStep(Math.max(safeActiveStep - 1, 0))}
                 >
                   Previous
                 </Button>
@@ -398,7 +422,7 @@ export function ApplicationRuntimeForm({
                     <Button
                       size="small"
                       variant="outlined"
-                      disabled={saving || application.status !== 0}
+                      disabled={interactionLocked || application.status !== 0}
                       onClick={async () => {
                         if (currentSections.every((section) => onValidateStep(section.id))) {
                           await onSave();
@@ -411,7 +435,7 @@ export function ApplicationRuntimeForm({
                   )}
                   <Button
                     size="small"
-                    disabled={activeStep === visibleSteps.length - 1}
+                    disabled={interactionLocked || safeActiveStep === visibleSteps.length - 1}
                     onClick={() => moveToNextStep()}
                   >
                     Next
@@ -433,7 +457,7 @@ export function ApplicationRuntimeForm({
                 size="small"
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:content-save-outline" />}
-                disabled={saving || application.status !== 0}
+                disabled={interactionLocked || application.status !== 0}
                 onClick={onSave}
               >
                 Save draft
@@ -443,7 +467,7 @@ export function ApplicationRuntimeForm({
               size="small"
               variant="contained"
               startIcon={<Iconify icon="mdi:send-outline" />}
-              disabled={submitting || application.status !== 0 || !canSubmitForm}
+              disabled={interactionLocked || application.status !== 0 || !canSubmitForm}
               onClick={onSubmit}
             >
               Submit application
@@ -453,7 +477,7 @@ export function ApplicationRuntimeForm({
                 size="small"
                 variant="outlined"
                 startIcon={<Iconify icon="mdi:lock-open-outline" />}
-                disabled={reopening}
+                disabled={interactionLocked}
                 onClick={onReopen}
               >
                 Reopen form

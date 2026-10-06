@@ -1,5 +1,5 @@
 import { it, vi, expect, describe } from 'vitest';
-import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentSetupDrawer from './student-setup-drawer';
 import { studentOnboardingTestData } from './student-onboarding-test-fixtures';
@@ -176,6 +176,7 @@ describe('Student Setup drawer readiness UI', () => {
     const liveStudent = {
       ...student,
       id: 'case-1',
+      studentId: 'student-1',
       source: 'onboarding-case' as const,
       readinessItems: [
         {

@@ -16,6 +16,8 @@ import {
   useGetStudentOnboardingServiceHandoffsQuery,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import StudentOnboardingCredentialEmails from './student-onboarding-credential-emails';
+
 import type { StudentOnboardingItem } from './student-onboarding-model';
 
 export default function StudentOnboardingPortalAccounts({ student, canManage }: {
@@ -43,7 +45,7 @@ export default function StudentOnboardingPortalAccounts({ student, canManage }: 
       try {
         await provision({ id: student.id, ...values, email: values.email.trim(), concurrencyStamp: student.concurrencyStamp }).unwrap();
         helpers.resetForm();
-        shikshaMitraToast.success({ message: 'Portal account linked. The owner must verify their email and set their password through the account service.' });
+        shikshaMitraToast.success({ message: 'Portal account linked. Credential emails follow this case’s saved school settings; check the sending status below.' });
       } catch (error: any) {
         helpers.setStatus(error?.data?.error?.data?.Reason || error?.data?.detail || 'Account setup failed. Check the saved person’s email, existing identity, and your identity permissions.');
       }
@@ -63,7 +65,7 @@ export default function StudentOnboardingPortalAccounts({ student, canManage }: 
       </Alert>)}
       {!required.length && !handoffs.isFetching && <Typography variant="body2">No portal accounts are required by this case’s saved settings.</Typography>}
       {!!required.length && !closed && <>
-        <Alert severity="info">Use the selected person’s saved profile email. Confirm it belongs to them. No password or invitation is sent from this screen.</Alert>
+        <Alert severity="info">Use the selected person’s saved profile email. Confirm it belongs to them. Credential emails follow the saved school settings and readiness checks.</Alert>
         {!canCreate && <Alert severity="warning">An authorized identity administrator must create the required accounts.</Alert>}
         <Stack component="form" spacing={1} onSubmit={formik.handleSubmit}>
           <CustomSelect label="Account type" size="small" value={formik.values.accountType}
@@ -89,6 +91,7 @@ export default function StudentOnboardingPortalAccounts({ student, canManage }: 
           </Button>
         </Stack>
       </>}
+      <StudentOnboardingCredentialEmails caseId={student.id} concurrencyStamp={student.concurrencyStamp} />
     </Stack>
   );
 }
