@@ -41,11 +41,8 @@ export default function DefaultPolicyToggle({
           display: 'flex',
           alignItems: 'center',
           borderRadius: 1.5,
-          opacity: disabled ? 0.6 : 1,
           bgcolor: (theme) =>
-            checked
-              ? alpha(theme.palette.primary.main, 0.05)
-              : alpha(theme.palette.background.default, 0.4),
+            checked ? alpha(theme.palette.primary.main, 0.05) : 'background.neutral',
           borderColor: (theme) =>
             checked ? alpha(theme.palette.primary.main, 0.4) : theme.palette.divider,
           boxShadow: (theme) =>
@@ -98,7 +95,7 @@ export default function DefaultPolicyToggle({
                   ? 'Designate another Active policy as Default before removing this default or archiving this policy.'
                   : status !== 'Active'
                     ? 'Only an Active policy can be selected as the default.'
-                    : 'Use this policy as the academic-year default. Selecting it replaces the current default.'}
+                    : 'Replaces the current academic-year default.'}
               </Typography>
             </Box>
           }

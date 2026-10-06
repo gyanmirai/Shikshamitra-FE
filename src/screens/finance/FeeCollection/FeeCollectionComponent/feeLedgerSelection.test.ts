@@ -1,6 +1,52 @@
 import { describe, expect, it } from 'vitest';
 
-import { academicYearMonthsFromDates } from './feeLedgerSelection';
+import {
+  academicYearMonthsFromDates,
+  applySelectionFilter,
+  createSelectionOwnership,
+  reconcileLedgerSelection,
+  recordManualSelection,
+} from './feeLedgerSelection';
+
+import type { LedgerSelection } from './feeLedgerSelection';
+
+describe('Fee Collection refreshed selection', () => {
+  it('updates existing balances and prunes settled ownership without selecting newly added rows', () => {
+    const ownership = createSelectionOwnership();
+    const fee = { dueFeeId: 'fee', feeHeadId: 'tuition', period: '2026-11', dueAmount: 2000 };
+    const manual = { ...fee, dueFeeId: 'manual' };
+    const empty = { items: [], charges: [] };
+    const selected: LedgerSelection = { items: [manual], charges: ['manual-charge'] };
+    recordManualSelection(ownership, empty, selected);
+    const combined = applySelectionFilter(ownership, selected, 'allPending', true, {
+      items: [fee],
+      charges: [],
+    });
+    const refreshed = reconcileLedgerSelection(ownership, combined, {
+      items: [
+        { ...fee, dueAmount: 500 },
+        { ...fee, dueFeeId: 'new' },
+      ],
+      charges: ['new-charge'],
+    });
+    expect(refreshed).toEqual({ items: [{ ...fee, dueAmount: 500 }], charges: [] });
+    expect(ownership.manual.items.size).toBe(0);
+    expect(ownership.manual.charges.size).toBe(0);
+    expect(applySelectionFilter(ownership, refreshed, 'allPending', false, empty)).toEqual(empty);
+  });
+
+  it('preserves existing row objects and order when a refresh does not change selected values', () => {
+    const ownership = createSelectionOwnership();
+    const item = { dueFeeId: 'fee', feeHeadId: 'tuition', period: '2026-11', dueAmount: 2000 };
+    const selected = { items: [item], charges: ['charge'] };
+    const next = reconcileLedgerSelection(ownership, selected, {
+      items: [{ ...item }],
+      charges: ['charge'],
+    });
+    expect(next.items[0]).toBe(item);
+    expect(next.charges).toEqual(selected.charges);
+  });
+});
 
 describe('Fee Collection academic calendar boundaries', () => {
   it('includes every June-May month even when the student has no ledger row in a month', () => {

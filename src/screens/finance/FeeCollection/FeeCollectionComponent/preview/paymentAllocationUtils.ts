@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { roundUpAmount } from 'src/utils/whole-rupee-amount';
 import { FeeCollectionStatusType } from 'src/enums/fee-collection-type';
 
 import type { IFeeCharge, SelectedItem } from '../../Components/type';
@@ -65,8 +66,7 @@ export const toPaise = (amount: number): number => {
  */
 export const roundUpToRupee = (amount: number): number => {
   if (!amount || amount <= 0 || Number.isNaN(amount)) return 0;
-  const paise = toPaise(amount);
-  return Math.ceil(paise / 100);
+  return roundUpAmount(amount);
 };
 
 /**

@@ -60,7 +60,7 @@ const BookViewBasicDetail: React.FC<BookViewDetailProps> = ({ book }) => {
       {
         label: 'Price',
         icon: 'mdi:currency-inr',
-        value: book?.price ? `₹${book.price.toFixed(2)}` : '—',
+        value: book?.price ? `₹${Math.ceil(book.price).toLocaleString('en-IN')}` : '—',
       },
       {
         label: 'Added On',

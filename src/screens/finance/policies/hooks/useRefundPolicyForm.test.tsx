@@ -73,7 +73,7 @@ describe('useRefundPolicyForm submission validation', () => {
     expect(values.amountMode).toBe('ManualUpToEligible');
     expect(values.maximumPerRequest).toBeNull();
     expect(values.maximumPerStudentYear).toBeNull();
-    expect(values.roundingMethod).toBe('None');
+    expect(values.roundingMethod).toBe('RoundUp');
     expect(values.deductionType).toBe('None');
     expect(values.processingTargetDays).toBeNull();
     expect(values).not.toHaveProperty('eligiblePaymentState');

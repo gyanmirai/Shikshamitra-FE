@@ -34,7 +34,7 @@ const formatCurrency = (value?: number | null) =>
     style: 'currency',
     currency: 'INR',
     maximumFractionDigits: 0,
-  }).format(value ?? 0);
+  }).format(Math.ceil(value ?? 0));
 
 const severityColor = (severity: string): 'error' | 'warning' | 'info' =>
   severity.toLowerCase() === 'high'

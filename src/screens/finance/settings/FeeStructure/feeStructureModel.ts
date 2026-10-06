@@ -9,7 +9,6 @@ import type {
 export type StructurePolicyFamily = Exclude<PolicyFamily, 'concession'>;
 export const structurePolicyFamilies: StructurePolicyFamily[] = [
   'collection',
-  'proration',
   'refund',
 ];
 
@@ -31,8 +30,6 @@ export const structureCandidate = (source?: Partial<StructureRecord>): Structure
   collectionPolicyVersionId: source?.collectionPolicyVersionId ?? null,
   concessionPolicyId: source?.concessionPolicyId ?? null,
   concessionPolicyVersionId: source?.concessionPolicyVersionId ?? null,
-  prorationPolicyId: source?.prorationPolicyId ?? null,
-  prorationPolicyVersionId: source?.prorationPolicyVersionId ?? null,
   refundPolicyId: source?.refundPolicyId ?? null,
   refundPolicyVersionId: source?.refundPolicyVersionId ?? null,
   concessionFeeHeadScope: source?.concessionFeeHeadScope ?? 'EntireFeeStructure',

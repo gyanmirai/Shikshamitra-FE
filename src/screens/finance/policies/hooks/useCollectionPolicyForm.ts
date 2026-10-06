@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useFormik, setNestedObjectValues } from 'formik';
+import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import {
@@ -57,7 +58,7 @@ const getInitialValues = (
     compoundFrequency: data?.compoundFrequency || 'Daily',
     escalationRules: data?.escalationRules || [],
     feeHeadOverrides: data?.feeHeadOverrides || [],
-    roundingMethod: data?.roundingMethod || 'None',
+    roundingMethod: 'RoundUp',
     maximumLateFeeAmount: data?.maximumLateFeeAmount ?? null,
     maximumChargingDays: data?.maximumChargingDays ?? null,
     considerAsIncome: true,
@@ -484,10 +485,7 @@ export function useCollectionPolicyForm({
     }
 
     if (v.maximumLateFeeAmount !== null) rawFee = Math.min(rawFee, v.maximumLateFeeAmount);
-    if (v.roundingMethod === 'RoundUp') return Math.ceil(rawFee);
-    if (v.roundingMethod === 'RoundDown') return Math.floor(rawFee);
-    if (v.roundingMethod === 'NearestRupee') return Math.round(rawFee);
-    return rawFee;
+    return roundUpWithinAmount(rawFee, v.maximumLateFeeAmount ?? Number.MAX_SAFE_INTEGER);
   }, [formik.values, calcAmount, calcDaysLate]);
 
   /**

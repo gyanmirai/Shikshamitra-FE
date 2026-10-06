@@ -207,9 +207,6 @@ export const formatFinancePolicyVersionValue = (
     return { kind: 'text', text: formatObject(value as Record<string, unknown>, context) };
   }
 
-  const referenceLabel = findReferenceLabel(value, context);
-  if (referenceLabel) return { kind: 'text', text: referenceLabel };
-
   if (typeof value === 'number') {
     if (fieldKey.includes('percentage')) {
       return { kind: 'text', text: fPercent(value) };
@@ -226,6 +223,9 @@ export const formatFinancePolicyVersionValue = (
       text: humanizeToken(String(value)),
     };
   }
+
+  const referenceLabel = findReferenceLabel(value, context);
+  if (referenceLabel) return { kind: 'text', text: referenceLabel };
 
   return { kind: 'text', text: String(value) };
 };

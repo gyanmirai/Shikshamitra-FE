@@ -60,3 +60,12 @@ The routing lookup also supplies malformed legacy labels (`SBI - null`,
 `AXIS - undefined`) alongside a masked SBI account and a named HDFC account.
 Select Cheque to verify the dropdown and its selected label omit missing-value text
 and preserve valid account identifiers. These IDs and labels are synthetic.
+Bank-only responses with redacted numbers also include masked or named metadata:
+verify `SBI - XXXX6789` and `AXIS - School Fees` appear in the options and selected value.
+
+With **All Pending** and **All Charges** selected, click **Refresh selection balances**
+inside the collection dialog. This synthetic refetch pays November tuition and ART Charge,
+and reduces December tuition to ₹500. Selection drops from 15 items / ₹22,720 to
+13 items / ₹18,109. Both presets remain checked; the newly paid rows are disabled and
+absent from checkout. Unticking All Pending leaves four unpaid charges / ₹400;
+unticking All Charges then clears checkout. No backend balances are changed.

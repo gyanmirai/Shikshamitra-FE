@@ -44,14 +44,14 @@ interface UsePayslipActionsParams {
 
 export const pdfCurrency = (val: number | null | undefined): string => {
   if (!val && val !== 0) {
-    return 'Rs. 0.00';
+    return 'Rs. 0';
   }
 
   const valueToFormat = val ?? 0;
 
-  return `Rs. ${valueToFormat.toLocaleString('en-IN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+  return `Rs. ${Math.ceil(valueToFormat).toLocaleString('en-IN', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   })}`;
 };
 

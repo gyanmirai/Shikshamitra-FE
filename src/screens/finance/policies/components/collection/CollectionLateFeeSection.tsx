@@ -729,22 +729,7 @@ export default function CollectionLateFeeSection({
             )}
 
             {/* Rounding Method */}
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Rounding Method</InputLabel>
-                <Select
-                  label="Rounding Method"
-                  name="roundingMethod"
-                  value={formik.values.roundingMethod}
-                  onChange={formik.handleChange}
-                >
-                  <MenuItem value="None">None (Exact decimal)</MenuItem>
-                  <MenuItem value="RoundUp">Round Up (Ceil to ₹1)</MenuItem>
-                  <MenuItem value="RoundDown">Round Down (Floor to ₹1)</MenuItem>
-                  <MenuItem value="NearestRupee">Nearest Rupee (Half up)</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+
 
             {/* Runaway Caps */}
             <Grid size={{ xs: 12, sm: 6 }}>

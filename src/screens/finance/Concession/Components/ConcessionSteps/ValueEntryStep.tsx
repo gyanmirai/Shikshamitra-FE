@@ -145,8 +145,8 @@ function RequestEnteredInstallments({ formik, requestContext, policy, preview }:
   const maximum = percentage ? Math.min(100, policy.maximumPercentage ?? 100)
     : policy.maximumFixedAmount ?? Number.POSITIVE_INFINITY;
   const money = (amount: number) => new Intl.NumberFormat('en-IN', {
-    style: 'currency', currency: 'INR', maximumFractionDigits: 2,
-  }).format(amount);
+    style: 'currency', currency: 'INR', maximumFractionDigits: 0,
+  }).format(Math.ceil(amount));
 
   return (
     <Stack spacing={2}>
@@ -320,8 +320,8 @@ const ValueEntryStepItem = ({
     new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      maximumFractionDigits: 2,
-    }).format(amount);
+      maximumFractionDigits: 0,
+    }).format(Math.ceil(amount));
 
   const selectedBaseTotal = selectedFeeHeads.reduce(
     (sum: number, feeHead: any) => sum + Number(feeHead.amount || 0),
@@ -333,6 +333,8 @@ const ValueEntryStepItem = ({
     0
   );
   const setRequestFixedTotal = (requestedTotal: number) => {
+    requestedTotal = Math.ceil(requestedTotal);
+    requestedTotal = Math.ceil(requestedTotal);
     let remaining = requestedTotal;
     const updates: Record<string, { basedOn: number; amount: number; netAmount: number }> = {};
     selectedFeeHeads.forEach((feeHead: any, index: number) => {
@@ -342,7 +344,7 @@ const ValueEntryStepItem = ({
           ? remaining
           : Math.min(
               baseAmount,
-              Math.round((requestedTotal * baseAmount * 100) / (selectedBaseTotal || 1)) / 100
+              Math.floor((requestedTotal * baseAmount) / (selectedBaseTotal || 1))
             );
       remaining = Math.max(0, Number((remaining - amount).toFixed(2)));
       updates[feeHead.feeHeadId] = {

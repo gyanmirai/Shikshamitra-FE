@@ -23,7 +23,6 @@ import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetChargeCategoriesQuery } from 'src/redux/finance/chargeCategory';
 import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
-import FinanceRoutingFields from 'src/screens/finance/components/FinanceRoutingFields';
 import { buildAudiencePayload } from 'src/redux/finance/ChargeManagement/chargeMappers';
 import {
   usePostChargeMutation,
@@ -149,8 +148,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
       chargeId: '',
       chargeName: '',
       chargeCategoryId: '',
-      incomeCategoryId: '',
-      receivingBankAccountId: '',
       chargeCategoryName: '',
       purposeDescription: '',
       amount: '',
@@ -206,8 +203,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
         const payload = {
           chargeName: values.chargeName,
           chargeCategoryId: values.chargeCategoryId,
-          incomeCategoryId: values.incomeCategoryId,
-          receivingBankAccountId: values.receivingBankAccountId,
           purposeDescription: values.purposeDescription,
           amount: parseFloat(String(values.amount)),
           dueDate: dayjs(values.dueDate).toISOString(),
@@ -443,15 +438,6 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <form onSubmit={formik.handleSubmit} style={{ height: '100%' }}>
-        <Box sx={{ px: 3 }}>
-          <FinanceRoutingFields
-            formik={formik}
-            academicYearId={currentYear?.id || ''}
-            operation="charge"
-            categoryField="incomeCategoryId"
-            bankField="receivingBankAccountId"
-          />
-        </Box>
         <Box
           component={motion.div}
           initial={{ opacity: 0, y: 12 }}
@@ -460,6 +446,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
           display="flex"
           flexDirection="column"
           height="100%"
+          minHeight={0}
         >
           <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
             <Box sx={{ p: 2 }}>
@@ -1026,7 +1013,7 @@ const UpdateChargeForm: React.FC<IUpdateChargeFormProps> = ({
                   size="small"
                   onClick={handleSubmit}
                 >
-                  {isEditMode ? 'Update' : 'Create'}
+                  Submit
                 </LoadingButton>
               </Stack>
             </Box>

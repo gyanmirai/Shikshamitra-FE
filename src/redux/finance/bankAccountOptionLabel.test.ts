@@ -38,6 +38,33 @@ describe('bank account option labels', () => {
     ).toBe('SBI - XXXX1234');
   });
 
+  it.each([
+    { label: 'SBI', bankName: 'SBI', maskedAccountNumber: 'XXXX1234' },
+    { label: 'SBI', maskedAccountNumber: 'XXXX1234' },
+    { label: 'Co-operative Bank', maskedAccountNumber: 'XXXX1234' },
+  ])('completes a bank-only label with an available masked identifier: %j', (account) => {
+    expect(bankAccountOptionLabel({ id: 'bank', ...account })).toBe(`${account.label} - XXXX1234`);
+  });
+
+  it('preserves a complete server label when alternate safe metadata is also present', () => {
+    expect(
+      bankAccountOptionLabel({
+        id: 'bank',
+        label: 'SBI • 1234',
+        bankName: 'SBI',
+        maskedAccountNumber: 'XXXX1234',
+        accountHolderName: 'School Account',
+      })
+    ).toBe('SBI • 1234');
+    expect(
+      bankAccountOptionLabel({
+        id: 'bank',
+        label: 'School Account',
+        accountHolderName: 'School Account',
+      })
+    ).toBe('School Account');
+  });
+
   it('falls back to the account holder then bank name when the masked identifier is unavailable', () => {
     expect(
       bankAccountOptionLabel({ id: 'bank', bankName: 'SBI', accountHolderName: 'School Account' })

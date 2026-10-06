@@ -72,6 +72,7 @@ import {
   createSelectionOwnership,
   isLedgerItemCollectible,
   recordManualSelection,
+  reconcileLedgerSelection,
   selectionFilterState,
   selectionItemKey,
 } from './feeLedgerSelection';
@@ -1165,38 +1166,84 @@ const FeeCollectComponentForm = ({
   const firstSixPeriodSet = new Set(orderedAcademicPeriods.slice(0, 6));
   const lastSixPeriodSet = new Set(orderedAcademicPeriods.slice(-6));
 
-  const pendingItems: SelectedItem[] = ledgerData.monthWise.flatMap((group) => {
-    const period = toPeriod(
-      FeeMonth[group.month] as string,
-      group.year ?? currentYear?.year ?? new Date().getFullYear()
+  const collectibleLedgerItems = useMemo(
+    () =>
+      ledgerData.monthWise.flatMap((group) => {
+        const period = toPeriod(
+          FeeMonth[group.month] as string,
+          group.year ?? currentYear?.year ?? new Date().getFullYear()
+        );
+        return group.items
+          .filter((item) => isLedgerItemCollectible(item))
+          .map((item) => {
+            const roundedDue = roundUpToRupee(item.due);
+            return {
+              status: item.status,
+              selection: {
+                dueFeeId: item.dueFeeId,
+                feeHeadId: item.feeHeadId,
+                period,
+                dueAmount: roundedDue,
+                originalDueAmount: item.due,
+                roundingAdjustment: safeRoundingDifference(item.due, roundedDue),
+                lateFeeAmount: item.lateFeeAmount,
+                installmentLabel: item.installmentLabel,
+              },
+            };
+          });
+      }),
+    [ledgerData, currentYear?.year]
+  );
+  const pendingItems = collectibleLedgerItems
+    .filter(({ status }) =>
+      [
+        FeeCollectionStatusType.Pending,
+        FeeCollectionStatusType.Overdue,
+        FeeCollectionStatusType.Partial,
+      ].includes(status)
+    )
+    .map(({ selection }) => selection);
+  const selectableChargeIds = useMemo(
+    () => chargesData.filter(isChargeSelectable).map((charge) => charge.chargeId),
+    [chargesData]
+  );
+  const collectibleSelection = useMemo(
+    () => ({
+      items: collectibleLedgerItems.map(({ selection }) => selection),
+      charges: selectableChargeIds,
+    }),
+    [collectibleLedgerItems, selectableChargeIds]
+  );
+  const selectedFeeItems = formik.values.selectedItems;
+  const selectedChargeIds = formik.values.charges;
+  const setCollectionValues = formik.setValues;
+
+  useEffect(() => {
+    if (!formData || collectFormLoading || collectFormFetching) return;
+    const next = reconcileLedgerSelection(
+      selectionOwnership.current,
+      { items: selectedFeeItems, charges: selectedChargeIds },
+      collectibleSelection
     );
-    return group.items
-      .filter(
-        (item) =>
-          isLedgerItemCollectible(item) &&
-          [
-            FeeCollectionStatusType.Pending,
-            FeeCollectionStatusType.Overdue,
-            FeeCollectionStatusType.Partial,
-          ].includes(item.status)
-      )
-      .map((item) => {
-        const roundedDue = roundUpToRupee(item.due);
-        return {
-          dueFeeId: item.dueFeeId,
-          feeHeadId: item.feeHeadId,
-          period,
-          dueAmount: roundedDue,
-          originalDueAmount: item.due,
-          roundingAdjustment: safeRoundingDifference(item.due, roundedDue),
-          lateFeeAmount: item.lateFeeAmount,
-          installmentLabel: item.installmentLabel,
-        };
-      });
-  });
-  const selectableChargeIds = chargesData
-    .filter(isChargeSelectable)
-    .map((charge) => charge.chargeId);
+    if (
+      next.items.length !== selectedFeeItems.length ||
+      next.items.some((item, index) => item !== selectedFeeItems[index]) ||
+      next.charges.length !== selectedChargeIds.length
+    ) {
+      setCollectionValues(
+        (values) => ({ ...values, selectedItems: next.items, charges: next.charges }),
+        false
+      );
+    }
+  }, [
+    formData,
+    collectFormLoading,
+    collectFormFetching,
+    collectibleSelection,
+    selectedFeeItems,
+    selectedChargeIds,
+    setCollectionValues,
+  ]);
   const filterMatches: Record<SelectionFilterKey, LedgerSelection> = {
     allPending: { items: pendingItems, charges: [] },
     allCharges: { items: [], charges: selectableChargeIds },

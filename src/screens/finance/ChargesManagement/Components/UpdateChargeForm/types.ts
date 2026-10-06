@@ -9,8 +9,6 @@ export interface IUpdateChargeFormValues {
   chargeId: string;
   chargeName: string;
   chargeCategoryId: string;
-  incomeCategoryId: string;
-  receivingBankAccountId: string;
   chargeCategoryName: string;
   purposeDescription: string;
   amount: number | string;

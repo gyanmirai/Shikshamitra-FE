@@ -10,6 +10,7 @@ import { shikshaMitraToast } from 'src/components/toast';
 import { useFormik, setNestedObjectValues } from 'formik';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { roundUpAmount, roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
 import {
   useCreateConcessionPolicyMutation,
   useGetConcessionPolicyImpactQuery,
@@ -56,7 +57,7 @@ const getInitialValues = (
     fixedAmount: d?.fixedAmount ?? null,
     maximumPercentage: d?.maximumPercentage ?? null,
     maximumFixedAmount: d?.maximumFixedAmount ?? null,
-    roundOff: d?.roundingMethod || d?.roundOff || 'None',
+    roundOff: 'RoundUp',
     applyOn: d?.applyOn || 'AllOutstanding',
     concurrencyStamp: d?.concurrencyStamp || '',
     changeReason: '',
@@ -198,7 +199,7 @@ export function useConcessionPolicyForm({
           maximumPercentage: values.maximumPercentage,
           maximumFixedAmount: values.maximumFixedAmount,
           applyOn: values.applyOn,
-          roundingMethod: values.roundOff,
+          roundingMethod: 'RoundUp',
           changeReason: values.changeReason?.trim() || null,
           concurrencyStamp: editData?.id ? values.concurrencyStamp : null,
         };
@@ -328,15 +329,18 @@ export function useConcessionPolicyForm({
       concessionAmount = pending;
     }
 
-    concessionAmount = Math.min(pending, Math.max(0, concessionAmount));
+    const maximum = values.valueSource === 'RequestEnteredWithinLimits' && values.calculationMethod === 'FixedAmount'
+      ? Math.min(pending, values.maximumFixedAmount ?? pending) : pending;
+    concessionAmount = values.calculationMethod === 'FullWaiver'
+      ? pending : roundUpWithinAmount(concessionAmount, maximum);
 
     const newOutstanding = Math.max(0, pending - concessionAmount);
 
     return {
-      concessionAmount: Math.round(concessionAmount),
+      concessionAmount,
       refundRequired: 0,
-      newOutstanding: Math.round(newOutstanding),
-      lateFeeImpact: simLateFee,
+      newOutstanding: roundUpAmount(newOutstanding),
+      lateFeeImpact: roundUpAmount(simLateFee),
     };
   }, [formik, simFeeAmount, simAlreadyPaid, simLateFee]);
 

@@ -8,7 +8,7 @@ import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import { Box, Card, Stack, Button } from '@mui/material';
+import { Box, Tab, Tabs, Card, Stack, Button } from '@mui/material';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { financePaths, financePermissions } from 'src/constants/finance-menu';
@@ -53,10 +53,10 @@ export default function ConcessionPolicyWorkspace() {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Concession Policy"
-        description="Define reusable concession calculation rules, fee head scope, application behaviour, and demand recalculation logic."
+        description="Manage reusable concession rules and limits. Staff select an applicable policy on each concession request."
         links={[
           { name: 'Finance', href: financePaths.dashboard },
           { name: 'Policies & Rules', href: financePaths.policies.root },
@@ -64,38 +64,39 @@ export default function ConcessionPolicyWorkspace() {
         ]}
       />
 
-      <Card sx={{ p: 1.25, mb: 1.5 }}>
+      <Card sx={{ px: 1, py: 0.75, flexShrink: 0 }}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           alignItems={{ xs: 'stretch', md: 'center' }}
           justifyContent="space-between"
           spacing={1}
         >
-          <Stack direction="row" spacing={1}>
-            <Button
-              size="small"
-              variant={!isArchived ? 'contained' : 'outlined'}
-              color={!isArchived ? 'inherit' : 'primary'}
-              onClick={() => setArchiveView('current')}
-              disableElevation
-            >
-              Current Policies
-            </Button>
-            <Button
-              size="small"
-              variant={isArchived ? 'contained' : 'outlined'}
-              color={isArchived ? 'inherit' : 'primary'}
-              onClick={() => setArchiveView('archived')}
-              endIcon={
-                <Label color="default" variant="soft">
-                  {archivedSummary?.totalCount ?? 0}
-                </Label>
+          <Tabs
+            value={archiveView}
+            onChange={(_, value) => setArchiveView(value)}
+            aria-label="Concession policy views"
+            sx={{ minHeight: 40 }}
+          >
+            <Tab
+              value="current"
+              label="Current policies"
+              icon={<Iconify icon="solar:document-text-linear" width={18} />}
+              iconPosition="start"
+              sx={{ minHeight: 40, px: 1 }}
+            />
+            <Tab
+              value="archived"
+              label={
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <span>Archived</span>
+                  {archivedSummary && <Label color="default">{archivedSummary.totalCount}</Label>}
+                </Stack>
               }
-              disableElevation
-            >
-              Archived
-            </Button>
-          </Stack>
+              icon={<Iconify icon="solar:archive-linear" width={18} />}
+              iconPosition="start"
+              sx={{ minHeight: 40, px: 1 }}
+            />
+          </Tabs>
 
           {!isArchived && canCreate && (
             <Button
@@ -103,15 +104,18 @@ export default function ConcessionPolicyWorkspace() {
               size="small"
               startIcon={<Iconify icon={GlobalIcons.addIcon} />}
               onClick={handleAdd}
+              disabled={!academicYearId}
               sx={{ px: 2 }}
             >
-              Concession Policy
+              Create policy
             </Button>
           )}
         </Stack>
       </Card>
 
-      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+      >
         <FinancePolicyTable
           policyType="concession"
           onAdd={handleAdd}

@@ -22,7 +22,7 @@ provided screenshots are reference examples, not a final visual target.
 - The title must describe the action and object, such as `Add subject`,
   `Update weekly lectures`, or `Add homework`.
 - Avoid titles that only repeat a menu or page name, such as `Subject
-  Creation`, when the user is actually adding a subject.
+Creation`, when the user is actually adding a subject.
 - Keep the form visually separated from the background with subtle elevation or
   surface contrast, not a harsh border.
 - The form must remain usable at smaller viewport sizes, with a scrollable body
@@ -35,13 +35,19 @@ Forms must use a predictable grid so fields are easy to scan and complete.
 - Group related fields under a concise section heading.
 - Use a two-column grid for related fields when the available width supports
   it. Examples include Class and Division, or Category and Icon.
-- Use a single full-width field for names, titles, descriptions, rich text,
-  uploads, and other content that benefits from horizontal space.
+- Give names, titles and descriptions enough horizontal space. In policy forms, pair
+  Policy name with Status in the first row, and Description with the default-policy toggle
+  in the next row when space permits. Give text fields the wider column and stack these
+  controls on narrow screens.
+- Use full-width fields for rich text, uploads, and other content that needs the space.
 - Do not force narrow or unrelated fields into the same row merely to reduce
   vertical height.
 - Keep equal-width fields aligned within the same row unless one field has a
   clearly greater content requirement.
 - Collapse the grid to one column on narrow screens.
+- Keep ordinary configuration drawers focused on their fields. Do not add auxiliary policy
+  summaries, illustrative balance previews, or completion-checklist panels unless requested.
+  Required transaction review or approval steps follow their own workflow rules.
 - Keep labels aligned consistently above their controls; do not mix floating,
   inline, and placeholder-only labels without a clear reason.
 - Keep section headings, helper text, fields, and validation messages in a
@@ -58,8 +64,10 @@ Forms must use a predictable grid so fields are easy to scan and complete.
 - Use singular nouns for a single value and plural nouns for collections.
 - Helper text should explain format, consequence, or selection context. Do not
   repeat the label or add decorative copy.
-- Use concise section descriptions when they help the user understand why the
-  fields are grouped together.
+- Put optional section-card guidance in an info-icon tooltip beside the heading instead of
+  rendering a one-line subtitle or a static informational banner. Make the info control
+  keyboard reachable and give it an accessible name. Keep field helper text, validation errors,
+  and current-condition warnings visible beside the fields they explain.
 - Avoid making placeholder text the only label; placeholders disappear when a
   user enters a value.
 
@@ -145,8 +153,12 @@ prevent accidental interaction without making the interface feel broken.
 ## 8. Form actions and submission
 
 - Use one clear primary submit action for the main form outcome.
-- Use action labels that describe the outcome: `Add`, `Update`, `Save draft`,
-  or `Publish now`.
+- Label the ordinary create/edit form submission `Submit`. Reserve outcome labels such as
+  `Save draft`, `Publish now`, or `Archive` for distinct workflow or lifecycle actions.
+- Use the application's neutral default styling for `Submit` and `Cancel`; omit explicit
+  submit-button color overrides, especially `color="primary"` or `color="success"`.
+- Do not add a Ctrl/Cmd+Enter submit handler, shortcut hint, or shortcut UI. Preserve normal
+  keyboard navigation and native form accessibility.
 - When a section's Add button has a leading plus icon, its visible label may
   name only the object (for example, `+ Level`); give it an accessible name
   that includes `Add`.
@@ -191,6 +203,9 @@ Before approving a form, verify:
 - Loading, error, success, and disabled treatments use system colors only.
 - Borders are restrained and do not create unnecessary visual noise.
 - The action footer is stable, clear, and consistent with other forms.
+- Section help uses accessible info tooltips; ordinary configuration forms have no added
+  summary, balance-preview, or completion-checklist sidebar.
+- The ordinary submit button reads `Submit`, uses neutral defaults, and has no submit shortcut.
 - The form works with keyboard and at supported narrow viewport sizes.
 
 ## 11. Confirmation dialogs and form-related decisions
@@ -204,7 +219,7 @@ delete.
 - Do not show confirmation for ordinary navigation, harmless focus changes, or
   reversible edits that have already been saved.
 - The dialog title must clearly state the decision, such as `Discard unsaved
-  changes?`, `Archive subject?`, or `Delete exam?`.
+changes?`, `Archive subject?`, or `Delete exam?`.
 - The message must identify what will happen and, when relevant, whether the
   action can be undone.
 - Use a clear primary action that states the outcome: `Discard changes`,

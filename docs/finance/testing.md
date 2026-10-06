@@ -28,35 +28,51 @@ npm run docs:check
 
 Use these commands as the first validation set.
 
-| Risk area                         | Command                                                                                                                                                   |
-| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Charge inbox, validation and collection refresh | `npm run test -- src/screens/finance/ChargesManagement src/redux/feeCollection/feeCollection.charges.test.ts` |
-| Finance audit client contract     | `npm run test -- src/redux/finance/audit/financeAuditApi.contract.test.ts`                                                                                |
-| Finance audit UI utilities        | `npm run test -- src/screens/finance/AuditTrail`                                                                                                          |
-| Concession document constraints   | `npm run test -- src/screens/finance/Concession/Components/concessionDocumentUpload.test.ts`                                                              |
-| Concession request types and UI   | `npm run ts` plus focused ESLint on `src/screens/finance/Concession`, `src/screens/finance/ConcessionAdmin`, and `src/redux/finance/ConcessionManagement` |
-| TypeScript impact                 | `npm run ts`                                                                                                                                              |
-| Collections class/division filters | `npm run test -- src/screens/finance/hooks/useFinanceAcademicFilters.test.tsx src/screens/finance/FeeCollection/Components/FeeCollectionTable.filters.test.tsx` |
-| Ledger status, charge filters and counts | `npm run test -- src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx src/screens/finance/FeeCollection/FeeCollectionComponent/feeLedgerStatus.test.ts` |
-| Selection ownership and academic-year boundaries | `npm run test -- src/screens/finance/FeeCollection/FeeCollectionComponent/feeLedgerSelection.test.ts src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx` |
-| Receiving-bank display labels | `npm run test -- src/redux/finance/bankAccountOptionLabel.test.ts src/redux/finance/financeRoutingApi.bankAccounts.test.ts` |
-| Policy default controls and lifecycle | `npm run test -- src/screens/finance/policies/components/DefaultPolicyToggle.test.tsx src/screens/finance/policies/components/PolicyDefaultLifecycle.test.tsx` |
-| Fee Structure default lookups | `npm run test -- src/screens/finance/settings/FeeStructure/hooks/useFeeStructureLookups.test.tsx src/screens/finance/settings/FeeStructure/feeStructureModel.test.ts` |
-| Collections additional charges | `npm run test -- src/redux/feeCollection/feeCollection.charges.test.ts src/screens/finance/FeeCollection/Components/FeeCollectionTable.charges.test.tsx src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx` |
-| Payment Term date entry            | `npm run test -- src/components/custom-date-range-picker/custom-date-range-picker.test.tsx src/screens/finance/settings/PaymentTerm/Components/sections/InstallmentSection.test.tsx src/screens/finance/settings/PaymentTerm/Components/PaymentTermValidationSchema.test.ts` |
+| Risk area                                        | Command                                                                                                                                                                                                                                                                      |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Charge inbox, validation and collection refresh  | `npm run test -- src/screens/finance/ChargesManagement src/redux/feeCollection/feeCollection.charges.test.ts`                                                                                                                                                                |
+| Finance audit client contract                    | `npm run test -- src/redux/finance/audit/financeAuditApi.contract.test.ts`                                                                                                                                                                                                   |
+| Finance audit UI utilities                       | `npm run test -- src/screens/finance/AuditTrail`                                                                                                                                                                                                                             |
+| Concession document constraints                  | `npm run test -- src/screens/finance/Concession/Components/concessionDocumentUpload.test.ts`                                                                                                                                                                                 |
+| Concession request types and UI                  | `npm run ts` plus focused ESLint on `src/screens/finance/Concession`, `src/screens/finance/ConcessionAdmin`, and `src/redux/finance/ConcessionManagement`                                                                                                                    |
+| TypeScript impact                                | `npm run ts`                                                                                                                                                                                                                                                                 |
+| Collections class/division filters               | `npm run test -- src/screens/finance/hooks/useFinanceAcademicFilters.test.tsx src/screens/finance/FeeCollection/Components/FeeCollectionTable.filters.test.tsx`                                                                                                              |
+| Ledger status, charge filters and counts         | `npm run test -- src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx src/screens/finance/FeeCollection/FeeCollectionComponent/feeLedgerStatus.test.ts`                                                                               |
+| Selection ownership and academic-year boundaries | `npm run test -- src/screens/finance/FeeCollection/FeeCollectionComponent/feeLedgerSelection.test.ts src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx`                                                                            |
+| Receiving-bank display labels                    | `npm run test -- src/redux/finance/bankAccountOptionLabel.test.ts src/redux/finance/financeRoutingApi.bankAccounts.test.ts`                                                                                                                                                  |
+| Policy default controls and lifecycle            | `npm run test -- src/screens/finance/policies/components/DefaultPolicyToggle.test.tsx src/screens/finance/policies/components/PolicyDefaultLifecycle.test.tsx`                                                                                                               |
+| Fee Structure default lookups                    | `npm run test -- src/screens/finance/settings/FeeStructure/hooks/useFeeStructureLookups.test.tsx src/screens/finance/settings/FeeStructure/feeStructureModel.test.ts`                                                                                                        |
+| Collections additional charges                   | `npm run test -- src/redux/feeCollection/feeCollection.charges.test.ts src/screens/finance/FeeCollection/Components/FeeCollectionTable.charges.test.tsx src/screens/finance/FeeCollection/FeeCollectionComponent/FeeCollectionForm.charges.test.tsx`                         |
+| Payment Term date entry                          | `npm run test -- src/components/custom-date-range-picker/custom-date-range-picker.test.tsx src/screens/finance/settings/PaymentTerm/Components/sections/InstallmentSection.test.tsx src/screens/finance/settings/PaymentTerm/Components/PaymentTermValidationSchema.test.ts` |
 
 ## Add coverage when needed
 
+Proration form validation and event interactions are covered by
+`src/screens/finance/policies/hooks/useProrationPolicyForm.test.ts` and
+`src/screens/finance/policies/components/proration/ProrationFeeHeadsSection.test.tsx`.
+They check independent event controls, admission preset scope, disabled-event validation,
+numeric boundaries, shared rounding, payload compatibility, checklist consistency,
+collapsed error rows, and invalid-submit focus.
+Use `e2e/fixtures/proration-policy` in the in-app browser for desktop/mobile create and edit
+checks. Its create/update API is an in-memory fixture; it never writes financial records.
+
+Receipt visibility and collection cache refresh are covered by
+`npm run test -- src/screens/finance/InvoiceAndReceipt/Components/ReceiptManagement/index.test.tsx`.
+The suite checks All months on entry, January/December API values, clearing the month,
+pagination reset, academic-year changes, and an already loaded list after collection.
+Finish in the in-app browser on `/finance/invoice-receipt`: verify existing receipts
+appear under All months, select a month, and return to All months.
+
 Add or update tests when a change affects these areas.
 
-| Change                                    | Expected coverage                              |
-| ----------------------------------------- | ---------------------------------------------- |
-| Charge request payload                    | Client or mapper test                          |
-| Optimistic cache update                   | Client cache test                              |
-| Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test |
-| Late-fee waiver queue and decisions        | Type check, exact permission visibility, Pending/Applied/Rejected tabs, reason-required rejection, maker-checker API denial, student-scope isolation, and collection refresh after approval |
-| Audit Trail mapping                       | Mapper test                                    |
-| Route-level behavior                      | Playwright test before release sign-off        |
+| Change                                    | Expected coverage                                                                                                                                                                           |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Charge request payload                    | Client or mapper test                                                                                                                                                                       |
+| Optimistic cache update                   | Client cache test                                                                                                                                                                           |
+| Approval, rejection, or reversal behavior | Preview/confirm screen or client mutation test                                                                                                                                              |
+| Late-fee waiver queue and decisions       | Type check, exact permission visibility, Pending/Applied/Rejected tabs, reason-required rejection, maker-checker API denial, student-scope isolation, and collection refresh after approval |
+| Audit Trail mapping                       | Mapper test                                                                                                                                                                                 |
+| Route-level behavior                      | Playwright test before release sign-off                                                                                                                                                     |
 
 Charge release evidence must cover the selected academic year in every query/cache key, exact action permissions plus server `availableActions`, explicit AllInScope versus selected-student audience, preview/stale/idempotent command behavior, server paging, collection refresh, and absence of placeholder correction actions. The complete matrix is in [Charge Management frontend flow](./references/charge-management-frontend-flow.md).
 
@@ -79,6 +95,10 @@ both grouping views, and display filters preserve consistent selected counts and
 Choose Cheque and inspect the receiving-bank options: malformed `SBI - null` and
 `AXIS - undefined` labels must render only their bank names; masked and named account
 labels must remain usable in both the dropdown and its selected value.
+Verify bank-only labels use supplied masked/account-holder metadata while preserving
+the chosen account ID. Use **Refresh selection balances** while presets are checked:
+paid rows must leave checkout, partial rows must use their current amount, and independent
+unticking must still preserve selections owned by other presets or manual ticks.
 This fixture supplies synthetic API responses through the actual client/components;
 it does not verify deployed student data or post backend payments.
 Also verify a collector with academic-year dates and no Fee Structure settings
@@ -106,7 +126,6 @@ Run `npm run test -- src/screens/finance/ChargesManagement src/redux/feeCollecti
 ## Income, expense, and bank routing
 
 The implemented selectors, retired Account Heads route, lookup permissions, cache updates, and rollout checks are documented in [Income, expense, and bank routing](./references/income-expense-routing.md).
-
 
 ## Variable fee assignment checks
 

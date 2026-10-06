@@ -16,16 +16,15 @@ import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import CustomTooltip from 'src/components/custom-tooltip';
-import React, { useMemo, useState, useEffect, useRef } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { EmptyContent } from 'src/components/empty-content';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 import NumericFormatCustom from 'src/components/custom-numeric-format';
+import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
+import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
 import { useGetAcademicYearMonthsQuery } from 'src/redux/finance/financeFeeStructure';
-import { useGetCollectionPoliciesQuery } from 'src/redux/finance/collectionPolicy';
-import { useGetRefundPoliciesQuery } from 'src/redux/finance/refundPolicy';
-import { useGetProrationPoliciesQuery } from 'src/redux/finance/prorationPolicy';
 import {
   useGetPaymentTermsQuery,
   useLazyGetPaymentTermByIdQuery,
@@ -152,7 +151,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       paymentPolicyId: initialData.paymentPolicyId ?? '',
       collectionPolicyId: initialData.collectionPolicyId ?? '',
       refundPolicyId: initialData.refundPolicyId ?? '',
-      prorationPolicyId: initialData.prorationPolicyId ?? '',
       concessionPolicyId: initialData.concessionPolicyId ?? '',
       concessionFeeHeadScope: initialData.concessionFeeHeadScope ?? 'EntireFeeStructure',
       concessionApplicableFeeHeadIds: initialData.concessionApplicableFeeHeadIds ?? [],
@@ -172,20 +170,14 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
     { academicYearId: currentYear?.id as string, status: 'Active', page: 1, pageSize: 100 },
     { skip: !currentYear?.id }
   );
-  const { data: prorationPolicies } = useGetProrationPoliciesQuery(
-    { academicYearId: currentYear?.id as string, status: 'Active', page: 1, pageSize: 100 },
-    { skip: !currentYear?.id }
-  );
   const collectionDefaultId = collectionPolicies?.items?.find((p: any) => p.isDefault)?.id;
   const refundDefaultId = refundPolicies?.items?.find((p) => p.isDefault)?.id;
-  const prorationDefaultId = prorationPolicies?.items?.find((p) => p.isDefault)?.id;
 
   useEffect(() => {
     if (!isEditing || !currentYear?.id) return;
     const defaults = [
       ['collectionPolicyId', collectionDefaultId],
       ['refundPolicyId', refundDefaultId],
-      ['prorationPolicyId', prorationDefaultId],
     ] as const;
     defaults.forEach(([field, policyId]) => {
       const key = `${currentYear.id}:${field}`;
@@ -193,7 +185,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
       appliedDefaults.current.add(key);
       if (!formik.values[field]) formik.setFieldValue(field, policyId);
     });
-  }, [collectionDefaultId, refundDefaultId, prorationDefaultId, currentYear?.id, isEditing, formik]);
+  }, [collectionDefaultId, refundDefaultId, currentYear?.id, isEditing, formik]);
 
   const addFeeHeadDialog = useBoolean();
   const deleteDlg = useBoolean();
@@ -377,9 +369,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
         ...(formik.values.refundPolicyId && {
           refundPolicyId: formik.values.refundPolicyId,
         }),
-        ...(formik.values.prorationPolicyId && {
-          prorationPolicyId: formik.values.prorationPolicyId,
-        }),
         ...(formik.values.concessionPolicyId && {
           concessionPolicyId: formik.values.concessionPolicyId,
           concessionFeeHeadScope: formik.values.concessionFeeHeadScope,
@@ -410,7 +399,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             paymentPolicyId: saved.paymentPolicyId ?? formik.values.paymentPolicyId,
             collectionPolicyId: saved.collectionPolicyId ?? formik.values.collectionPolicyId,
             refundPolicyId: saved.refundPolicyId ?? formik.values.refundPolicyId,
-            prorationPolicyId: saved.prorationPolicyId ?? formik.values.prorationPolicyId,
             concessionPolicyId: saved.concessionPolicyId ?? formik.values.concessionPolicyId,
             concessionFeeHeadScope:
               saved.concessionFeeHeadScope ?? formik.values.concessionFeeHeadScope,
@@ -445,7 +433,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
             paymentPolicyId: saved?.paymentPolicyId ?? formik.values.paymentPolicyId,
             collectionPolicyId: saved?.collectionPolicyId ?? formik.values.collectionPolicyId,
             refundPolicyId: saved?.refundPolicyId ?? formik.values.refundPolicyId,
-            prorationPolicyId: saved?.prorationPolicyId ?? formik.values.prorationPolicyId,
             concessionPolicyId: saved?.concessionPolicyId ?? formik.values.concessionPolicyId,
             concessionFeeHeadScope:
               saved?.concessionFeeHeadScope ?? formik.values.concessionFeeHeadScope,
@@ -514,8 +501,7 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
   const hasPolicies =
     formik.values.paymentPolicyId ||
     formik.values.collectionPolicyId ||
-    formik.values.refundPolicyId ||
-    formik.values.prorationPolicyId;
+    formik.values.refundPolicyId;
 
   return (
     <motion.div
@@ -1273,7 +1259,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
                 paymentPolicyId: formik.values.paymentPolicyId,
                 collectionPolicyId: formik.values.collectionPolicyId,
                 refundPolicyId: formik.values.refundPolicyId,
-                prorationPolicyId: formik.values.prorationPolicyId,
                 concessionPolicyId: formik.values.concessionPolicyId,
                 concessionFeeHeadScope: formik.values.concessionFeeHeadScope,
                 concessionApplicableFeeHeadIds: formik.values.concessionApplicableFeeHeadIds,
@@ -1282,7 +1267,6 @@ const IndependentFeeStructureCard: React.FC<IndependentFeeStructureCardProps> = 
               isEditing={isEditing}
               isLocked={isLocked}
               feeStructureMetadataId={initialData.feeStructureMetaDataId}
-              feeStructureId={cardId ?? undefined}
               feeHeads={formik.values.feeHeads.map((fh) => ({
                 feeHeadId: fh.feeHeadId,
                 feeHeadName: fh.feeHeadName,

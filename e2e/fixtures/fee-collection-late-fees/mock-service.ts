@@ -94,6 +94,24 @@ export function resetFixture(scenario?: 'statuses' | 'selection') {
 }
 
 const money = (value: number) => Math.round(value * 100) / 100;
+// Simulate authoritative balances changing elsewhere while the collector is editing.
+export function refreshSelectionBalances() {
+  ledger.flatMap((group) => group.items).forEach((item) => {
+    if (item.dueFeeId === 'tuition-5') {
+      Object.assign(item, { paid: item.total, due: 0, status: 'Paid' });
+    }
+    if (item.dueFeeId === 'tuition-6') {
+      Object.assign(item, { paid: item.total - 500, due: 500, status: 'Partial' });
+    }
+  });
+  charges.forEach((charge) => {
+    if (charge.chargeId === 'art-charge') {
+      Object.assign(charge, { paidAmount: charge.amount, pendingAmount: 0, status: 'Paid' });
+    }
+  });
+  ledger.forEach((group) => { group.totalDue = group.items.reduce((sum, item) => sum + item.due, 0); });
+}
+
 function balances() {
   const items = ledger.flatMap((month) => month.items);
   return {
@@ -220,6 +238,8 @@ export const api = createApi({
           { id: 'sbi-identified-account', label: 'SBI • 1234' },
           { id: 'axis-account', label: 'AXIS - undefined' },
           { id: 'hdfc-account', label: 'HDFC - School Collections' },
+          { id: 'sbi-redacted-account', label: 'SBI', bankName: 'SBI', accountNumber: null, maskedAccountNumber: 'XXXX6789' },
+          { id: 'axis-named-account', label: 'AXIS', bankName: 'AXIS', accountNumber: null, accountHolderName: 'School Fees' },
         ],
       } };
       if (url.startsWith('/student-fee-structure/student/')) return { data: {

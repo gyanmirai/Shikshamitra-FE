@@ -65,8 +65,8 @@ export interface IClassWiseFeeData {
  * Each card owns its _id, classId, feeStructureId, and lock status.
  */
 export interface IClassWiseFeeStructureCard {
-	/** Canonical workspace response; preserve all versions and schedule overrides. */
-	record?: StructureRecord;
+  /** Canonical workspace response; preserve all versions and schedule overrides. */
+  record?: StructureRecord;
   _id?: string; // undefined = unsaved (new draft)
   name: string;
   feeHeads: IClassWiseFeeItem[];
@@ -77,10 +77,9 @@ export interface IClassWiseFeeStructureCard {
   paymentPolicyId?: string;
   collectionPolicyId?: string;
   refundPolicyId?: string;
-  prorationPolicyId?: string;
   concessionPolicyId?: string;
-	concessionFeeHeadScope?: 'EntireFeeStructure' | 'SelectedFeeHeads';
-	concessionApplicableFeeHeadIds?: string[];
+  concessionFeeHeadScope?: 'EntireFeeStructure' | 'SelectedFeeHeads';
+  concessionApplicableFeeHeadIds?: string[];
 }
 
 export interface IFeeStructure {
@@ -124,6 +123,7 @@ export interface IFeeStructureFormProps {
 }
 
 export interface IFeeStructureEditFormProps {
+  onBusyChange?: (busy: boolean) => void;
   editData: IFeeStructure;
   onClose: (e: any, isSubmit?: boolean) => void;
   viewOnly?: boolean;

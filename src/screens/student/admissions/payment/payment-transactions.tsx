@@ -10,7 +10,7 @@ export function PaymentTransactions({ items, active, onVerify, onReject, onRever
   return <Stack divider={<Divider flexItem />}>
     {[...items].reverse().map((item) => <Stack key={item.id} direction={{ xs: 'column', sm: 'row' }}
       alignItems={{ sm: 'center' }} justifyContent="space-between" spacing={1} sx={{ py: 1 }}>
-      <Stack><Typography variant="body2" fontWeight={600}>{item.currency} {item.amount.toFixed(2)} · {labels[item.status] ?? item.status}</Typography>
+      <Stack><Typography variant="body2" fontWeight={600}>{item.currency} {Math.ceil(item.amount).toLocaleString('en-IN')} · {labels[item.status] ?? item.status}</Typography>
         <Typography variant="caption" color="text.secondary">{item.receiptNumber ?? `Attempt ${item.attemptNumber}`} · {item.method}{item.externalReference ? ` · ${item.externalReference}` : ''}</Typography></Stack>
       {active && item.status === 'pendingVerification' && <Stack direction="row" spacing={1}>
         <Button size="small" onClick={() => onReject(item)} color="error">Reject</Button>

@@ -212,7 +212,7 @@ export default function AssignmentStudentInputs({
                       fullWidth
                       value={variable?.amount ?? ''}
                       disabled={disabled}
-                      inputProps={{ min: 0, max: 9999999999.99, step: 0.01 }}
+                      inputProps={{ min: 0, max: 9999999999.99, step: 1 }}
                       error={variable !== undefined && !!amountError(variable.amount)}
                       helperText={
                         variable !== undefined && amountError(variable.amount)
@@ -262,7 +262,7 @@ export default function AssignmentStudentInputs({
                     type="number"
                     value={amount ?? ''}
                     disabled={disabled}
-                    inputProps={{ min: 0, step: 0.01 }}
+                    inputProps={{ min: 0, step: 1 }}
                     onChange={(e) =>
                       onChange({
                         ...request,

@@ -44,8 +44,12 @@ confirmations.
 - The header must identify the record or task immediately.
 - Use a clear title, concise supporting context, and status only when each
   provides different information.
-- Keep the title, record icon, status chip, information icon, and close action
+- Keep the title, meaningful record icon, status chip, and close action
   aligned to a consistent header grid.
+- Put optional drawer-level context in an accessible info tooltip immediately after the
+  status badge (after the title when there is no badge), instead of a visible subtitle line.
+  Give the icon a meaningful accessible label. Keep section-specific guidance in an info
+  tooltip beside the relevant section heading.
 - Use one record or task icon only when it helps identify the content; remove
   decorative or repeated icons.
 - Use the configured record icon or color only when it is meaningful product
@@ -96,7 +100,7 @@ confirmations.
 ## 6. Tabs and section navigation
 
 - Use tabs only when the sidebar contains peer content areas, such as `Details
-  & schedule` and `Audit trail`.
+& schedule` and `Audit trail`.
 - Keep tab labels short, aligned, and easy to scan.
 - The active tab must have a clear system-accent indicator and accessible state.
 - Preserve the selected tab while the user scrolls within the same sidebar.
@@ -167,6 +171,8 @@ confirmations.
   consequential workflow.
 - Use one clear primary action and a safe secondary action such as `Close` or
   `Cancel`.
+- Standard create/edit drawer forms follow the `Submit` label, neutral button defaults,
+  and no-shortcut rules in [forms.md](forms.md).
 - Use verb-first labels such as `Save changes`, `View timetable`, `Archive`, or
   `Publish exam`.
 - Keep destructive actions visually distinct and follow [popups.md](popups.md)

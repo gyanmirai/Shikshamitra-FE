@@ -17,8 +17,6 @@ const validValues = {
   chargeId: '',
   chargeName: 'Validated charge',
   chargeCategoryId: 'category-id',
-  incomeCategoryId: 'income-id',
-  receivingBankAccountId: 'bank-id',
   chargeCategoryName: 'Academic charge',
   purposeDescription: 'Charge validation regression test',
   amount: '1.05',
@@ -56,20 +54,14 @@ describe('charge amount validation', () => {
   });
 });
 
-describe('charge financial routing', () => {
-  const schema = createUpdateChargeValidationSchema(currentYear, false);
-  it.each(['incomeCategoryId', 'receivingBankAccountId'])(
-    'requires %s when creating a charge',
-    async (field) => {
-      await expect(schema.validateAt(field, { ...validValues, [field]: '' })).rejects.toThrow(
-        'is required'
-      );
+describe('charge form validation', () => {
+  it.each([false, true])(
+    'does not require income or bank selections (edit: %s)',
+    async (isEdit) => {
+      const schema = createUpdateChargeValidationSchema(currentYear, isEdit);
+      await expect(
+        schema.validate({ ...validValues, chargeId: isEdit ? 'charge-id' : '' })
+      ).resolves.toMatchObject({ chargeCategoryId: 'category-id' });
     }
   );
-  it('accepts an explicitly chosen category and bank', async () => {
-    await expect(schema.validate(validValues)).resolves.toMatchObject({
-      incomeCategoryId: 'income-id',
-      receivingBankAccountId: 'bank-id',
-    });
-  });
 });

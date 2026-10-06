@@ -1,11 +1,9 @@
 'use client';
 
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { alpha } from '@mui/material/styles';
 import {
   Box,
@@ -15,7 +13,6 @@ import {
   Drawer,
   Button,
   Typography,
-  IconButton,
   CircularProgress,
 } from '@mui/material';
 import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
@@ -23,6 +20,8 @@ import { useGetFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
 import VersionSidebar from './version/VersionSidebar';
 import VersionDiffTable from './version/VersionDiffTable';
 import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
+
+import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -44,6 +43,7 @@ export default function FinancePolicyVersionDrawer({
     setSelectedVersionId,
     isLoading,
     isError,
+    refetch,
   } = useFinancePolicyVersion({
     open,
     policyId: policy?.id,
@@ -85,19 +85,20 @@ export default function FinancePolicyVersionDrawer({
       slotProps={{
         backdrop: {
           sx: {
-            bgcolor: 'rgba(15, 23, 42, 0.44)',
-            backdropFilter: 'blur(3px)',
+            bgcolor: (theme) => alpha(theme.palette.common.black, 0.32),
           },
         },
       }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-labelledby': 'policy-versions-title',
         sx: {
-          width: { xs: '100%', md: 880 },
+          width: { xs: '100%', sm: 'min(960px, 96vw)' },
           maxWidth: '100%',
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
         },
       }}
     >
@@ -106,82 +107,15 @@ export default function FinancePolicyVersionDrawer({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          bgcolor: 'background.paper',
+          bgcolor: 'background.default',
         }}
       >
-        {/* Drawer Header */}
-        <Box
-          sx={{
-            px: { xs: 2, sm: 3 },
-            py: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            bgcolor: (theme) =>
-              theme.palette.mode === 'dark'
-                ? alpha(theme.palette.background.default, 0.5)
-                : alpha(theme.palette.grey[50], 0.8),
-            flexShrink: 0,
-            gap: 2,
-          }}
-        >
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.25,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                color: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon={GlobalIcons.newversion} width={22} height={22} />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                <Typography variant="h6" fontWeight={700} noWrap>
-                  Policy Version History
-                </Typography>
-                <CustomTooltip
-                  title="Compare configuration revisions, parameter modifications, and reasons for changes across policy versions"
-                  placement="right"
-                  arrow
-                >
-                  <Iconify
-                    icon={GlobalIcons.info}
-                    color="info.main"
-                    width={16}
-                    height={16}
-                    sx={{ cursor: 'pointer' }}
-                  />
-                </CustomTooltip>
-                <Label color="primary" sx={{ height: 20, fontSize: '0.7rem' }}>
-                  {policy.policyName}
-                </Label>
-              </Stack>
-              <Typography variant="caption" color="text.secondary">
-                Track version diffs and compare parameter changes across revisions.
-              </Typography>
-            </Box>
-          </Stack>
-
-          <IconButton
-            onClick={onClose}
-            sx={{
-              p: 0.75,
-              color: 'text.secondary',
-              '&:hover': { bgcolor: 'action.hover' },
-            }}
-          >
-            <Iconify icon="mdi:close" width={20} height={20} />
-          </IconButton>
-        </Box>
+        <FinancePolicyDrawerHeader
+          title="Policy version history"
+          titleId="policy-versions-title"
+          description={`${policy.policyName} · ${policy.academicYearName || 'Current academic year'}`}
+          onClose={onClose}
+        />
 
         {/* Content Body */}
         {isLoading || (policy.policyType === 'collection' && isFeeHeadsLoading) ? (
@@ -193,7 +127,15 @@ export default function FinancePolicyVersionDrawer({
           </Stack>
         ) : isError ? (
           <Box sx={{ p: 3 }}>
-            <Alert severity="warning" sx={{ borderRadius: 1.5 }}>
+            <Alert
+              severity="warning"
+              sx={{ borderRadius: 1.5 }}
+              action={
+                <Button size="small" onClick={() => refetch()}>
+                  Try again
+                </Button>
+              }
+            >
               Unable to load version history for this policy.
             </Alert>
           </Box>
@@ -236,23 +178,25 @@ export default function FinancePolicyVersionDrawer({
           <Box
             sx={{
               display: 'flex',
+              flexDirection: { xs: 'column', md: 'row' },
               flex: 1,
               minHeight: 0,
               overflow: 'hidden',
-              p: { xs: 1.5, sm: 2 },
+              p: { xs: 2, sm: 3 },
               gap: 2,
             }}
           >
             {/* Version List Sidebar */}
             <Box
               sx={{
-                width: { xs: '100%', sm: 260, md: 280 },
-                height: '100%',
+                width: { xs: '100%', md: 240 },
+                height: { xs: 208, md: '100%' },
                 flexShrink: 0,
                 minHeight: 0,
               }}
             >
               <VersionSidebar
+                key={policy.id}
                 versions={versions}
                 selectedVersionId={selectedVersionId}
                 onSelectVersion={handleSelectVersion}
@@ -260,13 +204,10 @@ export default function FinancePolicyVersionDrawer({
             </Box>
 
             {/* Version Changes Display */}
-            <Scrollbar sx={{ flex: 1, minHeight: 0 }}>
+            <Scrollbar sx={{ flex: 1, minHeight: 0, minWidth: 0 }}>
               <Box sx={{ pr: { xs: 0.5, sm: 1 }, pb: 4 }}>
                 {selectedVersion && (
-                  <VersionDiffTable
-                    selectedVersion={selectedVersion}
-                    valueContext={valueContext}
-                  />
+                  <VersionDiffTable selectedVersion={selectedVersion} valueContext={valueContext} />
                 )}
               </Box>
             </Scrollbar>
@@ -276,8 +217,9 @@ export default function FinancePolicyVersionDrawer({
         {/* Footer */}
         <Box
           sx={{
-            p: 2,
-            bgcolor: 'background.neutral',
+            px: { xs: 2, sm: 3 },
+            py: 1.5,
+            bgcolor: 'background.paper',
             borderTop: '1px solid',
             borderColor: 'divider',
             display: 'flex',

@@ -36,7 +36,7 @@ const ChargesManagement = () => {
   const addChargeDialog = useBoolean();
   const onConfirmDialg = useBoolean();
   const academicFilters = useFinanceAcademicFilters();
-	const permissions = useChargePermissions();
+  const permissions = useChargePermissions();
 
   // Lifted state for tab selection to persist across dialog open/close
   const [selectedTab, setSelectedTab] = useState<string | number>(0);
@@ -156,7 +156,7 @@ const ChargesManagement = () => {
   };
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
       {viewChargeDetailsDialog.value ? (
         <CustomBreadcrumbs
           heading="View Charge"
@@ -265,17 +265,19 @@ const ChargesManagement = () => {
             { name: 'Fees', href: '/finance/charge-management' },
             { name: 'Charges', href: '/finance/charge-management' },
           ]}
-		  action={permissions.canAdd ? (
-            <Button
-              startIcon={<Add />}
-              variant="contained"
-              onClick={addChargeDialog.onTrue}
-              size="small"
-              sx={{ px: '32px' }}
-            >
-              Charge
-            </Button>
-		  ) : undefined}
+          action={
+            permissions.canAdd ? (
+              <Button
+                startIcon={<Add />}
+                variant="contained"
+                onClick={addChargeDialog.onTrue}
+                size="small"
+                sx={{ px: '32px' }}
+              >
+                Charge
+              </Button>
+            ) : undefined
+          }
         />
       )}
       {!addChargeDialog.value &&
@@ -318,7 +320,7 @@ const ChargesManagement = () => {
 
       {/* Add Charge Dialog */}
       {addChargeDialog.value && (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ flex: 1, minHeight: 0, boxShadow: 'var(--shadows-4)' }}>
           <UpdateChargeForm
             open={addChargeDialog}
             onClose={handleClose}
@@ -340,7 +342,7 @@ const ChargesManagement = () => {
 
       {/* Edit Charge Dialog */}
       {editChargeDialog.value && selectedChargeData?.chargeId && (
-        <Card sx={{ height: '100%', boxShadow: 'var(--shadows-4)' }}>
+        <Card sx={{ flex: 1, minHeight: 0, boxShadow: 'var(--shadows-4)' }}>
           <UpdateChargeForm
             chargeId={selectedChargeData.chargeId}
             open={editChargeDialog}
@@ -447,19 +449,19 @@ const ChargesManagement = () => {
             variant="contained"
             color="error"
             size="small"
-			onClick={async () => {
+            onClick={async () => {
               removeChargeDialog.onFalse();
               if (selectedChargeData) {
-				try {
-					await deleteCharge({ id: selectedChargeData.chargeId }).unwrap();
-					setSelectedChargeData(null);
-					setRefetchTrigger((prev) => prev + 1);
-					shikshaMitraToast.success({ message: 'Charge deleted successfully.' });
-				} catch (error: any) {
-					shikshaMitraToast.error({
-						message: error?.data?.error?.message || 'Charge could not be deleted.',
-					});
-				}
+                try {
+                  await deleteCharge({ id: selectedChargeData.chargeId }).unwrap();
+                  setSelectedChargeData(null);
+                  setRefetchTrigger((prev) => prev + 1);
+                  shikshaMitraToast.success({ message: 'Charge deleted successfully.' });
+                } catch (error: any) {
+                  shikshaMitraToast.error({
+                    message: error?.data?.error?.message || 'Charge could not be deleted.',
+                  });
+                }
               }
             }}
           >

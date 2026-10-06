@@ -1,14 +1,10 @@
 'use client';
 
-import dayjs from 'dayjs';
 import React, { useMemo } from 'react';
-import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomTooltip from 'src/components/custom-tooltip';
-import AuditTimeline from 'src/screens/finance/AuditTrail/components/AuditTimeline';
 import {
   Box,
   Stack,
@@ -17,12 +13,13 @@ import {
   Drawer,
   Button,
   Typography,
-  IconButton,
   CircularProgress,
 } from '@mui/material';
 
 import { useFinancePolicyVersion } from '../hooks/useFinancePolicyVersion';
-import { mapPolicyVersionsToAuditLogs } from '../utils/policy-version-audit';
+import PolicyAuditTimeline from './version/PolicyAuditTimeline';
+
+import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -37,21 +34,20 @@ export default function FinancePolicyAuditDrawer({
   onClose,
   policy,
 }: FinancePolicyAuditDrawerProps) {
-  const { versions, isLoading, isError } = useFinancePolicyVersion({
+  const { versions, isLoading, isError, refetch } = useFinancePolicyVersion({
     open,
     policyId: policy?.id,
     policyType: policy?.policyType,
   });
 
-  const logs = useMemo(
-    () => (policy ? mapPolicyVersionsToAuditLogs(versions, policy) : []),
-    [policy, versions]
-  );
-
-  const latestEventTime = useMemo(() => {
-    if (!logs || logs.length === 0) return null;
-    return logs[0]?.createdAt ? dayjs(logs[0].createdAt).format('DD-MM-YYYY hh:mm A') : null;
-  }, [logs]);
+  const valueContext = useMemo(() => {
+    const labelsById: Record<string, string> = {};
+    if (policy?.id) labelsById[policy.id.toLowerCase()] = policy.policyName;
+    if (policy?.academicYearId && policy.academicYearName) {
+      labelsById[policy.academicYearId.toLowerCase()] = policy.academicYearName;
+    }
+    return { labelsById };
+  }, [policy]);
 
   if (!policy) return null;
 
@@ -63,19 +59,20 @@ export default function FinancePolicyAuditDrawer({
       slotProps={{
         backdrop: {
           sx: {
-            bgcolor: 'rgba(15, 23, 42, 0.44)',
-            backdropFilter: 'blur(3px)',
+            bgcolor: (theme) => alpha(theme.palette.common.black, 0.32),
           },
         },
       }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-labelledby': 'policy-audit-title',
         sx: {
           width: { xs: '100%', sm: 'min(680px, 92vw)' },
           maxWidth: '100%',
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          boxShadow: '-8px 0 24px -4px rgba(0, 0, 0, 0.08)',
         },
       }}
     >
@@ -84,82 +81,15 @@ export default function FinancePolicyAuditDrawer({
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          bgcolor: 'background.paper',
+          bgcolor: 'background.default',
         }}
       >
-        {/* Drawer Header */}
-        <Box
-          sx={{
-            px: { xs: 2, sm: 3 },
-            py: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            bgcolor: (theme) =>
-              theme.palette.mode === 'dark'
-                ? alpha(theme.palette.background.default, 0.5)
-                : alpha(theme.palette.grey[50], 0.8),
-            flexShrink: 0,
-            gap: 2,
-          }}
-        >
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.25,
-                bgcolor: (theme) => alpha(theme.palette.info.main, 0.1),
-                color: 'info.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon={GlobalIcons.history} width={22} height={22} />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                <Typography variant="h6" fontWeight={700} noWrap>
-                  Policy Audit Trail
-                </Typography>
-                <CustomTooltip
-                  title="Immutable audit event history tracking creation, version increments, and lifecycle state changes"
-                  placement="right"
-                  arrow
-                >
-                  <Iconify
-                    icon={GlobalIcons.info}
-                    color="info.main"
-                    width={16}
-                    height={16}
-                    sx={{ cursor: 'pointer' }}
-                  />
-                </CustomTooltip>
-                <Label color="info" sx={{ height: 20, fontSize: '0.7rem' }}>
-                  {policy.policyName}
-                </Label>
-              </Stack>
-              <Typography variant="caption" color="text.secondary">
-                Immutable event history, status transitions, and modification logs.
-              </Typography>
-            </Box>
-          </Stack>
-
-          <IconButton
-            onClick={onClose}
-            sx={{
-              p: 0.75,
-              color: 'text.secondary',
-              '&:hover': { bgcolor: 'action.hover' },
-            }}
-          >
-            <Iconify icon="mdi:close" width={20} height={20} />
-          </IconButton>
-        </Box>
+        <FinancePolicyDrawerHeader
+          title="Policy audit trail"
+          titleId="policy-audit-title"
+          description={`${policy.policyName} · ${policy.academicYearName || 'Current academic year'}`}
+          onClose={onClose}
+        />
 
         {/* Audit Stats Banner */}
         <Box
@@ -175,33 +105,12 @@ export default function FinancePolicyAuditDrawer({
             flexShrink: 0,
           }}
         >
-          <Stack direction="row" spacing={2.5} alignItems="center">
-            <Box>
-              <Typography variant="caption" color="text.secondary" display="block">
-                Total Audit Events
-              </Typography>
-              <Typography variant="subtitle2" fontWeight={700}>
-                {logs.length} recorded
-              </Typography>
-            </Box>
-            {latestEventTime && (
-              <Box>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Latest Activity
-                </Typography>
-                <Typography variant="subtitle2" fontWeight={600}>
-                  {latestEventTime}
-                </Typography>
-              </Box>
-            )}
-          </Stack>
-          <Label color="default" sx={{ height: 20, fontSize: '0.65rem' }}>
-            Entity:{' '}
-            {policy.policyType
-              .replace(/(^|_)(\w)/g, (_match, _prefix, letter) => ` ${letter.toUpperCase()}`)
-              .trim()}{' '}
-            Policy
-          </Label>
+          <Typography variant="subtitle2">
+            Recorded activity{!isLoading && !isError && ` (${versions.length})`}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Newest first
+          </Typography>
         </Box>
 
         {/* Scrollable Timeline */}
@@ -215,10 +124,18 @@ export default function FinancePolicyAuditDrawer({
                 </Typography>
               </Stack>
             ) : isError ? (
-              <Alert severity="warning" sx={{ borderRadius: 1.5 }}>
+              <Alert
+                severity="warning"
+                sx={{ borderRadius: 1.5 }}
+                action={
+                  <Button size="small" onClick={() => refetch()}>
+                    Try again
+                  </Button>
+                }
+              >
                 Unable to load audit events for this policy.
               </Alert>
-            ) : logs.length === 0 ? (
+            ) : versions.length === 0 ? (
               <Paper
                 variant="outlined"
                 sx={{
@@ -238,13 +155,18 @@ export default function FinancePolicyAuditDrawer({
                 <Typography variant="subtitle2" fontWeight={600} color="text.secondary">
                   No audit events recorded for this policy yet.
                 </Typography>
-                <Typography variant="caption" color="text.disabled" display="block" sx={{ mt: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  color="text.disabled"
+                  display="block"
+                  sx={{ mt: 0.5 }}
+                >
                   Modifications, status updates, and activations will appear here in chronological
-                  order.
+                  order, newest first.
                 </Typography>
               </Paper>
             ) : (
-              <AuditTimeline logs={logs} cardVariant="compact" />
+              <PolicyAuditTimeline versions={versions} valueContext={valueContext} />
             )}
           </Box>
         </Scrollbar>
@@ -252,8 +174,9 @@ export default function FinancePolicyAuditDrawer({
         {/* Footer */}
         <Box
           sx={{
-            p: 2,
-            bgcolor: 'background.neutral',
+            px: { xs: 2, sm: 3 },
+            py: 1.5,
+            bgcolor: 'background.paper',
             borderTop: '1px solid',
             borderColor: 'divider',
             display: 'flex',

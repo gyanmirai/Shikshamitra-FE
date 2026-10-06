@@ -182,6 +182,10 @@ describe('assignment review and commit boundaries', () => {
         })
       )
     );
+    expect(mocks.update.mock.calls[0][0].policies).toHaveLength(3);
+    expect(mocks.update.mock.calls[0][0].policies).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ family: 'proration' })])
+    );
     await waitFor(() => expect(refetch).toHaveBeenCalledTimes(1));
     expect(screen.queryByRole('button', { name: 'Save policies' })).not.toBeInTheDocument();
   });
@@ -240,6 +244,7 @@ describe('assignment review and commit boundaries', () => {
       'default-version'
     );
     expect(screen.getByRole('combobox', { name: 'Collection policy' })).toBeDisabled();
+    expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Concession policy' })).toHaveValue('');
   });
   it('requires a policy reason and submits the student override through preview and commit', async () => {

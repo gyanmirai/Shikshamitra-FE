@@ -4,7 +4,7 @@ import type {
 } from 'src/redux/finance/studentFeeAssignment';
 
 import CustomSelect from 'src/components/custom-select';
-import { Stack, Typography, TextField, Alert, Button, Skeleton } from '@mui/material';
+import { Stack, Alert, Button, Skeleton, TextField, Typography } from '@mui/material';
 import {
   assignmentPolicyFamilies,
   useAssignmentPolicyOptionsQuery,
@@ -44,8 +44,8 @@ export default function AssignmentPolicies({
     <Stack spacing={2}>
       <Typography variant="body2" color="text.secondary">
         {editing
-          ? 'Choose policies for this student. Existing dues, payments and receipts keep their recorded amounts. Proration changes do not recalculate existing charges.'
-          : 'Policies default to the selected fee structure. Overrides apply only to this student.'}
+          ? 'Choose policies for this student. Existing dues, payments and receipts keep their recorded amounts. Proration is inherited from the fee structure and cannot be changed here.'
+          : 'Policies default to the selected fee structure. Overrides apply only to this student. Proration is inherited from the fee structure.'}
       </Typography>
       {options.isLoading && <Skeleton height={48} />}
       {options.isError && (
@@ -60,45 +60,47 @@ export default function AssignmentPolicies({
           Policy choices could not be loaded. Retry to change a policy.
         </Alert>
       )}
-      {assignmentPolicyFamilies.map((family) => {
-        const inherited = defaults.find((p) => p.family === family);
-        const selected = selections.find((p) => p.family === family);
-        const value = selected ? (selected.versionId ?? '') : (inherited?.versionId ?? '');
-        const available = [...(options.data ?? []).filter((p) => p.family === family)];
-        if (inherited && !available.some((p) => p.versionId === inherited.versionId))
-          available.push(inherited);
-        const label = `${family.charAt(0).toUpperCase()}${family.slice(1)} policy`;
-        return (
-          <CustomSelect
-            key={family}
-            name={`${studentId}-${family}`}
-            label={label}
-            value={value}
-            disabled={disabled || !canOverride || options.isLoading || options.isError}
-            options={[
-              ...(family !== 'collection' ? [{ value: '', label: 'No policy assigned' }] : []),
-              ...available.map((p) => ({
-                value: p.versionId,
-                label: `${p.name} · v${p.version}${p.versionId === inherited?.versionId ? (editing ? ' · currently assigned' : ' · fee structure default') : ''}`,
-              })),
-            ]}
-            helperText={
-              !editing && selected && selected.versionId !== (inherited?.versionId ?? null)
-                ? `Student override · default: ${inherited ? `${inherited.name} · v${inherited.version}` : 'No policy assigned'}`
-                : undefined
-            }
-            onChange={(next) =>
-              onChange(
-                [
-                  ...selections.filter((p) => p.family !== family),
-                  { family, versionId: String(next) || null },
-                ],
-                reason
-              )
-            }
-          />
-        );
-      })}
+      {assignmentPolicyFamilies
+        .filter((family) => family !== 'proration')
+        .map((family) => {
+          const inherited = defaults.find((p) => p.family === family);
+          const selected = selections.find((p) => p.family === family);
+          const value = selected ? (selected.versionId ?? '') : (inherited?.versionId ?? '');
+          const available = [...(options.data ?? []).filter((p) => p.family === family)];
+          if (inherited && !available.some((p) => p.versionId === inherited.versionId))
+            available.push(inherited);
+          const label = `${family.charAt(0).toUpperCase()}${family.slice(1)} policy`;
+          return (
+            <CustomSelect
+              key={family}
+              name={`${studentId}-${family}`}
+              label={label}
+              value={value}
+              disabled={disabled || !canOverride || options.isLoading || options.isError}
+              options={[
+                ...(family !== 'collection' ? [{ value: '', label: 'No policy assigned' }] : []),
+                ...available.map((p) => ({
+                  value: p.versionId,
+                  label: `${p.name} · v${p.version}${p.versionId === inherited?.versionId ? (editing ? ' · currently assigned' : ' · fee structure default') : ''}`,
+                })),
+              ]}
+              helperText={
+                !editing && selected && selected.versionId !== (inherited?.versionId ?? null)
+                  ? `Student override · default: ${inherited ? `${inherited.name} · v${inherited.version}` : 'No policy assigned'}`
+                  : undefined
+              }
+              onChange={(next) =>
+                onChange(
+                  [
+                    ...selections.filter((p) => p.family !== family),
+                    { family, versionId: String(next) || null },
+                  ],
+                  reason
+                )
+              }
+            />
+          );
+        })}
       {!editing && selections.length > 0 && (
         <Button size="small" disabled={disabled} onClick={() => onChange([], '')}>
           Restore fee structure defaults

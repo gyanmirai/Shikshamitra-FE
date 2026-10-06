@@ -70,6 +70,8 @@
 //   'zh-TW': 'TWD', // Taiwan
 // };
 
+import { roundUpAmount } from './whole-rupee-amount';
+
 export const formatCurrency = (amount: number): string => {
   //   const locale: string = navigator.language || 'en-US';
   //   const currency: string = (localeCurrencyMap as Record<string, string>)[locale] || 'USD';
@@ -81,9 +83,9 @@ export const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(roundUpAmount(amount));
   } catch (error) {
     console.error('Error formatting currency:', error);
     return `${amount}`;

@@ -18,6 +18,12 @@ import {
   useUpdateProrationPolicyMutation,
 } from 'src/redux/finance/prorationPolicy';
 
+import {
+  isProratedRule,
+  isConfiguredRule,
+  configurationErrors,
+} from '../components/proration/prorationRuleHelpers';
+
 import type {
   IProrationPolicy,
   IFinancePolicyRow,
@@ -32,44 +38,31 @@ interface FeeHeadLookup {
   feeType?: 'Recurring' | 'OneTime';
 }
 
-const ROUNDING_TO_FORM = {
-  Currency: 'NoRoundOff',
-  NearestRupee: 'NoRoundOff',
-  RoundUpRupee: 'RoundUp',
-  RoundDownRupee: 'RoundDown',
-} as const;
-
-const ROUNDING_TO_API = {
-  NoRoundOff: 'Currency',
-  RoundUp: 'RoundUpRupee',
-  RoundDown: 'RoundDownRupee',
-} as const;
-
 export function apiRuleToForm(rule: IProrationPolicyRule): IProrationFeeHeadRule {
-  const ruleType =
-    rule.ruleType === 'Daily'
-      ? 'DailyProration'
-      : rule.ruleType === 'MonthlyCutoff'
-        ? 'MonthlyProration'
-        : 'FullMonthCharge';
-
+  const toFormModel = (model?: IProrationPolicyRule['ruleType']) =>
+    model === 'Daily' ? 'DailyProration' as const :
+      model === 'MonthlyCutoff' ? 'MonthlyProration' as const :
+        model === 'FullMonthCharge' ? 'FullMonthCharge' as const : 'NoProration' as const;
+  const configuration = (model: IProrationFeeHeadRule['ruleType'], withdrawal = false): IProrationFeeHeadRule['configuration'] => {
+    const minimum = withdrawal ? rule.earlyWithdrawalMinimumChargeDays : rule.minimumChargeDays;
+    const cutoff = withdrawal ? rule.earlyWithdrawalCutoffDay : rule.cutoffDay;
+    const action = withdrawal ? rule.earlyWithdrawalBeforeCutoffAction : rule.afterCutoffAction;
+    if (model === 'DailyProration') return { calculationBasis: 'CalendarDays', minimumChargeDays: minimum ?? 0, ...(!withdrawal && { roundOff: 'RoundUp' as const }) };
+    if (model === 'MonthlyProration') return { cutOffDay: cutoff ?? 15, monthlyRule: action === 'HalfCharge' ? 'HalfMonthRule' : 'ChargeNextMonth', ...(!withdrawal && { roundOff: 'RoundUp' as const }) };
+    return {};
+  };
+  const ruleType = toFormModel(rule.ruleType);
+  const earlyWithdrawalRuleType = toFormModel(rule.earlyWithdrawalRuleType ?? rule.ruleType);
   return {
     feeHeadId: rule.feeHeadId,
-    feeHeadName: rule.feeHeadName ?? undefined,
+    feeHeadName: rule.feeHeadName ?? '',
     feeType: 'Recurring',
     ruleType,
-    configuration: {
-      calculationBasis: rule.ruleType === 'Daily' ? 'CalendarDays' : undefined,
-      roundOff: ROUNDING_TO_FORM[rule.roundingMode],
-      minimumChargeDays: rule.minimumChargeDays,
-      monthlyRule:
-        rule.ruleType === 'MonthlyCutoff'
-          ? rule.afterCutoffAction === 'HalfCharge'
-            ? 'HalfMonthRule'
-            : 'ChargeNextMonth'
-          : undefined,
-      cutOffDay: rule.cutoffDay,
-    },
+    applyOnAdmission: rule.applyOnAdmission !== false,
+    applyOnEarlyWithdrawal: rule.applyOnEarlyWithdrawal ?? false,
+    configuration: configuration(ruleType),
+    earlyWithdrawalRuleType,
+    earlyWithdrawalConfiguration: configuration(earlyWithdrawalRuleType, true),
   };
 }
 
@@ -94,6 +87,10 @@ function buildFeeHeadRules(
       feeHeadName: head.name,
       feeType: head.feeType ?? 'Recurring',
       ruleType: 'NoProration',
+      applyOnAdmission: true,
+      applyOnEarlyWithdrawal: false,
+      earlyWithdrawalRuleType: 'NoProration',
+      earlyWithdrawalConfiguration: {},
       configuration: {},
     };
   });
@@ -140,31 +137,47 @@ export function toProrationPolicyPayload(
     isDefault: values.status === 'Active' ? values.isDefault : false,
     concurrencyStamp: values.concurrencyStamp || null,
     changeReason: values.changeReason?.trim() || null,
-    feeHeadRules: values.feeHeadRules
-      .filter((rule) => rule.ruleType !== 'NoProration')
-      .map((rule) => {
-        const {monthlyRule} = rule.configuration;
-        return {
-          feeHeadId: rule.feeHeadId,
-          ruleType:
-            rule.ruleType === 'DailyProration'
-              ? 'Daily'
-              : rule.ruleType === 'MonthlyProration'
-                ? 'MonthlyCutoff'
-                : 'FullCharge',
-          roundingMode: ROUNDING_TO_API[rule.configuration.roundOff ?? 'NoRoundOff'],
-          minimumChargeDays:
-            rule.ruleType === 'DailyProration' ? (rule.configuration.minimumChargeDays ?? 0) : null,
-          cutoffDay:
-            rule.ruleType === 'MonthlyProration' ? (rule.configuration.cutOffDay ?? null) : null,
-          afterCutoffAction:
-            rule.ruleType === 'MonthlyProration'
-              ? monthlyRule === 'HalfMonthRule'
-                ? 'HalfCharge'
-                : 'NoCharge'
-              : null,
-        };
-      }),
+    feeHeadRules: values.feeHeadRules.filter(isConfiguredRule).map((rule) => {
+      const { monthlyRule } = rule.configuration;
+      const withdrawal = rule.earlyWithdrawalConfiguration ?? {};
+      const withdrawalType = rule.earlyWithdrawalRuleType ?? 'NoProration';
+      const toApiModel = (model: IProrationFeeHeadRule['ruleType']) =>
+        model === 'DailyProration'
+          ? ('Daily' as const)
+          : model === 'MonthlyProration'
+            ? ('MonthlyCutoff' as const)
+            : model === 'FullMonthCharge'
+              ? ('FullMonthCharge' as const)
+              : ('FullCharge' as const);
+      return {
+        feeHeadId: rule.feeHeadId,
+        ruleType: toApiModel(rule.ruleType),
+        applyOnAdmission: rule.applyOnAdmission !== false,
+        applyOnEarlyWithdrawal: rule.applyOnEarlyWithdrawal ?? false,
+        earlyWithdrawalRuleType: toApiModel(withdrawalType),
+        earlyWithdrawalMinimumChargeDays:
+          withdrawalType === 'DailyProration' ? (withdrawal.minimumChargeDays ?? 0) : null,
+        earlyWithdrawalCutoffDay:
+          withdrawalType === 'MonthlyProration' ? (withdrawal.cutOffDay ?? null) : null,
+        earlyWithdrawalBeforeCutoffAction:
+          withdrawalType === 'MonthlyProration'
+            ? withdrawal.monthlyRule === 'HalfMonthRule'
+              ? 'HalfCharge'
+              : 'NoCharge'
+            : null,
+        roundingMode: 'RoundUpRupee',
+        minimumChargeDays:
+          rule.ruleType === 'DailyProration' ? (rule.configuration.minimumChargeDays ?? 0) : null,
+        cutoffDay:
+          rule.ruleType === 'MonthlyProration' ? (rule.configuration.cutOffDay ?? null) : null,
+        afterCutoffAction:
+          rule.ruleType === 'MonthlyProration'
+            ? monthlyRule === 'HalfMonthRule'
+              ? 'HalfCharge'
+              : 'NoCharge'
+            : null,
+      };
+    }),
   };
 }
 
@@ -198,73 +211,89 @@ export const buildProrationValidationSchema = (activeEdit: boolean) =>
           feeType: Yup.string().oneOf(['Recurring', 'OneTime']).required(),
           ruleType: Yup.string()
             .oneOf(['NoProration', 'DailyProration', 'MonthlyProration', 'FullMonthCharge'])
-            .required('Proration model is required'),
-          configuration: Yup.object({
-            calculationBasis: Yup.string().nullable().oneOf(['CalendarDays']),
-            roundOff: Yup.string().nullable().oneOf(['NoRoundOff', 'RoundUp', 'RoundDown']),
-            minimumChargeDays: Yup.number()
-              .nullable()
-              .typeError('Minimum charge days must be a number')
-              .integer('Minimum charge days must be a whole number')
-              .min(0, 'Minimum charge days cannot be negative')
-              .max(366, 'Minimum charge days cannot exceed 366'),
-            monthlyRule: Yup.string().nullable().oneOf(['ChargeNextMonth', 'HalfMonthRule']),
-            cutOffDay: Yup.number()
-              .nullable()
-              .typeError('Cut-off day must be a number')
-              .integer('Cut-off day must be a whole number')
-              .min(1, 'Cut-off day must be between 1 and 31')
-              .max(31, 'Cut-off day must be between 1 and 31'),
-          }),
+            .required(),
+          applyOnAdmission: Yup.boolean(),
+          applyOnEarlyWithdrawal: Yup.boolean(),
+          earlyWithdrawalRuleType: Yup.string().oneOf([
+            'NoProration',
+            'DailyProration',
+            'MonthlyProration',
+            'FullMonthCharge',
+          ]),
+          configuration: Yup.mixed(),
+          earlyWithdrawalConfiguration: Yup.mixed(),
+        }).test('event-settings', function validateEventSettings(value) {
+          const rule = value as IProrationFeeHeadRule;
+          if (rule.feeType === 'OneTime' && isConfiguredRule(rule))
+            return this.createError({ message: 'One-time fee heads cannot be prorated' });
+          const eventErrors = [false, true].flatMap((withdrawal) => {
+            const enabled = withdrawal
+              ? rule.applyOnEarlyWithdrawal
+              : rule.applyOnAdmission !== false;
+            if (!enabled || rule.feeType === 'OneTime') return [];
+            const model = withdrawal
+              ? (rule.earlyWithdrawalRuleType ?? 'NoProration')
+              : rule.ruleType;
+            const configuration = withdrawal
+              ? (rule.earlyWithdrawalConfiguration ?? {})
+              : (rule.configuration ?? {});
+            const errors = configurationErrors(model, {
+              ...configuration,
+              roundOff: rule.configuration?.roundOff,
+            });
+            return errors.map((error) => {
+              const key =
+                error.field === 'roundOff' || !withdrawal
+                  ? 'configuration'
+                  : 'earlyWithdrawalConfiguration';
+              return this.createError({
+                path: `${this.path}.${key}.${error.field}`,
+                message: error.message,
+              });
+            });
+          });
+
+          if (eventErrors.length === 1) return eventErrors[0];
+          return eventErrors.length ? new Yup.ValidationError(eventErrors) : true;
         })
-          .test(
-            'one-time-not-prorated',
-            'One-time fee heads cannot be prorated',
-            (rule) => rule?.feeType !== 'OneTime' || rule.ruleType === 'NoProration'
-          )
-          .test('daily-settings', function validateDailySettings(rule) {
-            if (rule?.ruleType !== 'DailyProration') return true;
-            if (rule.configuration?.calculationBasis !== 'CalendarDays') {
-              return this.createError({
-                path: `${this.path}.configuration.calculationBasis`,
-                message: 'Calculation basis is required',
-              });
-            }
-            if (!rule.configuration?.roundOff) {
-              return this.createError({
-                path: `${this.path}.configuration.roundOff`,
-                message: 'Rounding mode is required',
-              });
-            }
-            return true;
-          })
-          .test('monthly-settings', function validateMonthlySettings(rule) {
-            if (rule?.ruleType !== 'MonthlyProration') return true;
-            if (!rule.configuration?.monthlyRule) {
-              return this.createError({
-                path: `${this.path}.configuration.monthlyRule`,
-                message: 'Cut-off behavior strategy is required',
-              });
-            }
-            if (!rule.configuration?.cutOffDay) {
-              return this.createError({
-                path: `${this.path}.configuration.cutOffDay`,
-                message: 'Monthly cut-off day is required',
-              });
-            }
-            return true;
-          })
       )
       .required('Fee head rules are required')
       .test(
         'has-enabled-rule',
-        'At least one fee head must have proration enabled',
-        (rules) =>
-          !!rules?.some(
-            (rule) => rule.ruleType === 'DailyProration' || rule.ruleType === 'MonthlyProration'
-          )
+        'Enable Daily or Monthly proration on at least one recurring fee head',
+        (rules) => !!rules?.some((rule) => isProratedRule(rule as IProrationFeeHeadRule))
       ),
   });
+
+const enabledModelsForValidation = (rule: IProrationFeeHeadRule) =>
+  rule.feeType !== 'OneTime' && (rule.applyOnAdmission !== false || rule.applyOnEarlyWithdrawal);
+
+// The checklist and submit validation use the same schema, including all enabled events.
+export function getProrationFormChecks(
+  values: IProrationPolicyFormValues,
+  activeEdit = false,
+  isFeeHeadsError = false
+) {
+  let errors: Yup.ValidationError[] = [];
+  try {
+    buildProrationValidationSchema(activeEdit).validateSync(values, { abortEarly: false });
+  } catch (error) {
+    if (!(error instanceof Yup.ValidationError)) throw error;
+    errors = error.inner;
+  }
+  const proratedCount = values.feeHeadRules.filter(isProratedRule).length;
+  const configuredCount = values.feeHeadRules.filter(isConfiguredRule).length;
+  return {
+    generalValid: !errors.some((error) => !error.path?.startsWith('feeHeadRules')),
+    feeHeadsValid: proratedCount > 0,
+    configuredCount,
+    recurringEnabledCount: proratedCount,
+    allRuleSettingsValid:
+      configuredCount > 0 && !errors.some((error) => error.path?.startsWith('feeHeadRules[')),
+    isDefaultConflict: false,
+    isReadyToPublish: errors.length === 0 && !isFeeHeadsError,
+  };
+}
 
 interface UseProrationPolicyFormOptions {
   open: boolean;
@@ -357,68 +386,32 @@ export function useProrationPolicyForm({
   }, [feeHeads, policyDetails, editData?.id]);
 
   const handleCloseAttempt = () => {
+    if (isCreating || isUpdating || isFeeHeadsLoading || isPolicyLoading || formik.isSubmitting)
+      return;
     if (formik.dirty) unsavedChangesDialog.onTrue();
     else onClose();
   };
 
   const handleCustomSubmit = async () => {
-    if (isCreating || isUpdating) return;
+    if (
+      isCreating ||
+      isUpdating ||
+      isFeeHeadsLoading ||
+      isPolicyLoading ||
+      isFeeHeadsError ||
+      formik.isSubmitting
+    )
+      return;
     if (formik.values.status === 'Draft' && formik.values.isDefault) {
       await formik.setFieldValue('isDefault', false, false);
     }
     await formik.submitForm();
   };
 
-  const checks = useMemo(() => {
-    const enabledRules = formik.values.feeHeadRules.filter(
-      (rule) => rule.ruleType !== 'NoProration'
-    );
-    const proratedRules = enabledRules.filter(
-      (rule) => rule.ruleType === 'DailyProration' || rule.ruleType === 'MonthlyProration'
-    );
-    const allRuleSettingsValid = enabledRules.every((rule) => {
-      if (rule.ruleType === 'DailyProration') {
-        const minimumDays = rule.configuration.minimumChargeDays;
-        return (
-          rule.configuration.calculationBasis === 'CalendarDays' &&
-          Boolean(rule.configuration.roundOff) &&
-          (minimumDays == null ||
-            (Number.isInteger(minimumDays) && minimumDays >= 0 && minimumDays <= 366))
-        );
-      }
-      if (rule.ruleType === 'MonthlyProration') {
-        const cutoff = rule.configuration.cutOffDay;
-        return (
-          Boolean(rule.configuration.monthlyRule) &&
-          Number.isInteger(cutoff) &&
-          Number(cutoff) >= 1 &&
-          Number(cutoff) <= 31
-        );
-      }
-      return true;
-    });
-    const generalValid =
-      !!formik.values.academicYearId &&
-      formik.values.policyName.trim().length >= 3 &&
-      formik.values.policyName.trim().length <= 128 &&
-      formik.values.policyCode.length <= 32 &&
-      /^[A-Za-z0-9_-]*$/.test(formik.values.policyCode) &&
-      (formik.values.description?.length ?? 0) <= 500 &&
-      (!activeEdit || Boolean(formik.values.changeReason?.trim()));
-    return {
-      generalValid,
-      feeHeadsValid: proratedRules.length > 0,
-      configuredCount: enabledRules.filter((rule) => Boolean(rule.ruleType)).length,
-      recurringEnabledCount: enabledRules.length,
-      allRuleSettingsValid,
-      isDefaultConflict: false,
-      isReadyToPublish:
-        generalValid &&
-        proratedRules.length > 0 &&
-        allRuleSettingsValid &&
-        !isFeeHeadsError,
-    };
-  }, [activeEdit, formik.values, isFeeHeadsError]);
+  const checks = useMemo(
+    () => getProrationFormChecks(formik.values, activeEdit, isFeeHeadsError),
+    [activeEdit, formik.values, isFeeHeadsError]
+  );
 
   return {
     formik,

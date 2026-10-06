@@ -29,6 +29,16 @@ describe('Finance bank routing lookup contract', () => {
           { id: 'sbi-5678', label: 'SBI - null', maskedAccountNumber: 'XXXX5678' },
           { id: 'legacy', label: 'SBI - undefined' },
           { id: 'missing', label: null },
+          {
+            id: 'redacted-master',
+            bankName: 'SBI',
+            accountNumber: null,
+            maskedAccountNumber: '********4321',
+            accountHolderName: 'School Account',
+          },
+          { id: 'bank-only', label: 'SBI', bankName: 'SBI', maskedAccountNumber: 'XXXX8765' },
+          { id: 'holder', bankName: 'SBI', accountHolderName: 'School Operating Account' },
+          { id: 'name-only', bankName: 'SBI', maskedAccountNumber: null, accountHolderName: null },
         ],
       },
     });
@@ -55,6 +65,10 @@ describe('Finance bank routing lookup contract', () => {
         { id: 'sbi-5678', label: 'SBI - XXXX5678' },
         { id: 'legacy', label: 'SBI' },
         { id: 'missing', label: 'Bank account (details unavailable)' },
+        { id: 'redacted-master', label: 'SBI - ********4321' },
+        { id: 'bank-only', label: 'SBI - XXXX8765' },
+        { id: 'holder', label: 'SBI - School Operating Account' },
+        { id: 'name-only', label: 'SBI' },
       ]);
       expect(data.items).toEqual([{ id: 'income', name: 'Fees' }]);
     } finally {

@@ -1,17 +1,19 @@
+import { roundUpAmount } from './whole-rupee-amount';
+
 export const formatNumber = (num: number | string, currency?: string): string => {
   const numericValue = Number(num);
 
   if (Number.isNaN(numericValue)) {
-    return currency ? `${currency} 0.00` : '0.00';
+    return currency ? `${currency} 0` : '0';
   }
 
   return new Intl.NumberFormat(undefined, {
     style: currency ? 'currency' : 'decimal',
     currency,
     currencyDisplay: 'narrowSymbol',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   })
-    .format(numericValue)
+    .format(roundUpAmount(numericValue))
     .replace(/(\D)(\d)/, '$1 $2');
 };

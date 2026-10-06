@@ -1,6 +1,5 @@
 import type {
   IRefundPolicy,
-  IProrationPolicy,
   ICollectionPolicy,
 } from 'src/screens/finance/policies/types/finance-policy.types';
 import type {
@@ -20,7 +19,6 @@ export type ImpactPolicyData = Partial<
     | 'enableLateFee'
     | 'lateFeeApplyOnFeeHeads'
   > &
-    Pick<IProrationPolicy, 'feeHeadRules'> &
     Pick<IRefundPolicy, 'feeHeadScope' | 'applicableFeeHeadIds'>
 >;
 
@@ -67,7 +65,6 @@ export function policyImpactRows(
       !Array.isArray(policy.applicableFeeHeadIds))
   )
     return undefined;
-  if (family === 'proration' && !Array.isArray(policy.feeHeadRules)) return undefined;
   if (
     family === 'concession' &&
     candidate.feeHeads.some(
@@ -96,16 +93,6 @@ export function policyImpactRows(
             ? 'Eligible on approval'
             : 'Not eligible';
         break;
-      case 'proration': {
-        const rule = policy.feeHeadRules?.find((item) => item.feeHeadId === line.feeHeadId);
-        treatment =
-          rule?.ruleType === 'Daily'
-            ? 'Daily'
-            : rule?.ruleType === 'MonthlyCutoff'
-              ? 'Monthly cutoff'
-              : 'Full charge';
-        break;
-      }
       default:
         treatment =
           policy.feeHeadScope === 'AllFeeHeads' ||

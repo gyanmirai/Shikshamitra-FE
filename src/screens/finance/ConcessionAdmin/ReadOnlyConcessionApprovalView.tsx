@@ -14,8 +14,8 @@ import {
 import type { IFeeHeadApprovalViewProps } from './type';
 
 const money = (value: number) => new Intl.NumberFormat('en-IN', {
-  style: 'currency', currency: 'INR', maximumFractionDigits: 2,
-}).format(value);
+  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
+}).format(Math.ceil(value));
 
 export default function ReadOnlyConcessionApprovalView({ selectedItem, onBack }: IFeeHeadApprovalViewProps) {
   const requestId = selectedItem.studentConcessionTypeRequestId || selectedItem.id || '';

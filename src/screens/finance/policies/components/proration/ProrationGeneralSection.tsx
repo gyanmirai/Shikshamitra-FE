@@ -116,28 +116,7 @@ export default function ProrationGeneralSection({
           </ShakingTextField>
         </Grid>
 
-        <Grid size={{ xs: 12, sm: 4 }}>
-          <ShakingTextField error={formik.touched.policyCode && Boolean(formik.errors.policyCode)}>
-            <TextField
-              fullWidth
-              size="small"
-              label="Policy Code"
-              name="policyCode"
-              placeholder="e.g. PRORATE-STD-2026"
-              value={formik.values.policyCode}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.policyCode && Boolean(formik.errors.policyCode)}
-              helperText={
-                (formik.touched.policyCode && (formik.errors.policyCode as string)) ||
-                'Optional; generated automatically when blank'
-              }
-              inputProps={{ maxLength: 32 }}
-            />
-          </ShakingTextField>
-        </Grid>
-
-        <Grid size={{ xs: 12, sm: 8 }}>
+        <Grid size={{ xs: 12, sm: 6 }}>
           <ShakingTextField
             error={formik.touched.description && Boolean(formik.errors.description)}
           >
@@ -160,6 +139,17 @@ export default function ProrationGeneralSection({
               inputProps={{ maxLength: 500 }}
             />
           </ShakingTextField>
+        </Grid>
+
+        <Grid size={{ xs: 12, sm: 6 }}>
+          <DefaultPolicyToggle
+            policyLabel="Proration"
+            status={formik.values.status}
+            checked={Boolean(formik.values.isDefault)}
+            currentDefault={Boolean(formik.initialValues.isDefault)}
+            onChange={(checked) => formik.setFieldValue('isDefault', checked)}
+            otherDefaultPolicyName={otherDefaultPolicyName}
+          />
         </Grid>
 
         {activeEdit && (
@@ -189,17 +179,6 @@ export default function ProrationGeneralSection({
             </ShakingTextField>
           </Grid>
         )}
-
-        <Grid size={{ xs: 12 }}>
-          <DefaultPolicyToggle
-            policyLabel="Proration"
-            status={formik.values.status}
-            checked={Boolean(formik.values.isDefault)}
-            currentDefault={Boolean(formik.initialValues.isDefault)}
-            onChange={(checked) => formik.setFieldValue('isDefault', checked)}
-            otherDefaultPolicyName={otherDefaultPolicyName}
-          />
-        </Grid>
       </Grid>
     </SectionCard>
   );

@@ -53,7 +53,7 @@ const settings = {
       installments,
     },
   ],
-  policies: ['collection', 'concession', 'refund', 'proration'].flatMap((family) =>
+  policies: ['collection', 'concession', 'refund'].flatMap((family) =>
     [true, false].map((isDefault) => ({
       id: isDefault ? family : `${family}-alternate`,
       versionId: isDefault ? `${family}-v1` : `${family}-alternate-v2`,
@@ -73,11 +73,9 @@ const settings = {
       'collection',
       'concession',
       'refund',
-      'proration',
       'collectionRead',
       'concessionRead',
       'refundRead',
-      'prorationRead',
       'headsRead',
       'termsRead',
     ].map((key) => [key, true])
@@ -98,8 +96,6 @@ export const readyFixture = {
   concessionPolicyVersionId: 'concession-v1',
   refundPolicyId: 'refund',
   refundPolicyVersionId: 'refund-v1',
-  prorationPolicyId: 'proration',
-  prorationPolicyVersionId: 'proration-v1',
   concessionFeeHeadScope: 'EntireFeeStructure' as const,
   concessionApplicableFeeHeadIds: ['tuition'],
   feeHeads: [
@@ -127,8 +123,6 @@ export const pinnedPolicyFixture = {
   collectionPolicyVersionId: 'collection-alternate-v2',
   refundPolicyId: null,
   refundPolicyVersionId: null,
-  prorationPolicyId: 'proration-alternate',
-  prorationPolicyVersionId: 'proration-alternate-v2',
 };
 let saved: any = readyFixture;
 const preview = (candidate: any) => {
@@ -142,14 +136,13 @@ const preview = (candidate: any) => {
     candidate,
     isReady: !errors.length,
     errors,
-    warnings: ['Heads without a proration rule use full charge.'],
+    warnings: [],
     coverage: candidate.feeHeads.map((head: any) => ({
       feeHeadId: head.feeHeadId,
       name: head.feeHeadName,
       collection: 'Late fee applies',
       concession: head.feeHeadId === 'tuition' ? 'Eligible on approval' : 'Not eligible',
       refund: 'Policy eligible',
-      proration: 'Full charge',
       accounting: 'Ready',
     })),
     schedules: candidate.feeHeads
@@ -239,7 +232,7 @@ export function useFixtureLookups(_scope: any, _enabled: any, scheduleLine: any)
     context: { isLoading: false, isFetching: false, isError: false, refetch: () => {} },
     heads: { isFetching: false, isError: false, refetch: () => {} },
     terms: catalog,
-    catalogs: { collection: catalog, concession: catalog, refund: catalog, proration: catalog },
+    catalogs: { collection: catalog, concession: catalog, refund: catalog },
     scheduleTerm: settings.terms.find(
       (term) => term.versionId === scheduleLine?.paymentTermVersionId
     ),

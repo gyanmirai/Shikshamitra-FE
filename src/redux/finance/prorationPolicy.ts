@@ -9,11 +9,17 @@ const policyTags = policyCacheTags(financePolicyType.prorationPolicy);
 
 export interface ProrationPolicyRulePayload {
   feeHeadId: string;
-  ruleType: 'FullCharge' | 'Daily' | 'MonthlyCutoff';
+  ruleType: 'FullCharge' | 'Daily' | 'MonthlyCutoff' | 'FullMonthCharge';
   roundingMode: 'Currency' | 'NearestRupee' | 'RoundUpRupee' | 'RoundDownRupee';
   minimumChargeDays?: number | null;
   cutoffDay?: number | null;
   afterCutoffAction?: 'NoCharge' | 'HalfCharge' | null;
+  applyOnAdmission?: boolean;
+  applyOnEarlyWithdrawal?: boolean;
+  earlyWithdrawalRuleType?: 'FullCharge' | 'Daily' | 'MonthlyCutoff' | 'FullMonthCharge' | null;
+  earlyWithdrawalMinimumChargeDays?: number | null;
+  earlyWithdrawalCutoffDay?: number | null;
+  earlyWithdrawalBeforeCutoffAction?: 'NoCharge' | 'HalfCharge' | null;
 }
 
 export interface ProrationPolicySavePayload {
@@ -92,17 +98,6 @@ export interface ProrationPolicySimulationResponse {
   explanation: string;
   policyId: string;
   policyVersion: number;
-}
-
-export interface ProrationPolicyAttachmentImpactResponse {
-  policyId: string;
-  policyVersion: number;
-  isAttachable: boolean;
-  proratedFeeHeadIds: string[];
-  fullChargeFeeHeadIds: string[];
-  oneTimeFeeHeadIds: string[];
-  policyFeeHeadsNotInStructure: string[];
-  warnings: string[];
 }
 
 export const prorationPolicyApi = api.injectEndpoints({
@@ -185,16 +180,6 @@ export const prorationPolicyApi = api.injectEndpoints({
         body,
       }),
     }),
-    getProrationAttachmentImpact: builder.mutation<
-      ProrationPolicyAttachmentImpactResponse,
-      { id: string; feeStructureId: string }
-    >({
-      query: ({ id, feeStructureId }) => ({
-        url: `/finance/proration-policies/${id}/attachment-impact`,
-        method: 'POST',
-        body: { feeStructureId },
-      }),
-    }),
   }),
 });
 
@@ -210,5 +195,4 @@ export const {
   useGetProrationPolicyVersionsQuery,
   useGetProrationPolicyImpactQuery,
   useSimulateProrationPolicyMutation,
-  useGetProrationAttachmentImpactMutation,
 } = prorationPolicyApi;

@@ -29,13 +29,20 @@ const normalizeLabel = (value: string | null | undefined): string | undefined =>
 
 export const bankAccountOptionLabel = (account: BankAccountOptionResponse): string => {
   const label = normalizeLabel(account.label);
-  // The routing endpoint owns safe, complete labels. Preserve these verbatim, including
-  // its masked/last-four identifier, instead of requesting sensitive master-data fields.
-  if (label && label === account.label?.trim()) return label;
-
-  // Compatibility for missing/malformed labels and redacted BankAccountResponse records.
-  const bankName = availableText(account.bankName) ?? label;
+  const bankName = availableText(account.bankName);
   const identifier =
     availableText(account.maskedAccountNumber) ?? availableText(account.accountHolderName);
-  return [bankName, identifier].filter(Boolean).join(' - ') || 'Bank account (details unavailable)';
+  // A bank-only label is still incomplete when safe distinguishing metadata is available.
+  const isBankOnlyLabel =
+    label !== identifier &&
+    (label === bankName || (!bankName && label && !/(\s+-\s*|[•|])/.test(label)));
+  // The routing endpoint owns safe, complete labels. Preserve these verbatim, including
+  // its masked/last-four identifier, instead of requesting sensitive master-data fields.
+  if (label && label === account.label?.trim() && !(isBankOnlyLabel && identifier)) return label;
+
+  // Compatibility for missing/malformed labels and redacted BankAccountResponse records.
+  return (
+    [bankName ?? label, identifier].filter(Boolean).join(' - ') ||
+    'Bank account (details unavailable)'
+  );
 };

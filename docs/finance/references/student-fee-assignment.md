@@ -3,7 +3,7 @@ module: finance
 domain: student-fee-assignment
 content_type: Reference
 status: canonical
-updated_on: 2026-10-01
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,10 +17,10 @@ The `/finance/fee-structure-assign` route lists assignment status for the select
 1. Select academic context and students. Selection clears when context, search or page changes. Assigned students open a read view; inactive students cannot be selected for creation.
 2. Open the themed assignment drawer with the shared `DrawerHeader`. Select a published structure revision, then choose Next.
 3. Review each student's mandatory heads and select optional heads separately. Configure supported verified transport dates or authorized manual service dates. Amount overrides are permission-gated and require a reason.
-4. Review **Policies** for each student: Concession, Refund, Collection and Proration default to the structure's pinned selections. With `Finance.Fees.StructureAssign.OverridePolicies`, choose current active versions for the selected year or clear an optional policy. Collection remains required. Changes require a reason; Restore fee structure defaults clears student overrides.
+4. Review **Policies** for each student: Concession, Refund and Collection use the structure's supported pinned selections. New assignments do not inherit Proration Policy. With `Finance.Fees.StructureAssign.OverridePolicies`, choose current active versions for the selected year or clear an optional policy. Collection remains required. Changes require a reason; Restore fee structure defaults clears student overrides.
 5. Preview. Each student receives an independent result/error. Review head totals, dates, preserved installment percentages, payment-term versions and policy treatment.
 6. Confirm successful previews. The server returns canonical results and the client preserves successful students when retrying failed items.
-7. Open **View assignment** to see all four policy families, their names/versions and override reason. **Edit assigned policies** requires `.OverridePolicies`, saves with a concurrency stamp and invalidates assignment and collection/detail caches. Existing dues and receipts remain unchanged. Proration changes do not recalculate existing obligations.
+7. Open **View assignment** to see current policy selections and any historical proration evidence, their names/versions and override reason. **Edit assigned policies** requires `.OverridePolicies`, saves with a concurrency stamp and invalidates assignment and collection/detail caches. Existing dues and receipts remain unchanged. Historical proration pins remain unchanged; proration cannot be selected in this form.
 
 The compact academic filter card follows `DESIGN.md` with `Paper`, `p: 1` and `spacing={1}`. Board, medium, class and division fill the row on desktop and stack on mobile. The shared table fills the remaining height; its controlled page index is zero-based while its server callback is one-based.
 

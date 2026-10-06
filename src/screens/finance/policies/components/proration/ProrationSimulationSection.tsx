@@ -9,10 +9,11 @@
  */
 
 import dayjs from 'dayjs';
-import { useEffect, useMemo, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
+import { useMemo, useState, useEffect } from 'react';
 import { formatNumber } from 'src/utils/formate_number';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useSimulateProrationPolicyMutation } from 'src/redux/finance/prorationPolicy';
@@ -28,7 +29,6 @@ import {
   Typography,
   InputAdornment,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 
 import { SectionCard } from '../collection/CollectionCommon';
 
@@ -385,8 +385,7 @@ export default function ProrationSimulationSection({ policyId, rules }: Props) {
                       color="text.secondary"
                       sx={{ fontSize: '0.74rem', lineHeight: 1.5 }}
                     >
-                      <strong>Formula Breakdown:</strong> {result.explanation} (Rounding strategy:{' '}
-                      {result.roundingMode})
+                      <strong>Formula Breakdown:</strong> {result.explanation}
                     </Typography>
                   </Stack>
                 </Box>

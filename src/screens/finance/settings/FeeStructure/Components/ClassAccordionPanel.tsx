@@ -1,35 +1,23 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
+import CustomSelect from 'src/components/custom-select';
 import { EmptyContent } from 'src/components/empty-content';
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { FeeStructureLockStatusType } from 'src/enums/finance-fee-structure-status';
-import { Box, Alert, Stack, Button, Skeleton, Typography, CircularProgress } from '@mui/material';
+import { Box, Alert, Stack, Button, Skeleton, Typography, LinearProgress } from '@mui/material';
 
-import IndependentFeeStructureCard from './FeeStructureWorkspaceCard';
+import FeeStructureWorkspaceCard from './FeeStructureWorkspaceCard';
 import { useFetchStandardFeeStructures } from '../hooks/useClassWiseFeeStructureHooks';
 
 import type { IClassWiseFeeStructureCard } from '../type';
 
-// ---------------------------------------------------------------------------
-// Props
-// ---------------------------------------------------------------------------
 interface ClassAccordionPanelProps {
   classId: string;
   feeStructureMetaDataId: string;
   viewOnly?: boolean;
-  /** Called whenever unsaved-changes state changes for any card in this panel */
   onDirtyChange?: (dirty: boolean) => void;
-  /**
-   * Registers the panel's "add new draft" handler with the parent so the
-   * parent's sticky header button can trigger it without prop-drilling.
-   */
+  onBusyChange?: (busy: boolean) => void;
   onRegisterAddNew?: (fn: () => void) => void;
 }
 
-// ---------------------------------------------------------------------------
-// Map API response → card model
-// ---------------------------------------------------------------------------
 const mapToCardModel = (
   raw: any,
   classId: string,
@@ -63,73 +51,60 @@ const mapToCardModel = (
   concessionApplicableFeeHeadIds: raw.concessionApplicableFeeHeadIds ?? [],
 });
 
-// ---------------------------------------------------------------------------
-// Component — renders fee structures for the currently selected class.
-// No outer class accordion; the class strip is handled by FeeStructureEditForm.
-// Each individual fee structure is an accordion (inside IndependentFeeStructureCard).
-// ---------------------------------------------------------------------------
-const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
+// Editors stay mounted while switching structures so unsaved candidates and
+// customized schedules survive local navigation. Only the selected one is visible.
+export default function ClassAccordionPanel({
   classId,
   feeStructureMetaDataId,
   viewOnly = false,
   onDirtyChange,
+  onBusyChange,
   onRegisterAddNew,
-}) => {
+}: ClassAccordionPanelProps) {
   type DraftCard = IClassWiseFeeStructureCard & { __draftId: string };
-
   const [localDrafts, setLocalDrafts] = useState<DraftCard[]>([]);
-  const [deletedServerIds, setDeletedServerIds] = useState<Set<string>>(new Set());
-  const dirtySet = useRef<Set<string>>(new Set());
-  const draftCounterRef = useRef(0);
-
-  const handleCardDirtyChange = useCallback(
-    (cardKey: string, dirty: boolean) => {
-      if (dirty) {
-        dirtySet.current.add(cardKey);
-      } else {
-        dirtySet.current.delete(cardKey);
-      }
-      onDirtyChange?.(dirtySet.current.size > 0);
-    },
-    [onDirtyChange]
-  );
-
-  const {
-    data: rawStructures,
-    isLoading,
-    isFetching,
-    isError,
-    refetch,
-  } = useFetchStandardFeeStructures(classId);
-
-  const rawServerStructures: any[] = Array.isArray(rawStructures)
-    ? rawStructures
-    : (rawStructures?.standardFeeStructures ?? rawStructures?.data ?? []);
-
-  const serverCards: IClassWiseFeeStructureCard[] = rawServerStructures
-    .map((raw: any) => mapToCardModel(raw, classId, feeStructureMetaDataId))
-    .filter((card) => !card._id || !deletedServerIds.has(card._id));
-
-  const allCards = [
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set());
+  const [selectedKey, setSelectedKey] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [dirtyKeys, setDirtyKeys] = useState<Set<string>>(new Set());
+  const [savedCards, setSavedCards] = useState<
+    Record<string, { card: IClassWiseFeeStructureCard; previousStamp?: string }>
+  >({});
+  const draftCounter = useRef(0);
+  const dirtyCallback = useRef(onDirtyChange);
+  dirtyCallback.current = onDirtyChange;
+  const { data, isLoading, isFetching, isError, refetch } = useFetchStandardFeeStructures(classId);
+  const raw: any[] = Array.isArray(data) ? data : (data?.standardFeeStructures ?? data?.data ?? []);
+  const localSavedIds = new Set(localDrafts.map((card) => card._id).filter(Boolean));
+  const serverCards = raw
+    .map((item) => mapToCardModel(item, classId, feeStructureMetaDataId))
+    .filter((card) => !deletedIds.has(card._id!) && !localSavedIds.has(card._id));
+  const cards = [
     ...serverCards.map((card) => ({
-      card,
-      cardKey: card._id as string,
-      isDraft: false,
+      card:
+        savedCards[card._id!] &&
+        savedCards[card._id!].previousStamp === card.record?.concurrencyStamp
+          ? savedCards[card._id!].card
+          : card,
+      key: card._id!,
+      isLocal: false,
+      sourceStamp: card.record?.concurrencyStamp,
     })),
     ...localDrafts.map((card) => ({
       card,
-      cardKey: card.__draftId,
-      isDraft: true,
+      key: card.__draftId,
+      isLocal: true,
+      sourceStamp: undefined,
     })),
   ];
-
-  const handleAddNew = useCallback(() => {
-    draftCounterRef.current += 1;
-    setLocalDrafts((prev) => [
-      ...prev,
+  const activeKey = cards.some(({ key }) => key === selectedKey) ? selectedKey : cards[0]?.key;
+  const addNew = useCallback(() => {
+    draftCounter.current += 1;
+    const key = `draft-${classId}-${draftCounter.current}`;
+    setLocalDrafts((previous) => [
+      ...previous,
       {
-        __draftId: `draft-${classId}-${draftCounterRef.current}`,
-        _id: undefined,
+        __draftId: key,
         name: '',
         feeHeads: [],
         status: FeeStructureLockStatusType.Unlocked,
@@ -137,130 +112,133 @@ const ClassAccordionPanel: React.FC<ClassAccordionPanelProps> = ({
         feeStructureMetaDataId,
       },
     ]);
+    setSelectedKey(key);
   }, [classId, feeStructureMetaDataId]);
-
-  // Register the add handler with the parent whenever it changes
   useEffect(() => {
-    onRegisterAddNew?.(handleAddNew);
-  }, [handleAddNew, onRegisterAddNew]);
-
-  if (isLoading) {
-    return (
-      <Stack spacing={1.5}>
-        {[1, 2, 3].map((i) => (
-          <Box
-            key={i}
-            sx={{
-              border: '1px solid',
-              borderColor: 'divider',
-              borderRadius: '10px',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Accordion summary skeleton */}
-            <Box
-              display="flex"
-              alignItems="center"
-              gap={1}
-              sx={{ px: 2, py: 1.25, bgcolor: 'action.hover' }}
-            >
-              <Skeleton variant="rounded" width={28} height={28} />
-              <Skeleton variant="text" width={160} height={22} />
-              <Skeleton variant="rounded" width={100} height={22} sx={{ borderRadius: 1 }} />
-              <Skeleton variant="rounded" width={72} height={22} sx={{ borderRadius: 1 }} />
-              <Box flex={1} />
-              <Skeleton variant="rounded" width={32} height={28} sx={{ borderRadius: 1 }} />
-              <Skeleton variant="rounded" width={32} height={28} sx={{ borderRadius: 1 }} />
-              <Skeleton variant="rounded" width={28} height={28} sx={{ borderRadius: '50%' }} />
-              <Skeleton variant="rounded" width={20} height={20} />
-            </Box>
-          </Box>
-        ))}
-      </Stack>
-    );
-  }
+    onRegisterAddNew?.(addNew);
+  }, [addNew, onRegisterAddNew]);
+  useEffect(() => {
+    dirtyCallback.current?.(dirtyKeys.size > 0);
+  }, [dirtyKeys]);
+  const dirtyChange = useCallback((key: string, dirty: boolean) => {
+    setDirtyKeys((previous) => {
+      if (previous.has(key) === dirty) return previous;
+      const next = new Set(previous);
+      if (dirty) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+  }, []);
+  const busyChange = useCallback(
+    (value: boolean) => {
+      setBusy(value);
+      onBusyChange?.(value);
+    },
+    [onBusyChange]
+  );
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0, minWidth: 0 }}>
+      {isFetching && !isLoading && (
+        <LinearProgress aria-label="Refreshing fee structures" sx={{ flexShrink: 0 }} />
+      )}
       {isError && (
         <Alert
           severity="error"
           action={
-            <Button
-              size="small"
-              startIcon={<Iconify icon={GlobalIcons.refresh} />}
-              onClick={() => refetch()}
-            >
+            <Button size="small" onClick={refetch} disabled={busy}>
               Retry
             </Button>
           }
         >
-          Fee Structures could not be refreshed. Saved data may be out of date.
+          Fee structures could not be refreshed. Existing edits are preserved.
         </Alert>
       )}
-      {!isError && allCards.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22 }}
-        >
-          <EmptyContent
-            filled
-            title="No Fee Structures"
-            description={
-              viewOnly
-                ? 'This class currently has no fee structures configured.'
-                : "Click '+ Add Fee Structure' to create one for this class."
-            }
-            sx={{ py: 8 }}
-          />
-        </motion.div>
+      {isLoading && !cards.length && (
+        <Stack spacing={2} sx={{ p: 2 }}>
+          <Skeleton height={50} />
+          <Skeleton height={200} />
+        </Stack>
       )}
-
-      <AnimatePresence>
-        {allCards.map(({ card, cardKey, isDraft }, idx) => (
-          <IndependentFeeStructureCard
-            key={cardKey}
+      {!isLoading && !isError && !cards.length && (
+        <EmptyContent
+          filled
+          title="No fee structures"
+          description={
+            viewOnly
+              ? 'No fee structures are configured for this class.'
+              : 'Use Add Fee Structure to start configuring fees for this class.'
+          }
+          sx={{ flex: 1 }}
+        />
+      )}
+      {cards.map(({ card, key, isLocal, sourceStamp }, index) => (
+        <Box
+          key={key}
+          sx={{
+            display: key === activeKey ? 'flex' : 'none',
+            flexDirection: 'column',
+            flex: 1,
+            minHeight: 0,
+            minWidth: 0,
+            overflow: 'hidden',
+          }}
+        >
+          <FeeStructureWorkspaceCard
             initialData={card}
-            index={idx}
+            index={index}
             viewOnly={viewOnly}
-            onSaved={() => {
-              dirtySet.current.delete(cardKey);
-              onDirtyChange?.(dirtySet.current.size > 0);
-              if (isDraft) {
-                setLocalDrafts((prev) => prev.filter((d) => d.__draftId !== cardKey));
-              }
+            structureSelector={
+              cards.length > 1 ? (
+                <Box sx={{ maxWidth: { md: 540 } }}>
+                  <CustomSelect
+                    label="Fee structure"
+                    value={activeKey ?? ''}
+                    disabled={busy}
+                    isSearch
+                    options={cards.map(({ card: optionCard, key: optionKey }) => ({
+                      value: optionKey,
+                      label: `${optionCard.name || 'New fee structure'} · ${optionCard.status === FeeStructureLockStatusType.Locked ? 'Published' : 'Draft'} · v${optionCard.record?.revisionNumber ?? 1}${dirtyKeys.has(optionKey) ? ' · Unsaved' : ''}`,
+                    }))}
+                    onChange={(value) => setSelectedKey(String(value))}
+                  />
+                  {dirtyKeys.size > 0 && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      sx={{ display: 'block', mt: 0.5 }}
+                    >
+                      Switching structures keeps your unsaved edits.
+                    </Typography>
+                  )}
+                </Box>
+              ) : undefined
+            }
+            onBusyChange={busyChange}
+            onDirtyChange={(dirty) => dirtyChange(key, dirty)}
+            onSaved={(saved) => {
+              dirtyChange(key, false);
+              if (isLocal)
+                setLocalDrafts((previous) =>
+                  previous.map((draft) =>
+                    draft.__draftId === key ? { ...saved, __draftId: key } : draft
+                  )
+                );
+              else
+                setSavedCards((previous) => ({
+                  ...previous,
+                  [key]: { card: saved, previousStamp: sourceStamp },
+                }));
             }}
             onDeleted={() => {
-              dirtySet.current.delete(cardKey);
-              onDirtyChange?.(dirtySet.current.size > 0);
-
-              if (isDraft) {
-                setLocalDrafts((prev) => prev.filter((d) => d.__draftId !== cardKey));
-              } else if (card._id) {
-                setDeletedServerIds((prev) => {
-                  const next = new Set(prev);
-                  next.add(card._id as string);
-                  return next;
-                });
-              }
+              dirtyChange(key, false);
+              if (isLocal)
+                setLocalDrafts((previous) => previous.filter((draft) => draft.__draftId !== key));
+              if (card._id) setDeletedIds((previous) => new Set([...previous, card._id!]));
             }}
-            onDirtyChange={(dirty) => handleCardDirtyChange(cardKey, dirty)}
           />
-        ))}
-      </AnimatePresence>
-
-      {/* Refetching indicator */}
-      {isFetching && !isLoading && (
-        <Box display="flex" alignItems="center" gap={1} justifyContent="flex-end" mb={0.5}>
-          <CircularProgress size={12} />
-          <Typography variant="caption" color="text.secondary">
-            Refreshing...
-          </Typography>
         </Box>
-      )}
+      ))}
     </Box>
   );
-};
-
-export default ClassAccordionPanel;
+}

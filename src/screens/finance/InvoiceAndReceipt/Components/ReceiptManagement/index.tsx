@@ -1,4 +1,3 @@
-import type { Dayjs } from 'dayjs';
 import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type {
@@ -9,12 +8,11 @@ import type {
 import dayjs from 'dayjs';
 import { Box } from '@mui/material';
 import { useSelector } from 'react-redux';
-import { DatePicker } from '@mui/x-date-pickers';
 import { formatNumber } from 'src/utils/formate_number';
 import CustomSelect from 'src/components/custom-select';
 import React, { useMemo, useState, useCallback } from 'react';
-import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useFinanceAcademicFilters } from 'src/screens/finance/hooks/useFinanceAcademicFilters';
 import FinanceClassDivisionFilter from 'src/screens/finance/components/FinanceClassDivisionFilter';
@@ -41,6 +39,13 @@ const RECEIPT_KIND_OPTIONS = [
 ];
 
 const DEFAULT_PAGE_SIZE = 20;
+const MONTH_OPTIONS = [
+  { label: 'All months', value: 'All' },
+  ...Array.from({ length: 12 }, (_, index) => ({
+    label: dayjs().month(index).format('MMMM'),
+    value: String(index + 1),
+  })),
+];
 
 const ReceiptManagement = () => {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
@@ -64,14 +69,13 @@ const ReceiptManagement = () => {
     classesLoading,
   } = useFinanceAcademicFilters();
 
-  const [date, setDate] = useState<Dayjs | null>(dayjs(currentYear?.startDate));
+  const [selectedMonth, setSelectedMonth] = useState('All');
   const [selectedKind, setSelectedKind] = useState<string>('All');
 
   React.useEffect(() => {
-    if (currentYear?.startDate) {
-      setDate(dayjs(currentYear.startDate));
-    }
-  }, [currentYear?.startDate]);
+    setSelectedMonth('All');
+    setSkipCount(0);
+  }, [currentYear?.id]);
 
   // ── Pagination state ──────────────────────────────────────────────────────
 
@@ -126,7 +130,7 @@ const ReceiptManagement = () => {
       educationMediumId: filterPayload.educationMediumId,
       standardId: filterPayload.standardId,
       divisionId: filterPayload.divisionId,
-      month: date ? date.month() : undefined,
+      month: selectedMonth === 'All' ? undefined : Number(selectedMonth),
       receiptKind:
         selectedKind && selectedKind !== 'All'
           ? (Number(selectedKind) as FeeReceiptKind)
@@ -134,7 +138,7 @@ const ReceiptManagement = () => {
       skipCount,
       maxResultCount,
     };
-  }, [currentYear?.id, isReady, filterPayload, date, selectedKind, skipCount, maxResultCount]);
+  }, [currentYear?.id, isReady, filterPayload, selectedMonth, selectedKind, skipCount, maxResultCount]);
 
   const {
     data,
@@ -278,21 +282,17 @@ const ReceiptManagement = () => {
           onDivisionChange={handleDivisionChange}
           classesLoading={classesLoading}
         />
-        <DatePicker
-          label="Month-Year"
-          format="MMM-YYYY"
-          value={date}
-          views={['year', 'month']}
-          slotProps={{
-            textField: {
-              size: 'small',
-            },
-          }}
-          onChange={(newDate) => {
-            setDate(newDate);
+        <CustomSelect
+          label="Month"
+          options={MONTH_OPTIONS}
+          value={selectedMonth}
+          onChange={(value) => {
+            setSelectedMonth(String(value));
             resetPagination();
           }}
-          sx={{ maxWidth: 160, width: '100%' }}
+          labelKey="label"
+          valueKey="value"
+          formControlProps={{ sx: { maxWidth: 160, width: '100%' } }}
         />
         <CustomSelect
           options={RECEIPT_KIND_OPTIONS}
@@ -315,6 +315,7 @@ const ReceiptManagement = () => {
         data={tableData}
         isLoading={isReceiptListLoading || isReceiptListFetching}
         serverSide
+        page={Math.floor(skipCount / maxResultCount)}
         onServerPagination={(page: number, rowsPerPage: number) => {
           setSkipCount(page * rowsPerPage);
           setMaxResultCount(rowsPerPage);

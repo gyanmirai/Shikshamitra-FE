@@ -1,7 +1,7 @@
 import type { FinanceAuditSummary } from 'src/redux/feeCollection/feeCollection';
 
 const currency = (amount: number) =>
-  `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  `₹${Math.ceil(amount).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
 export function paymentReceiptSummary(
   summary: FinanceAuditSummary,

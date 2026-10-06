@@ -3,7 +3,7 @@ module: finance
 domain: fee-structure
 content_type: Reference
 status: canonical
-updated_on: 2026-09-10
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -17,11 +17,11 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 ## Screen flow
 
 1. Select an academic year. Refresh academic workspaces if board/medium containers have not been prepared.
-2. Open a workspace. Its class navigation comes from the scoped metadata response, not the generic class API.
+2. Open the full-screen workspace dialog. Its horizontal class tabs come from the scoped metadata response, not the generic class API.
 3. Add a Fee Structure draft. Enter its name. Eligible current default policies initialize once in a new draft.
 4. In **Fee Heads & Terms**, add active Fee Heads, set total amounts and optional flags, and select each head's exact published Payment Term version.
 5. Open the shared schedule dialog to inspect inherited dates/percentages. Customize locally or restore the inherited schedule. Replacing a customized term requires confirmation.
-6. In **Policies**, select exact Collection, Proration and Refund policy versions. Concession Policy selection, scope controls, defaults, lookup requests and review columns have been removed from Fee Structure settings.
+6. In **Policies**, select exact Collection and Refund policy versions. Proration and Concession Policy selection, scope controls, defaults, lookup requests and review columns have been removed from Fee Structure settings.
 7. Save the draft. Each added row requires an entered amount and a published Payment Term. Policy configuration may remain incomplete in a draft; invalid selected relationships are rejected by the backend.
 8. Open **Review & Publish** for backend readiness errors, mismatch warnings, per-head policy/accounting coverage and resolved installments.
 9. Publish only after saving and obtaining a ready review. The server revalidates and protects the configuration.
@@ -33,7 +33,9 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 |---|---|
 | Workspace list and head/schedule/coverage tables | `CustomizableTable` |
 | Policy, Fee Head and version choices | `CustomSelect` |
-| Editor sections (Heads & Terms, Policies, Review) | `CustomTabs`; Fee Heads remain together in one table |
+| Full-screen workspace | Unmodified shared `CustomDialog` with `fullScreen`, following the timetable workspace |
+| Horizontal class navigation | Unmodified shared `CustomTabs` with scroll buttons; the owning form guards dirty class switches |
+| Guided setup (Fee heads & terms, Policies, Review & publish) | Unmodified shared `CustomStepperWithFormik` owns navigation, scrolling and action footer; Fee Heads remain together in one table |
 | Installment editor | `CustomDialog` + `DialogScrollContent` |
 | Publication, revision, delete, discard and term replacement | `ConfirmDialog` |
 | Row removal | `ThreeDotsActions` |
@@ -41,7 +43,7 @@ Backend rules, exact permissions, migration and API contracts are owned by [the 
 | Feedback | `shikshaMitraToast`, MUI Alert and small controls |
 | API hooks | `useQueryAndMutation` |
 
-The nested tabs and schedule dialog opt out of the shared global leave prompt through `guardUnsavedChanges={false}`. These controls preserve the parent form. Their default behavior elsewhere is unchanged. Leaving the workspace or switching class uses the shared confirmation dialog and the actual aggregate dirty state.
+Stepper navigation preserves the parent candidate without a leave prompt. The nested schedule dialog opts out of the global leave prompt through `guardUnsavedChanges={false}`. Leaving the workspace or switching class uses the shared confirmation dialog and the actual aggregate dirty state.
 
 Metadata list pagination/search uses the server. Empty, loading and error states are distinct. Settings refresh preserves unsaved changes and invalidates the previous readiness result. Parent refetch never overwrites a dirty card. Out-of-order previews are discarded using an editor generation counter. Publication is disabled for an unsaved or unreviewed draft.
 
@@ -49,7 +51,7 @@ Metadata list pagination/search uses the server. Empty, loading and error states
 
 `src/redux/finance/feeStructureWorkspace.ts` owns typed lightweight context, preview, partial save, publish and revision endpoints. Existing `financeFeeStructure.tsx` remains the client for metadata lists/generation, class lists and draft deletion.
 
-`feeStructureModel.ts` preserves all policy version IDs, per-head term/version IDs, complete overrides and explicit nulls. It copies nested arrays so editing cannot mutate cached records. Create sends a stable request UUID; updates and publication send the server concurrency stamp. Existing draft PATCH responses replace the canonical record in the owning class cache. Create/revision/delete update class/count projections; no Fee Structure save invalidates a setting catalog.
+`feeStructureModel.ts` strips retired proration fields from legacy responses and preserves supported policy version IDs, per-head term/version IDs, complete overrides and explicit nulls. It copies nested arrays so editing cannot mutate cached records. Create sends a stable request UUID; updates and publication send the server concurrency stamp. Existing draft PATCH responses replace the canonical record in the owning class cache. Create/revision/delete update class/count projections; no Fee Structure save invalidates a setting catalog.
 
 Canonical save responses replace the local draft; subsequent saves use its ID and stamp. Conflicts keep unsaved input available and ask the user to refresh/review. Optional policy removal sends null IDs and null versions; a previous/default attachment must never be silently restored.
 
@@ -62,7 +64,7 @@ The active path uses `FeeStructureWorkspaceCard.tsx` and `StructureScheduleDialo
 ## Edge cases to verify
 
 - Required settings absent, settings fetch fails, or an attachment becomes inactive after the screen loads.
-- Legacy concession attachments survive unrelated edits; policy-only heads; no overlapping Collection/Refund heads; one-time Proration conflict.
+- Legacy concession attachments survive unrelated edits; policy-only heads; no overlapping Collection/Refund heads; independent Proration rules do not affect structure validation.
 - A newer policy/term version appears while editing: the existing version stays selected until explicitly changed.
 - Custom override references a removed or different-version installment; total percentage differs from 100%; dates overlap or exceed the board window.
 - Save then refresh preserves custom values and pinned versions; disabling a policy does not refill it.
@@ -147,7 +149,7 @@ New editor rows retain the existing false default; no database migration or back
 
 ## Contextual policy impact
 
-The Policies tab contains only Collection, Proration and Refund cards. Historical concession fields remain in the read contract for compatibility and are not editable or included in settings PATCH commands. Request-level policy selection is not implemented by this change; see the [backend behavior](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md).
+The Policies step contains only Collection, Proration and Refund cards. Historical concession fields remain in the read contract for compatibility and are not editable or included in settings PATCH commands. Request-level policy selection is not implemented by this change; see the [backend behavior](../../../../Shikshamitra-BE/docs/modules/finance/references/fee-structure-workspace.md).
 The other policy families retain their existing selection controls without new head selectors.
 Cards use a centered, bounded two-column grid on desktop and a single column below the medium breakpoint.
 
@@ -179,3 +181,19 @@ See [backend action and upgrade contract](../../../../Shikshamitra-BE/docs/modul
 ## Concession settings removal verification
 
 The focused editor/model/catalog suite passes 22 tests, including legacy attachment preservation on an unrelated save and absence of concession controls. TypeScript checking passes. The in-app browser verified the three remaining policy cards and the review table without a Concession column using the existing synthetic component fixture; this does not assert live backend integration. Finance documentation validation passes; the all-module frontend docs gate has unrelated existing failures outside Finance.
+
+## Guided workspace (2026-10-05)
+
+The timetable-style full-screen dialog displays scoped class tabs horizontally across the top at every viewport width. Tabs scroll within their row when needed. The class panel displays one selected structure, with a searchable shared selector in the editor toolbar when several exist. Other editors remain mounted so switching structures preserves unsaved names, policy pins, pricing and custom schedules. Newly saved drafts keep their editor identity and selection when the list refetches; an older list response cannot replace a newer save response.
+
+The workspace uses a flex-height chain. The existing `CustomStepperWithFormik` owns the scrolling body, horizontal step indicators and stable action footer. Its source and API are unchanged. Fee Structure keeps its canonical candidate, validation and changed-only save flow in the owning editor; the stepper delegates actions to that workflow. The primary forward action is **Save & next** during editing and **Next** in read-only sessions. **Save draft** stays on the current step; Back preserves input. A failed save never advances. Successful saves replace the candidate with canonical server data before the next stage renders. Saved structures resume their last navigation step using a metadata/class/structure-scoped local preference; financial values and unsaved drafts are never stored there.
+
+Policies retain Collection (required for publication), Proration and Refund (optional). Review groups blocking errors and non-blocking warnings, shows selected policy versions, labels coverage and installment tables, and provides Edit actions back to the owning step. Ready previews with warnings state that the warnings need review. Publication remains disabled until the draft is saved, unchanged, and ready according to the backend. Parent refreshes and candidate changes invalidate earlier review results.
+
+Blocking saves, publication and revisions disable step navigation, class/structure switching and workspace dismissal. Consequential confirmations use outcome labels, remain open during the request, prevent duplicate actions and display failures for retry. Published structures retain their saved review and revision path. Read-only review links use View labels; published records show the saved publication checks and a completed final step.
+
+Policy fields use three aligned columns on wide screens, two at medium widths and one on mobile. Structure names stay full width, the Fee Head picker has a readable width, and pricing/term fields stay together in the shared table. Closing through the dialog header or Escape uses the owning unsaved-change confirmation.
+
+Focused regression files include the shared stepper's existing tests, `feeStructureFields.test.tsx`, `Components/ClassAccordionPanel.test.tsx` and `Components/FeeStructureWorkspaceDialog.test.tsx`. The isolated browser fixture offers **Open full-screen workspace** to exercise the real dialog, horizontal class tabs, structure selector and class/dismissal guards with synthetic data. The fixture performs no backend financial transactions; authenticated full-stack integration is outside this fixture's coverage.
+
+Verification: 61 focused tests, TypeScript, focused ESLint and Finance documentation validation pass. The final in-app browser smoke covers full-screen desktop/tablet/mobile geometry, horizontal class scrolling, light/dark themes, class and dialog dirty guards, Save & next, review, and protected publication. No shared-component source files are changed.

@@ -11,7 +11,7 @@ const NumericFormatCustom = ({
   ...props
 }: Omit<NumericFormatProps, 'size'> & TextFieldProps) => (
   <NumericFormat
-    value={value as any}
+    value={value == null || value === '' ? value as any : Math.ceil(Number(value))}
     onChange={onChange}
     isAllowed={(values) => {
       const { floatValue } = values;

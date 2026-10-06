@@ -102,7 +102,6 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
         concessionFeeHeadScope,
         concessionApplicableFeeHeadIds,
         refundPolicyId,
-        prorationPolicyId,
       }) => ({
         url: `/fee-structures`,
         method: 'POST',
@@ -117,7 +116,6 @@ export const financeFeeStructureApi = financeModuleApi.injectEndpoints({
             concessionFeeHeadScope,
             concessionApplicableFeeHeadIds,
             refundPolicyId,
-            prorationPolicyId,
           },
         },
       }),
