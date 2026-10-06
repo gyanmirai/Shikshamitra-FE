@@ -28,7 +28,6 @@ import {
 import { reorderFormBuilder } from './reorder-form-builder';
 import { FormBuilderPalette } from './form-builder-palette';
 import { FormValidationPanel } from './form-validation-panel';
-import { getAdmissionFormStepGroups } from './form-step-groups';
 import { FormBuilderProperties } from './form-builder-properties';
 import { FormBuilderCanvas } from './components/form-builder-canvas';
 import { FormBuilderOutline } from './components/form-builder-outline';
@@ -47,7 +46,7 @@ export function FormBuilderSections({
   const selection = useFormBuilderSelection(formik.values.sections);
   const theme = useTheme();
   const [canvasMode, setCanvasMode] = useState<'design' | 'preview'>('design');
-  const [showFullStructure, setShowFullStructure] = useState(false);
+  const [showAllSteps, setShowAllSteps] = useState(false);
   const [newStepId, setNewStepId] = useState<string | null>(null);
   const [mobilePanel, setMobilePanel] = useState<'fields' | 'form'>('form');
   const [sidePanel, setSidePanel] = useState<'settings' | 'outline' | null>(null);
@@ -58,7 +57,7 @@ export function FormBuilderSections({
   const addStep = (afterStepId?: string) => {
     const stepId = commands.addCanvasUnit(afterStepId);
     setNewStepId(stepId ?? null);
-    setShowFullStructure(true);
+    setShowAllSteps(false);
     setCanvasMode('design');
     setMobilePanel('form');
   };
@@ -67,15 +66,7 @@ export function FormBuilderSections({
     if (fieldId) setSidePanel('settings');
     else setSidePanel(null);
   };
-  const showFields = () => {
-    setSidePanel(null);
-    setMobilePanel('fields');
-  };
   const { selectedSection } = selection;
-  const steps = getAdmissionFormStepGroups(formik.values.sections);
-  const selectedStep = steps.find((step) =>
-    step.sections.some(({ section }) => section.id === selectedSection?.id)
-  );
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -147,7 +138,6 @@ export function FormBuilderSections({
                 onAddField={commands.addField}
                 onAddGroupSection={(name, fields) => {
                   if (!commands.addGroupSection(name, fields)) return;
-                  setShowFullStructure(false);
                   setCanvasMode('design');
                   setSidePanel(null);
                   setMobilePanel('form');
@@ -165,21 +155,15 @@ export function FormBuilderSections({
                 sx={{ p: 1.5, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
               >
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-                  {formik.values.layoutType === 1 && (
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      startIcon={<Iconify icon="mdi:plus" />}
-                      onClick={() => addStep(selectedStep?.id)}
-                    >
-                      Add step
-                    </Button>
-                  )}
                   <Button
                     size="small"
                     variant="outlined"
                     startIcon={<Iconify icon="mdi:plus" />}
-                    onClick={commands.addSection}
+                    onClick={() => {
+                      commands.addSection();
+                      setCanvasMode('design');
+                      setMobilePanel('form');
+                    }}
                   >
                     Add section
                   </Button>
@@ -245,15 +229,17 @@ export function FormBuilderSections({
                 >
                   Form outline
                 </MenuItem>
-                <MenuItem
-                  onClick={() => {
-                    setMoreAnchor(null);
-                    setShowFullStructure(!showFullStructure);
-                    setCanvasMode('design');
-                  }}
-                >
-                  {showFullStructure ? 'Focus section' : 'Show full structure'}
-                </MenuItem>
+                {formik.values.layoutType === 1 && (
+                  <MenuItem
+                    onClick={() => {
+                      setMoreAnchor(null);
+                      setShowAllSteps(!showAllSteps);
+                      setCanvasMode('design');
+                    }}
+                  >
+                    {showAllSteps ? 'Show selected step' : 'Show all steps'}
+                  </MenuItem>
+                )}
                 <MenuItem
                   onClick={() => {
                     setMoreAnchor(null);
@@ -261,15 +247,6 @@ export function FormBuilderSections({
                   }}
                 >
                   Section library
-                </MenuItem>
-                <MenuItem
-                  disabled={!selectedSection}
-                  onClick={() => {
-                    setMoreAnchor(null);
-                    showFields();
-                  }}
-                >
-                  Add field
                 </MenuItem>
               </Menu>
               <Menu
@@ -297,9 +274,8 @@ export function FormBuilderSections({
                     formik={formik}
                     selectedSectionId={selection.selectedSectionId}
                     selectedFieldId={selection.selectedFieldId}
-                    showFullStructure={showFullStructure}
+                    showAllSteps={showAllSteps}
                     onSelect={selectCanvasField}
-                    onShowFullStructureChange={setShowFullStructure}
                     newStepId={newStepId}
                     onAddStep={addStep}
                     onNewStepReady={setNewStepId}
@@ -348,15 +324,9 @@ export function FormBuilderSections({
                   selectedSectionId={selection.selectedSectionId}
                   onSelectSection={(sectionId) => {
                     selection.select(sectionId, null);
-                    setShowFullStructure(false);
                     setSidePanel(null);
                     setMobilePanel('form');
                   }}
-                  onAddSection={() => {
-                    setSidePanel(null);
-                    sectionLibrary.onTrue();
-                  }}
-                  onAddField={showFields}
                 />
               </Box>
             </Stack>

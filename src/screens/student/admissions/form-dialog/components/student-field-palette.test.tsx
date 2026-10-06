@@ -2,7 +2,7 @@ import { it, vi, expect, describe } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { StudentFieldPalette } from './student-field-palette';
@@ -91,7 +91,9 @@ describe('StudentFieldPalette', () => {
     );
 
     expect(screen.getByText('100 available of 100 student fields')).toBeVisible();
-    await user.type(screen.getByRole('textbox', { name: 'Search student fields' }), 'record 100');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Search student fields' }), {
+      target: { value: 'record 100' },
+    });
     expect(screen.getByText('1 matching fields')).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Add Student record 100' }));
     expect(onAdd).toHaveBeenCalledWith(fullCatalogue[99]);

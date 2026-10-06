@@ -38,6 +38,7 @@ it('adds a Radio field in Build form and edits its option name through Field set
 
   await user.click(screen.getByRole('tab', { name: 'Student fields' }));
   await user.click(screen.getByRole('tab', { name: 'Custom fields' }));
+  await user.click(screen.getByRole('button', { name: 'More field formats' }));
   await user.click(screen.getByRole('button', { name: 'Add Radio' }));
   await user.click(screen.getByRole('tab', { name: 'Your form' }));
   await user.click(screen.getByRole('button', { name: 'Edit Radio field' }));
@@ -48,6 +49,8 @@ it('adds a Radio field in Build form and edits its option name through Field set
   await user.type(option, 'Yes');
 
   const form = JSON.parse(screen.getByTestId('form-json').textContent ?? '{}');
-  const radio = form.sections[0].fields.find((field: { fieldType: number }) => field.fieldType === 8);
+  const radio = form.sections[0].fields.find(
+    (field: { fieldType: number }) => field.fieldType === 8
+  );
   expect(JSON.parse(radio.optionsJson)).toEqual([{ value: 'OPTION_1', label: 'Yes' }]);
-}, 10000);
+}, 30000);

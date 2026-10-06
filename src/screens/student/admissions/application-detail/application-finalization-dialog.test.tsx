@@ -69,6 +69,70 @@ const renderDialog = (
 };
 
 describe('ApplicationFinalizationDialog', () => {
+  it('retains optional finalization when profile-review access is unavailable', async () => {
+    const onSubmit = renderDialog({
+      ...readyPreview,
+      linkedStudentId: 'student-1',
+      canReviewProfileFields: false,
+      profileReviewDescription: 'Identity details require separate Identity Compliance review.',
+      capturedStudentFields: [{ key: 'Medical.Allergies', label: 'Allergies', value: 'Peanuts' }],
+    });
+    expect(
+      screen.getByLabelText(/Submit these admission details for Student profile review/)
+    ).toBeDisabled();
+    expect(
+      screen.getByText(/Identity details require separate Identity Compliance review/)
+    ).toBeVisible();
+    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          existingStudentId: 'student-1',
+          applyStudentProfileFields: false,
+        })
+      )
+    );
+  });
+  it('requires explicit opt-in to submit captured details for an existing Student profile review', async () => {
+    const onSubmit = renderDialog({
+      ...readyPreview,
+      linkedStudentId: 'student-1',
+      canApplyProfileFieldsDirectly: false,
+      capturedStudentFields: [
+        { key: 'Identity.AadhaarNumber', label: 'Aadhaar number', value: '123456789012' },
+        { key: 'Applicant.ProfilePhoto', label: 'Student profile photo', value: 'Photo provided' },
+      ],
+    });
+    const review = screen.getByLabelText(
+      /Submit these admission details for Student profile review/
+    );
+    expect(review).not.toBeChecked();
+    expect(screen.getByText(/remain until the Student Records review is approved/)).toBeVisible();
+    expect(screen.getByText('Photo provided')).toBeVisible();
+    fireEvent.click(review);
+    fireEvent.click(screen.getByLabelText(/I verified the primary guardian/));
+    fireEvent.click(screen.getByRole('button', { name: 'Finalize admission' }));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ existingStudentId: 'student-1', applyStudentProfileFields: true })
+      )
+    );
+  });
+
+  it('offers direct reviewed application only when the selected existing Student supports it', () => {
+    renderDialog({
+      ...readyPreview,
+      linkedStudentId: 'student-1',
+      canApplyProfileFieldsDirectly: true,
+      capturedStudentFields: [
+        { key: 'Family.IsSingleChild', label: 'Single child', value: 'true' },
+      ],
+    });
+    expect(
+      screen.getByLabelText(/Apply these reviewed details to the Student profile/)
+    ).not.toBeChecked();
+  });
   it('keeps finalization disabled when a non-duplicate readiness gate fails', () => {
     renderDialog({
       ...readyPreview,

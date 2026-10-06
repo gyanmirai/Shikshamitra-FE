@@ -9,9 +9,14 @@ import ShakingTextField from 'src/components/shaking-text-field';
 import { datePickerToDateTimeOffset } from 'src/utils/dateConvertor';
 import { Box, Grid, Checkbox, TextField, FormControlLabel } from '@mui/material';
 
-import { parseFieldConfiguration } from './form-dialog/form-field-presets';
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
+import { parseFieldConfiguration } from './form-dialog/form-field-presets';
+import { AdmissionProfilePhotoField } from './admission-profile-photo-field';
 import { AdmissionSpecializedRuntimeField } from './admission-specialized-runtime-field';
+import {
+  isAdmissionSiblingField,
+  AdmissionSiblingRuntimeField,
+} from './admission-sibling-runtime-field';
 
 type Field = {
   code: string;
@@ -33,6 +38,7 @@ export type AdmissionRuntimeFieldProps = {
   formValues?: Record<string, string>;
   onChange: (value: string) => void;
   onBlur?: () => void;
+  onBusyChange?: (busy: boolean) => void;
 };
 type ChoiceOption = { value: string; label: string };
 type RendererProps = AdmissionRuntimeFieldProps & { options: ChoiceOption[] };
@@ -54,6 +60,9 @@ const GENDER_OPTIONS: ChoiceOption[] = [
 
 export default function AdmissionRuntimeField(props: AdmissionRuntimeFieldProps) {
   const { field, formValues } = props;
+  if (isAdmissionSiblingField(field)) return <AdmissionSiblingRuntimeField {...props} />;
+  if (parseFieldConfiguration(field.validationJson).format === 'photo')
+    return <AdmissionProfilePhotoField {...props} />;
   if (parseFieldConfiguration(field.validationJson).format || field.fieldType === 4) {
     return <AdmissionSpecializedRuntimeField {...props} formValues={formValues ?? {}} />;
   }

@@ -15,7 +15,8 @@ export function FormBuilderDeleteUnit({ name, unit, onDelete }: Props) {
   return (
     <>
       <IconButton
-        aria-label={`Delete ${name}`}
+        size="small"
+        aria-label={unit === 'step' ? `Delete ${name} step` : `Delete ${name}`}
         onClick={confirm.onTrue}
         sx={{ width: 44, height: 44, color: 'text.secondary' }}
       >
@@ -35,6 +36,7 @@ export function FormBuilderDeleteUnit({ name, unit, onDelete }: Props) {
         }
         action={
           <Button
+            size="small"
             variant="contained"
             color="error"
             onClick={() => {

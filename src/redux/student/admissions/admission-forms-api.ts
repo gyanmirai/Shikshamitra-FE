@@ -99,6 +99,8 @@ export type AdmissionFormSystemFieldMetadata = {
   fieldType: AdmissionFormFieldType;
   optionsJson?: string | null;
   readOnly: boolean;
+  validationJson?: string | null;
+  destination?: 'studentProfile' | 'capturedAdmissionDetails';
 };
 export type AdmissionFormDataSourceMetadata = {
   key: string;
@@ -111,6 +113,15 @@ export type AdmissionFormOption = {
   label: string;
   displayOrder: number;
   isActive: boolean;
+};
+export type AdmissionFormOptionsQuery = {
+  sourceKey: string;
+  parentId?: string;
+  academicYearId?: string;
+  searchTerm?: string;
+  skipCount?: number;
+  maxResultCount?: number;
+  selectedIds?: string[];
 };
 export type AdmissionFormAuditEntry = {
   id: string;
@@ -302,14 +313,36 @@ export const admissionFormsApi = api.injectEndpoints({
         r: Result<AdmissionFormDataSourceMetadata[]> | AdmissionFormDataSourceMetadata[]
       ) => unwrap(r),
     }),
-    getAdmissionFormOptions: builder.query<
-      AdmissionFormOption[],
-      { sourceKey: string; parentId?: string; academicYearId?: string }
-    >({
-      query: ({ sourceKey, parentId, academicYearId }) => ({
-        url: '/student/enrollment/admissions/forms/metadata/options',
-        params: { sourceKey, parentId, academicYearId },
-      }),
+    getAdmissionFormOptions: builder.query<AdmissionFormOption[], AdmissionFormOptionsQuery>({
+      query: ({
+        sourceKey,
+        parentId,
+        academicYearId,
+        searchTerm,
+        skipCount,
+        maxResultCount,
+        selectedIds,
+      }) => {
+        const url = '/student/enrollment/admissions/forms/metadata/options';
+        if (sourceKey !== 'StudentSiblings') {
+          return { url, params: { sourceKey, parentId, academicYearId } };
+        }
+        const params = {
+          sourceKey,
+          parentId,
+          academicYearId,
+          searchTerm,
+          skipCount,
+          maxResultCount,
+        };
+        if (!selectedIds?.length) return { url, params };
+        const queryParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+          if (value !== undefined) queryParams.set(key, String(value));
+        });
+        selectedIds.forEach((id) => queryParams.append('selectedIds', id));
+        return { url, params: queryParams };
+      },
       transformResponse: (r: Result<AdmissionFormOption[]> | AdmissionFormOption[]) => unwrap(r),
     }),
   }),

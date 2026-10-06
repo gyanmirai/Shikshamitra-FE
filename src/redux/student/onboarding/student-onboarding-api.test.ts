@@ -492,3 +492,31 @@ describe('student onboarding API', () => {
     expect(result.concurrencyStamp).toBe('case-stamp-2');
   });
 });
+it('uses the onboarding credential status and request contracts', async () => {
+  const email = { id: 'email-1', accountType: 'guardian' as const, email: 'parent@example.com', status: 'Pending', attemptCount: 0, emailEnabled: true, canSend: true };
+  let body: any;
+  mswServer.use(
+    http.get('*/api/student/onboarding/case-1/credential-emails', () => HttpResponse.json({ data: [email] })),
+    http.post('*/api/student/onboarding/case-1/credential-emails', async ({ request }) => { body = await request.json(); return HttpResponse.json({ data: email }); })
+  );
+  const query = store.dispatch(studentOnboardingApi.endpoints.getStudentCredentialEmails.initiate('case-1'));
+  expect(await query.unwrap()).toEqual([email]);
+  const result = await store.dispatch(studentOnboardingApi.endpoints.sendStudentCredentialEmail.initiate({ id: 'case-1', accountType: 'guardian', concurrencyStamp: 'latest-stamp' })).unwrap();
+  expect(result).toEqual(email);
+  expect(body).toEqual({ accountType: 'guardian', concurrencyStamp: 'latest-stamp' });
+  query.unsubscribe();
+});
+
+it('sends individual and all document overrides through the authenticated owning API', async () => {
+  const documents = { caseId: 'case-1', studentId: 'student-1', concurrencyStamp: 'new-stamp', canUpload: true, canOverride: true, documents: [] };
+  const bodies: any[] = [];
+  mswServer.use(http.post('*/api/student/onboarding/case-1/documents/override', async ({ request }) => { bodies.push(await request.json()); return HttpResponse.json({ data: documents }); }));
+  for (const overrideAll of [false, true]) {
+    const result = await store.dispatch(studentOnboardingApi.endpoints.overrideStudentOnboardingDocuments.initiate({ caseId: 'case-1', documentTypeIds: overrideAll ? [] : ['doc-1'], overrideAll, reason: 'Authorized exception', concurrencyStamp: 'stamp' })).unwrap();
+    expect(result).toEqual(documents);
+  }
+  expect(bodies).toEqual([
+    { documentTypeIds: ['doc-1'], overrideAll: false, reason: 'Authorized exception', concurrencyStamp: 'stamp' },
+    { documentTypeIds: [], overrideAll: true, reason: 'Authorized exception', concurrencyStamp: 'stamp' },
+  ]);
+});

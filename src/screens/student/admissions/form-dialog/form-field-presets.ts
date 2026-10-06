@@ -1,7 +1,7 @@
 import type { AdmissionFormFieldType } from 'src/redux/student/admissions/admission-forms-api';
 
 export type AdmissionFieldFormat =
-  'phone' | 'aadhaar' | 'pan' | 'pincode' | 'country' | 'state' | 'city';
+  'phone' | 'aadhaar' | 'pan' | 'pincode' | 'country' | 'state' | 'city' | 'photo';
 
 export type AdmissionFieldConfiguration = {
   format?: AdmissionFieldFormat;
@@ -15,13 +15,15 @@ export type AdmissionFieldConfiguration = {
 };
 
 export type AdmissionFieldPreset = {
-  key: AdmissionFieldFormat;
+  key?: AdmissionFieldFormat;
   label: string;
   description: string;
   icon: string;
   fieldType: AdmissionFormFieldType;
   placeholder?: string;
   validation: AdmissionFieldConfiguration;
+  required?: boolean;
+  optionsJson?: string;
 };
 
 export const CUSTOM_FIELD_PRESETS: AdmissionFieldPreset[] = [
@@ -43,7 +45,7 @@ export const CUSTOM_FIELD_PRESETS: AdmissionFieldPreset[] = [
       format: 'aadhaar',
       minLength: 12,
       maxLength: 12,
-      regex: '^[0-9]{12}$',
+      regex: '^[2-9][0-9]{11}$',
       messages: { regex: 'Enter a valid 12-digit Aadhaar number.' },
     },
   },

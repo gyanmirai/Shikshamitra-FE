@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { useMemo, useState, useContext, useCallback, createContext } from 'react';
 
 import {
+  defaultAccountRules,
   defaultOnboardingSettings,
   defaultOnboardingConfigurationScope,
 } from './onboarding-settings-model';
@@ -51,6 +52,7 @@ const cloneInitialSettings = (
       : null,
   },
   readinessAccess: {
+    ...defaultAccountRules,
     ...settings.readinessAccess,
     approvalTriggers: [...settings.readinessAccess.approvalTriggers],
     checks: settings.readinessAccess.checks.map((check) => ({ ...check })),
@@ -68,6 +70,7 @@ const cloneInitialSettings = (
       divisionIds: [...profile.applicability.divisionIds],
     },
     rules: {
+      ...defaultAccountRules,
       ...profile.rules,
       approvalTriggers: [...profile.rules.approvalTriggers],
       checks: profile.rules.checks.map((check) => ({ ...check })),

@@ -177,11 +177,12 @@ export const newField = (
   fieldType: preset?.fieldType ?? fieldType,
   bindingType: 1,
   bindingKey: `FIELD_${order + 1}`,
-  required: false,
+  required: preset?.required ?? false,
   readOnly: false,
   displayOrder: order,
   placeholder: preset?.placeholder,
   helpText: preset?.description,
+  optionsJson: preset?.optionsJson,
   validationJson: preset ? JSON.stringify(preset.validation) : undefined,
 });
 

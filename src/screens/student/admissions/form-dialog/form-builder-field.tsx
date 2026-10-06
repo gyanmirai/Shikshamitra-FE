@@ -2,7 +2,6 @@ import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
 import Box from '@mui/material/Box';
-import Card from '@mui/material/Card';
 import Stack from '@mui/material/Stack';
 import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
@@ -51,21 +50,19 @@ export function FormBuilderField({
     id: `field:${formik.values.sections[sectionIndex].id}:${field.id}`,
   });
   return (
-    <Card
+    <Box
       ref={sortable.setNodeRef}
       style={{
         transform: CSS.Transform.toString(sortable.transform),
         transition: sortable.transition,
         opacity: sortable.isDragging ? 0.65 : 1,
       }}
-      variant="outlined"
       sx={{
         minWidth: 0,
         gridColumn: field.fieldType === 1 ? '1 / -1' : undefined,
         borderRadius: 1.5,
-        borderColor: selected ? 'success.main' : 'divider',
-        bgcolor: 'background.paper',
-        '&:hover': { borderColor: selected ? 'success.main' : 'text.secondary' },
+        bgcolor: selected ? 'action.selected' : 'transparent',
+        '&:hover': { bgcolor: 'action.hover' },
       }}
     >
       <Stack
@@ -75,6 +72,7 @@ export function FormBuilderField({
       >
         <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
           <IconButton
+            size="small"
             ref={sortable.setActivatorNodeRef}
             {...sortable.attributes}
             {...sortable.listeners}
@@ -162,6 +160,7 @@ export function FormBuilderField({
         </ButtonBase>
         <CustomTooltip title={`Delete ${name}`}>
           <IconButton
+            size="small"
             aria-label={`Delete ${name}`}
             onClick={onDelete}
             sx={{
@@ -179,6 +178,6 @@ export function FormBuilderField({
           </IconButton>
         </CustomTooltip>
       </Stack>
-    </Card>
+    </Box>
   );
 }

@@ -245,6 +245,7 @@ export type StudentOnboardingDocuments = {
   studentId: string;
   concurrencyStamp: string;
   canUpload: boolean;
+  canOverride?: boolean;
   documents: {
     documentTypeId: string;
     name: string;
@@ -254,6 +255,21 @@ export type StudentOnboardingDocuments = {
     studentDocumentId?: string | null;
     fileName?: string | null;
     hasStudentUpload: boolean;
+    isValidated?: boolean;
+    isOverridden?: boolean;
+    overrideReason?: string | null;
     hasAcceptedAdmissionEvidence: boolean;
   }[];
+};
+
+export type StudentCredentialEmail = {
+  id: string;
+  accountType: 'student' | 'guardian';
+  email: string;
+  status: 'NotRequested' | 'Pending' | 'Sent' | 'Failed' | 'Cancelled' | 'Blocked';
+  message?: string | null;
+  sentAt?: string | null;
+  attemptCount: number;
+  emailEnabled?: boolean;
+  canSend?: boolean;
 };

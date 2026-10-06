@@ -5,7 +5,9 @@ import type {
   CreateUpdateAdmissionForm,
 } from 'src/redux/student/admissions/admission-forms-api';
 
+import { templateStudentBinding } from './template-student-fields';
 import { getRegistrationFormTemplate } from './registration-form-template';
+import { configureStudentField, connectStudentAddressFields } from './student-field-configuration';
 
 export type AdmissionFormTemplateCategory =
   | 'Admissions'
@@ -102,24 +104,37 @@ function createField(
   displayOrder: number,
   input: FieldInput
 ): AdmissionFormField {
-  const bindingType = input.bindingKey ? 0 : 1;
-  return {
+  const linked = input.bindingKey ? undefined : templateStudentBinding(input.code);
+  const bindingKey = input.bindingKey ?? linked?.bindingKey;
+  const bindingType = bindingKey ? 0 : 1;
+  const field: AdmissionFormField = {
     id: crypto.randomUUID(),
     sectionId,
     code: input.code,
     label: input.label,
-    fieldType: input.fieldType ?? 0,
+    fieldType: linked?.fieldType ?? input.fieldType ?? 0,
     bindingType,
-    bindingKey: input.bindingKey ?? input.code,
+    bindingKey: bindingKey ?? input.code,
     required: input.required ?? false,
     readOnly: false,
     displayOrder,
     placeholder: input.placeholder,
     helpText: input.helpText,
-    optionsJson: input.optionsJson,
+    optionsJson: linked?.optionsJson ?? input.optionsJson,
     validationJson: input.validationJson,
     defaultValue: input.defaultValue,
   };
+  return bindingKey
+    ? configureStudentField(field, {
+        key: bindingKey,
+        displayName: input.label,
+        description: '',
+        fieldType: field.fieldType,
+        readOnly: false,
+        optionsJson: field.optionsJson,
+        validationJson: field.validationJson,
+      })
+    : field;
 }
 
 function createSections(inputs: SectionInput[]): AdmissionFormSection[] {
@@ -144,7 +159,9 @@ function createSections(inputs: SectionInput[]): AdmissionFormSection[] {
       minEntries: input.repeatable ? 0 : 1,
       maxEntries: input.repeatable ? 10 : 1,
       entryLabel: input.entryLabel,
-      fields: input.fields.map((field, fieldOrder) => createField(id, fieldOrder, field)),
+      fields: connectStudentAddressFields(
+        input.fields.map((field, fieldOrder) => createField(id, fieldOrder, field))
+      ),
     };
   });
 }
@@ -319,7 +336,7 @@ const DEFINITIONS: TemplateDefinition[] = [
     category: 'Admissions',
     icon: 'mdi:file-document-edit-outline',
     sectionCount: 5,
-    fieldCount: 20,
+    fieldCount: 21,
     estimatedMinutes: 10,
     recommended: true,
     create: () =>
@@ -350,6 +367,7 @@ const DEFINITIONS: TemplateDefinition[] = [
             fields: [
               { code: 'ADDRESS_LINE_1', label: 'Address line 1', required: true },
               { code: 'ADDRESS_LINE_2', label: 'Address line 2' },
+              { code: 'COUNTRY', label: 'Country', required: true },
               { code: 'CITY', label: 'City', required: true },
               { code: 'STATE', label: 'State', required: true },
               {
@@ -401,7 +419,7 @@ const DEFINITIONS: TemplateDefinition[] = [
     category: 'Student information',
     icon: 'mdi:clipboard-account-outline',
     sectionCount: 15,
-    fieldCount: 134,
+    fieldCount: 133,
     estimatedMinutes: 25,
     create: getRegistrationFormTemplate,
   },

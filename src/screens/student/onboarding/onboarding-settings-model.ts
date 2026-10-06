@@ -43,6 +43,11 @@ export type AccountRules = {
   guardianAccount: boolean;
   verifiedGuardianContact: boolean;
   deliveryTiming: 'after-activation' | 'manual-release';
+  sendStudentCredentialEmail: boolean;
+  sendGuardianCredentialEmail: boolean;
+  credentialSendingTime: 'activation' | 'completion';
+  credentialProvisioningMode: 'manual' | 'automatic';
+  guardianAccountRelationship: 'father' | 'mother' | 'guardian';
 };
 
 export type ReadinessAccessRules = OnboardingRules &
@@ -216,6 +221,11 @@ export const defaultAccountRules: AccountRules = {
   guardianAccount: true,
   verifiedGuardianContact: true,
   deliveryTiming: 'after-activation',
+  sendStudentCredentialEmail: false,
+  sendGuardianCredentialEmail: false,
+  credentialSendingTime: 'activation',
+  credentialProvisioningMode: 'manual',
+  guardianAccountRelationship: 'guardian',
 };
 
 export const defaultReadinessAccessRules: ReadinessAccessRules = {

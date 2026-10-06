@@ -87,7 +87,11 @@ export function FormBuilderPalette({
               onAddSection={onAddGroupSection}
             />
           ) : (
-            <CustomFieldPalette onAddField={onAddField} />
+            <CustomFieldPalette
+              onAddField={onAddField}
+              systemFields={systemFields}
+              usedBindings={usedBindings}
+            />
           )}
         </Stack>
       ))}

@@ -188,3 +188,18 @@ describe('OnboardingSettingsProvider configuration scopes', () => {
     });
   });
 });
+it('defaults legacy profiles to email OFF without changing account requirements', () => {
+  const legacy = JSON.parse(JSON.stringify(defaultOnboardingSettings));
+  for (const rules of [legacy.readinessAccess, ...legacy.onboardingProfiles.map((profile: any) => profile.rules)]) {
+    delete rules.sendStudentCredentialEmail;
+    delete rules.sendGuardianCredentialEmail;
+    delete rules.credentialSendingTime;
+    delete rules.credentialProvisioningMode;
+    delete rules.guardianAccountRelationship;
+  }
+  const { result } = renderHook(() => useOnboardingSettings(), { wrapper: ({ children }) => <OnboardingSettingsProvider initialSettings={legacy}>{children}</OnboardingSettingsProvider> });
+  for (const rules of [result.current.settings.readinessAccess, ...result.current.settings.onboardingProfiles.map(profile => profile.rules)]) {
+    expect(rules).toMatchObject({ sendStudentCredentialEmail: false, sendGuardianCredentialEmail: false, credentialSendingTime: 'activation', credentialProvisioningMode: 'manual', guardianAccountRelationship: 'guardian' });
+  }
+  expect(result.current.settings.readinessAccess.studentAccount).toBe(true);
+});

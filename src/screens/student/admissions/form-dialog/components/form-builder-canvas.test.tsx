@@ -30,9 +30,7 @@ function renderCanvas(onlyBank = false) {
                 formik={formik}
                 selectedSectionId={bank.id}
                 selectedFieldId={null}
-                showFullStructure={false}
                 onSelect={() => undefined}
-                onShowFullStructureChange={() => undefined}
                 newStepId={null}
                 onAddStep={() => undefined}
                 onNewStepReady={() => undefined}

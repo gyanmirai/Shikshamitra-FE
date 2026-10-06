@@ -41,7 +41,7 @@ export default function AdmissionFormPreviewScreen() {
         .flatMap((section) => section.fields)
         .flatMap((field) => {
           const source = parseOptionsSource(field.optionsJson);
-          return source
+          return source && source.source !== 'StudentSiblings'
             ? [
                 {
                   code: field.code,

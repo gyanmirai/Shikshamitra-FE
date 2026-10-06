@@ -8,7 +8,7 @@ describe('registration admission form template', () => {
     const template = getRegistrationFormTemplate();
 
     expect(template.sections).toHaveLength(15);
-    expect(template.sections.flatMap((section) => section.fields)).toHaveLength(134);
+    expect(template.sections.flatMap((section) => section.fields)).toHaveLength(133);
     await expect(admissionFormSchema.validate(template)).resolves.toBeDefined();
   });
 

@@ -358,3 +358,32 @@ describe('Readiness and Numbering academic scope', () => {
     expect(screen.getByRole('combobox', { name: 'Medium' })).not.toHaveTextContent('English');
   });
 });
+it('persists school email timing and automatic provisioning with independent OFF defaults', async () => {
+  const persist = vi.fn().mockResolvedValue(undefined);
+  renderSettings(<ReadinessAccessSettingsScreen />, persist);
+  fireEvent.click(screen.getByRole('button', { name: 'Add readiness rule' }));
+  selectAcademicPath();
+  expect(screen.getByRole('switch', { name: 'Send student credential email' })).not.toBeChecked();
+  expect(screen.getByRole('switch', { name: 'Send parent/guardian credential email' })).not.toBeChecked();
+  fireEvent.click(screen.getByRole('switch', { name: 'Send parent/guardian credential email' }));
+  choose('Send credentials when', 'After full onboarding completion');
+  choose('Account creation and sending', 'Automatically when ready');
+  choose('Parent/guardian account owner', 'Mother');
+  fireEvent.click(screen.getByRole('button', { name: 'Review rule' }));
+  fireEvent.click(screen.getByText('Save and apply'));
+  await waitFor(() => expect(persist).toHaveBeenCalledOnce());
+  expect(persist.mock.calls[0][1].onboardingProfiles.at(-1).rules).toMatchObject({
+    sendStudentCredentialEmail: false, sendGuardianCredentialEmail: true,
+    credentialSendingTime: 'completion', credentialProvisioningMode: 'automatic', guardianAccountRelationship: 'mother',
+  });
+});
+
+it('blocks email configuration when corresponding account preparation is disabled', () => {
+  renderSettings(<ReadinessAccessSettingsScreen />);
+  fireEvent.click(screen.getByRole('button', { name: 'Add readiness rule' }));
+  selectAcademicPath();
+  fireEvent.click(screen.getByRole('switch', { name: 'Prepare student account' }));
+  fireEvent.click(screen.getByRole('switch', { name: 'Send student credential email' }));
+  expect(screen.getByRole('button', { name: 'Review rule' })).toBeDisabled();
+  expect(screen.getAllByText('Enable student account preparation before sending student emails.').length).toBeGreaterThan(0);
+});

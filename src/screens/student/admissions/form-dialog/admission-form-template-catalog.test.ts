@@ -73,6 +73,33 @@ describe('admission form template catalogue', () => {
 });
 
 describe('admission form section template catalogue', () => {
+  it('keeps address selectors connected when a pack renames conflicting field codes', () => {
+    const form = getAdmissionFormInitialValues();
+    form.sections[0].fields[0].code = 'COUNTRY';
+    const result = materializeAdmissionFormSectionTemplate('home-address', form);
+    const country = result.section.fields.find((field) => field.bindingKey === 'Address.Country')!;
+    const state = result.section.fields.find((field) => field.bindingKey === 'Address.State')!;
+    const city = result.section.fields.find((field) => field.bindingKey === 'Address.City')!;
+    expect(country.code).toBe('COUNTRY_2');
+    expect(JSON.parse(state.validationJson!)).toMatchObject({ countryField: country.code });
+    expect(JSON.parse(city.validationJson!)).toMatchObject({
+      countryField: country.code,
+      stateField: state.code,
+    });
+  });
+
+  it('uses the existing linked country when adding an address pack skips that duplicate', () => {
+    const form = getAdmissionFormInitialValues();
+    const source = getSystemAdmissionFormTemplate('admission-application');
+    const country = source.sections
+      .flatMap((section) => section.fields)
+      .find((field) => field.bindingKey === 'Address.Country')!;
+    form.sections[0].fields = [{ ...country, code: 'EXISTING_COUNTRY' }];
+    const result = materializeAdmissionFormSectionTemplate('home-address', form);
+    expect(result.skippedSystemBindings).toEqual(['Address.Country']);
+    const state = result.section.fields.find((field) => field.bindingKey === 'Address.State')!;
+    expect(JSON.parse(state.validationJson!)).toMatchObject({ countryField: 'EXISTING_COUNTRY' });
+  });
   it.each(ADMISSION_FORM_SECTION_TEMPLATES)(
     'materializes the $title section with fresh ids',
     (summary) => {
@@ -89,6 +116,7 @@ describe('admission form section template catalogue', () => {
 
   it('keeps the selected step and skips duplicate linked student fields', () => {
     const form = getAdmissionFormInitialValues();
+    form.layoutType = 1;
     const existing = getSystemAdmissionFormTemplate('admission-application').sections[0].fields[0];
     form.sections[0].fields = [existing];
     const result = materializeAdmissionFormSectionTemplate(

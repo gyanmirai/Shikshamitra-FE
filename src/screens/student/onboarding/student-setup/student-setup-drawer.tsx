@@ -1,9 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import Link from 'next/link';
 import { useRef, useState, useEffect, type ReactNode } from 'react';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import {
@@ -364,7 +364,9 @@ export default function StudentSetupDrawer({
           {activeStudent.source === 'onboarding-case' && (
             <SectionCard icon="mdi:account-key-outline" title="Portal accounts"
               description="Create and link the required student and guardian identities securely.">
-              <StudentOnboardingPortalAccounts key={activeStudent.id} student={activeStudent} canManage={canManage} />
+              <StudentOnboardingPortalAccounts key={activeStudent.id}
+                student={{ ...activeStudent, concurrencyStamp: capturedFieldsQuery.data?.concurrencyStamp ?? activeStudent.concurrencyStamp }}
+                canManage={canManage} />
             </SectionCard>
           )}
 

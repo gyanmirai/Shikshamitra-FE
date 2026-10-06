@@ -3,7 +3,7 @@ module: student
 domain: clients
 content_type: Reference
 status: canonical
-updated_on: 2026-09-29
+updated_on: 2026-10-05
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -101,3 +101,9 @@ Inquiry creation invalidates inquiry and applicant tags because it creates the C
 ## Client rule
 
 Use the existing Admissions RTK Query client for a new screen or mutation instead of adding a direct fetch helper.
+
+## Onboarding credential emails and document overrides
+
+`student-onboarding-api.ts` owns credential-email status/request and document override endpoints under the existing onboarding case boundary. Email request mutations invalidate that case's detail and handoff tags; document overrides additionally invalidate its document requirements. No credential/password is returned to the staff interface.
+
+The readiness profile persists separate student/guardian email switches (default OFF), activation/completion timing, manual/automatic provisioning, and the selected guardian relationship for automatic provisioning. Legacy configurations receive safe email-OFF defaults without changing their account requirements.

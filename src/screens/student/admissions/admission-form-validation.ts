@@ -1,5 +1,6 @@
 import * as Yup from 'yup';
 
+import { getAdmissionPhotoError } from './admission-profile-photo';
 import { isAdmissionRuleVisible } from './admission-visibility-rules';
 
 type DynamicValues = Record<string, unknown>;
@@ -71,8 +72,11 @@ function createFieldSchema(field: AdmissionFormValidationField, sectionRule?: st
     const values = Object.fromEntries(
       Object.entries(parent).map(([key, current]) => [key, asText(current)])
     );
-    if (!isAdmissionRuleVisible(sectionRule, values) ||
-      !isAdmissionRuleVisible(field.visibilityRuleJson, values)) return true;
+    if (
+      !isAdmissionRuleVisible(sectionRule, values) ||
+      !isAdmissionRuleVisible(field.visibilityRuleJson, values)
+    )
+      return true;
 
     const config = parseConfiguration(field.validationJson);
     const requiredByRule = field.requiredRuleJson
@@ -84,6 +88,10 @@ function createFieldSchema(field: AdmissionFormValidationField, sectionRule?: st
     if (isEmpty(value)) return true;
 
     const text = asText(value);
+    if (config.format === 'photo') {
+      const photoError = getAdmissionPhotoError(text);
+      if (photoError) return this.createError({ message: `${field.label}: ${photoError}` });
+    }
     if (config.minLength !== undefined && text.length < config.minLength) {
       return this.createError({
         message: fieldError(

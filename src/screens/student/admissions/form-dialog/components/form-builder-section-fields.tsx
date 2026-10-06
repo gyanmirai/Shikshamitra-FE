@@ -3,19 +3,16 @@ import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/adm
 
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable';
 
 import { FormBuilderField } from '../form-builder-field';
-import { newField, nextFieldOrder, nextFieldDisplayOrder } from '../form-dialog-model';
 
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   sectionIndex: number;
   selectedFieldId: string | null;
-  showInlineAddField?: boolean;
   onSelectField: (fieldId: string) => void;
 };
 
@@ -23,7 +20,6 @@ export function FormBuilderSectionFields({
   formik,
   sectionIndex,
   selectedFieldId,
-  showInlineAddField = true,
   onSelectField,
 }: Props) {
   const section = formik.values.sections[sectionIndex];
@@ -32,14 +28,8 @@ export function FormBuilderSectionFields({
       `sections[${sectionIndex}].fields`,
       section.fields.filter((_, index) => index !== fieldIndex)
     );
-  const addField = () => {
-    const field = newField(section.id, nextFieldOrder(formik.values.sections));
-    field.displayOrder = nextFieldDisplayOrder(formik.values.sections);
-    formik.setFieldValue(`sections[${sectionIndex}].fields`, [...section.fields, field]);
-    onSelectField(field.id);
-  };
   return (
-    <Stack spacing={1} sx={{ p: 1 }}>
+    <Stack spacing={1} sx={{ px: 2, pb: 2 }}>
       <SortableContext
         items={section.fields.map((field) => `field:${section.id}:${field.id}`)}
         strategy={rectSortingStrategy}
@@ -47,7 +37,7 @@ export function FormBuilderSectionFields({
         <Box
           sx={{
             display: 'grid',
-            gap: 1.5,
+            gap: 1,
             gridTemplateColumns: {
               xs: 'minmax(0, 1fr)',
               sm: `repeat(${Math.min(formik.values.fieldsPerRow, 2)}, minmax(0, 1fr))`,
@@ -85,20 +75,10 @@ export function FormBuilderSectionFields({
           <Iconify icon="mdi:form-textbox" width={28} sx={{ mb: 0.5, color: 'text.disabled' }} />
           <Typography variant="subtitle2">Add your first field</Typography>
           <Typography variant="caption" color="text.secondary">
-            Choose a student field from Add fields, or create your own below.
+            Select this section heading, then choose Student fields or Custom fields from Add
+            fields.
           </Typography>
         </Stack>
-      )}
-      {showInlineAddField && (
-        <Button
-          size="small"
-          color="inherit"
-          startIcon={<Iconify icon="mdi:plus" />}
-          onClick={addField}
-          sx={{ minHeight: 44, alignSelf: 'flex-start' }}
-        >
-          Add custom field
-        </Button>
       )}
     </Stack>
   );
