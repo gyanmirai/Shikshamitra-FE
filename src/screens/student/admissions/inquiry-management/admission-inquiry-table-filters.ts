@@ -111,11 +111,11 @@ export function buildAdmissionInquiryListFilters(
     emailFilterType: email?.type,
     admissionOfferingId: admissionOfferingId || undefined,
     status:
-      status !== undefined && status >= 0 && status <= 8
+      status !== undefined && [0, 2, 6].includes(status)
         ? (status as AdmissionInquiryStatus)
         : undefined,
     source:
-      source !== undefined && source >= 0 && source <= 9
+      source !== undefined && source >= 0 && source <= 12
         ? (source as AdmissionInquirySource)
         : undefined,
     assignedCounsellorId:

@@ -3,10 +3,26 @@ import type { AdmissionInquiryManagement } from 'src/redux/student/admissions/ad
 import { fDateTime } from 'src/utils/format-time';
 import { Chip, Grid, Alert, Paper, Stack, Typography } from '@mui/material';
 
-const outcomeLabels = ['Qualified', 'Follow-up required', 'Not interested', 'Lost', 'Duplicate'];
+const outcomeLabels = [
+  'Interested',
+  'Pending',
+  'Not interested',
+  'Not interested',
+  'Not interested',
+];
 
-export function InquiryManagementSummary({ value }: { value: AdmissionInquiryManagement }) {
+export function InquiryManagementSummary({
+  value,
+  counsellorName,
+}: {
+  value: AdmissionInquiryManagement;
+  counsellorName?: string | null;
+}) {
   const facts = [
+    {
+      label: 'Counsellor',
+      value: counsellorName || (value.assignedCounsellorId ? 'Assigned' : 'Unassigned'),
+    },
     { label: 'Contacts', value: String(value.contactCount) },
     {
       label: 'First contact due',
@@ -28,7 +44,13 @@ export function InquiryManagementSummary({ value }: { value: AdmissionInquiryMan
         <Chip
           size="small"
           color={value.canStartApplication ? 'success' : 'warning'}
-          label={value.canStartApplication ? 'Application can start' : 'Application blocked'}
+          label={
+            value.isLocked
+              ? 'Moved to Pipeline'
+              : value.canStartApplication
+                ? 'Ready for next stage'
+                : 'Next stage unavailable'
+          }
         />
         {value.outcome != null && (
           <Chip size="small" color="primary" label={outcomeLabels[value.outcome]} />
@@ -36,7 +58,7 @@ export function InquiryManagementSummary({ value }: { value: AdmissionInquiryMan
       </Stack>
       <Grid container spacing={1}>
         {facts.map((fact) => (
-          <Grid key={fact.label} size={{ xs: 12, sm: 4 }}>
+          <Grid key={fact.label} size={{ xs: 12, sm: 6, md: 3 }}>
             <Paper variant="outlined" sx={{ p: 1.25, height: 1 }}>
               <Typography variant="caption" color="text.secondary">
                 {fact.label}
@@ -59,7 +81,13 @@ export function InquiryManagementSummary({ value }: { value: AdmissionInquiryMan
         </Alert>
       )}
       {value.outcomeReason && (
-        <Alert severity="info">Latest outcome reason: {value.outcomeReason}</Alert>
+        <Alert severity="info">Latest status reason: {value.outcomeReason}</Alert>
+      )}
+      {value.qualificationEmailStatus && (
+        <Alert severity="info">
+          Qualification email: {value.qualificationEmailStatus}
+          {value.qualificationEmailMessage ? ` · ${value.qualificationEmailMessage}` : ''}
+        </Alert>
       )}
     </Stack>
   );

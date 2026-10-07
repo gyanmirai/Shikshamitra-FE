@@ -50,12 +50,7 @@ const STARTERS: Array<{
 export function FormTemplateChooser({ selectedStarter, onSelect }: Props) {
   return (
     <Stack spacing={1.5}>
-      <Box>
-        <Typography variant="h6">Start with a form</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Choose a starting point for this form.
-        </Typography>
-      </Box>
+      <Typography variant="h6">Start with a form</Typography>
 
       <Box
         sx={{

@@ -6,12 +6,19 @@ import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissi
 import {
   useGetAdmissionInquiryQuery,
   useUpdateAdmissionInquiryMutation,
+  useGetAdmissionInquiryCaptureContextQuery,
+  useGetAdmissionInquiryCaptureCatalogueQuery,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import AdmissionInquiryEditPage, { getInquiryEditReturnUrl } from './admission-inquiry-edit-page';
 
 const push = vi.fn();
 const update = vi.fn();
+const { loadOfferingChoices } = vi.hoisted(() => ({
+  loadOfferingChoices: () => ({ unwrap: () => Promise.resolve({ totalCount: 0, items: [] }) }),
+}));
+
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
 
 vi.mock('next/navigation', () => ({
   useParams: () => ({ id: 'inquiry-1' }),
@@ -22,9 +29,114 @@ vi.mock('next/navigation', () => ({
 vi.mock('src/redux/student/admissions/admission-inquiries-api', () => ({
   useGetAdmissionInquiryQuery: vi.fn(),
   useUpdateAdmissionInquiryMutation: vi.fn(),
+  useGetAdmissionInquiryCaptureContextQuery: vi.fn(),
+  useGetAdmissionInquiryCaptureCatalogueQuery: vi.fn(),
 }));
 vi.mock('src/redux/student/admissions/admission-inquiry-management-api', () => ({
   useGetAdmissionInquiryManagementQuery: vi.fn(),
+}));
+
+vi.mock('react-redux', () => ({
+  useSelector: (select: (state: unknown) => unknown) =>
+    select({ globalState: { currentYear: { id: 'year-1' } } }),
+}));
+vi.mock('src/redux/class/classApi', () => ({
+  useGetClassByMediumQuery: () => ({
+    currentData: [{ id: 'class-1', name: 'Class 1', educationMediumStageId: 'stage-1' }],
+  }),
+}));
+vi.mock('src/redux/academicOrganizationOptions/academicOrganizationOptionsApi', () => ({
+  useGetAcademicOrganizationOptionsQuery: () => ({
+    currentData: {
+      items: [
+        {
+          id: 'stage-1',
+          boardId: 'board-1',
+          boardName: 'CBSE',
+          mediumId: 'medium-1',
+          mediumName: 'English',
+          label: 'Primary',
+        },
+      ],
+    },
+  }),
+}));
+vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
+  useGetAdmissionOfferingQuery: () => ({
+    currentData: {
+      id: 'offering-1',
+      admissionCycleId: 'cycle-1',
+      boardId: 'board-1',
+      mediumId: 'medium-1',
+      standardId: 'class-1',
+      name: 'Class 1',
+      inquiryFormDefinitionId: 'form-v2',
+    },
+  }),
+  useGetAdmissionOfferingAvailabilityQuery: () => ({ currentData: { canCreateInquiry: true } }),
+  useLazyGetAdmissionOfferingsQuery: () => [loadOfferingChoices],
+}));
+vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
+  useGetAdmissionFormQuery: vi.fn(() => ({
+    currentData: {
+      id: 'form-v1',
+      name: 'Original inquiry',
+      version: 1,
+      sections: [
+        {
+          id: 'details',
+          code: 'details',
+          name: 'Family details',
+          displayOrder: 0,
+          fields: [
+            {
+              id: 'name',
+              code: 'name',
+              label: 'Applicant name',
+              fieldType: 0,
+              bindingType: 0,
+              bindingKey: 'Applicant.FirstName',
+              required: true,
+              readOnly: false,
+              displayOrder: 0,
+            },
+            {
+              id: 'guardian',
+              code: 'guardian',
+              label: 'Guardian name',
+              fieldType: 0,
+              bindingType: 0,
+              bindingKey: 'Guardian.FirstName',
+              required: true,
+              readOnly: false,
+              displayOrder: 1,
+            },
+            {
+              id: 'mobile',
+              code: 'mobile',
+              label: 'Mobile number',
+              fieldType: 4,
+              bindingType: 0,
+              bindingKey: 'Guardian.Mobile',
+              required: true,
+              readOnly: false,
+              displayOrder: 2,
+            },
+            {
+              id: 'notes',
+              code: 'notes',
+              label: 'Family notes',
+              fieldType: 1,
+              bindingType: 1,
+              required: false,
+              readOnly: false,
+              displayOrder: 3,
+            },
+          ],
+        },
+      ],
+    },
+  })),
 }));
 vi.mock('src/components/toast', () => ({
   shikshaMitraToast: { success: vi.fn(), error: vi.fn() },
@@ -33,10 +145,81 @@ vi.mock('./use-admission-unsaved-changes', () => ({
   useAdmissionUnsavedChanges: vi.fn(),
 }));
 
+const originalForm = {
+  id: 'form-v1',
+  name: 'Original inquiry',
+  version: 1,
+  sections: [
+    {
+      id: 'details',
+      code: 'details',
+      name: 'Family details',
+      displayOrder: 0,
+      fields: [
+        {
+          id: 'name',
+          code: 'name',
+          label: 'Applicant name',
+          fieldType: 0,
+          bindingType: 0,
+          bindingKey: 'Applicant.FirstName',
+          required: true,
+          readOnly: false,
+          displayOrder: 0,
+        },
+        {
+          id: 'guardian',
+          code: 'guardian',
+          label: 'Guardian name',
+          fieldType: 0,
+          bindingType: 0,
+          bindingKey: 'Guardian.FirstName',
+          required: true,
+          readOnly: false,
+          displayOrder: 1,
+        },
+        {
+          id: 'mobile',
+          code: 'mobile',
+          label: 'Mobile number',
+          fieldType: 4,
+          bindingType: 0,
+          bindingKey: 'Guardian.Mobile',
+          required: true,
+          readOnly: false,
+          displayOrder: 2,
+        },
+        {
+          id: 'notes',
+          code: 'notes',
+          label: 'Family notes',
+          fieldType: 1,
+          bindingType: 1,
+          required: false,
+          readOnly: false,
+          displayOrder: 3,
+        },
+      ],
+    },
+  ],
+};
 const inquiry = {
   id: 'inquiry-1',
   concurrencyStamp: 'stamp-1',
   inquiryNumber: 'INQ-1',
+  admissionCycleId: 'cycle-1',
+  admissionOfferingId: 'offering-1',
+  boardId: 'board-1',
+  mediumId: 'medium-1',
+  standardId: 'class-1',
+  formResponseDefinitionId: 'form-v1',
+  formDefinition: originalForm,
+  formValues: [
+    { fieldCode: 'name', valueJson: '"Riya Shah"' },
+    { fieldCode: 'guardian', valueJson: '"Meera"' },
+    { fieldCode: 'mobile', valueJson: '"9876543210"' },
+    { fieldCode: 'notes', valueJson: '"Existing note"' },
+  ],
   applicantName: 'Riya Shah',
   normalizedPhone: '9876543210',
   email: 'riya@example.com',
@@ -48,6 +231,36 @@ const inquiry = {
 describe('Edit inquiry page', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(useGetAdmissionInquiryCaptureCatalogueQuery).mockReturnValue({
+      currentData: {
+        periods: [{ id: 'cycle-1', name: '2026-27' }],
+        academicOptions: [
+          {
+            boardId: 'board-1',
+            boardName: 'CBSE',
+            mediumId: 'medium-1',
+            mediumName: 'English',
+            standardId: 'class-1',
+            standardName: 'Class 1',
+          },
+        ],
+        offerings: [],
+      },
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryCaptureCatalogueQuery>);
+    vi.mocked(useGetAdmissionInquiryCaptureContextQuery).mockReturnValue({
+      currentData: {
+        offering: {
+          id: 'offering-1',
+          admissionCycleId: 'cycle-1',
+          boardId: 'board-1',
+          mediumId: 'medium-1',
+          standardId: 'class-1',
+          name: 'Class 1',
+        },
+        form: { ...originalForm, id: 'form-v2', version: 2 },
+        availability: { canCreateInquiry: true },
+      },
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryCaptureContextQuery>);
     vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
       data: inquiry,
       isLoading: false,
@@ -71,7 +284,8 @@ describe('Edit inquiry page', () => {
     render(<AdmissionInquiryEditPage />);
 
     expect(screen.getByRole('heading', { name: 'Edit inquiry' })).toBeInTheDocument();
-    expect(screen.getByText('Class 1')).toBeInTheDocument();
+    expect(screen.getByText('Original inquiry · Version 1')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Family notes' })).toHaveValue('Existing note');
     fireEvent.change(screen.getByRole('textbox', { name: 'Applicant name' }), {
       target: { value: 'Riya S' },
     });
@@ -80,10 +294,36 @@ describe('Edit inquiry page', () => {
       expect(update).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'inquiry-1',
-          body: expect.objectContaining({ applicantName: 'Riya S', concurrencyStamp: 'stamp-1' }),
+          body: expect.objectContaining({
+            applicantName: 'Riya S',
+            concurrencyStamp: 'stamp-1',
+            formValues: expect.arrayContaining([
+              { fieldCode: 'notes', valueJson: '"Existing note"' },
+            ]),
+          }),
         })
       )
     );
+  });
+
+  it('preserves the draft when a status save refreshes the concurrency stamp', async () => {
+    const { rerender } = render(<AdmissionInquiryEditPage />);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Applicant name' }), { target: { value: 'Riya Updated' } });
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({ data: { ...inquiry, status: 2, concurrencyStamp: 'status-stamp' }, isLoading: false, isError: false } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    rerender(<AdmissionInquiryEditPage />);
+    expect(screen.getByRole('textbox', { name: 'Applicant name' })).toHaveValue('Riya Updated');
+    fireEvent.click(screen.getByRole('button', { name: 'Save changes' }));
+    await waitFor(() => expect(update).toHaveBeenCalledWith(expect.objectContaining({ body: expect.objectContaining({ applicantName: 'Riya Updated', concurrencyStamp: 'status-stamp' }) })));
+  });
+
+  it('does not replace an unavailable original form with the latest configured version', () => {
+    vi.mocked(useGetAdmissionInquiryQuery).mockReturnValue({
+      data: { ...inquiry, formDefinition: null }, isLoading: false, isError: false,
+    } as unknown as ReturnType<typeof useGetAdmissionInquiryQuery>);
+    render(<AdmissionInquiryEditPage />);
+    expect(screen.getByText(/original attached inquiry form is unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: 'Applicant name' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
   });
 
   it('respects the application lock and returns to the pipeline filter', () => {

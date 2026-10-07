@@ -34,6 +34,10 @@ export type AdmissionInquiryManagement = {
   isOverdue: boolean;
   isLocked: boolean;
   canStartApplication: boolean;
+  canReassign?: boolean;
+  status?: 0 | 2 | 6;
+  qualificationEmailStatus?: string | null;
+  qualificationEmailMessage?: string | null;
   blockers: string[];
   qualificationAnswers: InquiryQualificationAnswer[];
   followUps: InquiryFollowUp[];

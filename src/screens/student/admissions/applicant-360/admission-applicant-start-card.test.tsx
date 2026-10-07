@@ -6,6 +6,15 @@ import { AdmissionApplicantStartCard } from './admission-applicant-start-card';
 const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   startApplication: vi.fn(),
+  inquiry: {
+    data: {
+      id: 'inquiry-1',
+      status: 2,
+      admissionOfferingId: 'offering-1',
+      admissionOfferingCode: 'Class 4 · CBSE',
+    },
+    isLoading: false,
+  },
   management: {
     managed: true,
     canStartApplication: false,
@@ -37,6 +46,10 @@ vi.mock('src/redux/student/admissions/admission-offerings-api', () => ({
   }),
 }));
 
+vi.mock('src/redux/student/admissions/admission-inquiries-api', () => ({
+  useGetAdmissionInquiryQuery: () => mocks.inquiry,
+}));
+
 vi.mock('src/redux/student/admissions/admission-inquiry-management-api', () => ({
   useGetAdmissionInquiryManagementQuery: () => ({
     data: mocks.management,
@@ -65,17 +78,18 @@ it('explains the CRM blocker before staff try to start an application', () => {
     'href',
     '/student/admissions/inquiries?inquiryId=inquiry-1'
   );
-  expect(screen.getByRole('button', { name: 'Start application' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Move to next stage' })).toBeDisabled();
 });
 
-it('keeps the application action available for schools using the Basic Inquiry workflow', () => {
+it('keeps the Interested gate for schools using the Basic Inquiry workflow', () => {
   mocks.management.managed = false;
   mocks.management.blockers = [];
-
   render(<AdmissionApplicantStartCard applicantId="applicant-1" applications={[]} />);
-
-  expect(screen.queryByText('Complete the Inquiry handoff first')).not.toBeInTheDocument();
-  expect(screen.getByRole('combobox', { name: 'Admission offering' })).toBeEnabled();
+  expect(screen.getByText('Complete the Inquiry handoff first')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Move to next stage' })).toBeDisabled();
+  expect(screen.getByRole('textbox', { name: 'Confirmed inquiry offering' })).toHaveValue(
+    'Class 4 · CBSE'
+  );
 });
 
 it('disables another offering while an application is active', () => {
@@ -104,11 +118,10 @@ it('disables another offering while an application is active', () => {
     />
   );
 
-  expect(screen.getByRole('combobox', { name: 'Admission offering' })).toHaveAttribute(
-    'aria-disabled',
-    'true'
+  expect(screen.getByRole('textbox', { name: 'Confirmed inquiry offering' })).toHaveAttribute(
+    'readonly'
   );
-  expect(screen.getByRole('button', { name: 'Start application' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Move to next stage' })).toBeDisabled();
   expect(screen.getByText('Continue application')).toBeInTheDocument();
   expect(screen.queryByText('APP/2026/3a23c67c84f')).not.toBeInTheDocument();
 });
@@ -123,10 +136,13 @@ it('opens the created application in the full application page', async () => {
 
   render(<AdmissionApplicantStartCard applicantId="applicant-1" applications={[]} />);
 
-  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Admission offering' }));
-  fireEvent.click(await screen.findByRole('option', { name: /Class 4/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Start application' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Move to next stage' }));
 
+  expect(mocks.startApplication).toHaveBeenCalledWith({
+    applicantId: 'applicant-1',
+    offeringId: 'offering-1',
+    inquiryId: 'inquiry-1',
+  });
   await waitFor(() =>
     expect(mocks.push).toHaveBeenCalledWith('/student/admissions/applications/application-1')
   );

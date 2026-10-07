@@ -42,6 +42,15 @@ it('adds a Radio field in Build form and edits its option name through Field set
   await user.click(screen.getByRole('button', { name: 'Add Radio' }));
   await user.click(screen.getByRole('tab', { name: 'Your form' }));
   await user.click(screen.getByRole('button', { name: 'Edit Radio field' }));
+  expect(screen.getByRole('tab', { name: 'Basic' })).toBeVisible();
+  expect(screen.getByRole('tab', { name: 'Rules' })).toBeVisible();
+  expect(screen.queryByRole('tab', { name: 'Data' })).not.toBeInTheDocument();
+  const settingsHelp = screen.getByRole('button', { name: 'About field settings' });
+  await user.hover(settingsHelp);
+  expect(await screen.findByRole('tooltip')).toHaveTextContent(
+    'Configure the field, answer options, and visibility.'
+  );
+  await user.unhover(settingsHelp);
   await user.click(screen.getByRole('button', { name: 'Add choice' }));
 
   const option = screen.getByRole('textbox', { name: 'Option 1' });

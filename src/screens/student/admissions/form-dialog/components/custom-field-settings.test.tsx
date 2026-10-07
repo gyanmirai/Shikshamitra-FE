@@ -1,4 +1,7 @@
-import type { AdmissionFormFieldType } from 'src/redux/student/admissions/admission-forms-api';
+import type {
+  AdmissionFormField,
+  AdmissionFormFieldType,
+} from 'src/redux/student/admissions/admission-forms-api';
 
 import { Formik } from 'formik';
 import { vi, it, expect, describe } from 'vitest';
@@ -25,10 +28,15 @@ vi.mock('src/redux/student/admissions/admission-forms-api', () => ({
   useGetAdmissionFormSystemFieldsQuery: () => ({ data: [] }),
 }));
 
-function renderSettings(fieldType: AdmissionFormFieldType, preset?: AdmissionFieldPreset) {
+function renderSettings(
+  fieldType: AdmissionFormFieldType,
+  preset?: AdmissionFieldPreset,
+  patch: Partial<AdmissionFormField> = {},
+  otherFields: AdmissionFormField[] = []
+) {
   const form = getAdmissionFormInitialValues();
   const section = form.sections[0];
-  section.fields = [newField(section.id!, 0, fieldType, preset)];
+  section.fields = [{ ...newField(section.id!, 0, fieldType, preset), ...patch }, ...otherFields];
   render(
     <ThemeProvider theme={createTheme(defaultSettings)}>
       <Formik initialValues={form} onSubmit={() => undefined}>
@@ -50,12 +58,27 @@ function renderSettings(fieldType: AdmissionFormFieldType, preset?: AdmissionFie
 
 const currentField = () => JSON.parse(screen.getByTestId('field-json').textContent ?? '{}');
 
+function expectTechnicalEditorsHidden() {
+  expect(screen.queryByRole('tab', { name: 'Data' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Advanced rules/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Validation JSON' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Required rule JSON' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('textbox', { name: 'Field code' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: 'Save answer to' })).not.toBeInTheDocument();
+}
+
 describe('Admission Form Builder custom field settings', () => {
   it.each(CREATABLE_FIELD_TYPES)(
-    'edits Basic, Rules and Data settings for %s',
+    'edits Basic settings with directly available More options and Rules for %s',
     async (_label, fieldType) => {
       const user = userEvent.setup();
       renderSettings(fieldType);
+
+      expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Basic', 'Rules']);
+      expect(screen.getByText('Basic settings')).toBeVisible();
+      expect(screen.getByText('More options')).toBeVisible();
+      expect(screen.getByRole('tabpanel', { name: 'Basic' })).toBeVisible();
+      expectTechnicalEditorsHidden();
 
       const fieldLabel = screen.getByRole('textbox', { name: 'Field label' });
       fireEvent.change(fieldLabel, { target: { value: 'School question' } });
@@ -65,7 +88,6 @@ describe('Admission Form Builder custom field settings', () => {
       });
       expect(currentField().helpText).toBe('Ask the school office if unsure.');
 
-      await user.click(screen.getByRole('button', { name: /More options/ }));
       fireEvent.change(screen.getByRole('textbox', { name: 'Placeholder' }), {
         target: { value: 'Enter answer' },
       });
@@ -89,24 +111,12 @@ describe('Admission Form Builder custom field settings', () => {
       );
 
       await user.click(screen.getByRole('tab', { name: 'Rules' }));
-      await user.click(screen.getByRole('button', { name: /Advanced rules/ }));
-      expect(screen.getByRole('textbox', { name: 'Validation JSON' })).toBeVisible();
-      const validationJson = '{"messages":{"required":"Please answer this question."}}';
-      fireEvent.change(screen.getByRole('textbox', { name: 'Validation JSON' }), {
-        target: { value: validationJson },
-      });
-      expect(currentField().validationJson).toBe(validationJson);
-
-      await user.click(screen.getByRole('tab', { name: 'Data' }));
-      const fieldCode = screen.getByRole('textbox', { name: 'Field code' });
-      fireEvent.change(fieldCode, { target: { value: 'school_question' } });
-      expect(currentField().code).toBe('SCHOOL_QUESTION');
-      if (fieldType === 12) {
-        expect(screen.queryByRole('combobox', { name: 'Save answer to' })).not.toBeInTheDocument();
-      } else {
-        expect(screen.getByRole('combobox', { name: 'Save answer to' })).toBeVisible();
-        expect(currentField().bindingKey).toBe('SCHOOL_QUESTION');
-      }
+      expect(screen.getByText('Visibility conditions')).toBeVisible();
+      expect(screen.getByRole('tabpanel', { name: 'Rules' })).toBeVisible();
+      expect(screen.getByRole('combobox', { name: 'Show field when' })).toBeVisible();
+      expectTechnicalEditorsHidden();
+      expect(currentField().label).toBe('School question');
+      expect(currentField().placeholder).toBe('Enter answer');
     },
     10000
   );
@@ -120,14 +130,139 @@ describe('Admission Form Builder custom field settings', () => {
       expect(screen.getByRole('textbox', { name: 'Field label' })).toHaveValue(preset.label);
       expect(JSON.parse(currentField().validationJson)).toEqual(preset.validation);
       await user.click(screen.getByRole('tab', { name: 'Rules' }));
-      await user.click(screen.getByRole('button', { name: /Advanced rules/ }));
-      expect(screen.getByRole('textbox', { name: 'Validation JSON' })).toHaveValue(
-        JSON.stringify(preset.validation)
-      );
+      expectTechnicalEditorsHidden();
+      expect(JSON.parse(currentField().validationJson)).toEqual(preset.validation);
       if (preset.key === 'state' || preset.key === 'city') {
         expect(screen.getByText('Location dependency')).toBeVisible();
         expect(screen.getByRole('combobox', { name: 'Country field' })).toBeVisible();
       }
     }
   );
+
+  it('preserves stored validation, conditional required rules and Student binding while editing labels and visibility', async () => {
+    const user = userEvent.setup();
+    const stored = {
+      code: 'SCHOOL_IDENTITY',
+      bindingType: 1 as const,
+      bindingKey: 'Identity.AadhaarNumber',
+      validationJson:
+        '{"format":"aadhaar","regex":"^[2-9][0-9]{11}$","messages":{"regex":"Check the number."}}',
+      requiredRuleJson: '{"field":"COUNTRY","operator":"Equals","value":"India"}',
+    };
+    const country = { ...newField('section-1', 1, 0), code: 'COUNTRY', label: 'Country' };
+    renderSettings(0, undefined, stored, [country]);
+    fireEvent.change(screen.getByRole('textbox', { name: 'Field label' }), {
+      target: { value: 'Identity number' },
+    });
+    await user.click(screen.getByRole('switch', { name: /Required field/ }));
+    await user.click(screen.getByRole('tab', { name: 'Rules' }));
+    expectTechnicalEditorsHidden();
+    await user.click(screen.getByRole('combobox', { name: 'Show field when' }));
+    await user.click(screen.getByRole('option', { name: 'Country' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Answer to match' }), {
+      target: { value: 'India' },
+    });
+    expect(JSON.parse(currentField().visibilityRuleJson)).toEqual({
+      field: 'COUNTRY',
+      operator: 'Equals',
+      value: 'India',
+    });
+    expect(currentField()).toMatchObject({ ...stored, label: 'Identity number', required: true });
+    await user.click(screen.getByRole('button', { name: 'Clear condition' }));
+    expect(currentField().visibilityRuleJson).toBeUndefined();
+    expect(currentField()).toMatchObject(stored);
+  });
+
+  it('updates an existing simple visibility operator and keeps missing field references visible', async () => {
+    const user = userEvent.setup();
+    renderSettings(0, undefined, {
+      visibilityRuleJson: '{"field":"REMOVED_FIELD","operator":"Equals","value":"Yes"}',
+    });
+    await user.click(screen.getByRole('tab', { name: 'Rules' }));
+    expect(screen.getByRole('combobox', { name: 'Show field when' })).toHaveTextContent(
+      'REMOVED_FIELD (field not found)'
+    );
+    expect(screen.getByRole('textbox', { name: 'Answer to match' })).toHaveValue('Yes');
+    await user.click(screen.getByRole('combobox', { name: 'Condition' }));
+    await user.click(screen.getByRole('option', { name: 'is not empty' }));
+    expect(JSON.parse(currentField().visibilityRuleJson)).toMatchObject({
+      field: 'REMOVED_FIELD',
+      operator: 'IsNotEmpty',
+    });
+    expect(screen.queryByRole('textbox', { name: 'Answer to match' })).not.toBeInTheDocument();
+  });
+
+  it('preserves unsupported visibility rules until the user explicitly replaces them', async () => {
+    const user = userEvent.setup();
+    const savedRule = '{"all":[{"field":"COUNTRY","operator":"Equals","value":"India"}]}';
+    const country = { ...newField('section-1', 1, 0), code: 'COUNTRY', label: 'Country' };
+    renderSettings(0, undefined, { visibilityRuleJson: savedRule }, [country]);
+    await user.click(screen.getByRole('tab', { name: 'Rules' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('It has not been changed.');
+    expect(currentField().visibilityRuleJson).toBe(savedRule);
+    expect(screen.getByRole('textbox', { name: 'Compatibility rule' })).toHaveValue(savedRule);
+    expectTechnicalEditorsHidden();
+    await user.click(screen.getByRole('tab', { name: 'Basic' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Field label' }), {
+      target: { value: 'Travel details' },
+    });
+    await user.click(screen.getByRole('tab', { name: 'Rules' }));
+    expect(currentField().visibilityRuleJson).toBe(savedRule);
+    await user.click(screen.getByRole('button', { name: 'Replace with simple condition' }));
+    expect(JSON.parse(currentField().visibilityRuleJson)).toEqual({
+      field: 'COUNTRY',
+      operator: 'Equals',
+      value: '',
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Answer to match' })).toBeVisible();
+  });
+
+  it('changes the custom answer type without modifying hidden stored field metadata', async () => {
+    const user = userEvent.setup();
+    const stored = {
+      code: 'SCHOOL_QUESTION',
+      bindingType: 1 as const,
+      bindingKey: 'SCHOOL_QUESTION',
+      validationJson: '{"maxLength":120}',
+      requiredRuleJson: '{"field":"COUNTRY","operator":"IsNotEmpty"}',
+    };
+    renderSettings(0, undefined, stored);
+    await user.click(screen.getByRole('combobox', { name: 'Field type' }));
+    await user.click(screen.getByRole('option', { name: 'Textarea' }));
+    expect(currentField()).toMatchObject({ ...stored, fieldType: 1 });
+    expectTechnicalEditorsHidden();
+  });
+
+  it('edits location dependencies without losing stored validation or required rules', async () => {
+    const user = userEvent.setup();
+    const country = {
+      ...newField('section-1', 1, 0),
+      code: 'COUNTRY',
+      label: 'Current country',
+      validationJson: '{"format":"country"}',
+    };
+    const requiredRuleJson = '{"field":"COUNTRY","operator":"IsNotEmpty"}';
+    renderSettings(
+      0,
+      undefined,
+      {
+        validationJson:
+          '{"format":"state","minLength":2,"messages":{"required":"Choose a state."}}',
+        requiredRuleJson,
+      },
+      [country]
+    );
+    await user.click(screen.getByRole('tab', { name: 'Rules' }));
+    await user.click(screen.getByRole('combobox', { name: 'Country field' }));
+    await user.click(screen.getByRole('option', { name: 'Current country' }));
+    expect(JSON.parse(currentField().validationJson)).toEqual({
+      format: 'state',
+      minLength: 2,
+      messages: { required: 'Choose a state.' },
+      countryField: 'COUNTRY',
+    });
+    expect(currentField().requiredRuleJson).toBe(requiredRuleJson);
+    expectTechnicalEditorsHidden();
+  });
 });

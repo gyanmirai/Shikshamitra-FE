@@ -27,6 +27,16 @@ type Props = {
   onAddSection?: (name: string, fields: AdmissionFormSystemFieldMetadata[]) => void;
 };
 
+const admissionContextBindings = new Set([
+  'preference.board',
+  'preference.medium',
+  'preference.class',
+]);
+const usesAdmissionContext = (field: AdmissionFormSystemFieldMetadata) =>
+  admissionContextBindings.has(field.key.toLowerCase());
+const admissionContextMessage =
+  'Board, medium and class are already captured when an inquiry selects its admission option. No need to add them again.';
+
 export function StudentFieldPalette({
   fields,
   usedBindings = [],
@@ -50,7 +60,9 @@ export function StudentFieldPalette({
     }))
     .filter((group) => group.fields.length > 0);
   const used = new Set(usedBindings.map((key) => key.toLowerCase()));
-  const availableCount = fields.filter((field) => !used.has(field.key.toLowerCase())).length;
+  const availableCount = fields.filter(
+    (field) => !used.has(field.key.toLowerCase()) && !usesAdmissionContext(field)
+  ).length;
   const visibleCount = visibleGroups.reduce((count, group) => count + group.fields.length, 0);
   const addressPacks = [
     {
@@ -82,13 +94,18 @@ export function StudentFieldPalette({
         fullWidth
         size="small"
         label="Search student fields"
+        InputLabelProps={{ shrink: Boolean(search) }}
         value={search}
         disabled={loading || error}
         onChange={(event) => setSearch(event.target.value)}
+        sx={{
+          '&& .MuiInputBase-root': { minHeight: 36 },
+          '& .MuiInputBase-input': { py: 0.75 },
+        }}
         InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <Iconify icon="mdi:magnify" />
+          endAdornment: (
+            <InputAdornment position="end">
+              <Iconify icon="mdi:magnify" width={18} />
             </InputAdornment>
           ),
         }}
@@ -102,6 +119,11 @@ export function StudentFieldPalette({
               ? `${visibleCount} matching fields`
               : `${availableCount} available of ${fields.length} student fields`}
       </Typography>
+      {visibleGroups.some((group) => group.fields.some(usesAdmissionContext)) && (
+        <Typography variant="caption" color="text.secondary" role="note">
+          {admissionContextMessage}
+        </Typography>
+      )}
       <Scrollbar
         fillContent
         aria-label="Student field categories"
@@ -113,28 +135,6 @@ export function StudentFieldPalette({
         }}
       >
         <Stack spacing={0.75} sx={{ pr: 1, pb: 1 }}>
-          {!loading &&
-            !error &&
-            !normalizedSearch &&
-            onAddSection &&
-            addressPacks.map((pack) => {
-              const packFields = pack.keys
-                .map((key) => fields.find((field) => field.key === key))
-                .filter((field): field is AdmissionFormSystemFieldMetadata => Boolean(field));
-              if (!packFields.length) return null;
-              return (
-                <Button
-                  key={pack.name}
-                  variant="outlined"
-                  size="small"
-                  startIcon={<Iconify icon="mdi:plus" />}
-                  disabled={packFields.every((field) => used.has(field.key.toLowerCase()))}
-                  onClick={() => onAddSection(pack.name, packFields)}
-                >
-                  {pack.name} pack
-                </Button>
-              );
-            })}
           {loading &&
             Array.from({ length: 4 }, (_, index) => (
               <Skeleton key={index} variant="rounded" height={48} />
@@ -144,7 +144,7 @@ export function StudentFieldPalette({
             visibleGroups.map((group, index) => {
               const expanded = Boolean(normalizedSearch) || expandedGroup === group.name;
               const availableFields = group.allFields.filter(
-                (field) => !used.has(field.key.toLowerCase())
+                (field) => !used.has(field.key.toLowerCase()) && !usesAdmissionContext(field)
               );
               const groupId = `${paletteId}-group-${index}`;
               return (
@@ -152,7 +152,7 @@ export function StudentFieldPalette({
                   key={group.name}
                   sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}
                 >
-                  <Stack direction="row" alignItems="center" spacing={0.5} sx={{ px: 0.5 }}>
+                  <Stack direction="row" alignItems="center" sx={{ px: 0.5 }}>
                     <ButtonBase
                       aria-expanded={expanded}
                       aria-controls={groupId}
@@ -163,7 +163,8 @@ export function StudentFieldPalette({
                         flex: 1,
                         minWidth: 0,
                         minHeight: 44,
-                        px: 1,
+                        pl: 1,
+                        pr: 0.25,
                         borderRadius: 1,
                         textAlign: 'left',
                         justifyContent: 'space-between',
@@ -174,18 +175,25 @@ export function StudentFieldPalette({
                       <Typography
                         variant="subtitle2"
                         component="h3"
-                        sx={{ overflowWrap: 'anywhere' }}
+                        sx={{ overflowWrap: 'anywhere', mr: 1 }}
                       >
                         {group.name} ({group.fields.length})
                       </Typography>
-                      <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} width={18} />
+                      <Iconify
+                        icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
+                        width={18}
+                        sx={{ flexShrink: 0 }}
+                      />
                     </ButtonBase>
                     {onAddSection && (
                       <IconButton
                         aria-label={`Add ${group.name} section`}
                         disabled={!availableFields.length}
                         onClick={() => {
-                          onAddSection(group.name, group.allFields);
+                          onAddSection(
+                            group.name,
+                            group.allFields.filter((field) => !usesAdmissionContext(field))
+                          );
                           setExpandedGroup(null);
                           setSearch('');
                         }}
@@ -201,13 +209,55 @@ export function StudentFieldPalette({
                       spacing={0.75}
                       sx={{ p: 1, borderTop: 1, borderColor: 'divider' }}
                     >
+                      {group.name === 'Contact and addresses' &&
+                        onAddSection &&
+                        addressPacks
+                          .filter(
+                            (pack) =>
+                              !normalizedSearch ||
+                              `${pack.name} pack`.toLowerCase().includes(normalizedSearch) ||
+                              pack.keys.some((key) =>
+                                group.fields.some((field) => field.key === key)
+                              )
+                          )
+                          .map((pack) => {
+                            const packFields = pack.keys
+                              .map((key) => fields.find((field) => field.key === key))
+                              .filter((field): field is AdmissionFormSystemFieldMetadata =>
+                                Boolean(field)
+                              );
+                            if (!packFields.length) return null;
+                            return (
+                              <Button
+                                key={pack.name}
+                                variant="outlined"
+                                size="small"
+                                startIcon={<Iconify icon="mdi:plus" />}
+                                disabled={packFields.every((field) =>
+                                  used.has(field.key.toLowerCase())
+                                )}
+                                onClick={() => onAddSection(pack.name, packFields)}
+                              >
+                                {pack.name} pack
+                              </Button>
+                            );
+                          })}
                       {group.fields.map((field) => (
                         <PaletteFieldButton
                           key={field.key}
                           label={field.displayName}
                           icon={fieldTypeIcon(field.fieldType)}
-                          description={`${studentFieldDestination(field)}${field.description ? ` · ${field.description}` : ''}`}
-                          disabled={used.has(field.key.toLowerCase())}
+                          description={
+                            usesAdmissionContext(field)
+                              ? admissionContextMessage
+                              : `${studentFieldDestination(field)}${field.description ? ` · ${field.description}` : ''}`
+                          }
+                          disabled={
+                            used.has(field.key.toLowerCase()) || usesAdmissionContext(field)
+                          }
+                          disabledLabel={
+                            usesAdmissionContext(field) ? 'Captured in inquiry' : 'Added'
+                          }
                           onClick={() => onAdd(field)}
                         />
                       ))}

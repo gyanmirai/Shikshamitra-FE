@@ -5,6 +5,7 @@ import Typography from '@mui/material/Typography';
 import CustomSelect from 'src/components/custom-select';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import ShakingTextField from 'src/components/shaking-text-field';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { getConfigurableFieldTypes } from './form-dialog-model';
 import { FieldChoiceSettings } from './components/field-choice-settings';
@@ -21,78 +22,81 @@ export function FormFieldCoreFields({ formik, sectionIndex, fieldIndex }: FieldS
   const labelError = Boolean(labelMeta.touched && labelMeta.error);
   return (
     <Stack spacing={1.5}>
-      <ShakingTextField error={labelError}>
-        <TextField
-          fullWidth
-          required
-          size="small"
-          label="Field label"
-          value={field.label}
-          name={`${path}.label`}
-          onBlur={formik.handleBlur}
-          error={labelError}
-          onChange={(event) => formik.setFieldValue(`${path}.label`, event.target.value)}
-          helperText={labelError ? labelMeta.error : 'The question or label applicants will see.'}
-        />
-      </ShakingTextField>
-      <CustomSelect
-        size="small"
-        label="Field type"
-        value={field.fieldType}
-        options={getConfigurableFieldTypes(field.fieldType).map(([label, value]) => ({
-          label,
-          value,
-        }))}
-        disabled={field.fieldType === 10}
-        helperText={
-          field.fieldType === 10
-            ? 'File upload is not available yet. Replace this field before publishing.'
-            : undefined
-        }
-        onChange={(value) => formik.setFieldValue(`${path}.fieldType`, Number(value))}
-      />
-      {!isStatic && (
-        <FormControlLabel
-          labelPlacement="start"
-          sx={{
-            m: 0,
-            p: 1.25,
-            borderRadius: 1,
-            bgcolor: 'action.hover',
-            justifyContent: 'space-between',
-            gap: 1,
-          }}
-          control={
-            <Switch
+      <SectionCard
+        title="Basic settings"
+        paperProps={{ sx: { mb: 0, minWidth: 0 } }}
+        gridProps={{ sx: { display: 'block' } }}
+      >
+        <Stack spacing={1.5}>
+          <ShakingTextField error={labelError}>
+            <TextField
+              fullWidth
+              required
               size="small"
-              checked={field.required}
-              onChange={(event) => formik.setFieldValue(`${path}.required`, event.target.checked)}
+              label="Field label"
+              value={field.label}
+              name={`${path}.label`}
+              onBlur={formik.handleBlur}
+              error={labelError}
+              onChange={(event) => formik.setFieldValue(`${path}.label`, event.target.value)}
+              helperText={labelError ? labelMeta.error : ''}
             />
-          }
-          label={
-            <Stack>
-              <Typography variant="body2" fontWeight={600}>
-                Required field
-              </Typography>
-              <Typography variant="caption" color="text.secondary">
-                Applicants must answer before submitting.
-              </Typography>
-            </Stack>
-          }
-        />
-      )}
-      <TextField
-        fullWidth
-        size="small"
-        label="Help text (optional)"
-        value={field.helpText ?? ''}
-        multiline
-        minRows={2}
-        helperText="A short instruction shown below the field."
-        onChange={(event) =>
-          formik.setFieldValue(`${path}.helpText`, event.target.value || undefined)
-        }
-      />
+          </ShakingTextField>
+          <CustomSelect
+            size="small"
+            label="Field type"
+            value={field.fieldType}
+            options={getConfigurableFieldTypes(field.fieldType).map(([label, value]) => ({
+              label,
+              value,
+            }))}
+            disabled={field.fieldType === 10}
+            helperText={
+              field.fieldType === 10
+                ? 'File upload is not available yet. Replace this field before publishing.'
+                : undefined
+            }
+            onChange={(value) => formik.setFieldValue(`${path}.fieldType`, Number(value))}
+          />
+          {!isStatic && (
+            <FormControlLabel
+              labelPlacement="start"
+              sx={{
+                m: 0,
+                justifyContent: 'space-between',
+                gap: 1,
+              }}
+              control={
+                <Switch
+                  size="small"
+                  checked={field.required}
+                  onChange={(event) =>
+                    formik.setFieldValue(`${path}.required`, event.target.checked)
+                  }
+                />
+              }
+              label={
+                <Stack>
+                  <Typography variant="body2" fontWeight={600}>
+                    Required field
+                  </Typography>
+                </Stack>
+              }
+            />
+          )}
+          <TextField
+            fullWidth
+            size="small"
+            label="Help text (optional)"
+            value={field.helpText ?? ''}
+            multiline
+            minRows={2}
+            onChange={(event) =>
+              formik.setFieldValue(`${path}.helpText`, event.target.value || undefined)
+            }
+          />
+        </Stack>
+      </SectionCard>
       {isChoice && (
         <FieldChoiceSettings formik={formik} sectionIndex={sectionIndex} fieldIndex={fieldIndex} />
       )}

@@ -16,7 +16,6 @@ export function FieldGuidanceSettings({ formik, sectionIndex, fieldIndex }: Fiel
         size="small"
         label="Placeholder"
         value={field.placeholder ?? ''}
-        helperText="An example shown inside an empty field."
         onChange={(event) =>
           formik.setFieldValue(`${path}.placeholder`, event.target.value || undefined)
         }
@@ -26,7 +25,6 @@ export function FieldGuidanceSettings({ formik, sectionIndex, fieldIndex }: Fiel
         size="small"
         label="Default value"
         value={field.defaultValue ?? ''}
-        helperText="A starting value shown when the form opens."
         onChange={(event) =>
           formik.setFieldValue(`${path}.defaultValue`, event.target.value || undefined)
         }
@@ -46,9 +44,6 @@ export function FieldGuidanceSettings({ formik, sectionIndex, fieldIndex }: Fiel
           <Stack>
             <Typography variant="body2" fontWeight={600}>
               Read-only
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Applicants can view this answer, but cannot edit it.
             </Typography>
           </Stack>
         }

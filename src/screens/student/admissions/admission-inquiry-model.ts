@@ -16,6 +16,7 @@ import * as Yup from 'yup';
 import { getDynamicAdmissionValidationErrors } from './admission-form-validation';
 
 export type AdmissionInquiryFormValues = {
+  admissionCycleId?: string;
   boardId: string;
   mediumId: string;
   standardId: string;
@@ -28,7 +29,7 @@ export type AdmissionInquiryFormValues = {
 
 export type AdmissionInquiryFormSection = Pick<
   AdmissionFormSection,
-  'id' | 'code' | 'name' | 'displayOrder' | 'fields'
+  'id' | 'code' | 'name' | 'displayOrder' | 'fields' | 'visibilityRuleJson'
 >;
 
 export const admissionInquirySourceOptions = [
@@ -63,6 +64,7 @@ export const admissionInquiryLanguageOptions = [
 ];
 
 export const initialAdmissionInquiryValues: AdmissionInquiryFormValues = {
+  admissionCycleId: '',
   boardId: '',
   mediumId: '',
   standardId: '',
@@ -77,6 +79,7 @@ export const admissionInquirySchema = Yup.object({
   boardId: Yup.string().required('Board is required'),
   mediumId: Yup.string().required('Medium is required'),
   standardId: Yup.string().required('Class is required'),
+  admissionCycleId: Yup.string().required('Admission period is required'),
   offeringId: Yup.string().required('Offering is required'),
   source: Yup.number().integer().min(0).max(12).required('Source is required'),
   sourceDetail: Yup.string().max(128, 'Source details must be 128 characters or fewer'),
@@ -165,6 +168,7 @@ export const getAdmissionInquirySections = (
       code: section.code,
       name: section.name,
       displayOrder: section.displayOrder,
+      visibilityRuleJson: section.visibilityRuleJson,
       fields: [...section.fields].sort((left, right) => left.displayOrder - right.displayOrder),
     }));
   const fields = sections.flatMap((section) => section.fields);
@@ -215,18 +219,24 @@ const uniqueOptions = (
 
 export function getAdmissionInquiryAcademicOptions(
   offerings: AdmissionOfferingListItem[],
-  values: Pick<AdmissionInquiryFormValues, 'boardId' | 'mediumId' | 'standardId'>
+  values: Pick<
+    AdmissionInquiryFormValues,
+    'admissionCycleId' | 'boardId' | 'mediumId' | 'standardId'
+  >
 ) {
-  const boardOfferings = values.boardId
-    ? offerings.filter((offering) => offering.boardId === values.boardId)
+  const periodOfferings = values.admissionCycleId
+    ? offerings.filter((offering) => offering.admissionCycleId === values.admissionCycleId)
     : offerings;
+  const boardOfferings = values.boardId
+    ? periodOfferings.filter((offering) => offering.boardId === values.boardId)
+    : periodOfferings;
   const mediumOfferings = values.mediumId
     ? boardOfferings.filter((offering) => offering.mediumId === values.mediumId)
     : boardOfferings;
 
   return {
     boards: uniqueOptions(
-      offerings.map((offering) => ({ id: offering.boardId, name: offering.boardName }))
+      periodOfferings.map((offering) => ({ id: offering.boardId, name: offering.boardName }))
     ),
     mediums: uniqueOptions(
       boardOfferings.map((offering) => ({ id: offering.mediumId, name: offering.mediumName }))
@@ -234,7 +244,7 @@ export function getAdmissionInquiryAcademicOptions(
     standards: uniqueOptions(
       mediumOfferings.map((offering) => ({ id: offering.standardId, name: offering.standardName }))
     ),
-    offerings: offerings.filter(
+    offerings: periodOfferings.filter(
       (offering) =>
         offering.boardId === values.boardId &&
         offering.mediumId === values.mediumId &&
@@ -432,5 +442,44 @@ export function canLinkAdmissionInquiryFamily(match: DuplicateMatch, guardianPho
     /^[6-9]\d{9}$/.test(enteredPhone) &&
     matchedPhone === enteredPhone &&
     match.canLinkFamily !== false
+  );
+}
+
+// Decode raw answers while retaining structured repeatable and multi-select values.
+export function readAdmissionInquiryFormValues(
+  values?: { fieldCode: string; valueJson?: string | null }[]
+) {
+  return Object.fromEntries(
+    (values ?? []).map((item) => {
+      let value = item.valueJson ?? '';
+      try {
+        const parsed: unknown = JSON.parse(value);
+        value = typeof parsed === 'string' ? parsed : parsed == null ? '' : JSON.stringify(parsed);
+      } catch {
+        /* Legacy scalar answers remain readable. */
+      }
+      return [item.fieldCode, value];
+    })
+  );
+}
+
+export function preserveCompatibleInquiryAnswers(
+  previousFields: Array<Pick<AdmissionFormField, 'code' | 'fieldType'> & { bindingKey?: string; defaultValue?: string | null }>,
+  nextFields: Array<Pick<AdmissionFormField, 'code' | 'fieldType'> & { bindingKey?: string; defaultValue?: string | null }>,
+  values: Record<string, string>
+) {
+  return Object.fromEntries(
+    nextFields.map((field) => {
+      const previous = previousFields.find(
+        (item) =>
+          item.fieldType === field.fieldType &&
+          (equalsIgnoreCase(item.code, field.code) ||
+            Boolean(field.bindingKey && equalsIgnoreCase(item.bindingKey, field.bindingKey)))
+      );
+      return [
+        field.code,
+        previous ? (values[previous.code] ?? field.defaultValue ?? '') : (field.defaultValue ?? ''),
+      ];
+    })
   );
 }

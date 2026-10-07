@@ -1,42 +1,33 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
-import type { IColumn, IParams } from 'src/components/customizabaleTable/types';
+import type { IParams } from 'src/components/customizabaleTable/types';
 
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
-import { useBoolean } from 'src/hooks/use-boolean';
-import { shikshaMitraToast } from 'src/components/toast';
+import { Box, Stack, Button } from '@mui/material';
 import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Stack, Button, Checkbox, Typography } from '@mui/material';
-import { useGetAdmissionOfferingsQuery } from 'src/redux/student/admissions/admission-offerings-api';
 import {
   type AdmissionInquiry,
   useGetAdmissionInquiryQuery,
   useGetAdmissionInquiriesQuery,
-  useMarkAdmissionInquiryContactedMutation,
-  useGetAdmissionInquiryAssignableCounsellorsQuery,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
 import { getAdmissionInquiryAccess } from './inquiry-access';
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
-import { AdmissionUnmatchedInquiryDrawer } from './admission-unmatched-inquiry-drawer';
+import { useInquiryHandoff } from './inquiry-management/use-inquiry-handoff';
 import { buildAdmissionInquiryColumns } from './inquiry-management/admission-inquiry-columns';
+import { buildAdmissionInquiryRowOptions } from './inquiry-management/admission-inquiry-list-options';
 import { AdmissionInquiryManagementPage } from './inquiry-management/admission-inquiry-management-page';
 import {
   AdmissionAcademicFilters,
   useAdmissionAcademicFilters,
 } from './admission-academic-filters';
-import { AdmissionInquiryAssignmentDialog } from './inquiry-management/admission-inquiry-assignment-dialog';
-import { AdmissionInquiryCommunicationDialog } from './inquiry-management/admission-inquiry-communication-dialog';
-import { AdmissionInquiryBulkAssignmentDialog } from './inquiry-management/admission-inquiry-bulk-assignment-dialog';
 import {
   isAdmissionInquiryEnumFilter,
   buildAdmissionInquiryListFilters,
@@ -58,14 +49,10 @@ export default function AdmissionInquiriesScreen() {
   const [rowsPerPage, setRowsPerPage] = useState(25);
   const [selectedInquiry, setSelectedInquiry] = useState<AdmissionInquiry | null>(null);
   const [dismissedInquiryId, setDismissedInquiryId] = useState('');
-  const [assignmentInquiry, setAssignmentInquiry] = useState<AdmissionInquiry | null>(null);
-  const [communicationInquiry, setCommunicationInquiry] = useState<AdmissionInquiry | null>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkAssignmentOpen, setBulkAssignmentOpen] = useState(false);
   const [sorts, setSorts] = useState<
     Array<{ column: string; direction: 'asc' | 'desc'; originalId?: string }>
   >([]);
-  const unmatchedDialog = useBoolean();
+  const handoff = useInquiryHandoff();
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams.toString());
@@ -91,19 +78,18 @@ export default function AdmissionInquiriesScreen() {
   const currentUserId = useSelector(
     (state: RootState) => state.auth.user?.sub as string | undefined
   );
-  const { canManage, canAssign } = getAdmissionInquiryAccess(permissions);
-  const canCommunicate =
-    canManage && hasGrantedPermission(permissions, 'Communication.Campaigns.Add');
-  const canSendCommunication = hasGrantedPermission(permissions, 'Communication.Campaigns.Send');
+  const { canManage } = getAdmissionInquiryAccess(permissions);
   const listFilters = buildAdmissionInquiryListFilters(tableFilters, search, currentUserId);
   const {
     currentData: data,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useGetAdmissionInquiriesQuery(
     {
       ...listFilters,
+      isTransferred: false,
       academicYearId: academic.academicYearId,
       boardId: academic.boardId || undefined,
       mediumId: academic.mediumId || undefined,
@@ -117,21 +103,10 @@ export default function AdmissionInquiriesScreen() {
   const { data: linkedInquiry } = useGetAdmissionInquiryQuery(linkedInquiryId, {
     skip: !linkedInquiryId,
   });
-  const { data: offerings } = useGetAdmissionOfferingsQuery({ maxResultCount: 100, skipCount: 0 });
-  const { data: counsellors = [] } = useGetAdmissionInquiryAssignableCounsellorsQuery(undefined, {
-    skip: !canAssign,
-  });
-  const {
-    data: assignmentCounsellors = [],
-    isLoading: assignmentCounsellorsLoading,
-    isError: assignmentCounsellorsError,
-  } = useGetAdmissionInquiryAssignableCounsellorsQuery(
-    { admissionOfferingId: assignmentInquiry?.admissionOfferingId ?? undefined },
-    { skip: !canAssign || !assignmentInquiry?.admissionOfferingId }
+  const rowOptions = useMemo(
+    () => buildAdmissionInquiryRowOptions(data?.items ?? []),
+    [data?.items]
   );
-  const [markContacted, { isLoading: markingContacted }] =
-    useMarkAdmissionInquiryContactedMutation();
-
   const openInquiry = useCallback(
     (inquiry: AdmissionInquiry) => {
       setDismissedInquiryId('');
@@ -143,133 +118,20 @@ export default function AdmissionInquiriesScreen() {
     [router, searchParams]
   );
 
-  const openEditInquiry = useCallback(
-    (inquiry: AdmissionInquiry) => {
-      const next = new URLSearchParams();
-      const listQuery = new URLSearchParams(searchParams.toString());
-      listQuery.delete('inquiryId');
-      next.set(
-        'returnTo',
-        `${studentPaths.enrollment.inquiries}${listQuery.size ? `?${listQuery.toString()}` : ''}`
-      );
-      router.push(`${studentPaths.enrollment.inquiryEdit(inquiry.id)}?${next.toString()}`);
-    },
-    [router, searchParams]
-  );
-
-  const openApplicant360 = useCallback(
-    (inquiry: AdmissionInquiry) => {
-      if (!inquiry.applicantId) return;
-      router.push(
-        `${studentPaths.enrollment.root}/applicants/${inquiry.applicantId}?inquiryId=${encodeURIComponent(inquiry.id)}`
-      );
-    },
-    [router]
-  );
-
   const columns = useMemo(() => {
-    const rows = data?.items ?? [];
-    const visibleIds = rows.map((row) => row.id);
-    const selectedVisibleCount = visibleIds.filter((id) => selectedIds.includes(id)).length;
-    const selectionColumn: IColumn = {
-      id: 'selection',
-      label: (
-        <Checkbox
-          size="small"
-          inputProps={{ 'aria-label': 'Select all inquiries on this page' }}
-          checked={visibleIds.length > 0 && selectedVisibleCount === visibleIds.length}
-          indeterminate={selectedVisibleCount > 0 && selectedVisibleCount < visibleIds.length}
-          onChange={(_, checked) =>
-            setSelectedIds((current) =>
-              checked
-                ? Array.from(new Set([...current, ...visibleIds])).slice(0, 100)
-                : current.filter((id) => !visibleIds.includes(id))
-            )
-          }
-        />
-      ),
-      width: 52,
-      sticky: true,
-      stickyPosition: 'left',
-      stickyOnMobile: false,
-      isSort: false,
-      isFilter: false,
-      excludeFromExport: true,
-      render: (_value: unknown, row) => {
-        const inquiry = row as AdmissionInquiry;
-        return (
-          <Checkbox
-            size="small"
-            inputProps={{
-              'aria-label': `Select ${formatAdmissionReference(inquiry.inquiryNumber)}`,
-            }}
-            checked={selectedIds.includes(inquiry.id)}
-            disabled={!selectedIds.includes(inquiry.id) && selectedIds.length >= 100}
-            onClick={(event) => event.stopPropagation()}
-            onChange={(_event, checked) =>
-              setSelectedIds((current) =>
-                checked ? [...current, inquiry.id] : current.filter((id) => id !== inquiry.id)
-              )
-            }
-          />
-        );
-      },
-    };
     const sortable = new Set(['inquiryNumber', 'applicantName', 'status', 'source']);
-    const inquiryColumns = buildAdmissionInquiryColumns({
+    return buildAdmissionInquiryColumns({
       canManage,
-      canAssign,
-      canCommunicate,
-      isMarkingContacted: markingContacted,
-      counsellorNames: Object.fromEntries(
-        counsellors.map((counsellor) => [counsellor.id, counsellor.name || counsellor.userName])
-      ),
-      counsellorOptions: counsellors.map((counsellor) => ({
-        label: counsellor.name || counsellor.userName,
-        value: counsellor.id,
-      })),
-      offeringOptions: (offerings?.items ?? []).map((offering) => ({
-        label: `${offering.code} · ${offering.admissionCycleName}`,
-        value: offering.id,
-      })),
-      onOpenApplicant360: openApplicant360,
-      onManage: openEditInquiry,
-      onAssign: setAssignmentInquiry,
-      onCommunicate: setCommunicationInquiry,
-      onMarkContacted: (inquiry) => {
-        markContacted(inquiry.id)
-          .unwrap()
-          .then(() =>
-            shikshaMitraToast.success({
-              message: `${formatAdmissionReference(inquiry.inquiryNumber)} was marked contacted.`,
-            })
-          )
-          .catch((error) =>
-            shikshaMitraToast.error({
-              message:
-                parseApiProblemDetail(error).detail ||
-                'Unable to update this inquiry. Open it and record the contact note instead.',
-            })
-          );
-      },
+      canMove: handoff.canMove,
+      isMoving: handoff.moving,
+      ...rowOptions,
+      onManage: openInquiry,
+      onMove: handoff.move,
     }).map((column) => ({
       ...column,
       isSort: column.isSort === false ? false : sortable.has(column.id),
     }));
-    return canAssign ? [selectionColumn, ...inquiryColumns] : inquiryColumns;
-  }, [
-    canAssign,
-    canCommunicate,
-    canManage,
-    counsellors,
-    data?.items,
-    markContacted,
-    markingContacted,
-    offerings?.items,
-    openApplicant360,
-    openEditInquiry,
-    selectedIds,
-  ]);
+  }, [canManage, rowOptions, handoff.canMove, handoff.moving, handoff.move, openInquiry]);
   const activeInquiry =
     selectedInquiry ??
     (linkedInquiryId && linkedInquiryId !== dismissedInquiryId ? linkedInquiry : null) ??
@@ -297,7 +159,7 @@ export default function AdmissionInquiriesScreen() {
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, height: 1, minHeight: 0 }}>
       <CustomBreadcrumbs
         heading="Admission inquiries"
-        description="Capture, qualify, and trace prospective applicants through the enrollment funnel."
+        description="Capture inquiries for open admissions, record interest, and manage family follow-ups."
         slotProps={{
           action: {},
           heading: {},
@@ -311,16 +173,6 @@ export default function AdmissionInquiriesScreen() {
         ]}
         action={
           <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" justifyContent="flex-end">
-            {canManage && (
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<Iconify icon="mdi:help-circle-outline" />}
-                onClick={unmatchedDialog.onTrue}
-              >
-                Offering unknown
-              </Button>
-            )}
             {canManage && (
               <Button
                 aria-label="New inquiry"
@@ -355,31 +207,8 @@ export default function AdmissionInquiriesScreen() {
         onClear={academic.clear}
         onChange={(key, value) => {
           setPage(0);
-          setSelectedIds([]);
           academic.update(key, value);
         }}
-      />
-      <AdmissionUnmatchedInquiryDrawer
-        open={unmatchedDialog.value}
-        onClose={unmatchedDialog.onFalse}
-      />
-      <AdmissionInquiryAssignmentDialog
-        inquiry={assignmentInquiry}
-        counsellors={assignmentCounsellors}
-        counsellorsLoading={assignmentCounsellorsLoading}
-        counsellorsError={assignmentCounsellorsError}
-        onClose={() => setAssignmentInquiry(null)}
-      />
-      <AdmissionInquiryCommunicationDialog
-        inquiry={communicationInquiry}
-        canSend={canSendCommunication}
-        onClose={() => setCommunicationInquiry(null)}
-      />
-      <AdmissionInquiryBulkAssignmentDialog
-        inquiryIds={bulkAssignmentOpen ? selectedIds : []}
-        counsellors={counsellors}
-        onClose={() => setBulkAssignmentOpen(false)}
-        onCompleted={() => setSelectedIds([])}
       />
       {isError ? (
         <AdmissionQueryError
@@ -388,95 +217,73 @@ export default function AdmissionInquiriesScreen() {
           }}
         />
       ) : (
-        <>
-          {selectedIds.length > 0 && (
-            <Stack
-              direction={{ xs: 'column', sm: 'row' }}
-              spacing={1}
-              alignItems={{ xs: 'stretch', sm: 'center' }}
-              sx={{ px: 1, py: 0.75, border: 1, borderColor: 'divider', borderRadius: 1 }}
-            >
-              <Typography variant="body2" role="status" aria-live="polite" sx={{ flex: 1 }}>
-                {selectedIds.length} selected
-                {selectedIds.length === 100 ? ' · maximum bulk size reached' : ''}
-              </Typography>
-              <Button size="small" variant="outlined" onClick={() => setSelectedIds([])}>
-                Clear selection
-              </Button>
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<Iconify icon="mdi:account-arrow-right-outline" />}
-                onClick={() => setBulkAssignmentOpen(true)}
-              >
-                Assign selected
-              </Button>
-            </Stack>
-          )}
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-            <CustomizableTable
-              tableId="admission-inquiries"
-              tableTitle="Admission inquiries"
-              wrapperProps={{ sx: { height: 1 } }}
-              tableContainerProps={{ sx: { height: 1 } }}
-              columns={columns}
-              data={data?.items ?? []}
-              isLoading={isLoading}
-              serverSidePagination
-              serverSideSearch
-              serverSideSort
-              serverSideFilter
-              serverSideSortMode="single"
-              searchTerm={search}
-              filters={tableFilters}
-              sorts={sorts}
-              onServerSearch={(nextSearch) => {
-                setPage(0);
-                setSearch(nextSearch);
-              }}
-              onServerFilter={(nextFilters) => {
-                setPage(0);
-                setTableFilters(normalizeAdmissionInquiryTableFilters(nextFilters));
-              }}
-              onServerSort={(_, nextSorts) => {
-                setPage(0);
-                setSorts(nextSorts);
-              }}
-              totalCount={data?.totalCount ?? 0}
-              page={page}
-              rowsPerPage={rowsPerPage}
-              defaultRowsPerPage={25}
-              rowsPerPageOptions={[10, 25, 100]}
-              onServerPagination={(nextPage, nextRowsPerPage) => {
-                setPage(nextPage - 1);
-                setRowsPerPage(nextRowsPerPage);
-              }}
-              isPagination
-              handleRowClick={(row) => openInquiry(row as AdmissionInquiry)}
-              rowProps={(row) => {
-                const inquiry = row as AdmissionInquiry;
-                return {
-                  tabIndex: 0,
-                  role: 'link',
-                  'aria-label': `Open ${formatAdmissionReference(inquiry.inquiryNumber)}`,
-                  onKeyDown: (event) => {
-                    if (event.target !== event.currentTarget) return;
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      openInquiry(inquiry);
-                    }
-                  },
-                  sx: { cursor: 'pointer' },
-                };
-              }}
-              searchFieldProps={{
-                placeholder: 'Search by applicant, inquiry no. or phone',
-                inputProps: { 'aria-label': 'Search admission inquiries' },
-              }}
-              noDataText="No admission inquiries have been added yet"
-            />
-          </Box>
-        </>
+        <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <CustomizableTable
+            tableId="admission-inquiries"
+            tableTitle="Admission inquiries"
+            wrapperProps={{ sx: { height: 1 } }}
+            tableContainerProps={{ sx: { height: 1 } }}
+            columns={columns}
+            data={data?.items ?? []}
+            isLoading={isLoading || (!data && isFetching)}
+            serverSidePagination
+            serverSideSearch
+            serverSideSort
+            serverSideFilter
+            serverSideSortMode="single"
+            searchTerm={search}
+            filters={tableFilters}
+            sorts={sorts}
+            onServerSearch={(nextSearch) => {
+              setPage(0);
+              setSearch(nextSearch);
+            }}
+            onServerFilter={(nextFilters) => {
+              setPage(0);
+              setTableFilters(normalizeAdmissionInquiryTableFilters(nextFilters));
+            }}
+            onServerSort={(_, nextSorts) => {
+              setPage(0);
+              setSorts(nextSorts);
+            }}
+            totalCount={data?.totalCount ?? 0}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            defaultRowsPerPage={25}
+            rowsPerPageOptions={[10, 25, 100]}
+            onServerPagination={(nextPage, nextRowsPerPage) => {
+              setPage(nextPage - 1);
+              setRowsPerPage(nextRowsPerPage);
+            }}
+            isPagination
+            handleRowClick={(row) => openInquiry(row as AdmissionInquiry)}
+            rowProps={(row) => {
+              const inquiry = row as AdmissionInquiry;
+              return {
+                tabIndex: 0,
+                role: 'link',
+                'aria-label': `Open ${formatAdmissionReference(inquiry.inquiryNumber)}`,
+                onKeyDown: (event) => {
+                  if (event.target !== event.currentTarget) return;
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openInquiry(inquiry);
+                  }
+                },
+                sx: { cursor: 'pointer' },
+              };
+            }}
+            searchFieldProps={{
+              placeholder: 'Search by applicant, inquiry no. or phone',
+              inputProps: { 'aria-label': 'Search admission inquiries' },
+            }}
+            noDataText={
+              search || tableFilters.length
+                ? 'No inquiries match the selected search or filters'
+                : 'No inquiries awaiting admission handoff'
+            }
+          />
+        </Box>
       )}
     </Box>
   );

@@ -57,7 +57,7 @@ The application-review workspace remains available at `/student/admissions/revie
 
 The Admissions menu and route constants are defined in `src/constants/student-menu.ts`.
 The Admissions menu exposes Inquiries, Pipeline, Assessments, Applications, and Settings. Settings follows the school setup order: Admission Periods, Admission Form, Admission Stage, Intake & Assignment, and Admission Offering. There are no numbered labels, and the Admissions root redirects to Inquiries.
-Pipeline is an inquiry workspace and therefore uses Inquiry View access. It does not reuse or expose the Applications list; application work remains under Applications.
+Pipeline keeps its existing name and Inquiry View access. It lists inquiries already handed to linked applications and opens the existing application detail route when the user has Applications View. Applications retains its existing independent list and route.
 The Inquiry list stores its search, filters, and selected `inquiryId` in query parameters. Applicant 360 also accepts `inquiryId` when opened from the management drawer so application start uses the exact inquiry selected by the counselor.
 Applicant 360 is the applicant-level admissions workspace: it explains the family context, surfaces missing identity data, shows the current application stage, exposes the next action, and keeps applications, inquiry activity, and internal notes together.
 

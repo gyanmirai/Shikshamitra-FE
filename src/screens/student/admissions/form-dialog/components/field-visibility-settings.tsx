@@ -61,7 +61,6 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
           minRows={2}
           label="Compatibility rule"
           value={field.visibilityRuleJson ?? ''}
-          helperText="This technical value is shown only because the saved rule cannot be edited safely here."
           onChange={(event) =>
             formik.setFieldValue(`${path}.visibilityRuleJson`, event.target.value || undefined)
           }
@@ -70,6 +69,7 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
           <Button
             size="small"
             variant="outlined"
+            startIcon={<Iconify icon="mdi:refresh" />}
             disabled={!otherFields.length}
             onClick={() =>
               formik.setFieldValue(
@@ -87,6 +87,7 @@ export function FieldVisibilitySettings({ formik, sectionIndex, fieldIndex }: Fi
           <Button
             size="small"
             color="inherit"
+            startIcon={<Iconify icon="mdi:close" />}
             onClick={() => formik.setFieldValue(`${path}.visibilityRuleJson`, undefined)}
           >
             Clear rule

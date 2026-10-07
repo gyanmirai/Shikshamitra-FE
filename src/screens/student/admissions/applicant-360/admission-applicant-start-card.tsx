@@ -12,6 +12,7 @@ import { studentPaths } from 'src/constants/student-menu';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { LoadingButton } from 'src/components/loading-button';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { useGetAdmissionInquiryQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 import { useStartAdmissionApplicationMutation } from 'src/redux/student/admissions/admission-applications-api';
 import { useGetAdmissionInquiryManagementQuery } from 'src/redux/student/admissions/admission-inquiry-management-api';
 import {
@@ -67,19 +68,26 @@ export function AdmissionApplicantStartCard({
       maxResultCount: 100,
       skipCount: 0,
     },
-    { skip: Boolean(activeApplication) }
+    { skip: Boolean(activeApplication) || Boolean(inquiryId) }
   );
+  const inquiry = useGetAdmissionInquiryQuery(inquiryId ?? '', { skip: !inquiryId });
+  const selectedOfferingId = inquiryId ? (inquiry.data?.admissionOfferingId ?? '') : offeringId;
   const inquiryState = useGetAdmissionInquiryManagementQuery(inquiryId ?? '', {
     skip: !inquiryId,
   });
-  const { currentData: classCapacity } = useGetAdmissionClassCapacityQuery(offeringId, {
-    skip: !offeringId,
+  const { currentData: classCapacity } = useGetAdmissionClassCapacityQuery(selectedOfferingId, {
+    skip: !selectedOfferingId,
   });
   const [startApplication, startState] = useStartAdmissionApplicationMutation();
   const blockers = inquiryState.data?.blockers ?? [];
   const applicationStartBlocked = Boolean(
     activeApplication ||
-    (inquiryId && inquiryState.data?.managed && !inquiryState.data.canStartApplication)
+    (inquiryId &&
+      (!inquiryState.data ||
+        !inquiry.data ||
+        inquiry.data.status !== 2 ||
+        !inquiryState.data.canStartApplication ||
+        Boolean(inquiry.data.isTransferred)))
   );
   const readinessMessage = blockers.length
     ? blockers.join(' ')
@@ -88,10 +96,14 @@ export function AdmissionApplicantStartCard({
       : 'Complete the required inquiry steps before starting an application.';
 
   const start = async () => {
-    if (!offeringId || applicationStartBlocked) return;
+    if (!selectedOfferingId || applicationStartBlocked || startState.isLoading) return;
     setSubmitError('');
     try {
-      const application = await startApplication({ applicantId, offeringId, inquiryId }).unwrap();
+      const application = await startApplication({
+        applicantId,
+        offeringId: selectedOfferingId,
+        inquiryId,
+      }).unwrap();
       shikshaMitraToast.success({ message: 'Application started successfully.' });
       router.push(`${studentPaths.enrollment.applications}/${application.id}`);
     } catch (error) {
@@ -120,7 +132,9 @@ export function AdmissionApplicantStartCard({
           <Typography variant="body2" color="text.secondary">
             {activeApplication
               ? 'Continue the current admission journey before starting another application.'
-              : 'Choose the school offering this family wants to apply for.'}
+              : inquiryId
+                ? 'Continue with the confirmed inquiry offering.'
+                : 'Choose the school offering this family wants to apply for.'}
           </Typography>
         </Box>
       </Stack>
@@ -204,49 +218,64 @@ export function AdmissionApplicantStartCard({
       {submitError && <Alert severity="error">{submitError}</Alert>}
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'flex-start' }}>
-        <TextField
-          select
-          fullWidth
-          size="small"
-          label="Admission offering"
-          value={offeringId}
-          disabled={isFetching || applicationStartBlocked}
-          onChange={(event) => {
-            setOfferingId(event.target.value);
-            setSubmitError('');
-          }}
-          helperText={
-            activeApplication
-              ? 'Finish the current application before starting another.'
-              : isFetching
-                ? 'Loading open offerings…'
-                : !(offerings?.items.length ?? 0)
-                  ? 'No open offerings are currently available.'
-                  : 'Cycle, class, board, and medium'
-          }
-        >
-          {(offerings?.items ?? [])
-            .filter((offering) => !inquiryId || offering.entryMode !== 1)
-            .map((offering) => (
-              <MenuItem key={offering.id} value={offering.id}>
-                {offering.name || offering.code}
-                {offering.name && offering.name !== offering.code
-                  ? ` (${offering.code})`
-                  : ''} · {offering.standardName} · {offering.boardName} / {offering.mediumName} ·{' '}
-                {offering.admissionCycleName}
-              </MenuItem>
-            ))}
-        </TextField>
+        {inquiryId ? (
+          <TextField
+            fullWidth
+            size="small"
+            label="Confirmed inquiry offering"
+            value={inquiry.data?.admissionOfferingCode ?? ''}
+            slotProps={{ input: { readOnly: true } }}
+            helperText={
+              inquiry.isLoading
+                ? 'Loading inquiry offering…'
+                : 'Edit the inquiry to change the selected class or offering.'
+            }
+          />
+        ) : (
+          <TextField
+            select
+            fullWidth
+            size="small"
+            label="Admission offering"
+            value={offeringId}
+            disabled={isFetching || applicationStartBlocked}
+            onChange={(event) => {
+              setOfferingId(event.target.value);
+              setSubmitError('');
+            }}
+            helperText={
+              activeApplication
+                ? 'Finish the current application before starting another.'
+                : isFetching
+                  ? 'Loading open offerings…'
+                  : !(offerings?.items.length ?? 0)
+                    ? 'No open offerings are currently available.'
+                    : 'Cycle, class, board, and medium'
+            }
+          >
+            {(offerings?.items ?? [])
+              .filter((offering) => !inquiryId || offering.entryMode !== 1)
+              .map((offering) => (
+                <MenuItem key={offering.id} value={offering.id}>
+                  {offering.name || offering.code}
+                  {offering.name && offering.name !== offering.code
+                    ? ` (${offering.code})`
+                    : ''} · {offering.standardName} · {offering.boardName} / {offering.mediumName} ·{' '}
+                  {offering.admissionCycleName}
+                </MenuItem>
+              ))}
+          </TextField>
+        )}
         <LoadingButton
           size="small"
           variant={currentApplication ? 'outlined' : 'contained'}
           loading={startState.isLoading}
-          disabled={!offeringId || applicationStartBlocked}
+          disabled={!selectedOfferingId || applicationStartBlocked}
           onClick={start}
           startIcon={<Iconify icon="mdi:file-document-plus-outline" />}
           sx={{ minWidth: 170, minHeight: 44 }}
         >
-          Start application
+          {inquiryId ? 'Move to next stage' : 'Start application'}
         </LoadingButton>
       </Stack>
       {offeringId && classCapacity && (
@@ -254,8 +283,7 @@ export function AdmissionApplicantStartCard({
           {classCapacity.capacity == null
             ? 'Admission room capacity is not set. Division seats are checked during onboarding. You can continue registration.'
             : `${classCapacity.remainingSeats} of ${classCapacity.capacity} admission room seats available.`}
-          {classCapacity.isFull &&
-            ' Admission room capacity is full; registration can continue.'}
+          {classCapacity.isFull && ' Admission room capacity is full; registration can continue.'}
         </Alert>
       )}
 

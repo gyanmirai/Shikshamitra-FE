@@ -1,101 +1,163 @@
+import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import Box from '@mui/material/Box';
-import Chip from '@mui/material/Chip';
-import Alert from '@mui/material/Alert';
-import Paper from '@mui/material/Paper';
-import Stack from '@mui/material/Stack';
-import Button from '@mui/material/Button';
-import Divider from '@mui/material/Divider';
-import { Iconify } from 'src/components/iconify';
-import Typography from '@mui/material/Typography';
+import { useRef, useState, useEffect } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useResponsive } from 'src/hooks/use-responsive';
+import { Box, Card, Stack, Typography } from '@mui/material';
 
-import { FormReviewChecks } from './form-review-checks';
-import { FormReviewStructure } from './form-review-structure';
+import { FormReviewSection } from './form-review-section';
+import { FormValidationPanel } from '../form-validation-panel';
 import { getAdmissionFormStepGroups } from '../form-step-groups';
+import { AdmissionDialogTitle } from '../../admission-dialog-title';
+import { getDependentAdmissionFieldCodes } from '../../admission-field-dependencies';
+import { AdmissionFormStepNavigation } from '../../components/admission-form-step-navigation';
 
-type Props = {
-  form: CreateUpdateAdmissionForm;
-  onEditDetails: () => void;
-  onEditFields: () => void;
-};
+type Props = { formik: FormikProps<CreateUpdateAdmissionForm> };
 
-export function FormBuilderReview({ form, onEditDetails, onEditFields }: Props) {
-  const fields = form.sections.flatMap((section) => section.fields);
-  const summary = [
-    { label: 'Layout', value: form.layoutType === 1 ? 'Step by step' : 'Single page' },
-    ...(form.layoutType === 1
-      ? [{ label: 'Steps', value: getAdmissionFormStepGroups(form.sections).length }]
-      : []),
-    { label: 'Sections', value: form.sections.length },
-    { label: 'Fields', value: fields.length },
-    { label: 'Required fields', value: fields.filter((field) => field.required).length },
-  ];
+export function FormBuilderReview({ formik }: Props) {
+  const form = formik.values;
+  const desktop = useResponsive('up', 'md');
+  const steps = getAdmissionFormStepGroups(form.sections);
+  const [activeStepId, setActiveStepId] = useState<string | null>(null);
+  const previewScrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    previewScrollRef.current?.scrollTo?.({ top: 0 });
+  }, [activeStepId]);
+  const activeStep = Math.max(
+    0,
+    steps.findIndex((step) => step.id === activeStepId)
+  );
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const previewAnswers = Object.fromEntries(
+    form.sections
+      .flatMap((section) => section.fields)
+      .map((field) => [field.code, answers[field.code] ?? field.defaultValue ?? ''])
+  );
+  const sections =
+    form.layoutType === 1
+      ? (steps[activeStep]?.sections ?? [])
+      : form.sections.map((section, sectionIndex) => ({ section, sectionIndex }));
+  const changeAnswer = (code: string, value: string) => {
+    const dependents = getDependentAdmissionFieldCodes(
+      form.sections.flatMap((section) => section.fields),
+      code
+    );
+    setAnswers((current) => ({
+      ...current,
+      [code]: value,
+      ...Object.fromEntries(dependents.map((dependent) => [dependent, ''])),
+    }));
+  };
+  const navigation = (
+    <Box sx={{ p: 1.5 }}>
+      <AdmissionFormStepNavigation
+        steps={steps.map((step) => ({ id: step.id, name: step.name }))}
+        activeStep={activeStep}
+        disabled={formik.isSubmitting}
+        onStepChange={(index) => setActiveStepId(steps[index].id)}
+      />
+    </Box>
+  );
   return (
     <Stack
       spacing={2}
-      sx={{ width: 1, minWidth: 0, maxWidth: 1120, mx: 'auto', p: { xs: 1.5, sm: 2 } }}
+      sx={{
+        width: 1,
+        height: 1,
+        flex: 1,
+        minHeight: 0,
+        minWidth: 0,
+        maxWidth: 1120,
+        mx: 'auto',
+        p: { xs: 1.5, sm: 2 },
+        overflow: 'hidden',
+      }}
     >
-      <Alert severity="info" icon={<Iconify icon="mdi:content-save-outline" />}>
-        Save draft to keep editing later, or Publish now to make this version available to new
-        admission offerings. Published versions cannot be edited.
-      </Alert>
-      <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-        <Stack direction="row" spacing={1.5} justifyContent="space-between" alignItems="flex-start">
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="overline" color="text.secondary">
-              Form details
-            </Typography>
-            <Typography variant="h6" sx={{ overflowWrap: 'anywhere' }}>
-              {form.name || 'Untitled form'}
-            </Typography>
-          </Box>
-          <Button
-            size="small"
+      <Box sx={{ minWidth: 0, flexShrink: 0 }}>
+        <Typography component="h2" variant="h6" tabIndex={-1} sx={{ overflowWrap: 'anywhere' }}>
+          {form.description ? (
+            <AdmissionDialogTitle
+              title={form.name || 'Untitled form'}
+              helpText={form.description}
+              helpLabel="About this admission form"
+            />
+          ) : (
+            form.name || 'Untitled form'
+          )}
+        </Typography>
+      </Box>
+      <FormValidationPanel form={form} />
+      <Stack
+        direction={{ xs: 'column', md: 'row' }}
+        spacing={2}
+        alignItems="stretch"
+        sx={{ flex: 1, minHeight: 0, minWidth: 0, overflow: 'hidden' }}
+      >
+        {form.layoutType === 1 && !!steps.length && (
+          <Card
+            component="aside"
+            aria-label="Form step navigation"
             variant="outlined"
-            onClick={onEditDetails}
-            startIcon={<Iconify icon="mdi:pencil-outline" />}
-            sx={{ flexShrink: 0, minHeight: 44 }}
+            sx={{
+              width: { xs: 1, md: 220 },
+              minWidth: 0,
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0,
+              height: { xs: 'auto', md: 1 },
+              bgcolor: 'background.paper',
+              borderRadius: 2,
+              borderColor: 'divider',
+            }}
           >
-            Edit details
-          </Button>
-        </Stack>
-        <Chip label="Draft" size="small" variant="outlined" sx={{ mt: 1.25 }} />
-        {form.description && (
-          <Typography
-            variant="body2"
-            sx={{ mt: 1.5, overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}
-          >
-            {form.description}
-          </Typography>
+            {desktop ? (
+              <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
+                {navigation}
+              </Scrollbar>
+            ) : (
+              navigation
+            )}
+          </Card>
         )}
-        <Divider sx={{ my: 2 }} />
-        <Box
-          component="dl"
+        <Scrollbar
+          ref={previewScrollRef}
+          aria-label="Form preview sections"
           sx={{
-            m: 0,
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: 'repeat(2, minmax(0, 1fr))',
-              sm: 'repeat(3, minmax(0, 1fr))',
-            },
-            gap: 2,
+            flex: 1,
+            width: 1,
+            minWidth: 0,
+            minHeight: 0,
+            '& > .simplebar-track.simplebar-horizontal': { display: 'none' },
           }}
+          slotProps={{ contentWrapper: { overflowX: 'hidden' } }}
         >
-          {summary.map((item) => (
-            <Box key={item.label}>
-              <Typography component="dt" variant="caption" color="text.secondary">
-                {item.label}
-              </Typography>
-              <Typography component="dd" variant="subtitle2" sx={{ m: 0 }}>
-                {item.value}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
-      </Paper>
-      <FormReviewStructure form={form} onEditFields={onEditFields} />
-      <FormReviewChecks form={form} onEditFields={onEditFields} />
+          <Stack spacing={1.5} sx={{ minWidth: 0, pb: 1, pr: 1 }}>
+            {sections.map(({ section, sectionIndex }) => (
+              <FormReviewSection
+                key={section.id}
+                formik={formik}
+                sectionIndex={sectionIndex}
+                answers={previewAnswers}
+                onChangeAnswer={changeAnswer}
+              />
+            ))}
+            {!form.sections.length && (
+              <Stack
+                spacing={1}
+                alignItems="center"
+                sx={{ p: 3, border: 1, borderColor: 'divider', borderRadius: 2 }}
+              >
+                <Typography variant="subtitle1">No sections to review</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Return to Build form to add sections.
+                </Typography>
+              </Stack>
+            )}
+          </Stack>
+        </Scrollbar>
+      </Stack>
     </Stack>
   );
 }

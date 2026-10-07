@@ -52,7 +52,8 @@ describe('FormBuilderCanvas section deletion', () => {
     const user = userEvent.setup();
     renderCanvas();
 
-    await user.click(screen.getByRole('button', { name: 'Delete Bank Details' }));
+    await user.click(screen.getByRole('button', { name: 'Actions for Bank Details section' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(screen.getByText(/removes that step too/i)).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'Delete section' }));
 
@@ -64,7 +65,8 @@ describe('FormBuilderCanvas section deletion', () => {
     const user = userEvent.setup();
     renderCanvas(true);
 
-    await user.click(screen.getByRole('button', { name: 'Delete Bank Details' }));
+    await user.click(screen.getByRole('button', { name: 'Actions for Bank Details section' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Delete' }));
     await user.click(screen.getByRole('button', { name: 'Delete section' }));
 
     expect(screen.getByTestId('section-codes').textContent).toBe('');

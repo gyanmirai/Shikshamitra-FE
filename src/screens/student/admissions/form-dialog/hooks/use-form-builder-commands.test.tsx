@@ -114,6 +114,45 @@ function renderCommands(empty = false) {
 }
 
 describe('useFormBuilderCommands', () => {
+  it('fills the selected empty section with a pack and preserves its saved rules and identity', async () => {
+    const user = userEvent.setup();
+    const template = getSystemAdmissionFormTemplate('admission-application');
+    const emptySection = {
+      ...template.sections[0],
+      fields: [],
+      visibilityRuleJson: '{"field":"CHECK","equals":true}',
+      isRepeatable: true,
+      minEntries: 0,
+      maxEntries: 3,
+    };
+    render(
+      <Formik<CreateUpdateAdmissionForm>
+        initialValues={{ ...template, sections: [emptySection] }}
+        onSubmit={() => undefined}
+      >
+        {(formik) => (
+          <>
+            <Commands formik={formik} selectedSectionId={emptySection.id} />
+            <output data-testid="pack-section">{JSON.stringify(formik.values.sections[0])}</output>
+          </>
+        )}
+      </Formik>
+    );
+    await user.click(screen.getByRole('button', { name: 'Add profile section' }));
+    const sections = JSON.parse(screen.getByTestId('sections').textContent || '[]');
+    expect(sections).toHaveLength(1);
+    expect(JSON.parse(screen.getByTestId('pack-section').textContent || '{}')).toMatchObject({
+      id: emptySection.id,
+      code: emptySection.code,
+      name: 'Student profile',
+      stepId: emptySection.stepId,
+      visibilityRuleJson: emptySection.visibilityRuleJson,
+      isRepeatable: true,
+      minEntries: 0,
+      maxEntries: 3,
+    });
+    expect(sections[0].bindings).toEqual(['Applicant.TestProfileOne', 'Applicant.TestProfileTwo']);
+  });
   it('connects an address pack to an already-added country instead of duplicating it', async () => {
     const user = userEvent.setup();
     const template = getSystemAdmissionFormTemplate('admission-application');

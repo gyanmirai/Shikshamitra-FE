@@ -29,7 +29,7 @@ describe('Admission Inquiry shared-table filters', () => {
         filter('email', 'family@example.com'),
         filter('admissionOfferingId', 'offering-1'),
         filter('source', 2),
-        filter('status', 1),
+        filter('status', 2),
         filter('assignedCounsellorId', 'counsellor-1'),
       ],
       'riya'
@@ -46,7 +46,7 @@ describe('Admission Inquiry shared-table filters', () => {
       email: 'family@example.com',
       admissionOfferingId: 'offering-1',
       source: 2,
-      status: 1,
+      status: 2,
       assignedCounsellorId: 'counsellor-1',
       excludePostApplication: true,
     });
@@ -63,6 +63,11 @@ describe('Admission Inquiry shared-table filters', () => {
       { column: 'source', value: 1 },
       { column: 'status', value: 2 },
     ]);
+  });
+
+  it('supports all capture sources and rejects retired status filters', () => {
+    expect(buildAdmissionInquiryListFilters([filter('source', 12)], '').source).toBe(12);
+    expect(buildAdmissionInquiryListFilters([filter('status', 3)], '').status).toBeUndefined();
   });
 
   it('allows the Pipeline table to include post-application statuses', () => {

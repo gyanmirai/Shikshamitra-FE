@@ -12,6 +12,8 @@ import {
   getAdmissionInquiryFields,
   getAdmissionInquirySections,
   buildAdmissionInquiryPayload,
+  readAdmissionInquiryFormValues,
+  preserveCompatibleInquiryAnswers,
   type AdmissionInquiryFormValues,
   getAdmissionInquiryAcademicOptions,
   getAdmissionInquiryPreferredClassError,
@@ -293,4 +295,41 @@ describe('admission inquiry model', () => {
       'Guardian details',
     ]);
   });
+});
+
+describe('persisted inquiry form answers', () => {
+  it('decodes raw strings and preserves structured values for the original form', () => {
+    expect(
+      readAdmissionInquiryFormValues([
+        { fieldCode: 'NAME', valueJson: '"Aanya"' },
+        { fieldCode: 'SIBLINGS', valueJson: '[{"name":"Riya"}]' },
+        { fieldCode: 'CHOICES', valueJson: '["A","B"]' },
+        { fieldCode: 'LEGACY', valueJson: 'unchanged' },
+        { fieldCode: 'EMPTY', valueJson: null },
+      ])
+    ).toEqual({
+      NAME: 'Aanya',
+      SIBLINGS: '[{"name":"Riya"}]',
+      CHOICES: '["A","B"]',
+      LEGACY: 'unchanged',
+      EMPTY: '',
+    });
+  });
+  it('keeps offering choices within the selected admission period', () => {
+    const alternate = { ...offering, id: 'offering-2', admissionCycleId: 'cycle-2' };
+    expect(
+      getAdmissionInquiryAcademicOptions([offering, alternate], {
+        ...values,
+        admissionCycleId: 'cycle-1',
+      }).offerings.map((item) => item.id)
+    ).toEqual(['offering-1']);
+  });
+});
+
+it('preserves compatible bindings when changing an offering and drops incompatible answers', () => {
+  expect(preserveCompatibleInquiryAnswers(
+    [field('oldName', 'Applicant.FirstName'), field('shared', undefined, 0)],
+    [field('newName', 'Applicant.FirstName'), field('shared', undefined, 3), field('fresh', undefined, 0)],
+    { oldName: 'Riya', shared: 'text' }
+  )).toEqual({ newName: 'Riya', shared: '', fresh: '' });
 });

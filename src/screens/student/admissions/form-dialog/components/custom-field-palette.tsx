@@ -3,13 +3,14 @@ import type {
   AdmissionFormSystemFieldMetadata,
 } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import Switch from '@mui/material/Switch';
 import MenuItem from '@mui/material/MenuItem';
 import Collapse from '@mui/material/Collapse';
 import TextField from '@mui/material/TextField';
+import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import { Scrollbar } from 'src/components/scrollbar';
 import FormControlLabel from '@mui/material/FormControlLabel';
@@ -42,6 +43,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
   const [choices, setChoices] = useState('');
   const needsChoices = [6, 7, 8].includes(type);
   const [showTypes, setShowTypes] = useState(false);
+  const formatsId = useId();
   const normalized = label.trim().toLowerCase();
   const suggestions =
     normalized.length >= 3
@@ -64,10 +66,7 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
         '& .simplebar-track.simplebar-horizontal': { display: 'none' },
       }}
     >
-      <Stack spacing={1} sx={{ pr: 1, pb: 1 }}>
-        <Typography variant="caption" color="text.secondary">
-          Collect extra information for this admission form.
-        </Typography>
+      <Stack spacing={1.5} sx={{ pt: 1, pr: 1, pb: 1 }}>
         <TextField
           size="small"
           fullWidth
@@ -121,11 +120,17 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           />
         )}
         <FormControlLabel
-          control={<Switch checked={required} onChange={(_, value) => setRequired(value)} />}
-          label="Required"
+          sx={{ m: 0, alignSelf: 'flex-start' }}
+          control={
+            <Switch size="small" checked={required} onChange={(_, value) => setRequired(value)} />
+          }
+          label={<Typography variant="body2">Required</Typography>}
         />
         <Button
+          fullWidth
+          size="small"
           variant="contained"
+          startIcon={<Iconify icon="mdi:plus" />}
           disabled={!normalized || (needsChoices && !choices.trim())}
           onClick={() => {
             onAddField(type, undefined, {
@@ -146,13 +151,18 @@ export function CustomFieldPalette({ onAddField, systemFields = [], usedBindings
           Add custom field
         </Button>
         <Button
+          fullWidth
           size="small"
+          variant="outlined"
           aria-expanded={showTypes}
+          aria-controls={formatsId}
+          endIcon={<Iconify icon={showTypes ? 'mdi:chevron-up' : 'mdi:chevron-down'} />}
+          sx={{ justifyContent: 'space-between' }}
           onClick={() => setShowTypes((value) => !value)}
         >
           More field formats
         </Button>
-        <Collapse in={showTypes}>
+        <Collapse id={formatsId} in={showTypes}>
           <Stack spacing={1}>
             <Typography variant="overline" color="text.secondary">
               Ready to use

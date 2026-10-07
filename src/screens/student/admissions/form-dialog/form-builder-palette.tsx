@@ -41,12 +41,8 @@ export function FormBuilderPalette({
   const [activeTab, setActiveTab] = useState<'system' | 'custom'>('system');
   return (
     <Stack sx={{ height: 1, minHeight: 0, p: 1.5, bgcolor: 'background.paper' }}>
-      <Typography variant="subtitle1">Add fields</Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ mb: 1.5 }}>
-        Adding to {targetLabel || 'Student Details'}
-      </Typography>
-
-      <Tabs
+      
+          <Tabs
         value={activeTab}
         variant="fullWidth"
         aria-label="Field library"
@@ -74,8 +70,8 @@ export function FormBuilderPalette({
           role="tabpanel"
           id={`${tabId}-panel-${tab}`}
           aria-labelledby={`${tabId}-${tab}`}
-          spacing={1.25}
-          sx={{ display: activeTab === tab ? 'flex' : 'none', flex: 1, minHeight: 0, pt: 1.5 }}
+          spacing={0.75}
+          sx={{ display: activeTab === tab ? 'flex' : 'none', flex: 1, minHeight: 0, pt: 1 }}
         >
           {tab === 'system' ? (
             <StudentFieldPalette

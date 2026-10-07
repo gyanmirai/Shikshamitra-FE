@@ -28,6 +28,7 @@ type Props = {
 
 const schema = Yup.object({
   counsellorId: Yup.string().required('Choose a counsellor'),
+  reason: Yup.string().trim().required('Enter a reason for changing counsellor').max(1024),
 });
 
 export function AdmissionInquiryAssignmentDialog({
@@ -39,7 +40,7 @@ export function AdmissionInquiryAssignmentDialog({
 }: Props) {
   const [assignCounsellor, assignmentState] = useAssignAdmissionInquiryCounsellorMutation();
   const formik = useFormik({
-    initialValues: { counsellorId: inquiry?.assignedCounsellorId ?? '' },
+    initialValues: { counsellorId: inquiry?.assignedCounsellorId ?? '', reason: '' },
     enableReinitialize: true,
     validationSchema: schema,
     onSubmit: async (values) => {
@@ -47,7 +48,12 @@ export function AdmissionInquiryAssignmentDialog({
       try {
         await assignCounsellor({
           id: inquiry.id,
-          body: { mode: 0, counsellorId: values.counsellorId, candidateCounsellorIds: [] },
+          body: {
+            mode: 0,
+            counsellorId: values.counsellorId,
+            candidateCounsellorIds: [],
+            reason: values.reason.trim(),
+          },
         }).unwrap();
         shikshaMitraToast.success({
           message: `${formatAdmissionReference(inquiry.inquiryNumber)} was assigned successfully.`,
@@ -69,14 +75,14 @@ export function AdmissionInquiryAssignmentDialog({
     <CustomDialog
       open
       maxWidth="xs"
-      title="Assign counsellor"
+      title="Change counsellor"
       handleClose={onClose}
       disableClose={assignmentState.isLoading}
     >
       <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Choose the counsellor responsible for {inquiry.applicantName}. Assignment is limited to
-          active staff who can access this admission offering.
+          Transfer {inquiry.applicantName} to an eligible counsellor in the configured intake pool.
+          Capacity is checked before saving; scheduled follow-ups move with ownership.
         </Typography>
         <ShakingTextField
           error={Boolean(formik.touched.counsellorId && formik.errors.counsellorId)}
@@ -108,6 +114,22 @@ export function AdmissionInquiryAssignmentDialog({
             ))}
           </TextField>
         </ShakingTextField>
+        <TextField
+          fullWidth
+          required
+          multiline
+          minRows={2}
+          size="small"
+          name="reason"
+          label="Transfer reason"
+          value={formik.values.reason}
+          onChange={formik.handleChange}
+          onBlur={formik.handleBlur}
+          sx={{ mt: 2 }}
+          error={Boolean(formik.touched.reason && formik.errors.reason)}
+          helperText={formik.touched.reason && formik.errors.reason}
+          slotProps={{ htmlInput: { maxLength: 1024 } }}
+        />
       </DialogScrollContent>
       <DialogActions sx={{ p: 2, borderTop: 1, borderColor: 'divider' }}>
         <Button
@@ -124,10 +146,16 @@ export function AdmissionInquiryAssignmentDialog({
           size="small"
           variant="contained"
           loading={assignmentState.isLoading}
+          disabled={
+            counsellorsLoading ||
+            counsellorsError ||
+            !counsellors.length ||
+            formik.values.counsellorId === inquiry.assignedCounsellorId
+          }
           startIcon={<Iconify icon="mdi:account-arrow-right-outline" />}
           onClick={() => formik.handleSubmit()}
         >
-          Assign
+          Change counsellor
         </LoadingButton>
       </DialogActions>
     </CustomDialog>

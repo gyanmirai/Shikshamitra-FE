@@ -6,8 +6,8 @@ import { useFormik } from 'formik';
 import React, { useState } from 'react';
 import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
-import { styled } from '@mui/material/styles';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { alpha, styled } from '@mui/material/styles';
 import { useResponsive } from 'src/hooks/use-responsive';
 import { stepConnectorClasses } from '@mui/material/StepConnector';
 import {
@@ -111,6 +111,7 @@ interface CustomStepperWithFormikProps {
   saveButtonLabel?: React.ReactNode;
   nextButtonLabel?: React.ReactNode;
   finalButtonLabel?: React.ReactNode;
+  footerPlacement?: 'outside' | 'content';
   handleNext: (
     isLastStep: boolean,
     value: any,
@@ -130,10 +131,12 @@ interface CustomStepperWithFormikProps {
     formik,
     activeStep,
     isBackClick,
+    footer,
   }: {
     formik: any;
     activeStep: number;
     isBackClick: boolean;
+    footer?: React.ReactNode;
   }) => any;
   onStepClick?: (index: number, label: string, formik: any) => void;
   completedSteps?: number[];
@@ -330,6 +333,7 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
   validateFinalStep = true,
   validateForwardStepClick = false,
   viewMode = 'horizontal', // Default to horizontal
+  footerPlacement = 'outside',
 }) => {
   const isMobile = useResponsive('down', 'lg');
   const [isBackClick, setIsBackClick] = useState(false);
@@ -466,9 +470,15 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
                   bgcolor: (theme) => theme.palette.action.hover,
                 },
                 '&.Mui-active': {
-                  bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.08),
+                  bgcolor: (theme) =>
+                    theme.vars
+                      ? varAlpha(theme.vars.palette.primary.mainChannel, 0.08)
+                      : alpha(theme.palette.primary.main, 0.08),
                   '&:hover': {
-                    bgcolor: (theme) => varAlpha(theme.palette.primary.mainChannel, 0.12),
+                    bgcolor: (theme) =>
+                      theme.vars
+                        ? varAlpha(theme.vars.palette.primary.mainChannel, 0.12)
+                        : alpha(theme.palette.primary.main, 0.12),
                   },
                 },
               },
@@ -518,9 +528,11 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             completed={hasExplicitCompletedSteps ? completedSteps.includes(index) : undefined}
             sx={{
               cursor: isClickable ? 'pointer' : 'no-drop',
-              ...(!isVertical && index > 0 && index <= activeStep && {
-                '--step-connector-color': (theme) => theme.palette.primary.main,
-              }),
+              ...(!isVertical &&
+                index > 0 &&
+                index <= activeStep && {
+                  '--step-connector-color': (theme) => theme.palette.primary.main,
+                }),
             }}
           >
             <StepButton
@@ -573,6 +585,43 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
     </Stepper>
   );
 
+  const renderFooter = () => (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        position: 'sticky',
+        bottom: 0,
+        flexShrink: footerPlacement === 'content' ? 0 : undefined,
+        backgroundColor: 'background.paper',
+        p: footerPlacement === 'content' ? 1.5 : 2,
+        borderTop: isVertical || footerPlacement === 'content' ? '1px solid' : 'none',
+        borderColor: 'divider',
+        zIndex: 10,
+      }}
+    >
+      <Button
+        size="small"
+        variant="outlined"
+        startIcon={<Iconify icon="mdi:arrow-left" width={20} />}
+        {...backButtonProps}
+        disabled={(activeStep === 0 && !onCancel) || isBusy || Boolean(backButtonProps.disabled)}
+        onClick={() => {
+          setIsBackClick(true);
+          if (activeStep === 0 && onCancel) onCancel();
+          else handleBack();
+        }}
+      >
+        {activeStep === 0 && onCancel ? 'Cancel' : 'Back'}
+      </Button>
+      <Box display="flex" gap={1}>
+        {showSaveButton && <Button {...mergedSaveButtonProps}>{saveButtonLabel}</Button>}
+        <Button {...mergedSaveAndNextButtonProps}>
+          {activeStep === steps.length - 1 ? finalButtonLabel : nextButtonLabel}
+        </Button>
+      </Box>
+    </Box>
+  );
   const renderFormContent = () => (
     <Box
       component="form"
@@ -607,43 +656,16 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
           },
         }}
       >
-        {formik && renderItem({ formik, activeStep, isBackClick })}
+        {formik &&
+          renderItem({
+            formik,
+            activeStep,
+            isBackClick,
+            footer: footerPlacement === 'content' ? renderFooter() : undefined,
+          })}
       </Scrollbar>
 
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          position: 'sticky',
-          bottom: 0,
-          backgroundColor: 'background.paper',
-          p: 2,
-          borderTop: isVertical ? '1px solid' : 'none',
-          borderColor: 'divider',
-          zIndex: 10,
-        }}
-      >
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:arrow-left" width={20} />}
-          {...backButtonProps}
-          disabled={(activeStep === 0 && !onCancel) || isBusy || Boolean(backButtonProps.disabled)}
-          onClick={() => {
-            setIsBackClick(true);
-            if (activeStep === 0 && onCancel) onCancel();
-            else handleBack();
-          }}
-        >
-          {activeStep === 0 && onCancel ? 'Cancel' : 'Back'}
-        </Button>
-        <Box display="flex" gap={1}>
-          {showSaveButton && <Button {...mergedSaveButtonProps}>{saveButtonLabel}</Button>}
-          <Button {...mergedSaveAndNextButtonProps}>
-            {activeStep === steps.length - 1 ? finalButtonLabel : nextButtonLabel}
-          </Button>
-        </Box>
-      </Box>
+      {footerPlacement === 'outside' && renderFooter()}
     </Box>
   );
 
@@ -675,7 +697,10 @@ export const CustomStepperWithFormik: React.FC<CustomStepperWithFormikProps> = (
             justifyContent: 'center',
             gap: 1.5,
             color: 'text.primary',
-            bgcolor: (theme) => varAlpha(theme.vars.palette.background.paperChannel, 0.9),
+            bgcolor: (theme) =>
+              theme.vars
+                ? varAlpha(theme.vars.palette.background.paperChannel, 0.9)
+                : alpha(theme.palette.background.paper, 0.9),
             backdropFilter: 'blur(4px)',
             cursor: 'wait',
           }}

@@ -68,7 +68,8 @@ export function FormBuilderWorkspace({ panel, onPanelChange, fields, form, child
           display: 'grid',
           gridTemplateColumns: {
             xs: 'minmax(0, 1fr)',
-            lg: 'minmax(300px, 340px) minmax(0, 1fr)',
+            lg: 'minmax(320px, 350px) minmax(0, 1fr)',
+            xl: 'minmax(350px, 370px) minmax(0, 1fr)',
           },
           gap: 1,
           flex: 1,

@@ -1,19 +1,18 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useState } from 'react';
 import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
+import { useId, useState } from 'react';
 import Stack from '@mui/material/Stack';
 import { Iconify } from 'src/components/iconify';
 import Typography from '@mui/material/Typography';
 import { Scrollbar } from 'src/components/scrollbar';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { FormFieldCoreFields } from './form-field-core-fields';
-import { FieldDataSettings } from './components/field-data-settings';
 import { FormFieldAdvancedFields } from './form-field-advanced-fields';
-import { FieldSettingsGroup } from './components/field-settings-group';
 import { FormFieldLocationSettings } from './form-field-location-settings';
 import { FieldPropertiesHeader } from './components/field-properties-header';
 import { FieldGuidanceSettings } from './components/field-guidance-settings';
@@ -24,7 +23,8 @@ type Props = {
 };
 
 export function FormBuilderProperties({ formik, selectedLocation }: Props) {
-  const [activeTab, setActiveTab] = useState<'basic' | 'rules' | 'data'>('basic');
+  const settingsId = useId();
+  const [activeTab, setActiveTab] = useState<'basic' | 'rules'>('basic');
   const section = selectedLocation
     ? formik.values.sections[selectedLocation.sectionIndex]
     : undefined;
@@ -64,7 +64,7 @@ export function FormBuilderProperties({ formik, selectedLocation }: Props) {
       <FieldPropertiesHeader field={field} sectionName={section?.name} />
       <Tabs
         value={activeTab}
-        onChange={(_, value: 'basic' | 'rules' | 'data') => setActiveTab(value)}
+        onChange={(_, value: 'basic' | 'rules') => setActiveTab(value)}
         variant="fullWidth"
         aria-label="Field settings categories"
         sx={{
@@ -76,21 +76,38 @@ export function FormBuilderProperties({ formik, selectedLocation }: Props) {
           '& .MuiTabs-indicator': { bgcolor: 'common.black' },
         }}
       >
-        <Tab value="basic" label="Basic" />
-        <Tab value="rules" label="Rules" />
-        <Tab value="data" label="Data" />
+        <Tab
+          value="basic"
+          label="Basic"
+          id={`${settingsId}-basic-tab`}
+          aria-controls={`${settingsId}-basic-panel`}
+        />
+        <Tab
+          value="rules"
+          label="Rules"
+          id={`${settingsId}-rules-tab`}
+          aria-controls={`${settingsId}-rules-panel`}
+        />
       </Tabs>
       <Scrollbar fillContent sx={{ flex: 1, minHeight: 0 }}>
-        <Stack key={field.id} spacing={1.5} sx={{ p: 1.5 }}>
+        <Stack
+          key={field.id}
+          role="tabpanel"
+          id={`${settingsId}-${activeTab}-panel`}
+          aria-labelledby={`${settingsId}-${activeTab}-tab`}
+          spacing={1.5}
+          sx={{ p: 1.5, bgcolor: 'background.neutral' }}
+        >
           {activeTab === 'basic' && (
             <>
               <FormFieldCoreFields {...settingsProps} />
-              <FieldSettingsGroup
+              <SectionCard
                 title="More options"
-                description="Placeholder, default value, and read-only access."
+                paperProps={{ sx: { mb: 0, minWidth: 0 } }}
+                gridProps={{ sx: { display: 'block' } }}
               >
                 <FieldGuidanceSettings {...settingsProps} />
-              </FieldSettingsGroup>
+              </SectionCard>
             </>
           )}
           {activeTab === 'rules' && (
@@ -99,10 +116,6 @@ export function FormBuilderProperties({ formik, selectedLocation }: Props) {
               <FormFieldAdvancedFields {...settingsProps} />
             </>
           )}
-          {activeTab === 'data' && <FieldDataSettings {...settingsProps} />}
-          <Typography variant="caption" color="text.secondary">
-            Changes stay in this draft until you save.
-          </Typography>
         </Stack>
       </Scrollbar>
     </Stack>
