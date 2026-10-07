@@ -802,22 +802,26 @@ const ScheduledExamTable: React.FC<IScheduledExamTableProps> = ({
 
       <ConfirmDialog
         open={publishExamDialog.value}
-        disableBackdropClick={isPublishing}
-        disableEscapeKeyDown={isPublishing}
+        disableBackdropClick
+        disableEscapeKeyDown
+        disableCancel={isPublishing}
         onClose={() => {
           if (isPublishing) return;
           publishExamDialog.onFalse();
           setSelectedTimetable(null);
         }}
-        title="Publish"
+        icon={
+          <Iconify icon="solar:check-circle-outline" width={24} sx={{ color: 'success.main' }} />
+        }
+        title="Publish exam?"
         content={
           <Stack spacing={1}>
             <Box>
-              Are you sure you want to publish{' '}
+              This will publish{' '}
               <Box component="span" fontWeight="bold" color="text.primary">
                 {selectedTimetable?.examName}
               </Box>
-              ?
+              .
             </Box>
             {(selectedTimetable?.issueCount ?? 0) > 0 && (
               <Alert severity="warning" sx={{ mt: 1 }}>

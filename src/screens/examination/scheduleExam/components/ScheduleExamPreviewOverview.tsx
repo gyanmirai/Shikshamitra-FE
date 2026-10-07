@@ -26,19 +26,24 @@ export function ScheduleExamPreviewOverview({
   const items = [
     { label: 'Exam type', value: examType },
     { label: 'Class', value: className },
+    { label: 'Divisions', value: divisions.length ? divisions.join(', ') : '-' },
     { label: 'Grading scale', value: gradingScale },
     { label: 'Created by', value: createdBy },
   ];
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, boxShadow: 'var(--shadows-2)' }}>
-      <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 0.8 }}>
+    <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2, boxShadow: 'var(--shadows-2)' }}>
+      <Typography
+        variant="overline"
+        color="text.secondary"
+        sx={{ letterSpacing: 0.8, lineHeight: 1.5, display: 'block', mb: 1 }}
+      >
         Exam overview
       </Typography>
 
-      <Grid container columnSpacing={3} rowSpacing={2} sx={{ mt: 0.5 }}>
+      <Grid container columnSpacing={2} rowSpacing={1.5}>
         {items.map((item) => (
-          <Grid key={item.label} size={{ xs: 12, sm: 6 }}>
+          <Grid key={item.label} size={{ xs: 12, sm: 4 }}>
             <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.25 }}>
               {item.label}
             </Typography>
@@ -47,29 +52,6 @@ export function ScheduleExamPreviewOverview({
             </Typography>
           </Grid>
         ))}
-
-        <Grid size={{ xs: 12 }}>
-          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
-            Divisions
-          </Typography>
-          <Stack direction="row" flexWrap="wrap" gap={0.75}>
-            {divisions.length ? (
-              divisions.map((division) => (
-                <Chip
-                  key={division}
-                  label={division}
-                  size="small"
-                  variant="soft"
-                  sx={{ height: 26, fontWeight: 600 }}
-                />
-              ))
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                -
-              </Typography>
-            )}
-          </Stack>
-        </Grid>
       </Grid>
     </Paper>
   );
@@ -113,7 +95,7 @@ export function ScheduleExamStatusSummary({
             alignItems="center"
             justifyContent="center"
             spacing={0.5}
-            sx={{ flex: 1, minWidth: 0, px: { xs: 0.5, sm: 1 }, py: 1.25 }}
+            sx={{ flex: 1, minWidth: 0, p: 1.5 }}
           >
             <Iconify
               icon={item.icon}

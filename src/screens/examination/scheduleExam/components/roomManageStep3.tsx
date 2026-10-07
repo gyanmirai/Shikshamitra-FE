@@ -277,11 +277,9 @@ const RoomAssignmentCard = ({ subject, formik }: any) => {
           )}
           <Button
             size="small"
-            variant="outlined"
-            color="primary"
+            variant="contained"
             startIcon={<Iconify icon="mdi:domain" />}
             onClick={(e) => setBulkAnchorEl(e.currentTarget)}
-            sx={{ fontWeight: 700, borderRadius: 1, textTransform: 'none' }}
           >
             Apply Room to All Divisions
           </Button>

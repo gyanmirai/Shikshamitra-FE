@@ -1,6 +1,5 @@
 'use client';
 
-import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Grid, Paper, Stack, Typography } from '@mui/material';
 import { GradeEntryWorkflowStatus } from 'src/enums/grade-entry-status';
@@ -31,42 +30,42 @@ export function GradeEntryInsights({
       label: 'Total students',
       value: total,
       icon: 'solar:user-bold',
-      tone: 'primary' as const,
+      tone: 'neutral' as const,
     },
     {
       id: 'graded',
       label: 'Graded',
       value: total - pending,
       icon: 'solar:check-square-bold',
-      tone: 'success' as const,
+      tone: 'neutral' as const,
     },
     {
       id: 'pending',
       label: 'Pending',
       value: pending,
       icon: 'solar:clock-circle-bold',
-      tone: 'warning' as const,
+      tone: 'neutral' as const,
     },
     {
       id: 'highest',
       label: 'Highest marks',
       value: stats?.highestMarks ?? 0,
       icon: 'solar:arrow-up-bold',
-      tone: 'success' as const,
+      tone: 'neutral' as const,
     },
     {
       id: 'lowest',
       label: 'Lowest marks',
       value: stats?.lowestMarks ?? 0,
       icon: 'solar:arrow-down-bold',
-      tone: 'error' as const,
+      tone: 'neutral' as const,
     },
     {
       id: 'average',
       label: 'Average marks',
       value: stats?.averageMarks ?? 0,
       icon: 'solar:graph-new-bold',
-      tone: 'info' as const,
+      tone: 'neutral' as const,
     },
   ];
   const readiness = [
@@ -92,6 +91,7 @@ export function GradeEntryInsights({
         description: 'Pass and fail count for the selected exam, subject and class.',
         categories: ['Pass', 'Fail'],
         values: [stats?.passCount ?? 0, stats?.failCount ?? 0],
+        monochrome: true,
         seriesName: 'Students',
         summary: [
           { label: 'Pass', value: stats?.passCount ?? 0 },
@@ -112,18 +112,10 @@ export function GradeEntryInsights({
                   direction="row"
                   alignItems="center"
                   spacing={1}
-                  sx={{
-                    py: 0.75,
-                    px: 1,
-                    borderRadius: 1,
-                    bgcolor: (theme) =>
-                      check.done
-                        ? alpha(theme.palette.success.main, 0.1)
-                        : alpha(theme.palette.grey[500], 0.06),
-                  }}
+                  sx={{ py: 0.75, px: 1, borderRadius: 1 }}
                 >
                   <Iconify
-                    icon={check.done ? 'solar:check-circle-bold' : 'solar:close-circle-bold'}
+                    icon={check.done ? 'solar:check-circle-bold' : 'solar:minus-circle-bold'}
                     width={14}
                     sx={{ color: check.done ? 'success.main' : 'text.disabled', flexShrink: 0 }}
                   />

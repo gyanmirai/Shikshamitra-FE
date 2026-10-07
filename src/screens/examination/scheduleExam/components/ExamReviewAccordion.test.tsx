@@ -26,17 +26,21 @@ describe('ExamReviewAccordion', () => {
     );
 
     const editButton = screen.getByRole('button', { name: 'Edit Basic Details' });
+    const collapseButton = screen.getByRole('button', { name: 'Collapse Basic Details' });
     const accordionToggle = container.querySelector('.MuiAccordionSummary-root');
 
     expect(container.querySelector('button button')).toBeNull();
     expect(accordionToggle).not.toContainElement(editButton);
+    expect(editButton.nextElementSibling).toBe(collapseButton);
 
     fireEvent.click(editButton);
     expect(onEdit).toHaveBeenCalledOnce();
 
     expect(accordionToggle).toHaveAttribute('aria-expanded', 'true');
-    fireEvent.click(accordionToggle!);
+    fireEvent.click(collapseButton);
     expect(accordionToggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(accordionToggle!);
+    expect(accordionToggle).toHaveAttribute('aria-expanded', 'true');
     expect(onEdit).toHaveBeenCalledOnce();
   });
 });

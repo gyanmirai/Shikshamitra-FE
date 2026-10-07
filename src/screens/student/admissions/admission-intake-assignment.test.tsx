@@ -175,7 +175,7 @@ describe('intake setup details and row actions', () => {
     expect(within(drawer).getByText('0 public inquiry links · 0 active')).toBeVisible();
     expect(
       within(drawer)
-        .getByRole('button', { name: 'Close', exact: true })
+        .getByRole('button', { name: /^Close$/ })
         .querySelector('[data-icon="mdi:close"]')
     ).not.toBeNull();
     expect(
@@ -192,7 +192,7 @@ describe('intake setup details and row actions', () => {
     const user = userEvent.setup();
     renderScreen();
     fireEvent.keyDown(rowFor(activeSetup.name), { key });
-    await user.click(screen.getByRole('button', { name: 'Close', exact: true }));
+    await user.click(screen.getByRole('button', { name: /^Close$/ }));
     expect(screen.queryByRole('dialog', { name: activeSetup.name })).not.toBeInTheDocument();
   });
 

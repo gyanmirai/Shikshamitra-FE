@@ -54,16 +54,11 @@ export function ScheduleExamScheduleSection({
         direction="row"
         alignItems="center"
         justifyContent="space-between"
-        sx={{ px: 2, py: 1.5 }}
+        sx={{ p: 1.5 }}
       >
-        <Box>
-          <Typography id="exam-schedule-heading" variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Subjects &amp; schedule
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Timetable arranged in chronological order
-          </Typography>
-        </Box>
+        <Typography id="exam-schedule-heading" variant="subtitle1" sx={{ fontWeight: 700 }}>
+          Subjects &amp; schedule
+        </Typography>
         <Chip
           label={`${subjectCount} subject${subjectCount === 1 ? '' : 's'}`}
           size="small"
@@ -74,7 +69,7 @@ export function ScheduleExamScheduleSection({
       <Divider />
 
       {subjectCount === 0 ? (
-        <Box sx={{ p: 3, textAlign: 'center' }}>
+        <Box sx={{ p: 1.5, textAlign: 'center' }}>
           <Typography variant="body2" color="text.secondary">
             No subjects have been scheduled for this exam yet.
           </Typography>
@@ -86,48 +81,33 @@ export function ScheduleExamScheduleSection({
 
             return (
               <Box key={group.dateKey}>
-                {groupIndex > 0 && <Divider />}
-                <Box
-                  sx={{
-                    px: 2,
-                    py: 1,
-                    bgcolor: 'background.neutral',
-                  }}
-                >
+                {groupIndex > 0 && <Divider sx={{ mx: 1.5 }} />}
+                <Box sx={{ px: 1.5, pt: 1.25, pb: 0.5 }}>
                   <Stack
                     direction="row"
                     alignItems="center"
                     justifyContent="space-between"
-                    spacing={2}
+                    spacing={1}
                   >
-                    <Stack direction="row" spacing={1} alignItems="center">
+                    <Stack direction="row" spacing={0.75} alignItems="center" minWidth={0}>
                       <Iconify
                         icon={isUnscheduled ? 'solar:calendar-cross-bold' : GlobalIcons.calendar}
-                        width={17}
-                        height={17}
-                        sx={{ color: 'text.secondary' }}
+                        width={15}
+                        sx={{ color: 'text.secondary', flexShrink: 0 }}
                       />
-                      <Box>
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
-                        >
-                          {group.formattedDate}
-                        </Typography>
-                        {group.dayOfWeek && (
-                          <Typography variant="caption" color="text.secondary">
-                            {group.dayOfWeek}
-                          </Typography>
-                        )}
-                      </Box>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {group.formattedDate}
+                        {group.dayOfWeek ? ` · ${group.dayOfWeek}` : ''}
+                      </Typography>
                     </Stack>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>
-                      {group.subjects.length} {group.subjects.length === 1 ? 'exam' : 'exams'}
-                    </Typography>
                   </Stack>
                 </Box>
 
-                <Stack divider={<Divider />}>
+                <Stack divider={<Divider sx={{ mx: 1.5 }} />}>
                   {group.subjects.map((subject) => {
                     const duration = getDurationText(subject.startTime, subject.endTime);
                     const hasTime = Boolean(subject.startTime && subject.endTime);
@@ -138,8 +118,8 @@ export function ScheduleExamScheduleSection({
                         direction={{ xs: 'column', sm: 'row' }}
                         alignItems={{ xs: 'flex-start', sm: 'center' }}
                         justifyContent="space-between"
-                        spacing={1.5}
-                        sx={{ px: 2, py: 1.5 }}
+                        gap={0.75}
+                        sx={{ px: 1.5, py: 0.75 }}
                       >
                         <Box sx={{ minWidth: 0 }}>
                           <Typography variant="body2" sx={{ fontWeight: 650 }}>
@@ -157,33 +137,36 @@ export function ScheduleExamScheduleSection({
                             direction="row"
                             alignItems="center"
                             spacing={0.75}
-                            sx={{ flexShrink: 0 }}
+                            sx={{ flexShrink: 0, whiteSpace: 'nowrap' }}
                           >
                             <Iconify
                               icon={GlobalIcons.clock}
-                              width={16}
+                              width={14}
                               height={16}
                               sx={{ color: 'text.secondary' }}
                             />
                             <Typography
-                              variant="body2"
-                              color="text.primary"
-                              sx={{ fontWeight: 650, fontVariantNumeric: 'tabular-nums' }}
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}
                             >
                               {dayjs(subject.startTime).format('hh:mm A')} –{' '}
                               {dayjs(subject.endTime).format('hh:mm A')}
                             </Typography>
                             {duration && (
-                              <Chip
-                                label={duration}
-                                size="small"
-                                variant="soft"
-                                sx={{ height: 24 }}
-                              />
+                              <Typography variant="caption" color="text.disabled">
+                                · {duration}
+                              </Typography>
                             )}
                           </Stack>
                         ) : (
-                          <Chip label="Time not set" size="small" color="warning" variant="soft" />
+                          <Chip
+                            label="Time not set"
+                            size="small"
+                            color="warning"
+                            variant="soft"
+                            sx={{ justifySelf: { xs: 'start', sm: 'end' } }}
+                          />
                         )}
                       </Stack>
                     );

@@ -15,7 +15,7 @@ function renderActions(allMarksAssigned: boolean) {
       allMarksAssigned={allMarksAssigned}
       isSaveDraftLoading={false}
       isBulkSaveLoading={false}
-      isSubmitLoading={false}
+      isReviewLoading={false}
       isRequestChangesLoading={false}
       isVerifyLoading={false}
       isPublishLoading={false}
@@ -42,7 +42,7 @@ describe('GradeEntryToolbarActions', () => {
         allMarksAssigned
         isSaveDraftLoading={false}
         isBulkSaveLoading={false}
-        isSubmitLoading={false}
+        isReviewLoading={false}
         isRequestChangesLoading={false}
         isVerifyLoading={false}
         isPublishLoading={false}

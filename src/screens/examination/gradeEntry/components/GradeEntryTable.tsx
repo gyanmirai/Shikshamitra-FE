@@ -182,43 +182,43 @@ const GradeEntryTable = ({
     field: 'marks' | 'feedback' | 'attendanceStatus',
     value: any
   ) => {
-    setLocalRows((prev) => {
-      const nextRows = prev.map((row) => {
-        if (row.studentId !== studentId) return row;
+    const nextRows = localRows.map((row) => {
+      if (row.studentId !== studentId) return row;
 
-        const updatedRow = { ...row, [field]: value };
+      const updatedRow = { ...row, [field]: value };
 
-        // If marks are edited, automatically calculate grade and status preview
-        if (field === 'marks' || field === 'attendanceStatus') {
-          if (field === 'marks' && value !== null) {
-            const rawVal = Number(value);
-            updatedRow.marks =
-              updatedRow.totalMarks != null
-                ? Math.min(Math.max(0, rawVal), updatedRow.totalMarks)
-                : Math.max(0, rawVal);
-            if (updatedRow.attendanceStatus == null) {
-              updatedRow.attendanceStatus = 0; // Default to Present when marks are entered
-            }
-          }
-          const isPresent = updatedRow.attendanceStatus === 0;
-          if (isPresent && updatedRow.marks !== null) {
-            const pct = (updatedRow.marks / updatedRow.totalMarks) * 100;
-            updatedRow.grade =
-              pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
-            updatedRow.status = 1; // Assigned
-          } else if (!isPresent) {
-            updatedRow.marks = null;
-            updatedRow.grade = '—';
-            updatedRow.status = 1; // Attendance status saved counts as assigned
-          } else {
-            updatedRow.status = 0; // Pending
+      // If marks are edited, automatically calculate grade and status preview
+      if (field === 'marks' || field === 'attendanceStatus') {
+        if (field === 'marks' && value !== null) {
+          const rawVal = Number(value);
+          updatedRow.marks =
+            updatedRow.totalMarks != null
+              ? Math.min(Math.max(0, rawVal), updatedRow.totalMarks)
+              : Math.max(0, rawVal);
+          if (updatedRow.attendanceStatus == null) {
+            updatedRow.attendanceStatus = 0; // Default to Present when marks are entered
           }
         }
+        const isPresent = updatedRow.attendanceStatus === 0;
+        if (isPresent && updatedRow.marks !== null) {
+          const pct = (updatedRow.marks / updatedRow.totalMarks) * 100;
+          updatedRow.grade =
+            pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B+' : pct >= 60 ? 'B' : 'C';
+          updatedRow.status = 1; // Assigned
+        } else if (!isPresent) {
+          updatedRow.marks = null;
+          updatedRow.grade = '—';
+          updatedRow.status = 1; // Attendance status saved counts as assigned
+        } else {
+          updatedRow.status = 0; // Pending
+        }
+      }
 
-        return updatedRow;
-      });
-      return nextRows;
+      return updatedRow;
     });
+    setLocalRows(nextRows);
+    onRowsChange?.(nextRows);
+    onDirtyChange?.(!isLocked && nextRows.some((row) => isRowModified(row)));
   };
 
   // Keyboard navigation

@@ -18,12 +18,14 @@ export function AcademicInsightChart({ config }: Props) {
   const tickAmount = Math.min(5, Math.max(2, Math.ceil(maxValue) + 1));
   const options = useChart({
     chart: { toolbar: { show: false }, height: chartHeight },
-    colors: [
-      theme.palette.primary.main,
-      theme.palette.info.main,
-      theme.palette.warning.main,
-      theme.palette.success.main,
-    ],
+    colors: config.monochrome
+      ? [theme.palette.primary.main]
+      : [
+          theme.palette.primary.main,
+          theme.palette.info.main,
+          theme.palette.warning.main,
+          theme.palette.success.main,
+        ],
     xaxis: { categories: config.categories },
     yaxis: {
       min: 0,

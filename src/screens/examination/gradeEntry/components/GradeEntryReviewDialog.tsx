@@ -73,25 +73,21 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
       label: 'Highest Marks',
       value: stats.highestMarks,
       icon: 'solar:arrow-up-bold',
-      color: 'success',
     },
     {
       label: 'Lowest Marks',
       value: stats.lowestMarks,
       icon: 'solar:arrow-down-bold',
-      color: 'error',
     },
     {
       label: 'Average Marks',
       value: stats.averageMarks,
       icon: 'solar:graph-new-bold',
-      color: 'info',
     },
     {
       label: 'Total Present',
       value: stats.gradedCount,
       icon: 'solar:user-bold',
-      color: 'primary',
     },
   ];
 
@@ -100,7 +96,14 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
       open={open}
       handleClose={onClose}
       title={
-        <Box display="flex" flexDirection="row" gap={1.25} alignItems="center" component="span" sx={{ fontWeight: 'normal' }}>
+        <Box
+          display="flex"
+          flexDirection="row"
+          gap={1.25}
+          alignItems="center"
+          component="span"
+          sx={{ fontWeight: 'normal' }}
+        >
           <Box
             sx={{
               width: 32,
@@ -109,8 +112,8 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'primary.main',
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
+              color: 'text.secondary',
+              bgcolor: 'action.hover',
             }}
           >
             <Iconify icon="solar:clipboard-check-bold" width={20} height={20} />
@@ -125,7 +128,7 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
     >
       <DialogScrollContent
         sx={{
-          bgcolor: (theme) => alpha(theme.palette.grey[500], 0.02),
+          bgcolor: 'background.default',
           p: 3,
         }}
       >
@@ -144,7 +147,7 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
             <Typography variant="subtitle2" fontWeight={700}>
               Grade Entry Progress
             </Typography>
-            <Typography variant="subtitle2" color="primary" fontWeight={700}>
+            <Typography variant="subtitle2" color="text.primary" fontWeight={700}>
               {completionPct}% Complete ({stats.gradedCount} Graded / {stats.totalCount} Total)
             </Typography>
           </Stack>
@@ -184,7 +187,8 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
                         borderRadius: 1.5,
                         bgcolor: 'background.paper',
                         border: (theme) => `1px solid ${theme.palette.divider}`,
-                        boxShadow: (theme) => `0 4px 12px 0 ${alpha(theme.palette.grey[500], 0.03)}`,
+                        boxShadow: (theme) =>
+                          `0 4px 12px 0 ${alpha(theme.palette.grey[500], 0.03)}`,
                         width: '100%',
                         height: '100%',
                       }}
@@ -197,8 +201,8 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          bgcolor: (theme) => alpha(theme.palette[stat.color as 'success' | 'error' | 'info' | 'primary'].main, 0.08),
-                          color: (theme) => theme.palette[stat.color as 'success' | 'error' | 'info' | 'primary'].main,
+                          bgcolor: 'action.hover',
+                          color: 'text.secondary',
                         }}
                       >
                         <Iconify icon={stat.icon} width={18} />
@@ -236,44 +240,38 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
                 <Stack spacing={1.5} sx={{ flexGrow: 1, justifyContent: 'center' }}>
                   <Box>
                     <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
-                      <Typography variant="body2" color="success.main" fontWeight={600}>
+                      <Typography variant="body2" color="text.secondary" fontWeight={600}>
                         Passed Students
                       </Typography>
                       <Typography variant="body2" fontWeight={700}>
                         {stats.passCount} ({passPct}%)
                       </Typography>
                     </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={passPct}
-                      color="success"
-                      sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        bgcolor: (theme) => alpha(theme.palette.success.main, 0.08),
-                      }}
-                    />
                   </Box>
 
                   <Box>
                     <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.75 }}>
-                      <Typography variant="body2" color="error.main" fontWeight={600}>
+                      <Typography variant="body2" color="text.secondary" fontWeight={600}>
                         Failed Students
                       </Typography>
                       <Typography variant="body2" fontWeight={700}>
                         {stats.failCount} ({failPct}%)
                       </Typography>
                     </Stack>
-                    <LinearProgress
-                      variant="determinate"
-                      value={failPct}
-                      color="error"
-                      sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        bgcolor: (theme) => alpha(theme.palette.error.main, 0.08),
-                      }}
-                    />
+                  </Box>
+                  <Box
+                    role="img"
+                    aria-label={`${stats.passCount} passed students, ${stats.failCount} failed students`}
+                    sx={{
+                      display: 'flex',
+                      overflow: 'hidden',
+                      height: 4,
+                      borderRadius: 2,
+                      bgcolor: 'action.hover',
+                    }}
+                  >
+                    <Box sx={{ width: `${passPct}%`, bgcolor: 'success.main' }} />
+                    <Box sx={{ width: `${failPct}%`, bgcolor: 'error.main' }} />
                   </Box>
                 </Stack>
               </Box>
@@ -314,15 +312,23 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
               ) : (
                 <Alert
                   severity="success"
+                  variant="outlined"
                   sx={{
                     mb: 1.5,
                     borderRadius: 1.5,
-                    border: (theme) => `1px solid ${theme.palette.success.light}`,
-                    bgcolor: (theme) => alpha(theme.palette.success.main, 0.03),
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
+                    color: 'text.primary',
                   }}
-                  icon={<Iconify icon="solar:shield-check-bold" width={24} />}
+                  icon={
+                    <Iconify
+                      icon="solar:shield-check-bold"
+                      width={22}
+                      sx={{ color: 'success.main' }}
+                    />
+                  }
                 >
-                  <Typography variant="subtitle2" fontWeight={700} sx={{ color: 'success.dark' }}>
+                  <Typography variant="subtitle2" fontWeight={700} color="text.primary">
                     No validation blockers
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
@@ -355,7 +361,15 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
                     Validation Checks Detail
                   </Typography>
                 </Box>
-                <Box sx={{ flexGrow: 1, overflow: 'hidden', p: 0.5, display: 'flex', flexDirection: 'column' }}>
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    overflow: 'hidden',
+                    p: 0.5,
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
                   <Scrollbar sx={{ flexGrow: 1, height: '50px' }}>
                     <List disablePadding>
                       {/* Blockers List */}
@@ -460,5 +474,6 @@ export const GradeEntryReviewDialog: React.FC<GradeEntryReviewDialogProps> = ({
           startIcon={<Iconify icon="solar:plain-bold" />}
         />
       </DialogActions>
-    </CustomDialog>)
-}
+    </CustomDialog>
+  );
+};

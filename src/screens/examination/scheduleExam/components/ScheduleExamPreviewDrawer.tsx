@@ -360,10 +360,10 @@ const ScheduleExamPreviewDrawer = ({
       />
 
       <Scrollbar sx={{ flex: 1 }}>
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ p: 1.5 }}>
           {isDetailsLoading && <LoadingScreen sx={{ minHeight: 200 }} />}
           {!isDetailsLoading && (
-            <Stack spacing={1.5}>
+            <Stack spacing={1}>
               <ScheduleExamPreviewOverview
                 className={resolvedStandardName}
                 createdBy={resolvedCreatedBy}

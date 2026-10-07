@@ -8,7 +8,7 @@ type Props = {
   allMarksAssigned: boolean;
   isSaveDraftLoading: boolean;
   isBulkSaveLoading: boolean;
-  isSubmitLoading: boolean;
+  isReviewLoading: boolean;
   isRequestChangesLoading: boolean;
   isVerifyLoading: boolean;
   isPublishLoading: boolean;
@@ -26,7 +26,7 @@ export function GradeEntryToolbarActions({
   allMarksAssigned,
   isSaveDraftLoading,
   isBulkSaveLoading,
-  isSubmitLoading,
+  isReviewLoading,
   isRequestChangesLoading,
   isVerifyLoading,
   isPublishLoading,
@@ -57,11 +57,16 @@ export function GradeEntryToolbarActions({
         <LoadingButton
           variant="contained"
           size="small"
-          color="primary"
-          loading={isSubmitLoading}
+          color="inherit"
+          loading={isReviewLoading}
           disabled={!allMarksAssigned}
           startIcon={<Iconify icon="solar:plain-bold" />}
           onClick={onReview}
+          sx={{
+            bgcolor: 'text.primary',
+            color: 'background.paper',
+            '&:hover': { bgcolor: 'text.secondary' },
+          }}
         >
           Review & Submit
         </LoadingButton>
@@ -94,11 +99,16 @@ export function GradeEntryToolbarActions({
         <LoadingButton
           variant="contained"
           size="small"
-          color="primary"
+          color="inherit"
           loading={isPublishLoading}
           disabled={!allMarksAssigned}
           startIcon={<Iconify icon={GlobalIcons.publish} />}
           onClick={onPublish}
+          sx={{
+            bgcolor: 'text.primary',
+            color: 'background.paper',
+            '&:hover': { bgcolor: 'text.secondary' },
+          }}
         >
           Publish Marks
         </LoadingButton>

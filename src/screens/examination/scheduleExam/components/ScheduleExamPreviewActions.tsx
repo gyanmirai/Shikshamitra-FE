@@ -26,8 +26,8 @@ export function ScheduleExamPreviewActions({
     <Box
       component="footer"
       sx={{
-        px: { xs: 2, sm: 3 },
-        py: 2,
+        px: { xs: 1, sm: 1.5 },
+        py: 1,
         display: 'flex',
         flexWrap: 'wrap',
         alignItems: 'center',
@@ -39,7 +39,7 @@ export function ScheduleExamPreviewActions({
         boxShadow: 'var(--shadows-8)',
       }}
     >
-      <Button color="inherit" onClick={onClose}>
+      <Button variant="outlined" color="inherit" onClick={onClose}>
         Close
       </Button>
       {onViewTimetable && (
@@ -63,10 +63,15 @@ export function ScheduleExamPreviewActions({
       )}
       {onPublish && isPending && (
         <Button
-          color="primary"
+          color="inherit"
           variant="contained"
           startIcon={<Iconify icon={GlobalIcons.publish} />}
           onClick={() => onPublish(exam)}
+          sx={{
+            bgcolor: 'text.primary',
+            color: 'background.paper',
+            '&:hover': { bgcolor: 'text.secondary' },
+          }}
         >
           Publish exam
         </Button>
