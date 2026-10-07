@@ -17,9 +17,10 @@ function buildReviewRows(subjects: any[]): any[] {
     if (!sub.electiveGroupId) {
       // Core subject
       rows.push(sub);
-    } else if (sub.schedulingMode === 'separate' && (sub.subjects ?? []).length > 0) {
+    } else if (sub.schedulingMode === 'separate' && Array.isArray(sub.subjects)) {
       // Separate-mode elective: expand into individual subject rows
       (sub.subjects as any[]).forEach((s) => {
+        if (s.isExamSelectionDisabled) return;
         const sName = s.subjectName || s.name || '';
         const groupName =
           sub.electiveGroupName ||

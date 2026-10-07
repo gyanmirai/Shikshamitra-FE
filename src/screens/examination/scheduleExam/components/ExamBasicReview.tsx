@@ -9,6 +9,7 @@ import { Box, Grid, Chip, Paper, Divider, Typography } from '@mui/material';
 import { ExamReviewInfoItem } from './ExamReviewInfoItem';
 import { ExamReviewAccordion } from './ExamReviewAccordion';
 import { useExamBasicReviewData } from './use-exam-basic-review-data';
+import { hasSchedulableExamSubject } from './schedulable-exam-subjects';
 
 import type { IExamFormValues } from '../type';
 
@@ -130,7 +131,7 @@ const ExamBasicReview = ({
                 value={
                   values.subjects.length > 0 ? (
                     <Box display="flex" flexWrap="wrap" gap={0.75}>
-                      {values.subjects.map((subject) => (
+                      {values.subjects.filter(hasSchedulableExamSubject).map((subject) => (
                         <Chip
                           key={subject.subjectId}
                           label={subject.subjectName}

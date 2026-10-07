@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
 import * as yup from 'yup';
 
+import { hasSchedulableExamSubject } from './components/schedulable-exam-subjects';
+
 interface ScheduledSlot {
   subjectId: string;
   electiveGroupId?: string;
@@ -277,7 +279,12 @@ export const validationSchema = [
     subjects: yup
       .array()
       .required('Subjects is required')
-      .min(1, 'At least one subject is required'),
+      .min(1, 'At least one subject is required')
+      .test(
+        'schedulable-subject',
+        'Select at least one core subject or elective with assigned students',
+        (value) => (value ?? []).some(hasSchedulableExamSubject)
+      ),
   }),
 
   // Step 1: Exam Details
@@ -312,6 +319,7 @@ export const validationSchema = [
                   'at-least-one-elective-scheduled',
                   'Schedule at least one subject in this elective group',
                   (value) =>
+                    !(value ?? []).some((subject: any) => !subject?.isExamSelectionDisabled) ||
                     (value ?? []).some(
                       (subject: any) =>
                         !subject?.isExamSelectionDisabled && hasCompleteSchedule(subject)
@@ -321,7 +329,12 @@ export const validationSchema = [
           }),
         })
       )
-      .required('At least one subject is required'),
+      .required('At least one subject is required')
+      .test(
+        'schedulable-subject',
+        'Select at least one core subject or elective with assigned students',
+        (value) => (value ?? []).some(hasSchedulableExamSubject)
+      ),
   }),
 
   // Step 2: Room assignment validation
@@ -350,7 +363,11 @@ export const validationSchema = [
         allSubjects.forEach((subject) => {
           if (subject?.electiveGroupId && Array.isArray(subject?.subjects)) {
             subject.subjects.forEach((nested: any) => {
-              if (!nested?.isExamSelectionDisabled && hasCompleteSchedule(nested) && nested?.subjectId) {
+              if (
+                !nested?.isExamSelectionDisabled &&
+                hasCompleteSchedule(nested) &&
+                nested?.subjectId
+              ) {
                 activeSubjects.push({
                   subjectId: nested.subjectId,
                   subjectName: nested.subjectName || nested.name || 'Elective Subject',
@@ -380,9 +397,7 @@ export const validationSchema = [
             const path = `roomDetails.${sub.subjectId}.${divisionId}.roomIds`;
 
             if (!Array.isArray(roomIds) || roomIds.length === 0) {
-              validationErrors.push(
-                new yup.ValidationError('Room is required', roomIds, path)
-              );
+              validationErrors.push(new yup.ValidationError('Room is required', roomIds, path));
             }
           });
         });

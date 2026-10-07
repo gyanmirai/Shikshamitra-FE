@@ -26,7 +26,6 @@ import {
   Divider,
   Tooltip,
   TableRow,
-  Accordion,
   TableBody,
   TableCell,
   TableHead,
@@ -35,9 +34,9 @@ import {
   Autocomplete,
   TableContainer,
   FormControlLabel,
-  AccordionSummary,
-  AccordionDetails,
 } from '@mui/material';
+
+import { ElectiveScheduleCard } from './ElectiveScheduleCard';
 
 import type { IExamFormValues } from '../type';
 
@@ -797,119 +796,75 @@ const ElectiveGroupCard = memo(
     );
 
     return (
-      <Accordion
-        defaultExpanded
-        disableGutters
-        elevation={0}
-        sx={{
-          mb: 2,
-          borderRadius: 2,
-          border: '1px solid',
-          borderColor: 'divider',
-          overflow: 'hidden',
-          '&:before': { display: 'none' },
-        }}
+      <ElectiveScheduleCard
+        name={groupName}
+        subjectCount={
+          individualSubjects.filter((subject) => !subject.isExamSelectionDisabled).length
+        }
+        standardId={standardId}
+        divisionIds={formik.values.divisions}
       >
-        <AccordionSummary
-          expandIcon={<Iconify icon="eva:chevron-down-fill" width={18} />}
+        {/* Per-group apply-to-all bar */}
+        <Box
           sx={{
             px: 2,
-            minHeight: 44,
-            bgcolor: (theme: any) => varAlpha(theme.vars.palette.warning.mainChannel, 0.07),
+            py: 1.25,
             borderBottom: '1px solid',
             borderColor: 'divider',
-            '&.Mui-expanded': { minHeight: 44 },
-            '& .MuiAccordionSummary-content': {
-              alignItems: 'center',
-              gap: 1,
-              my: 0.75,
-              flexWrap: 'wrap',
-            },
+            bgcolor: (theme: any) => varAlpha(theme.vars.palette.warning.mainChannel, 0.03),
           }}
         >
-          <Box
-            sx={{
-              width: 10,
-              height: 10,
-              borderRadius: '50%',
-              bgcolor: 'warning.main',
-              flexShrink: 0,
-            }}
-          />
-          <Typography variant="subtitle2" fontWeight={700}>
-            {groupName}
-          </Typography>
-          <Chip
-            label={`${individualSubjects.length} subject${individualSubjects.length !== 1 ? 's' : ''}`}
-            size="small"
-            color="warning"
-            variant="soft"
-            sx={{ fontSize: '0.7rem', height: 20, fontWeight: 600 }}
-          />
-        </AccordionSummary>
+          <ApplyToAllBar onApply={handleApplyToGroup} />
+          {showGroupScheduleError && (
+            <Alert severity="error" variant="outlined" sx={{ mt: 1, py: 0.5 }}>
+              {groupSubjectsError}
+            </Alert>
+          )}
+        </Box>
 
-        <AccordionDetails sx={{ p: 0 }}>
-          {/* Per-group apply-to-all bar */}
-          <Box
-            sx={{
-              px: 2,
-              py: 1.25,
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              bgcolor: (theme: any) => varAlpha(theme.vars.palette.warning.mainChannel, 0.03),
-            }}
-          >
-            <ApplyToAllBar onApply={handleApplyToGroup} />
-            {showGroupScheduleError && (
-              <Alert severity="error" variant="outlined" sx={{ mt: 1, py: 0.5 }}>
-                {groupSubjectsError}
-              </Alert>
-            )}
-          </Box>
-
-          {/* Schedule table */}
-          <TableContainer>
-            <Table size="small" sx={{ tableLayout: 'auto' }}>
-              <ScheduleTableHead />
-              <TableBody>
-                {individualSubjects.map((sub: any, j: number) => {
-                  const subSchedule = group.subjects?.[j] || sub;
-                  const subErrors = formik.errors.subjects?.[groupIndex]?.subjects?.[j] ?? {};
-                  const subTouched = formik.touched.subjects?.[groupIndex]?.subjects?.[j] ?? {};
-                  return (
-                    <SubjectScheduleRow
-                      key={`sep-${groupIndex}-${j}-${sub.subjectId || j}`}
-                      values={{
-                        subjectColor: sub.subjectColor || sub.color || '#9E9E9E',
-                        subjectName: sub.subjectName || sub.name || '',
-                        subjectCode: sub.subjectCode || sub.code,
-                        examDate: subSchedule.examDate || null,
-                        startTime: subSchedule.startTime || null,
-                        endTime: subSchedule.endTime || null,
-                        gradeScalingId: subSchedule.gradeScalingId ?? null,
-                        totalMarks: subSchedule.totalMarks ?? '',
-                        passingMarks: subSchedule.passingMarks ?? '',
-                        notes: subSchedule.notes ?? '',
-                        assignedStudentCount: sub.assignedStudentCount,
-                        isExamSelectionDisabled: sub.isExamSelectionDisabled,
-                      }}
-                      errors={subErrors}
-                      touched={subTouched}
-                      onFieldChange={(field, value) => handleSubjectFieldChange(j, field, value)}
-                      onFieldBlur={(field) => handleSepFieldBlur(j, field)}
-                      gradeScalings={gradeScalings}
-                      isGradeScalingsLoading={isGradeScalingsLoading}
-                      currentYear={currentYear}
-                      standardId={standardId}
-                      isReadOnly={!!sub.isExamSelectionDisabled}
-                    />
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </AccordionDetails>
-      </Accordion>
+        {/* Schedule table */}
+        <TableContainer>
+          <Table size="small" sx={{ tableLayout: 'auto' }}>
+            <ScheduleTableHead />
+            <TableBody>
+              {individualSubjects.map((sub: any, j: number) => {
+                if (sub.isExamSelectionDisabled) return null;
+                const subSchedule = group.subjects?.[j] || sub;
+                const subErrors = formik.errors.subjects?.[groupIndex]?.subjects?.[j] ?? {};
+                const subTouched = formik.touched.subjects?.[groupIndex]?.subjects?.[j] ?? {};
+                return (
+                  <SubjectScheduleRow
+                    key={`sep-${groupIndex}-${j}-${sub.subjectId || j}`}
+                    values={{
+                      subjectColor: sub.subjectColor || sub.color || '#9E9E9E',
+                      subjectName: sub.subjectName || sub.name || '',
+                      subjectCode: sub.subjectCode || sub.code,
+                      examDate: subSchedule.examDate || null,
+                      startTime: subSchedule.startTime || null,
+                      endTime: subSchedule.endTime || null,
+                      gradeScalingId: subSchedule.gradeScalingId ?? null,
+                      totalMarks: subSchedule.totalMarks ?? '',
+                      passingMarks: subSchedule.passingMarks ?? '',
+                      notes: subSchedule.notes ?? '',
+                      assignedStudentCount: sub.assignedStudentCount,
+                      isExamSelectionDisabled: sub.isExamSelectionDisabled,
+                    }}
+                    errors={subErrors}
+                    touched={subTouched}
+                    onFieldChange={(field, value) => handleSubjectFieldChange(j, field, value)}
+                    onFieldBlur={(field) => handleSepFieldBlur(j, field)}
+                    gradeScalings={gradeScalings}
+                    isGradeScalingsLoading={isGradeScalingsLoading}
+                    currentYear={currentYear}
+                    standardId={standardId}
+                    isReadOnly={!!sub.isExamSelectionDisabled}
+                  />
+                );
+              })}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </ElectiveScheduleCard>
     );
   }
 );
@@ -948,7 +903,13 @@ const ExamDetails = (props: FormikProps<IExamFormValues>) => {
   }, [formik.values.subjects]);
 
   const totalElectiveSubjects = useMemo(
-    () => electiveGroups.reduce((acc, { subject }) => acc + (subject.subjects?.length ?? 0), 0),
+    () =>
+      electiveGroups.reduce(
+        (acc, { subject }) =>
+          acc +
+          (subject.subjects ?? []).filter((nested: any) => !nested.isExamSelectionDisabled).length,
+        0
+      ),
     [electiveGroups]
   );
 
