@@ -130,5 +130,5 @@ src/redux/hr/employee-account-email-api.ts exposes typed read and change operati
 GET /employees/{id}/account-email returns employeeEmail, accountEmail, userName, userId and the joint concurrencyToken.
 PUT sends email, reason, confirmEmployeeVerified, concurrencyToken and an idempotencyKey retained for the same failed payload.
 Only successful writes invalidate employee and salary-slip tags; failed writes retain the form and caches.
-The backend [HR API contract](../../../Shikshamitra-BE/docs/modules/hr/api.md) owns Identity synchronization, audit, permissions, scope, transaction and credential behavior.
+The backend [HR API contract](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md) owns Identity synchronization, audit, permissions, scope, transaction and credential behavior.
 No arbitrary payslip recipient or separate contact field is sent.

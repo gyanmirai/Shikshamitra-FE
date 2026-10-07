@@ -194,7 +194,7 @@ The backend [calculation audit matrix](https://github.com/gyanmirai/Shikshamitra
 
 ## Payslip completion acceptance
 
-The [payslip specification](../../../Shikshamitra-BE/docs/modules/hr/references/payslip-design.md) owns the acceptance matrix and implementation ledger.
+The [payslip specification](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/references/payslip-design.md) owns the acceptance matrix and implementation ledger.
 Run payslip-selection.test.ts, use-payslip-actions.test.tsx and payslip-document-action-dialog.test.tsx.
 These cover late-selection responses, one private server artifact for all actions, URL cleanup, preserved correction drafts, discard confirmation and payment evidence without document amount fields.
 Verify screen, print, download and email use the same issued revision, with no employer contribution or internal compensation fields.
