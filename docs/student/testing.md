@@ -163,6 +163,8 @@ Authenticated localhost checks used the existing synthetic `InquiryQA Edited0710
 
 Desktop 1440×900, tablet 768×1024 and mobile 390×844 checks found no document horizontal overflow. Narrow-screen academic filters use an accessible expandable toggle so table rows remain reachable; desktop retains the shared filter row. The history drawer becomes full width on mobile and uses the shared Scrollbar. Independent approval with a second account followed by live Continue is deferred by the user. A restricted account is currently unavailable; the user moved that live check to staging. Multi-page real-data navigation and retakes remain release acceptance checks. Backend representative-volume evidence is recorded in the backend testing notes. Their focused guards/contracts have automated coverage; this change is not deployed. A final authenticated local reload reconfirmed the QA session, Present attendance, persisted 75/100 score and Review queue; the recorder still has no approval or Continue action.
 
+The staging release restores the documented reusable Security Regression gate before deployment. Its 96 local tests, Security lint, docs and workflow syntax checks passed. Only pushes to `main` trigger deployment; caller and reusable jobs carry explicit main guards, manual dispatch is removed, and deployment runs are serialized. The release build now checks full TypeScript after Next generates its route declarations. Deployment, restricted-user acceptance, multi-page/retake checks and concurrent production-like load remain separate staging evidence.
+
 Run the admissions regression suite, including policy and request contracts, stage configuration, outcome routes, scheduling, history, local dialog guards, and legacy compatibility:
 
 ```bash
