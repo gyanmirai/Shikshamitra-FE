@@ -19,6 +19,7 @@ type Props = {
   assessment: ManagedApplicationAssessment;
   admissionOfferingId: string;
   workflowStageDefinitionId: string;
+  initialSessionId?: string;
   onClose: () => void;
 };
 
@@ -27,6 +28,7 @@ export function AssessmentActionDialog({
   assessment,
   admissionOfferingId,
   workflowStageDefinitionId,
+  initialSessionId = '',
   onClose,
 }: Props) {
   // Keep the reviewed attempt and concurrency stamp fixed while staff edit the dialog.
@@ -35,7 +37,7 @@ export function AssessmentActionDialog({
   const run = useAssessmentActions(snapshot);
   const formik = useFormik<AssessmentActionValues>({
     initialValues: {
-      sessionId: '',
+      sessionId: initialSessionId,
       attendance: 'present',
       outcome: '',
       approved: true,
@@ -68,7 +70,7 @@ export function AssessmentActionDialog({
       title={title}
       maxWidth="sm"
       handleClose={onClose}
-      guardUnsavedChanges={formik.dirty}
+      hasUnsavedChanges={formik.dirty}
       disableClose={formik.isSubmitting}
     >
       <DialogScrollContent>

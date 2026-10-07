@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
@@ -17,6 +17,7 @@ import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { FormHistoryCard } from './application-detail/form-history-card';
 import { useApplicationDetail } from './application-detail/use-application-detail';
+import { getApplicationReturnUrl } from './application-detail/application-return-url';
 import { TransitionHistoryCard } from './application-detail/transition-history-card';
 import { ApplicationRuntimeForm } from './application-detail/application-runtime-form';
 import { ApplicationCurrentTask } from './application-detail/application-current-task';
@@ -50,6 +51,8 @@ type DetailTab = 'current' | 'form' | 'history';
 export default function AdmissionApplicationDetailScreen() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const returnUrl = getApplicationReturnUrl(searchParams.get('returnTo'));
   const detail = useApplicationDetail(id);
   const completionDialog = useBoolean();
   const [activeTab, setActiveTab] = useState<DetailTab>('current');
@@ -78,7 +81,7 @@ export default function AdmissionApplicationDetailScreen() {
     workflowQuery.isError ||
     (!isLoading && (!application || !form));
 
-  const closeDetail = () => router.push(studentPaths.enrollment.applications);
+  const closeDetail = () => router.push(returnUrl);
 
   const renderRuntimeForm = () => {
     if (!application || !form) return null;
@@ -473,7 +476,11 @@ export default function AdmissionApplicationDetailScreen() {
                 severity="warning"
                 action={
                   <Button color="inherit" size="small" onClick={closeDetail}>
-                    Back to applications
+                    {returnUrl === studentPaths.enrollment.applications
+                      ? 'Back to applications'
+                      : returnUrl.startsWith(studentPaths.enrollment.assessments)
+                        ? 'Back to assessments'
+                        : 'Back to Pipeline'}
                   </Button>
                 }
               >

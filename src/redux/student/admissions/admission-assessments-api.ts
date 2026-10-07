@@ -11,7 +11,7 @@ import type {
 
 const stageUrl = ({ applicationId, stageInstanceId }: AssessmentStageKey) =>
   `${ASSESSMENTS_URL}/applications/${applicationId}/stages/${stageInstanceId}`;
-const assessmentTags = [tags.exam, tags.admissionApplication];
+const assessmentTags = [tags.exam, tags.admissionApplication, tags.admissionApplicant];
 export const admissionAssessmentsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getApplicationAssessment: builder.query<ApplicationAssessment, AssessmentStageKey>({

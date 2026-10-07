@@ -58,7 +58,7 @@ export function AssessmentBookingField({
           value: session.id,
           label: `${session.name} · ${dayjs(normalizeAssessmentDateTime(session.startsAt)).format('DD MMM, h:mm A')} · ${session.location} · ${session.capacity - session.bookedCount} places`,
         }))}
-        noOptionsMessage="No available sessions. Create a session under Applications → Assessments."
+        noOptionsMessage="No available sessions. Create a session under Admissions → Assessments."
       />
     </Stack>
   );

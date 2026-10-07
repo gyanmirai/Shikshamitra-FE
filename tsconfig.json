@@ -44,6 +44,7 @@
   "exclude": [
     "node_modules",
     ".artifacts",
+    "artifacts",
     "**/route.ts",
     "**/overview/page.ts",
     "dist",

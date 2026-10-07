@@ -7,6 +7,8 @@ export type AssessmentScope = {
   mediumId?: string;
   standardId?: string;
   offeringName: string;
+  offeringCode?: string | null;
+  workflowName?: string | null;
   workflowStageDefinitionId: string;
   stageName: string;
   workflowDefinitionId: string;
