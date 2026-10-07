@@ -1510,6 +1510,7 @@ The established shared implementation is exported from `src/screens/hr/employee/
 - Prefer MUI buttons and the shared button variants already configured by the theme.
 - Use `LoadingButton` for async submit or mutation actions and disable duplicate submission while loading.
 - Use `variant="outlined"` for secondary or cancel actions and `variant="contained"` for the primary action unless the surrounding component contract says otherwise.
+- For a primary submit, save, or publish action that should use the system's neutral black/white treatment, use the theme's `text.primary` background and `background.paper` foreground so it adapts in light and dark mode; avoid feature-specific accent colors for these actions.
 - Use `size="small"` for standard page actions, table actions, dialog and drawer footer actions, and dense forms.
 - The theme defines small labeled buttons as 30 px high, with its existing typography, icon spacing, and horizontal padding.
 - Do not override their `height`, `minHeight`, padding, or font size locally; `size="small"` together with `minHeight: 44` is not compliant.

@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react';
 
+import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import {
   Box,
-  Button,
   Accordion,
+  IconButton,
   Typography,
   AccordionSummary,
   AccordionDetails,
@@ -25,9 +26,12 @@ export function ExamReviewAccordion({
   onEdit,
   status,
 }: ExamReviewAccordionProps) {
+  const [expanded, setExpanded] = useState(true);
+
   return (
     <Accordion
-      defaultExpanded
+      expanded={expanded}
+      onChange={(_, isExpanded) => setExpanded(isExpanded)}
       disableGutters
       elevation={0}
       sx={{
@@ -39,7 +43,6 @@ export function ExamReviewAccordion({
     >
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         <AccordionSummary
-          expandIcon={<Iconify icon="eva:chevron-down-fill" width={20} />}
           sx={{
             flex: 1,
             minWidth: 0,
@@ -71,17 +74,30 @@ export function ExamReviewAccordion({
             {status}
           </Box>
         </AccordionSummary>
-        {onEdit && (
-          <Button
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexShrink: 0 }}>
+          {onEdit && (
+            <IconButton
+              size="small"
+              aria-label={`Edit ${title}`}
+              onClick={onEdit}
+              sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+            >
+              <Iconify icon="solar:pen-bold" width={18} />
+            </IconButton>
+          )}
+          <IconButton
             size="small"
-            variant="outlined"
-            aria-label={`Edit ${title}`}
-            onClick={onEdit}
-            sx={{ flexShrink: 0, minWidth: 56 }}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} ${title}`}
+            aria-expanded={expanded}
+            onClick={() => setExpanded((current) => !current)}
           >
-            Edit
-          </Button>
-        )}
+            <Iconify
+              icon="eva:chevron-down-fill"
+              width={20}
+              sx={{ transform: expanded ? 'rotate(180deg)' : 'none' }}
+            />
+          </IconButton>
+        </Box>
       </Box>
 
       <AccordionDetails sx={{ px: 0, pt: 1.5, pb: 0 }}>{children}</AccordionDetails>

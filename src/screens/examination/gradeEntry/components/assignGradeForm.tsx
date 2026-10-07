@@ -98,7 +98,12 @@ const QUICK_TEMPLATES = [
   'Can Do Better. With focused preparation and consistent effort, improvement is expected.',
 ];
 
-const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGradeProps) => {
+const AssignGrade: React.FC<IAssignGradeProps> = ({
+  onClose,
+  data,
+  className,
+  divisionName,
+}: IAssignGradeProps) => {
   const marksInputRef = useRef<HTMLInputElement>(null);
   const templateBtnRef = useRef<HTMLButtonElement>(null);
   const [activeQuickScore, setActiveQuickScore] = useState<string | null>(null);
@@ -231,124 +236,88 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
           <Scrollbar sx={{ height: '500px', p: 2 }}>
             <Grid container spacing={1}>
               {/* Student Profile */}
-              <Grid size={{ xs: 12 }}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Card
                   sx={{
-                    p: 0,
-                    overflow: 'hidden',
+                    p: 2,
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
                     boxShadow: 'none',
                     border: (theme) => `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  <Box
-                    sx={{
-                      height: 4,
-                      background: (theme) =>
-                        `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
-                    }}
-                  />
-                  <Box sx={{ p: 2 }}>
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Avatar
-                        alt={data?.studentName || 'Student'}
-                        sx={{
-                          width: 44,
-                          height: 44,
-                          bgcolor: 'primary.main',
-                          color: 'primary.contrastText',
-                          fontWeight: 700,
-                          fontSize: 18,
-                        }}
-                      >
-                        {data?.studentName?.charAt(0)?.toUpperCase() || 'S'}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3}>
-                          {data?.studentName || '—'}
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                          Roll No: {data?.rollNo || '—'}
-                          {data?.examName ? ` • ${data.examName}` : ''}
-                        </Typography>
-                      </Box>
+                  <Stack direction="row" alignItems="center" spacing={1}>
+                    <Avatar
+                      alt={data?.studentName || 'Student'}
+                      sx={{
+                        width: 44,
+                        height: 44,
+                        bgcolor: 'primary.main',
+                        color: 'primary.contrastText',
+                        fontWeight: 700,
+                        fontSize: 18,
+                      }}
+                    >
+                      {data?.studentName?.charAt(0)?.toUpperCase() || 'S'}
+                    </Avatar>
+                    <Stack spacing={0.25}>
+                      <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3}>
+                        {data?.studentName || '—'}
+                      </Typography>
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        Roll No: {data?.rollNo || '—'}
+                      </Typography>
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        {[className, divisionName].filter(Boolean).join(' ') || '—'}
+                      </Typography>
                     </Stack>
-                  </Box>
+                  </Stack>
                 </Card>
               </Grid>
 
-              {/* Attendance Status */}
-              <Grid size={{ xs: 12 }}>
+              {/* Attendance */}
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Card
                   sx={{
-                    p: 0,
-                    overflow: 'hidden',
+                    p: 2,
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
                     boxShadow: 'none',
                     border: (theme) => `1px solid ${theme.palette.divider}`,
                   }}
                 >
-                  <Box
-                    sx={{
-                      px: 2,
-                      py: 1.25,
-                      bgcolor: (theme) => varAlpha(theme.palette.grey['500Channel'], 0.06),
-                      borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-                    }}
-                  >
-                    <Typography
-                      variant="overline"
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.75,
-                        color: 'text.secondary',
-                        letterSpacing: 0.8,
-                      }}
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Attendance</InputLabel>
+                    <Select
+                      name="attendanceStatus"
+                      label="Attendance"
+                      value={formik.values.attendanceStatus}
+                      onChange={formik.handleChange}
+                      renderValue={(selected) =>
+                        AttendanceStatusLabel[selected as AttendanceStatus] ?? 'Select attendance'
+                      }
                     >
-                      <Iconify
-                        icon="solar:user-check-bold"
-                        width={16}
-                        sx={{ color: 'info.main' }}
-                      />
-                      Attendance Status
-                    </Typography>
-                  </Box>
-                  <Box sx={{ p: 2 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Attendance</InputLabel>
-                      <Select
-                        name="attendanceStatus"
-                        label="Attendance"
-                        value={formik.values.attendanceStatus}
-                        onChange={formik.handleChange}
-                      >
-                        {AttendanceStatusOptions.map((opt) => (
-                          <MenuItem key={opt.value} value={opt.value}>
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                              <Label
-                                color={AttendanceStatusColor[opt.value as AttendanceStatus] as any}
-                                sx={{ minWidth: 90 }}
-                              >
-                                {opt.label}
-                              </Label>
-                            </Stack>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-                    {isAbsent && (
-                      <Alert severity="info" sx={{ mt: 1.5, py: 0.5 }}>
-                        Marks entry is disabled for{' '}
-                        <strong>
-                          {
-                            AttendanceStatusLabel[
-                            formik.values.attendanceStatus as AttendanceStatus
-                            ]
-                          }
-                        </strong>{' '}
-                        students.
-                      </Alert>
-                    )}
-                  </Box>
+                      {AttendanceStatusOptions.map((opt) => (
+                        <MenuItem key={opt.value} value={opt.value}>
+                          <Label color={AttendanceStatusColor[opt.value as AttendanceStatus] as any}>
+                            {opt.label}
+                          </Label>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  {isAbsent && (
+                    <Alert severity="info" sx={{ mt: 1.5, py: 0.5 }}>
+                      Marks entry is disabled for{' '}
+                      <strong>
+                        {AttendanceStatusLabel[formik.values.attendanceStatus as AttendanceStatus]}
+                      </strong>{' '}
+                      students.
+                    </Alert>
+                  )}
                 </Card>
               </Grid>
 
@@ -370,17 +339,7 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                       borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                     }}
                   >
-                    <Typography
-                      variant="overline"
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.75,
-                        color: 'text.secondary',
-                        letterSpacing: 0.8,
-                      }}
-                    >
-                      <Iconify icon="solar:star-bold" width={16} sx={{ color: 'warning.main' }} />
+                    <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0.8 }}>
                       Marks Entry
                     </Typography>
                   </Box>
@@ -528,19 +487,8 @@ const AssignGrade: React.FC<IAssignGradeProps> = ({ onClose, data }: IAssignGrad
                   >
                     <Typography
                       variant="overline"
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.75,
-                        color: 'text.secondary',
-                        letterSpacing: 0.8,
-                      }}
+                      sx={{ color: 'text.secondary', letterSpacing: 0.8 }}
                     >
-                      <Iconify
-                        icon="solar:chat-round-dots-bold"
-                        width={16}
-                        sx={{ color: 'primary.main' }}
-                      />
                       Feedback
                     </Typography>
 

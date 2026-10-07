@@ -13,11 +13,13 @@ import { useSession } from 'next-auth/react';
 import { GlobalIcons } from 'src/utils/icons';
 import { useReactToPrint } from 'react-to-print';
 import { Iconify } from 'src/components/iconify';
+import { useBoolean } from 'src/hooks/use-boolean';
 import CustomSelect from 'src/components/custom-select';
 import CancelButton from 'src/components/cancel-button';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { AcademicInsights } from 'src/screens/academic/components/academic-insights';
 import { useGetTenantByIdQuery } from 'src/redux/tenant/tenantApi';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -35,6 +37,7 @@ import {
   Card,
   Stack,
   Button,
+  Divider,
   Tooltip,
   TextField,
   Accordion,
@@ -159,6 +162,30 @@ const getWorkflowCopy = (resultHeaderData: any) => {
   };
 };
 
+const getResultReadinessSummary = (readinessData: any) => {
+  const checks = readinessData?.checks ?? [];
+  const passedCount = checks.filter((check: any) => check.passed).length;
+  const pendingSubjects: string[] = readinessData?.pendingSubjects ?? [];
+
+  return {
+    checks,
+    passedCount,
+    readinessPercentage:
+      typeof readinessData?.percentage === 'number'
+        ? readinessData.percentage
+        : checks.length
+          ? Math.round((passedCount / checks.length) * 100)
+          : 0,
+    blockerCount:
+      readinessData?.blockerCount ??
+      checks.filter((check: any) => !check.passed && check.severity !== 'warning').length,
+    warningCount:
+      readinessData?.warningCount ??
+      checks.filter((check: any) => !check.passed && check.severity === 'warning').length,
+    pendingSubjects,
+  };
+};
+
 function ResultWorkflowPanel({
   readinessData,
   resultHeaderData,
@@ -173,77 +200,36 @@ function ResultWorkflowPanel({
   selectedDivisionName: string;
 }) {
   const workflow = getWorkflowCopy(resultHeaderData);
-  const checks = readinessData?.checks ?? [];
-  const readinessPercentage =
-    typeof readinessData?.percentage === 'number'
-      ? readinessData.percentage
-      : checks.length
-        ? Math.round((checks.filter((check: any) => check.passed).length / checks.length) * 100)
-        : 0;
-  const blockerCount =
-    readinessData?.blockerCount ??
-    checks.filter((check: any) => !check.passed && check.severity !== 'warning').length;
-  const warningCount =
-    readinessData?.warningCount ??
-    checks.filter((check: any) => !check.passed && check.severity === 'warning').length;
-  const pendingSubjects: string[] = readinessData?.pendingSubjects ?? [];
+  const {
+    checks,
+    readinessPercentage,
+    blockerCount,
+    warningCount,
+    pendingSubjects,
+  } = getResultReadinessSummary(readinessData);
 
   return (
-    <Accordion
-      defaultExpanded={false}
-      disableGutters
-      elevation={0}
-      sx={{
-        mb: 1,
-        borderRadius: 1.5,
-        border: '1px solid',
-        borderColor: 'divider',
-        overflow: 'hidden',
-        '&:before': { display: 'none' },
-      }}
-    >
-      <AccordionSummary
-        expandIcon={<Iconify icon="eva:chevron-down-fill" width={18} />}
-        sx={{
-          px: 2,
-          py: 0.5,
-          bgcolor: 'background.neutral',
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          '&.Mui-expanded': { minHeight: 48 },
-          '& .MuiAccordionSummary-content': {
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            my: 0.5,
-            '&.Mui-expanded': { my: 0.5 },
-          },
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={2} minWidth={0} flex={1}>
-          <Stack direction="row" alignItems="center" spacing={1} flexShrink={0}>
-            <Iconify icon={workflow.icon} width={20} sx={{ color: 'text.secondary' }} />
+    <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
+      <Stack spacing={1.5}>
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          justifyContent="space-between"
+          spacing={1}
+        >
+          <Box minWidth={0}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              Result readiness
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {selectedExamName || 'Selected exam'} · {selectedClassName || 'Class'} /{' '}
+              {selectedDivisionName || 'Division'}
+            </Typography>
+          </Box>
+          <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
             <Label variant="soft" color={workflow.color}>
               {workflow.label}
             </Label>
-          </Stack>
-          <Box minWidth={0}>
-            <Typography variant="subtitle2" noWrap sx={{ fontWeight: 700 }}>
-              {selectedExamName || 'Selected exam'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {selectedClassName || 'Class'} / {selectedDivisionName || 'Division'}
-            </Typography>
-          </Box>
-        </Stack>
-
-        <Stack direction="row" alignItems="center" spacing={2} flexShrink={0} sx={{ mr: 1 }}>
-          <Typography
-            variant="subtitle2"
-            sx={{ color: 'text.primary', display: { xs: 'none', sm: 'block' } }}
-          >
-            Result readiness
-          </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             <Label variant="soft" color={blockerCount ? 'error' : 'success'}>
               {blockerCount} Blockers
             </Label>
@@ -252,110 +238,84 @@ function ResultWorkflowPanel({
             </Label>
           </Stack>
         </Stack>
-      </AccordionSummary>
 
-      <AccordionDetails sx={{ p: 1 }}>
-        <Box
-          display="grid"
-          gridTemplateColumns={{ xs: '1fr', md: '280px 1fr' }}
-          gap={1.5}
-          alignItems="stretch"
-        >
-          {/* Left Side Content */}
-          <Box
-            sx={{
-              p: 1,
-              borderRadius: 1,
-              bgcolor: (theme) => alpha(theme.palette.action.selected, 0.04),
-              border: (theme) => `1px solid ${theme.palette.divider}`,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-            }}
-          >
+        <Box>
+          <Stack direction="row" justifyContent="space-between" spacing={1} sx={{ mb: 0.75 }}>
             <Typography variant="caption" color="text.secondary">
-              {workflow.helper}
+              {readinessData?.isReady ? 'Required checks are complete.' : workflow.helper}
             </Typography>
-          </Box>
-
-          {/* Right Side Content */}
-          <Stack spacing={1.5}>
-            <Typography variant="caption" color="text.secondary" display="block">
-              {readinessData?.isReady
-                ? 'Required checks are complete.'
-                : 'Resolve blockers before generating preview.'}
+            <Typography variant="caption" color="text.secondary" fontWeight={700}>
+              {readinessPercentage}%
             </Typography>
-
-            <LinearProgress
-              variant="determinate"
-              value={Math.min(100, Math.max(0, readinessPercentage))}
-              sx={{ height: 8, borderRadius: 999 }}
-              color={readinessData?.isReady ? 'success' : 'warning'}
-            />
-
-            <Box
-              display="grid"
-              gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' }}
-              gap={1}
-            >
-              {checks.map((check: any) => (
-                <Box
-                  key={check.label}
-                  sx={{
-                    p: 1,
-                    borderRadius: 1,
-                    border: (theme) => `1px solid ${theme.palette.divider}`,
-                    bgcolor: check.passed
-                      ? (theme) => alpha(theme.palette.success.main, 0.04)
-                      : 'background.paper',
-                  }}
-                >
-                  <Stack direction="row" alignItems="flex-start" spacing={1}>
-                    <Iconify
-                      icon={check.passed ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
-                      width={17}
-                      sx={{
-                        mt: 0.15,
-                        color: check.passed
-                          ? 'success.main'
-                          : check.severity === 'warning'
-                            ? 'warning.main'
-                            : 'error.main',
-                      }}
-                    />
-                    <Box minWidth={0}>
-                      <Typography variant="caption" fontWeight={700} display="block">
-                        {check.label}
-                      </Typography>
-                      {check.hint && (
-                        <Typography variant="caption" color="text.secondary" display="block">
-                          {check.hint}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Stack>
-                </Box>
-              ))}
-            </Box>
-
-            {pendingSubjects.length > 0 && (
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {pendingSubjects.slice(0, 5).map((subject) => (
-                  <Label key={subject} variant="soft" color="warning">
-                    {subject}
-                  </Label>
-                ))}
-                {pendingSubjects.length > 5 && (
-                  <Label variant="soft" color="warning">
-                    +{pendingSubjects.length - 5} more
-                  </Label>
-                )}
-              </Stack>
-            )}
           </Stack>
+          <LinearProgress
+            variant="determinate"
+            value={Math.min(100, Math.max(0, readinessPercentage))}
+            sx={{ height: 8, borderRadius: 999 }}
+            color={readinessData?.isReady ? 'success' : 'warning'}
+          />
         </Box>
-      </AccordionDetails>
-    </Accordion>
+
+        <Stack divider={<Divider flexItem />}>
+          {checks.map((check: any) => {
+            const checkColor = check.passed
+              ? 'success'
+              : check.severity === 'warning'
+                ? 'warning'
+                : 'error';
+
+            return (
+              <Stack
+                key={check.label}
+                direction="row"
+                alignItems="flex-start"
+                spacing={1}
+                sx={{ py: 1.25 }}
+              >
+                <Iconify
+                  icon={check.passed ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
+                  width={18}
+                  sx={{ mt: 0.15, color: `${checkColor}.main`, flexShrink: 0 }}
+                />
+                <Box minWidth={0} flex={1}>
+                  <Typography variant="body2" fontWeight={600}>
+                    {check.label}
+                  </Typography>
+                  {check.hint && (
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      {check.hint}
+                    </Typography>
+                  )}
+                </Box>
+                <Label variant="soft" color={checkColor}>
+                  {check.passed ? 'Complete' : check.severity === 'warning' ? 'Warning' : 'Blocker'}
+                </Label>
+              </Stack>
+            );
+          })}
+        </Stack>
+
+        {pendingSubjects.length > 0 && (
+          <Stack spacing={0.75}>
+            <Typography variant="caption" color="text.secondary" fontWeight={600}>
+              Subjects needing attention
+            </Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+              {pendingSubjects.slice(0, 5).map((subject) => (
+                <Label key={subject} variant="soft" color="warning">
+                  {subject}
+                </Label>
+              ))}
+              {pendingSubjects.length > 5 && (
+                <Label variant="soft" color="warning">
+                  +{pendingSubjects.length - 5} more
+                </Label>
+              )}
+            </Stack>
+          </Stack>
+        )}
+      </Stack>
+    </Card>
   );
 }
 
@@ -1407,6 +1367,7 @@ function AnalyticsCards({
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 const ResultCreation = (_props: TabComponentType) => {
+  const insightsDrawer = useBoolean();
   const { currentMedium: medium, currentYear } = useSelector(
     (state: RootState) => state.globalState
   );
@@ -1521,6 +1482,7 @@ const ResultCreation = (_props: TabComponentType) => {
 
   const resultHeaderData = allFiltersSet ? rawResultHeaderData : null;
   const readinessData = allFiltersSet ? rawReadinessData : null;
+  const readinessSummary = getResultReadinessSummary(readinessData);
 
   const [generateResult, { isLoading: isGenerating }] = useQueryAndMutation<
     typeof useGenerateResultMutation
@@ -2020,18 +1982,57 @@ const ResultCreation = (_props: TabComponentType) => {
               />
             )}
           />
+          <Button
+            size="small"
+            variant="outlined"
+            color="inherit"
+            startIcon={<Iconify icon="solar:chart-2-outline" width={18} />}
+            onClick={insightsDrawer.onTrue}
+            disabled={!allFiltersSet || !readinessData?.checks?.length}
+            sx={{ ml: 'auto', alignSelf: 'center', whiteSpace: 'nowrap' }}
+          >
+            View all insights
+          </Button>
         </Box>
       </motion.div>
 
-      {allFiltersSet && readinessData?.checks?.length > 0 && (
-        <ResultWorkflowPanel
-          readinessData={readinessData}
-          resultHeaderData={resultHeaderData}
-          selectedExamName={selectedExamName}
-          selectedClassName={selectedClassName}
-          selectedDivisionName={selectedDivisionName}
-        />
-      )}
+      <AcademicInsights
+        title="Result creation insights"
+        description="Result readiness and validation checks for the selected exam, class and division."
+        metrics={[]}
+        chart={{
+          title: 'Readiness check overview',
+          description: 'Passed, blocked, and warning checks for result generation.',
+          categories: ['Passed', 'Blockers', 'Warnings'],
+          values: [
+            readinessSummary.passedCount,
+            readinessSummary.blockerCount,
+            readinessSummary.warningCount,
+          ],
+          seriesName: 'Checks',
+          monochrome: true,
+          summary: [
+            { label: 'Passed', value: readinessSummary.passedCount },
+            { label: 'Blockers', value: readinessSummary.blockerCount },
+            { label: 'Warnings', value: readinessSummary.warningCount },
+          ],
+          emptyMessage: 'No result readiness checks are available.',
+        }}
+        afterChart={
+          allFiltersSet && readinessData?.checks?.length > 0 ? (
+            <ResultWorkflowPanel
+              readinessData={readinessData}
+              resultHeaderData={resultHeaderData}
+              selectedExamName={selectedExamName}
+              selectedClassName={selectedClassName}
+              selectedDivisionName={selectedDivisionName}
+            />
+          ) : null
+        }
+        open={insightsDrawer.value}
+        onClose={insightsDrawer.onFalse}
+        hideTrigger
+      />
 
       {/* Readiness Panel */}
       {false &&

@@ -7,7 +7,7 @@ export type AcademicInsightMetric = {
   value: string | number;
   helper?: string;
   icon: string;
-  tone?: 'primary' | 'info' | 'success' | 'warning' | 'error';
+  tone?: 'neutral' | 'primary' | 'info' | 'success' | 'warning' | 'error';
   selected?: boolean;
   onClick?: () => void;
 };
@@ -22,6 +22,7 @@ export type AcademicInsightChart = {
   max?: number;
   summary?: { label: string; value: number }[];
   emptyMessage?: string;
+  monochrome?: boolean;
 };
 
 export type AcademicInsightFocus = {

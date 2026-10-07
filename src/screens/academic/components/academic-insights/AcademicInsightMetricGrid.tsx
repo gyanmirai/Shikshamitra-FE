@@ -32,6 +32,8 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
       {metrics.map((metric, index) => {
         const interactive = Boolean(metric.onClick);
         const tone = metric.tone ?? METRIC_TONES[index % METRIC_TONES.length];
+        const isNeutral = tone === 'neutral';
+        const paletteTone = tone === 'neutral' ? 'primary' : tone;
 
         return (
           <Grid key={metric.id} size={{ xs: 6 }} sx={{ display: 'flex' }}>
@@ -46,9 +48,15 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
                 height: '100%',
                 p: 1.5,
                 borderRadius: 1.5,
-                borderColor: metric.selected ? `${tone}.main` : 'divider',
+                borderColor: metric.selected
+                  ? isNeutral
+                    ? 'text.primary'
+                    : `${paletteTone}.main`
+                  : 'divider',
                 bgcolor: metric.selected
-                  ? (theme) => varAlpha(theme.vars.palette[tone].mainChannel, 0.06)
+                  ? isNeutral
+                    ? 'action.selected'
+                    : (theme) => varAlpha(theme.vars.palette[paletteTone].mainChannel, 0.06)
                   : 'background.paper',
                 color: 'text.primary',
                 textAlign: 'left',
@@ -56,7 +64,10 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
                 transition: (theme) =>
                   theme.transitions.create(['border-color', 'background-color']),
                 '&:hover': interactive
-                  ? { borderColor: `${tone}.main`, bgcolor: 'action.hover' }
+                  ? {
+                      borderColor: isNeutral ? 'text.primary' : `${paletteTone}.main`,
+                      bgcolor: 'action.hover',
+                    }
                   : undefined,
               }}
             >
@@ -87,8 +98,10 @@ export function AcademicInsightMetricGrid({ metrics, isLoading, onMetricClick }:
                     display: 'grid',
                     placeItems: 'center',
                     borderRadius: 1.25,
-                    color: `${tone}.main`,
-                    bgcolor: (theme) => varAlpha(theme.vars.palette[tone].mainChannel, 0.1),
+                    color: isNeutral ? 'text.secondary' : `${paletteTone}.main`,
+                    bgcolor: isNeutral
+                      ? 'action.hover'
+                      : (theme) => varAlpha(theme.vars.palette[paletteTone].mainChannel, 0.1),
                   }}
                 >
                   <Iconify icon={metric.icon} width={20} />

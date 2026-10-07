@@ -303,14 +303,15 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
       </AnimatePresence>
       <ConfirmDialog
         open={deleteDialog.value}
+        disableBackdropClick
         onClose={() => {
           deleteDialog.onFalse();
           setSelectedExam(null);
         }}
-        title="Delete"
+        title="Delete exam?"
         content={
           <>
-            Are you sure you want to delete exam <strong>{selectedExam?.examName}</strong>?
+            This will delete exam <strong>{selectedExam?.examName}</strong>.
           </>
         }
         action={
@@ -321,7 +322,7 @@ const ScheduleExam = ({ showBreadCumb = true }: { showBreadCumb?: boolean }) => 
             size="small"
             onClick={handleDeleteExam}
           >
-            Yes
+            Delete
           </LoadingButton>
         }
       />

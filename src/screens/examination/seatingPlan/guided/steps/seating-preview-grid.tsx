@@ -61,12 +61,19 @@ export function SeatingPreviewGrid({ assignments }: { assignments: Assignment[] 
                 <Typography variant="overline" color="text.primary">
                   Seat {assignment.seatNumber}
                 </Typography>
-                <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ overflowWrap: 'anywhere', textAlign: 'left' }}
+                >
                   {assignment.studentName || `Student ${assignment.studentId.slice(0, 6)}`}
                 </Typography>
-                <Typography variant="caption" color="text.primary" noWrap>
-                  {assignment.rollNo ? `Roll ${assignment.rollNo}` : 'Roll —'}
-                  {assignment.divisionName ? ` · ${assignment.divisionName}` : ''}
+                <Typography
+                  variant="caption"
+                  color="text.primary"
+                  sx={{ textAlign: 'left', overflowWrap: 'anywhere' }}
+                >
+                  {assignment.rollNo != null ? `Roll ${assignment.rollNo}` : 'Roll —'}
+                  {assignment.divisionName ? ` · Div ${assignment.divisionName}` : ''}
                 </Typography>
               </Stack>
             ))}

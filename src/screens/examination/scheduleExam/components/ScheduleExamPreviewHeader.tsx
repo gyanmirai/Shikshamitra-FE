@@ -23,15 +23,15 @@ export function ScheduleExamPreviewHeader({
     <Box
       component="header"
       sx={{
-        px: { xs: 2, sm: 3 },
-        py: 2.5,
+        px: { xs: 1, sm: 1.5 },
+        py: 1,
         borderBottom: '1px solid',
         borderColor: 'divider',
         bgcolor: 'background.paper',
       }}
     >
-      <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
-        <Stack spacing={1} sx={{ minWidth: 0 }}>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+        <Stack spacing={0.5} sx={{ minWidth: 0 }}>
           <Stack direction="row" alignItems="center" flexWrap="wrap" gap={1}>
             <Typography variant="h5" component="h2" sx={{ fontWeight: 700, lineHeight: 1.25 }}>
               {examName}
@@ -50,7 +50,7 @@ export function ScheduleExamPreviewHeader({
             </CustomTooltip>
           </Stack>
 
-          {dateRange && (
+          {dateRange && statusLabel !== 'Completed' && (
             <Stack direction="row" spacing={0.75} alignItems="center" color="text.secondary">
               <Iconify icon={GlobalIcons.calendar} width={16} height={16} />
               <Typography
@@ -66,7 +66,7 @@ export function ScheduleExamPreviewHeader({
         <IconButton
           aria-label="Close exam details"
           onClick={onClose}
-          sx={{ mt: -0.75, mr: -1, width: 44, height: 44, color: 'text.secondary' }}
+          sx={{ width: 40, height: 40, color: 'text.secondary' }}
         >
           <Iconify icon="mdi:close" width={22} />
         </IconButton>

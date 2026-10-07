@@ -111,6 +111,8 @@ export interface IUpdateStudentMarksRequest {
  */
 export interface IAssignGradeProps {
   data?: IStudentExamGradeEntry | null;
+  className?: string;
+  divisionName?: string;
   onClose?: (e: any, isSubmit: boolean) => void;
 }
 

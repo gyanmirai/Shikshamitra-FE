@@ -32,11 +32,11 @@ export function ScheduleExamPreviewAlerts({
   if (!visibleIssues.length && missingRoomAssignmentCount <= 0) return null;
 
   return (
-    <Stack spacing={1}>
+    <>
       {visibleIssues.length > 0 && (
         <Box
           sx={{
-            p: 2,
+            p: 1.5,
             borderRadius: 2,
             border: '1px solid',
             borderColor: 'divider',
@@ -61,8 +61,9 @@ export function ScheduleExamPreviewAlerts({
                   component="li"
                   key={issue.id}
                   sx={{
-                    py: 1.25,
+                    py: 1,
                     '&:not(:last-child)': { borderBottom: '1px solid', borderColor: 'divider' },
+                    '&:last-child': { pb: 0 },
                   }}
                 >
                   <Stack
@@ -101,7 +102,7 @@ export function ScheduleExamPreviewAlerts({
       {missingRoomAssignmentCount > 0 && (
         <Box
           sx={{
-            p: 2,
+            p: 1.5,
             borderRadius: 2,
             bgcolor: 'background.paper',
             border: '1px solid',
@@ -129,6 +130,6 @@ export function ScheduleExamPreviewAlerts({
           </Stack>
         </Box>
       )}
-    </Stack>
+    </>
   );
 }

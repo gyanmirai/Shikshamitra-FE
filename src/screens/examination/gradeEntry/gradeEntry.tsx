@@ -45,6 +45,7 @@ import {
   Autocomplete,
   ListItemText,
   DialogActions,
+  CircularProgress,
 } from '@mui/material';
 import {
   useVerifyMarksMutation,
@@ -113,6 +114,7 @@ const GradeEntry = (props: TabComponentType) => {
 
   // Autosave State
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'failed'>('idle');
+  const [isReviewLoading, setIsReviewLoading] = useState(false);
 
   // Rows state for bulk operations
   const [tableRows, setTableRows] = useState<IExamMarkItem[]>([]);
@@ -514,7 +516,18 @@ const GradeEntry = (props: TabComponentType) => {
 
   // Review before submit validation trigger
   const handleTriggerReview = async () => {
+    if (!examId || !division || !subject || isReviewLoading) return;
+
+    setIsReviewLoading(true);
     try {
+      const focusedElement = document.activeElement;
+      if (
+        focusedElement instanceof HTMLElement &&
+        focusedElement.matches('input, textarea, [role="combobox"]')
+      ) {
+        focusedElement.blur();
+      }
+
       if (isDirty) {
         setSaveState('saving');
         await bulkSaveMarks({
@@ -532,6 +545,11 @@ const GradeEntry = (props: TabComponentType) => {
       if (isDirty) {
         setSaveState('failed');
       }
+      shikshaMitraToast.error({
+        message: 'Unable to prepare grade review. Please check your connection and try again.',
+      });
+    } finally {
+      setIsReviewLoading(false);
     }
   };
 
@@ -612,6 +630,23 @@ const GradeEntry = (props: TabComponentType) => {
     } catch (error) {
       if (action === 'draft') setSaveState('failed');
       console.error(`[GradeEntry] Failed to ${action}:`, error);
+    }
+  };
+
+  const handleRetrySave = async () => {
+    if (!examId || !division || !subject) return;
+    setSaveState('saving');
+    try {
+      await bulkSaveMarks({
+        examId,
+        body: { subjectId: subject, divisionId: division, rows: buildMarksPayload(tableRows) },
+      }).unwrap();
+      await saveDraftMarks({ examId, divisionId: division, subjectId: subject }).unwrap();
+      setIsDirty(false);
+      setSaveState('saved');
+    } catch (error) {
+      console.error('[GradeEntry] Failed to retry saving marks:', error);
+      setSaveState('failed');
     }
   };
 
@@ -869,44 +904,40 @@ const GradeEntry = (props: TabComponentType) => {
                 },
                 {
                   icon: 'solar:book-2-bold',
-                  value: subjectOptions.find((option) => option.id === subject)?.name ?? '—',
+                  value: `Subject: ${subjectOptions.find((option) => option.id === subject)?.name ?? '—'}`,
                 },
                 {
                   icon: 'solar:users-group-rounded-bold',
-                  value: [
-                    allClass.find((item) => item.id === classes)?.name ?? '—',
-                    allDivision.find((item) => item.id === division)?.name ?? '—',
-                  ].join(' / '),
+                  value: `Standard: ${allClass.find((item) => item.id === classes)?.name ?? '—'} · Division: ${allDivision.find((item) => item.id === division)?.name ?? '—'}`,
                 },
                 {
                   icon: 'solar:checklist-minimalistic-bold',
                   value: `Pending Publish: ${targetSummaryData?.pendingPublishedCount ?? 0} Subj`,
                 },
-              ].map((info) => (
-                <Stack key={info.icon} direction="row" alignItems="center" spacing={0.75}>
-                  <Iconify icon={info.icon} width={14} sx={{ color: 'text.disabled' }} />
-                  <Typography variant="caption" color="text.secondary">
-                    {info.value}
-                  </Typography>
-                </Stack>
+              ].map((info, index) => (
+                <React.Fragment key={info.icon}>
+                  {index === 2 && (
+                    <Box
+                      aria-hidden="true"
+                      sx={{
+                        alignSelf: 'stretch',
+                        borderLeft: '1px solid',
+                        borderColor: 'divider',
+                        mx: 0.25,
+                      }}
+                    />
+                  )}
+                  <Stack direction="row" alignItems="center" spacing={0.75}>
+                    <Iconify icon={info.icon} width={14} sx={{ color: 'text.disabled' }} />
+                    <Typography variant="caption" color="text.secondary">
+                      {info.value}
+                    </Typography>
+                  </Stack>
+                </React.Fragment>
               ))}
               <Label color={GradeEntryWorkflowStatusColor[workflowStatus] as any} variant="soft">
                 {GradeEntryWorkflowStatusLabel[workflowStatus]}
               </Label>
-              {saveState !== 'idle' && (
-                <Label
-                  color={
-                    saveState === 'saving' ? 'warning' : saveState === 'saved' ? 'success' : 'error'
-                  }
-                  variant="soft"
-                >
-                  {saveState === 'saving'
-                    ? 'Saving...'
-                    : saveState === 'saved'
-                      ? 'Saved'
-                      : 'Save failed'}
-                </Label>
-              )}
             </Stack>
 
             <Stack
@@ -915,6 +946,44 @@ const GradeEntry = (props: TabComponentType) => {
               justifyContent="flex-end"
               sx={{ width: { xs: '100%', md: 'auto' }, flexWrap: 'wrap', gap: 1.5, ml: 'auto' }}
             >
+              {saveState !== 'idle' && (
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  justifyContent="center"
+                  spacing={0.5}
+                  sx={{
+                    minWidth: 132,
+                    flex: '0 0 132px',
+                    whiteSpace: 'nowrap',
+                    color: 'text.secondary',
+                  }}
+                >
+                  {saveState === 'saving' ? (
+                    <CircularProgress size={13} color="inherit" />
+                  ) : (
+                    <Iconify
+                      icon={saveState === 'saved' ? 'solar:check-circle-bold' : 'solar:danger-bold'}
+                      width={14}
+                      sx={{ color: saveState === 'saved' ? 'text.secondary' : 'error.main' }}
+                    />
+                  )}
+                  <Typography variant="caption" color="text.secondary" aria-live="polite">
+                    {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Saved' : 'Not saved ·'}
+                  </Typography>
+                  {saveState === 'failed' && (
+                    <Button
+                      size="small"
+                      variant="text"
+                      color="inherit"
+                      onClick={handleRetrySave}
+                      sx={{ minWidth: 0, p: 0, color: 'text.primary' }}
+                    >
+                      Retry
+                    </Button>
+                  )}
+                </Stack>
+              )}
               <Button
                 size="small"
                 variant="outlined"
@@ -930,7 +999,7 @@ const GradeEntry = (props: TabComponentType) => {
                 allMarksAssigned={allMarksAssigned}
                 isSaveDraftLoading={isSaveDraftLoading}
                 isBulkSaveLoading={isBulkSaveLoading}
-                isSubmitLoading={isSubmitLoading}
+                isReviewLoading={isReviewLoading}
                 isRequestChangesLoading={isRequestChangesLoading}
                 isVerifyLoading={isVerifyLoading}
                 isPublishLoading={isPublishLoading}
@@ -1071,7 +1140,12 @@ const GradeEntry = (props: TabComponentType) => {
           }
           maxWidth="sm"
         >
-          <AssignGrade data={selectedStudent} onClose={handleClose} />
+          <AssignGrade
+            data={selectedStudent}
+            className={allClass.find((item) => item.id === classes)?.name}
+            divisionName={allDivision.find((item) => item.id === division)?.name}
+            onClose={handleClose}
+          />
         </CustomDialog>
 
         <ImportMarksPreviewDialog

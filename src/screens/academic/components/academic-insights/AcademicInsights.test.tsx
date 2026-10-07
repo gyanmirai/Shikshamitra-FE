@@ -11,6 +11,25 @@ vi.mock('src/components/iconify', () => ({
 }));
 
 describe('AcademicInsights', () => {
+  it('hides the key metrics section when the drawer only has custom insight content', () => {
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <AcademicInsights
+          title="Result creation insights"
+          description="Result readiness checks."
+          metrics={[]}
+          afterChart={<div>Readiness checks</div>}
+          open
+          onClose={vi.fn()}
+          hideTrigger
+        />
+      </ThemeProvider>
+    );
+
+    expect(screen.getByText('Readiness checks')).toBeInTheDocument();
+    expect(screen.queryByText('Key metrics')).not.toBeInTheDocument();
+  });
+
   it('opens the full insights drawer and explains its purpose in the header tooltip', async () => {
     render(
       <ThemeProvider theme={createTheme(defaultSettings)}>

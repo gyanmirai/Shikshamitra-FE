@@ -1,5 +1,5 @@
 import { Iconify } from 'src/components/iconify';
-import { Box, Chip, Tooltip, Typography } from '@mui/material';
+import { Box, Typography } from '@mui/material';
 
 import type { SeatStateStyle } from './seat-card-types';
 import type { SeatingSeat, SeatingAssignment } from '../../types';
@@ -40,36 +40,54 @@ export default function SeatCardContent({
       </Box>
       {assignment ? (
         <Box
-          sx={{ minWidth: 0, opacity: isSwapTarget ? 0.35 : 1, transition: 'opacity 150ms ease' }}
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            minWidth: 0,
+            width: '100%',
+            opacity: isSwapTarget ? 0.35 : 1,
+            transition: 'opacity 150ms ease',
+          }}
         >
           <Typography
             variant="caption"
             fontWeight={800}
             noWrap
             display="block"
-            sx={{ color: stateStyle.color }}
+            sx={{ color: stateStyle.color, textAlign: 'left' }}
           >
             {studentName || 'Student'}
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-start',
+              flexWrap: 'wrap',
+              columnGap: 0.75,
+              rowGap: 0.25,
+            }}
+          >
             {rollNo != null && (
               <Typography
                 variant="caption"
                 color={isExternalExam ? 'text.disabled' : stateStyle.color}
                 noWrap
-                sx={{ lineHeight: 1.2 }}
+                sx={{ lineHeight: 1.2, fontSize: '0.65rem' }}
               >
                 Roll {rollNo}
               </Typography>
             )}
             {divisionName && (
-              <Tooltip title={divisionName} arrow>
-                <Chip
-                  label={divisionName}
-                  size="small"
-                  sx={{ height: 14, maxWidth: 132, fontSize: '0.55rem', px: 0.25 }}
-                />
-              </Tooltip>
+              <Typography
+                variant="caption"
+                color={isExternalExam ? 'text.disabled' : stateStyle.color}
+                noWrap
+                sx={{ lineHeight: 1.2, fontSize: '0.65rem' }}
+              >
+                Div {divisionName}
+              </Typography>
             )}
             {isExternalExam && !divisionName && rollNo == null && (
               <Typography variant="caption" sx={{ color: 'text.disabled', lineHeight: 1.2 }}>

@@ -99,20 +99,22 @@ export function AcademicInsights({
             {!isLoading && chart && <AcademicInsightChart config={chart} />}
             {!isLoading && afterChart}
 
-            <Box>
-              <Typography
-                variant="overline"
-                color="text.secondary"
-                sx={{ display: 'block', mb: 1 }}
-              >
-                Key metrics
-              </Typography>
-              <AcademicInsightMetricGrid
-                metrics={metrics}
-                isLoading={isLoading}
-                onMetricClick={handleMetricClick}
-              />
-            </Box>
+            {(metrics.length > 0 || isLoading) && (
+              <Box>
+                <Typography
+                  variant="overline"
+                  color="text.secondary"
+                  sx={{ display: 'block', mb: 1 }}
+                >
+                  Key metrics
+                </Typography>
+                <AcademicInsightMetricGrid
+                  metrics={metrics}
+                  isLoading={isLoading}
+                  onMetricClick={handleMetricClick}
+                />
+              </Box>
+            )}
 
             {!isLoading && focus && (
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
