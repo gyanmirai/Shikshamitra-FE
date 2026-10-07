@@ -63,33 +63,30 @@ const normalizeNestedElectiveSubjects = (
   defaults: SubjectDefaults,
   readiness?: ElectiveReadiness
 ) =>
-  (option.subjects ?? [])
-    .filter((subject) => {
-      if (!readiness) return true;
-      const subjectId = normalizeSubjectId(subject.subjectId ?? subject.id);
-      return (readiness.assignedCounts[subjectId] ?? 0) > 0;
-    })
-    .map((subject): IExamSubject => {
-      const subjectId = subject.subjectId ?? subject.id ?? '';
-      const normalizedId = normalizeSubjectId(subjectId);
-      return {
-        subjectId,
-        subjectName: subject.subjectName ?? subject.name ?? '',
-        subjectCode: subject.subjectCode,
-        subjectColor: subject.color ?? subject.subjectColor ?? '#9E9E9E',
-        electiveGroupId: option.electiveGroupId,
-        electiveGroupName: option.electiveGroupName ?? option.optionGroup,
-        assignedStudentCount: readiness?.assignedCounts[normalizedId],
-        isExamSelectionDisabled: false,
-        examDate: subject.examDate ?? null,
-        startTime: subject.startTime ?? null,
-        endTime: subject.endTime ?? null,
-        totalMarks: subject.totalMarks || defaults.totalMarks,
-        passingMarks: subject.passingMarks || defaults.passingMarks,
-        notes: subject.notes ?? '',
-        gradeScalingId: subject.gradeScalingId || defaults.gradeScalingId,
-      };
-    });
+  (option.subjects ?? []).map((subject): IExamSubject => {
+    const subjectId = subject.subjectId ?? subject.id ?? '';
+    const normalizedId = normalizeSubjectId(subjectId);
+    const assignedStudentCount = readiness
+      ? (readiness.assignedCounts[normalizedId] ?? 0)
+      : undefined;
+    return {
+      subjectId,
+      subjectName: subject.subjectName ?? subject.name ?? '',
+      subjectCode: subject.subjectCode,
+      subjectColor: subject.color ?? subject.subjectColor ?? '#9E9E9E',
+      electiveGroupId: option.electiveGroupId,
+      electiveGroupName: option.electiveGroupName ?? option.optionGroup,
+      assignedStudentCount,
+      isExamSelectionDisabled: assignedStudentCount === 0,
+      examDate: subject.examDate ?? null,
+      startTime: subject.startTime ?? null,
+      endTime: subject.endTime ?? null,
+      totalMarks: subject.totalMarks || defaults.totalMarks,
+      passingMarks: subject.passingMarks || defaults.passingMarks,
+      notes: subject.notes ?? '',
+      gradeScalingId: subject.gradeScalingId || defaults.gradeScalingId,
+    };
+  });
 
 export const normalizeSelectedExamSubjects = (
   options: SubjectSelectionOption[],

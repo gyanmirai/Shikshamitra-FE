@@ -117,8 +117,9 @@ const RoomDetails = (props: FormikProps<IExamFormValues>) => {
           >
             <Grid container spacing={1.5}>
               {(formik.values.subjects ?? []).flatMap((subject: any) => {
-                if (subject.electiveGroupId && subject.subjects?.length) {
-                  return subject.subjects.map((s: any, sIdx: number) => {
+                if (subject.electiveGroupId && Array.isArray(subject.subjects)) {
+                  return subject.subjects.flatMap((s: any, sIdx: number) => {
+                    if (s.isExamSelectionDisabled) return [];
                     const resolvedElectiveGroupName =
                       subject.electiveGroupName ||
                       s.electiveGroupName ||

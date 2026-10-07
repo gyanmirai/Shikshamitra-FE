@@ -15,6 +15,7 @@ const flattenScheduledSubjects = (subjects: any[]) => {
   subjects.forEach((subject) => {
     if (subject?.electiveGroupId && subject?.schedulingMode === 'separate') {
       (subject.subjects || []).forEach((nested: any) => {
+        if (nested.isExamSelectionDisabled) return;
         rows.push({
           ...nested,
           subjectName: nested.subjectName || nested.name || subject.subjectName,
@@ -120,7 +121,8 @@ export const buildExamPlanningIssues = (values: any): ExamPlanningIssue[] => {
             step: 2,
             severity: 'blocking',
             title: `${subject.subjectName || 'Subject'} is missing room assignment`,
-            description: 'Room assignment is required for all divisions when Assign Rooms is enabled.',
+            description:
+              'Room assignment is required for all divisions when Assign Rooms is enabled.',
           });
         }
       });

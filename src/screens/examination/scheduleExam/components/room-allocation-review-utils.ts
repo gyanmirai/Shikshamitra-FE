@@ -31,11 +31,7 @@ export function buildReviewSubjectRoomEntries(
   };
 
   subjects.forEach((subject: any) => {
-    if (
-      subject?.electiveGroupId &&
-      Array.isArray(subject?.subjects) &&
-      subject.subjects.length > 0
-    ) {
+    if (subject?.electiveGroupId && Array.isArray(subject?.subjects)) {
       subject.subjects.forEach((nestedSubject: any) => {
         if (nestedSubject?.isExamSelectionDisabled) return;
         const subjectId = nestedSubject.subjectId || nestedSubject.id;

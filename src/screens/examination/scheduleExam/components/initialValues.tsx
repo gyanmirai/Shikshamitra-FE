@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
-import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
 import { parseWallClockTime } from 'src/utils/time-of-day';
+import { dateFormat, dateConvertor } from 'src/utils/dateConvertor';
+
+import { hasSchedulableExamSubject } from './schedulable-exam-subjects';
 
 import type { IExamSubject, IRoomDetails, IExamFormValues, IDivisionRoomDetail } from '../type';
 
@@ -74,7 +76,11 @@ export function mapBackendToFormik(
       scheduleMap[s.subjectId] = s;
       // Schedule API stores individual elective subjects in electiveGroupSubjects (not subjects).
       // Populate scheduleMap for each so per-subject schedule lookup works in separate mode.
-      if (s.electiveGroupId && Array.isArray(s.electiveGroupSubjects) && s.electiveGroupSubjects.length > 0) {
+      if (
+        s.electiveGroupId &&
+        Array.isArray(s.electiveGroupSubjects) &&
+        s.electiveGroupSubjects.length > 0
+      ) {
         s.electiveGroupSubjects.forEach((sub: any) => {
           if (sub?.subjectId) {
             scheduleSubjectIds.add(sub.subjectId);
@@ -202,10 +208,12 @@ export function mapBackendToFormik(
     const sub = examSubjectMap[subjectId] ?? {};
     // Look up by electiveGroupId on sub, or subjectId if basicData uses group IDs
     const electiveGroupId = sub.electiveGroupId ?? sched.electiveGroupId;
-    const electiveData = electiveGroupId ? electiveGroupMap[electiveGroupId] : electiveGroupMap[subjectId];
+    const electiveData = electiveGroupId
+      ? electiveGroupMap[electiveGroupId]
+      : electiveGroupMap[subjectId];
 
     const resolvedElectiveGroupId: string | undefined =
-      electiveGroupId ?? (electiveData ? (sub.electiveGroupId || subjectId) : undefined);
+      electiveGroupId ?? (electiveData ? sub.electiveGroupId || subjectId : undefined);
 
     const resolvedSubjectName: string =
       sub.subjectName ??
@@ -386,13 +394,16 @@ export function pruneRoomDetails(
   // Collect all valid subject IDs (core subject IDs + nested elective subject IDs)
   const validSubjectIds = new Set<string>();
   (subjects || []).forEach((sub: any) => {
-    if (sub?.electiveGroupId && Array.isArray(sub?.subjects) && sub.subjects.length > 0) {
+    if (sub?.electiveGroupId && Array.isArray(sub?.subjects)) {
       sub.subjects.forEach((nested: any) => {
+        if (nested.isExamSelectionDisabled) return;
         const id = nested?.subjectId || nested?.id;
         if (id) validSubjectIds.add(id);
       });
-      if (sub.electiveGroupId) validSubjectIds.add(sub.electiveGroupId);
-      if (sub.subjectId) validSubjectIds.add(sub.subjectId);
+      if (hasSchedulableExamSubject(sub)) {
+        if (sub.electiveGroupId) validSubjectIds.add(sub.electiveGroupId);
+        if (sub.subjectId) validSubjectIds.add(sub.subjectId);
+      }
     } else if (sub?.subjectId || sub?.id) {
       validSubjectIds.add(sub.subjectId || sub.id);
     }
@@ -431,7 +442,7 @@ export function serializeBasicDetailsPayload(values: IExamFormValues) {
     divisionIds: values.divisions.filter((id) => id !== 'all'),
     subjectIds: values.subjects.flatMap((s: any) => {
       // Elective group: send each individual subject's ID, not the group ID
-      if (s.electiveGroupId && Array.isArray(s.subjects) && s.subjects.length > 0) {
+      if (s.electiveGroupId && Array.isArray(s.subjects)) {
         return s.subjects
           .filter((sub: any) => !sub.isExamSelectionDisabled)
           .map((sub: any) => sub.subjectId || sub.id);
@@ -457,7 +468,7 @@ export function serializeSchedulePayload(values: IExamFormValues) {
 
   values.subjects.forEach((sub) => {
     // Elective group in Separate mode: expand individual subjects into entries
-    if (sub.electiveGroupId && sub.schedulingMode === 'separate' && (sub as any).subjects?.length) {
+    if (sub.electiveGroupId && sub.schedulingMode === 'separate' && Array.isArray(sub.subjects)) {
       ((sub as any).subjects as any[])
         .filter((s: any) => !s.isExamSelectionDisabled)
         .forEach((s: any) => {
@@ -516,7 +527,7 @@ export function serializeRoomAssignmentPayload(values: IExamFormValues) {
   }> = [];
 
   values.subjects.forEach((sub) => {
-    if (sub.electiveGroupId && (sub as any).subjects?.length) {
+    if (sub.electiveGroupId && Array.isArray(sub.subjects)) {
       // Elective group: expand into one entry per individual subject
       ((sub as any).subjects as any[])
         .filter((s: any) => !s.isExamSelectionDisabled)
