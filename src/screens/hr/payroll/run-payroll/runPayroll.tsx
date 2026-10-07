@@ -15,18 +15,19 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
 import { useResponsive } from 'src/hooks/use-responsive';
 import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
 import { shikshaMitraToast } from 'src/components/toast';
-import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import CustomizableTable from 'src/components/customizabaleTable';
+import { formatPayrollCurrency } from 'src/utils/payroll-currency';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { useGetHrAuditEventsQuery } from 'src/redux/hr/hr-policy-api';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { HrAuditValueView } from 'src/screens/hr/components/HrAuditValueView';
+import { PAYROLL_ISSUE_LABELS as ISSUE_LABELS } from 'src/constants/payroll-issues';
 import {
   toHrAuditLabel,
   formatHrAuditText,
@@ -62,13 +63,15 @@ import {
 } from 'src/redux/runPayroll/runPayrollApi';
 
 import { usePayrollPreviewRun } from './use-payroll-preview-run';
+import { SalaryDetailsTableCard } from './salary-details-table-card';
 import { DrawerHeader } from '../../policies/components/HRPolicySharedUI';
 import { getPayrollMutationErrorMessage } from './run-payroll-error-utils';
-import { SalaryDetailsTableCard } from '../salarySlip-generate/salarySlipGenerate';
 import {
   getPayrollAdjustmentSourceLabel,
   isSystemGeneratedPayrollAdjustment,
 } from './run-payroll-adjustment-utils';
+
+
 
 dayjs.extend(isSameOrAfter);
 dayjs.extend(isSameOrBefore);
@@ -144,67 +147,6 @@ type PayrollPreviewError = {
   month?: string;
 };
 
-const ISSUE_LABELS: Record<
-  string,
-  { label: string; severity: 'CRITICAL' | 'WARNING' | 'INFO'; color: 'warning' | 'error' | 'info' }
-> = {
-  MISSING_SALARY_STRUCTURE: {
-    label: 'Salary structure missing',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
-  NO_ATTENDANCE: { label: 'No attendance', severity: 'CRITICAL', color: 'error' },
-  LOW_ATTENDANCE: { label: 'Low attendance', severity: 'WARNING', color: 'warning' },
-  NEGATIVE_NET_PAY: { label: 'Negative net pay', severity: 'CRITICAL', color: 'error' },
-  NO_PREVIOUS_MONTH_COMPARISON: { label: 'No previous month', severity: 'INFO', color: 'info' },
-  LARGE_SALARY_VARIANCE: { label: 'Large variance', severity: 'WARNING', color: 'warning' },
-  ATTENDANCE_POLICY_EFFECTIVE_BOUNDARY: {
-    label: 'Attendance policy boundary warning',
-    severity: 'INFO',
-    color: 'info',
-  },
-  PAYROLL_POLICY_CONFIGURATION: {
-    label: 'Payroll policy needs setup',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
-  ESI_ESTABLISHMENT_INACTIVE: {
-    label: 'ESI establishment setup is inactive',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
-  ESI_WAGE_CLASSIFICATION_REQUIRED: {
-    label: 'ESI wage classification required',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
-  ESI_ENROLLMENT_REVIEW_REQUIRED: {
-    label: 'ESI enrollment review required',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
-  ESI_INSURANCE_NUMBER_REQUIRED: {
-    label: 'ESI insurance number required',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
-  ESI_PWD_RELIEF_EVIDENCE_REQUIRED: {
-    label: 'PwD employer-share relief evidence needs review',
-    severity: 'WARNING',
-    color: 'warning',
-  },
-  COMPENSATION_REVISION_REQUIRED: {
-    label: 'Effective salary setup required',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
-  COMPENSATION_TARGET_VARIANCE: {
-    label: 'Resolve the protected budget difference in compensation configuration',
-    severity: 'CRITICAL',
-    color: 'error',
-  },
-};
-
 const statusColor = {
   PENDING: 'warning',
   REVIEWED: 'info',
@@ -217,7 +159,7 @@ const formatDelta = (value: number | null, percent: number | null) => {
   if (value === null || value === undefined) return '-';
   const sign = value > 0 ? '+' : '';
   const pct = percent === null || percent === undefined ? '' : ` (${sign}${percent.toFixed(1)}%)`;
-  return `${sign}${formatCurrency(value)}${pct}`;
+  return `${sign}${formatPayrollCurrency(value)}${pct}`;
 };
 
 const getPayrollPreviewError = (error: any, fallbackMonth: string): PayrollPreviewError => ({
@@ -753,7 +695,7 @@ const RunPayroll = () => {
         minWidth: 140,
         align: 'center',
         filterType: 'number',
-        render: (v) => formatCurrency(v),
+        render: (v) => formatPayrollCurrency(v),
       },
       {
         id: 'grossSalary',
@@ -761,7 +703,7 @@ const RunPayroll = () => {
         minWidth: 130,
         align: 'center',
         filterType: 'number',
-        render: (v) => formatCurrency(v),
+        render: (v) => formatPayrollCurrency(v),
       },
       {
         id: 'additionalEarnings',
@@ -769,7 +711,7 @@ const RunPayroll = () => {
         minWidth: 140,
         align: 'center',
         filterType: 'number',
-        render: (v) => formatCurrency(v),
+        render: (v) => formatPayrollCurrency(v),
       },
       {
         id: 'totalEarnings',
@@ -777,7 +719,7 @@ const RunPayroll = () => {
         minWidth: 140,
         align: 'center',
         filterType: 'number',
-        render: (v) => formatCurrency(v),
+        render: (v) => formatPayrollCurrency(v),
       },
       {
         id: 'totalDeduction',
@@ -785,7 +727,7 @@ const RunPayroll = () => {
         minWidth: 140,
         align: 'center',
         filterType: 'number',
-        render: (v) => formatCurrency(v),
+        render: (v) => formatPayrollCurrency(v),
       },
       {
         id: 'netSalary',
@@ -793,7 +735,7 @@ const RunPayroll = () => {
         minWidth: 130,
         align: 'center',
         filterType: 'number',
-        render: (v) => formatCurrency(v),
+        render: (v) => formatPayrollCurrency(v),
       },
       {
         id: 'previousMonthNetPay',
@@ -801,7 +743,7 @@ const RunPayroll = () => {
         minWidth: 130,
         align: 'left',
         filterType: 'number',
-        render: (v) => (typeof v === 'number' ? formatCurrency(v) : '-'),
+        render: (v) => (typeof v === 'number' ? formatPayrollCurrency(v) : '-'),
       },
       {
         id: 'netPayDelta',
@@ -969,7 +911,7 @@ const RunPayroll = () => {
     },
     {
       label: 'Net preview',
-      value: hasPreviewForSelectedMonth ? formatCurrency(stats.net) : '-',
+      value: hasPreviewForSelectedMonth ? formatPayrollCurrency(stats.net) : '-',
     },
   ];
   const previewButtonIcon = isDataForSelectedMonth ? 'solar:refresh-linear' : 'solar:rocket-bold';
@@ -1419,7 +1361,7 @@ const RunPayroll = () => {
                           Full-month gross
                         </Typography>
                         <Typography variant="h5" sx={{ fontWeight: 800, color: 'primary.main' }}>
-                          {formatCurrency(activeRow.fullGrossSalary)}
+                          {formatPayrollCurrency(activeRow.fullGrossSalary)}
                         </Typography>
                       </Stack>
                       <Stack alignItems="flex-end" spacing={0.5}>
@@ -1463,19 +1405,19 @@ const RunPayroll = () => {
                       {[
                         {
                           label: 'Gross Salary',
-                          value: formatCurrency(activeRow.grossSalary),
+                          value: formatPayrollCurrency(activeRow.grossSalary),
                           icon: 'solar:calculator-bold-duotone',
                           color: 'primary.main',
                         },
                         {
                           label: 'Additional earnings',
-                          value: formatCurrency(activeRow.additionalEarnings),
+                          value: formatPayrollCurrency(activeRow.additionalEarnings),
                           icon: 'solar:calculator-bold-duotone',
                           color: 'success.main',
                         },
                         {
                           label: 'Total earnings',
-                          value: formatCurrency(activeRow.totalEarnings),
+                          value: formatPayrollCurrency(activeRow.totalEarnings),
                           icon: 'solar:calculator-bold-duotone',
                           color: 'primary.main',
                         },
@@ -1722,7 +1664,7 @@ const RunPayroll = () => {
                               Quoted
                             </Typography>
                             <Typography variant="body2" fontWeight={700}>
-                              {formatCurrency(activeRow.compensationQuotedAmount || 0)}
+                              {formatPayrollCurrency(activeRow.compensationQuotedAmount || 0)}
                             </Typography>
                           </Grid>
                           <Grid size={{ xs: 6, sm: 3 }}>
@@ -1730,7 +1672,7 @@ const RunPayroll = () => {
                               Normalized Result
                             </Typography>
                             <Typography variant="body2" fontWeight={700}>
-                              {formatCurrency(activeRow.compensationNormalizedProtectedAmount || 0)}
+                              {formatPayrollCurrency(activeRow.compensationNormalizedProtectedAmount || 0)}
                             </Typography>
                           </Grid>
                           <Grid size={{ xs: 6, sm: 3 }}>
@@ -1746,7 +1688,7 @@ const RunPayroll = () => {
                                   : 'text.primary'
                               }
                             >
-                              {formatCurrency(activeRow.compensationTargetDifference || 0)}
+                              {formatPayrollCurrency(activeRow.compensationTargetDifference || 0)}
                             </Typography>
                           </Grid>
                         </Grid>
@@ -1800,7 +1742,7 @@ const RunPayroll = () => {
                               fontWeight={700}
                               sx={{ fontVariantNumeric: 'tabular-nums' }}
                             >
-                              {formatCurrency(activeRow.employeeStateInsuranceWages)}
+                              {formatPayrollCurrency(activeRow.employeeStateInsuranceWages)}
                             </Typography>
                           </Grid>
                           {activeRow.employeeStateInsuranceGovernmentContribution > 0 ? (
@@ -1809,7 +1751,7 @@ const RunPayroll = () => {
                                 Government Contribution
                               </Typography>
                               <Typography variant="body2" fontWeight={700}>
-                                {formatCurrency(
+                                {formatPayrollCurrency(
                                   activeRow.employeeStateInsuranceGovernmentContribution
                                 )}
                               </Typography>
@@ -1908,7 +1850,7 @@ const RunPayroll = () => {
                                       size="small"
                                       color={adjustment.isEarning ? 'success' : 'error'}
                                       variant="outlined"
-                                      label={`${adjustment.isEarning ? '+' : '-'}${formatCurrency(adjustment.amount)}`}
+                                      label={`${adjustment.isEarning ? '+' : '-'}${formatPayrollCurrency(adjustment.amount)}`}
                                       sx={{
                                         maxWidth: { xs: 140, sm: 180 },
                                         '& .MuiChip-label': {
@@ -2106,7 +2048,7 @@ const RunPayroll = () => {
                     {activeRow.employerContributions.length ? (
                       <SalaryDetailsTableCard
                         title="Employer Contributions"
-                        subheader={`Additional employer cost: ${formatCurrency(activeRow.employerContributionTotal)}`}
+                        subheader={`Additional employer cost: ${formatPayrollCurrency(activeRow.employerContributionTotal)}`}
                         icon="solar:buildings-2-linear"
                         iconColor={{ bg: 'info.lighter', color: 'info.main' }}
                         data={activeRow.employerContributions}

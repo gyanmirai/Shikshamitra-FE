@@ -140,6 +140,7 @@
     "next-auth": "^5.0.0-beta.30",
     "nprogress": "^0.2.0",
     "openid-client": "^5.6.5",
+    "pdfjs-dist": "5.6.205",
     "qrcode": "^1.5.4",
     "react": "19.1.0",
     "react-barcode": "^1.6.1",

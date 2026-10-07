@@ -2,7 +2,7 @@ import type { RootState } from 'src/redux/store';
 import type { PaperProps, DialogProps, DialogContentProps } from '@mui/material';
 
 import { CONFIG } from 'src/config-global';
-import { Close } from '@mui/icons-material';
+import Close from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
 import React, { useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';

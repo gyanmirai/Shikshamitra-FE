@@ -3,7 +3,7 @@ module: hr
 domain: testing
 content_type: Reference
 status: canonical
-updated_on: 2026-10-05
+updated_on: 2026-10-07
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -191,3 +191,421 @@ Run the full src/screens/hr/payroll Vitest scope for calculation-preview state, 
 Check that the payroll readiness disclosure works with Enter and Space and retains focus.
 At 390, 768 and 1440 px, inspect complete readiness labels and currency values, plus the stale and blocking-issue statuses.
 The backend [calculation audit matrix](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/testing.md#final-calculation-audit-matrix) owns monetary and transaction acceptance.
+
+## Payslip completion acceptance
+
+The [payslip specification](../../../Shikshamitra-BE/docs/modules/hr/references/payslip-design.md) owns the acceptance matrix and implementation ledger.
+Run payslip-selection.test.ts, use-payslip-actions.test.tsx and payslip-document-action-dialog.test.tsx.
+These cover late-selection responses, one private server artifact for all actions, URL cleanup, preserved correction drafts, discard confirmation and payment evidence without document amount fields.
+Verify screen, print, download and email use the same issued revision, with no employer contribution or internal compensation fields.
+Exercise auto-email off/on, manual Send/Resend, missing address, failed/uncertain delivery, recipient visibility and history.
+Exercise unpaid correction/reissue and paid future-payroll adjustment without losing the original document.
+Render generated PDFs and inspect normal, long-name and multi-page cases.
+Finish with authenticated Codex browser journeys at 390, 768 and 1440 px, including keyboard, loading and recovery states.
+
+The resumed focused payslip suites passed 14 tests across three files, and scoped ESLint passed.
+Global typecheck still reports the two unrelated primaryText prop errors in assignmentForm.tsx and homeworkForm.tsx.
+Authenticated browser verification confirmed delivery history recovers after the local API restarts and re-enables Resend without discarding the selected document.
+This does not constitute the delivery worker process-restart acceptance check.
+The earlier native PDF iframe was blank in the Codex browser despite its PDF-viewer capability reporting enabled.
+The replacement PDF.js viewer renders the stored revision 4 in the authenticated Codex browser.
+The print action reached copied document pages, but browser commands subsequently timed out during printing; full print acceptance remains unverified.
+The incoming unrelated package-lock.json changes were captured before installation and restored byte-for-byte after the archive-only lock proved machine-specific.
+The archive installation added PDF.js locally and removed eight installed test peer packages, which were restored from the existing local installation for verification.
+The current manifest pins pdfjs-dist 5.6.205, which supports the deployment's Node 20 runtime, and bundles its worker through the application build.
+Preserve unrelated incoming lockfile changes when reconciling the intentional PDF.js dependency before publication.
+
+The independent settings/history probes reproduced four failures before the fix, with dirty-draft preservation already passing.
+Clean settings now adopt refreshed server facts, and discarding a dirty form restores the latest observed server baseline.
+Delivery history now uses current selection data during pending, failed, repeated and interrupted employee selections.
+The resumed payslip scope passed thirty-one tests across six files in .artifacts/payslip-correction-ui-tests.log.
+Correction controls cover required reasons, idempotent start retry, failed recalculation, dirty background refresh, review/reissue tokens, permission-disabled actions, server cancellation and shared discard confirmation.
+The correction clock regressions cover field validation and focus, exact unedited timestamp precision, changed-clock serialization, failed saves and dirty background refreshes.
+Keep valid punches within the same displayed minute intact, and reject newly submitted equal or reversed punches.
+Check the labelled time controls at 390, 768 and 1440 px, including keyboard use, Keep editing, discard and cancellation without changing the issued PDF.
+Adding missing attendance requires an explicit status and a date in the source period; it never silently creates Present attendance.
+Five focused permission/security suites passed twenty-seven tests in .artifacts/payslip-correction-security-tests.log.
+Scoped lint passed in .artifacts/payslip-correction-ui-lint.log.
+Typecheck still reports only the two existing Academic primaryText errors in this older checkout; those files remain unchanged.
+Authenticated browser reproduction confirmed the clean-refresh and stale-discard settings defects before the fix.
+At that checkpoint, post-fix browser acceptance remained open because the expired local session could not be recovered with the saved sign-in credentials.
+The delivery-history selection matrix and responsive correction layouts were then unrun; the later dated sections record the recovered session and executed flows.
+
+## Resumed payslip correction checks
+
+On 2026-10-03, the focused payslip suite passed 39 tests across nine files.
+Settlement controls require a current target run, preserve the month after failed writes and ignore an interrupted calculation from another academic year.
+Settings regressions cover clean refresh, dirty draft retention, latest-baseline discard and a refresh observed during a pending save.
+A real RTK Query store regression confirms structurally identical GET results retain their object reference, so a cloned component prop alone does not establish production reachability of that pending-save race.
+The shared navigation-hook regression covers internal links and browser traversal with both keep-editing and discard choices.
+Authenticated Codex browser checks confirmed the settings link and Back guards with a dedicated synthetic local identity.
+Full failed-request, repeated history selection, correction and responsive document acceptance remains open.
+The authenticated paid correction journey reached reasoned draft, attendance edit, recalculation, review, later-month preview, recovery-limit rejection, retry and cancellation.
+The browser verified the actionable recovery message after fixing its generic conflict response.
+Cancelled evidence remained visible and revision 4 remained paid and current.
+Correction layouts were inspected at 390, 768 and 1440 pixels, including scrolling and persistent actions; this does not establish PDF rendering or every responsive workflow.
+The mobile raw-issue-code overflow was corrected by sharing the existing Run Payroll labels and omitting routine comparison information.
+
+## Resumed payslip UI repairs, 2026-10-05
+
+Authenticated local reproduction confirmed that settings saves exposed TypeError: Failed to fetch during an API outage.
+FETCH_ERROR and TIMEOUT_ERROR now show plain retry guidance while preserving the exact draft and request key.
+The real outage, API recovery, successful retry and restoration of the original synthetic settings were verified in the Codex browser.
+The calculated correction table previously extended beyond its dialog at 390 px.
+A bounded MUI table container and compact mobile cells keep all four issued/recalculated rows inside the dialog.
+Authenticated calculated comparisons fit at 390, 768 and 1440 px, and keyboard focus reaches the comparison region.
+The temporary correction was cancelled without applying it or changing the paid original.
+The focused payslip suite passed 46 tests across ten files, including transport retry and accessible comparison regressions.
+Scoped ESLint passed for the four repaired component/test files.
+Full typecheck still reports only the two known Academic primaryText errors in this older checkout, which remain outside payslip scope.
+These checks do not complete the remaining jurisdiction, correction race and full distribution acceptance matrix.
+
+The final expanded UI selection passed 66 tests across 15 files with no failures or skips.
+It includes the payslip folder, payroll preview/error/adjustment utilities, shared navigation guard and shared dialog close guard.
+The preceding combined run exposed a transient MUI menu/combobox label ambiguity in a correction assertion.
+The regression now selects the labelled combobox by its role and retains the same attendance expectation.
+Authenticated delivery-history checks used two issued synthetic employees with different recorded recipients.
+A controlled pending database read, an interrupted selection, a late response and an actual API failure never displayed the other employee's recipient.
+The failed current selection displayed the existing history retry state and recovered after the owned API restarted.
+The retry control disappeared during recovery before the attempted click, so that attempted click is not counted as a successful manual retry.
+The API outage and pending read controls were confined to the disposable database and all temporary locks were rolled back.
+The newly issued canonical PDF renders without missing-glyph markers or NUL text at 390, 768 and 1440 px on PDF.js 5.6.205.
+Previously issued synthetic PDFs remain byte-identical, including their existing incomplete-text announcement.
+The actual browser Resend flow reached provider acceptance through the running host worker and a loopback-only SMTP capture accepting one explicit synthetic recipient.
+The captured attachment hash equals the stored document hash and contains only that employee's PDF.
+The production webpack build passed on Node 24.19.0 with the bundled PDF.js worker.
+This does not establish a Node 20 execution pass or override the separately failed full typecheck.
+The scoped security run passed 21 tests and failed the unchanged deployment-workflow expectation, which remains outside payslip scope.
+Native in-app download event capture timed out; independent stored-artifact download and print evidence remains separate from native printer acceptance.
+An additional authenticated two-tab settings journey changed the server baseline while the first tab retained an unsaved draft.
+An actual correction mutation triggered the existing RTK Query background refresh without replacing that draft.
+Keep editing retained the draft, and Discard changes restored the latest server name rather than the original loaded name.
+The clean form subsequently adopted another refreshed server value.
+Both temporary settings changes were restored, automatic email stayed off and the temporary correction was cancelled without reissue.
+This verifies actual background refresh and discard behavior; it does not establish every possible pending-save response ordering.
+The final real Print action created a PDF-derived print frame with the same extracted text and page count in the native accessibility tree.
+The subsequent DOM snapshot timed out while that frame had focus, so native printer selection and a new print-pixel comparison remain unverified.
+Final authenticated keyboard month switches and settled October/November PDF rendering passed at 390, 768 and 1440 pixels on PDF.js 5.6.205, with no horizontal page overflow.
+The older stored artifacts retain their explicit incomplete-text warning; the newly issued synthetic PDF has complete accessible text.
+No immutable PDF was rewritten or reconstructed from payroll facts.
+
+The continued authenticated correction journey verified the recalculated comparison at 390, 768 and 1440 px with keyboard focus and no page overflow.
+Changing one recorded working day to unpaid leave recalculated the synthetic employee's earned gross, employee ESI and net through the backend correction pipeline while the issued PDF retained its original amounts.
+Escape and Close displayed the shared discard guard for a verified attendance edit.
+Keep editing retained that edit, discard restored the saved attendance when reopened, and focus returned to Correct payroll.
+Cancellation retained the reason in correction history and did not reissue the original document.
+The final stored PDF again rendered its exact employee deduction and net with no NUL or missing-glyph markers at all three widths.
+An initial page-count probe used an explicit role selector, but the viewer uses a semantic section with an implicit region role.
+The corrected probe counts the observed page sections and retains the one-page, currency, text-integrity and viewport assertions.
+The native date-input fill attempt left its DOM value empty and does not establish an application failure or a successful date-entry browser check.
+
+The subsequent production webpack build passed on integrity-verified Node 20.19.5 with the pinned PDF.js 5.6.205 dependency.
+The generated standalone server started on loopback without changing product authentication or email settings.
+Static extraction of the exact stored/captured synthetic PDF passed on that runtime, retaining its checksum, one page, employee ESI of 60.00 and net pay of 7940.00 without NUL or employer-contribution fields.
+These runtime checks do not replace authenticated browser acceptance or the separately failed full typecheck.
+The Codex browser subsequently blocked fresh navigation to both the temporary production port and the existing development port.
+Earlier responsive and keyboard observations remain preserved, but the final fresh-navigation acceptance remains blocked.
+Temporary servers and agent-created tabs were stopped, and the viewport override was reset.
+
+Seven additional issued PDFs from the actual backend pipeline passed static extraction on Node20.19.5 and PDF.js5.6.205.
+The cases cover monthly salary, CTC, reduced attendance, joining, zero pay, an additional earning and ESIC-off payroll.
+The recorded ₹10,000 CTC fixture produces gross of ₹9,685, employee ESI of ₹73 and net pay of ₹9,612 while retaining employer ESI of ₹315 in school cost evidence.
+The employee PDFs contain the recorded earnings, employee deductions, net, employee identity and stable slip number without employer contribution fields or incomplete text mappings.
+A long synthetic name wraps within its unbroken identifier at the same column, so its extraction assertion retains every recorded glyph in order while ignoring only line-boundary whitespace.
+The initial failed probe remains recorded separately.
+No stored PDF or salary fact was altered for those assertions.
+
+The expanded backend document qualification exports eleven payroll scenarios and the original/replacement artifacts for both paid and unpaid identity corrections.
+All fifteen issued PDFs passed static extraction on Node20.19.5 and PDF.js5.6.205 against the actual API evidence, including overtime, the employee-share exemption, non-coverage, leaving-month pay and configured department/designation.
+The backend regression reproduced and fixed retained post-exit attendance increasing pay; see the owning backend HR testing and workflow guides for calculation details.
+Every extracted document preserves complete recorded text, exact component amounts and the absence of employer contribution fields.
+This is content verification of stored artifacts, not a substitute for authenticated rendering, print preparation or download checks in the Codex browser.
+Fresh navigation to the existing local test page still failed with net::ERR_BLOCKED_BY_CLIENT in the next continuation, so no new browser acceptance is claimed.
+The blank temporary tab was closed without changing authentication, browser security or application settings.
+
+The final backend-issued artifact selection additionally verifies the Non-payable days label against recorded API evidence rather than presenting employment-boundary days as unpaid leave.
+All fifteen issued PDFs passed that content probe on Node20.19.5 and PDF.js5.6.205.
+Read-only Poppler layout inspection covered the fifteen-document contact sheet and the three-page long-name/45-earning fixture without observed clipping or overlapping content.
+Those artifacts are separate from the earlier stored browser fixtures and were not substituted into their immutable history.
+Final authenticated browser, native printer selection and legal-format acceptance remain outstanding.
+
+## Settings response ordering and current runtime, 2026-10-05
+
+The disposable API host was restarted from the rebuilt application assembly rather than the older fixture output.
+Authenticated synthetic-identity reads returned both recorded PDF revisions with hashes matching the stored document metadata.
+Anonymous reads returned empty local login redirects and an invalid bearer returned 401 without protected document content.
+No permissions were changed, and the verification host uses process-only loopback SMTP binding with automatic email off.
+
+The live unauthenticated settings-write probe followed a login redirect to an empty 400 response.
+The proposed PARSING_ERROR was not reproduced and is not counted as a confirmed production defect.
+The observed empty response previously rendered the shared fallback Something went wrong.
+Its permanent settings regression now requires contextual retry guidance, the retained draft and the identical retry request.
+
+Two authenticated settings saves using each current concurrency stamp established the valid backend ordering for a delayed earlier read.
+The original synthetic values were restored after that probe, and no email was requested.
+The production RTK Query endpoints and authenticated API-service path are used in a controlled HTTP component regression; the settings hooks and cache are not mocked.
+That regression reproduced the first save's delayed refresh replacing the second acknowledged save.
+The fix keeps the acknowledged baseline, rejects the in-flight read, retains it through a failed follow-up refresh and accepts a later successful refresh.
+Both successful and failed follow-up cases pass together with the existing settings/navigation/history checks: 17 tests in five files, no failures or skips.
+These HTTP and component results establish the request/cache ordering, not a fresh authenticated browser pass.
+
+The Codex browser again rejected the original local Payslips URL with net::ERR_BLOCKED_BY_CLIENT before login.
+Only the agent-created blank tab was closed; no alternate host, browser interface or security relaxation was used.
+The latest production-build and full frontend validation results are recorded separately in the implementation handoff.
+Gujarat wage-slip applicability remains unverified for both private unaided and government-aided schools.
+
+The complete UI selection initially failed to import the shared close and navigation guards because their MUI icon barrel exhausted the Windows open-file limit.
+Repeating without a concurrent build reproduced that failure.
+Only the three used icon imports were switched to direct module paths; guard behavior, test assertions and icon rendering remain unchanged.
+The same full selection then passed 69 tests across 16 files with no failures or skips.
+The twelve-scenario backend matrix additionally issues an employer-share-relief document and verifies government-funded cost evidence stays outside the employee contract.
+All twelve current issued artifacts pass PDF.js5.6.205 extraction on Node20.19.5, and the relief page was inspected through read-only Poppler rendering.
+This does not establish a new browser or legal-format acceptance pass.
+
+## Correction response ordering and failed-history recovery
+
+The permanent correction request-order regression uses the production RTK Query endpoints, store, middleware and authenticated request path with controlled HTTP responses.
+The correction hooks and query cache are not mocked; the session adapter and dialog/navigation shell are synthetic test boundaries.
+Four orderings reproduced an earlier history response replacing a later acknowledged calculation, including arrival before and after the second write and successful or failed follow-up reads.
+The failed-refresh cases also reproduced reopening an older cached calculation as actionable.
+The fix retains the acknowledged calculation/review, prevents pending or failed initial reads from exposing actionable cached comparisons, and recovers through Retry.
+Each write must use the current server concurrency token, and a later independent successful read must still replace a clean form and clear an obsolete review.
+The final payslip-directory selection passed 53 tests in twelve files with no failures or skips on 2026-10-05, including all four response-order cases.
+Scoped lint passed with no warnings.
+Full typecheck still fails on the two unrelated Academic primaryText properties in assignmentForm.tsx and homeworkForm.tsx; those files remain untouched.
+The separate backend PostgreSQL regression proves that the consecutive authenticated writes, delayed history body, stale-review rejection and latest-version reissue are valid API orderings.
+These HTTP/component and API results do not establish a fresh authenticated browser, responsive layout or native-print pass.
+
+## Document-status freshness and preserved drafts
+
+The permanent document-freshness regression uses the actual RTK Query endpoints, middleware, cache, PDF-fetch hook and Redux permission checks against controlled synthetic HTTP responses.
+Search, session, salary-summary and dialog/PDF presentation adapters remain explicit test boundaries; no real email or browser rendering is claimed.
+Seven pre-fix cases reproduced actionable stale document metadata, lost document-detail reasons and visible protected correction content after View revocation.
+The final test also checks that pending and failed metadata refreshes retain one already fetched immutable artifact URL instead of fetching its PDF again.
+The stable lazy-preview adapter matches production hook identity, and the test store uses the application's existing Blob middleware settings.
+An earlier unstable adapter caused unrelated test timeouts; those attempts are retained separately from the one-case artifact-refetch reproduction.
+Payment, replacement, correction and resend actions are disabled until current document status is known, and Retry preserves the draft.
+A replaced source stays visible with its unsaved reason and a blocked write rather than silently adopting a new revision.
+Removing View hides an already open protected dialog, while removing Add disables an already open resend.
+The document-action regression also rejects implicit form submission when its source status is unavailable.
+An HTTP 403 scope-denial reproduction confirmed that previously loaded content and Download remained available despite lost access.
+The regression now requires that protected content disappear, its artifact URL be revoked and pending Retry remain blocked until the selected document read succeeds.
+This security failure is distinct from a network failure, which preserves the immutable artifact.
+A further controlled HTTP reproduction denied the deliveries refresh while the older document query still retained its successful request ID.
+It reproduced visible cached recipient/requester facts, an open correction and an enabled artifact action after the denied read.
+The screen now records denial request identities per employee/period, stops protected queries and revokes the artifact until a new successful document request revalidates access.
+Recovery retains the preceding history denial through failed metadata retries and ignores only that acknowledged older history result after the fresh authorized document read.
+Resubscribing also refreshes delivery history instead of relying on its failed warm cache.
+Three permanent cases cover first-observed history denial, interrupted selections with failed retries, and an ordinary 503 history outage that retains the authorized artifact while blocking duplicate sends.
+They use forced endpoint refreshes through actual RTK Query, not a mocked query result or an assertion that the five-second timer itself fired.
+The final full selection passed 79 tests in fifteen files with no failures or skips; the seventeen cases in this document-freshness file are included in that total.
+Backend permission and employee-scope enforcement remain unchanged and have their separately recorded API/direct-service evidence.
+The final executed counts, lint, typecheck, security and build results are recorded in the implementation handoff rather than inferred from these component assertions.
+Fresh authenticated, responsive, keyboard and native-print acceptance remains separate and must run in the Codex in-app browser.
+
+## Real-query employee-history selection
+
+The document-freshness fixture also supplies two issued synthetic employees with distinct recorded recipients through the actual documents and deliveries endpoints.
+It retains the first employee's history in the Redux cache while delaying the second employee's HTTP response.
+Both late-success and late-failure cases interrupt that request by returning to the first employee, then select each employee repeatedly.
+The visible expanded history must belong to the current selection, and a late response must not overwrite the selected employee's history.
+The failed second selection uses the real Retry control and must recover without displaying the first recipient or posting a delivery.
+These two regressions use real RTK Query arguments, subscription changes, middleware, cached responses and controlled HTTP ordering rather than mocking the query hooks.
+Search, session, salary summary and PDF/dialog presentation retain the explicit synthetic boundaries described above.
+An initial substring collision between synthetic addresses and a query against a collapsed accordion were fixture failures, retained separately from the final visible-control assertions.
+No production change was required for these two cases, and they do not replace the outstanding authenticated browser selection checks.
+
+## Delivery requester visibility
+
+Three actual RTK Query history regressions first failed because the screen omitted the requesting actor.
+They now require the visible Requested by label for a resolved account, an unavailable account and an unrecorded actor without exposing a raw internal ID as the primary label.
+The typed delivery response includes requestedByDisplayName, while requestedBy remains the audit identifier.
+The caption stays within the existing history row and wraps long values without a separate colored surface or helper banner.
+An authenticated PostgreSQL API regression separately exercises same-tenant name resolution, automatic and manual responses, idempotent retry and unavailable foreign/missing accounts.
+Fresh responsive and keyboard browser acceptance remains separate from these controlled HTTP/component checks.
+
+## Salary-summary authorization and recovery
+
+The document-freshness fixture now runs the actual salary-summary query alongside the production document and delivery endpoints through the same RTK Query store and middleware.
+Employee search, session, preview-PDF and dialog presentation remain explicit synthetic adapters.
+This supersedes the earlier salary-summary adapter boundary for this test file, without claiming an authenticated browser run.
+
+The pre-fix HTTP regression denied the summary refresh while retaining the successful document request and cached summary response.
+It reproduced visible recipient/requester content and an open correction after access had been denied.
+The screen now records the summary request identity with the existing per-employee/per-month denial state, hides protected content, revokes the artifact and stops delivery history until a new successful document request revalidates access.
+It retains the recorded denial while an old summary error is still cached rather than clearing it prematurely.
+An ordinary 503 summary failure preserves the authorized immutable PDF and does not require regeneration.
+
+Three permanent cases cover first-observed summary denial, employee switches with failed document retries, and ordinary network-error recovery.
+The existing seventeen document/history cases also run with the real summary hook.
+All twenty cases passed, and the final payslip/shared-guard selection passed 82 tests in fifteen files with no failures or skips in 53.76 seconds.
+The fixture verifies that the separately typed endpoint modules share the same reducer and middleware at runtime, and uses their intersected selector-state types without suppressing TypeScript errors or weakening assertions.
+Scoped ESLint passed with no warnings.
+The security selection passed 95 tests and failed the unchanged deployment-workflow expectation in 16.79 seconds.
+The final build, full typecheck, current source hashes and remaining browser/legal acceptance are recorded separately in the implementation handoff.
+
+## Canonical issued artifact qualification
+
+`src/test/payslip-artifact-qualification.test.ts` reads exact stored PDFs exported by the authenticated, capture-only backend payroll matrix and document-facts correction workflows.
+Its eighteen cases cover fourteen calculated scenarios and four issued original/replacement identity documents.
+It uses the installed PDF.js 5.6.205 Node 20 module without a mocked renderer, replacement layout or inferred payroll calculations.
+Each case verifies A4 size, recorded identity and amounts, employee-only ESI presentation, the India-local issue date, accessible text and headings matching recorded payment/statutory facts.
+The off-bank case requires preserved bank details without statutory presentation, and the off case rejects empty payment/statutory panels.
+Previously issued PDFs remain immutable.
+
+Set PAYSLIP_PDF_ARTIFACT_DIRECTORY to the complete exported eighteen-artifact directory, then run `node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/test/payslip-artifact-qualification.test.ts --pool=forks --maxWorkers=1` on Node 20.
+The directory must contain each expected PDF and recorded API response JSON; missing fixtures fail qualification.
+Without that environment variable the suite is unconfigured and skipped, so an ordinary test run does not prove artifact qualification.
+Acceptance requires eighteen passing configured cases with zero skips.
+These checks complement the [backend HR tests](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/testing.md) and do not establish browser rendering, native printing or Gujarat legal applicability.
+
+The original accepted Gujarati profile reproduced incomplete conjuncts and reordered vowel marks in stored PDF text.
+The approved generator now records logical spans with exact page/content associations and keeps each span on one page.
+The reader uses those recorded values without guessing missing facts or deduplicating independently repeated fields by equal text.
+The immutable two-page synthetic fixture proves reader behavior with separate spans, not a replacement spanning pages or authenticated issuance.
+Meaningful negative cases reject conflicting, unrelated and figure tags and retain uncovered NUL as an error.
+A separate real continued-span probe remains negative evidence for the unsupported spanning form.
+Canvas rendering and print preparation consume the same stored bytes; document rendering errors keep Print disabled and offer Retry.
+
+Record exact current test/build results, checksums and failed attempts in the implementation handoff.
+The two unchanged Academic primaryText errors remain outside this task, and the unchanged build configuration's skipped type validation does not override that typecheck failure.
+The Vite configuration warning remains visible.
+The earlier Codex in-app browser attempt failed before app/login with ERR_BLOCKED_BY_CLIENT.
+After the execution reset, the same approved route instead failed with ERR_CONNECTION_REFUSED while the local test services were stopped.
+Both errors remain historical failed attempts, not evidence that the final UI passed or that the original client block is still present.
+Automatic approval review subsequently rejected both environment-loading and normal Next.js start commands for localhost:3041, leaving current authenticated browser acceptance blocked pending an approved running test service.
+No alternate interface, host or security bypass is used to retry the rejected service start.
+The isolated Node 20 accessControlSubmit retry still failed before executing any cases with EMFILE while importing the existing MUI icon barrel.
+The earlier three-case Node 24 pass remains supporting evidence; it does not turn that Node 20 loader failure into a pass.
+
+## Controlled employee account email
+
+`src/screens/hr/employee/employee-account-email-action.test.tsx` uses the actual shared dialog, Formik form and discard guard with typed API mocks.
+Its nine cases cover the two required permissions, initial failure/retry, explicit reason and verification, clean refresh, dirty refresh, same-key failed-save retry and stale-token reload.
+Read and write access-denial cases hide protected values until access is revalidated.
+Cancel, close and Escape follow Keep editing/Discard behavior, pending saves block dismissal, successful saves close directly, and native dialog focus returns to its opening control.
+This component evidence does not prove actual RTK/browser ordering or responsive authenticated navigation.
+
+Run the employee account-email test together with the payslip directory, payroll salary-card test, shared unsaved-navigation test and shared-dialog test on Node 20 with the Windows single-fork workaround.
+`src/screens/hr/employee/employee-account-email-transport.test.tsx` additionally uses the actual RTK Query hooks, reducer, middleware and fetch parser with an MSW transport boundary.
+It models a committed account change before a lost response or unreadable HTTP 200 JSON, with and without a subsequent real-query refresh.
+All four pre-fix cases reproduced misleading no-change feedback or a raw parsing exception.
+They require truthful confirmation/readability feedback, preserved dirty address/reason/verification and the original payload/key/concurrency token, followed by a duplicate-free acknowledgement.
+The corresponding PostgreSQL account regression verifies a real committed write followed by a dropped HTTP acknowledgement and same-key replay, as described in the [backend HR testing guide](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/testing.md).
+The typed component test separately covers `TIMEOUT_ERROR`; the current base query does not configure a timeout, so that case is not claimed as a demonstrated network path.
+These transport/component checks do not establish final authenticated Codex browser acceptance.
+The combined UI/security selection passed 112 cases and failed one unchanged deployment-workflow expectation on 2026-10-06.
+Ninety-one of those passing cases cover the employee/payslip/payroll/shared-dialog workflows; the remaining twenty-one are permission/security checks.
+Scoped ESLint and the production build passed on the earlier snapshot, while full typecheck retained the two unrelated Academic primaryText failures.
+Final frozen-source results, actual browser blockers and source hashes are recorded in the handoff.
+The final Node 20 selection passed 93 employee/payslip/navigation cases and 18 additional payroll/shared-dialog cases, all with zero skips.
+The final configured stored-artifact selection also passed all eighteen PDF.js 5.6.205 cases with zero skips.
+Scoped lint, production webpack build and both HR documentation validators passed.
+The final typecheck first exhausted its default compiler heap, then completed with an 8 GiB heap and exactly the same two unrelated Academic primaryText errors.
+Responsive, keyboard, correction/settlement, account-recipient repair and native-print browser checks remain unexecuted on this final source.
+Use the current runtime status and exact failed command recorded in the handoff rather than treating an older browser error as the current blocker.
+
+## Payslip action transport recovery
+
+`src/screens/hr/payroll/salarySlip-generate/payslip-action-transport.test.tsx` uses the actual Formik forms, MUI/shared dialogs, RTK Query reducers, middleware and typed endpoints.
+MSW intercepts HTTP with synthetic fetch failures, unreadable JSON and an actionable backend rejection; session, router and discard navigation remain explicit test adapters.
+The first run reproduced four visible raw fetch/parser diagnostics in payment, document replacement, correction and settlement preparation.
+The regression retains those message expectations after the fix and additionally checks explicit settlement retry and preservation of the backend blocking explanation.
+Failed requests preserve the reason, payment reference, date, selected target and existing request identity, without closing the dialog or adding money fields.
+The message does not assume that losing the response means the server did not commit the request.
+These six integration cases prove the tested UI-to-transport behavior; they do not replace authenticated browser, scope, native print or real server concurrency acceptance.
+Run the file with the existing Node 20 single-fork Windows workaround and retain the initial four-case failure alongside the final configured result.
+
+## Current-main payroll money integration
+
+The correction comparison regression reproduces authoritative INR 9,428.45 being displayed as INR 9,429 after the Finance formatter began rounding displays to whole rupees.
+The scoped payroll formatter preserves paise in correction evidence, salary-detail components and Run Payroll without changing Finance display rules, calculated amounts or issued PDFs.
+Run `payslip-correction-dialog.test.tsx`, `src/utils/payroll-currency.test.ts` and `src/utils/money-formatting.test.ts` together.
+The original failing comparison expectation remains unchanged; all 28 selected cases passed on Node 20 after the fix.
+These checks used the existing installed Vite 8.3.2 toolchain, while the current-main lock requires Vite 8.3.3.
+A clean locked installation is still required separately; the offline installation failure and exact missing archive remain preserved.
+The approved localhost:3041 runtime reached synthetic sign-in on the reconciled source, but Codex navigation to the protected payslip route returned `ERR_BLOCKED_BY_CLIENT`.
+Final authenticated responsive, keyboard, printing and full-workflow acceptance remain unproved by this check.
+
+## Send acknowledgment and selection recovery
+
+`payslip-send-recovery.test.tsx` exercises the actual RTK Query reducers, middleware and endpoints through controlled MSW transports.
+It reproduces a lost send response followed by an acknowledged history read, independent unconfirmed requests across interrupted employee selections, and a technical network error.
+It also rejects inaccurate queued messages for failed, uncertain or already accepted attempts and retains the retry identity after empty or mismatched acknowledgments.
+The nine assertions passed after the fix; the original six-case failure and subsequent three-response failure remain preserved.
+The complete current-main payroll selection then passed 145 cases across 25 files with zero failures or skips using the supporting installed toolchain.
+The single payslip icon now uses its supported typed subpath, avoiding the reproduced Windows icon-catalogue file limit without changing rendering or expectations.
+These client-to-transport checks are separate from authenticated Codex browser acceptance and server persistence/concurrency evidence.
+
+The send test's unsupported Testing Library `exact` option was removed without changing its string-name matching or assertions.
+The nine-case file passed again, and a fresh full typecheck then reported only the two unchanged Admissions test errors at lines 178 and 195.
+Those unrelated tests are not altered, excluded or reported as a passing full typecheck.
+Scoped lint passed across all changed frontend source and tests.
+The final Node 20 production build passed with the repository's supported Webpack option and TLS verification enabled.
+An initial default Turbopack build rejected the existing dependency junction outside the isolated checkout; that failure remains preserved separately.
+The successful build still uses the supporting installed dependencies and does not establish a clean install of the current-main lockfile.
+The normal server runs only on approved localhost:3041 and retains the existing standalone-start warning without a configuration or deployment edit.
+The refreshed approved login shell remains blank, so final authenticated responsive, keyboard, focus, repeated-selection, correction and native-print checks remain outstanding.
+
+## Exact current-main dependency verification
+
+The integrity-matched Vite 8.3.3 archive was recovered from the existing local npm cache without a network request.
+A clean `npm ci --offline --ignore-scripts --no-audit --no-fund` installed the exact final lock on Node 20.19.5.
+Installed package versions match that lock, including Next 16.3.5, Vitest 4.1.11 and PDF.js 5.6.205.
+The original dependency junction and incoming unrelated lockfile remain preserved.
+The normal Turbopack production build now passes with physical dependencies, without the earlier Webpack fallback.
+Its skipped type validation does not change the separate full typecheck failure for the two untouched Admissions tests.
+The emitted PDF.js worker is a bundled build asset, not an external CDN or an untracked runtime asset.
+
+The explicit final selection passes 151 cases across 28 files with zero skips on the locked tree.
+It includes the actual RTK Query/MSW ordering tests, controlled account email, shared navigation, salary-basis, payroll-summary and correction/settlement coverage.
+The eighteen configured stored-artifact qualifications also pass on PDF.js 5.6.205.
+Test fixtures await Formik updates and wrap direct focus in React `act` while retaining their draft, permission, retry and focus assertions.
+The ESI navigation fixture records whether the real document capture guard prevented each allowed click before cancelling Happy DOM's native navigation.
+It additionally requires no application navigation, avoiding an unintended port 3000 request without masking guard behavior or suppressing diagnostics.
+The final run has no React `act` or connection-refused diagnostics; the existing Vite configuration warning remains visible.
+
+The fresh protected-route Codex navigation still returns `ERR_BLOCKED_BY_CLIENT`, and the retained approved login shell has no visible form.
+The locked build and test passes do not establish final authenticated responsive, keyboard, correction, selection or native-print acceptance.
+The current authenticated capture-only API delivery now passes with the same stored PDF checksum, as recorded in the [backend HR tests](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/testing.md).
+Final browser Send/Resend controls and current Gujarat applicability for both supported school categories remain separate acceptance checks.
+
+## Settings acknowledgement recovery
+
+`payslip-settings-transport.test.tsx` uses the real RTK Query settings hooks, reducers, middleware and response parser with an MSW response boundary.
+Four cases persist the requested settings before dropping the response or returning unreadable successful JSON, including an actual background refresh while the form remains dirty.
+The pre-fix run reproduced misleading save-failure feedback and raw parsing diagnostics in all four cases.
+The settings form reuses the existing action-error handler to report an unconfirmed request or unreadable response without claiming the write did not happen.
+The regressions require preserved name/address, the same payload, original concurrency stamp and idempotency key, and one fixture commit across retry acknowledgement.
+Typed component coverage additionally exercises TIMEOUT_ERROR; the current base query configures no timeout, so actual timeout reachability is not claimed.
+The corresponding authenticated PostgreSQL test consumes the real committed response before throwing a transport exception, then verifies an authenticated read and same-key acknowledgement without another configuration change.
+These client and API checks remain separate from final authenticated Codex browser acceptance.
+
+The final physical exact-lock install also passes with lifecycle scripts enabled through `npm ci --offline --no-audit --no-fund --ignore-scripts=false` on Node20.19.5 and normal certificate validation.
+The normal prepare script runs, preserving the original incoming lock and the reconciled lock.
+The prior ignored-lifecycle installation and supporting-toolchain failures remain historical evidence rather than proof of this stronger install gate.
+
+## Current-main completion verification on 7 October
+
+This section supersedes the earlier pending browser, dependency and typecheck statuses above, without changing their historical results.
+The reconciled frontend is based on main `3abb69a8c3af0ee4fc7daf22eaa459da554b835c`.
+Normal npm tooling repaired two missing transitive lock entries, `fast-uri` 3.1.7 and `json-schema-traverse` 1.0.0, without changing existing package versions or incoming metadata.
+The subsequent exact `npm ci --prefer-offline --no-audit --no-fund` passed with lifecycle scripts enabled and normal TLS validation on Node 20.19.5.
+The installed toolchain includes Vite 8.3.3 and bundled PDF.js 5.6.205.
+
+The final focused payslip, account-email, currency, ESIC navigation and upstream shared-component selection passed 151 cases across 24 files with zero failures or skips.
+Full TypeScript, nine-file scoped lint and the production Webpack build passed on this source.
+The 12-file security selection passed 92 cases and failed the unchanged deployment-workflow wiring assertion.
+That failure remains explicit; no deployment file, expectation, source mock or skip was changed.
+The supported temporary dependency optimizer avoids the independently reproduced Windows icon-catalogue file limit while preserving assertions.
+
+Authenticated Codex verification uses the final production build `zXHmu38lvSuOON9Oqhlru` on approved `http://localhost:3041` and the capture-only disposable API on `http://localhost:5100`.
+The canonical November revision 3 renders at 390, 768 and 1440 px without outer horizontal overflow, retains exact INR 10,526.55 and matching paise wording, and exposes no NUL characters in accessible text.
+Keyboard scrolling remains inside the zoomed PDF viewer.
+Repeated employee and period selection suppresses the previous employee's document and recipient while the new selection is unavailable, and returns the matching issued artifact after loading.
+Earlier authenticated interrupted-selection, settings save/refresh/discard/navigation, correction, settlement, focus, download, capture-only send/resend and canonical print-preparation evidence remains separately recorded in the acceptance ledger.
+Native printer selection and physical output are unrun; provider acceptance is not inbox receipt.
+
+The user deferred DOC-15 legal-format applicability for this iteration on 7 October.
+Applicability for both private unaided and government-aided Gujarat schools remains unverified, with no legal certification or change to statutory, permission, scope, freshness or immutable-document guards.
+Independent review and publication remain outside the writer's completion handoff.

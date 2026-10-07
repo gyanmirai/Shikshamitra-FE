@@ -1,4 +1,5 @@
-import { Close, DeleteOutline } from '@mui/icons-material';
+import Close from '@mui/icons-material/Close';
+import DeleteOutline from '@mui/icons-material/DeleteOutline';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
