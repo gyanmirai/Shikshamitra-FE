@@ -61,6 +61,23 @@ Use these expectations when reviewing client behavior:
 
 ## Contract rule
 
+`src/redux/hr/payslip-api.ts` owns issued document metadata/PDFs, version history, delivery attempts, Send/Resend, school settings, payment recording, non-monetary detail replacement and unpaid correction read/start/calculate/review/cancel/apply contracts.
+It uses the shared authenticated API service and invalidates salary-slip tags after mutations.
+Payment recording also invalidates payroll views.
+Correction application invalidates payroll views as well as document and correction queries.
+Correction controls consume recorded attendance, original totals, candidate components and concurrency stamps from the server.
+The client cannot submit arbitrary monetary figures or a conflicting calculation basis.
+Current selection data, rather than retained previous query data, determines delivery history.
+Delivery responses include `idempotencyKey` so the selected history can acknowledge a previously unconfirmed Send request.
+An unconfirmed retry reuses its document-specific key; an explicit Resend after acknowledgment uses a new key.
+Delivery responses retain requestedBy as audit identity and provide requestedByDisplayName resolved by the server within the school tenant.
+The history label uses that name, or Unavailable/Not recorded when the corresponding fact is absent; it never looks up arbitrary user identities from the browser.
+The employee/month selection and returned current document ID determine which stored artifact is displayed.
+The client never regenerates an issued PDF or fabricates a fallback document after an API failure.
+`payslip-pdf-viewer.tsx` renders that private stored-artifact URL with PDF.js and a worker bundled from the installed package.
+The preview and print content contain those rendered PDF pages, not a second salary template.
+Download retains the original stored bytes.
+
 The durable payroll preview client is a pending coordinated release and requires the additive backend schema.
 `src/screens/hr/payroll/run-payroll/use-payroll-preview-run.ts` owns month/run URL state, bounded polling, debounced search, and late-response protection.
 The monthly workbench and Payroll Overview consume the same background-run contract instead of invoking synchronous readiness calculations.
@@ -93,3 +110,25 @@ Cached rows never override the status response when determining whether payroll 
 Staff wording is presentation-only; RTK Query URLs, field keys, tags, enums, and permission keys retain their employee identifiers.
 Policy lookup APIs remain available to assignment previews and authenticated regression tests after removal of the standalone lookup page.
 Attendance download columns are Staff Code and Staff Name, while the backend normalizes Staff and Employee header aliases into the existing employee fields.
+
+## Paid correction settlement
+
+The payslip RTK Query client exposes settlePayslipCorrection with correction ID, concurrency stamp, target month and preview run ID.
+The settlement control reuses startPayrollPreview and getPayrollPreviewStatus rather than introducing another payroll calculator.
+Use currentData and the active month/academic-year selection to prevent cached or interrupted target results enabling Apply settlement.
+Invalidate payslip and payroll tags after an acknowledged settlement, then require the ordinary payroll regeneration/review workflow.
+
+The payslip settings form adopts a completed successful settings read only when the draft is clean.
+An acknowledged save excludes the read that was already in flight, including a response arriving after a second consecutive save.
+Pending or failed refreshes cannot replace the saved baseline with retained cache data.
+Background refresh failure has its own Retry state and does not report an acknowledged write as failed.
+Failed writes retain the draft and its idempotency key; transport and empty-response failures use concise settings-specific retry messages.
+
+## Controlled employee account email
+
+src/redux/hr/employee-account-email-api.ts exposes typed read and change operations through the shared authenticated API service.
+GET /employees/{id}/account-email returns employeeEmail, accountEmail, userName, userId and the joint concurrencyToken.
+PUT sends email, reason, confirmEmployeeVerified, concurrencyToken and an idempotencyKey retained for the same failed payload.
+Only successful writes invalidate employee and salary-slip tags; failed writes retain the form and caches.
+The backend [HR API contract](../../../Shikshamitra-BE/docs/modules/hr/api.md) owns Identity synchronization, audit, permissions, scope, transaction and credential behavior.
+No arbitrary payslip recipient or separate contact field is sent.

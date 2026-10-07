@@ -65,10 +65,22 @@ describe('ESI unsaved navigation', () => {
   });
 
   it('does not intercept modified clicks, new tabs, or same-page anchors', () => {
-    render(<Fixture push={vi.fn()} />);
+    const push = vi.fn();
+    render(<Fixture push={push} />);
+    const nativeDefaultPrevented: boolean[] = [];
+    ['Payroll structure', 'New tab', 'Establishment section'].forEach((name) => {
+      screen.getByRole('link', { name }).addEventListener('click', (event) => {
+        // The document's real capture guard has run before this target listener.
+        nativeDefaultPrevented.push(event.defaultPrevented);
+        // Avoid Happy DOM following the allowed link outside this fixture.
+        event.preventDefault();
+      }, { once: true });
+    });
     fireEvent.click(screen.getByText('Payroll structure'), { ctrlKey: true });
     fireEvent.click(screen.getByText('New tab'));
     fireEvent.click(screen.getByText('Establishment section'));
+    expect(nativeDefaultPrevented).toEqual([false, false, false]);
+    expect(push).not.toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -104,8 +116,13 @@ describe('ESI unsaved navigation', () => {
     link.href = '/hr/payroll/structure';
     document.body.append(link);
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    let nativeDefaultPrevented: boolean | undefined;
+    link.addEventListener('click', (nativeEvent) => {
+      nativeDefaultPrevented = nativeEvent.defaultPrevented;
+      nativeEvent.preventDefault();
+    }, { once: true });
     link.dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(false);
+    expect(nativeDefaultPrevented).toBe(false);
     link.remove();
   });
 });

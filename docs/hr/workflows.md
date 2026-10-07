@@ -183,7 +183,8 @@ A later save creates another revision, supersedes the previous effective revisio
 After salary is ready, users with Employee Edit permission activate the employee as a separate action.
 Only effective revisions drive payroll, while one-time earning and deduction components remain a separate editable list.
 System-managed statutory lines stay visible in the calculation but are never persisted as editable employee components.
-Run Payroll and payslips show revision provenance and protected-target drift without silently changing salary or blocking lock.
+Run Payroll shows compensation revision provenance and protected-target drift without silently changing salary or blocking lock.
+Employee payslips omit employer cost and compensation protection details.
 Professional-tax settings also control whether tax is deducted in an employee's employment cessation month.
 Salary Template settings uses one full-height table for Active, Needs setup, and Archived templates.
 The shared inline breadcrumb header owns the Create template action and places reusable-default guidance in its information tooltip.
@@ -258,3 +259,89 @@ Secondary guidance remains available under Details.
 An explicit sole-default archive rejection reads “Choose another default before archiving”; reused missing-default and inactive-reference error codes keep their own meaning.
 Saving, archiving, assigning, and changing defaults still use impact previews, confirmation tokens, payroll lock blockers, versions, and audit.
 Attendance templates use Staff Code and Staff Name; imports accept Employee aliases, including mixed aliases for different fields, and reject duplicate aliases for one field.
+
+## Payslip completion requirements
+
+Immutable issued documents, payment recording, document-detail replacement and delivery are implemented with focused regression coverage.
+Unpaid reissue and paid later-payroll settlement are implemented with focused regression coverage and authenticated correction/settlement journeys.
+On 2026-10-07 the user deferred DOC-15 current Gujarat legal-format verification for both private unaided and government-aided schools, allowing engineering to proceed with the existing document.
+The deferred review does not change payroll rules, document immutability, signature fields, permission checks or recipient controls, and does not establish legal certification.
+The owning [payslip specification](../../../Shikshamitra-BE/docs/modules/hr/references/payslip-design.md) defines issuance, money, corrections, email and acceptance requirements.
+Keep the existing Payslips route, standard breadcrumbs and employee/month controls.
+Use one server-generated document for the screen document preview, Print, Download and email attachment.
+PDF.js renders the stored document with a bundled worker rather than relying on native PDF frames.
+The PDF zoom control offers fit-width and explicit scales with keyboard-accessible scrolling on narrow screens.
+Changing zoom reuses the same rendered pages and keeps the controls outside the A4 print content.
+
+Account-email drafts remain mounted during payslip metadata refreshes, and successful dialog actions return focus to their opening control once it is enabled.
+After a successful document Retry, focus returns to Print when the selected PDF is ready, or to Staff member for an empty period.
+A changed selection or another focused control cancels this restoration.
+Correction breakdowns omit empty sections while preserving explicitly recorded zero-value components.
+The logical text reader uses standard tagged text-span replacements only when the stored PDF associates them with actual page content.
+PDF.js5.6.205 returns page-specific structure trees without a shared identity for a span continued across pages.
+The reader does not deduplicate fields by equal text, because independently repeated fields must remain visible.
+New server generation keeps each logical span and its corresponding glyphs on one page, avoiding full-text repetition across page-specific trees.
+It retains uncovered text and reports unmapped glyphs instead of guessing employee names or using API facts to repair the preview.
+This reader support does not repair already stored untagged PDFs or establish PDF/UA or legal conformance.
+Print becomes available only after every selected document page renders and copies those pages using the existing print library.
+Changing the selection cancels the previous renderer and cannot publish its pages into the new selection.
+Rendering failures keep Print disabled and provide Retry without regenerating payroll facts.
+Official documents become available after payroll finalization, with payment status recorded separately.
+HR manages distribution; no employee portal is included.
+The school can enable automatic employee email after successful locking, with the setting off by default.
+Authorized HR can Send and Resend even when automatic email is off.
+Show the employee's recorded recipient address and delivery state.
+HR repairs a missing or wrong recipient through Change account email in employee information or the selected official payslip.
+The action requires both employee Edit and Identity Users.Update; generic personal-information email edits remain protected.
+Use the shared Formik dialog for the new email, a reason and confirmation that HR verified the address with the employee.
+An email-based sign-in name follows the address; a distinct sign-in name remains unchanged and is shown in the dialog.
+Failed writes preserve the draft and retry key, dirty refreshes retain the reviewed concurrency token, and explicit Reload account preserves the draft but requires verification again.
+Successful changes invalidate employee and payslip queries without rewriting issued PDFs or clearing failed delivery history.
+An explicit new send request retries delivery to the updated recipient; reusing a failed send's request key does not silently resend.
+Unconfirmed Send requests retain separate retry keys for each document across employee selections.
+When authorized history confirms that key, a deliberate Resend creates a new request instead of replaying the old accepted attempt.
+Confirm the response document, request key and supported status before clearing a pending retry key.
+Report acknowledged failed, uncertain and provider-accepted attempts accurately instead of claiming every response queued a new email.
+Keep delivery history and document revisions under secondary disclosures.
+Viewing a replaced revision disables sending and mutation actions.
+Recording payment keeps the PDF unchanged and stores a payment reference separately.
+Replacing document details requires a reason and uses current employee/school facts while retaining frozen monetary and attendance evidence.
+Payment and replacement forms preserve drafts and idempotency keys after failed writes.
+Deliberate resend uses the shared confirmation and shows the employee recipient.
+Provider acceptance is not labelled as inbox delivery.
+Failed document-history loading blocks a draft fallback; HR retries the failed request.
+Pending or failed document-status refreshes do not establish current revision, payment or recipient facts and disable payment, replacement, correction and send actions.
+The already loaded immutable official PDF stays available for reading and download without another artifact fetch.
+Open payment, document-detail and correction forms retain drafts during refresh failures, offer Retry and remain blocked if their source revision has been replaced.
+Removing payslip View permission removes protected document and dialog content immediately; exact action permissions and server guards continue to apply.
+An authorization or scope denial also hides cached document/history content and revokes its artifact URL; Retry keeps it hidden until a successful current-selection read restores access.
+Unpaid corrections require a reason and a replacement retaining the original; paid monetary differences go through later payroll.
+Correct payroll opens a compact reasoned draft for an unpaid or paid current revision.
+Recorded attendance remains editable without fabricating Present values for missing records.
+Recalculate shows issued and candidate earnings, employee deductions, net pay and school cost, with component evidence for HR.
+Run Payroll and correction comparisons use `formatPayrollCurrency` to retain authoritative paise in earnings, deductions, settlements and net pay.
+Do not apply the Finance whole-rupee display formatter to payroll evidence or introduce renderer-side statutory rounding.
+Keep this comparison inside a bounded, keyboard-focusable table container, with compact mobile cell spacing and horizontal scrolling when amounts need more room.
+Attendance edits disable review and reissue until recalculated.
+For a reviewed paid correction, select a later settlement month and calculate its payroll through the existing preview service.
+Apply settlement requires a current successful target preview and the existing payroll Lock permission.
+Changing the month or academic year invalidates the selected target run; interrupted requests from another selection cannot enable settlement.
+Successful settlement leaves the paid document unchanged and requires target payroll regeneration, review and locking.
+Failed settlement retains the month and shows the server's actionable error.
+Review and reissue follow the existing RunPayroll permissions in addition to payslip permissions.
+Close protects unsaved edits, failed writes retain the draft, and failed follow-up history refresh is reported separately from an acknowledged write.
+An already-started correction-history read cannot replace a subsequently acknowledged calculation or review.
+Clean correction forms adopt later successful reads; dirty attendance remains editable through background refreshes.
+Each correction attendance row provides the existing compact MUI time inputs beside its status, with persistent labels and a responsive layout.
+Time edits use attendance's offset-zero clock contract, preserve untouched timestamp precision, and serialize only when calculating.
+Invalid time ranges show a field error without clearing the draft, and time edits participate in the existing discard and background-refresh guards.
+Reopening with pending or failed history keeps cached comparison results non-actionable until a successful read.
+Retry restores the current correction and concurrency token without creating another draft or calculation.
+Cancellation preserves audit evidence and does not discard the issued document.
+Clean settings adopt refreshed server values; dirty settings retain their draft and original concurrency token until saved or discarded.
+Discard restores the latest observed server baseline.
+Internal links and browser traversal use the shared keep-editing/discard guard.
+An earlier refresh observed during saving cannot overwrite the acknowledged save response.
+Connection and timeout failures show plain save/retry guidance while retaining the draft and its idempotency key.
+Server validation and concurrency messages remain actionable rather than being replaced by that connection message.
+Preserve compact labelled controls, stable loading/error layouts, draft protection and keyboard focus behavior.

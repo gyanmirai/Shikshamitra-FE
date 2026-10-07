@@ -31,6 +31,7 @@ import { infoValidations } from './employee-form-validation';
 import { FamilyFields } from './employee-form-fields/FamilyFields';
 import { PayrollFields } from './employee-form-fields/PayrollFields';
 import { buildWorkExperiencePayload } from './work-experience-payload';
+import EmployeeAccountEmailAction from './employee-account-email-action';
 import { InformationFields } from './employee-form-fields/InformationFields';
 import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
 import { buildProfilePersonalInfoUpdatePayload } from './personal-info-update-payload';
@@ -520,6 +521,9 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
           <Card sx={{ p: 1, flexGrow: 1, height: '100%', overflow: 'hidden' }}>
             <Scrollbar sx={{ height: '100%' }}>
               <Box sx={{ p: 2 }}>
+                {activeTabIndex === 0 && !isEdit && editData?.id &&
+                  <EmployeeAccountEmailAction employeeId={editData.id} />
+                }
                 <form onSubmit={formik.handleSubmit}>
                   <ViewInformationScreen
                     isBackClick={isBackClick}
