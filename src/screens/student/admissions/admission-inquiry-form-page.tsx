@@ -27,6 +27,7 @@ import {
 } from '@mui/material';
 
 import AdmissionRuntimeField from './admission-runtime-field';
+import { isAdmissionRuleVisible } from './admission-visibility-rules';
 import { useAdmissionInquiryDialog } from './use-admission-inquiry-dialog';
 import { AdmissionInquiryDuplicateMatches } from './admission-inquiry-duplicate-matches';
 import {
@@ -149,10 +150,43 @@ export default function AdmissionInquiryFormPage() {
                 </Alert>
               )}
 
-            <InquiryFormSection
-              title="Admission interest"
-              description="The offering determines the admission cycle automatically."
-            >
+            {controller.academicError && (
+              <Alert
+                severity="error"
+                action={<Button onClick={controller.retryAcademic}>Retry</Button>}
+              >
+                Academic choices could not be loaded.
+              </Alert>
+            )}
+            <InquiryFormSection title="Admission interest">
+              <TextField
+                select
+                required
+                fullWidth
+                size="small"
+                label="Admission period"
+                value={formik.values.admissionCycleId ?? ''}
+                disabled={controller.busy || controller.academicLoading}
+                error={Boolean(formik.touched.admissionCycleId && formik.errors.admissionCycleId)}
+                helperText={formik.touched.admissionCycleId && formik.errors.admissionCycleId}
+                onChange={(event) =>
+                  formik.setValues((current) => ({
+                    ...current,
+                    admissionCycleId: event.target.value,
+                    boardId: '',
+                    mediumId: '',
+                    standardId: '',
+                    offeringId: '',
+                    fields: {},
+                  }))
+                }
+              >
+                {controller.periods.map((period) => (
+                  <MenuItem key={period.id} value={period.id}>
+                    {period.name}
+                  </MenuItem>
+                ))}
+              </TextField>
               <ShakingTextField error={Boolean(formik.touched.boardId && formik.errors.boardId)}>
                 <TextField
                   select
@@ -162,7 +196,14 @@ export default function AdmissionInquiryFormPage() {
                   label="Board"
                   name="boardId"
                   value={formik.values.boardId}
-                  disabled={controller.offeringsLoading || controller.offeringsError}
+                  disabled={
+                    !formik.values.admissionCycleId ||
+                    controller.busy ||
+                    controller.offeringsLoading ||
+                    controller.academicLoading ||
+                    controller.academicError ||
+                    controller.offeringsError
+                  }
                   error={Boolean(formik.touched.boardId && formik.errors.boardId)}
                   helperText={formik.touched.boardId && formik.errors.boardId}
                   onBlur={formik.handleBlur}
@@ -185,7 +226,12 @@ export default function AdmissionInquiryFormPage() {
                   label="Medium"
                   name="mediumId"
                   value={formik.values.mediumId}
-                  disabled={!formik.values.boardId || controller.offeringsLoading}
+                  disabled={
+                    !formik.values.boardId ||
+                    controller.busy ||
+                    controller.offeringsLoading ||
+                    controller.academicLoading
+                  }
                   error={Boolean(formik.touched.mediumId && formik.errors.mediumId)}
                   helperText={formik.touched.mediumId && formik.errors.mediumId}
                   onBlur={formik.handleBlur}
@@ -210,7 +256,12 @@ export default function AdmissionInquiryFormPage() {
                   label="Class"
                   name="standardId"
                   value={formik.values.standardId}
-                  disabled={!formik.values.mediumId || controller.offeringsLoading}
+                  disabled={
+                    !formik.values.mediumId ||
+                    controller.busy ||
+                    controller.offeringsLoading ||
+                    controller.academicLoading
+                  }
                   error={Boolean(formik.touched.standardId && formik.errors.standardId)}
                   helperText={formik.touched.standardId && formik.errors.standardId}
                   onBlur={formik.handleBlur}
@@ -236,11 +287,11 @@ export default function AdmissionInquiryFormPage() {
                     label="Offering"
                     name="offeringId"
                     value={formik.values.offeringId}
-                    disabled={controller.offerings.length === 0}
+                    disabled={controller.busy || controller.offerings.length === 0}
                     error={Boolean(formik.touched.offeringId && formik.errors.offeringId)}
                     helperText={
                       controller.offerings.length === 0
-                        ? 'No open offering matches the selected board, medium, and class.'
+                        ? 'Selected class has no admission open.'
                         : formik.touched.offeringId && formik.errors.offeringId
                     }
                     onBlur={formik.handleBlur}
@@ -265,6 +316,23 @@ export default function AdmissionInquiryFormPage() {
                   </TextField>
                 </ShakingTextField>
               )}
+              {hierarchySelected &&
+                !controller.offeringsLoading &&
+                !controller.offeringsError &&
+                controller.offerings.length === 0 && (
+                  <Alert severity="warning" sx={{ gridColumn: '1 / -1' }}>
+                    Selected class has no admission open.
+                  </Alert>
+                )}
+              {formik.values.offeringId &&
+                !controller.runtimeLoading &&
+                !controller.runtimeError &&
+                !controller.canCreateInquiry && (
+                  <Alert severity="warning" sx={{ gridColumn: '1 / -1' }}>
+                    {controller.unavailableReason ||
+                      'Admission is not open for the selected class.'}
+                  </Alert>
+                )}
               {controller.classCapacity &&
                 formik.values.offeringId &&
                 dismissedCapacityOfferingId !== formik.values.offeringId && (
@@ -277,7 +345,9 @@ export default function AdmissionInquiryFormPage() {
                         ? 'Admission room capacity is not set. Division seats are checked during onboarding. You can continue this inquiry.'
                         : `${controller.classCapacity.remainingSeats} of ${controller.classCapacity.capacity} admission room seats available.`}
                       {controller.classCapacity.isFull &&
-                        ' Admission room capacity is full; you can still continue.'}
+                        (controller.canCreateInquiry
+                          ? ` ${controller.unavailableReason || 'The configured admission capacity rules allow this inquiry. Division allocation is checked during onboarding.'}`
+                          : ' Capacity is full and this offering does not accept further inquiries.')}
                     </Alert>
                   </Box>
                 )}
@@ -305,117 +375,133 @@ export default function AdmissionInquiryFormPage() {
                 The inquiry form for this offering could not be loaded. Try again.
               </Alert>
             )}
-            {controller.sections.map((section) => (
-              <InquiryFormSection key={section.id} title={section.name}>
-                {section.fields.map((field) => (
-                  <Box
-                    key={field.code}
-                    sx={{
-                      minWidth: 0,
-                      gridColumn: [1, 11, 12].includes(field.fieldType) ? '1 / -1' : undefined,
-                    }}
-                  >
-                    <AdmissionRuntimeField
+            {controller.sections
+              .filter((section) =>
+                isAdmissionRuleVisible(section.visibilityRuleJson, formik.values.fields)
+              )
+              .map((section) => (
+                <InquiryFormSection key={section.id} title={section.name}>
+                  {section.fields
+                    .filter((field) =>
+                      isAdmissionRuleVisible(field.visibilityRuleJson, formik.values.fields)
+                    )
+                    .map((field) => (
+                      <Box
+                        key={field.code}
+                        sx={{
+                          minWidth: 0,
+                          gridColumn: [1, 11, 12].includes(field.fieldType) ? '1 / -1' : undefined,
+                        }}
+                      >
+                        <AdmissionRuntimeField
+                          onBusyChange={(busy) => controller.onPhotoReading(field.code, busy)}
                       field={field}
-                      value={formik.values.fields[field.code] ?? ''}
-                      disabled={controller.formLoading || field.readOnly}
-                      error={
-                        formik.submitCount > 0 || touchedFields?.[field.code]
-                          ? fieldErrors?.[field.code]
-                          : undefined
-                      }
-                      formValues={formik.values.fields}
-                      onBlur={() => {
-                        formik.setTouched({
-                          ...formik.touched,
-                          fields: { ...touchedFields, [field.code]: true },
-                        });
-                        if (preferredClassError?.fieldCode === field.code) {
-                          notifyPreferredClassError();
-                        }
-                      }}
-                      onChange={(value) => {
-                        if (preferredClassError?.fieldCode === field.code) {
-                          lastPreferredClassToast.current = '';
-                        }
-                        formik.setValues((current) => ({
-                          ...current,
-                          fields: { ...current.fields, [field.code]: value },
-                        }));
-                      }}
-                    />
-                  </Box>
-                ))}
-              </InquiryFormSection>
-            ))}
+                          value={formik.values.fields[field.code] ?? ''}
+                          disabled={controller.busy || controller.formLoading || field.readOnly}
+                          error={
+                            formik.submitCount > 0 || touchedFields?.[field.code]
+                              ? fieldErrors?.[field.code]
+                              : undefined
+                          }
+                          formValues={formik.values.fields}
+                          onBlur={() => {
+                            formik.setTouched({
+                              ...formik.touched,
+                              fields: { ...touchedFields, [field.code]: true },
+                            });
+                            if (preferredClassError?.fieldCode === field.code) {
+                              notifyPreferredClassError();
+                            }
+                          }}
+                          onChange={(value) => {
+                            if (preferredClassError?.fieldCode === field.code) {
+                              lastPreferredClassToast.current = '';
+                            }
+                            formik.setValues((current) => ({
+                              ...current,
+                              fields: { ...current.fields, [field.code]: value },
+                            }));
+                          }}
+                        />
+                      </Box>
+                    ))}
+                </InquiryFormSection>
+              ))}
 
-            <InquiryFormSection title="Inquiry details">
-              <ShakingTextField error={Boolean(formik.touched.source && formik.errors.source)}>
-                <TextField
-                  select
-                  fullWidth
-                  required
-                  size="small"
-                  name="source"
-                  label="Source"
-                  value={formik.values.source}
-                  disabled={controller.runtimeLoading || controller.runtimeError}
-                  error={Boolean(formik.touched.source && formik.errors.source)}
-                  helperText={formik.touched.source && formik.errors.source}
-                  onBlur={formik.handleBlur}
-                  onChange={(event) => {
-                    formik.setFieldValue(
-                      'source',
-                      Number(event.target.value) as AdmissionInquirySource
-                    );
-                    formik.setFieldValue('sourceDetail', '');
-                  }}
-                >
-                  {admissionInquirySourceOptions.map((label, index) =>
-                    controller.allowedSources.includes(index) ? (
-                      <MenuItem key={label} value={index}>
-                        {label}
-                      </MenuItem>
-                    ) : null
-                  )}
-                </TextField>
-              </ShakingTextField>
-              <ShakingTextField
-                error={Boolean(formik.touched.sourceDetail && formik.errors.sourceDetail)}
-              >
-                <TextField
-                  fullWidth
-                  size="small"
-                  name="sourceDetail"
-                  label="Source details"
-                  value={formik.values.sourceDetail}
-                  disabled={controller.runtimeLoading || controller.runtimeError}
-                  inputProps={{ maxLength: 128 }}
-                  error={Boolean(formik.touched.sourceDetail && formik.errors.sourceDetail)}
-                  helperText={
-                    (formik.touched.sourceDetail || formik.submitCount > 0) &&
-                    formik.errors.sourceDetail
-                      ? formik.errors.sourceDetail
-                      : 'Optional context to help staff trace this inquiry.'
-                  }
-                  onBlur={formik.handleBlur}
-                  onChange={formik.handleChange}
-                />
-              </ShakingTextField>
-              {controller.canAutoAcknowledge && (
-                <FormControlLabel
-                  label="Send acknowledgement automatically after saving"
-                  control={
-                    <Switch
-                      checked={formik.values.sendAcknowledgement}
-                      onChange={(_, checked) =>
-                        formik.setFieldValue('sendAcknowledgement', checked)
+            {controller.canCreateInquiry &&
+              !controller.runtimeLoading &&
+              !controller.runtimeError && (
+                <InquiryFormSection title="Inquiry details">
+                  <ShakingTextField error={Boolean(formik.touched.source && formik.errors.source)}>
+                    <TextField
+                      select
+                      fullWidth
+                      required
+                      size="small"
+                      name="source"
+                      label="Source"
+                      value={formik.values.source}
+                      disabled={
+                        controller.busy || controller.runtimeLoading || controller.runtimeError
+                      }
+                      error={Boolean(formik.touched.source && formik.errors.source)}
+                      helperText={formik.touched.source && formik.errors.source}
+                      onBlur={formik.handleBlur}
+                      onChange={(event) => {
+                        formik.setFieldValue(
+                          'source',
+                          Number(event.target.value) as AdmissionInquirySource
+                        );
+                        formik.setFieldValue('sourceDetail', '');
+                      }}
+                    >
+                      {admissionInquirySourceOptions.map((label, index) =>
+                        controller.allowedSources.includes(index) ? (
+                          <MenuItem key={label} value={index}>
+                            {label}
+                          </MenuItem>
+                        ) : null
+                      )}
+                    </TextField>
+                  </ShakingTextField>
+                  <ShakingTextField
+                    error={Boolean(formik.touched.sourceDetail && formik.errors.sourceDetail)}
+                  >
+                    <TextField
+                      fullWidth
+                      size="small"
+                      name="sourceDetail"
+                      label="Source details"
+                      value={formik.values.sourceDetail}
+                      disabled={controller.runtimeLoading || controller.runtimeError}
+                      inputProps={{ maxLength: 128 }}
+                      error={Boolean(formik.touched.sourceDetail && formik.errors.sourceDetail)}
+                      helperText={
+                        (formik.touched.sourceDetail || formik.submitCount > 0) &&
+                        formik.errors.sourceDetail
+                          ? formik.errors.sourceDetail
+                          : 'Optional context to help staff trace this inquiry.'
+                      }
+                      onBlur={formik.handleBlur}
+                      onChange={formik.handleChange}
+                    />
+                  </ShakingTextField>
+                  {controller.canAutoAcknowledge && (
+                    <FormControlLabel
+                      label="Send acknowledgement automatically after saving"
+                      control={
+                        <Switch
+                          disabled={controller.busy}
+                          checked={formik.values.sendAcknowledgement}
+                          onChange={(_, checked) =>
+                            formik.setFieldValue('sendAcknowledgement', checked)
+                          }
+                        />
                       }
                     />
-                  }
-                />
+                  )}
+                </InquiryFormSection>
               )}
-            </InquiryFormSection>
 
             <AdmissionInquiryDuplicateMatches
               matches={controller.matches}
@@ -464,6 +550,8 @@ export default function AdmissionInquiryFormPage() {
             variant="contained"
             disabled={
               controller.busy ||
+              !controller.canCreateInquiry ||
+              controller.academicError ||
               controller.formLoading ||
               controller.workflowLoading ||
               controller.runtimeLoading ||

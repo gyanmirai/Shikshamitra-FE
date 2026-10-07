@@ -36,6 +36,67 @@ const fields = [
 ];
 
 describe('StudentFieldPalette', () => {
+  it('explains captured admission fields and keeps previous school fields available', async () => {
+    const user = userEvent.setup();
+    const onAdd = vi.fn();
+    const onAddSection = vi.fn();
+    const catalogue = [
+      'Preference.Board',
+      'Preference.Medium',
+      'Preference.Class',
+      'Preference.Campus',
+      'PreviousSchool.LastClass',
+    ].map((key) => ({
+      key,
+      displayName: key,
+      fieldType: 0 as const,
+      readOnly: false,
+      description: '',
+    }));
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentFieldPalette fields={catalogue} onAdd={onAdd} onAddSection={onAddSection} />
+      </ThemeProvider>
+    );
+    expect(screen.getByRole('note')).toHaveTextContent('No need to add them again');
+    await user.click(screen.getByRole('button', { name: 'Admission preferences (4)' }));
+    expect(
+      screen.getByRole('button', { name: 'Preference.Class captured in inquiry' })
+    ).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Add Admission preferences section' }));
+    expect(onAddSection).toHaveBeenCalledWith('Admission preferences', [catalogue[3]]);
+    await user.type(screen.getByRole('textbox', { name: 'Search student fields' }), 'lastclass');
+    await user.click(screen.getByRole('button', { name: 'Add PreviousSchool.LastClass' }));
+    expect(onAdd).toHaveBeenCalledWith(catalogue[4]);
+  });
+  it('keeps address packs inside the related expandable category', async () => {
+    const user = userEvent.setup();
+    const onAddSection = vi.fn();
+    const addressFields = ['Address.Country', 'Address.State', 'PermanentAddress.Country'].map(
+      (key) => ({
+        key,
+        displayName: key,
+        description: '',
+        fieldType: 0 as const,
+        readOnly: false,
+      })
+    );
+    render(
+      <ThemeProvider theme={createTheme(defaultSettings)}>
+        <StudentFieldPalette
+          fields={addressFields}
+          usedBindings={['PermanentAddress.Country']}
+          onAdd={vi.fn()}
+          onAddSection={onAddSection}
+        />
+      </ThemeProvider>
+    );
+    expect(screen.queryByRole('button', { name: 'Current address pack' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Contact and addresses (3)' }));
+    expect(screen.getByRole('button', { name: 'Permanent address pack' })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Current address pack' }));
+    expect(onAddSection).toHaveBeenCalledWith('Current address', addressFields.slice(0, 2));
+  });
   it('groups linked fields, marks used fields, and filters by group or name', async () => {
     const user = userEvent.setup();
     const onAdd = vi.fn();
@@ -65,13 +126,19 @@ describe('StudentFieldPalette', () => {
     await user.click(screen.getByRole('button', { name: 'Add Blood group' }));
     expect(onAdd).toHaveBeenCalledWith(fields[1]);
 
-    await user.type(
-      screen.getByRole('textbox', { name: 'Search student fields' }),
-      'previous school'
-    );
+    const search = screen.getByRole('textbox', { name: 'Search student fields' });
+    const label = search.closest('.MuiFormControl-root')?.querySelector('label');
+    expect(label).toHaveAttribute('data-shrink', 'false');
+    await user.click(search);
+    expect(label).toHaveAttribute('data-shrink', 'false');
+    await user.type(search, 'previous school');
+    expect(label).toHaveAttribute('data-shrink', 'true');
     expect(screen.getByText('1 matching fields')).toBeVisible();
     expect(screen.getByRole('button', { name: 'Add Previous school name' })).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Add Blood group' })).not.toBeInTheDocument();
+    await user.clear(search);
+    expect(label).toHaveAttribute('data-shrink', 'false');
+    expect(screen.getByText('2 available of 3 student fields')).toBeVisible();
   });
 
   it('keeps the last option searchable when the catalogue has 100 fields', async () => {

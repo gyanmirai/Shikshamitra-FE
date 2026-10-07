@@ -1,7 +1,9 @@
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
-import { Alert, Stack, MenuItem, TextField, Typography } from '@mui/material';
+import { Grid, Stack } from '@mui/material';
+import CustomSelect from 'src/components/custom-select';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
 import { parseFieldConfiguration, writeFieldConfiguration } from './form-field-presets';
 
@@ -22,64 +24,79 @@ export function FormFieldLocationSettings({ formik, sectionIndex, fieldIndex }: 
   const stateFields = fields.filter(
     (item) => parseFieldConfiguration(item.validationJson).format === 'state'
   );
+  const countryFieldMissing = Boolean(
+    configuration.countryField &&
+    !countryFields.some((item) => item.code === configuration.countryField)
+  );
+  const stateFieldMissing = Boolean(
+    configuration.stateField && !stateFields.some((item) => item.code === configuration.stateField)
+  );
   const update = (patch: Partial<typeof configuration>) =>
     formik.setFieldValue(path, writeFieldConfiguration({ ...configuration, ...patch }));
 
   if (configuration.format !== 'state' && configuration.format !== 'city') return null;
 
   return (
-    <Stack spacing={1.25}>
-      <Typography variant="subtitle2">Location dependency</Typography>
-      <Alert severity="info">
-        The child field is cleared automatically when its parent selection changes.
-      </Alert>
-      <TextField
-        select
-        fullWidth
-        required
-        size="small"
-        label="Country field"
-        value={configuration.countryField ?? ''}
-        onChange={(event) =>
-          update({
-            countryField: event.target.value,
-            ...(configuration.format === 'state' ? {} : { stateField: configuration.stateField }),
-          })
-        }
-        helperText={
-          countryFields.length
-            ? 'Select the country field that controls the available locations.'
-            : 'Add a Country common field first.'
-        }
-      >
-        {countryFields.map((item) => (
-          <MenuItem key={item.code} value={item.code}>
-            {item.label}
-          </MenuItem>
-        ))}
-      </TextField>
-      {configuration.format === 'city' && (
-        <TextField
-          select
-          fullWidth
-          required
-          size="small"
-          label="State field"
-          value={configuration.stateField ?? ''}
-          onChange={(event) => update({ stateField: event.target.value })}
-          helperText={
-            stateFields.length
-              ? 'Select the state field that controls the available cities.'
-              : 'Add a State common field first.'
-          }
-        >
-          {stateFields.map((item) => (
-            <MenuItem key={item.code} value={item.code}>
-              {item.label}
-            </MenuItem>
-          ))}
-        </TextField>
-      )}
-    </Stack>
+    <SectionCard
+      title="Location dependency"
+      paperProps={{ sx: { mb: 0, minWidth: 0 } }}
+      gridProps={{ spacing: 1.5 }}
+    >
+      <Grid size={12}>
+        <Stack spacing={1.5}>
+          <CustomSelect
+            required
+            size="small"
+            label="Country field"
+            value={configuration.countryField ?? ''}
+            options={[
+              ...countryFields.map((item) => ({ value: item.code, label: item.label })),
+              ...(countryFieldMissing
+                ? [{ value: configuration.countryField!, label: 'Unavailable country field' }]
+                : []),
+            ]}
+            onChange={(value) =>
+              update({
+                countryField: String(value),
+                ...(configuration.format === 'state'
+                  ? {}
+                  : { stateField: configuration.stateField }),
+              })
+            }
+            error={countryFieldMissing}
+            helperText={
+              countryFieldMissing
+                ? 'Select an available country field.'
+                : countryFields.length
+                  ? undefined
+                  : 'Add a Country common field first.'
+            }
+          />
+          {configuration.format === 'city' && (
+            <CustomSelect
+              required
+              size="small"
+              label="State field"
+              value={configuration.stateField ?? ''}
+              options={[
+                ...stateFields.map((item) => ({ value: item.code, label: item.label })),
+                ...(stateFieldMissing
+                  ? [{ value: configuration.stateField!, label: 'Unavailable state field' }]
+                  : []),
+              ]}
+              onChange={(value) => update({ stateField: String(value) })}
+              error={stateFieldMissing}
+              helperText={
+                stateFieldMissing
+                  ? 'Select an available state field.'
+                  : stateFields.length
+                    ? undefined
+                    : 'Add a State common field first.'
+              }
+            />
+          )}
+        </Stack>
+      </Grid>
+    </SectionCard>
   );
 }

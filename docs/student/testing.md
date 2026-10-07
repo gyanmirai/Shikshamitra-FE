@@ -312,9 +312,11 @@ The 2026-09-11 focused run passed 18 model, policy, prerequisite, and RTK Query 
 
 Operational-queue coverage verifies that the list request serializes the work-queue filter and that next-action presentation prioritizes overdue follow-ups, still identifies first-contact work when no SLA deadline is configured, and stops showing qualification work after an outcome is recorded.
 Communication coverage verifies the inquiry-scoped POST payload, language-aware template fallback, and channel validation, including the required Email subject and at least one supported family channel. Inquiry API coverage also verifies concurrency-safe edit, timeline, atomic bulk assignment, and filtered CSV contracts. Backend tests separately verify campaign creation and the route/permission contract.
-Navigation coverage verifies the flat Admissions menu, the dependency-ordered Settings group, the hidden Review Queue sidebar entry, and the preserved Application Reviews permission entry. It also verifies that Pipeline is guarded by Inquiry View rather than Applications View. Its responsive smoke test should cover both pipeline groups, horizontal lane scrolling, filters, empty/error/loading lanes, Manage and Assign actions, and card readability at 390×844, 768×1024, and 1440×900.
+Navigation coverage verifies the flat Admissions menu, the dependency-ordered Settings group, the hidden Review Queue sidebar entry, and the preserved Application Reviews permission entry. It also verifies that Pipeline is guarded by Inquiry View rather than Applications View. Its responsive smoke test should cover the transferred-only Pipeline table, linked application navigation and permission state, retained filters, empty/error/loading states, and the two Inquiry row actions at 390×844, 768×1024, and 1440×900.
 The browser showed real server-paged controls and the management drawer's recoverable error state against the still-running older API build.
 Managed lifecycle and API behavior are covered by backend service and contract tests until the new migration and Host are loaded into that external process.
+
+The 2026-10-06 focused inquiry simplification checks cover the three status choices, required Not interested reason, separate Interested save and application handoff, Pending/Not interested/duplicate handoff blockers, repeat-transfer prevention, application navigation using the confirmed inquiry offering, full source-filter range, original API serialization, and pre-application status copy. Browser save/reload, availability denial, handoff/Pipeline and qualification email verification remain required integration checks.
 
 ## Managed Form checks
 
@@ -381,6 +383,14 @@ Desktop, 768px tablet, and 390px mobile drawer checks found no document-level ho
 Full-project TypeScript remains blocked by eight diagnostics in untouched homework and Admissions test files; this change's files reported no diagnostics.
 The all-module documentation gate remains blocked by unrelated Finance and Testing documentation issues; the Student gate passed.
 No production deployment or complete live applicant journey was performed.
+
+## Public inquiry link compatibility checks (2026-10-07)
+
+The focused public-link drawer suite passed 26 cases covering period-dependent setup/form pairs, excluded unlinked setups, loading/error/empty guards, refresh without losing link details, period-change clearing, the reported generic `OfferingRequired` response, successful creation, and existing link actions. Focused lint and formatting passed; Student documentation validation passed. The all-module documentation gate still reports unrelated Testing and Finance issues.
+
+Strict affected-source TypeScript validation passed with the project's theme and test augmentations included. The check excludes generated Next route declarations; validation using `next-env.d.ts` remains blocked by syntax diagnostics TS1161/TS1128 in `build/dev/types/routes.d.ts`. Full-project TypeScript was stopped during resource contention and is not a passing release gate.
+
+Authenticated localhost browser checks verified missing-Offering guidance and disabled creation, compatible form/setup selections, successful link creation, and Active status after reload. The temporary QA link was then revoked. The drawer was checked at 390×844, 768×1024, and 1440×900; mobile and tablet had no horizontal drawer overflow. Staging acceptance remains unverified because the browser has no signed-in staging session; this local change has not been deployed.
 
 ## Credential-email and document-override checks
 

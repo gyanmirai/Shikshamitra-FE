@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 
-import { Box, Step, Stack, Stepper, StepLabel, StepButton } from '@mui/material';
+import { useRef, useEffect } from 'react';
+import { Scrollbar } from 'src/components/scrollbar';
+import { useResponsive } from 'src/hooks/use-responsive';
+import { Step, Stack, Stepper, StepLabel, StepButton } from '@mui/material';
 
 type Props = {
   steps: { id: string; name: string; caption?: ReactNode }[];
@@ -10,6 +13,7 @@ type Props = {
   stepErrors?: readonly boolean[];
   disabled?: boolean;
   children?: ReactNode;
+  renderStepLabel?: (index: number) => ReactNode;
 };
 
 export function AdmissionFormStepNavigation({
@@ -20,7 +24,25 @@ export function AdmissionFormStepNavigation({
   stepErrors = [],
   disabled = false,
   children,
+  renderStepLabel,
 }: Props) {
+  const vertical = useResponsive('up', 'md');
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (vertical || !container) return undefined;
+    const revealActiveStep = () => {
+      if (container.clientWidth)
+        container
+          .querySelector<HTMLElement>('[aria-current="step"]')
+          ?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+    };
+    revealActiveStep();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(revealActiveStep);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [activeStep, vertical]);
   const renderSteps = () =>
     steps.map((step, index) => (
       <Step
@@ -28,7 +50,14 @@ export function AdmissionFormStepNavigation({
         completed={completedSteps.includes(index)}
         aria-current={index === activeStep ? 'step' : undefined}
       >
-        {onStepChange ? (
+        {renderStepLabel ? (
+          <StepLabel
+            error={stepErrors[index]}
+            sx={{ '& .MuiStepLabel-labelContainer': { minWidth: 0 } }}
+          >
+            {renderStepLabel(index)}
+          </StepLabel>
+        ) : onStepChange ? (
           <StepButton
             type="button"
             disabled={disabled}
@@ -47,26 +76,30 @@ export function AdmissionFormStepNavigation({
       </Step>
     ));
 
+  const stepper = (
+    <Stepper
+      activeStep={activeStep}
+      orientation={vertical ? 'vertical' : 'horizontal'}
+      nonLinear
+      sx={{
+        width: vertical ? 1 : 'max-content',
+        minWidth: 1,
+        '& .MuiStepConnector-line': { minHeight: 24 },
+        '& .MuiStepLabel-label': { typography: 'subtitle2', overflowWrap: 'anywhere' },
+      }}
+    >
+      {renderSteps()}
+    </Stepper>
+  );
   return (
     <Stack component="nav" aria-label="Form steps" spacing={1.5} sx={{ minWidth: 0 }}>
-      <Box sx={{ display: { xs: 'none', md: 'block' } }}>
-        <Stepper
-          activeStep={activeStep}
-          orientation="vertical"
-          nonLinear
-          sx={{
-            '& .MuiStepConnector-line': { minHeight: 24 },
-            '& .MuiStepLabel-label': { typography: 'subtitle2', overflowWrap: 'anywhere' },
-          }}
-        >
-          {renderSteps()}
-        </Stepper>
-      </Box>
-      <Box sx={{ display: { xs: 'block', md: 'none' }, overflowX: 'auto', pb: 1 }}>
-        <Stepper activeStep={activeStep} nonLinear sx={{ width: 'max-content', minWidth: 1 }}>
-          {renderSteps()}
-        </Stepper>
-      </Box>
+      {vertical ? (
+        stepper
+      ) : (
+        <Scrollbar ref={scrollRef} sx={{ flexGrow: 0, pb: 1 }}>
+          {stepper}
+        </Scrollbar>
+      )}
       {children}
     </Stack>
   );

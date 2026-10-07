@@ -12,6 +12,7 @@ import Typography from '@mui/material/Typography';
 import CustomTooltip from 'src/components/custom-tooltip';
 
 import { FIELD_TYPES } from './form-dialog-model';
+import { FormBuilderUnitActions } from './components/form-builder-unit-actions';
 
 function fieldPrompt(fieldType: number, label: string, placeholder?: string | null) {
   if (placeholder) return placeholder;
@@ -60,19 +61,28 @@ export function FormBuilderField({
       sx={{
         minWidth: 0,
         gridColumn: field.fieldType === 1 ? '1 / -1' : undefined,
-        borderRadius: 1.5,
-        bgcolor: selected ? 'action.selected' : 'transparent',
-        '&:hover': { bgcolor: 'action.hover' },
+        border: 1,
+        borderColor: selected ? 'primary.main' : 'divider',
+        borderRadius: 1,
+        bgcolor: 'background.paper',
+        '&:hover': { borderColor: 'primary.main' },
+        '& .admission-field-reorder, & .admission-field-actions': { opacity: 0 },
+        '&:hover .admission-field-reorder, &:focus-within .admission-field-reorder, &:hover .admission-field-actions, &:focus-within .admission-field-actions':
+          { opacity: 1 },
+        '@media (hover: none)': {
+          '& .admission-field-reorder, & .admission-field-actions': { opacity: 1 },
+        },
       }}
     >
       <Stack
-        direction={{ xs: 'row', lg: compactFourColumnCard ? 'column' : 'row', xl: 'row' }}
+        direction={{ xs: 'row', lg: compactFourColumnCard ? 'column' : 'row' }}
         alignItems="flex-start"
-        sx={{ p: 0.75, position: 'relative' }}
+        sx={{ p: 0.5, position: 'relative' }}
       >
         <CustomTooltip title="Drag to reorder. With a keyboard, press Space, then arrow keys.">
           <IconButton
             size="small"
+            className="admission-field-reorder"
             ref={sortable.setActivatorNodeRef}
             {...sortable.attributes}
             {...sortable.listeners}
@@ -83,9 +93,9 @@ export function FormBuilderField({
               flexShrink: 0,
               cursor: 'grab',
               touchAction: 'none',
-              position: { lg: compactFourColumnCard ? 'absolute' : 'static', xl: 'static' },
-              top: 6,
-              left: 6,
+              position: { lg: compactFourColumnCard ? 'absolute' : 'static' },
+              top: 4,
+              left: 4,
               zIndex: 1,
             }}
           >
@@ -99,13 +109,13 @@ export function FormBuilderField({
           sx={{
             flex: 1,
             minWidth: 0,
-            width: { lg: compactFourColumnCard ? 1 : 'auto', xl: 'auto' },
-            minHeight: 88,
+            width: { lg: compactFourColumnCard ? 1 : 'auto' },
+            minHeight: 72,
             textAlign: 'left',
             display: 'block',
             borderRadius: 1,
             p: 0.5,
-            pt: { lg: compactFourColumnCard ? 5.5 : 0.5, xl: 0.5 },
+            pt: { lg: compactFourColumnCard ? 5.5 : 0.5 },
             '&:focus-visible': { outline: 2, outlineColor: 'success.main', outlineOffset: 1 },
           }}
         >
@@ -124,7 +134,7 @@ export function FormBuilderField({
               justifyContent="space-between"
               spacing={1}
               sx={{
-                minHeight: 42,
+                minHeight: 36,
                 px: 1.25,
                 border: 1,
                 borderColor: 'divider',
@@ -158,25 +168,27 @@ export function FormBuilderField({
             )}
           </Stack>
         </ButtonBase>
-        <CustomTooltip title={`Delete ${name}`}>
-          <IconButton
-            size="small"
-            aria-label={`Delete ${name}`}
-            onClick={onDelete}
-            sx={{
-              width: 44,
-              height: 44,
-              flexShrink: 0,
-              color: 'text.secondary',
-              position: { lg: compactFourColumnCard ? 'absolute' : 'static', xl: 'static' },
-              top: 6,
-              right: 6,
-              zIndex: 1,
-            }}
-          >
-            <Iconify icon="mdi:delete-outline" width={20} />
-          </IconButton>
-        </CustomTooltip>
+        <Box
+          className="admission-field-actions"
+          sx={{
+            width: 44,
+            height: 44,
+            flexShrink: 0,
+            color: 'text.secondary',
+            position: { lg: compactFourColumnCard ? 'absolute' : 'static' },
+            top: 4,
+            right: 4,
+            zIndex: 1,
+          }}
+        >
+          <FormBuilderUnitActions
+            name={name}
+            unit="field"
+            onEdit={onSelect}
+            onDelete={onDelete}
+            disabled={formik.isSubmitting}
+          />
+        </Box>
       </Stack>
     </Box>
   );

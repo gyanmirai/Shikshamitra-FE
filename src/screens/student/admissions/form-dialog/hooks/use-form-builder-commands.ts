@@ -197,8 +197,9 @@ export function useFormBuilderCommands(
       return null;
     }
 
-    const id = crypto.randomUUID();
     const selected = formik.values.sections.find((section) => section.id === selectedSectionId);
+    const reuseSelected = selected && selected.fields.length === 0;
+    const id = reuseSelected ? selected.id : crypto.randomUUID();
     const selectedStep = steps.find((step) =>
       step.sections.some(({ section }) => section.id === selected?.id)
     );
@@ -235,26 +236,30 @@ export function useFormBuilderCommands(
     const groupFieldsWithDependencies = fields.map(
       (field) => connectedFields.find((item) => item.id === field.id) ?? field
     );
-    formik.setFieldValue('sections', [
-      ...formik.values.sections,
-      {
-        id,
-        code: `SECTION_${nextSectionNumber(formik.values.sections)}`,
-        name,
-        displayOrder: formik.values.sections.length,
-        stepId,
-        stepCode: stepId
-          ? (selectedStep?.code ?? `STEP_${nextStepNumber(formik.values.sections)}`)
-          : undefined,
-        stepName: stepId ? (selectedStep?.name ?? `Step ${steps.length + 1}`) : undefined,
-        stepDisplayOrder: stepId ? (selectedStep?.displayOrder ?? steps.length) : undefined,
-        stepVisibilityRuleJson: selectedStep?.visibilityRuleJson,
-        isRepeatable: false,
-        minEntries: 1,
-        maxEntries: 1,
-        fields: groupFieldsWithDependencies,
-      },
-    ]);
+    const groupSection = {
+      ...(reuseSelected ? selected : {}),
+      id,
+      code: reuseSelected ? selected.code : `SECTION_${nextSectionNumber(formik.values.sections)}`,
+      name,
+      displayOrder: reuseSelected ? selected.displayOrder : formik.values.sections.length,
+      stepId,
+      stepCode: stepId
+        ? (selectedStep?.code ?? `STEP_${nextStepNumber(formik.values.sections)}`)
+        : undefined,
+      stepName: stepId ? (selectedStep?.name ?? `Step ${steps.length + 1}`) : undefined,
+      stepDisplayOrder: stepId ? (selectedStep?.displayOrder ?? steps.length) : undefined,
+      stepVisibilityRuleJson: selectedStep?.visibilityRuleJson,
+      isRepeatable: reuseSelected ? selected.isRepeatable : false,
+      minEntries: reuseSelected ? selected.minEntries : 1,
+      maxEntries: reuseSelected ? selected.maxEntries : 1,
+      fields: groupFieldsWithDependencies,
+    };
+    formik.setFieldValue(
+      'sections',
+      reuseSelected
+        ? formik.values.sections.map((section) => (section.id === id ? groupSection : section))
+        : [...formik.values.sections, groupSection]
+    );
     onSelect(id, null);
     const skipped = groupFields.length - availableFields.length;
     if (skipped) {

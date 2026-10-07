@@ -134,6 +134,7 @@ function AdmissionFormEditor({
           m: 0,
           borderRadius: 0,
           backgroundImage: 'none',
+          '& > .MuiBox-root > .MuiBox-root:first-of-type': { py: 1 },
         },
       }}
     >
@@ -157,6 +158,7 @@ function AdmissionFormEditor({
             initialValues={wizard.initialValues}
             steps={ADMISSION_FORM_STEPS}
             activeStep={wizard.activeStep}
+            footerPlacement={wizard.activeStep === 1 ? 'content' : 'outside'}
             validationSchema={wizard.validationSchema}
             validateOnChange
             scrollbarHeight="auto"
@@ -195,13 +197,12 @@ function AdmissionFormEditor({
             onStepClick={wizard.goTo}
             isStepClickable={(index) => index <= wizard.activeStep + 1}
             validateForwardStepClick
-            renderItem={({ formik }) => (
+            renderItem={({ formik, footer }) => (
               <FormBuilderWizardContent
                 formik={formik}
                 activeStep={wizard.activeStep}
+                footer={footer}
                 editing={editing}
-                onEditDetails={() => wizard.goTo(0)}
-                onEditFields={() => wizard.goTo(1)}
               />
             )}
           />

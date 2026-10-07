@@ -229,3 +229,73 @@ it('uses the edit, timeline, bulk assignment and filtered export contracts', asy
   expect(exportQuery.get('status')).toBe('0');
   expect(await csv.text()).toContain('INQ-1,Aanya Patel');
 });
+
+it('separates transferred Pipeline records and saves status with raw pinned-form values', async () => {
+  let query = new URLSearchParams();
+  let body: unknown;
+  mswServer.use(
+    http.get('*/api/student/enrollment/admissions/inquiries', ({ request }) => {
+      query = new URL(request.url).searchParams;
+      return HttpResponse.json({
+        data: {
+          totalCount: 1,
+          items: [
+            {
+              id: 'inquiry-1',
+              status: 2,
+              legacyStatus: 4,
+              isTransferred: true,
+              applicationId: 'application-1',
+            },
+          ],
+        },
+      });
+    }),
+    http.put('*/api/student/enrollment/admissions/inquiries/inquiry-1', async ({ request }) => {
+      body = await request.json();
+      return HttpResponse.json({
+        data: { id: 'inquiry-1', status: 6, concurrencyStamp: 'new-stamp' },
+      });
+    })
+  );
+  const list = await store
+    .dispatch(
+      admissionInquiriesApi.endpoints.getAdmissionInquiries.initiate({
+        isTransferred: true,
+        excludePostApplication: false,
+        status: 2,
+      })
+    )
+    .unwrap();
+  expect(query.get('isTransferred')).toBe('true');
+  expect(query.get('excludePostApplication')).toBe('false');
+  expect(list.items[0]).toMatchObject({
+    status: 2,
+    legacyStatus: 4,
+    applicationId: 'application-1',
+  });
+  await store
+    .dispatch(
+      admissionInquiriesApi.endpoints.updateAdmissionInquiry.initiate({
+        id: 'inquiry-1',
+        body: {
+          applicantName: 'Riya Shah',
+          phone: '9876543210',
+          preferredLanguageCode: 'en',
+          source: 1,
+          concurrencyStamp: 'stamp',
+          status: 6,
+          statusReason: 'Family changed plans',
+          admissionOfferingId: 'offering-1',
+          formValues: [{ fieldCode: 'GUARDIAN_MOBILE', valueJson: '"9876543210"' }],
+        },
+      })
+    )
+    .unwrap();
+  expect(body).toMatchObject({
+    status: 6,
+    statusReason: 'Family changed plans',
+    concurrencyStamp: 'stamp',
+    formValues: [{ fieldCode: 'GUARDIAN_MOBILE', valueJson: '"9876543210"' }],
+  });
+});

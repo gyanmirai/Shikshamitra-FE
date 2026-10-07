@@ -13,7 +13,7 @@ import { getBuilderIssues } from './form-builder-issues';
 
 export { getBuilderIssues } from './form-builder-issues';
 
-type Props = { form: CreateUpdateAdmissionForm; onSelectField: (fieldId: string) => void };
+type Props = { form: CreateUpdateAdmissionForm; onSelectField?: (fieldId: string) => void };
 
 export function FormValidationPanel({ form, onSelectField }: Props) {
   const issues = getBuilderIssues(form);
@@ -85,7 +85,7 @@ export function FormValidationPanel({ form, onSelectField }: Props) {
           <Divider sx={{ my: 1 }} />
           <Stack spacing={0.5} sx={{ maxHeight: 220, overflowY: 'auto' }}>
             {issues.map((issue, index) =>
-              issue.fieldId ? (
+              issue.fieldId && onSelectField ? (
                 <Button
                   key={issue.message + index}
                   type="button"

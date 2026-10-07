@@ -1,16 +1,16 @@
 import type { useSortable } from '@dnd-kit/sortable';
 import type { AdmissionFormSection } from 'src/redux/student/admissions/admission-forms-api';
 
-import { useRef } from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
+import { useRef, useEffect } from 'react';
 import { Iconify } from 'src/components/iconify';
 import ButtonBase from '@mui/material/ButtonBase';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
 import CustomTooltip from 'src/components/custom-tooltip';
 
-import { FormBuilderDeleteUnit } from './form-builder-delete-unit';
+import { FormBuilderUnitActions } from './form-builder-unit-actions';
 import { FormBuilderUnitSettings } from './form-builder-unit-settings';
 
 type Props = {
@@ -18,6 +18,9 @@ type Props = {
   sectionIndex: number;
   selected: boolean;
   settingsOpen: boolean;
+  expanded: boolean;
+  contentId: string;
+  onToggleExpanded: () => void;
   reorderEnabled: boolean;
   sortable: ReturnType<typeof useSortable>;
   onSelect: () => void;
@@ -33,6 +36,9 @@ export function FormBuilderSectionHeader({
   sectionIndex,
   selected,
   settingsOpen,
+  expanded,
+  contentId,
+  onToggleExpanded,
   reorderEnabled,
   sortable,
   onSelect,
@@ -43,10 +49,14 @@ export function FormBuilderSectionHeader({
   onDelete,
 }: Props) {
   const name = section.name || `Section ${sectionIndex + 1}`;
-  const editButtonRef = useRef<HTMLButtonElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const wasEditing = useRef(settingsOpen);
+  useEffect(() => {
+    if (wasEditing.current && !settingsOpen) actionsRef.current?.querySelector('button')?.focus();
+    wasEditing.current = settingsOpen;
+  }, [settingsOpen]);
   const finishEditing = () => {
     onToggleSettings();
-    editButtonRef.current?.focus();
   };
   return (
     <Stack
@@ -103,32 +113,51 @@ export function FormBuilderSectionHeader({
             <Typography component="h3" variant="h6" sx={{ overflowWrap: 'anywhere' }}>
               {name}
             </Typography>
-            {selected && (
-              <Typography variant="caption" color="text.secondary">
-                Adding fields here
-              </Typography>
-            )}
           </Box>
         </ButtonBase>
       )}
-      <CustomTooltip title={settingsOpen ? 'Finish editing heading' : 'Edit section heading'}>
+      <CustomTooltip title={expanded ? 'Collapse section' : 'Expand section'}>
         <IconButton
           size="small"
-          ref={editButtonRef}
-          aria-label={`Edit ${name} section`}
-          aria-expanded={settingsOpen}
-          aria-controls={settingsOpen ? `section-heading-${section.id}` : undefined}
-          onClick={() => {
-            if (settingsOpen) onNameBlur();
-            else onSelect();
-            if (!settingsOpen || section.name.trim()) onToggleSettings();
-          }}
+          aria-label={`${expanded ? 'Collapse' : 'Expand'} ${name} section`}
+          aria-expanded={expanded}
+          aria-controls={contentId}
+          onClick={onToggleExpanded}
           sx={{ width: 44, height: 44, flexShrink: 0 }}
         >
-          <Iconify icon={settingsOpen ? 'mdi:check' : 'mdi:pencil-outline'} width={18} />
+          <Iconify icon={expanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} width={20} />
         </IconButton>
       </CustomTooltip>
-      <FormBuilderDeleteUnit name={name} unit="section" onDelete={onDelete} />
+      {settingsOpen ? (
+        <CustomTooltip title="Finish editing heading">
+          <IconButton
+            size="small"
+            aria-label="Finish editing section heading"
+            aria-expanded={settingsOpen}
+            aria-controls={settingsOpen ? `section-heading-${section.id}` : undefined}
+            onClick={() => {
+              if (settingsOpen) onNameBlur();
+              else onSelect();
+              if (!settingsOpen || section.name.trim()) onToggleSettings();
+            }}
+            sx={{ width: 44, height: 44, flexShrink: 0 }}
+          >
+            <Iconify icon="mdi:check" width={18} />
+          </IconButton>
+        </CustomTooltip>
+      ) : (
+        <Box ref={actionsRef}>
+          <FormBuilderUnitActions
+            name={name}
+            unit="section"
+            onEdit={() => {
+              onSelect();
+              onToggleSettings();
+            }}
+            onDelete={onDelete}
+          />
+        </Box>
+      )}
     </Stack>
   );
 }

@@ -42,9 +42,9 @@ export const getApplicantJourneyState = (applications: Application[]) => {
   const application = getPrimaryApplication(applications);
   if (!application)
     return {
-      label: 'Inquiry converted',
+      label: 'Application not started',
       color: 'info' as LabelColor,
-      description: 'Ready to start an application',
+      description: 'Confirm inquiry interest before starting an application',
     };
 
   const status = getAdmissionApplicationStatusLabel(application.status);

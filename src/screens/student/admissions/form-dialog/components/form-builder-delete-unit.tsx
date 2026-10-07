@@ -8,23 +8,29 @@ type Props = {
   name: string;
   unit: 'step' | 'section';
   onDelete: () => void;
+  open?: boolean;
+  onClose?: () => void;
+  hideTrigger?: boolean;
 };
 
-export function FormBuilderDeleteUnit({ name, unit, onDelete }: Props) {
+export function FormBuilderDeleteUnit({ name, unit, onDelete, open, onClose, hideTrigger }: Props) {
   const confirm = useBoolean();
+  const close = onClose ?? confirm.onFalse;
   return (
     <>
-      <IconButton
-        size="small"
-        aria-label={unit === 'step' ? `Delete ${name} step` : `Delete ${name}`}
-        onClick={confirm.onTrue}
-        sx={{ width: 44, height: 44, color: 'text.secondary' }}
-      >
-        <Iconify icon="mdi:delete-outline" width={20} />
-      </IconButton>
+      {!hideTrigger && (
+        <IconButton
+          size="small"
+          aria-label={unit === 'step' ? `Delete ${name} step` : `Delete ${name}`}
+          onClick={confirm.onTrue}
+          sx={{ width: 44, height: 44, color: 'text.secondary' }}
+        >
+          <Iconify icon="mdi:delete-outline" width={20} />
+        </IconButton>
+      )}
       <ConfirmDialog
-        open={confirm.value}
-        onClose={confirm.onFalse}
+        open={open ?? confirm.value}
+        onClose={close}
         title={`Delete ${unit}?`}
         content={
           <>
@@ -40,7 +46,7 @@ export function FormBuilderDeleteUnit({ name, unit, onDelete }: Props) {
             variant="contained"
             color="error"
             onClick={() => {
-              confirm.onFalse();
+              close();
               onDelete();
             }}
           >

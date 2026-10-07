@@ -1370,6 +1370,7 @@ The component already creates and manages the Formik instance internally, so a s
 | `showSaveButton`           | Keep enabled when the workflow supports saving a draft/current step; disable only when that action is not valid.             |
 | `scrollbarHeight`          | Set when the stepper is inside a bounded dialog or drawer; keep the content area scrollable and the footer stable.           |
 | `viewMode`                 | Use `horizontal` by default; use `vertical` for a wide desktop setup workflow when the layout benefits from side navigation. |
+| `footerPlacement` | Keep `outside` by default; use `content` only when the step renders the supplied `footer` once in a stable, reachable panel footer. |
 
 **Preferred usage**
 
@@ -1729,6 +1730,7 @@ Use `CustomAccordion` from `src/components/custom-accordian/` for collapsible se
 | `expanded` | Control from the owning screen when expansion is meaningful state.        |
 | `onChange` | Update the owning expanded state.                                         |
 | `isActive` | Use only when the section represents the active context or selected item. |
+| `summary` | Optional header element for independent actions; provide its ID and content relationship and a labeled expansion control. |
 
 **Rules**
 

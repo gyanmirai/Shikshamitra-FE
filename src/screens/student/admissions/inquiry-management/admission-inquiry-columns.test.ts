@@ -10,17 +10,13 @@ import {
 
 const columnOptions = {
   canManage: true,
-  canAssign: true,
-  canCommunicate: true,
-  isMarkingContacted: false,
+  canMove: true,
+  isMoving: false,
   counsellorNames: {},
   counsellorOptions: [],
   offeringOptions: [],
-  onOpenApplicant360: vi.fn(),
   onManage: vi.fn(),
-  onAssign: vi.fn(),
-  onCommunicate: vi.fn(),
-  onMarkContacted: vi.fn(),
+  onMove: vi.fn(),
 };
 
 function inquiry(overrides: Partial<AdmissionInquiry> = {}): AdmissionInquiry {
@@ -106,27 +102,40 @@ describe('admission inquiry columns', () => {
     });
   });
 
-  it('supplies every permitted action in the existing order', () => {
+  it('shows only edit/follow-up and a disabled handoff for Pending', () => {
     const actions = getAdmissionInquiryActions(
-      inquiry({ applicantId: 'applicant-1', admissionOfferingId: 'offering-1', status: 0 }),
+      inquiry({ applicantId: 'applicant-1', admissionOfferingId: 'offering-1' }),
       columnOptions
     );
-
-    expect(actions.map((action) => action.id)).toEqual([
-      'applicant360',
-      'manage',
-      'assign',
-      'communicate',
-      'markContacted',
-    ]);
-  });
-
-  it('omits unavailable assignment and contact actions', () => {
-    const actions = getAdmissionInquiryActions(inquiry({ applicantId: 'applicant-1', status: 2 }), {
-      ...columnOptions,
-      canAssign: false,
+    expect(actions.map((action) => action.id)).toEqual(['manage', 'move']);
+    expect(actions[1]).toMatchObject({
+      disabled: true,
+      tooltip: expect.stringContaining('Interested'),
     });
-
-    expect(actions.map((action) => action.id)).toEqual(['applicant360', 'manage', 'communicate']);
+  });
+  it('allows Interested handoff only with applicant and offering and prevents repeats', () => {
+    const row = inquiry({
+      applicantId: 'applicant-1',
+      admissionOfferingId: 'offering-1',
+      status: 2,
+    });
+    expect(getAdmissionInquiryActions(row, columnOptions)[1].disabled).toBe(false);
+    expect(
+      getAdmissionInquiryActions(
+        { ...row, applicationId: 'app-1', isTransferred: true },
+        columnOptions
+      )[1].disabled
+    ).toBe(true);
+    expect(getAdmissionInquiryActions({ ...row, status: 6 }, columnOptions)[1].disabled).toBe(true);
+  });
+  it('omits mutation actions without permissions and opens application from Pipeline', () => {
+    expect(
+      getAdmissionInquiryActions(inquiry(), { ...columnOptions, canManage: false, canMove: false })
+    ).toEqual([]);
+    const row = inquiry({ applicationId: 'app-1', isTransferred: true });
+    const actions = getAdmissionInquiryActions(row, { ...columnOptions, pipeline: true });
+    expect(actions.map((action) => action.id)).toEqual(['application']);
+    actions[0].onClick();
+    expect(columnOptions.onManage).toHaveBeenCalledWith(row);
   });
 });

@@ -38,7 +38,10 @@ export function FormBuilderDetails({ formik, editing }: Props) {
     else applyStarter(values, starter);
   };
   return (
-    <Stack spacing={2} sx={{ width: 1, minWidth: 0, p: { xs: 1.5, sm: 2 } }}>
+    <Stack
+      spacing={2}
+      sx={{ width: 1, minWidth: 0, maxWidth: 1120, mx: 'auto', p: { xs: 1.5, sm: 2 } }}
+    >
       {!editing && (
         <Box component="section" aria-label="Form templates">
           <FormTemplateChooser selectedStarter={selectedStarter} onSelect={selectStarter} />

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type { CreateUpdateAdmissionForm } from 'src/redux/student/admissions/admission-forms-api';
 
@@ -14,7 +15,7 @@ import { useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import { useBoolean } from 'src/hooks/use-boolean';
+import { useResponsive } from 'src/hooks/use-responsive';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import {
   useSensor,
@@ -28,36 +29,34 @@ import {
 import { reorderFormBuilder } from './reorder-form-builder';
 import { FormBuilderPalette } from './form-builder-palette';
 import { FormValidationPanel } from './form-validation-panel';
+import { AdmissionDialogTitle } from '../admission-dialog-title';
 import { FormBuilderProperties } from './form-builder-properties';
 import { FormBuilderCanvas } from './components/form-builder-canvas';
-import { FormBuilderOutline } from './components/form-builder-outline';
 import { FormBuilderWorkspace } from './components/form-builder-workspace';
 import { useFormBuilderCommands } from './hooks/use-form-builder-commands';
 import { useFormBuilderSelection } from './hooks/use-form-builder-selection';
 import { FormBuilderLivePreview } from './components/form-builder-live-preview';
 import { FormBuilderValidationNotice } from './components/form-builder-validation-notice';
-import { FormBuilderSectionLibraryDrawer } from './components/form-builder-section-library-drawer';
 
 export function FormBuilderSections({
   formik,
+  footer,
 }: {
   formik: FormikProps<CreateUpdateAdmissionForm>;
+  footer?: ReactNode;
 }) {
   const selection = useFormBuilderSelection(formik.values.sections);
   const theme = useTheme();
+  const desktop = useResponsive('up', 'lg');
   const [canvasMode, setCanvasMode] = useState<'design' | 'preview'>('design');
-  const [showAllSteps, setShowAllSteps] = useState(false);
   const [newStepId, setNewStepId] = useState<string | null>(null);
   const [mobilePanel, setMobilePanel] = useState<'fields' | 'form'>('form');
-  const [sidePanel, setSidePanel] = useState<'settings' | 'outline' | null>(null);
-  const [moreAnchor, setMoreAnchor] = useState<HTMLElement | null>(null);
+  const [sidePanel, setSidePanel] = useState<'settings' | null>(null);
   const [gridAnchor, setGridAnchor] = useState<HTMLElement | null>(null);
-  const sectionLibrary = useBoolean();
   const commands = useFormBuilderCommands(formik, selection.selectedSectionId, selection.select);
   const addStep = (afterStepId?: string) => {
     const stepId = commands.addCanvasUnit(afterStepId);
     setNewStepId(stepId ?? null);
-    setShowAllSteps(false);
     setCanvasMode('design');
     setMobilePanel('form');
   };
@@ -80,7 +79,11 @@ export function FormBuilderSections({
         sx={{ px: 2, py: 1.5 }}
       >
         <Typography id="admission-form-field-settings-title" variant="subtitle1">
-          Field settings
+          <AdmissionDialogTitle
+            title="Field settings"
+            helpLabel="About field settings"
+            helpText="Configure the field, answer options, and visibility. Changes stay in this draft until you save."
+          />
         </Typography>
         <IconButton aria-label="Close field settings" onClick={() => setSidePanel(null)}>
           <Iconify icon="mdi:close" />
@@ -155,6 +158,22 @@ export function FormBuilderSections({
                 sx={{ p: 1.5, flexShrink: 0, borderBottom: 1, borderColor: 'divider' }}
               >
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
+                  <FormValidationPanel
+                    form={formik.values}
+                    onSelectField={(fieldId) => {
+                      selection.selectField(fieldId);
+                      setSidePanel('settings');
+                    }}
+                  />
+                </Stack>
+                <Stack
+                  direction="row"
+                  spacing={1}
+                  useFlexGap
+                  flexWrap="wrap"
+                  alignItems="center"
+                  justifyContent="flex-end"
+                >
                   <Button
                     size="small"
                     variant="outlined"
@@ -170,37 +189,13 @@ export function FormBuilderSections({
                   <Button
                     size="small"
                     variant="outlined"
-                    endIcon={<Iconify icon="mdi:chevron-down" />}
-                    onClick={(event) => setMoreAnchor(event.currentTarget)}
-                  >
-                    More
-                  </Button>
-                  <FormValidationPanel
-                    form={formik.values}
-                    onSelectField={(fieldId) => {
-                      selection.selectField(fieldId);
-                      setSidePanel('settings');
-                    }}
-                  />
-                </Stack>
-                <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap" alignItems="center">
-                  <Button
-                    size="small"
-                    variant="outlined"
                     startIcon={<Iconify icon="mdi:view-grid-outline" />}
                     endIcon={<Iconify icon="mdi:chevron-down" />}
                     aria-expanded={Boolean(gridAnchor)}
                     aria-controls={gridAnchor ? 'admission-form-grid-menu' : undefined}
                     onClick={(event) => setGridAnchor(event.currentTarget)}
                   >
-                    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' }, mr: 0.5 }}>
-                      Grid layout:
-                    </Box>
-                    <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' }, mr: 0.5 }}>
-                      Grid:
-                    </Box>
-                    {formik.values.fieldsPerRow}{' '}
-                    {formik.values.fieldsPerRow === 1 ? 'column' : 'columns'}
+                    Grid layout
                   </Button>
                   <Button
                     size="small"
@@ -212,43 +207,10 @@ export function FormBuilderSections({
                     }
                     onClick={() => setCanvasMode(canvasMode === 'preview' ? 'design' : 'preview')}
                   >
-                    {canvasMode === 'preview' ? 'Back to builder' : 'Preview as applicant'}
+                    {canvasMode === 'preview' ? 'Back to builder' : 'Preview'}
                   </Button>
                 </Stack>
               </Stack>
-              <Menu
-                anchorEl={moreAnchor}
-                open={Boolean(moreAnchor)}
-                onClose={() => setMoreAnchor(null)}
-              >
-                <MenuItem
-                  onClick={() => {
-                    setMoreAnchor(null);
-                    setSidePanel('outline');
-                  }}
-                >
-                  Form outline
-                </MenuItem>
-                {formik.values.layoutType === 1 && (
-                  <MenuItem
-                    onClick={() => {
-                      setMoreAnchor(null);
-                      setShowAllSteps(!showAllSteps);
-                      setCanvasMode('design');
-                    }}
-                  >
-                    {showAllSteps ? 'Show selected step' : 'Show all steps'}
-                  </MenuItem>
-                )}
-                <MenuItem
-                  onClick={() => {
-                    setMoreAnchor(null);
-                    sectionLibrary.onTrue();
-                  }}
-                >
-                  Section library
-                </MenuItem>
-              </Menu>
               <Menu
                 id="admission-form-grid-menu"
                 anchorEl={gridAnchor}
@@ -274,72 +236,38 @@ export function FormBuilderSections({
                     formik={formik}
                     selectedSectionId={selection.selectedSectionId}
                     selectedFieldId={selection.selectedFieldId}
-                    showAllSteps={showAllSteps}
                     onSelect={selectCanvasField}
                     newStepId={newStepId}
                     onAddStep={addStep}
                     onNewStepReady={setNewStepId}
+                    footer={desktop ? footer : undefined}
                   />
                 ) : (
-                  <FormBuilderLivePreview form={formik.values} />
+                  <Stack sx={{ height: 1, minHeight: 0 }}>
+                    <Box sx={{ flex: 1, minHeight: 0 }}>
+                      <FormBuilderLivePreview form={formik.values} />
+                    </Box>
+                    {desktop && footer}
+                  </Stack>
                 )}
               </Box>
             </Box>
           }
         >
           <FormBuilderValidationNotice formik={formik} onSelect={selectCanvasField} />
+          {!desktop && footer}
         </FormBuilderWorkspace>
 
         <Drawer
           anchor="right"
           open={sidePanel !== null}
           onClose={() => setSidePanel(null)}
-          aria-labelledby={
-            sidePanel === 'outline'
-              ? 'admission-form-side-panel-title'
-              : 'admission-form-field-settings-title'
-          }
+          aria-labelledby="admission-form-field-settings-title"
           sx={{ zIndex: theme.zIndex.modal + 1 }}
           slotProps={{ paper: { sx: { width: { xs: 1, sm: 440 }, maxWidth: 1 } } }}
         >
-          {sidePanel === 'outline' ? (
-            <Stack sx={{ height: 1, minHeight: 0 }}>
-              <Stack
-                direction="row"
-                alignItems="center"
-                justifyContent="space-between"
-                sx={{ p: 2 }}
-              >
-                <Typography id="admission-form-side-panel-title" variant="h6">
-                  Form outline
-                </Typography>
-                <IconButton aria-label="Close form outline" onClick={() => setSidePanel(null)}>
-                  <Iconify icon="mdi:close" />
-                </IconButton>
-              </Stack>
-              <Divider />
-              <Box sx={{ flex: 1, minHeight: 0 }}>
-                <FormBuilderOutline
-                  form={formik.values}
-                  selectedSectionId={selection.selectedSectionId}
-                  onSelectSection={(sectionId) => {
-                    selection.select(sectionId, null);
-                    setSidePanel(null);
-                    setMobilePanel('form');
-                  }}
-                />
-              </Box>
-            </Stack>
-          ) : (
-            settingsContent
-          )}
+          {settingsContent}
         </Drawer>
-        <FormBuilderSectionLibraryDrawer
-          open={sectionLibrary.value}
-          targetLabel={selection.selectedSection?.name}
-          onClose={sectionLibrary.onFalse}
-          onAddSection={commands.addSectionTemplate}
-        />
       </>
     </DndContext>
   );

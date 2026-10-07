@@ -32,8 +32,8 @@ describe('Applicant 360 presentation model', () => {
     expect(getApplicantName(applicant360)).toBe('Raj Patel');
     expect(getApplicantMissingDetails(applicant360)).toEqual(['date of birth', 'gender']);
     expect(getApplicantJourneyState(applicant360.applications)).toMatchObject({
-      label: 'Inquiry converted',
-      description: 'Ready to start an application',
+      label: 'Application not started',
+      description: 'Confirm inquiry interest before starting an application',
     });
   });
 

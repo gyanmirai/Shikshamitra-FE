@@ -1,6 +1,33 @@
 import { api } from 'src/redux/service';
 import { studentAdmissionsCrmType } from 'src/redux/tagTypes';
 
+import type { AdmissionForm } from './admission-forms-api';
+import type { AdmissionInquiryPolicy } from './admission-inquiry-policy';
+import type {
+  AdmissionOffering,
+  AdmissionOfferingListItem,
+  AdmissionOfferingAvailability,
+} from './admission-offerings-api';
+
+export type AdmissionInquiryCaptureContext = {
+  offering: AdmissionOffering;
+  form: AdmissionForm | null;
+  policy: AdmissionInquiryPolicy | null;
+  availability: AdmissionOfferingAvailability;
+};
+export type AdmissionInquiryCaptureCatalogue = {
+  periods: { id: string; name: string }[];
+  academicOptions: {
+    boardId: string;
+    boardName: string;
+    mediumId: string;
+    mediumName: string;
+    standardId: string;
+    standardName: string;
+  }[];
+  offerings: AdmissionOfferingListItem[];
+};
+
 export type AdmissionInquiryStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type AdmissionInquirySource = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 export type AdmissionInquiryWorkQueue = 1 | 2 | 3 | 4;
@@ -22,6 +49,23 @@ export type AdmissionInquiry = {
   source: AdmissionInquirySource;
   sourceDetail?: string | null;
   formResponseDefinitionId?: string | null;
+  formDefinitionId?: string | null;
+  formDefinitionVersion?: number | null;
+  formDefinition?: AdmissionForm | null;
+  formValues?: { fieldCode: string; valueJson?: string | null }[];
+  guardianName?: string | null;
+  applicantFirstName?: string | null;
+  applicantLastName?: string | null;
+  applicantDateOfBirth?: string | null;
+  guardianFirstName?: string | null;
+  guardianLastName?: string | null;
+  boardId?: string | null;
+  mediumId?: string | null;
+  standardId?: string | null;
+  applicationId?: string | null;
+  isTransferred?: boolean;
+  isDuplicate?: boolean;
+  legacyStatus?: AdmissionInquiryStatus;
   formAnswers?: { fieldCode: string; label: string; value: string }[];
   status: AdmissionInquiryStatus;
   contactedAt?: string | null;
@@ -42,10 +86,10 @@ export type AdmissionInquiry = {
   isOverdue: boolean;
 };
 export type AdmissionInquiryListInput = {
-	academicYearId?: string;
-	boardId?: string;
-	mediumId?: string;
-	standardId?: string;
+  academicYearId?: string;
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
   admissionCycleId?: string;
   admissionOfferingId?: string;
   inquiryNumber?: string;
@@ -62,6 +106,7 @@ export type AdmissionInquiryListInput = {
   assignedCounsellorId?: string;
   isAssigned?: boolean;
   excludePostApplication?: boolean;
+  isTransferred?: boolean;
   workQueue?: AdmissionInquiryWorkQueue;
   search?: string;
   sorting?: string;
@@ -73,6 +118,7 @@ export type AssignAdmissionInquiryCounsellor = {
   mode: 0 | 1;
   counsellorId?: string | null;
   candidateCounsellorIds: string[];
+  reason?: string;
 };
 export type AdmissionInquiryCommunicationChannel = 0 | 1 | 2;
 export type AdmissionInquiryCommunicationStatus = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
@@ -138,6 +184,13 @@ export type UpdateAdmissionInquiry = {
   source: AdmissionInquirySource;
   sourceDetail?: string | null;
   concurrencyStamp: string;
+  admissionOfferingId?: string;
+  boardId?: string;
+  mediumId?: string;
+  standardId?: string;
+  formValues?: { fieldCode: string; valueJson?: string | null }[];
+  status?: 0 | 2 | 6;
+  statusReason?: string;
 };
 export type AdmissionInquiryTimelineItem = {
   id: string;
@@ -164,6 +217,35 @@ const unwrap = <T>(response: Result<T> | T): T => {
 };
 export const admissionInquiriesApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getAdmissionInquiryCaptureContext: builder.query<AdmissionInquiryCaptureContext, string>({
+      query: (offeringId) =>
+        `/student/enrollment/admissions/inquiries/capture-context/${offeringId}`,
+      transformResponse: (
+        response: Result<AdmissionInquiryCaptureContext> | AdmissionInquiryCaptureContext
+      ) => unwrap(response),
+      providesTags: [
+        studentAdmissionsCrmType.admissionInquiry,
+        studentAdmissionsCrmType.admissionOffering,
+        studentAdmissionsCrmType.admissionForm,
+      ],
+    }),
+    getAdmissionInquiryCaptureCatalogue: builder.query<
+      AdmissionInquiryCaptureCatalogue,
+      { academicYearId?: string }
+    >({
+      query: (params) => ({
+        url: '/student/enrollment/admissions/inquiries/capture-catalogue',
+        params,
+      }),
+      transformResponse: (
+        response: Result<AdmissionInquiryCaptureCatalogue> | AdmissionInquiryCaptureCatalogue
+      ) => unwrap(response),
+      providesTags: [
+        studentAdmissionsCrmType.admissionInquiry,
+        studentAdmissionsCrmType.admissionOffering,
+        studentAdmissionsCrmType.admissionCycle,
+      ],
+    }),
     getAdmissionInquiry: builder.query<AdmissionInquiry, string>({
       query: (id) => `/student/enrollment/admissions/inquiries/${id}`,
       transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
@@ -222,7 +304,8 @@ export const admissionInquiriesApi = api.injectEndpoints({
         method: 'POST',
         body: { offeringId, concurrencyStamp },
       }),
-      transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) => unwrap(response),
+      transformResponse: (response: Result<AdmissionInquiry> | AdmissionInquiry) =>
+        unwrap(response),
       invalidatesTags: [studentAdmissionsCrmType.admissionInquiry],
     }),
     getAdmissionInquiryTimeline: builder.query<AdmissionInquiryTimelineItem[], string>({
@@ -314,6 +397,8 @@ export const admissionInquiriesApi = api.injectEndpoints({
   }),
 });
 export const {
+  useGetAdmissionInquiryCaptureContextQuery,
+  useGetAdmissionInquiryCaptureCatalogueQuery,
   useGetAdmissionInquiryQuery,
   useGetAdmissionInquiriesQuery,
   useLazyExportAdmissionInquiriesQuery,

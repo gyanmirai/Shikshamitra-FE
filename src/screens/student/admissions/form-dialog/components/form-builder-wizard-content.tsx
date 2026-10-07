@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { FormikProps } from 'formik';
 import type {
   AdmissionForm,
@@ -15,18 +16,11 @@ import { useAdmissionUnsavedChanges } from '../../use-admission-unsaved-changes'
 type Props = {
   formik: FormikProps<CreateUpdateAdmissionForm>;
   activeStep: number;
+  footer?: ReactNode;
   editing?: AdmissionForm | null;
-  onEditDetails: () => void;
-  onEditFields: () => void;
 };
 
-export function FormBuilderWizardContent({
-  formik,
-  activeStep,
-  editing,
-  onEditDetails,
-  onEditFields,
-}: Props) {
+export function FormBuilderWizardContent({ formik, activeStep, footer, editing }: Props) {
   useAdmissionUnsavedChanges(true, formik.dirty);
   const contentRef = useFormWizardFocus(activeStep);
   return (
@@ -37,8 +31,8 @@ export function FormBuilderWizardContent({
         width: 1,
         minWidth: 0,
         minHeight: 0,
-        overflow: activeStep === 1 ? 'hidden' : undefined,
-        height: activeStep === 1 ? { lg: 1 } : undefined,
+        overflow: activeStep !== 0 ? 'hidden' : undefined,
+        height: activeStep === 2 ? 1 : activeStep === 1 ? { lg: 1 } : undefined,
       }}
     >
       {activeStep === 0 && <FormBuilderDetails formik={formik} editing={Boolean(editing)} />}
@@ -53,16 +47,10 @@ export function FormBuilderWizardContent({
             bgcolor: 'background.neutral',
           }}
         >
-          <FormBuilderSections formik={formik} />
+          <FormBuilderSections formik={formik} footer={footer} />
         </Box>
       )}
-      {activeStep === 2 && (
-        <FormBuilderReview
-          form={formik.values}
-          onEditDetails={onEditDetails}
-          onEditFields={onEditFields}
-        />
-      )}
+      {activeStep === 2 && <FormBuilderReview formik={formik} />}
     </Stack>
   );
 }

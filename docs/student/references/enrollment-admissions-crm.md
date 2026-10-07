@@ -3,7 +3,7 @@ module: student
 domain: enrollment-admissions-crm
 content_type: Reference
 status: canonical
-updated_on: 2026-09-25
+updated_on: 2026-10-07
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -22,8 +22,8 @@ See the maintained [Enrollment Admissions workflow](../workflows.md) for the cur
 | Workflow configuration         | Graph-based immutable versions with explicit entry and terminal stages, controlled conditional or default transitions, validation, preview, usage, clone, archive, and publish       |
 | Dynamic form runtime           | Published form versions are pinned to applications; controlled Applicant, Guardian, and Address bindings prefill canonical data, while custom values remain in form-instance storage |
 | Form configuration             | Versioned sections and fields with system bindings, defaults, validation, visibility rules, preview, and publish                                                                     |
-| Inquiry CRM                    | Inquiry creation, duplicate check, family and applicant linking, search, filters, contacted state, and source tracking                                                               |
-| Intake and assignment          | Reusable Inquiry and Counsellor Assignment profiles, Offering linkage, secure public inquiry links, unknown-Offering triage, and owner handoff into application and onboarding        |
+| Inquiry CRM                    | Offering-gated inquiry capture, original-form editing, duplicate checks, family and applicant linking, follow-ups, and Pending / Interested / Not interested status                 |
+| Intake and assignment          | Offering-linked intake profiles, automatic counsellor routing, secure public inquiry links, and reasoned reassignment with eligible-pool and capacity checks                        |
 | Applicant 360                  | Applicant and family context, identity completeness, explainable next action, frozen application-stage progress, unified activity timeline, and staff notes                          |
 | Application runtime            | Start, prefill, draft save, concurrency handling, authoritative submit validation, condition-based advancement, stage handlers, idempotency, and transition history                  |
 
@@ -35,9 +35,12 @@ See the maintained [Enrollment Admissions workflow](../workflows.md) for the cur
 4. Open `/student/admissions/settings/intake-assignment` and create Inquiry and Counsellor Assignment profiles.
 5. Open `/student/admissions/settings/offerings`, select scoped academic hierarchy, entry mode, published definitions, and the matching profiles, then save or activate the offering.
 6. Use Bulk create when several Standards share one workflow, forms, profiles, and admission window; commit only after every preview row is ready.
-7. Create an inquiry under `/student/admissions/inquiries` and use duplicate detection when matching contact data exists. Leads without a known Offering can be captured against a published cycle and linked to an open Offering later.
-8. Open the linked Applicant 360 page, confirm the family and identity context, resolve any explained Inquiry blocker, review the current journey stage, and add a staff note when useful.
-9. Start an application, edit the prefilled form, save a draft, submit it, and follow the application through its configured journey and immutable transition history.
+7. Under `/student/admissions/inquiries`, choose the admission period, Board, Medium, and Class. An open, ready Offering is required before the configured Inquiry form opens; unavailable classes are denied. Public links use the same gate.
+8. Use **Edit / Follow-up** to maintain the originally captured form and mark the inquiry Pending, Interested, or Not interested. The first Interested transition requests a qualification email when a valid contact email exists; delivery remains governed by Communication consent, approval, and provider settings.
+9. For an Interested inquiry, use **Move to next stage**. The server rechecks availability and capacity and creates or reuses the linked draft application. The inquiry appears in **Pipeline** and opens the existing application journey; repeated moves do not create duplicates.
+10. Complete, save, and submit the application through its configured journey. Direct Registration remains a separate entry route.
+
+Qualification emails use the existing school email settings when Communication has an enabled Email provider named **SMTP**. Pending approval or missing provider configuration waits for resolution; delivery errors remain visible without reverting Interested status. SMTP Sent confirms sender acceptance, not inbox delivery. Existing bulk operations are not part of this inquiry redesign.
 
 ## Frontend source map
 

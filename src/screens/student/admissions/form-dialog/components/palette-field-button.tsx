@@ -9,10 +9,18 @@ type Props = {
   icon: string;
   description?: string | null;
   disabled?: boolean;
+  disabledLabel?: string;
   onClick: () => void;
 };
 
-export function PaletteFieldButton({ label, icon, description, disabled = false, onClick }: Props) {
+export function PaletteFieldButton({
+  label,
+  icon,
+  description,
+  disabled = false,
+  disabledLabel = 'Added',
+  onClick,
+}: Props) {
   return (
     <Tooltip title={description || ''} placement="right" enterDelay={500}>
       <Box component="span" sx={{ display: 'block' }}>
@@ -23,7 +31,11 @@ export function PaletteFieldButton({ label, icon, description, disabled = false,
           color="inherit"
           disabled={disabled}
           onClick={onClick}
-          aria-label={disabled ? `${label} already added` : `Add ${label}`}
+          aria-label={
+            disabled
+              ? `${label} ${disabledLabel === 'Added' ? 'already added' : disabledLabel.toLowerCase()}`
+              : `Add ${label}`
+          }
           sx={{
             minHeight: 48,
             px: 1,
@@ -62,7 +74,7 @@ export function PaletteFieldButton({ label, icon, description, disabled = false,
           </Typography>
           {disabled ? (
             <Typography component="span" variant="caption" color="text.secondary">
-              Added
+              {disabledLabel}
             </Typography>
           ) : (
             <Iconify icon="mdi:plus" width={18} sx={{ color: 'primary.main' }} />

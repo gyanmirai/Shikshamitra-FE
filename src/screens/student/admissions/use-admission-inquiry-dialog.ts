@@ -1,62 +1,61 @@
 'use client';
 
 import type { RootState } from 'src/redux/store';
+import type { AdmissionFormField } from 'src/redux/student/admissions/admission-forms-api';
+import type { AdmissionOfferingListItem } from 'src/redux/student/admissions/admission-offerings-api';
 
 import { useSelector } from 'react-redux';
 import { useFormik, type FormikProps } from 'formik';
-import { useMemo, useState, useEffect } from 'react';
 import { shikshaMitraToast } from 'src/components/toast';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
-import { useGetAdmissionWorkflowQuery } from 'src/redux/student/admissions/admission-workflows-api';
-import { useGetAdmissionIntakeProfilesQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
-import {
-  type AdmissionFormField,
-  useGetAdmissionFormQuery,
-} from 'src/redux/student/admissions/admission-forms-api';
 import {
   DEFAULT_INQUIRY_POLICY,
-  readAdmissionInquiryPolicy,
   withStandardInquiryBehavior,
 } from 'src/redux/student/admissions/admission-inquiry-policy';
 import {
-  useGetAdmissionOfferingQuery,
-  type AdmissionOfferingListItem,
-  useLazyGetAdmissionOfferingsQuery,
-} from 'src/redux/student/admissions/admission-offerings-api';
-import {
   type DuplicateMatch,
   useCreateAdmissionInquiryMutation,
+  useGetAdmissionInquiryCaptureContextQuery,
   useCheckAdmissionInquiryDuplicatesMutation,
+  useGetAdmissionInquiryCaptureCatalogueQuery,
   useCreateAdmissionInquiryCommunicationMutation,
 } from 'src/redux/student/admissions/admission-inquiries-api';
 
+import { useAdmissionPhotoReads } from './use-admission-photo-reads';
 import { useAdmissionUnsavedChanges } from './use-admission-unsaved-changes';
 import { getInquiryCommunicationTemplate } from './inquiry-management/inquiry-communication-templates';
 import {
   admissionInquirySchema,
   validateAdmissionInquiry,
-  getAdmissionInquiryFields,
   getAdmissionInquirySections,
   buildAdmissionInquiryPayload,
   initialAdmissionInquiryValues,
   canLinkAdmissionInquiryFamily,
   type AdmissionInquiryFormValues,
+  preserveCompatibleInquiryAnswers,
   getAdmissionInquiryAcademicOptions,
   buildAdmissionInquiryDuplicateInput,
 } from './admission-inquiry-model';
 
+const EMPTY_OFFERINGS: AdmissionOfferingListItem[] = [];
 const ALL_INQUIRY_SOURCES = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 
 export function useAdmissionInquiryDialog(onClose: () => void) {
+  const { readingPhoto, onPhotoReading } = useAdmissionPhotoReads();
+  const previousForm = useRef<{ fields: AdmissionFormField[]; values: Record<string, string> } | null>(null);
   const [matches, setMatches] = useState<DuplicateMatch[]>([]);
   const [requestError, setRequestError] = useState<string | null>(null);
   const [duplicateOverrideReason, setDuplicateOverrideReason] = useState('');
-  const [offeringChoices, setOfferingChoices] = useState<AdmissionOfferingListItem[]>([]);
-  const [offeringsLoading, setOfferingsLoading] = useState(true);
-  const [offeringsError, setOfferingsError] = useState(false);
-  const [offeringsReload, setOfferingsReload] = useState(0);
-  const [loadOfferings] = useLazyGetAdmissionOfferingsQuery();
+  const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
+  const catalogue = useGetAdmissionInquiryCaptureCatalogueQuery(
+    { academicYearId },
+    { refetchOnMountOrArgChange: true }
+  );
+  const offeringChoices = catalogue.currentData?.offerings ?? EMPTY_OFFERINGS;
+  const offeringsLoading = catalogue.isFetching;
+  const offeringsError = catalogue.isError;
   const [create, createState] = useCreateAdmissionInquiryMutation();
   const [createCommunication, communicationState] =
     useCreateAdmissionInquiryCommunicationMutation();
@@ -77,7 +76,7 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
       ),
     onSubmit: async (values) => {
       const offering = offeringChoices.find((item) => item.id === values.offeringId);
-      if (!offering) return;
+      if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError) return;
       setRequestError(null);
       try {
         const result = await checkDuplicates(
@@ -96,53 +95,25 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     () => getAdmissionInquiryAcademicOptions(offeringChoices, formik.values),
     [formik.values, offeringChoices]
   );
-  const offeringQuery = useGetAdmissionOfferingQuery(formik.values.offeringId, {
+  const runtime = useGetAdmissionInquiryCaptureContextQuery(formik.values.offeringId, {
     skip: !formik.values.offeringId,
     refetchOnMountOrArgChange: true,
   });
-  const offeringDetail = offeringQuery.currentData;
-  const intakeProfiles = useGetAdmissionIntakeProfilesQuery(undefined, {
-    skip: !offeringDetail?.inquiryIntakeProfileId,
-  });
-  const formQuery = useGetAdmissionFormQuery(offeringDetail?.inquiryFormDefinitionId ?? '', {
-    skip: !offeringDetail?.inquiryFormDefinitionId,
-  });
-  const workflowQuery = useGetAdmissionWorkflowQuery(offeringDetail?.workflowDefinitionId ?? '', {
-    skip: !offeringDetail?.workflowDefinitionId,
-  });
-  const form = formQuery.currentData;
-  const workflow = workflowQuery.currentData;
-  const workflowLoading = workflowQuery.isFetching;
-  const runtimeError =
-    offeringQuery.isError || formQuery.isError || workflowQuery.isError || intakeProfiles.isError;
+  const offeringDetail = runtime.currentData?.offering;
+  const form = runtime.currentData?.form ?? undefined;
+  const runtimeError = runtime.isError;
   const runtimeLoading =
     Boolean(formik.values.offeringId) &&
     !runtimeError &&
-    (offeringQuery.isFetching ||
-      !offeringDetail ||
-      formQuery.isFetching ||
-      Boolean(offeringDetail.inquiryFormDefinitionId && !form) ||
-      workflowQuery.isFetching ||
-      Boolean(offeringDetail.workflowDefinitionId && !workflow) ||
-      intakeProfiles.isFetching);
+    (runtime.isFetching || !runtime.currentData);
+  const canCreateInquiry = Boolean(runtime.currentData?.availability.canCreateInquiry);
   const sections =
-    formik.values.offeringId && !runtimeLoading && !runtimeError
+    formik.values.offeringId && !runtimeLoading && !runtimeError && canCreateInquiry
       ? getAdmissionInquirySections(form)
       : [];
-  const fields: AdmissionFormField[] =
-    formik.values.offeringId && !runtimeLoading && !runtimeError
-      ? getAdmissionInquiryFields(form)
-      : [];
-  const inquiryStage = workflow?.stages.find((stage) => stage.stageType === 0);
-  const profile = intakeProfiles.data?.find(
-    (item) => item.id === offeringDetail?.inquiryIntakeProfileId
-  );
-  const policy = profile
-    ? withStandardInquiryBehavior({
-        ...DEFAULT_INQUIRY_POLICY,
-        ...JSON.parse(profile.configurationJson),
-      })
-    : readAdmissionInquiryPolicy(inquiryStage?.configurationJson);
+  const fields: AdmissionFormField[] = sections.flatMap((section) => section.fields);
+  const policy = withStandardInquiryBehavior(runtime.currentData?.policy ?? DEFAULT_INQUIRY_POLICY);
+  const workflowLoading = false;
   const allowedSources = policy?.allowedSources.length
     ? policy.allowedSources
     : ALL_INQUIRY_SOURCES;
@@ -151,61 +122,32 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     ? buildAdmissionInquiryDuplicateInput(formik.values, fields, selectedOffering).guardianPhone
     : '';
 
+  useEffect(() => {
+    if (!canCreateInquiry || readingPhoto || runtimeLoading || runtimeError || offeringDetail?.id !== formik.values.offeringId) return;
+    let next = formik.values.fields;
+    if (!Object.keys(next).length) {
+      next = preserveCompatibleInquiryAnswers(previousForm.current?.fields ?? [], fields, previousForm.current?.values ?? {});
+      if (Object.keys(next).length) formik.setFieldValue('fields', next, false);
+    }
+    previousForm.current = { fields, values: next };
+  }, [canCreateInquiry, fields, formik, offeringDetail, readingPhoto, runtimeError, runtimeLoading]);
+
   useAdmissionUnsavedChanges(true, formik.dirty);
 
   useEffect(() => {
-    let active = true;
-
-    const loadOpenOfferings = async () => {
-      setOfferingsLoading(true);
-      setOfferingsError(false);
-      try {
-        const items: AdmissionOfferingListItem[] = [];
-        const pageSize = 100;
-        let totalCount = Number.MAX_SAFE_INTEGER;
-
-        while (active && items.length < totalCount) {
-          // Each page starts after the previous result, so these requests must stay sequential.
-          // eslint-disable-next-line no-await-in-loop
-          const page = await loadOfferings({
-            availabilityStatus: 2,
-            maxResultCount: pageSize,
-            skipCount: items.length,
-            sorting: 'BoardName, MediumName, StandardName, Code',
-          }).unwrap();
-          if (!active) return;
-          const { items: pageItems, totalCount: pageTotalCount } = page;
-          totalCount = pageTotalCount;
-          if (!pageItems.length) break;
-          items.push(...pageItems);
-        }
-
-        if (active) {
-          setOfferingChoices(
-            Array.from(
-              new Map(
-                items
-                  .filter((offering) => offering.entryMode !== 1)
-                  .map((offering) => [offering.id, offering])
-              ).values()
-            )
-          );
-        }
-      } catch {
-        if (active) {
-          setOfferingChoices([]);
-          setOfferingsError(true);
-        }
-      } finally {
-        if (active) setOfferingsLoading(false);
-      }
-    };
-
-    loadOpenOfferings();
-    return () => {
-      active = false;
-    };
-  }, [loadOfferings, offeringsReload]);
+    const candidates = academicOptions.offerings.filter(
+      (item) =>
+        item.availabilityStatus === 2 && item.configurationStatus === 1 && item.entryMode !== 1
+    );
+    if (
+      formik.values.admissionCycleId &&
+      formik.values.standardId &&
+      candidates.length === 1 &&
+      !formik.values.offeringId
+    ) {
+      formik.setFieldValue('offeringId', candidates[0].id, false);
+    }
+  }, [academicOptions.offerings, formik]);
 
   useEffect(() => {
     if (
@@ -219,7 +161,7 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
 
   async function submit(existingFamilyId?: string | null, createSeparateFamily = false) {
     const offering = offeringChoices.find((item) => item.id === formik.values.offeringId);
-    if (!offering) return;
+    if (!offering || !canCreateInquiry || readingPhoto || runtimeLoading || runtimeError) return;
     setRequestError(null);
     try {
       const inquiry = await create(
@@ -275,30 +217,57 @@ export function useAdmissionInquiryDialog(onClose: () => void) {
     requestError,
     duplicateOverrideReason,
     setDuplicateOverrideReason,
-    boards: academicOptions.boards,
-    mediums: academicOptions.mediums,
-    standards: academicOptions.standards,
-    offerings: academicOptions.offerings,
+    periods: catalogue.currentData?.periods ?? [],
+    boards: Array.from(
+      new Map(
+        (catalogue.currentData?.academicOptions ?? []).map((item) => [
+          item.boardId,
+          { id: item.boardId, name: item.boardName },
+        ])
+      ).values()
+    ),
+    mediums: Array.from(
+      new Map(
+        (catalogue.currentData?.academicOptions ?? [])
+          .filter((item) => item.boardId === formik.values.boardId)
+          .map((item) => [item.mediumId, { id: item.mediumId, name: item.mediumName }])
+      ).values()
+    ),
+    standards: Array.from(
+      new Map(
+        (catalogue.currentData?.academicOptions ?? [])
+          .filter(
+            (item) =>
+              item.boardId === formik.values.boardId && item.mediumId === formik.values.mediumId
+          )
+          .map((item) => [item.standardId, { id: item.standardId, name: item.standardName }])
+      ).values()
+    ),
+    offerings: academicOptions.offerings.filter(
+      (item) =>
+        item.availabilityStatus === 2 && item.configurationStatus === 1 && item.entryMode !== 1
+    ),
+    canCreateInquiry,
+    unavailableReason: runtime.currentData?.availability.reasonMessage,
+    academicLoading: catalogue.isFetching,
+    academicError: catalogue.isError,
+    retryAcademic: () => catalogue.refetch(),
     selectedOffering,
     classCapacity:
       offeringDetail?.id === formik.values.offeringId ? offeringDetail.classCapacity : null,
     offeringsLoading,
     offeringsError,
-    retryOfferings: () => setOfferingsReload((current) => current + 1),
-    formLoading: formQuery.isFetching,
-    workflowLoading: workflowQuery.isFetching,
+    retryOfferings: () => catalogue.refetch(),
+    formLoading: runtime.isFetching,
+    workflowLoading,
     runtimeLoading,
     runtimeError,
-    retryRuntime: () => {
-      if (offeringQuery.isError) offeringQuery.refetch();
-      if (formQuery.isError) formQuery.refetch();
-      if (workflowQuery.isError) workflowQuery.refetch();
-      if (intakeProfiles.isError) intakeProfiles.refetch();
-    },
+    retryRuntime: () => runtime.refetch(),
     policy,
     allowedSources,
     canAutoAcknowledge,
-    busy: createState.isLoading || duplicateState.isLoading || communicationState.isLoading,
+    onPhotoReading,
+    busy: readingPhoto || createState.isLoading || duplicateState.isLoading || communicationState.isLoading,
     useExistingFamily: async (familyId: string) => {
       if (
         !matches.some(

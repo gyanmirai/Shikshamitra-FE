@@ -13,6 +13,8 @@ import {
   type AdmissionInquiryFormValues,
 } from './admission-inquiry-model';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => <span aria-hidden="true" /> }));
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
   useSearchParams: () => new URLSearchParams(),
@@ -29,6 +31,7 @@ function controller(overrides: Record<string, unknown> = {}) {
   return {
     formik: {
       values: {
+        admissionCycleId: 'cycle-1',
         boardId: 'board-1',
         mediumId: 'medium-1',
         standardId: 'standard-1',
@@ -54,6 +57,10 @@ function controller(overrides: Record<string, unknown> = {}) {
       setTouched: vi.fn(),
       setValues: vi.fn(),
     },
+    periods: [{ id: 'cycle-1', name: '2026-27' }],
+    academicLoading: false,
+    academicError: false,
+    canCreateInquiry: true,
     boards: [{ id: 'board-1', name: 'CBSE' }],
     mediums: [{ id: 'medium-1', name: 'English' }],
     standards: [{ id: 'standard-1', name: 'Class 1' }],

@@ -1,33 +1,20 @@
-import Stack from '@mui/material/Stack';
+import Grid from '@mui/material/Grid';
+import { SectionCard } from 'src/screens/hr/employee/employee-form-fields/InformationFields';
 
-import { FieldJsonSettings } from './components/field-json-settings';
-import { FieldSettingsGroup } from './components/field-settings-group';
 import { FieldVisibilitySettings } from './components/field-visibility-settings';
 
 import type { FieldSettingsProps } from './types/field-settings';
 
 export function FormFieldAdvancedFields(props: FieldSettingsProps) {
-  const { formik, sectionIndex, fieldIndex } = props;
-  const field = formik.values.sections[sectionIndex].fields[fieldIndex];
   return (
-    <Stack spacing={1}>
-      <FieldSettingsGroup
-        title="Visibility conditions"
-        description={
-          field.visibilityRuleJson
-            ? 'A visibility rule is configured.'
-            : 'Always visible to applicants.'
-        }
-        defaultExpanded={Boolean(field.visibilityRuleJson)}
-      >
+    <SectionCard
+      title="Visibility conditions"
+      paperProps={{ sx: { mb: 0, minWidth: 0 } }}
+      gridProps={{ spacing: 1.5 }}
+    >
+      <Grid size={12}>
         <FieldVisibilitySettings {...props} />
-      </FieldSettingsGroup>
-      <FieldSettingsGroup
-        title="Advanced rules"
-        description="Validation and conditional required rules in JSON."
-      >
-        <FieldJsonSettings {...props} />
-      </FieldSettingsGroup>
-    </Stack>
+      </Grid>
+    </SectionCard>
   );
 }

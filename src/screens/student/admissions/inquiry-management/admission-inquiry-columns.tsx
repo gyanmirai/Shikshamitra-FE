@@ -3,12 +3,11 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AdaptiveThreeDotsAction } from 'src/components/adaptive-three-dots-actions';
 import type { AdmissionInquiry } from 'src/redux/student/admissions/admission-inquiries-api';
 
-import NextLink from 'next/link';
 import { Label } from 'src/components/label';
 import { Stack, Typography } from '@mui/material';
-import { studentPaths } from 'src/constants/student-menu';
 import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions';
 
+import { inquiryHandoffBlocker } from './use-inquiry-handoff';
 import { formatAdmissionReference } from '../admission-reference';
 import { UNASSIGNED_INQUIRIES_FILTER } from './admission-inquiry-filters';
 import {
@@ -16,21 +15,20 @@ import {
   inquiryStatusLabel,
   INQUIRY_SOURCE_OPTIONS,
   INQUIRY_STATUS_OPTIONS,
+  normalizeInquiryStatus,
 } from './admission-inquiry-list-options';
 
 type Options = {
   canManage: boolean;
-  canAssign: boolean;
-  canCommunicate: boolean;
-  isMarkingContacted: boolean;
+  canMove: boolean;
+  isMoving: boolean;
+  pipeline?: boolean;
+  canOpenApplication?: boolean;
   counsellorNames: Record<string, string>;
   counsellorOptions: { label: string; value: string }[];
   offeringOptions: { label: string; value: string }[];
-  onOpenApplicant360: (inquiry: AdmissionInquiry) => void;
   onManage: (inquiry: AdmissionInquiry) => void;
-  onAssign: (inquiry: AdmissionInquiry) => void;
-  onCommunicate: (inquiry: AdmissionInquiry) => void;
-  onMarkContacted: (inquiry: AdmissionInquiry) => void;
+  onMove: (inquiry: AdmissionInquiry) => void;
 };
 
 const statusColors: Record<number, LabelColor> = {
@@ -51,42 +49,37 @@ export function getAdmissionInquiryActions(
 ): AdaptiveThreeDotsAction[] {
   const actions: AdaptiveThreeDotsAction[] = [];
   const reference = formatAdmissionReference(inquiry.inquiryNumber);
-  if (inquiry.applicantId)
-    actions.push({
-      id: 'applicant360',
-      label: `Open Applicant 360 for ${inquiry.applicantName}`,
-      icon: 'mdi:account-circle-outline',
-      onClick: () => options.onOpenApplicant360(inquiry),
-    });
+  if (options.pipeline)
+    return [
+      {
+        id: 'application',
+        label: `Open application for ${inquiry.applicantName}`,
+        icon: 'mdi:file-document-edit-outline',
+        disabled: !inquiry.applicationId || options.canOpenApplication === false,
+        tooltip:
+          options.canOpenApplication === false
+            ? 'You do not have permission to view applications.'
+            : !inquiry.applicationId
+              ? 'The historical application link could not be resolved.'
+              : undefined,
+        onClick: () => options.onManage(inquiry),
+      },
+    ];
   if (options.canManage)
     actions.push({
       id: 'manage',
-      label: `Edit inquiry ${reference}`,
-      icon: 'solar:pen-bold',
+      label: `Edit / Follow-up ${reference}`,
+      icon: 'mdi:pencil-outline',
       onClick: () => options.onManage(inquiry),
     });
-  if (options.canAssign && inquiry.admissionOfferingId)
+  if (options.canMove)
     actions.push({
-      id: 'assign',
-      label: `${inquiry.assignedCounsellorId ? 'Reassign' : 'Assign'} counsellor for ${inquiry.applicantName}`,
-      icon: 'mdi:account-arrow-right-outline',
-      onClick: () => options.onAssign(inquiry),
-    });
-  if (options.canCommunicate)
-    actions.push({
-      id: 'communicate',
-      label: `Compose communication for ${inquiry.applicantName}`,
-      icon: 'mdi:message-text-outline',
-      onClick: () => options.onCommunicate(inquiry),
-    });
-  if (options.canManage && inquiry.status === 0)
-    actions.push({
-      id: 'markContacted',
-      label: `Mark ${inquiry.applicantName} contacted`,
-      icon: 'mdi:phone-check-outline',
-      disabled: options.isMarkingContacted,
-      tooltip: options.isMarkingContacted ? 'Updating contact status…' : undefined,
-      onClick: () => options.onMarkContacted(inquiry),
+      id: 'move',
+      label: `Move ${reference} to next stage`,
+      icon: 'mdi:arrow-right-circle-outline',
+      disabled: options.isMoving || Boolean(inquiryHandoffBlocker(inquiry)),
+      tooltip: options.isMoving ? 'Moving inquiry…' : inquiryHandoffBlocker(inquiry),
+      onClick: () => options.onMove(inquiry),
     });
   return actions;
 }
@@ -110,19 +103,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       sticky: true,
       stickyPosition: 'left',
       stickyOnMobile: false,
-      render: (value, row) => {
-        const inquiry = row as AdmissionInquiry;
-        return inquiry.applicantId ? (
-          <NextLink
-            href={`${studentPaths.enrollment.root}/applicants/${inquiry.applicantId}`}
-            onClick={(event) => event.stopPropagation()}
-          >
-            {String(value)}
-          </NextLink>
-        ) : (
-          String(value)
-        );
-      },
+      render: (value, row) => String(value),
     },
     {
       id: 'admissionOfferingId',
@@ -135,7 +116,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
         return (
           <Stack spacing={0.25}>
             <Typography variant="body2">
-              {inquiry.admissionOfferingCode || 'Cycle inquiry'}
+              {inquiry.admissionOfferingCode || 'Offering requires resolution'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               {inquiry.admissionCycleName || 'Admission cycle'}
@@ -204,7 +185,9 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       stickyPosition: 'right',
       stickyOnMobile: false,
       render: (value) => (
-        <Label color={statusColors[Number(value)]}>{inquiryStatusLabel(value)}</Label>
+        <Label color={statusColors[normalizeInquiryStatus(value)]}>
+          {inquiryStatusLabel(value)}
+        </Label>
       ),
     },
     {
@@ -227,7 +210,7 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
           <AdaptiveThreeDotsActions
             placement="right-top"
             moreLabel={`More actions for ${reference}`}
-            mobileDirectActionLimit={0}
+            mobileDirectActionLimit={2}
             sx={{
               gap: 0,
               justifyContent: 'flex-end',

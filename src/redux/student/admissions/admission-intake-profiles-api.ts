@@ -113,6 +113,11 @@ export type CreateAdmissionPublicInquiryLink = Omit<
 
 export type CreatedAdmissionPublicInquiryLink = AdmissionPublicInquiryLink & { token: string };
 
+export type AdmissionPublicInquiryLinkOption = {
+  counsellorAssignmentProfileId: string;
+  inquiryFormDefinitionId: string;
+};
+
 type Envelope<T> = T | { data: T };
 const unwrap = <T>(response: Envelope<T>): T =>
   typeof response === 'object' && response !== null && 'data' in response
@@ -203,6 +208,21 @@ export const admissionIntakeProfilesApi = api.injectEndpoints({
       transformResponse: (response: Envelope<AdmissionIntakeSetup>) => unwrap(response),
       invalidatesTags: [tag],
     }),
+    getAdmissionPublicInquiryLinkOptions: builder.query<AdmissionPublicInquiryLinkOption[], string>(
+      {
+        query: (admissionCycleId) => ({
+          url: '/student/enrollment/admissions/public-inquiry-links/options',
+          params: { admissionCycleId },
+        }),
+        transformResponse: (response: Envelope<AdmissionPublicInquiryLinkOption[]>) =>
+          unwrap(response),
+        providesTags: [
+          tag,
+          studentAdmissionsCrmType.admissionForm,
+          studentAdmissionsCrmType.admissionCycle,
+        ],
+      }
+    ),
     getAdmissionPublicInquiryLinks: builder.query<AdmissionPublicInquiryLink[], void>({
       query: () => '/student/enrollment/admissions/public-inquiry-links',
       transformResponse: (response: Envelope<AdmissionPublicInquiryLink[]>) => unwrap(response),
@@ -260,6 +280,7 @@ export const {
   useLazyGetAdmissionIntakeSetupUsageQuery,
   useArchiveAdmissionIntakeSetupMutation,
   useGetAdmissionPublicInquiryLinksQuery,
+  useGetAdmissionPublicInquiryLinkOptionsQuery,
   useCreateAdmissionPublicInquiryLinkMutation,
   useSetAdmissionPublicInquiryLinkFormMutation,
   useRevokeAdmissionPublicInquiryLinkMutation,
