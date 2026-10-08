@@ -3,12 +3,15 @@ import { render, screen, fireEvent } from '@testing-library/react';
 
 import { SalaryEditorDialog } from './salary-editor-dialog';
 
-const mocks = vi.hoisted(() => ({ push: vi.fn() }));
+const mocks = vi.hoisted(() => ({ push: vi.fn(), prefetch: vi.fn(), loading: false }));
+vi.mock('./use-salary-editor-prefetch', () => ({ useSalaryEditorPrefetch: () => mocks.prefetch }));
 vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: mocks.push }) }));
 vi.mock('src/redux/hr/employeeApi', () => ({
   useGetEmployeeByIdQuery: () => ({
-    currentData: { id: 'employee-1', fullName: 'Test Staff', status: 0 },
-    isLoading: false,
+    currentData: mocks.loading
+      ? undefined
+      : { id: 'employee-1', fullName: 'Test Staff', status: 0 },
+    isLoading: mocks.loading,
   }),
 }));
 vi.mock('src/components/customDialog', () => ({
@@ -39,7 +42,17 @@ vi.mock('./SalaryStructureBuilder', async () => {
     ),
   };
 });
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.loading = false;
+});
+it('starts salary reads while staff details are still loading without initializing the form', () => {
+  mocks.loading = true;
+  render(<SalaryEditorDialog employeeId="employee-1" handleClose={vi.fn()} />);
+  expect(mocks.prefetch).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('dialog', { name: 'Edit salary' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: 'Change input' })).not.toBeInTheDocument();
+});
 it('shows the salary footer and monthly payroll link without a month or legacy component editor', () => {
   render(<SalaryEditorDialog employeeId="employee-1" handleClose={vi.fn()} />);
   expect(screen.getByText('Test Staff')).toBeVisible();

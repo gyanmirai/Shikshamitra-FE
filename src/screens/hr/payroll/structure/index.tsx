@@ -8,6 +8,7 @@ import { useSearchParams } from 'next/navigation';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { RouterLink } from 'src/routes/components/router-link';
 import { useMemo, useState, useEffect, useCallback } from 'react';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -32,6 +33,15 @@ import { getLocalMonthKey } from './salary-structure-builder-utils';
 
 const EmployeeSalaryStructureScreen = () => {
   const searchParams = useSearchParams();
+  return (
+    <EmployeeSalaryStructureContent
+      key={`${searchParams.get('employeeId') || ''}:${searchParams.get('setup') || ''}`}
+    />
+  );
+};
+
+const EmployeeSalaryStructureContent = () => {
+  const searchParams = useSearchParams();
   const requestedEmployeeId = searchParams.get('employeeId')?.trim() || '';
   const openRequestedSalarySetup = searchParams.get('setup') === 'salary';
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -44,9 +54,17 @@ const EmployeeSalaryStructureScreen = () => {
     hrPermissions.payroll.compensationRevisionActions.manage
   );
   const canReadCompensationRevisions = canViewCompensationRevisions || canManageCompensation;
-  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(null);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const { data: requestedEmployee } = useGetEmployeeByIdQuery(requestedEmployeeId, {
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(() =>
+    requestedEmployeeId ? { id: requestedEmployeeId, label: 'Loading staff...' } : null
+  );
+  const [editDialogOpen, setEditDialogOpen] = useState(
+    Boolean(requestedEmployeeId && openRequestedSalarySetup)
+  );
+  const {
+    currentData: requestedEmployee,
+    isError: employeeError,
+    refetch: refetchEmployee,
+  } = useGetEmployeeByIdQuery(requestedEmployeeId, {
     skip: !requestedEmployeeId,
   });
 
@@ -54,19 +72,19 @@ const EmployeeSalaryStructureScreen = () => {
     if (
       !requestedEmployeeId ||
       !requestedEmployee ||
-      selectedEmployee?.id === requestedEmployeeId
+      selectedEmployee?.id !== requestedEmployeeId
     ) {
       return;
     }
+    const label = requestedEmployee.fullName || requestedEmployee.employeeName || 'Selected staff';
+    const status = requestedEmployee.status ?? requestedEmployee.employeeStatusType;
+    if (selectedEmployee.label === label && selectedEmployee.status === status) return;
     setSelectedEmployee({
       id: requestedEmployeeId,
-      label: requestedEmployee.fullName || requestedEmployee.employeeName || 'Selected staff',
-      status: requestedEmployee.status ?? requestedEmployee.employeeStatusType,
+      label,
+      status,
     });
-    if (openRequestedSalarySetup) {
-      setEditDialogOpen(true);
-    }
-  }, [openRequestedSalarySetup, requestedEmployee, requestedEmployeeId, selectedEmployee?.id]);
+  }, [requestedEmployee, requestedEmployeeId, selectedEmployee]);
 
   const [getEmployees] = useQueryAndMutation({
     type: 'mutation',
@@ -75,13 +93,11 @@ const EmployeeSalaryStructureScreen = () => {
 
   const employeeId = selectedEmployee?.id ?? '';
 
-  const { data: structureData, isLoading: isStructureLoading } = useGetEmployeeSalaryStructureQuery(
-    { employeeId },
-    { skip: !employeeId }
-  );
+  const { currentData: structureData, isFetching: isStructureLoading } =
+    useGetEmployeeSalaryStructureQuery({ employeeId }, { skip: !employeeId });
   const monthKey = getLocalMonthKey();
   const month = `${monthKey}-01T00:00:00.000Z`;
-  const { data: effectiveRevision, isLoading: isRevisionLoading } =
+  const { currentData: effectiveRevision, isFetching: isRevisionLoading } =
     useGetEffectiveCompensationRevisionQuery(
       { employeeId, month },
       { skip: !employeeId || !canReadCompensationRevisions }
@@ -140,6 +156,7 @@ const EmployeeSalaryStructureScreen = () => {
       {['staff-profile', 'staff-edit'].includes(searchParams.get('from') || '') &&
         requestedEmployeeId && (
           <Button
+            component={RouterLink}
             href={
               searchParams.get('from') === 'staff-edit'
                 ? staffPayrollEditHref(requestedEmployeeId)
@@ -192,6 +209,16 @@ const EmployeeSalaryStructureScreen = () => {
           />
         </Box>
       </Card>
+
+      {employeeError && selectedEmployee?.id === requestedEmployeeId && (
+        <Alert
+          severity="error"
+          action={<Button onClick={() => refetchEmployee()}>Retry</Button>}
+          sx={{ mt: 1 }}
+        >
+          Unable to load staff details.
+        </Alert>
+      )}
 
       {!employeeId ? (
         <Paper elevation={3} sx={{ p: 3, mt: 1, borderRadius: 2 }}>
@@ -250,7 +277,11 @@ const EmployeeSalaryStructureScreen = () => {
           </Grid>
 
           {editDialogOpen && (
-            <SalaryEditorDialog employeeId={employeeId} handleClose={handleCloseEdit} />
+            <SalaryEditorDialog
+              key={employeeId}
+              employeeId={employeeId}
+              handleClose={handleCloseEdit}
+            />
           )}
         </>
       )}

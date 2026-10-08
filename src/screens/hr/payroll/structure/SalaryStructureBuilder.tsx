@@ -109,17 +109,20 @@ export function SalaryStructureBuilder({
   const {
     data: templateData,
     isLoading: templatesLoading,
+    isFetching: templatesFetching,
     isError: templatesError,
     refetch: refetchTemplates,
-  } = useGetActiveSalaryTemplatesQuery();
+  } = useGetActiveSalaryTemplatesQuery(undefined, { refetchOnMountOrArgChange: 30 });
   const { data: pfData, isError: pfRulesError } = useGetPFQuery({});
   const {
     data: revisionData,
     isLoading: revisionsLoading,
+    isFetching: revisionsFetching,
     isError: revisionsError,
     refetch: refetchRevisions,
   } = useGetCompensationRevisionsQuery(employeeId || '', {
     skip: !employeeId || !canReadCompensation,
+    refetchOnMountOrArgChange: 30,
   });
   const { data: readiness, refetch: refetchReadiness } = useGetEmployeeActivationReadinessQuery(
     employeeId || '',
@@ -176,7 +179,13 @@ export function SalaryStructureBuilder({
 
   useEffect(() => {
     const initializationKey = employeeId || 'unsaved-employee';
-    if (revisionsLoading || !selectedTemplate || initializedRef.current === initializationKey) {
+    if (
+      revisionsLoading ||
+      revisionsFetching ||
+      templatesFetching ||
+      !selectedTemplate ||
+      initializedRef.current === initializationKey
+    ) {
       return;
     }
     const source =
@@ -201,7 +210,15 @@ export function SalaryStructureBuilder({
     }
     initializedRef.current = initializationKey;
     setInitialized(true);
-  }, [dateOfJoining, employeeId, revisionData?.items, revisionsLoading, selectedTemplate]);
+  }, [
+    dateOfJoining,
+    employeeId,
+    revisionData?.items,
+    revisionsLoading,
+    revisionsFetching,
+    templatesFetching,
+    selectedTemplate,
+  ]);
 
   useEffect(() => setActivationCompleted(false), [employeeId]);
 
@@ -383,7 +400,11 @@ export function SalaryStructureBuilder({
     setCalculation(null);
   };
 
-  if (templatesLoading || revisionsLoading) {
+  if (
+    templatesLoading ||
+    revisionsLoading ||
+    (!initialized && (templatesFetching || revisionsFetching))
+  ) {
     return (
       <Box aria-busy="true" aria-label="Loading staff salary" display="grid" gap={2.5}>
         <Grid container spacing={2}>

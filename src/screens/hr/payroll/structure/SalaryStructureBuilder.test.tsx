@@ -11,6 +11,7 @@ import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 
 const mocks = vi.hoisted(() => ({
   templatesLoading: false,
+  revisionsFetching: false,
   revisions: [] as any[],
   readiness: { canActivate: false, blockerCodes: [] as string[] },
   activate: vi.fn(),
@@ -95,6 +96,7 @@ vi.mock('src/redux/hr/salary-template-api', () => ({
 }));
 vi.mock('src/redux/hr/compensation-revision-api', () => ({
   useGetCompensationRevisionsQuery: () => ({
+    isFetching: mocks.revisionsFetching,
     data: { items: mocks.revisions },
     refetch: mocks.refetchRevisions,
     isLoading: false,
@@ -129,6 +131,7 @@ describe('SalaryStructureBuilder initialization and activation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.revisions = [];
+    mocks.revisionsFetching = false;
     mocks.canManageSalary = true;
     mocks.refetchRevisions.mockResolvedValue({});
     mocks.calculate.mockReturnValue({
@@ -163,6 +166,44 @@ describe('SalaryStructureBuilder initialization and activation', () => {
       );
       expect(screen.getByLabelText('Effective month')).toHaveValue('2026-11');
     });
+  });
+
+  it('waits for an in-flight revision refresh before initializing and retains edits on later refreshes', async () => {
+    mocks.revisionsFetching = true;
+    mocks.revisions = [
+      {
+        id: 'revision-current',
+        revisionNumber: 1,
+        status: 'EFFECTIVE',
+        netSalary: 10000,
+        isCurrent: true,
+        effectiveMonth: '2026-10-01',
+        salaryBasis: 'EMPLOYER_COST',
+        quotedMonthlyAmount: 10000,
+      },
+    ];
+    const result = renderBuilder();
+    expect(screen.queryByLabelText('Monthly cost to school (CTC)')).not.toBeInTheDocument();
+    mocks.revisions = [{ ...mocks.revisions[0], quotedMonthlyAmount: 20000 }];
+    mocks.revisionsFetching = false;
+    const rerender = () =>
+      result.rerender(
+        <ThemeProvider theme={theme}>
+          <SalaryStructureBuilder formik={formik} employeeId="employee-1" />
+        </ThemeProvider>
+      );
+    rerender();
+    expect(await screen.findByLabelText('Monthly cost to school (CTC)')).toHaveValue(20000);
+    const user = userEvent.setup();
+    await user.clear(screen.getByLabelText('Monthly cost to school (CTC)'));
+    await user.type(screen.getByLabelText('Monthly cost to school (CTC)'), '25000');
+    mocks.revisionsFetching = true;
+    rerender();
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue(25000);
+    mocks.revisionsFetching = false;
+    mocks.revisions = [{ ...mocks.revisions[0], quotedMonthlyAmount: 30000 }];
+    rerender();
+    expect(screen.getByLabelText('Monthly cost to school (CTC)')).toHaveValue(25000);
   });
 
   it('saves CTC without contaminating the separate payroll form with partial salary provenance', async () => {
