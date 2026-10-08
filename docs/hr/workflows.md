@@ -11,7 +11,7 @@ audience: humans-and-agents
 # Trace HR frontend workflows
 
 TL;DR: use this page to connect HR screens, clients, and browser tests.
-Backend workflow rules are canonical in `../../../Shikshamitra-BE/docs/modules/hr/workflows.md`.
+Backend workflow rules are canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/workflows.md`.
 
 ## Core workflows
 

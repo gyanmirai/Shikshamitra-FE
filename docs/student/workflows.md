@@ -189,10 +189,10 @@ The form list opens **History & versions** in a shared dialog with separate Comp
 The full-screen editor in `src/screens/student/admissions/admission-form-dialog.tsx` uses the shared `CustomStepperWithFormik` for three ordered stages.
 The shared stepper owns one Formik state across the stages; **Back** preserves entered values and **Next** validates the current stage without saving.
 
-| Stage             | User interaction                                                                                                                                                       |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Form details**  | Choose **Blank form**, the recommended **Admission application**, or **Inquiry form**, then enter the form details.                                                    |
-| **Build form**    | View every section in the selected step, select a heading to choose where fields are added, add ready-made packs, or preview the applicant form.                       |
+| Stage             | User interaction                                                                                                                                                                                                                        |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Form details**  | Choose **Blank form**, the recommended **Admission application**, or **Inquiry form**, then enter the form details.                                                                                                                     |
+| **Build form**    | View every section in the selected step, select a heading to choose where fields are added, add ready-made packs, or preview the applicant form.                                                                                        |
 | **Review & save** | Preview the actual form controls in section cards and navigate configured steps inside the navigation card. Review publishing checks, then choose **Save draft** or **Publish now**. Return to Build form to change fields or sections. |
 
 Form details uses a centered 1120px container on large screens, matching Review & save. The starting-form heading omits redundant helper text. The wizard uses the shared scrollbar for vertical body scrolling with horizontal scrolling disabled and stable footer actions.
@@ -202,11 +202,11 @@ Details validation checks name, code, layout, and fields per row; the builder st
 The final save validates the complete draft schema and is the only wizard action that persists the form.
 Publishing checks in the review are advisory and do not add a separate draft-save gate.
 
-| Workspace area     | User interaction                                                                                                                                                 |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Student fields** | Use the left palette to add linked student fields to the selected section; switch to Custom fields when needed. On narrow screens, this becomes a workspace tab. |
-| **Your form**      | Keep all sections in the selected step visible. Use **Actions → Edit** to edit titles in place and the connected step navigation to select a step.               |
-| **Add field**      | Open the field palette on narrow screens; on desktop the palette remains beside the canvas. Repeated additions keep the palette available.                       |
+| Workspace area     | User interaction                                                                                                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Student fields** | Use the left palette to add linked student fields to the selected section; switch to Custom fields when needed. On narrow screens, this becomes a workspace tab.                   |
+| **Your form**      | Keep all sections in the selected step visible. Use **Actions → Edit** to edit titles in place and the connected step navigation to select a step.                                 |
+| **Add field**      | Open the field palette on narrow screens; on desktop the palette remains beside the canvas. Repeated additions keep the palette available.                                         |
 | **Field settings** | Select a field to open the right drawer. Basic groups field details, answer options, and guidance in section cards; Rules exposes visibility conditions and location dependencies. |
 
 Field settings has only **Basic** and **Rules** tabs and reuses HR section cards. Visibility conditions are always visible; Advanced rules and Data editors are absent. Existing binding, validation, and conditional-required metadata stays intact when editing other settings. Redundant helper copy is removed, while field errors and compatibility warnings remain visible. The heading's info tooltip explains that changes belong to the draft until saved. The shared scrollbar owns the drawer body, with the heading and Done action fixed.

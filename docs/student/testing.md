@@ -176,7 +176,7 @@ Desktop 1440×900, tablet 768×1024 and mobile 390×844 checks found no document
 Run the admissions regression suite, including policy and request contracts, stage configuration, outcome routes, scheduling, history, local dialog guards, and legacy compatibility:
 
 ```bash
-npm run test:admissions
+node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/redux/student/admissions src/screens/student/admissions --maxWorkers=2 --no-file-parallelism
 ```
 
 This command uses the existing Windows Vite startup helper to bypass local network-drive discovery and limits the runner to two workers.

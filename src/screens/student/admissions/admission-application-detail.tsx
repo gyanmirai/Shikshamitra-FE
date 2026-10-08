@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
@@ -8,7 +9,6 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { studentPaths } from 'src/constants/student-menu';
-import { useParams, useSearchParams } from 'next/navigation';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -19,8 +19,8 @@ import { formatAdmissionReference } from './admission-reference';
 import { FormHistoryCard } from './application-detail/form-history-card';
 import { ApplicationFollowUps } from './application-detail/application-follow-ups';
 import { useApplicationDetail } from './application-detail/use-application-detail';
-import { TransitionHistoryCard } from './application-detail/transition-history-card';
 import { getApplicationReturnUrl } from './application-detail/application-return-url';
+import { TransitionHistoryCard } from './application-detail/transition-history-card';
 import { ApplicationRuntimeForm } from './application-detail/application-runtime-form';
 import { ApplicationCurrentTask } from './application-detail/application-current-task';
 import { ApplicationProgressCard } from './application-detail/application-progress-card';
