@@ -266,7 +266,7 @@ Immutable issued documents, payment recording, document-detail replacement and d
 Unpaid reissue and paid later-payroll settlement are implemented with focused regression coverage and authenticated correction/settlement journeys.
 On 2026-10-07 the user deferred DOC-15 current Gujarat legal-format verification for both private unaided and government-aided schools, allowing engineering to proceed with the existing document.
 The deferred review does not change payroll rules, document immutability, signature fields, permission checks or recipient controls, and does not establish legal certification.
-The owning [payslip specification](../../../Shikshamitra-BE/docs/modules/hr/references/payslip-design.md) defines issuance, money, corrections, email and acceptance requirements.
+The owning [payslip specification](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/references/payslip-design.md) defines issuance, money, corrections, email and acceptance requirements.
 Keep the existing Payslips route, standard breadcrumbs and employee/month controls.
 Use one server-generated document for the screen document preview, Print, Download and email attachment.
 PDF.js renders the stored document with a bundled worker rather than relying on native PDF frames.
