@@ -9,12 +9,12 @@ import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { fNumber } from 'src/utils/format-number';
 import { RouterLink } from 'src/routes/components';
+import { formatDateOnly } from 'src/utils/date-only';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { fNumber } from 'src/utils/format-number';
-import { formatDateOnly } from 'src/utils/date-only';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -325,6 +325,7 @@ function Corrections() {
               fullWidth
               multiline
               minRows={2}
+              disabled={deciding.isLoading}
               label="Review reason"
               name="reason"
               value={formik.values.reason}

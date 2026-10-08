@@ -51,7 +51,7 @@ export default function AdmissionInquiryEditPage() {
         isBack
         onBack={returnToList}
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: originLabel, href: originHref },
           { name: 'Edit inquiry' },

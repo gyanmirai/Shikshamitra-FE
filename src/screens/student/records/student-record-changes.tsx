@@ -6,6 +6,7 @@ import type { RecordSection } from 'src/redux/student/records/student-record-cha
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { RouterLink } from 'src/routes/components';
 import { CustomTabs } from 'src/components/custom-tabs';
@@ -145,7 +146,7 @@ export default function StudentRecordChanges() {
         heading="Changes & Approvals"
         description="Request changes, review differences, and track their application to student records."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Student Records', href: studentPaths.records.root },
           { name: 'Changes & Approvals' },
         ]}
@@ -177,6 +178,10 @@ export default function StudentRecordChanges() {
           component={RouterLink}
           value="changes"
           label="Changes & Approvals"
+          icon={<Iconify icon="mdi:account-edit-outline" />}
+          iconPosition="start"
+          id="record-review-tab-changes"
+          aria-controls="record-review-panel"
           href={recordsQueryUrl(pathname, params.toString(), {
             tab: undefined,
             status: undefined,
@@ -189,6 +194,10 @@ export default function StudentRecordChanges() {
           component={RouterLink}
           value="duplicates"
           label="Duplicate reviews"
+          icon={<Iconify icon="mdi:account-multiple-check-outline" />}
+          iconPosition="start"
+          id="record-review-tab-duplicates"
+          aria-controls="record-review-panel"
           href={recordsQueryUrl(pathname, params.toString(), {
             tab: 'duplicates',
             status: undefined,
@@ -198,195 +207,205 @@ export default function StudentRecordChanges() {
           })}
         />
       </CustomTabs>
-      {duplicates ? (
-        <StudentDuplicateReviews
-          studentId={studentId || undefined}
-          status={status || undefined}
-          page={page}
-          onPage={(next) => update({ page: next })}
-          onStatus={(next) => update({ status: next || undefined, page: 0 })}
-        />
-      ) : newMode ? (
-        <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
-          <Stack spacing={2}>
-            {!canCreate ? (
-              <Alert severity="info">
-                You do not have permission to create student record changes.
-              </Alert>
-            ) : (
-              <>
-                {!studentId && (
-                  <RecordsStudentPicker
-                    onSelect={(student) =>
-                      update({ student: student?.studentId, request: undefined })
-                    }
-                  />
-                )}
-                {studentId && (
-                  <Typography variant="body2">
-                    Student selected.{' '}
-                    <Button
-                      component={RouterLink}
-                      href={`${studentPaths.records.studentList}?student=${encodeURIComponent(studentId)}`}
-                    >
-                      Open profile
-                    </Button>
-                    <Button onClick={() => update({ student: undefined })}>
-                      Choose another student
-                    </Button>
-                  </Typography>
-                )}
-                <CustomSelect
-                  label="Record section"
-                  value={section}
-                  options={changeSections}
-                  onChange={(value) => update({ section: String(value) })}
-                />
-                {snapshot.isError && (
-                  <Alert
-                    severity="error"
-                    action={
-                      <Button color="inherit" onClick={() => snapshot.refetch()}>
-                        Retry
+      <Box
+        role="tabpanel"
+        id="record-review-panel"
+        aria-labelledby={`record-review-tab-${duplicates ? 'duplicates' : 'changes'}`}
+        sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}
+      >
+        {duplicates ? (
+          <StudentDuplicateReviews
+            studentId={studentId || undefined}
+            status={status || undefined}
+            page={page}
+            onPage={(next) => update({ page: next })}
+            onStatus={(next) => update({ status: next || undefined, page: 0 })}
+          />
+        ) : newMode ? (
+          <Box sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
+            <Stack spacing={2}>
+              {!canCreate ? (
+                <Alert severity="info">
+                  You do not have permission to create student record changes.
+                </Alert>
+              ) : (
+                <>
+                  {!studentId && (
+                    <RecordsStudentPicker
+                      onSelect={(student) =>
+                        update({ student: student?.studentId, request: undefined })
+                      }
+                    />
+                  )}
+                  {studentId && (
+                    <Typography variant="body2">
+                      Student selected.{' '}
+                      <Button
+                        component={RouterLink}
+                        href={`${studentPaths.records.studentList}?student=${encodeURIComponent(studentId)}`}
+                      >
+                        Open profile
                       </Button>
-                    }
-                  >
-                    This section could not be opened for editing. Check provisioning access and
-                    sensitive-field permissions.
-                  </Alert>
-                )}
-                {studentId && snapshot.isFetching && !snapshot.currentData && (
-                  <LinearProgress aria-label="Loading current student section" />
-                )}
-                {studentId && !snapshot.isError && snapshot.currentData && (
-                  <RecordChangeForm
-                    key={`${studentId}-${section}-${params.get('reload') ?? ''}`}
-                    studentId={studentId}
-                    onDirtyChange={setDraftDirty}
-                    snapshot={snapshot.currentData}
-                    correctsChangeId={params.get('corrects') ?? undefined}
-                    onReload={() => update({ reload: crypto.randomUUID() })}
-                    onSubmitted={(id) =>
-                      navigate({ mode: undefined, request: id, corrects: undefined })
-                    }
+                      <Button onClick={() => update({ student: undefined })}>
+                        Choose another student
+                      </Button>
+                    </Typography>
+                  )}
+                  <CustomSelect
+                    label="Record section"
+                    value={section}
+                    options={changeSections}
+                    onChange={(value) => update({ section: String(value) })}
                   />
-                )}
-              </>
-            )}
-          </Stack>
-        </Box>
-      ) : (
-        <>
-          <Paper variant="outlined" sx={{ p: 1.5 }}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-              <CustomSelect
-                label="Request status"
-                value={status}
-                options={[
-                  { value: '', label: 'All requests' },
-                  ...[
-                    'Pending',
-                    'Approved',
-                    'Scheduled',
-                    'Applied',
-                    'Conflict',
-                    'Rejected',
-                    'Cancelled',
-                  ].map((value) => ({ value, label: value })),
-                ]}
-                onChange={(value) => update({ status: String(value), page: 0 })}
-              />
-              <Button onClick={() => update({ status: undefined, student: undefined, page: 0 })}>
-                Clear filters
-              </Button>
-            </Stack>
-          </Paper>
-          {list.isError && (
-            <Alert
-              severity="error"
-              action={
-                <Button color="inherit" onClick={() => list.refetch()}>
-                  Retry
-                </Button>
-              }
-            >
-              Change requests could not be loaded.
-            </Alert>
-          )}
-          <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-            <CustomizableTable
-              tableId="student-record-changes"
-              tableTitle="Student record changes"
-              columns={[
-                { id: 'studentName', label: 'Student', minWidth: 170 },
-                {
-                  id: 'section',
-                  label: 'Record section',
-                  render: (value) =>
-                    changeSections.find((item) => item.value === value)?.label ?? value,
-                },
-                {
-                  id: 'status',
-                  label: 'Status',
-                  render: (value) => (
-                    <Label
-                      color={
-                        value === 'Applied'
-                          ? 'success'
-                          : ['Conflict', 'Rejected'].includes(value)
-                            ? 'error'
-                            : value === 'Pending'
-                              ? 'warning'
-                              : ['Scheduled', 'Approved'].includes(value)
-                                ? 'info'
-                                : 'default'
+                  {snapshot.isError && (
+                    <Alert
+                      severity="error"
+                      action={
+                        <Button color="inherit" onClick={() => snapshot.refetch()}>
+                          Retry
+                        </Button>
                       }
                     >
-                      {value}
-                    </Label>
-                  ),
-                },
-                { id: 'reason', label: 'Reason', minWidth: 220 },
-                { id: 'creationTime', label: 'Requested', render: (value) => fDateTime(value) },
-                {
-                  id: 'approvalCount',
-                  label: 'Reviews',
-                  render: (value, row) => `${value} / ${row.requiredApprovals}`,
-                },
-                {
-                  id: 'actions',
-                  label: 'Actions',
-                  sticky: true,
-                  stickyPosition: 'right',
-                  excludeFromExport: true,
-                  render: (_value, row) => (
-                    <Button
-                      component={RouterLink}
-                      href={recordsQueryUrl(pathname, params.toString(), { request: row.id })}
-                      aria-label={`Review change for ${row.studentName}`}
-                    >
-                      Review
-                    </Button>
-                  ),
-                },
-              ]}
-              data={list.currentData?.items ?? []}
-              totalCount={list.currentData?.totalCount ?? 0}
-              isLoading={list.isLoading}
-              serverSidePagination
-              isSearch={false}
-              isFilter={false}
-              page={page}
-              rowsPerPage={25}
-              rowsPerPageOptions={[25]}
-              onServerPagination={(next) => update({ page: next })}
-              wrapperProps={{ sx: { height: 1 } }}
-              tableContainerProps={{ sx: { height: 1 } }}
-              noDataText="No change requests match this view."
-            />
+                      This section could not be opened for editing. Check provisioning access and
+                      sensitive-field permissions.
+                    </Alert>
+                  )}
+                  {studentId && snapshot.isFetching && !snapshot.currentData && (
+                    <LinearProgress aria-label="Loading current student section" />
+                  )}
+                  {studentId && !snapshot.isError && snapshot.currentData && (
+                    <RecordChangeForm
+                      key={`${studentId}-${section}-${params.get('reload') ?? ''}`}
+                      studentId={studentId}
+                      onDirtyChange={setDraftDirty}
+                      snapshot={snapshot.currentData}
+                      correctsChangeId={params.get('corrects') ?? undefined}
+                      onReload={() => update({ reload: crypto.randomUUID() })}
+                      onSubmitted={(id) =>
+                        navigate({ mode: undefined, request: id, corrects: undefined })
+                      }
+                    />
+                  )}
+                </>
+              )}
+            </Stack>
           </Box>
-        </>
-      )}
+        ) : (
+          <>
+            <Paper variant="outlined" sx={{ p: 1.5 }}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <CustomSelect
+                  label="Request status"
+                  value={status}
+                  options={[
+                    { value: '', label: 'All requests' },
+                    ...[
+                      'Pending',
+                      'Approved',
+                      'Scheduled',
+                      'Applied',
+                      'Conflict',
+                      'Rejected',
+                      'Cancelled',
+                    ].map((value) => ({ value, label: value })),
+                  ]}
+                  onChange={(value) => update({ status: String(value), page: 0 })}
+                />
+                <Button onClick={() => update({ status: undefined, student: undefined, page: 0 })}>
+                  Clear filters
+                </Button>
+              </Stack>
+            </Paper>
+            {list.isError && (
+              <Alert
+                severity="error"
+                action={
+                  <Button color="inherit" onClick={() => list.refetch()}>
+                    Retry
+                  </Button>
+                }
+              >
+                Change requests could not be loaded.
+              </Alert>
+            )}
+            <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <CustomizableTable
+                tableId="student-record-changes"
+                tableTitle="Student record changes"
+                columns={[
+                  { id: 'studentName', label: 'Student', minWidth: 170 },
+                  {
+                    id: 'section',
+                    label: 'Record section',
+                    render: (value) =>
+                      changeSections.find((item) => item.value === value)?.label ?? value,
+                  },
+                  {
+                    id: 'status',
+                    label: 'Status',
+                    render: (value) => (
+                      <Label
+                        color={
+                          value === 'Applied'
+                            ? 'success'
+                            : ['Conflict', 'Rejected'].includes(value)
+                              ? 'error'
+                              : value === 'Pending'
+                                ? 'warning'
+                                : ['Scheduled', 'Approved'].includes(value)
+                                  ? 'info'
+                                  : 'default'
+                        }
+                      >
+                        {value}
+                      </Label>
+                    ),
+                  },
+                  { id: 'reason', label: 'Reason', minWidth: 220 },
+                  { id: 'creationTime', label: 'Requested', render: (value) => fDateTime(value) },
+                  {
+                    id: 'approvalCount',
+                    label: 'Reviews',
+                    render: (value, row) => `${value} / ${row.requiredApprovals}`,
+                  },
+                  {
+                    id: 'actions',
+                    label: 'Actions',
+                    isSort: false,
+                    isFilter: false,
+                    align: 'right',
+                    sticky: true,
+                    stickyPosition: 'right',
+                    excludeFromExport: true,
+                    render: (_value, row) => (
+                      <Button
+                        component={RouterLink}
+                        href={recordsQueryUrl(pathname, params.toString(), { request: row.id })}
+                        aria-label={`Review change for ${row.studentName}`}
+                      >
+                        Review
+                      </Button>
+                    ),
+                  },
+                ]}
+                data={list.currentData?.items ?? []}
+                totalCount={list.currentData?.totalCount ?? 0}
+                isLoading={list.isLoading}
+                serverSidePagination
+                isSearch={false}
+                isFilter={false}
+                page={page}
+                rowsPerPage={25}
+                rowsPerPageOptions={[25]}
+                onServerPagination={(next) => update({ page: next })}
+                wrapperProps={{ sx: { height: 1 } }}
+                tableContainerProps={{ sx: { height: 1 } }}
+                noDataText="No change requests match this view."
+              />
+            </Box>
+          </>
+        )}
+      </Box>
       {navigationGuard.confirmation}
       <CustomDialog
         open={Boolean(detailId)}

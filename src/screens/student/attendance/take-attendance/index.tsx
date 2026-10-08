@@ -33,6 +33,7 @@ import {
   Box,
   Alert,
   Stack,
+  Paper,
   Button,
   Tooltip,
   TextField,
@@ -47,8 +48,8 @@ import {
 } from 'src/redux/student/take-attendance/take-attendace-api';
 
 import AttendanceDetailsDialog from './attendance-details-dialog';
-import AttendanceCorrectionDialog from './attendance-correction-dialog';
 import { readAttendanceTableQuery } from './attendance-url-state';
+import AttendanceCorrectionDialog from './attendance-correction-dialog';
 import {
   getAttendanceCounts,
   hasAttendanceChanges,
@@ -534,84 +535,86 @@ const DailyAttendanceWorkspace = () => {
           { name: 'Daily Attendance' },
         ]}
       />
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ flex: 1 }}>
-          <DatePicker
-            label="Date"
-            value={dayjs(selection.date)}
-            format="DD-MM-YYYY"
-            disabled={busy}
-            minDate={year?.startDate ? dayjs(year.startDate) : undefined}
-            maxDate={year?.endDate ? dayjs(year.endDate) : undefined}
-            onChange={(value: Dayjs | null) => {
-              if (value?.isValid()) changeSelection({ date: toDateOnly(value) });
-            }}
-            slotProps={{ textField: { size: 'small', sx: { width: { xs: '100%', sm: 170 } } } }}
-          />
-          <CustomSelect
-            label="School level"
-            options={organizations}
-            value={selection.organization}
-            labelKey="name"
-            valueKey="id"
-            onChange={(value) =>
-              changeSelection({ organization: String(value), standard: '', division: '' })
-            }
-            disabled={!medium || busy}
-            formControlProps={{ sx: { width: { xs: '100%', sm: 170 } } }}
-          />
-          <CustomSelect
-            label="Class"
-            options={standards}
-            value={selection.standard}
-            labelKey="name"
-            valueKey="id"
-            onChange={(value) => changeSelection({ standard: String(value), division: '' })}
-            disabled={!organization || busy}
-            formControlProps={{ sx: { width: { xs: '100%', sm: 140 } } }}
-          />
-          <CustomSelect
-            label="Division"
-            options={divisions}
-            value={selection.division}
-            labelKey="name"
-            valueKey="id"
-            onChange={(value) => changeSelection({ division: String(value) })}
-            disabled={!standard || busy}
-            formControlProps={{ sx: { width: { xs: '100%', sm: 140 } } }}
-          />
+      <Paper variant="outlined" sx={{ px: 1, py: 1 }}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1} alignItems={{ md: 'center' }}>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ flex: 1 }}>
+            <DatePicker
+              label="Date"
+              value={dayjs(selection.date)}
+              format="DD-MM-YYYY"
+              disabled={busy}
+              minDate={year?.startDate ? dayjs(year.startDate) : undefined}
+              maxDate={year?.endDate ? dayjs(year.endDate) : undefined}
+              onChange={(value: Dayjs | null) => {
+                if (value?.isValid()) changeSelection({ date: toDateOnly(value) });
+              }}
+              slotProps={{ textField: { size: 'small', sx: { width: { xs: '100%', sm: 170 } } } }}
+            />
+            <CustomSelect
+              label="School level"
+              options={organizations}
+              value={selection.organization}
+              labelKey="name"
+              valueKey="id"
+              onChange={(value) =>
+                changeSelection({ organization: String(value), standard: '', division: '' })
+              }
+              disabled={!medium || busy}
+              formControlProps={{ sx: { width: { xs: '100%', sm: 170 } } }}
+            />
+            <CustomSelect
+              label="Class"
+              options={standards}
+              value={selection.standard}
+              labelKey="name"
+              valueKey="id"
+              onChange={(value) => changeSelection({ standard: String(value), division: '' })}
+              disabled={!organization || busy}
+              formControlProps={{ sx: { width: { xs: '100%', sm: 140 } } }}
+            />
+            <CustomSelect
+              label="Division"
+              options={divisions}
+              value={selection.division}
+              labelKey="name"
+              valueKey="id"
+              onChange={(value) => changeSelection({ division: String(value) })}
+              disabled={!standard || busy}
+              formControlProps={{ sx: { width: { xs: '100%', sm: 140 } } }}
+            />
+          </Stack>
+          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!canSave}
+              loading={saving}
+              onClick={() => save(false)}
+            >
+              Save draft
+            </Button>
+            <Tooltip
+              title={
+                counts.unmarked
+                  ? `Mark all ${counts.unmarked} remaining students before submitting.`
+                  : ''
+              }
+            >
+              <span>
+                <Button
+                  size="small"
+                  variant="contained"
+                  disabled={!canSubmit}
+                  loading={saving}
+                  onClick={() => setDecision('submit')}
+                >
+                  Submit attendance
+                </Button>
+              </span>
+            </Tooltip>
+          </Stack>
         </Stack>
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-          <Button
-            size="small"
-            variant="outlined"
-            disabled={!canSave}
-            loading={saving}
-            onClick={() => save(false)}
-          >
-            Save draft
-          </Button>
-          <Tooltip
-            title={
-              counts.unmarked
-                ? `Mark all ${counts.unmarked} remaining students before submitting.`
-                : ''
-            }
-          >
-            <span>
-              <Button
-                size="small"
-                variant="contained"
-                disabled={!canSubmit}
-                loading={saving}
-                onClick={() => setDecision('submit')}
-              >
-                Submit attendance
-              </Button>
-            </span>
-          </Tooltip>
-        </Stack>
-      </Stack>
+      </Paper>
       {isFetching && <LinearProgress aria-label="Refreshing attendance" />}
       {academicContextChanged && (
         <Alert

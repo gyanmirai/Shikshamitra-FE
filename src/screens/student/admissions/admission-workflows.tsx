@@ -82,7 +82,7 @@ export default function AdmissionWorkflowsScreen() {
         onBack={() => actions.createCloseRef.current?.()}
         description="Design, validate, version, and publish the admission journey used by offerings."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Stage' },

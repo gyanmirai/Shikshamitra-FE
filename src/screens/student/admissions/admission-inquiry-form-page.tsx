@@ -107,7 +107,7 @@ export default function AdmissionInquiryFormPage() {
         isBack
         onBack={handleCancel}
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Inquiries', href: studentPaths.enrollment.inquiries },
           { name: 'New inquiry' },

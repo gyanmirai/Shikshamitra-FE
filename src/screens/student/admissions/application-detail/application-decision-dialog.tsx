@@ -7,6 +7,7 @@ import type {
 
 import dayjs from 'dayjs';
 import { DateTimePicker } from '@mui/x-date-pickers';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import { DialogScrollContent } from 'src/components/customDialog';
 import { Alert, Stack, TextField, Typography } from '@mui/material';
 
@@ -68,62 +69,70 @@ export function ApplicationDecisionDialog({
         />
       )}
     >
-      <DialogScrollContent onSubmit={() => formik.handleSubmit()}>
-        <Stack spacing={2}>
-          <ReviewRecoveryAlert
-            context="application"
-            error={recovery.error}
-            dirty={formik.dirty}
-            busy={isBusy}
-            onReload={reload}
-          />
-          <Alert severity={isDangerous ? 'warning' : 'info'}>
-            <Typography variant="body2">
-              This decision is recorded in the application history for{' '}
-              {formatAdmissionReference(current.applicationNumber)}.
-            </Typography>
-          </Alert>
-          {concurrencyUnavailable && (
-            <Alert severity="warning">
-              This decision is not available in the current application state. Reload after a failed
-              request to check the latest permissions and review requirements.
+      <DialogScrollContent>
+        <FormBusyRegion busy={isBusy} label="Recording admission decision…">
+          <Stack spacing={2}>
+            <ReviewRecoveryAlert
+              context="application"
+              error={recovery.error}
+              dirty={formik.dirty}
+              busy={isBusy}
+              onReload={reload}
+            />
+            <Alert severity={isDangerous ? 'warning' : 'info'}>
+              <Typography variant="body2">
+                This decision is recorded in the application history for{' '}
+                {formatAdmissionReference(current.applicationNumber)}.
+              </Typography>
             </Alert>
-          )}
-          {requiresExpiry && (
-            <DateTimePicker
-              label="Offer expires at"
-              format={ADMISSION_DATE_TIME_FORMAT}
-              value={formik.values.offerExpiresAt ? dayjs(formik.values.offerExpiresAt) : null}
-              minDateTime={dayjs()}
-              onChange={(value) =>
-                formik.setFieldValue('offerExpiresAt', value?.isValid() ? value.toISOString() : '')
-              }
-              slotProps={{
-                textField: {
-                  fullWidth: true,
-                  required: true,
-                  size: 'small',
-                  onBlur: () => formik.setFieldTouched('offerExpiresAt', true),
-                  error: Boolean(formik.touched.offerExpiresAt && formik.errors.offerExpiresAt),
-                  helperText: formik.touched.offerExpiresAt && formik.errors.offerExpiresAt,
-                },
-              }}
-            />
-          )}
-          {action !== 'accept' && (
-            <TextField
-              fullWidth
-              disabled={isBusy}
-              multiline
-              minRows={3}
-              size="small"
-              label={requiresReason ? 'Reason *' : 'Reason (optional)'}
-              {...formik.getFieldProps('reason')}
-              error={Boolean(formik.touched.reason && formik.errors.reason)}
-              helperText={formik.touched.reason && formik.errors.reason}
-            />
-          )}
-        </Stack>
+            {concurrencyUnavailable && (
+              <Alert severity="warning">
+                This decision is not available in the current application state. Reload after a
+                failed request to check the latest permissions and review requirements.
+              </Alert>
+            )}
+            {requiresExpiry && (
+              <DateTimePicker
+                label="Offer expires at *"
+                disabled={isBusy}
+                format={ADMISSION_DATE_TIME_FORMAT}
+                value={formik.values.offerExpiresAt ? dayjs(formik.values.offerExpiresAt) : null}
+                minDateTime={dayjs()}
+                onChange={(value) =>
+                  formik.setFieldValue(
+                    'offerExpiresAt',
+                    value?.isValid() ? value.toISOString() : ''
+                  )
+                }
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                    size: 'small',
+                    onBlur: () => formik.setFieldTouched('offerExpiresAt', true),
+                    error: Boolean(formik.touched.offerExpiresAt && formik.errors.offerExpiresAt),
+                    helperText:
+                      (formik.touched.offerExpiresAt && formik.errors.offerExpiresAt) ||
+                      'Enter date and time in your local timezone (DD-MM-YYYY hh:mm AM/PM).',
+                  },
+                }}
+              />
+            )}
+            {action !== 'accept' && (
+              <TextField
+                fullWidth
+                disabled={isBusy}
+                multiline
+                minRows={3}
+                size="small"
+                label={requiresReason ? 'Reason *' : 'Reason (optional)'}
+                {...formik.getFieldProps('reason')}
+                error={Boolean(formik.touched.reason && formik.errors.reason)}
+                helperText={formik.touched.reason && formik.errors.reason}
+              />
+            )}
+          </Stack>
+        </FormBusyRegion>
       </DialogScrollContent>
     </ReviewDialog>
   );

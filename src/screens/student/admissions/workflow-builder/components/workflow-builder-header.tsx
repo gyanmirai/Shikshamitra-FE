@@ -264,7 +264,7 @@ export function WorkflowBuilderHeader(props: WorkflowBuilderHeaderProps) {
         isBack
         onBack={onBack}
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Stage' },

@@ -60,7 +60,7 @@ export default function AdmissionApplicant360Screen() {
           isBack
           onBack={handleBack}
           links={[
-            { name: 'Students', href: studentPaths.dashboard },
+            { name: 'Student', href: studentPaths.dashboard },
             { name: 'Admissions', href: studentPaths.enrollment.root },
             { name: 'Inquiries', href: studentPaths.enrollment.inquiries },
             { name: 'Applicant 360' },

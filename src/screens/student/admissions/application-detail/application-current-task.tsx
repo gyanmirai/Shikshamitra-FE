@@ -105,7 +105,6 @@ export function ApplicationCurrentTask({
                 color="inherit"
                 loading={advancing}
                 startIcon={<Iconify icon="mdi:check-circle-outline" />}
-                sx={{ minHeight: 44 }}
                 onClick={onAdvance}
               >
                 {getStageActionLabel(stage)}
@@ -118,7 +117,6 @@ export function ApplicationCurrentTask({
                 color="inherit"
                 loading={retryingFormHandoff}
                 startIcon={<Iconify icon="mdi:arrow-right-circle-outline" />}
-                sx={{ minHeight: 44 }}
                 onClick={onRetryFormHandoff}
               >
                 Continue admission
@@ -131,7 +129,6 @@ export function ApplicationCurrentTask({
                 color="inherit"
                 href="#admission-decision"
                 startIcon={<Iconify icon="mdi:clipboard-check-outline" />}
-                sx={{ minHeight: 44 }}
               >
                 Review admission decision
               </Button>
@@ -142,7 +139,6 @@ export function ApplicationCurrentTask({
                 variant="outlined"
                 color="warning"
                 startIcon={<Iconify icon="mdi:skip-next-outline" />}
-                sx={{ minHeight: 44 }}
                 onClick={onSkip}
               >
                 Skip this step

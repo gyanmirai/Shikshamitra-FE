@@ -123,6 +123,9 @@ export default function StudentDuplicateReviews({
             {
               id: 'action',
               label: 'Action',
+              isSort: false,
+              isFilter: false,
+              align: 'right',
               sticky: true,
               stickyPosition: 'right',
               excludeFromExport: true,

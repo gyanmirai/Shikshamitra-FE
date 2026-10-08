@@ -27,7 +27,7 @@ const SettingSubjectForm: React.FC<ISubjectFormProps> = ({ onClose, editData }) 
         <FormSectionCard
           icon="mdi:book-open-page-variant-outline"
           title="Subject details"
-          description="Define how this subject is named, grouped, and identified across academics."
+          descriptionTooltip="Define how this subject is named, grouped, and identified across academics."
         >
           <Grid container spacing={1.5}>
             <SubjectIdentityFields formik={formik} />

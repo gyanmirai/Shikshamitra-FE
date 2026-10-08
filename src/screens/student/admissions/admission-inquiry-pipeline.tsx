@@ -138,7 +138,7 @@ export default function AdmissionInquiryPipelineScreen() {
           breadcrumbs: { display: { xs: 'none', md: 'flex' } },
         }}
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Pipeline' },
         ]}

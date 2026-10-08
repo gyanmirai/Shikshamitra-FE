@@ -45,7 +45,7 @@ export function CustomTabs({
       orientation={orientation}
       sx={{
         gap: { sm: 0 },
-        minHeight: 38,
+        minHeight: 44,
         flexShrink: 0,
         backgroundColor: theme.vars.palette.background.paper,
         alignItems: isVertical ? 'flex-start' : 'center',
@@ -90,7 +90,7 @@ export function CustomTabs({
           py: 1,
           px: 2,
           zIndex: 1,
-          minHeight: 'auto',
+          minHeight: 44,
           ...(isVertical && {
             width: 1,
             alignItems: 'flex-start',

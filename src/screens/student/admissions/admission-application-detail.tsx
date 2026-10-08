@@ -10,6 +10,7 @@ import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { studentPaths } from 'src/constants/student-menu';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 import { Box, Tab, Alert, Paper, Stack, Button, Skeleton, Typography } from '@mui/material';
 
@@ -58,8 +59,14 @@ export default function AdmissionApplicationDetailScreen() {
     dirty: false,
     busy: false,
   });
+  const workspaceBusy =
+    feeEditorState.busy ||
+    detail.updateState.isLoading ||
+    detail.submitState.isLoading ||
+    detail.advanceState.isLoading ||
+    detail.reopenState.isLoading;
   const requestTabChange = (value: DetailTab) => {
-    if (value === activeTab || feeEditorState.busy) return;
+    if (value === activeTab || workspaceBusy) return;
     if (feeEditorState.dirty) setRequestedTab(value);
     else setActiveTab(value);
   };
@@ -83,34 +90,36 @@ export default function AdmissionApplicationDetailScreen() {
   const renderRuntimeForm = () => {
     if (!application || !form) return null;
     return (
-      <ApplicationRuntimeForm
-        application={application}
-        form={form}
-        values={detail.currentValues}
-        errors={detail.errors}
-        fieldErrors={detail.fieldErrors}
-        saving={detail.updateState.isLoading}
-        submitting={detail.submitState.isLoading || detail.updateState.isLoading}
-        onChange={detail.setFieldValue}
-        onBlur={detail.setFieldTouched}
-        onValidateStep={detail.validateStep}
-        onSave={detail.save}
-        onSubmit={detail.submitApplication}
-        showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
-        canSubmitForm={detail.formStageQuery.currentData?.canSubmit ?? application.status === 0}
-        managedFormStage={Boolean(currentStage?.formStageEnabled)}
-        canReopen={detail.canReopen}
-        reopening={detail.reopenState.isLoading}
-        onReopen={detail.reopenApplication}
-        documents={
-          <ApplicationFormDocuments
-            applicationId={application.id}
-            stages={workflow?.stages ?? []}
-            unsaved={detail.hasUnsavedAnswers}
-            saving={detail.updateState.isLoading || detail.submitState.isLoading}
-          />
-        }
-      />
+      <FormBusyRegion busy={workspaceBusy} label="Saving application…">
+        <ApplicationRuntimeForm
+          application={application}
+          form={form}
+          values={detail.currentValues}
+          errors={detail.errors}
+          fieldErrors={detail.fieldErrors}
+          saving={detail.updateState.isLoading}
+          submitting={detail.submitState.isLoading || detail.updateState.isLoading}
+          onChange={detail.setFieldValue}
+          onBlur={detail.setFieldTouched}
+          onValidateStep={detail.validateStep}
+          onSave={detail.save}
+          onSubmit={detail.submitApplication}
+          showSaveDraft={detail.formStageQuery.currentData?.policy?.allowSaveAndResume ?? true}
+          canSubmitForm={detail.formStageQuery.currentData?.canSubmit ?? application.status === 0}
+          managedFormStage={Boolean(currentStage?.formStageEnabled)}
+          canReopen={detail.canReopen}
+          reopening={detail.reopenState.isLoading}
+          onReopen={detail.reopenApplication}
+          documents={
+            <ApplicationFormDocuments
+              applicationId={application.id}
+              stages={workflow?.stages ?? []}
+              unsaved={detail.hasUnsavedAnswers}
+              saving={detail.updateState.isLoading || detail.submitState.isLoading}
+            />
+          }
+        />
+      </FormBusyRegion>
     );
   };
 
@@ -122,7 +131,7 @@ export default function AdmissionApplicationDetailScreen() {
       workflow?.history.length || (detail.formHistoryQuery.data?.length ?? 0) > 0
     );
     const active = workflow?.status === 0 && Boolean(workflow.currentStageInstanceId);
-    const canLeaveFeeEditor = !feeEditorState.dirty && !feeEditorState.busy;
+    const canLeaveFeeEditor = !feeEditorState.dirty && !workspaceBusy;
     const canComplete = canCompleteStageFromProgress(
       currentStage,
       application.status,
@@ -206,7 +215,7 @@ export default function AdmissionApplicationDetailScreen() {
               id="application-tab-current"
               aria-controls="application-panel-current"
               value="current"
-              disabled={feeEditorState.busy}
+              disabled={workspaceBusy}
               label="Current step"
               icon={<Iconify icon="mdi:clipboard-check-outline" width={20} />}
               iconPosition="start"
@@ -215,7 +224,7 @@ export default function AdmissionApplicationDetailScreen() {
               id="application-tab-form"
               aria-controls="application-panel-form"
               value="form"
-              disabled={feeEditorState.busy}
+              disabled={workspaceBusy}
               label="Application form"
               icon={<Iconify icon="mdi:file-document-outline" width={20} />}
               iconPosition="start"
@@ -224,7 +233,7 @@ export default function AdmissionApplicationDetailScreen() {
               id="application-tab-history"
               aria-controls="application-panel-history"
               value="history"
-              disabled={feeEditorState.busy}
+              disabled={workspaceBusy}
               label="History"
               icon={<Iconify icon="mdi:history" width={20} />}
               iconPosition="start"
@@ -361,7 +370,7 @@ export default function AdmissionApplicationDetailScreen() {
               size="small"
               variant="outlined"
               startIcon={<Iconify icon="mdi:file-document-outline" />}
-              disabled={feeEditorState.busy}
+              disabled={workspaceBusy}
               onClick={() => requestTabChange('form')}
             >
               Review application form
@@ -378,7 +387,7 @@ export default function AdmissionApplicationDetailScreen() {
         open
         fullScreen
         hasForm={false}
-        disableClose={feeEditorState.busy}
+        disableClose={workspaceBusy}
         data-testid="admission-application-full-screen-dialog"
         title={
           <Box component="span" sx={{ display: 'block', minWidth: 0 }}>
@@ -498,20 +507,20 @@ export default function AdmissionApplicationDetailScreen() {
       <ConfirmDialog
         open={Boolean(requestedTab)}
         onClose={() => {
-          if (!feeEditorState.busy) setRequestedTab(undefined);
+          if (!workspaceBusy) setRequestedTab(undefined);
         }}
         title="Discard unsaved fee selection?"
         icon="warning"
         content="Changing sections will discard the unsaved fee selection. Your saved application information remains available."
-        disableCancel={feeEditorState.busy}
-        disableEscapeKeyDown={feeEditorState.busy}
-        disableBackdropClick={feeEditorState.busy}
+        disableCancel={workspaceBusy}
+        disableEscapeKeyDown={workspaceBusy}
+        disableBackdropClick={workspaceBusy}
         action={
           <Button
             size="small"
             variant="contained"
             color="error"
-            disabled={feeEditorState.busy}
+            disabled={workspaceBusy}
             onClick={() => {
               if (requestedTab) setActiveTab(requestedTab);
               setRequestedTab(undefined);

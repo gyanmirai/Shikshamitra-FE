@@ -44,7 +44,7 @@ export default function AdmissionOfferingsScreen() {
         heading="Admission Offering"
         description="Connect classes, admission periods, processes, and forms before accepting applications."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Offering' },

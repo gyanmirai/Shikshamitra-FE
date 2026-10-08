@@ -67,7 +67,7 @@ export function AdmissionInquiryManagementPage({
         isBack
         onBack={close}
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           {
             name: origin === 'pipeline' ? 'Pipeline' : 'Inquiries',

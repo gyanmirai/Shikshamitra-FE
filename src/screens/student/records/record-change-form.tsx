@@ -239,7 +239,7 @@ export default function RecordChangeForm({
         <FormSectionCard
           icon="mdi:account-edit-outline"
           title={correctsChangeId ? 'Correction request' : 'Change details'}
-          description="School rules decide whether this change applies directly or requires approval."
+          descriptionTooltip="School rules decide whether this change applies directly or requires approval."
         >
           <TextField
             label="Reason for change"

@@ -1,10 +1,9 @@
 import type { ReactNode } from 'react';
+import type { TypographyProps } from '@mui/material';
 
 import { Iconify } from 'src/components/iconify';
 import CustomTooltip from 'src/components/custom-tooltip';
-import { Box, Card, IconButton, Stack, Typography } from '@mui/material';
-
-import type { TypographyProps } from '@mui/material';
+import { Box, Card, Stack, IconButton, Typography } from '@mui/material';
 
 interface FormSectionCardProps {
   icon: string;
@@ -51,10 +50,12 @@ export function FormSectionCard({
               {descriptionTooltip && (
                 <CustomTooltip title={descriptionTooltip} arrow placement="right">
                   <IconButton
-                    aria-label={typeof title === 'string' ? `${title} information` : 'Section information'}
+                    aria-label={
+                      typeof title === 'string' ? `${title} information` : 'Section information'
+                    }
                     size="small"
                     color="info"
-                    sx={{ p: 0.25 }}
+                    sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
                   >
                     <Iconify icon="lucide:info" width={16} />
                   </IconButton>

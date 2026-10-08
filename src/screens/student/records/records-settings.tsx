@@ -10,13 +10,11 @@ import { useState } from 'react';
 import { useFormik } from 'formik';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
-import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -39,7 +37,8 @@ import {
 } from 'src/redux/student/records/student-records-api';
 
 import { recordsQueryUrl } from './records-url-state';
-import { settingsTasks, recordsPolicySchema } from './records-settings-model';
+import { recordsPolicySchema } from './records-settings-model';
+import RecordsSettingsWorkspace from './components/records-settings-workspace';
 import {
   AccessSettings,
   ChangesSettings,
@@ -53,112 +52,28 @@ const sectionPath = (task: RecordsSettingsTask) => studentPaths.records.settings
 const taskQuery = (scope: string, yearId?: string) =>
   scope === 'year' && yearId ? `?scope=year&year=${encodeURIComponent(yearId)}` : '';
 
-function SettingsHeader({ task }: { task?: RecordsSettingsTask }) {
-  const selected = settingsTasks.find((item) => item.key === task);
-  return (
-    <CustomBreadcrumbs
-      heading={selected?.title ?? 'Student Records Settings'}
-      description={
-        selected?.description ??
-        'Configure school rules for daily records, documents, and student transitions.'
-      }
-      links={[
-        { name: 'Students', href: studentPaths.dashboard },
-        { name: 'Student Records', href: studentPaths.records.root },
-        { name: 'Settings', ...(task ? { href: studentPaths.records.settingsWorkspace } : {}) },
-        ...(selected ? [{ name: selected.title }] : []),
-      ]}
-    />
-  );
-}
-
-function SettingsNavigator({ task, suffix = '' }: { task?: RecordsSettingsTask; suffix?: string }) {
-  return (
-    <Box
-      component="nav"
-      aria-label="Student Records settings tasks"
-      sx={{
-        display: 'grid',
-        gridTemplateColumns: {
-          xs: '1fr',
-          sm: 'repeat(2, minmax(0, 1fr))',
-          xl: 'repeat(4, minmax(0, 1fr))',
-        },
-        gap: 1.5,
-      }}
-    >
-      {settingsTasks.map((item) => (
-        <Paper
-          key={item.key}
-          component={RouterLink}
-          href={`${sectionPath(item.key)}${suffix}`}
-          aria-current={task === item.key ? 'page' : undefined}
-          variant="outlined"
-          sx={{
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: 1.5,
-            p: 2,
-            color: 'inherit',
-            textDecoration: 'none',
-            borderColor: task === item.key ? 'primary.main' : 'divider',
-            '&:hover': { borderColor: 'primary.main' },
-            '&:focus-visible': {
-              outline: (theme) => `3px solid ${theme.palette.primary.main}`,
-              outlineOffset: 2,
-            },
-          }}
-        >
-          <Iconify icon={item.icon} width={24} sx={{ color: 'primary.main', flexShrink: 0 }} />
-          <Stack spacing={0.5}>
-            <Typography variant="subtitle2">{item.title}</Typography>
-            <Typography variant="caption" color="text.secondary">
-              {item.description}
-            </Typography>
-          </Stack>
-        </Paper>
-      ))}
-    </Box>
-  );
-}
-
-export default function RecordsSettings({ task }: { task?: RecordsSettingsTask }) {
+export default function RecordsSettings({ task = 'changes' }: { task?: RecordsSettingsTask }) {
   const params = useSearchParams();
   const currentYear = useSelector((state: RootState) => state.globalState.currentYear);
   const scope = params.get('scope') === 'year' ? 'year' : 'school';
   const academicYearId = scope === 'year' ? (params.get('year') ?? currentYear?.id) : undefined;
   const query = useGetStudentRecordsSettingsQuery(academicYearId ? { academicYearId } : undefined, {
-    skip: !task || (scope === 'year' && !academicYearId),
+    skip: scope === 'year' && !academicYearId,
   });
-  if (!task)
-    return (
-      <Stack spacing={2}>
-        <SettingsHeader />
-        <SettingsNavigator />
-        <Alert severity="info">
-          School defaults apply across academic years. Open a task to save a draft, review its
-          effect, and publish it. Academic-year overrides are configured inside each task.
-        </Alert>
-      </Stack>
-    );
   if (scope === 'year' && !academicYearId)
     return (
-      <Stack spacing={2}>
-        <SettingsHeader task={task} />
-        <SettingsNavigator task={task} />
+      <RecordsSettingsWorkspace task={task}>
         <Alert severity="warning">
           Select an academic year in the school context before configuring an override.
         </Alert>
         <Button component={RouterLink} href={sectionPath(task)}>
           Open school defaults
         </Button>
-      </Stack>
+      </RecordsSettingsWorkspace>
     );
   if (!query.currentData)
     return (
-      <Stack spacing={2}>
-        <SettingsHeader task={task} />
-        <SettingsNavigator task={task} suffix={taskQuery(scope, academicYearId)} />
+      <RecordsSettingsWorkspace task={task} suffix={taskQuery(scope, academicYearId)}>
         {query.isError ? (
           <Alert
             severity="error"
@@ -176,7 +91,7 @@ export default function RecordsSettings({ task }: { task?: RecordsSettingsTask }
             <Skeleton variant="rounded" height={280} />
           </>
         )}
-      </Stack>
+      </RecordsSettingsWorkspace>
     );
   return (
     <RecordsSettingsEditor
@@ -321,12 +236,10 @@ function RecordsSettingsEditor({
     rolesUnavailable: roleQuery.isLoading || roleQuery.isError,
   };
   return (
-    <Stack spacing={2} sx={{ minWidth: 0 }}>
-      <SettingsHeader task={task} />
-      <SettingsNavigator
-        task={task}
-        suffix={taskQuery(academicYearId ? 'year' : 'school', academicYearId)}
-      />
+    <RecordsSettingsWorkspace
+      task={task}
+      suffix={taskQuery(academicYearId ? 'year' : 'school', academicYearId)}
+    >
       <Paper variant="outlined" sx={{ p: 2 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }}>
           <CustomSelect
@@ -482,6 +395,6 @@ function RecordsSettingsEditor({
           </Button>
         </DialogActions>
       </CustomDialog>
-    </Stack>
+    </RecordsSettingsWorkspace>
   );
 }
