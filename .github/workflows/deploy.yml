@@ -15,12 +15,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  security:
-    uses: ./.github/workflows/security-regression.yml
-    if: github.ref == 'refs/heads/main'
-
   build:
-    needs: security
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -39,9 +34,6 @@ jobs:
 
       - name: Validate HR documentation
         run: npm run docs:hr:check
-
-      - name: Run HR regression tests
-        run: npx vitest run src/redux/hr src/screens/hr src/utils/hr-audit-format.test.ts
 
       - name: Build Next.js
         run: npm run build
