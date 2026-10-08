@@ -1,4 +1,9 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { hostTenantPermissions } from 'src/constants/host-tenant-menu';
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+
+import { isHostSessionContext } from '../host-tenants/session-context';
+
+import type { HostSessionContext } from '../host-tenants/types';
 
 interface AuthState {
   user: any | null;
@@ -8,6 +13,8 @@ interface AuthState {
   employee: any;
   permissions: { name: string; isGranted: boolean }[];
   mainModuleVisibility: boolean[];
+  sessionContext: HostSessionContext | null;
+  currentRequestId: string | null;
 }
 export function extractGrantedPermissions(groups: any): { name: string; isGranted: boolean }[] {
   if (!Array.isArray(groups)) return [];
@@ -58,15 +65,45 @@ export const loadUser = createAsyncThunk(
         return rejectWithValue({ status: 401, message: 'The authentication session is invalid.' });
       }
 
+      const headers = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      };
+      const contextResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/host/session-context`,
+        { headers }
+      );
+
+      if (!contextResponse.ok)
+        return rejectWithValue({
+          status: contextResponse.status,
+          message: 'Unable to verify the account context.',
+        });
+      const sessionContext: unknown = await contextResponse.json();
+      if (!isHostSessionContext(sessionContext))
+        return rejectWithValue({ status: 401, message: 'Invalid account context.' });
+
+      if (sessionContext.accountMode === 'host') {
+        const permissionData = [
+          { name: hostTenantPermissions.view, isGranted: sessionContext.canViewTenants },
+          { name: hostTenantPermissions.create, isGranted: sessionContext.canCreateTenants },
+          { name: hostTenantPermissions.update, isGranted: sessionContext.canUpdateTenants },
+          {
+            name: hostTenantPermissions.manageStatus,
+            isGranted: sessionContext.canManageTenantStatus,
+          },
+        ];
+        return {
+          user: userSession.profile,
+          mainModuleVisibility: buildModuleVisibility(permissionData),
+          permissionData,
+          sessionContext,
+        };
+      }
+
       const permissionResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/permission-management/permissions?providerName=U&providerKey=${encodeURIComponent(userId)}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }
+        { method: 'GET', headers }
       );
 
       if (!permissionResponse.ok) {
@@ -83,6 +120,7 @@ export const loadUser = createAsyncThunk(
         user: userSession.profile,
         mainModuleVisibility: buildModuleVisibility(permissionData),
         permissionData,
+        sessionContext,
       };
     } catch (error) {
       return rejectWithValue({ status: 'FETCH_ERROR', message: String(error) });
@@ -127,6 +165,8 @@ const initialState: AuthState = {
   employee: null,
   permissions: [],
   mainModuleVisibility: [],
+  sessionContext: null,
+  currentRequestId: null,
 };
 
 const authSlice = createSlice({
@@ -145,6 +185,8 @@ const authSlice = createSlice({
       state.permissions = [];
       state.mainModuleVisibility = [];
       state.permissionsInitialized = false;
+      state.sessionContext = null;
+      state.currentRequestId = null;
     },
     setMainModuleVisibility: (state, action: PayloadAction<boolean[]>) => {
       state.mainModuleVisibility = action.payload;
@@ -156,18 +198,24 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(loadUser.pending, (state) => {
+      .addCase(loadUser.pending, (state, action) => {
         state.loading = true;
+        state.currentRequestId = action.meta.requestId;
       })
       .addCase(loadUser.fulfilled, (state, action) => {
+        if (state.currentRequestId !== action.meta.requestId) return;
+        state.currentRequestId = null;
         state.user = action.payload.user;
         state.isAuthenticated = !!action.payload.user;
         state.mainModuleVisibility = action.payload.mainModuleVisibility;
         state.permissions = action.payload.permissionData;
         state.loading = false;
         state.permissionsInitialized = true;
+        state.sessionContext = action.payload.sessionContext;
       })
-      .addCase(loadUser.rejected, (state) => {
+      .addCase(loadUser.rejected, (state, action) => {
+        if (state.currentRequestId !== action.meta.requestId) return;
+        state.currentRequestId = null;
         state.user = null;
         state.isAuthenticated = false;
         state.employee = null;
@@ -175,15 +223,18 @@ const authSlice = createSlice({
         state.mainModuleVisibility = [];
         state.loading = false;
         state.permissionsInitialized = true;
+        state.sessionContext = null;
       })
       .addCase(getEmployee.pending, (state) => {
         // state.loading = true;
       })
       .addCase(getEmployee.fulfilled, (state, action) => {
+        if (action.meta.arg?.profile?.sub !== state.user?.sub) return;
         state.employee = action.payload;
         // state.loading = false;
       })
-      .addCase(getEmployee.rejected, (state) => {
+      .addCase(getEmployee.rejected, (state, action) => {
+        if (action.meta.arg?.profile?.sub !== state.user?.sub) return;
         state.employee = null;
         // state.error = action.payload;
         // state.loading = false;

@@ -1,11 +1,13 @@
 'use client';
 
 import type React from 'react';
+import type { RootState } from 'src/redux/store';
 
 import { useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useRouter, usePathname } from 'next/navigation';
+import { hostTenantPath } from 'src/constants/host-tenant-menu';
 
 import { SplashScreen } from '../loading-screen';
 
@@ -19,8 +21,8 @@ import { SplashScreen } from '../loading-screen';
 const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
   // Get authentication state from Redux store
 
-  const { loading, isAuthenticated, permissionsInitialized } = useSelector(
-    (state: any) => state.auth
+  const { loading, isAuthenticated, permissionsInitialized, sessionContext, user } = useSelector(
+    (state: RootState) => state.auth
   );
 
   const session: any = useSession();
@@ -28,6 +30,23 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
 
   // Initialize Next.js router for navigation
   const router = useRouter();
+  const pathname = usePathname();
+  const verifiedIdentity =
+    isAuthenticated &&
+    permissionsInitialized &&
+    Boolean(sessionContext) &&
+    user?.sub === sessionData?.profile?.sub &&
+    Boolean(sessionData?.accessToken) &&
+    !sessionData?.error;
+  const wrongWorkspace =
+    sessionContext?.accountMode === 'host'
+      ? pathname.replace(/\/+$/, '') !== hostTenantPath
+      : sessionContext?.accountMode === 'tenant' && pathname.startsWith('/host/');
+
+  useEffect(() => {
+    if (verifiedIdentity && wrongWorkspace)
+      router.replace(sessionContext?.accountMode === 'host' ? hostTenantPath : '/dashboard');
+  }, [verifiedIdentity, wrongWorkspace, router, sessionContext?.accountMode]);
 
   useEffect(() => {
     const hasUsableSession =
@@ -40,11 +59,18 @@ const AuthRouteLayout = ({ children }: { children: React.ReactNode }) => {
 
   const hasUsableSession = sessionData?.profile && sessionData?.accessToken && !sessionData?.error;
 
-  if (status === 'loading' || (hasUsableSession && (loading || !permissionsInitialized))) {
+  if (
+    status === 'loading' ||
+    (hasUsableSession &&
+      (loading ||
+        !permissionsInitialized ||
+        user?.sub !== sessionData?.profile?.sub ||
+        wrongWorkspace))
+  ) {
     return <SplashScreen />;
   }
 
-  if (hasUsableSession && isAuthenticated) {
+  if (hasUsableSession && isAuthenticated && sessionContext) {
     return children;
   }
 

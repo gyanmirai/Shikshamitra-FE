@@ -30,7 +30,7 @@ export async function refreshAccessToken(
   token: AuthToken,
   fetchToken: typeof fetch = fetch
 ): Promise<AuthToken> {
-  const refreshToken = token.refreshToken;
+  const { refreshToken } = token;
   if (!refreshToken) {
     return failedRefresh(token);
   }
@@ -57,7 +57,9 @@ async function requestRefreshedAccessToken(
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        __tenant: token.user?.organizationName ?? '',
+        ...(token.user?.organizationName?.trim()
+          ? { __tenant: token.user.organizationName.trim() }
+          : {}),
       },
       body,
     });

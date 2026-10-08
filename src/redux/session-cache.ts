@@ -13,6 +13,7 @@ const TOKEN_REFRESH_BUFFER_MS = 60_000;
 let cachedSession: AuthSession | null | undefined;
 let cacheExpiresAt = 0;
 let pendingSession: Promise<AuthSession | null> | null = null;
+let cacheRevision = 0;
 
 const getTokenExpiresAt = (session: AuthSession | null) => {
   const exp = Number(session?.profile?.exp);
@@ -41,6 +42,7 @@ const getCacheExpiresAt = (session: AuthSession | null) => {
 };
 
 export const clearCachedAuthSession = () => {
+  cacheRevision += 1;
   cachedSession = undefined;
   cacheExpiresAt = 0;
   pendingSession = null;
@@ -57,18 +59,20 @@ export const getCachedAuthSession = async () => {
     return pendingSession;
   }
 
+  const revision = cacheRevision;
   pendingSession = getSession()
     .then((session) => {
+      if (revision !== cacheRevision) return null;
       cachedSession = session as AuthSession | null;
       cacheExpiresAt = getCacheExpiresAt(cachedSession);
       return cachedSession;
     })
     .catch((error) => {
-      clearCachedAuthSession();
+      if (revision === cacheRevision) clearCachedAuthSession();
       throw error;
     })
     .finally(() => {
-      pendingSession = null;
+      if (revision === cacheRevision) pendingSession = null;
     });
 
   return pendingSession;
