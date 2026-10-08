@@ -3,46 +3,46 @@ module: student
 domain: routes
 content_type: Reference
 status: canonical
-updated_on: 2026-10-08
+updated_on: 2026-09-21
 owner: frontend-team
 audience: humans-and-agents
 ---
 
 # Find Student Admissions routes
 
-TL;DR: use this page to map the implemented Admissions and Student Onboarding routes to their screens and visible Student menu entries.
+TL;DR: use this page to map the implemented Admissions and Onboarding routes to their screens and visible Student menu entries.
 
 ## Admissions route map
 
-| Area                                        | Route                                             | Screen                                                            | Frontend permission                                                    |
-| ------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Admissions → Settings → Admission Periods   | `/student/admissions/settings/cycles`             | `src/screens/student/admissions/admission-cycles.tsx`             | `Students.Admissions.View`; commands use only `Add` or `Delete`        |
-| Admissions → Settings → Admission Form      | `/student/admissions/settings/forms`              | `src/screens/student/admissions/admission-forms.tsx`              | `Students.Admissions.Forms`; Inquiry and Registration forms only       |
-| Admissions → Settings → Admission Stage     | `/student/admissions/settings/workflows`          | `src/screens/student/admissions/admission-workflows.tsx`          | `Students.Admissions.Workflows`                                        |
-| Workflow definition builder                 | `/student/admissions/settings/workflows/[id]`     | `src/screens/student/admissions/admission-workflow-builder.tsx`   | granular Workflow View, Edit, Validate, and Publish permissions        |
-| Form preview                                | `/student/admissions/settings/forms/[id]/preview` | `src/screens/student/admissions/admission-form-preview.tsx`       | inherited from Forms                                                   |
-| Admissions → Settings → Intake & Assignment | `/student/admissions/settings/intake-assignment`  | `src/screens/student/admissions/admission-intake-assignment.tsx`  | `Students.Admissions.Offerings.View`                                   |
-| Admissions → Settings → Admission Offering  | `/student/admissions/settings/offerings`          | `src/screens/student/admissions/admission-offerings.tsx`          | `View`; additive commands use `Add`, destructive commands use `Delete` |
-| Admissions → Inquiries                      | `/student/admissions/inquiries`                   | `src/screens/student/admissions/admission-inquiries.tsx`          | `Students.Admissions.Inquiries`                                        |
-| Admissions → Pipeline                       | `/student/admissions/pipeline`                    | `src/screens/student/admissions/admission-inquiry-pipeline.tsx`   | `Students.Admissions.Applications.View`                                        |
-| Admissions → Applicant 360                  | `/student/admissions/applicants/[id]`             | `src/screens/student/admissions/admission-applicant-360.tsx`      | inherited from Admissions                                              |
-| Admissions → Assessments                    | `/student/admissions/assessments`                 | `src/screens/student/admissions/admission-assessments.tsx`        | `Students.Admissions.Assessments.View`                                 |
-| Admissions → Applications                   | `/student/admissions/applications`                | `src/screens/student/admissions/admission-applications.tsx`       | `Students.Admissions.Applications`                                     |
-| Admissions → Application detail             | `/student/admissions/applications/[id]`           | `src/screens/student/admissions/admission-application-detail.tsx` | inherited from Applications                                            |
+| Area                                                 | Route                                             | Screen                                                            | Frontend permission                                                    |
+| ---------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| Admissions → Settings → Admission Periods            | `/student/admissions/settings/cycles`             | `src/screens/student/admissions/admission-cycles.tsx`             | `Students.Admissions.View`; commands use only `Add` or `Delete`        |
+| Admissions → Settings → Admission Form                | `/student/admissions/settings/forms`              | `src/screens/student/admissions/admission-forms.tsx`              | `Students.Admissions.Forms`; Inquiry and Registration forms only |
+| Admissions → Settings → Admission Stage               | `/student/admissions/settings/workflows`          | `src/screens/student/admissions/admission-workflows.tsx`          | `Students.Admissions.Workflows`                                        |
+| Workflow definition builder                          | `/student/admissions/settings/workflows/[id]`     | `src/screens/student/admissions/admission-workflow-builder.tsx`   | granular Workflow View, Edit, Validate, and Publish permissions        |
+| Form preview                                         | `/student/admissions/settings/forms/[id]/preview` | `src/screens/student/admissions/admission-form-preview.tsx`       | inherited from Forms                                                   |
+| Admissions → Settings → Intake & Assignment           | `/student/admissions/settings/intake-assignment`  | `src/screens/student/admissions/admission-intake-assignment.tsx`  | `Students.Admissions.Offerings.View`                             |
+| Admissions → Settings → Admission Offering            | `/student/admissions/settings/offerings`          | `src/screens/student/admissions/admission-offerings.tsx`          | `View`; additive commands use `Add`, destructive commands use `Delete` |
+| Admissions → Inquiries                               | `/student/admissions/inquiries`                   | `src/screens/student/admissions/admission-inquiries.tsx`          | `Students.Admissions.Inquiries`                                        |
+| Admissions → Pipeline                                | `/student/admissions/pipeline`                    | `src/screens/student/admissions/admission-inquiry-pipeline.tsx`   | `Students.Admissions.Inquiries`                                        |
+| Admissions → Applicant 360                           | `/student/admissions/applicants/[id]`             | `src/screens/student/admissions/admission-applicant-360.tsx`      | inherited from Admissions                                              |
+| Admissions → Assessments                             | `/student/admissions/assessments`                 | `src/screens/student/admissions/admission-assessments.tsx`        | `Students.Admissions.Assessments.View`                                 |
+| Admissions → Applications                            | `/student/admissions/applications`                | `src/screens/student/admissions/admission-applications.tsx`       | `Students.Admissions.Applications`                                     |
+| Admissions → Application detail                      | `/student/admissions/applications/[id]`           | `src/screens/student/admissions/admission-application-detail.tsx` | inherited from Applications                                            |
 
-## Student Onboarding route map
+## Onboarding route map
 
-| Area                                 | Route                                               | Screen                                                                  | Frontend permission                            |
-| ------------------------------------ | --------------------------------------------------- | ----------------------------------------------------------------------- | ---------------------------------------------- |
-| Student Onboarding → Student Setup   | `/student/onboarding/setup`                         | `src/screens/student/onboarding/student-setup/index.tsx`                | `Students.Onboarding.View`; commands use `Add` |
-| Student Onboarding → Readiness       | `/student/onboarding/setup/readiness`               | Student Setup task view                                                 | `Students.Onboarding.View`                     |
-| Student Onboarding → GR Number       | `/student/onboarding/setup/gr-number`               | Student Setup task view                                                 | `Students.Onboarding.View`                     |
-| Student Onboarding → Roll Number     | `/student/onboarding/setup/roll-number`             | Student Setup task view                                                 | `Students.Onboarding.View`                     |
-| Student Onboarding → Division        | `/student/onboarding/setup/division`                | Student Setup task view                                                 | `Students.Onboarding.View`                     |
-| Student Onboarding → Settings        | `/student/onboarding/settings`                      | `src/screens/student/onboarding/setting/onboarding-settings-page.tsx`   | `Students.Onboarding.Add`                      |
-| Legacy Operational Policies redirect | `/student/onboarding/settings/operational-policies` | Redirects to Readiness & Access                                         | `Students.Onboarding.Add`                      |
-| Settings → Readiness & Access        | `/student/onboarding/settings/readiness-access`     | `src/screens/student/onboarding/setting/onboarding-policy-settings.tsx` | `Students.Onboarding.Add`                      |
-| Settings → Numbering & Placement     | `/student/onboarding/settings/numbering-placement`  | `src/screens/student/onboarding/setting/onboarding-number-settings.tsx` | `Students.Onboarding.Add`                      |
+| Area                                              | Route                                                      | Screen                                                                         | Frontend permission                                    |
+| ------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------ |
+| Onboarding → Student Setup                        | `/student/onboarding/setup`                                | `src/screens/student/onboarding/student-setup/index.tsx`                       | `Students.Onboarding.View`; commands use `Add`         |
+| Onboarding → Readiness                            | `/student/onboarding/setup/readiness`                      | Student Setup task view                                                        | `Students.Onboarding.View`                             |
+| Onboarding → GR Number                            | `/student/onboarding/setup/gr-number`                      | Student Setup task view                                                        | `Students.Onboarding.View`                             |
+| Onboarding → Roll Number                          | `/student/onboarding/setup/roll-number`                    | Student Setup task view                                                        | `Students.Onboarding.View`                             |
+| Onboarding → Division                             | `/student/onboarding/setup/division`                       | Student Setup task view                                                        | `Students.Onboarding.View`                             |
+| Onboarding → Settings                             | `/student/onboarding/settings`                             | `src/screens/student/onboarding/setting/onboarding-settings-page.tsx`          | `Students.Onboarding.Add`                              |
+| Legacy Operational Policies redirect              | `/student/onboarding/settings/operational-policies`        | Redirects to Readiness & Access                                              | `Students.Onboarding.Add`                              |
+| Settings → Readiness & Access                     | `/student/onboarding/settings/readiness-access`            | `src/screens/student/onboarding/setting/onboarding-policy-settings.tsx`        | `Students.Onboarding.Add`                              |
+| Settings → Numbering & Placement                  | `/student/onboarding/settings/numbering-placement`         | `src/screens/student/onboarding/setting/onboarding-number-settings.tsx`        | `Students.Onboarding.Add`                              |
 
 Student Setup reads the durable onboarding worklist. Placement, identifiers, readiness refresh, ownership, activation, cancellation, documents and supported handoff rechecks use live commands. Cancellation additionally requires `Students.Onboarding.Delete`. Readiness & Access and Numbering & Placement persist scoped rules through `/api/student/onboarding/settings/configurations`; the selected header year opens its override or inherited school rules. Saved Defaults and Saved GR & Seat Settings are removed. The case drawer reuses the unchanged Finance assignment drawer, links to the standard Finance collections page, and offers permission-gated student/guardian account creation. Finance does not preselect the onboarding student; staff must select the year and confirm the student there. Backend services remain authoritative for all state changes.
 
@@ -51,16 +51,13 @@ Student Setup reads the durable onboarding worklist. Placement, identifiers, rea
 The Assessment workspace is available at `/student/admissions/assessments`, owned by `src/screens/student/admissions/admission-assessments.tsx` and guarded by `Students.Admissions.Assessments.View`.
 It appears directly under Admissions as Assessments.
 The corresponding App Router entry is `src/app/(auth-route)/student/admissions/assessments/page.tsx`.
-Sessions and Applicants are URL-backed workspace tabs. Scope, applicant queue, session, search, sorting and pagination remain shareable without replacing unrelated academic filters. Assessment View opens the workbench; Add controls session and normal applicant actions, Delete controls waiver, and Continue additionally requires Applications View and Advance. Backend capabilities, authorization and offering scope remain authoritative.
+Session and applicant assessment actions use granular assessment permissions; backend authorization and offering scope remain authoritative.
 
 The application-review workspace remains available at `/student/admissions/reviews`, owned by `src/screens/student/admissions/admission-reviews.tsx`, with the App Router entry `src/app/(auth-route)/student/admissions/reviews/page.tsx`. It is intentionally not a separate sidebar item. `Students.Admissions.Reviews.View` remains exposed in the permission editor as **Application Reviews** under Applications, and the existing deep link and embedded review actions remain protected. Assigned-to-me and overdue filters use server pagination; rows open the existing application detail route.
 
 The Admissions menu and route constants are defined in `src/constants/student-menu.ts`.
 The Admissions menu exposes Inquiries, Pipeline, Assessments, Applications, and Settings. Settings follows the school setup order: Admission Periods, Admission Form, Admission Stage, Intake & Assignment, and Admission Offering. There are no numbered labels, and the Admissions root redirects to Inquiries.
-Pipeline uses Applications View for both its menu and route guard.
-It lists active inquiry-linked applications and opens the existing current-step detail workspace.
-The `returnTo` query accepts only the Pipeline route and preserves its search, filters, sort and page when closing the application.
-Applications retains completed, closed and historical records through its existing independent list and route.
+Pipeline keeps its existing name and Inquiry View access. It lists inquiries already handed to linked applications and opens the existing application detail route when the user has Applications View. Applications retains its existing independent list and route.
 The Inquiry list stores its search, filters, and selected `inquiryId` in query parameters. Applicant 360 also accepts `inquiryId` when opened from the management drawer so application start uses the exact inquiry selected by the counselor.
 Applicant 360 is the applicant-level admissions workspace: it explains the family context, surfaces missing identity data, shows the current application stage, exposes the next action, and keeps applications, inquiry activity, and internal notes together.
 
@@ -89,8 +86,3 @@ The existing `/student/profile?student={id}` entry resolves the protected record
 
 Do not describe an Admissions page as visible navigation unless its route and permission are present in `src/constants/student-menu.ts`.
 The Applicant 360 and application detail pages are deep-linked detail surfaces and should be reached from the corresponding Applicant or Application list.
-## Student dashboard route
-
-`/student/dashboard` renders `src/screens/student/dashboard/index.tsx` for all permitted users. The route requires `Students.Dashboard.View`. Links require both the exact destination action grant and its submodule visibility grant; server context determines available sections. The admin/teacher/principal sample-dashboard folders are inactive and are not routed here.
-
-Directory metric links preserve supported `population=Active` or `population=Former`; class strength adds `class={standardId}`. Personal inquiry links use the supported `owner=__mine__` filter. Setup and application links open their owning worklists; they do not imply an unsupported status or owner URL filter.

@@ -2,6 +2,7 @@
 
 import type { StudentOnboardingServiceHandoffStatus } from 'src/redux/student/onboarding/student-onboarding-types';
 
+import { LoadingButton } from '@mui/lab';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useMemo, useState, useEffect } from 'react';
@@ -14,9 +15,13 @@ import {
   Stack,
   Button,
   MenuItem,
+  Skeleton,
+  Accordion,
   TextField,
   Typography,
   DialogActions,
+  AccordionDetails,
+  AccordionSummary,
 } from '@mui/material';
 import {
   useCancelStudentOnboardingMutation,
@@ -27,6 +32,7 @@ import {
   useConfirmStudentOnboardingServiceConsentMutation,
 } from 'src/redux/student/onboarding/student-onboarding-api';
 
+import { StudentSetupLoadingRows } from './student-setup-loading';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import { isAcademicApplicabilityMatch } from '../onboarding-settings-model';
 import { type StudentOnboardingItem, getStudentAcademicPathContext } from './student-onboarding-model';
@@ -167,6 +173,13 @@ export default function StudentOnboardingCaseOperations({
 
   return (
     <Stack spacing={1.5}>
+      {!isClosed && (canManage || canCancel) && (
+        <Accordion variant="outlined" disableGutters sx={{ order: 2, boxShadow: 'none' }}>
+          <AccordionSummary expandIcon={<Iconify icon="mdi:chevron-down" width={20} />}>
+            <Typography variant="subtitle2">Case Settings</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Stack spacing={1.5}>
       <Stack direction={{ xs: 'column', sm: 'row' }} gap={1}>
         <CustomSelect label="Admission route" size="small" value={route}
           options={routeOptions}
@@ -190,11 +203,6 @@ export default function StudentOnboardingCaseOperations({
           value={ownerId}
           onChange={(event) => setOwnerId(event.target.value)}
           disabled={!canManage || isClosed || usersQuery.isFetching}
-          helperText={
-            isClosed
-              ? 'Closed cases retain their final owner for audit.'
-              : 'Assign one staff member who is accountable for resolving blockers.'
-          }
         >
           <MenuItem value="">Unassigned</MenuItem>
           {users.map((user) => {
@@ -206,8 +214,9 @@ export default function StudentOnboardingCaseOperations({
             );
           })}
         </TextField>
-        <Button
+        <LoadingButton
           variant="outlined"
+          size="small"
           startIcon={<Iconify icon="mdi:account-check-outline" width={18} />}
           disabled={
             !canManage ||
@@ -215,11 +224,11 @@ export default function StudentOnboardingCaseOperations({
             assignOwnerState.isLoading ||
             ownerId === (student.assignedToUserId ?? '')
           }
+          loading={assignOwnerState.isLoading}
           onClick={saveOwner}
-          sx={{ minWidth: 130, minHeight: 40 }}
         >
-          {assignOwnerState.isLoading ? 'Saving...' : 'Save owner'}
-        </Button>
+          Save owner
+        </LoadingButton>
       </Stack>
 
       {usersQuery.isError ? (
@@ -228,21 +237,36 @@ export default function StudentOnboardingCaseOperations({
         </Alert>
       ) : null}
 
-      <Stack direction="row" justifyContent="flex-end">
-        <Button
-          color="error"
-          variant="outlined"
-          startIcon={<Iconify icon="mdi:cancel" width={18} />}
-          disabled={!canCancel || isClosed}
-          onClick={() => setCancelOpen(true)}
-        >
-          Cancel onboarding
-        </Button>
-      </Stack>
+      {canCancel && !isClosed && (
+        <Stack direction="row" justifyContent="flex-end">
+          <Button
+            color="error"
+            variant="outlined"
+            size="small"
+            startIcon={<Iconify icon="mdi:cancel" width={18} />}
+            onClick={() => setCancelOpen(true)}
+          >
+            Cancel onboarding
+          </Button>
+        </Stack>
+      )}
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+      )}
 
-      {handoffsQuery.data?.length ? (
-        <Stack spacing={1}>
-          <Typography variant="subtitle2">Service handoffs</Typography>
+      {handoffsQuery.isError && !handoffsQuery.data ? (
+        <Alert severity="error" sx={{ order: 1 }} action={
+          <Button size="small" onClick={() => handoffsQuery.refetch()}>Retry</Button>
+        }>Service handoffs could not be loaded.</Alert>
+      ) : handoffsQuery.isFetching && !handoffsQuery.data ? (
+        <Stack spacing={1} sx={{ order: 1 }}>
+          <Skeleton variant="text" width={150} height={24} />
+          <StudentSetupLoadingRows label="Loading service handoffs" />
+        </Stack>
+      ) : handoffsQuery.data?.length ? (
+        <Stack spacing={1} sx={{ order: 1 }}>
+          <Typography variant="subtitle2">Service Handoffs</Typography>
           {handoffsQuery.data.map((handoff) => {
             const meta = handoffStatusMeta[handoff.status];
             return (
@@ -252,16 +276,23 @@ export default function StudentOnboardingCaseOperations({
                 justifyContent="space-between"
                 alignItems={{ sm: 'center' }}
                 spacing={1}
-                sx={{ p: 1.25, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}
+                sx={{
+                  py: 1.25,
+                  borderBottom: '1px solid',
+                  borderColor: 'divider',
+                  '&:last-child': { borderBottom: 0 },
+                }}
               >
                 <Stack spacing={0.25} sx={{ minWidth: 0 }}>
                   <Typography variant="body2" fontWeight={600}>
                     {handoffLabels[handoff.serviceKey] ?? handoff.serviceKey.replaceAll('-', ' ')}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {handoff.lastError ||
-                      `${handoff.attemptCount} dispatch attempt${handoff.attemptCount === 1 ? '' : 's'}`}
-                  </Typography>
+                  {(handoff.lastError || handoff.attemptCount > 0) && (
+                    <Typography variant="caption" color="text.secondary">
+                      {handoff.lastError ||
+                        `${handoff.attemptCount} dispatch attempt${handoff.attemptCount === 1 ? '' : 's'}`}
+                    </Typography>
+                  )}
                 </Stack>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Label color={meta.color}>{meta.label}</Label>
@@ -275,6 +306,7 @@ export default function StudentOnboardingCaseOperations({
                     <Button
                       size="small"
                       variant="outlined"
+                      startIcon={<Iconify icon="mdi:refresh" width={18} />}
                       disabled={retryState.isLoading}
                       onClick={async () => {
                         try {
@@ -300,19 +332,17 @@ export default function StudentOnboardingCaseOperations({
       <CustomDialog
         open={consentOpen}
         handleClose={() => { if (!consentState.isLoading) setConsentOpen(false); }}
-        title="Confirm service consent"
+        title="Confirm Service Consent"
         maxWidth="sm"
       >
         <DialogScrollContent dividers>
           <Stack spacing={1.5}>
-            <Alert severity="info" variant="outlined">
-              Confirm only after the required consent has been saved in the school’s records.
-              This action records your confirmation; it does not collect consent from the family.
-            </Alert>
+            <Typography variant="body2" color="text.secondary">
+              Use an existing consent record. This does not collect consent.
+            </Typography>
             <TextField fullWidth required size="small" label="Consent record reference"
               value={consentReference} onChange={(event) => setConsentReference(event.target.value)}
-              disabled={consentState.isLoading} inputProps={{ maxLength: 200 }}
-              helperText="Enter the signed form ID or saved file reference, without personal details." />
+              disabled={consentState.isLoading} inputProps={{ maxLength: 200 }} />
           </Stack>
         </DialogScrollContent>
         <DialogActions sx={{ px: 2, pb: 2 }}>
@@ -329,14 +359,13 @@ export default function StudentOnboardingCaseOperations({
       <CustomDialog
         open={cancelOpen}
         handleClose={() => setCancelOpen(false)}
-        title="Cancel onboarding?"
+        title="Cancel Onboarding"
         maxWidth="sm"
       >
         <DialogScrollContent dividers>
           <Stack spacing={1.5}>
             <Alert severity="warning" variant="outlined">
-              Cancelling releases the reserved seat and identifier. The case remains available for
-              audit but cannot be activated.
+              Cancelling releases the reserved seat and identifier. The case cannot be activated.
             </Alert>
             <TextField
               fullWidth
@@ -347,7 +376,6 @@ export default function StudentOnboardingCaseOperations({
               value={cancellationReason}
               onChange={(event) => setCancellationReason(event.target.value)}
               inputProps={{ maxLength: 1000 }}
-              helperText="Required and recorded in the onboarding audit history."
             />
           </Stack>
         </DialogScrollContent>

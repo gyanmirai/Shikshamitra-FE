@@ -1,3 +1,6 @@
+import type { ComponentProps } from 'react';
+
+import { Tabs } from '@mui/material';
 import { it, vi, expect, describe } from 'vitest';
 import { act, render, screen, waitFor, fireEvent } from '@testing-library/react';
 
@@ -19,6 +22,11 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock('src/components/iconify', () => ({
   Iconify: ({ icon }: { icon: string }) => <span data-icon={icon} />,
+}));
+vi.mock('src/components/custom-tabs', () => ({
+  CustomTabs: ({ children, guardUnsavedChanges, ...props }: ComponentProps<typeof Tabs> & {
+    guardUnsavedChanges?: boolean;
+  }) => <Tabs {...props}>{children}</Tabs>,
 }));
 vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
@@ -61,21 +69,32 @@ describe('Student Setup drawer readiness UI', () => {
     );
 
     expect(screen.getByRole('heading', { name: student.studentName })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Admission handoff' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Placement' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Identifiers' })).toBeInTheDocument();
+    expect(screen.queryByRole('tab', { name: 'Tasks' })).not.toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Details' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('button', { name: 'Student onboarding case information' }))
+      .toBeInTheDocument();
+    expect(screen.queryByText('Read-only admission context handed over from Enrollment.'))
+      .not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Admission' })).toBeInTheDocument();
+    expect(screen.getByText('Admission reference').tagName).toBe('DT');
+    expect(screen.getByRole('heading', { name: 'Placement & Identifiers' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Documents' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Accounts & access' })).not.toBeInTheDocument();
     expect(screen.queryByText('GR preview')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Readiness & activation' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Activity & audit' })).toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'Change Division' }));
     fireEvent.click(screen.getByRole('button', { name: 'Assign GR No.' }));
     fireEvent.click(screen.getByRole('button', { name: 'Assign Roll No.' }));
     expect(onAssignDivision).toHaveBeenCalledOnce();
     expect(onAssignGrNumber).toHaveBeenCalledOnce();
     expect(onAssignRollNumber).toHaveBeenCalledOnce();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
+    expect(screen.getByRole('heading', { name: 'Readiness & Activation' })).toBeInTheDocument();
+    expect(screen.queryByText('Admission approved')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show 3 passed checks' }));
+    expect(screen.getByText('Admission approved')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'History' }));
+    expect(screen.getByRole('heading', { name: 'Activity & Audit' })).toBeInTheDocument();
 
     expect(screen.getByRole('button', { name: 'Refresh Readiness' })).toBeDisabled();
     expect(screen.getByText(/no onboarding case, so activation is unavailable/i)).toBeInTheDocument();
@@ -87,6 +106,21 @@ describe('Student Setup drawer readiness UI', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
+  it('distinguishes completed readiness checks from an action-required case', () => {
+    render(<StudentSetupDrawer open onClose={vi.fn()} student={{
+      ...student,
+      source: 'onboarding-case',
+      status: 'action-required',
+      readinessItems: student.readinessItems.map((check) => ({ ...check, status: 'passed' })),
+    }} />);
+
+    expect(screen.getByRole('tab', { name: 'Tasks' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByText('Complete service handoffs')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '5 of 5 checks passed' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
+    expect(screen.getByRole('button', { name: 'Show 5 passed checks' })).toBeInTheDocument();
+  });
+
   it('does not offer a nonfunctional student-record action or misleading optional Finance check', () => {
     render(<StudentSetupDrawer open canManage onClose={vi.fn()} student={{
       ...student, source: 'onboarding-case', status: 'completed', backendStatus: 4,
@@ -96,12 +130,17 @@ describe('Student Setup drawer readiness UI', () => {
     }} />);
     expect(screen.queryByRole('button', { name: 'View Student Record' })).not.toBeInTheDocument();
     expect(screen.queryByText('Finance, accounts, and optional services')).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Fee assignment & first payment' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Portal accounts' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Captured admission details' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Admission' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Placement & Identifiers' })).toBeInTheDocument();
     expect(screen.getByText('Blood group')).toBeInTheDocument();
     expect(screen.getByText('O+')).toBeInTheDocument();
     expect(screen.getByText('Sample School')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Tasks' }));
+    expect(screen.getByRole('heading', { name: 'Finance' })).toBeInTheDocument();
+    expect(screen.getByText('Portal & Emails')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Case Actions' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
+    expect(screen.queryByText('Finance, accounts, and optional services')).not.toBeInTheDocument();
   });
 
   it('uses the latest backend activation-preview stamp when activation is confirmed', async () => {
@@ -129,10 +168,10 @@ describe('Student Setup drawer readiness UI', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
     });
     await waitFor(() =>
-      expect(screen.getByText('Backend readiness confirmed at 100%.')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Activate student' })).toBeEnabled()
     );
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Confirm activation' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Activate student' }));
     });
 
     expect(onPrimaryAction).toHaveBeenCalledWith(liveStudent, 'latest-case-stamp', 'activate');
@@ -169,7 +208,7 @@ describe('Student Setup drawer readiness UI', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Activate Student' }));
-    expect(screen.getByRole('heading', { name: 'Activate student?' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Activate Student' })).toBeInTheDocument();
   });
 
   it('links a failed communication requirement to the existing student record', () => {
@@ -192,6 +231,7 @@ describe('Student Setup drawer readiness UI', () => {
 
     render(<StudentSetupDrawer open canManage student={liveStudent} onClose={vi.fn()} />);
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
     expect(screen.getByRole('link', { name: 'Open student record' })).toHaveAttribute(
       'href',
       `/student/profile?student=${liveStudent.studentId}&tab=general`
@@ -218,8 +258,9 @@ describe('Student Setup drawer readiness UI', () => {
 
     render(<StudentSetupDrawer open canManage student={liveStudent} onClose={vi.fn()} />);
 
+    fireEvent.click(screen.getByRole('tab', { name: 'Checks' }));
     fireEvent.click(screen.getByRole('button', { name: 'Record approval for Onboarding approval' }));
-    expect(screen.getByRole('heading', { name: 'Approve onboarding' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Approve Onboarding' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Approve onboarding' })).toBeDisabled();
   });
 });

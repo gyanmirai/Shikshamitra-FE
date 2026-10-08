@@ -51,7 +51,7 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
     <CustomDialog
       open
       handleClose={onClose}
-      title={isApproval ? 'Approve onboarding' : 'Review onboarding exception'}
+      title={isApproval ? 'Approve Onboarding' : 'Review Onboarding Exception'}
       maxWidth="sm"
       disableClose={updateState.isLoading}
       hasUnsavedChanges={Boolean(reason)}
@@ -61,7 +61,9 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
           <Summary label="Student" value={student.studentName} />
           <Summary label="Requirement" value={check.label} />
           <Alert severity="warning" variant="outlined">
-            {isApproval ? 'Review the student records and record your approval note. Approval does not bypass placement, identifiers, documents or Finance checks.' : 'Waiving this requirement allows activation to continue without resolving the current blocker. The reason is retained in the onboarding audit history.'}
+            {isApproval
+              ? 'Approval does not bypass other readiness checks.'
+              : 'Waiving this requirement removes its activation blocker and records the reason.'}
           </Alert>
           <TextField
             required
@@ -72,7 +74,6 @@ export default function StudentOnboardingStepWaiverDialog({ check, student, onCl
             label={isApproval ? 'Approval note' : 'Waiver reason'}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            helperText="Explain why this student can proceed without the requirement."
             inputProps={{ maxLength: 1000 }}
           />
         </Stack>

@@ -51,15 +51,17 @@ Popup copy must tell the user what is happening, what will change, and what
 action is available.
 
 - Use a short title that names the action and object:
-  `Delete subject?`, `Archive exam?`, `Discard unsaved changes?`, or
-  `Unlock published marks`.
+  `Delete Subject?`, `Archive Exam?`, `Discard Unsaved Changes?`, or
+  `Unlock Published Marks`.
 - Use a message that explains the consequence in plain language.
 - Avoid repeating the title in the message.
 - Avoid vague copy such as `Are you sure?`, `Please confirm`, or `Something will
   happen` without explaining the result.
 - Avoid unnecessary words such as `kindly`, `perform the action`, or `as per
   your request`.
-- Use sentence case and direct language.
+- Use Title Case for visible dialog titles, as defined in `DESIGN.md`. Use sentence case and direct language in the message, field labels, and actions.
+- Outside Student Onboarding, put one accessible info icon directly after the title of each data-entry or review dialog by using the shared `CustomDialog` `titleInfo` prop. Explain what the user is reviewing or deciding, and keep the tooltip distinct from the body copy. Simple confirmations may omit the icon when it would add no information.
+- For Student Onboarding dialogs, omit generic descriptions, title info icons, and instructional helper text when the title, labels, and controls already explain the decision. Keep material consequences, field validation, and actionable errors.
 - Name the affected record when it reduces ambiguity, such as `Delete
   “Mathematics” from the curriculum?`.
 - If the action is reversible, say so. If it is not reversible, say so clearly.
@@ -73,7 +75,7 @@ Avoid:
 
 Use:
 
-**Title:** `Unlock published marks`
+**Title:** `Unlock Published Marks`
 
 **Message:** `This will reopen the selected published marks for editing. Enter a
 reason for the audit log.`

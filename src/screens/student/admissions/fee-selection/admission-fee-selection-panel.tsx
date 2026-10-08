@@ -70,7 +70,14 @@ export default function AdmissionFeeSelectionPanel({
 
   if (!canRead || !applicationId) return null;
   if (query.isLoading || (!state && query.isFetching))
-    return (
+    return mode === 'onboarding' ? (
+      <Stack role="status" aria-label="Loading fee structure" spacing={0.5}>
+        <Skeleton variant="text" width={148} height={28} />
+        <Skeleton variant="text" width="60%" height={22} />
+        <Skeleton variant="text" width="42%" height={18} />
+        <Skeleton variant="rounded" height={44} sx={{ mt: 1 }} />
+      </Stack>
+    ) : (
       <Box aria-label="Loading fee structure">
         <Skeleton height={90} />
       </Box>

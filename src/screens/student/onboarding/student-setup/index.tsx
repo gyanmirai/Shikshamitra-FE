@@ -2,8 +2,11 @@
 
 import type { RootState } from 'src/redux/store';
 import type { TooltipProps } from '@mui/material';
-import type { IData, IColumn } from 'src/components/customizabaleTable/types';
-import type { StudentOnboardingFilterOptions } from 'src/redux/student/onboarding/student-onboarding-types';
+import type { IData, IParams, IColumn } from 'src/components/customizabaleTable/types';
+import type {
+  StudentOnboardingStatus,
+  StudentOnboardingFilterOptions,
+} from 'src/redux/student/onboarding/student-onboarding-types';
 
 import Link from 'next/link';
 import { useSelector } from 'react-redux';
@@ -23,6 +26,7 @@ import {
   Alert,
   Paper,
   Stack,
+  Avatar,
   Button,
   Tooltip,
   Divider,
@@ -33,7 +37,6 @@ import {
   ListItemIcon,
   ListItemText,
   LinearProgress,
-  FormControlLabel,
 } from '@mui/material';
 import {
   useGetStudentOnboardingCasesQuery,
@@ -46,7 +49,15 @@ import StudentSetupDrawer from './student-setup-drawer';
 import { useOnboardingSettings } from '../onboarding-settings-context';
 import StudentSetupTaskNavigation from './student-setup-task-navigation';
 import StudentOnboardingOperationDialog from './student-onboarding-operation-dialog';
-import OnboardingBulkActionDialog, { type BulkOnboardingAction } from './onboarding-bulk-action-dialog';
+import OnboardingBulkActionDialog, {
+  type BulkOnboardingAction,
+} from './onboarding-bulk-action-dialog';
+import {
+  type StudentSetupView,
+  parseStudentSetupView,
+  type StudentSetupTaskScope,
+  parseStudentSetupTaskScope,
+} from './student-setup-view';
 import {
   accountStatusMeta,
   getReadinessSummary,
@@ -54,21 +65,13 @@ import {
   mapOnboardingCaseToItem,
   type StudentOnboardingItem,
 } from './student-onboarding-model';
-import {
-  type StudentSetupView,
-  parseStudentSetupView,
-  getPendingStudentCount,
-  type StudentSetupTaskScope,
-  parseStudentSetupTaskScope,
-  filterStudentsForSetupView,
-} from './student-setup-view';
 
 import type { StudentAssignmentType } from './student-onboarding-operation-dialog';
 
 const studentSetupTooltip = (
   <Box sx={{ p: 1.5, maxWidth: 340 }}>
     <Typography variant="subtitle2" fontWeight={700} gutterBottom>
-      Student Onboarding worklist
+      Onboarding worklist
     </Typography>
     <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
       Review each admitted student&apos;s placement, identifiers, documents, accounts, and
@@ -93,51 +96,84 @@ const studentSetupTooltip = (
 
 const ALL_STANDARDS = '__all__';
 
+const studentSetupStatusOptions: Array<{ status: StudentOnboardingStatus; label: string }> = [
+  { status: 0, label: onboardingStageMeta['to-prepare'].label },
+  { status: 1, label: onboardingStageMeta['awaiting-approval'].label },
+  { status: 2, label: onboardingStageMeta['ready-to-activate'].label },
+  { status: 3, label: onboardingStageMeta['action-required'].label },
+  { status: 4, label: onboardingStageMeta.completed.label },
+  { status: 5, label: onboardingStageMeta.cancelled.label },
+  { status: 6, label: onboardingStageMeta.provisioning.label },
+];
+
+const studentSetupSortFields: Record<string, string> = {
+  studentName: 'StudentName',
+  placement: 'Placement',
+  divisionTask: 'Placement',
+  rollNumberTask: 'RollNumber',
+  ownerName: 'OwnerName',
+  statusLabel: 'Status',
+};
+
+const textFilterOperators = ['contains', 'equals', 'startsWith', 'endsWith'] as const;
+const numberFilterOperators = ['equals', 'greaterThan', 'lessThan', 'between'] as const;
+
+function getTextFilterOperator(value: string | null) {
+  return textFilterOperators.find((operator) => operator === value) ?? 'contains';
+}
+
+function getNumberFilterOperator(value: string | null) {
+  return numberFilterOperators.find((operator) => operator === value) ?? 'equals';
+}
+
 function StudentSetupFilters({
   options,
   selectedBoardId,
   selectedMediumId,
   selectedStandardId,
   selectedDivisionId,
-  overdueOnly,
-  unassignedOnly,
   onBoardChange,
   onMediumChange,
   onStandardChange,
   onDivisionChange,
-  onOverdueOnlyChange,
-  onUnassignedOnlyChange,
 }: {
   options?: StudentOnboardingFilterOptions;
   selectedBoardId: string;
   selectedMediumId: string;
   selectedStandardId: string;
   selectedDivisionId: string;
-  overdueOnly: boolean;
-  unassignedOnly: boolean;
   onBoardChange: (value: string) => void;
   onMediumChange: (value: string) => void;
   onStandardChange: (value: string) => void;
   onDivisionChange: (value: string) => void;
-  onOverdueOnlyChange: (value: boolean) => void;
-  onUnassignedOnlyChange: (value: boolean) => void;
 }) {
   const mediums = (options?.mediums ?? []).filter((item) => item.parentId === selectedBoardId);
   const standards = (options?.standards ?? []).filter((item) => item.parentId === selectedMediumId);
-  const divisions = (options?.divisions ?? []).filter((item) => item.parentId === selectedStandardId);
+  const divisions = (options?.divisions ?? []).filter(
+    (item) => item.parentId === selectedStandardId
+  );
 
   return (
     <Paper variant="outlined" sx={{ p: 1, flexShrink: 0, borderRadius: 2 }}>
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1}>
         <CustomSelect
-          fullWidth options={[{ id: ALL_STANDARDS, name: 'All boards' }, ...(options?.boards ?? [])]}
-          label="Board" value={selectedBoardId} onChange={(value) => onBoardChange(String(value))}
-          labelKey="name" valueKey="id"
+          fullWidth
+          options={[{ id: ALL_STANDARDS, name: 'All boards' }, ...(options?.boards ?? [])]}
+          label="Board"
+          value={selectedBoardId}
+          onChange={(value) => onBoardChange(String(value))}
+          labelKey="name"
+          valueKey="id"
         />
         <CustomSelect
-          fullWidth options={[{ id: ALL_STANDARDS, name: 'All mediums' }, ...mediums]}
-          label="Medium" value={selectedMediumId} onChange={(value) => onMediumChange(String(value))}
-          labelKey="name" valueKey="id" disabled={selectedBoardId === ALL_STANDARDS}
+          fullWidth
+          options={[{ id: ALL_STANDARDS, name: 'All mediums' }, ...mediums]}
+          label="Medium"
+          value={selectedMediumId}
+          onChange={(value) => onMediumChange(String(value))}
+          labelKey="name"
+          valueKey="id"
+          disabled={selectedBoardId === ALL_STANDARDS}
         />
         <CustomSelect
           fullWidth
@@ -151,30 +187,15 @@ function StudentSetupFilters({
           disabled={selectedMediumId === ALL_STANDARDS}
         />
         <CustomSelect
-          fullWidth options={[{ id: ALL_STANDARDS, name: 'All divisions' }, ...divisions]}
-          label="Division" value={selectedDivisionId} onChange={(value) => onDivisionChange(String(value))}
-          labelKey="name" valueKey="id" disabled={selectedStandardId === ALL_STANDARDS}
+          fullWidth
+          options={[{ id: ALL_STANDARDS, name: 'All divisions' }, ...divisions]}
+          label="Division"
+          value={selectedDivisionId}
+          onChange={(value) => onDivisionChange(String(value))}
+          labelKey="name"
+          valueKey="id"
+          disabled={selectedStandardId === ALL_STANDARDS}
         />
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={overdueOnly}
-                onChange={(event) => onOverdueOnlyChange(event.target.checked)}
-              />
-            }
-            label="Overdue only"
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={unassignedOnly}
-                onChange={(event) => onUnassignedOnlyChange(event.target.checked)}
-              />
-            }
-            label="Unassigned owner only"
-          />
-        </Stack>
       </Stack>
     </Paper>
   );
@@ -183,10 +204,15 @@ function StudentSetupFilters({
 function StudentSetupTable({
   rows,
   isLoading,
+  isError,
+  onRetry,
   view,
+  taskScope,
   tableId,
   tableTitle,
   noDataText,
+  noDataDescription,
+  onClearWorklistFilters,
   onOpen,
   selectedStudentIds,
   onToggleSelection,
@@ -199,14 +225,24 @@ function StudentSetupTable({
   searchTerm,
   onPaginationChange,
   onSearchChange,
+  columnFilters,
+  onColumnFilterChange,
+  sorts,
+  onSortChange,
+  placementOptions,
   isServerBacked,
 }: {
   rows: StudentOnboardingItem[];
   isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
   view: StudentSetupView;
+  taskScope: StudentSetupTaskScope;
   tableId: string;
   tableTitle: string;
   noDataText: string;
+  noDataDescription?: string;
+  onClearWorklistFilters?: () => void;
   onOpen: (studentId: string) => void;
   selectedStudentIds: string[];
   onToggleSelection: (studentId: string) => void;
@@ -219,6 +255,11 @@ function StudentSetupTable({
   searchTerm: string;
   onPaginationChange: (page: number, rowsPerPage: number) => void;
   onSearchChange: (searchTerm: string) => void;
+  columnFilters: IParams['filters'];
+  onColumnFilterChange: (filters: IParams['filters']) => void;
+  sorts: IParams['sorts'];
+  onSortChange: (sorts: IParams['sorts']) => void;
+  placementOptions: Array<{ label: string; value: string }>;
   isServerBacked: boolean;
 }) {
   const tableData = useMemo(
@@ -229,10 +270,13 @@ function StudentSetupTable({
           ...student,
           placement: `${student.standardName} / ${student.divisionName}`,
           identifiers: `GR ${student.grNo ?? student.grPreview ?? 'Pending'} · Roll ${student.rollNo ?? 'Pending'}`,
+          grNumberTask: student.grNo ?? student.grPreview ?? 'Not assigned',
+          rollNumberTask: student.rollNo ?? 'Not assigned',
+          divisionTask: `${student.standardName} / ${student.divisionName}`,
           readinessProgress: readiness.progress,
           readinessText: `${readiness.passedCount}/${readiness.requiredCount} checks`,
           blockerCount: readiness.blockingCount,
-          accounts: `${accountStatusMeta[student.studentAccountStatus].label} / ${accountStatusMeta[student.guardianAccountStatus].label}`,
+          accounts: `Student: ${accountStatusMeta[student.studentAccountStatus].label} · Guardian: ${accountStatusMeta[student.guardianAccountStatus].label}`,
           statusLabel: onboardingStageMeta[student.status].label,
         };
       }),
@@ -246,6 +290,7 @@ function StudentSetupTable({
         label: '',
         width: 48,
         sticky: true,
+        stickyPosition: 'left',
         isFilter: false,
         isSort: false,
         excludeFromExport: true,
@@ -253,6 +298,7 @@ function StudentSetupTable({
           <Checkbox
             checked={allStudentsSelected}
             indeterminate={someStudentsSelected}
+            disabled={rows.length === 0}
             onChange={onToggleAll}
             inputProps={{ 'aria-label': 'Select all visible students' }}
           />
@@ -268,27 +314,59 @@ function StudentSetupTable({
       {
         id: 'studentName',
         label: 'Student',
-        minWidth: 210,
+        filterType: 'string',
+        minWidth: 230,
         sticky: true,
         stickyPosition: 'left',
         render: (value, row) => (
-          <Stack spacing={0.25}>
-            <Typography variant="body2" fontWeight={700} noWrap>
-              {value}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {row.applicationNumber}
-            </Typography>
+          <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0, py: 0.25 }}>
+            <Avatar
+              sx={{
+                width: 36,
+                height: 36,
+                bgcolor: 'primary.lighter',
+                color: 'primary.dark',
+                fontSize: 12,
+                fontWeight: 700,
+              }}
+            >
+              {String(value)
+                .trim()
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((part) => part[0])
+                .join('')
+                .toUpperCase()}
+            </Avatar>
+            <Stack spacing={0.25} sx={{ minWidth: 0 }}>
+              <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                {value}
+              </Typography>
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {row.applicationNumber}
+              </Typography>
+            </Stack>
           </Stack>
         ),
       },
-      { id: 'admissionRoute', label: 'Admission route', minWidth: 160, filterType: 'enum' },
-      { id: 'placement', label: 'Placement', minWidth: 150, filterType: 'enum' },
+      {
+        id: 'admissionRoute',
+        label: 'Admission route',
+        minWidth: 160,
+        cellSx: { whiteSpace: 'normal' },
+      },
+      {
+        id: 'placement',
+        label: 'Placement',
+        minWidth: 160,
+        filterType: 'enum',
+        enumOptions: placementOptions,
+        cellSx: { whiteSpace: 'normal' },
+      },
       {
         id: 'readinessProgress',
         label: 'Readiness',
         minWidth: 170,
-        filterType: 'number',
         render: (value, row) => (
           <Stack spacing={0.5}>
             <Stack direction="row" justifyContent="space-between" spacing={1}>
@@ -387,7 +465,7 @@ function StudentSetupTable({
         id: 'rollNumberTask',
         label: 'Roll number',
         minWidth: 150,
-        isFilter: false,
+        filterType: 'number',
         render: (_value, row) => {
           const hasCommittedValue = row.rollNo !== undefined && row.rollNo !== null;
 
@@ -408,6 +486,7 @@ function StudentSetupTable({
         label: 'Current placement',
         minWidth: 180,
         filterType: 'enum',
+        enumOptions: placementOptions,
         render: (_value, row) => {
           const divisionAssigned = Boolean(row.divisionName && row.divisionName !== '—');
 
@@ -423,41 +502,109 @@ function StudentSetupTable({
           );
         },
       },
-      { id: 'accounts', label: 'Student / guardian access', minWidth: 190, filterType: 'enum' },
-      { id: 'ownerName', label: 'Owner', minWidth: 140, filterType: 'enum' },
+      {
+        id: 'accounts',
+        label: 'Account access',
+        minWidth: 210,
+        render: (_value, row) => (
+          <Stack spacing={0.5} alignItems="flex-start">
+            <Stack direction="row" spacing={0.75} alignItems="center">
+              <Typography variant="caption" color="text.secondary" sx={{ minWidth: 54 }}>
+                Student
+              </Typography>
+              <Label
+                variant="soft"
+                color={
+                  accountStatusMeta[
+                    row.studentAccountStatus as StudentOnboardingItem['studentAccountStatus']
+                  ].color
+                }
+              >
+                {
+                  accountStatusMeta[
+                    row.studentAccountStatus as StudentOnboardingItem['studentAccountStatus']
+                  ].label
+                }
+              </Label>
+            </Stack>
+            <Stack direction="row" spacing={0.75} alignItems="center">
+              <Typography variant="caption" color="text.secondary" sx={{ minWidth: 54 }}>
+                Guardian
+              </Typography>
+              <Label
+                variant="soft"
+                color={
+                  accountStatusMeta[
+                    row.guardianAccountStatus as StudentOnboardingItem['guardianAccountStatus']
+                  ].color
+                }
+              >
+                {
+                  accountStatusMeta[
+                    row.guardianAccountStatus as StudentOnboardingItem['guardianAccountStatus']
+                  ].label
+                }
+              </Label>
+            </Stack>
+          </Stack>
+        ),
+      },
+      {
+        id: 'ownerName',
+        label: 'Owner',
+        minWidth: 150,
+        filterType: 'string',
+        render: (value: string) =>
+          value === 'Not assigned' ? (
+            <Label variant="soft" color="default">
+              Not assigned
+            </Label>
+          ) : (
+            <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+              {value}
+            </Typography>
+          ),
+      },
       {
         id: 'statusLabel',
         label: 'Status',
-        minWidth: 150,
+        width: 156,
+        minWidth: 156,
         filterType: 'enum',
+        enumOptions: studentSetupStatusOptions.map(({ label }) => ({ label, value: label })),
         sticky: true,
         stickyPosition: 'right',
         render: (_value, row) => (
-          <Label color={onboardingStageMeta[row.status as StudentOnboardingItem['status']].color}>
+          <Label
+            variant="soft"
+            color={onboardingStageMeta[row.status as StudentOnboardingItem['status']].color}
+          >
             {onboardingStageMeta[row.status as StudentOnboardingItem['status']].label}
           </Label>
         ),
       },
       {
         id: 'actions',
-        label: 'Action',
-        width: 72,
-        align: 'center',
+        label: 'Actions',
+        width: 88,
+        minWidth: 88,
+        align: 'right',
         isFilter: false,
         isSort: false,
         excludeFromExport: true,
         sticky: true,
         stickyPosition: 'right',
         render: (_value, row: IData) => (
-          <Tooltip title={`Open onboarding for ${String(row.studentName)}`}>
+          <Tooltip title={`Review ${String(row.studentName)}`}>
             <IconButton
+              aria-label={`Review ${String(row.studentName)}`}
               onClick={(e) => {
                 e.stopPropagation();
                 onOpen(String(row.id));
               }}
-              color="primary"
+              sx={{ color: 'text.secondary' }}
             >
-              <Iconify icon="mdi:user-edit" width={24} />
+              <Iconify icon="mdi:eye-outline" width={20} />
             </IconButton>
           </Tooltip>
         ),
@@ -506,14 +653,32 @@ function StudentSetupTable({
       ],
     };
 
-    return allColumns.filter((column) => visibleColumns[view].includes(column.id));
+    const filterableColumns = new Set(['studentName', 'ownerName', 'statusLabel']);
+    if (taskScope === 'all') filterableColumns.add('rollNumberTask');
+    if (placementOptions.length > 0 && (view !== 'division' || taskScope === 'all')) {
+      filterableColumns.add('placement');
+      filterableColumns.add('divisionTask');
+    }
+
+    return allColumns
+      .filter((column) => visibleColumns[view].includes(column.id))
+      .map((column) => ({
+        ...column,
+        isSort:
+          column.id in studentSetupSortFields &&
+          (taskScope === 'all' || (column.id !== 'rollNumberTask' && column.id !== 'divisionTask')),
+        isFilter: filterableColumns.has(column.id),
+      }));
   }, [
     allStudentsSelected,
     onOpen,
     onToggleAll,
     onToggleSelection,
+    placementOptions,
+    rows.length,
     selectedStudentIds,
     someStudentsSelected,
+    taskScope,
     view,
   ]);
 
@@ -521,6 +686,7 @@ function StudentSetupTable({
     <CustomizableTable
       tableId={tableId}
       tableTitle={tableTitle}
+      exportLabel="Export current page"
       columns={columns}
       data={tableData}
       isLoading={isLoading}
@@ -529,6 +695,13 @@ function StudentSetupTable({
       serverSide={isServerBacked}
       serverSidePagination={isServerBacked}
       serverSideSearch={isServerBacked}
+      serverSideFilter={isServerBacked}
+      serverSideSort={isServerBacked}
+      serverSideSortMode="single"
+      filters={columnFilters}
+      onServerFilter={onColumnFilterChange}
+      sorts={sorts}
+      onServerSort={(_column, nextSorts) => onSortChange(nextSorts)}
       totalCount={totalCount}
       page={page - 1}
       rowsPerPage={rowsPerPage}
@@ -536,9 +709,43 @@ function StudentSetupTable({
       rowsPerPageOptions={[10, 25, 100]}
       onServerPagination={onPaginationChange}
       onServerSearch={onSearchChange}
-      noDataText={<>{noDataText}</>}
+      noDataText={
+        <Stack component="span" alignItems="center" spacing={1}>
+          <Box component="span">{noDataText}</Box>
+          {noDataDescription && (
+            <Typography component="span" variant="caption" color="text.secondary">
+              {noDataDescription}
+            </Typography>
+          )}
+          {onClearWorklistFilters && (
+            <Button
+              variant="outlined"
+              color="inherit"
+              size="small"
+              onClick={onClearWorklistFilters}
+            >
+              Clear filters
+            </Button>
+          )}
+        </Stack>
+      }
+      errorContent={
+        isError ? (
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" onClick={onRetry}>
+                Retry
+              </Button>
+            }
+          >
+            Onboarding cases could not be loaded.
+          </Alert>
+        ) : undefined
+      }
+      searchFieldProps={{ placeholder: 'Search...' }}
       wrapperProps={{ sx: { minWidth: 0, minHeight: 0, flex: 1 } }}
-      tableContainerProps={{ sx: { minWidth: 0, minHeight: 0 } }}
+      tableContainerProps={{ sx: { minWidth: 0, minHeight: 0, height: 1 } }}
     />
   );
 }
@@ -709,6 +916,7 @@ export default function StudentSetupScreen() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [bulkAction, setBulkAction] = useState<BulkOnboardingAction | null>(null);
+  const [bulkActionStudents, setBulkActionStudents] = useState<StudentOnboardingItem[]>([]);
   const [assignmentRequest, setAssignmentRequest] = useState<{
     type: StudentAssignmentType;
     studentIds: string[];
@@ -719,26 +927,145 @@ export default function StudentSetupScreen() {
   const selectedMediumId = searchParams.get('medium') ?? ALL_STANDARDS;
   const selectedStandardId = searchParams.get('class') ?? ALL_STANDARDS;
   const selectedDivisionId = searchParams.get('division') ?? ALL_STANDARDS;
-  const [overdueOnly, setOverdueOnly] = useState(false);
-  const [unassignedOnly, setUnassignedOnly] = useState(false);
+  const placementDivisionId = searchParams.get('placementDivision') ?? '';
+  const selectedStatusOption = studentSetupStatusOptions.find(
+    ({ status }) => String(status) === searchParams.get('status')
+  );
+  const studentNameFilter = searchParams.get('studentName')?.trim() ?? '';
+  const ownerNameFilter = searchParams.get('ownerName')?.trim() ?? '';
+  const studentNameOperator = getTextFilterOperator(searchParams.get('studentNameOp'));
+  const ownerNameOperator = getTextFilterOperator(searchParams.get('ownerNameOp'));
+  const rollNumberOperator = getNumberFilterOperator(searchParams.get('rollOp'));
+  const rollNumberFilter = Number(searchParams.get('rollNumber'));
+  const rollNumberMin = Number(searchParams.get('rollMin'));
+  const rollNumberMax = Number(searchParams.get('rollMax'));
+  const hasRollNumberFilter = searchParams.has('rollNumber') && Number.isFinite(rollNumberFilter);
+  const hasRollNumberRange =
+    searchParams.has('rollMin') &&
+    searchParams.has('rollMax') &&
+    Number.isFinite(rollNumberMin) &&
+    Number.isFinite(rollNumberMax);
+  const rollFilterApplicable =
+    activeTaskScope === 'all' && (activeView === 'roll-number' || activeView === 'division');
+  const placementFilterApplicable = activeView !== 'division' || activeTaskScope === 'all';
+  const selectedSortColumn = searchParams.get('sort');
+  const selectedSortDirection = searchParams.get('direction') === 'desc' ? 'desc' : 'asc';
+  const sortAppliesToView =
+    (selectedSortColumn !== 'rollNumberTask' || rollFilterApplicable) &&
+    (selectedSortColumn !== 'divisionTask' || activeTaskScope === 'all');
+  const sorts: IParams['sorts'] =
+    selectedSortColumn &&
+      sortAppliesToView &&
+      Object.prototype.hasOwnProperty.call(studentSetupSortFields, selectedSortColumn)
+      ? [{ column: selectedSortColumn, direction: selectedSortDirection }]
+      : [];
+  const sortOrder = sorts[0]
+    ? `${studentSetupSortFields[sorts[0].column]} ${sorts[0].direction}`
+    : undefined;
   const [tablePage, setTablePage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(25);
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') ?? '');
+  const searchTerm = searchParams.get('search') ?? '';
   const [refreshReadiness, refreshReadinessState] = useRefreshStudentOnboardingReadinessMutation();
   const [activateOnboarding, activateOnboardingState] = useActivateStudentOnboardingMutation();
+  const hasWorklistFilters =
+    selectedBoardId !== ALL_STANDARDS ||
+    selectedMediumId !== ALL_STANDARDS ||
+    selectedStandardId !== ALL_STANDARDS ||
+    selectedDivisionId !== ALL_STANDARDS ||
+    Boolean(placementDivisionId);
 
-  const changeAcademicFilter = useCallback((key: 'board' | 'medium' | 'class' | 'division', value: string) => {
+  const changeAcademicFilter = useCallback(
+    (key: 'board' | 'medium' | 'class' | 'division', value: string) => {
+      const next = new URLSearchParams(searchParams.toString());
+      if (value === ALL_STANDARDS) next.delete(key);
+      else next.set(key, value);
+      if (key === 'board') ['medium', 'class', 'division'].forEach((item) => next.delete(item));
+      if (key === 'medium') ['class', 'division'].forEach((item) => next.delete(item));
+      if (key === 'class') next.delete('division');
+      next.delete('placementDivision');
+      setTablePage(1);
+      setSelectedStudentIds([]);
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const clearWorklistFilters = () => {
     const next = new URLSearchParams(searchParams.toString());
-    if (value === ALL_STANDARDS) next.delete(key);
-    else next.set(key, value);
-    if (key === 'board') ['medium', 'class', 'division'].forEach((item) => next.delete(item));
-    if (key === 'medium') ['class', 'division'].forEach((item) => next.delete(item));
-    if (key === 'class') next.delete('division');
+    ['board', 'medium', 'class', 'division', 'placementDivision'].forEach((key) =>
+      next.delete(key)
+    );
     setTablePage(1);
     setSelectedStudentIds([]);
     const query = next.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-  }, [pathname, router, searchParams]);
+  };
+
+  const handleColumnFilterChange = (filters: IParams['filters']) => {
+    const latest = (column: string) => filters.filter((filter) => filter.column === column).at(-1);
+    const statusOption = studentSetupStatusOptions.find(
+      ({ label }) => label === latest('statusLabel')?.value
+    );
+    const placementFilter = latest(activeView === 'division' ? 'divisionTask' : 'placement');
+    const studentFilter = latest('studentName');
+    const ownerFilter = latest('ownerName');
+    const rollFilter = latest('rollNumberTask');
+    const next = new URLSearchParams(searchParams.toString());
+    [
+      'status',
+      'placementDivision',
+      'studentName',
+      'studentNameOp',
+      'ownerName',
+      'ownerNameOp',
+      'rollNumber',
+      'rollMin',
+      'rollMax',
+      'rollOp',
+    ].forEach((key) => next.delete(key));
+    if (statusOption) next.set('status', String(statusOption.status));
+    if (placementFilter?.value) next.set('placementDivision', String(placementFilter.value));
+    if (studentFilter?.value) {
+      next.set('studentName', String(studentFilter.value));
+      next.set('studentNameOp', getTextFilterOperator(studentFilter.type));
+    }
+    if (ownerFilter?.value) {
+      next.set('ownerName', String(ownerFilter.value));
+      next.set('ownerNameOp', getTextFilterOperator(ownerFilter.type));
+    }
+    if (rollFilter) {
+      const operator = getNumberFilterOperator(rollFilter.type);
+      if (operator === 'between' && rollFilter.value && typeof rollFilter.value === 'object') {
+        next.set('rollMin', String(rollFilter.value.min));
+        next.set('rollMax', String(rollFilter.value.max));
+        next.set('rollOp', operator);
+      } else if (Number.isFinite(Number(rollFilter.value))) {
+        next.set('rollNumber', String(rollFilter.value));
+        next.set('rollOp', operator);
+      }
+    }
+    setTablePage(1);
+    setSelectedStudentIds([]);
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+
+  const handleSortChange = (nextSorts: IParams['sorts']) => {
+    const sort = nextSorts.at(-1);
+    const next = new URLSearchParams(searchParams.toString());
+    if (sort && Object.prototype.hasOwnProperty.call(studentSetupSortFields, sort.column)) {
+      next.set('sort', sort.column);
+      next.set('direction', sort.direction);
+    } else {
+      next.delete('sort');
+      next.delete('direction');
+    }
+    setTablePage(1);
+    setSelectedStudentIds([]);
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
 
   const queryArgs = useMemo(
     () => ({
@@ -747,74 +1074,232 @@ export default function StudentSetupScreen() {
       mediumId: selectedMediumId === ALL_STANDARDS ? undefined : selectedMediumId,
       standardId: selectedStandardId === ALL_STANDARDS ? undefined : selectedStandardId,
       divisionId: selectedDivisionId === ALL_STANDARDS ? undefined : selectedDivisionId,
-      overdueOnly: overdueOnly || undefined,
-      unassignedOnly: unassignedOnly || undefined,
+      placementDivisionId: placementFilterApplicable ? placementDivisionId || undefined : undefined,
+      status: selectedStatusOption?.status,
+      pendingTask:
+        activeView !== 'readiness' && activeTaskScope === 'pending' ? activeView : undefined,
+      studentNameFilter: studentNameFilter || undefined,
+      studentNameOperator: studentNameFilter ? studentNameOperator : undefined,
+      ownerNameFilter: ownerNameFilter || undefined,
+      ownerNameOperator: ownerNameFilter ? ownerNameOperator : undefined,
+      rollNumberFilter:
+        rollFilterApplicable && hasRollNumberFilter && rollNumberOperator !== 'between'
+          ? rollNumberFilter
+          : undefined,
+      rollNumberMin:
+        rollFilterApplicable && hasRollNumberRange && rollNumberOperator === 'between'
+          ? rollNumberMin
+          : undefined,
+      rollNumberMax:
+        rollFilterApplicable && hasRollNumberRange && rollNumberOperator === 'between'
+          ? rollNumberMax
+          : undefined,
+      rollNumberOperator:
+        rollFilterApplicable && (hasRollNumberFilter || hasRollNumberRange)
+          ? rollNumberOperator
+          : undefined,
+      sorting: sortOrder,
       search: searchTerm.trim() || undefined,
-      sorting: 'DueAt asc,CreationTime desc',
       skipCount: (tablePage - 1) * rowsPerPage,
       maxResultCount: rowsPerPage,
     }),
     [
       currentYear?.id,
+      activeView,
+      activeTaskScope,
       selectedBoardId,
       selectedMediumId,
       selectedDivisionId,
-      overdueOnly,
+      placementDivisionId,
+      placementFilterApplicable,
+      selectedStatusOption?.status,
+      studentNameFilter,
+      studentNameOperator,
+      ownerNameFilter,
+      ownerNameOperator,
+      rollNumberFilter,
+      rollNumberMin,
+      rollNumberMax,
+      rollNumberOperator,
+      hasRollNumberFilter,
+      hasRollNumberRange,
+      rollFilterApplicable,
+      sortOrder,
       rowsPerPage,
       searchTerm,
       selectedStandardId,
       tablePage,
-      unassignedOnly,
     ]
   );
 
   const onboardingQuery = useGetStudentOnboardingCasesQuery(queryArgs, {
     skip: !currentYear?.id,
   });
+  const pendingCountQuery = useGetStudentOnboardingCasesQuery(
+    {
+      ...queryArgs,
+      pendingTask: activeView === 'readiness' ? undefined : activeView,
+      sorting: undefined,
+      skipCount: 0,
+      maxResultCount: 1,
+    },
+    {
+      skip: !currentYear?.id || activeView === 'readiness' || activeTaskScope === 'pending',
+    }
+  );
   const filterOptionsQuery = useGetStudentOnboardingFilterOptionsQuery(currentYear?.id ?? '', {
     skip: !currentYear?.id,
   });
+  const placementOptions = useMemo(() => {
+    const options = filterOptionsQuery.currentData;
+    if (!options) return [];
+    const mediumIds = new Set(
+      options.mediums
+        .filter(
+          (medium) => selectedBoardId === ALL_STANDARDS || medium.parentId === selectedBoardId
+        )
+        .map((medium) => medium.id)
+    );
+    const standards = options.standards.filter(
+      (standard) =>
+        (selectedMediumId === ALL_STANDARDS
+          ? mediumIds.has(String(standard.parentId))
+          : standard.parentId === selectedMediumId) &&
+        (selectedStandardId === ALL_STANDARDS || standard.id === selectedStandardId)
+    );
+    const standardNames = new Map(standards.map((standard) => [standard.id, standard.name]));
+    return options.divisions
+      .filter((division) => standardNames.has(String(division.parentId)))
+      .map((division) => ({
+        value: division.id,
+        label: `${standardNames.get(String(division.parentId))} / ${division.name}`,
+      }));
+  }, [filterOptionsQuery.currentData, selectedBoardId, selectedMediumId, selectedStandardId]);
+  const columnFilters: IParams['filters'] = [
+    ...(studentNameFilter
+      ? [
+        {
+          column: 'studentName',
+          type: studentNameOperator,
+          value: studentNameFilter,
+          valueType: 'string',
+          label: 'Student',
+        },
+      ]
+      : []),
+    ...(placementFilterApplicable && placementDivisionId
+      ? [
+        {
+          column: activeView === 'division' ? 'divisionTask' : 'placement',
+          type: 'equals',
+          value: placementDivisionId,
+          valueType: 'enum',
+          label: activeView === 'division' ? 'Current placement' : 'Placement',
+          displayValue:
+            placementOptions.find((option) => option.value === placementDivisionId)?.label ??
+            'Selected division',
+        },
+      ]
+      : []),
+    ...(ownerNameFilter
+      ? [
+        {
+          column: 'ownerName',
+          type: ownerNameOperator,
+          value: ownerNameFilter,
+          valueType: 'string',
+          label: 'Owner',
+        },
+      ]
+      : []),
+    ...(rollFilterApplicable && (hasRollNumberFilter || hasRollNumberRange)
+      ? [
+        {
+          column: 'rollNumberTask',
+          type: rollNumberOperator,
+          value:
+            rollNumberOperator === 'between'
+              ? { min: rollNumberMin, max: rollNumberMax }
+              : rollNumberFilter,
+          valueType: 'number',
+          label: 'Roll number',
+        },
+      ]
+      : []),
+    ...(selectedStatusOption
+      ? [
+        {
+          column: 'statusLabel',
+          type: 'equals',
+          value: selectedStatusOption.label,
+          valueType: 'enum',
+          label: 'Status',
+          displayValue: selectedStatusOption.label,
+        },
+      ]
+      : []),
+  ];
   useEffect(() => {
     const options = filterOptionsQuery.currentData;
     if (!options) return;
-    if (selectedBoardId !== ALL_STANDARDS && !options.boards?.some((item) => item.id === selectedBoardId))
+    if (
+      selectedBoardId !== ALL_STANDARDS &&
+      !options.boards?.some((item) => item.id === selectedBoardId)
+    )
       changeAcademicFilter('board', ALL_STANDARDS);
-    else if (selectedMediumId !== ALL_STANDARDS && !options.mediums?.some((item) =>
-      item.id === selectedMediumId && item.parentId === selectedBoardId))
+    else if (
+      selectedMediumId !== ALL_STANDARDS &&
+      !options.mediums?.some(
+        (item) => item.id === selectedMediumId && item.parentId === selectedBoardId
+      )
+    )
       changeAcademicFilter('medium', ALL_STANDARDS);
-    else if (selectedStandardId !== ALL_STANDARDS && !options.standards?.some((item) =>
-      item.id === selectedStandardId && item.parentId === selectedMediumId))
+    else if (
+      selectedStandardId !== ALL_STANDARDS &&
+      !options.standards?.some(
+        (item) => item.id === selectedStandardId && item.parentId === selectedMediumId
+      )
+    )
       changeAcademicFilter('class', ALL_STANDARDS);
-    else if (selectedDivisionId !== ALL_STANDARDS && !options.divisions?.some((item) =>
-      item.id === selectedDivisionId && item.parentId === selectedStandardId))
+    else if (
+      selectedDivisionId !== ALL_STANDARDS &&
+      !options.divisions?.some(
+        (item) => item.id === selectedDivisionId && item.parentId === selectedStandardId
+      )
+    )
       changeAcademicFilter('division', ALL_STANDARDS);
-  }, [changeAcademicFilter, filterOptionsQuery.currentData, selectedBoardId, selectedMediumId, selectedStandardId, selectedDivisionId]);
+    else if (
+      placementDivisionId &&
+      !placementOptions.some((option) => option.value === placementDivisionId)
+    ) {
+      const next = new URLSearchParams(searchParams.toString());
+      next.delete('placementDivision');
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    }
+  }, [
+    changeAcademicFilter,
+    filterOptionsQuery.currentData,
+    selectedBoardId,
+    selectedMediumId,
+    selectedStandardId,
+    selectedDivisionId,
+    placementDivisionId,
+    placementOptions,
+    searchParams,
+    router,
+    pathname,
+  ]);
   const liveRows = useMemo(
     () => (onboardingQuery.currentData?.items ?? []).map(mapOnboardingCaseToItem),
     [onboardingQuery.currentData?.items]
   );
   const sourceRows = liveRows;
-  const displayedRows = useMemo(
-    () => filterStudentsForSetupView(sourceRows, activeView, activeTaskScope),
-    [activeTaskScope, activeView, sourceRows]
-  );
-  const pendingCounts = useMemo(
-    () => ({
-      'gr-number': getPendingStudentCount(sourceRows, 'gr-number'),
-      'roll-number': getPendingStudentCount(sourceRows, 'roll-number'),
-      division: getPendingStudentCount(sourceRows, 'division'),
-    }),
-    [sourceRows]
-  );
-  const navigationCounts = useMemo<Record<StudentSetupView, number>>(
-    () => ({
-      readiness: sourceRows.length,
-      'gr-number': pendingCounts['gr-number'],
-      'roll-number': pendingCounts['roll-number'],
-      division: sourceRows.length,
-    }),
-    [pendingCounts, sourceRows.length]
-  );
+  const displayedRows = sourceRows;
+  const pendingCount =
+    activeTaskScope === 'pending'
+      ? (onboardingQuery.currentData?.totalCount ?? 0)
+      : (pendingCountQuery.currentData?.totalCount ?? 0);
   const selectedStudents = useMemo(
     () => sourceRows.filter((student) => selectedStudentIds.includes(student.id)),
     [selectedStudentIds, sourceRows]
@@ -857,6 +1342,18 @@ export default function StudentSetupScreen() {
     next.set('view', view);
     if (view !== activeView) next.delete('scope');
     if (view !== 'readiness') next.delete('stage');
+    if (view !== activeView) {
+      next.delete('status');
+      if (view !== 'roll-number' && view !== 'division') {
+        ['rollNumber', 'rollMin', 'rollMax', 'rollOp'].forEach((key) => next.delete(key));
+      }
+      if (next.get('sort') === 'divisionTask') next.set('sort', 'placement');
+      if (view === 'division' && next.get('sort') === 'placement') next.set('sort', 'divisionTask');
+      if (next.get('sort') === 'rollNumberTask' && view !== 'roll-number' && view !== 'division') {
+        next.delete('sort');
+        next.delete('direction');
+      }
+    }
     const query = next.toString();
     return query ? `${pathname}?${query}` : pathname;
   };
@@ -866,6 +1363,14 @@ export default function StudentSetupScreen() {
     next.set('view', activeView);
     next.set('scope', scope);
     next.delete('stage');
+    if (scope === 'pending') {
+      ['rollNumber', 'rollMin', 'rollMax', 'rollOp'].forEach((key) => next.delete(key));
+      if (activeView === 'division') next.delete('placementDivision');
+      if (next.get('sort') === 'rollNumberTask' || next.get('sort') === 'divisionTask') {
+        next.delete('sort');
+        next.delete('direction');
+      }
+    }
     return `${pathname}?${next.toString()}`;
   };
 
@@ -894,12 +1399,14 @@ export default function StudentSetupScreen() {
   const openAssignment = (type: StudentAssignmentType, studentIds: string[]) => {
     if (!canManageOnboarding) {
       shikshaMitraToast.error({
-        message: 'You do not have permission to change Student Onboarding cases.',
+        message: 'You do not have permission to change onboarding cases.',
       });
       return;
     }
     if (studentIds.length !== 1) {
-      shikshaMitraToast.error({ message: 'Select one student to review and save placement or identifiers.' });
+      shikshaMitraToast.error({
+        message: 'Select one student to review and save placement or identifiers.',
+      });
       return;
     }
     setAssignmentRequest({ type, studentIds });
@@ -907,6 +1414,7 @@ export default function StudentSetupScreen() {
 
   const openBulkWorkflowAction = (action: BulkOnboardingAction) => {
     setMoreActionsAnchor(null);
+    setBulkActionStudents(selectedStudents);
     setBulkAction(action);
   };
 
@@ -955,23 +1463,19 @@ export default function StudentSetupScreen() {
   };
 
   return (
-    <Stack spacing={1.5} sx={{ minWidth: 0, minHeight: 0, height: '100%' }}>
+    <Stack spacing={1} sx={{ minWidth: 0, minHeight: 0, height: '100%' }}>
       <CustomBreadcrumbs
         heading="Student Setup"
         description=" "
         tooltipProps={{ title: studentSetupTooltip, sx: { textAlign: 'left' } } as TooltipProps}
         links={[
           { name: 'Student', href: studentPaths.dashboard },
-          { name: 'Student Onboarding', href: studentPaths.onboarding.setup },
+          { name: 'Onboarding' },
           { name: 'Student Setup' },
         ]}
       />
 
-      <StudentSetupTaskNavigation
-        activeView={activeView}
-        counts={navigationCounts}
-        getViewHref={getViewHref}
-      />
+      <StudentSetupTaskNavigation activeView={activeView} getViewHref={getViewHref} />
 
       <Box
         role="tabpanel"
@@ -983,49 +1487,24 @@ export default function StudentSetupScreen() {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          gap: 1.5,
+          gap: 1,
         }}
       >
         <StudentSetupFilters
-            options={filterOptionsQuery.data}
-            selectedBoardId={selectedBoardId}
-            selectedMediumId={selectedMediumId}
-            selectedStandardId={selectedStandardId}
-            selectedDivisionId={selectedDivisionId}
-            overdueOnly={overdueOnly}
-            unassignedOnly={unassignedOnly}
-            onBoardChange={(value) => changeAcademicFilter('board', value)}
-            onMediumChange={(value) => changeAcademicFilter('medium', value)}
-            onStandardChange={(value) => changeAcademicFilter('class', value)}
-            onDivisionChange={(value) => changeAcademicFilter('division', value)}
-            onOverdueOnlyChange={(value) => {
-              setOverdueOnly(value);
-              setTablePage(1);
-            }}
-            onUnassignedOnlyChange={(value) => {
-              setUnassignedOnly(value);
-              setTablePage(1);
-            }}
-          />
+          options={filterOptionsQuery.data}
+          selectedBoardId={selectedBoardId}
+          selectedMediumId={selectedMediumId}
+          selectedStandardId={selectedStandardId}
+          selectedDivisionId={selectedDivisionId}
+          onBoardChange={(value) => changeAcademicFilter('board', value)}
+          onMediumChange={(value) => changeAcademicFilter('medium', value)}
+          onStandardChange={(value) => changeAcademicFilter('class', value)}
+          onDivisionChange={(value) => changeAcademicFilter('division', value)}
+        />
 
-        {onboardingQuery.isFetching ? (
-          <LinearProgress aria-label="Loading Student Onboarding worklist" />
-        ) : null}
-        {onboardingQuery.isError ? (
-          <Alert
-            severity="error"
-            action={
-              <Button color="inherit" onClick={() => onboardingQuery.refetch()}>
-                Retry
-              </Button>
-            }
-          >
-            Student Onboarding cases could not be loaded.
-          </Alert>
-        ) : null}
         {!currentYear?.id && showFilterAlert ? (
           <Alert severity="info" onClose={() => setShowFilterAlert(false)}>
-            Select an academic year to load Student Onboarding cases.
+            Select an academic year to load onboarding cases.
           </Alert>
         ) : null}
 
@@ -1036,7 +1515,7 @@ export default function StudentSetupScreen() {
                 view={activeView}
                 scope={activeTaskScope}
                 scopeHref={getScopeHref}
-                pendingCount={pendingCounts[activeView]}
+                pendingCount={pendingCount}
                 visibleCount={displayedRows.length}
                 selectedCount={selectedStudentIds.length}
                 assignmentMode={
@@ -1147,7 +1626,10 @@ export default function StudentSetupScreen() {
             <StudentSetupTable
               rows={displayedRows}
               isLoading={onboardingQuery.isLoading}
+              isError={onboardingQuery.isError}
+              onRetry={() => onboardingQuery.refetch()}
               view={activeView}
+              taskScope={activeTaskScope}
               tableId={`student-onboarding-${activeView}-worklist`}
               tableTitle={
                 activeView === 'readiness'
@@ -1155,11 +1637,25 @@ export default function StudentSetupScreen() {
                   : assignmentViewMeta[activeView].title
               }
               noDataText={
-                activeView === 'readiness'
-                  ? 'No students match the selected filters.'
-                  : activeTaskScope === 'pending'
-                    ? `No students are currently ${activeView === 'division' ? 'without a division' : `waiting for a ${activeView === 'gr-number' ? 'GR number' : 'roll number'}`}. Switch to All students to review existing assignments.`
-                    : 'No students match the selected academic filters.'
+                !currentYear?.id
+                  ? 'Select an academic year to view onboarding students.'
+                  : activeView === 'readiness'
+                    ? hasWorklistFilters
+                      ? 'No students match the selected filters.'
+                      : 'No students are in onboarding for this academic year.'
+                    : activeTaskScope === 'pending'
+                      ? `No students are currently ${activeView === 'division' ? 'without a division' : `waiting for a ${activeView === 'gr-number' ? 'GR number' : 'roll number'}`}. Switch to All students to review existing assignments.`
+                      : hasWorklistFilters
+                        ? 'No students match the selected filters.'
+                        : 'No students are in onboarding for this academic year.'
+              }
+              noDataDescription={
+                currentYear?.id && !hasWorklistFilters && activeView === 'readiness'
+                  ? 'Students appear here after an admission is accepted.'
+                  : undefined
+              }
+              onClearWorklistFilters={
+                hasWorklistFilters && currentYear?.id ? clearWorklistFilters : undefined
               }
               onOpen={setSelectedStudentId}
               selectedStudentIds={selectedStudentIds}
@@ -1167,9 +1663,7 @@ export default function StudentSetupScreen() {
               allStudentsSelected={allStudentsSelected}
               someStudentsSelected={someStudentsSelected}
               onToggleAll={toggleAll}
-              totalCount={
-                onboardingQuery.currentData?.totalCount ?? 0
-              }
+              totalCount={onboardingQuery.currentData?.totalCount ?? 0}
               page={tablePage}
               rowsPerPage={rowsPerPage}
               searchTerm={searchTerm}
@@ -1178,9 +1672,18 @@ export default function StudentSetupScreen() {
                 setRowsPerPage(nextRowsPerPage);
               }}
               onSearchChange={(value) => {
-                setSearchTerm(value);
+                const next = new URLSearchParams(searchParams.toString());
+                if (value.trim()) next.set('search', value.trim());
+                else next.delete('search');
                 setTablePage(1);
+                const query = next.toString();
+                router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
               }}
+              columnFilters={columnFilters}
+              onColumnFilterChange={handleColumnFilterChange}
+              sorts={sorts}
+              onSortChange={handleSortChange}
+              placementOptions={placementOptions}
               isServerBacked
             />
           </Stack>
@@ -1212,8 +1715,11 @@ export default function StudentSetupScreen() {
       ) : null}
       <OnboardingBulkActionDialog
         action={bulkAction}
-        students={selectedStudents}
-        onClose={() => setBulkAction(null)}
+        students={bulkActionStudents}
+        onClose={() => {
+          setBulkAction(null);
+          setBulkActionStudents([]);
+        }}
       />
     </Stack>
   );

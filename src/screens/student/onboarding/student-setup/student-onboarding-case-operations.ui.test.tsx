@@ -51,7 +51,7 @@ it('records required service consent only after enrollment and keeps its evidenc
   );
 
   fireEvent.click(screen.getByRole('button', { name: 'Confirm consent' }));
-  expect(screen.getByText(/does not collect consent from the family/)).toBeInTheDocument();
+  expect(screen.getByText(/This does not collect consent/)).toBeInTheDocument();
   const reference = screen.getByRole('textbox', { name: 'Consent record reference' });
   fireEvent.change(reference, { target: { value: 'Signed form CONSENT-001' } });
   fireEvent.click(screen.getByRole('button', { name: 'Record confirmation' }));
@@ -101,6 +101,7 @@ it('offers a saved school-defined route in Student Setup', () => {
     </OnboardingSettingsProvider>
   );
 
+  fireEvent.click(screen.getByRole('button', { name: 'Case Settings' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Admission route' }));
   expect(screen.getByRole('option', { name: 'Scholarship intake' })).toBeInTheDocument();
 });
@@ -140,6 +141,7 @@ it('shows custom routes only for this student’s board and campus while retaini
     </OnboardingSettingsProvider>
   );
 
+  fireEvent.click(screen.getByRole('button', { name: 'Case Settings' }));
   fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Admission route' }));
   expect(screen.getByRole('option', { name: 'Scholarship intake' })).toBeInTheDocument();
   expect(screen.getByRole('option', { name: 'Legacy custom route' })).toBeInTheDocument();

@@ -31,13 +31,13 @@ export default function OnboardingSettingsPage() {
   return (
     <Stack spacing={2} sx={{ minWidth: 0 }}>
       <CustomBreadcrumbs
-        heading="Student Onboarding Settings"
+        heading="Onboarding Settings"
         description=" "
         tooltipProps={
           {
             title: (
               <OnboardingSettingsBreadcrumbInfo
-                title="Student Onboarding settings"
+                title="Onboarding settings"
                 description="Control readiness, identifiers, roll numbers, and portal access without crowding daily work."
                 items={[
                   'Manage activation readiness and portal-access rules.',
@@ -50,8 +50,8 @@ export default function OnboardingSettingsPage() {
           } as TooltipProps
         }
         links={[
-          { name: 'Student Management', href: studentPaths.dashboard },
-          { name: 'Student Onboarding', href: studentPaths.onboarding.setup },
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Onboarding', href: studentPaths.onboarding.setup },
           { name: 'Settings' },
         ]}
       />
@@ -152,8 +152,8 @@ export function OnboardingSettingsSectionPlaceholder({
           } as TooltipProps
         }
         links={[
-          { name: 'Student Management', href: studentPaths.dashboard },
-          { name: 'Student Onboarding', href: studentPaths.onboarding.setup },
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Onboarding', href: studentPaths.onboarding.setup },
           { name: 'Settings', href: studentPaths.onboarding.settings },
           { name: title },
         ]}

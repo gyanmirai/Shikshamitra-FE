@@ -124,9 +124,15 @@ it('saves a division through the onboarding API instead of confirming a preview'
     />
   );
 
+  expect(screen.getByText(student.studentName)).toBeInTheDocument();
+  expect(screen.getByRole('option', { name: 'B · 4 of 30 seats available' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Reserve division' })).toBeDisabled();
   fireEvent.change(screen.getByRole('combobox', { name: 'Division' }), {
     target: { value: 'division-b' },
   });
+  expect(screen.getByText('Available seats')).toBeVisible();
+  expect(screen.getByText('4 of 30')).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Reserve division' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: 'Reserve division' }));
 
   await waitFor(() =>
@@ -161,6 +167,8 @@ it('saves GR and roll allocation through the onboarding API', async () => {
   await waitFor(() =>
     expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeEnabled()
   );
+  expect(screen.getByText('Roll number preview ready')).toBeInTheDocument();
+  expect(screen.getByText('GR 2026')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Prepare identifiers' }));
 
   await waitFor(() =>
@@ -192,12 +200,15 @@ it('uses a read-only automatic proposal and sends the accepted owner number', as
     />
   );
   expect(screen.queryByRole('textbox', { name: 'Roll number' })).not.toBeInTheDocument();
-  expect(screen.getByRole('textbox', { name: 'Proposed roll number' })).toHaveAttribute('readonly');
+  expect(screen.queryByRole('textbox', { name: 'Proposed roll number' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeDisabled();
   fireEvent.change(screen.getByLabelText('Identifier series'), { target: { value: 'series-1' } });
+  expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeEnabled();
   fireEvent.click(screen.getByRole('button', { name: 'Preview roll number' }));
   await waitFor(() =>
     expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeEnabled()
   );
+  expect(screen.getByText('28')).toBeInTheDocument();
   expect(operationMocks.preview).toHaveBeenCalledWith({
     id: 'case-1',
     rollAssignmentMode: 'automatic',
@@ -229,14 +240,96 @@ it('requires an explicit numbering choice when the school allows both', async ()
       onClose={vi.fn()}
     />
   );
-  expect(screen.getByLabelText('Roll number assignment')).toHaveValue('');
+  expect(screen.getByRole('radiogroup', { name: 'Roll number assignment' })).toHaveAttribute(
+    'aria-required',
+    'true'
+  );
+  expect(screen.getByRole('radio', { name: /Automatic/ })).not.toBeChecked();
   expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeDisabled();
-  fireEvent.change(screen.getByLabelText('Roll number assignment'), {
-    target: { value: 'automatic' },
+  fireEvent.click(screen.getByRole('radio', { name: /Automatic/ }));
+  expect(screen.getByRole('radio', { name: /Automatic/ })).toBeChecked();
+  expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Identifier series'), {
+    target: { value: 'series-1' },
   });
   fireEvent.click(screen.getByRole('button', { name: 'Preview roll number' }));
   await waitFor(() => expect(operationMocks.preview).toHaveBeenCalledOnce());
   expect(operationMocks.preview.mock.calls[0][0].rollAssignmentMode).toBe('automatic');
+});
+
+it('requires an audit reason before previewing a replacement roll number', async () => {
+  render(
+    <StudentOnboardingOperationDialog
+      assignmentType="roll-number"
+      student={{ ...student, rollNo: 7 }}
+      onClose={vi.fn()}
+    />
+  );
+
+  expect(screen.queryByText('Replacing an existing assignment')).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Identifier series'), {
+    target: { value: 'series-1' },
+  });
+  fireEvent.change(screen.getByLabelText('Roll number'), {
+    target: { value: '11' },
+  });
+  expect(screen.getByText('Replacing an existing assignment')).toBeVisible();
+  expect(screen.getByText('Current roll: 7')).toBeVisible();
+  expect(
+    screen.queryByRole('textbox', { name: 'Manual identifier override' })
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeDisabled();
+  fireEvent.change(screen.getByRole('textbox', { name: /Override reason/ }), {
+    target: { value: 'Correcting the prior assignment' },
+  });
+  expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Preview roll number' }));
+  await waitFor(() =>
+    expect(operationMocks.preview).toHaveBeenCalledWith({
+      id: 'case-1',
+      rollAssignmentMode: 'manual',
+      rollNumber: 11,
+      reason: 'Correcting the prior assignment',
+    })
+  );
+  expect(await screen.findByText('Roll number preview ready')).toBeVisible();
+});
+
+it('keeps an identifier override in the final preview and requires a reason', async () => {
+  render(
+    <StudentOnboardingOperationDialog
+      assignmentType="gr-number"
+      student={student}
+      onClose={vi.fn()}
+    />
+  );
+
+  fireEvent.change(screen.getByLabelText('Identifier series'), {
+    target: { value: 'series-1' },
+  });
+  fireEvent.change(screen.getByLabelText('Roll number'), {
+    target: { value: '11' },
+  });
+  expect(
+    screen.queryByRole('textbox', { name: 'Manual identifier override' })
+  ).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Add manual identifier override' }));
+  fireEvent.change(screen.getByRole('textbox', { name: 'Manual identifier override' }), {
+    target: { value: 'GR-CUSTOM-11' },
+  });
+  expect(screen.getByRole('button', { name: 'Preview roll number' })).toBeDisabled();
+  fireEvent.change(screen.getByRole('textbox', { name: /Override reason/ }), {
+    target: { value: 'Correcting the series value' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Preview roll number' }));
+  expect(await screen.findByText('Roll number preview ready')).toBeVisible();
+  expect(screen.getByText('GR-CUSTOM-11')).toBeInTheDocument();
+
+  fireEvent.change(screen.getByRole('textbox', { name: 'Manual identifier override' }), {
+    target: { value: 'GR-CUSTOM-12' },
+  });
+  expect(screen.getByText(/Preview the roll number again before preparing/)).toBeVisible();
+  expect(screen.getByRole('button', { name: 'Prepare identifiers' })).toBeDisabled();
 });
 
 it('does not silently rebase the preview onto a newer case stamp', async () => {

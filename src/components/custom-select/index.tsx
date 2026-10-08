@@ -3,20 +3,20 @@ import type { SxProps, SelectProps, FormControlProps, FormHelperTextProps } from
 import React, { useId, useState } from 'react';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import {
-  Tooltip,
-  IconButton,
-  InputAdornment,
   Chip,
   Select,
+  Tooltip,
   MenuItem,
   Checkbox,
   Skeleton,
   TextField,
+  IconButton,
   InputLabel,
   Typography,
   FormControl,
   ListItemText,
   ListSubheader,
+  InputAdornment,
   FormHelperText,
 } from '@mui/material';
 
@@ -135,6 +135,7 @@ const CustomSelect = <T extends string, J extends boolean>({
         }),
       ]}
       {...formControlProps}
+      required={Boolean(props.required || formControlProps?.required)}
     >
       {isLoading ? (
         <Skeleton variant="rectangular" height={40} />
