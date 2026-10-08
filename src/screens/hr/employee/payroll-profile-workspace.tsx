@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { fDate } from 'src/utils/format-time';
 import { formatCurrency } from 'src/utils/cureencyFormater';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { RouterLink } from 'src/routes/components/router-link';
 import { hrPaths, hrPermissions } from 'src/constants/hr-menus';
 import { useGetBankDetailsQuery } from 'src/redux/hr/employeeApi';
 import { FormSectionCard } from 'src/components/form-section-card';
@@ -34,6 +35,7 @@ import { staffSalaryEditorHref } from './payroll-profile-utils';
 import { EmployeeEsiDetails } from '../payroll/setting/employee-esi-details';
 import { PayrollProfilePolicyEditor } from './payroll-profile-policy-editor';
 import { PayrollProfileDetailsEditor } from './payroll-profile-details-editor';
+import { useSalaryEditorPrefetch } from '../payroll/structure/use-salary-editor-prefetch';
 
 function DetailRows({ rows }: { rows: Array<[string, string | number | null | undefined]> }) {
   return (
@@ -138,6 +140,7 @@ export function PayrollProfileWorkspace({
   actionsDisabled?: boolean;
 }) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const prefetchSalaryEditor = useSalaryEditorPrefetch(employeeId);
   const academicYearId = useSelector((state: RootState) => state.globalState.currentYear?.id);
   const can = (permission: string) => hasGrantedPermission(permissions, permission);
   const canManageSalary = can(hrPermissions.payroll.compensationRevisionActions.manage);
@@ -204,7 +207,10 @@ export function PayrollProfileWorkspace({
           !salary.isError &&
           !salary.isLoading && (
             <Button
+              component={RouterLink}
               href={staffSalaryEditorHref(employeeId, origin)}
+              onMouseEnter={actionsDisabled ? undefined : prefetchSalaryEditor}
+              onFocus={actionsDisabled ? undefined : prefetchSalaryEditor}
               size="small"
               variant="outlined"
               disabled={actionsDisabled}

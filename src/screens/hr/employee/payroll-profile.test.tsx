@@ -10,6 +10,7 @@ import {
 } from './payroll-profile-utils';
 
 const mocks = vi.hoisted(() => ({
+  prefetch: vi.fn(),
   permissions: [] as Array<{ name: string; isGranted: boolean }>,
   details: {
     data: {
@@ -36,6 +37,7 @@ const mocks = vi.hoisted(() => ({
   policies: { currentData: null as any, isFetching: false, isError: false, refetch: vi.fn() },
   save: vi.fn(),
 }));
+vi.mock('../payroll/structure/use-salary-editor-prefetch', () => ({ useSalaryEditorPrefetch: () => mocks.prefetch }));
 vi.mock('react-redux', () => ({
   useSelector: (selector: any) =>
     selector({
@@ -110,6 +112,17 @@ beforeEach(() => {
 });
 
 describe('staff payroll overview', () => {
+  it('preloads salary on pointer and keyboard intent, but not while actions are disabled', () => {
+    const { rerender } = render(<PayrollProfileWorkspace employeeId="staff-1" />);
+    const link = screen.getByRole('link', { name: 'Set up salary' });
+    fireEvent.mouseEnter(link);
+    fireEvent.focus(link);
+    expect(mocks.prefetch).toHaveBeenCalledTimes(2);
+    rerender(<PayrollProfileWorkspace employeeId="staff-1" actionsDisabled />);
+    fireEvent.mouseEnter(link);
+    fireEvent.focus(link);
+    expect(mocks.prefetch).toHaveBeenCalledTimes(2);
+  });
   it('offers salary setup and routes one-time adjustments to payroll without profile editors', () => {
     render(<PayrollProfileWorkspace employeeId="staff-1" />);
     expect(screen.getByRole('link', { name: 'Set up salary' })).toHaveAttribute(

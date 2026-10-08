@@ -624,6 +624,9 @@ Verify Save versus Save & Next, unchanged continuation, group-only requests, fai
 
 ## Recurring salary editor acceptance
 
+Run the structure screen and salary-editor-prefetch tests for parallel loading, employee switching, deep links, and permission-gated preloading.
+Verify the staff payroll salary link and return link do not reload the document, and that hover/focus followed by opening the editor reuses requests.
+
 Run SalaryStructureBuilder and salary-editor-dialog tests for calculation freshness, failed-save retention, unchanged-save prevention, activation, and unsaved navigation.
 Check both Staff Directory and Payroll Structure entry points at desktop, tablet, and mobile widths.
 Verify sticky footer access, keyboard history expansion, draft retention, and return to staff edit.

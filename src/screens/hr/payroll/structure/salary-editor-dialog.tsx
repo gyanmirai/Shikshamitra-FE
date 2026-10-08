@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import { useFormik } from 'formik';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'src/routes/hooks';
 import { hrPaths } from 'src/constants/hr-menus';
 import { LoadingScreen } from 'src/components/loading-screen';
@@ -12,6 +12,7 @@ import { Box, Alert, Button, Typography, DialogActions } from '@mui/material';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
+import { useSalaryEditorPrefetch } from './use-salary-editor-prefetch';
 
 export function SalaryEditorDialog({
   employeeId,
@@ -20,6 +21,9 @@ export function SalaryEditorDialog({
   employeeId: string;
   handleClose: () => void;
 }) {
+  const prefetchSalaryEditor = useSalaryEditorPrefetch(employeeId);
+  // Start independent editor reads while staff details load, without initializing an incomplete form.
+  useEffect(() => prefetchSalaryEditor(), [prefetchSalaryEditor]);
   const {
     currentData: employee,
     isLoading,
