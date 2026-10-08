@@ -17,7 +17,6 @@ import {
   useUpdateEmployeeMutation,
   useGetWorkExperienceQuery,
   useGetBasicInformationQuery,
-  useUpdateBankDetailsMutation,
   useGetFamilyInformationQuery,
   useGetAdditionalInformationQuery,
   useUpdateFamilyInformationMutation,
@@ -36,7 +35,6 @@ import { InformationFields } from './employee-form-fields/InformationFields';
 import { WorkExperienceFields } from './employee-form-fields/WorkExperienceFields';
 import { buildProfilePersonalInfoUpdatePayload } from './personal-info-update-payload';
 import { AssignReportingManager } from './employee-form-fields/AssignReportingManager';
-import { isSalaryComponentFixed, getSalaryComponentPayloadAmount } from './salary-utils';
 import { AdditionalDetailsFields } from './employee-form-fields/AdditionalDetailsFields';
 import { AcademicPermissionFields } from './employee-form-fields/AcademicPermissionFields';
 import {
@@ -60,11 +58,6 @@ import {
 
 //   InformationFields,
 import type { FieldsType } from './employee-form-fields/types';
-
-const toOptionalNumber = (value: unknown) => (value === '' || value == null ? null : Number(value));
-const toOptionalGuid = (value: unknown) =>
-  typeof value === 'string' && value.trim() ? value : null;
-const getPayrollComponentId = (item: any) => item?.componentId || item?._id || item?.id || null;
 
 const TabSkeleton = ({ activeTabIndex }: { activeTabIndex: number }) => {
   switch (activeTabIndex) {
@@ -211,11 +204,6 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     isThrowError: true,
   });
 
-  const [updateBankDetails] = useQueryAndMutation({
-    type: 'mutation',
-    currentQueryAndMutation: useUpdateBankDetailsMutation,
-    isThrowError: true,
-  });
   const [updateAdditionalInfo] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateAdditionalInformationMutation,
@@ -326,66 +314,6 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
     [updateExperienceInfo]
   );
 
-  // Handler for updateBankDetailsInformation
-  const handleBankDetailsInformation = useCallback(
-    async (values: any, formik: any, id?: any) => {
-      const res = await updateBankDetails({
-        employeeId: values.employeeId || id,
-        body: {
-          bankDetails: {
-            bankName: values.bankName,
-            branchName: values.branchName,
-            accountHolderName: values.accountHolderName,
-            accountNumber: values.accountNumber,
-            ifscCode: values.ifscCode,
-          },
-
-          salaryDetails: {
-            pfRuleId: toOptionalGuid(values.pfRule),
-            epfNumber: values.epfNumber,
-            uanNumber: values.uanNumber,
-            punchId: values.punchId,
-            totalWorkingHourPerMonth: toOptionalNumber(values.totalWorkingHourPerMonth),
-            quotedSalaryBasis: values.quotedSalaryBasis || null,
-            quotedMonthlyAmount: toOptionalNumber(values.quotedMonthlyAmount),
-            sourceSalaryTemplateId: toOptionalGuid(values.sourceSalaryTemplateId),
-            sourceSalaryTemplateVersionId: toOptionalGuid(values.sourceSalaryTemplateVersionId),
-            sourceSalaryTemplateVersion: toOptionalNumber(values.sourceSalaryTemplateVersion),
-            salaryGeneratedAt: values.salaryGeneratedAt || null,
-            wasModifiedAfterGeneration: Boolean(values.wasModifiedAfterGeneration),
-          },
-
-          earningComponents: values.earningComponents
-            .filter((item: any) => item.isTemp)
-            .map((item: any) => ({
-              componentId: getPayrollComponentId(item),
-              name: item?.name || item?.earningComponentName || '',
-              amount: getSalaryComponentPayloadAmount(item),
-              isFixed: isSalaryComponentFixed(item),
-              isTemp: Boolean(item?.isTemp),
-              usesMasterValue: item?.usesMasterValue,
-              semanticType: item?.semanticType || 'Ordinary',
-              statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
-            })),
-          deductionComponents: values.deductionComponents
-            .filter((item: any) => item.isTemp)
-            .map((item: any) => ({
-              componentId: getPayrollComponentId(item),
-              name: item?.name || item?.deductionComponentName || '',
-              amount: getSalaryComponentPayloadAmount(item),
-              isFixed: isSalaryComponentFixed(item),
-              isTemp: Boolean(item?.isTemp),
-              usesMasterValue: item?.usesMasterValue,
-              semanticType: item?.semanticType || 'Ordinary',
-              statutoryRuleId: toOptionalGuid(item?.statutoryRuleId),
-            })),
-        },
-      }).unwrap();
-      return res;
-    },
-    [updateBankDetails]
-  );
-
   const handleAdditionalDetails = useCallback(
     async (values: any, formik: any, id?: any) => {
       const res = await updateAdditionalInfo({
@@ -437,8 +365,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
         await handleWorkExperience(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Work Experience  updated successfully' });
       } else if (activeTabIndex === 4) {
-        await handleBankDetailsInformation(formik.values, formik, editData?.id);
-        shikshaMitraToast.success({ message: 'Bank Details updated successfully' });
+        // Payroll profile drawers save independently.
       } else if (activeTabIndex === 5) {
         await handleReportingManager(formik.values, formik, editData?.id);
         shikshaMitraToast.success({ message: 'Assign Reporting Manager updated successfully' });
@@ -447,9 +374,7 @@ const EmployeeInformation = ({ editData }: { editData: any }) => {
       console.error(error);
       shikshaMitraToast.error({
         message:
-          (error as any)?.data?.message ||
-          (error as any)?.error ||
-          'Failed to save staff details',
+          (error as any)?.data?.message || (error as any)?.error || 'Failed to save staff details',
       });
     }
   };

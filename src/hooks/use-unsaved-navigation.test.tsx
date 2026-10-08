@@ -11,8 +11,16 @@ vi.mock('react-redux', () => ({
   useDispatch: () => vi.fn(),
 }));
 
-function Fixture({ push, dirty = true }: { push: (href: string) => void; dirty?: boolean }) {
-  const { confirmation } = useUnsavedNavigation(dirty, { push });
+function Fixture({
+  push,
+  dirty = true,
+  blocked = false,
+}: {
+  push: (href: string) => void;
+  dirty?: boolean;
+  blocked?: boolean;
+}) {
+  const { confirmation } = useUnsavedNavigation(dirty, { push, blockNavigation: blocked });
   return (
     <>
       <a href="/hr/payroll/structure">Payroll structure</a>
@@ -66,4 +74,15 @@ describe('shared unsaved navigation', () => {
     fireEvent.click(cleanLink);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
+});
+
+it('blocks navigation during a save even after the dirty baseline has reset', () => {
+  const push = vi.fn();
+  render(<Fixture push={push} dirty={false} blocked />);
+  const link = screen.getByText('Payroll structure');
+  const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+  link.dispatchEvent(event);
+  expect(event.defaultPrevented).toBe(true);
+  expect(push).not.toHaveBeenCalled();
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 });

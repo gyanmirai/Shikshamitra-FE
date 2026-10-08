@@ -1,0 +1,140 @@
+import { it, vi, expect, beforeEach } from 'vitest';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+
+import EmployeeFrom from './employee-form';
+
+const mocks = vi.hoisted(() => ({ save: vi.fn(), toast: vi.fn() }));
+vi.mock('react-redux', () => ({
+  useSelector: (selector: any) =>
+    selector({
+      auth: { permissions: [] },
+      globalState: { currentYear: { id: 'year' } },
+      confirmPopup: { isChanges: false },
+    }),
+  useDispatch: () => vi.fn(),
+}));
+vi.mock('src/routes/hooks', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock('src/components/toast', () => ({
+  shikshaMitraToast: { success: mocks.toast, error: vi.fn() },
+}));
+vi.mock('src/redux/customQueryAndMutation', () => ({
+  default: ({ type }: any) => (type === 'mutation' ? [vi.fn()] : {}),
+}));
+vi.mock('src/redux/hr/hr-policy-api', () => ({
+  useGetPayrollPoliciesQuery: () => ({}),
+  useGetAttendancePoliciesQuery: () => ({}),
+}));
+vi.mock('src/redux/hr/leaveApi', () => ({ useGetLeavePoliciesQuery: () => ({}) }));
+vi.mock('./employee-form-fields', () => ({ allFields: [] }));
+vi.mock('src/components/confirm-dialog', () => ({ ConfirmDialog: () => null }));
+vi.mock('src/components/form-section-card', () => ({
+  FormSectionCard: ({ title, children }: any) => (
+    <section>
+      <h2>{title}</h2>
+      {children}
+    </section>
+  ),
+}));
+vi.mock('src/redux/hr/employee-payroll-profile-api', () => ({
+  useUpdatePayrollProfileDetailsMutation: () => [mocks.save, {}],
+}));
+vi.mock('./payroll-profile-workspace', () => ({
+  PayrollProfileWorkspace: ({ detailsContent }: any) =>
+    detailsContent(
+      {
+        bankDetails: {
+          bankName: 'Bank',
+          branchName: '',
+          accountHolderName: 'Staff',
+          accountNumber: '1234567890',
+          ifscCode: 'SBIN0001234',
+        },
+        statutoryIdentifiers: { epfNumber: '', uanNumber: '' },
+        attendanceIntegration: { punchId: 'PUNCH', totalWorkingHourPerMonth: 160 },
+      },
+      true
+    ),
+}));
+vi.mock('src/components/custom-stepper', async () => {
+  const { useFormik } = await import('formik');
+  return {
+    CustomStepperWithFormik: ({
+      initialValues,
+      activeStep,
+      renderItem,
+      showSaveButton,
+      onSave,
+      saveAndNextButtonProps,
+      handleNext,
+    }: any) => {
+      const formik = useFormik({ initialValues, onSubmit: () => undefined });
+      return (
+        <>
+          <div data-testid="current-step">{activeStep}</div>
+          {activeStep === 5 && renderItem({ activeStep: 5, formik })}
+          {showSaveButton && (
+            <button
+              type="button"
+              onClick={() => onSave(false, formik.values, formik, () => undefined)}
+            >
+              Save
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={saveAndNextButtonProps?.disabled}
+            onClick={() => handleNext(false, formik.values, formik, () => undefined)}
+          >
+            Save & Next
+          </button>
+        </>
+      );
+    },
+  };
+});
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.save.mockReturnValue({ unwrap: async () => undefined });
+});
+function setup() {
+  render(
+    <EmployeeFrom
+      editData={{ id: 'staff', firstName: 'Test', fullName: 'Test Staff' }}
+      initialStep={5}
+      handleClose={vi.fn()}
+    />
+  );
+}
+it('advances the actual edit wizard without a write when payroll details are unchanged', async () => {
+  setup();
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  await waitFor(() => expect(screen.getByTestId('current-step')).toHaveTextContent('6'));
+  expect(mocks.save).not.toHaveBeenCalled();
+  expect(mocks.toast).not.toHaveBeenCalled();
+});
+it('Save persists the inline draft and stays on Payroll; Save & Next then advances without resaving', async () => {
+  setup();
+  fireEvent.change(screen.getByLabelText('Punch ID'), { target: { value: 'UPDATED' } });
+  fireEvent.click(await screen.findByRole('button', { name: /^Save$/ }));
+  await waitFor(() =>
+    expect(screen.queryByRole('button', { name: /^Save$/ })).not.toBeInTheDocument()
+  );
+  expect(screen.getByTestId('current-step')).toHaveTextContent('5');
+  expect(mocks.save).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  await waitFor(() => expect(screen.getByTestId('current-step')).toHaveTextContent('6'));
+  expect(mocks.save).toHaveBeenCalledTimes(1);
+});
+it('keeps the wizard on Payroll and retains inputs when Save & Next fails', async () => {
+  mocks.save.mockReturnValue({
+    unwrap: async () => {
+      throw new Error('Failed');
+    },
+  });
+  setup();
+  fireEvent.change(screen.getByLabelText('Punch ID'), { target: { value: 'DRAFT' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Save & Next' }));
+  await screen.findByRole('alert');
+  expect(screen.getByTestId('current-step')).toHaveTextContent('5');
+  expect(screen.getByLabelText('Punch ID')).toHaveValue('DRAFT');
+});
