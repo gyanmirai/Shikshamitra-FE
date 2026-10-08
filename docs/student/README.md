@@ -15,6 +15,8 @@ Admissions starts from qualified inquiries, and Pipeline projects active applica
 Finalization creates an Onboarding case; Onboarding owns enrollment activation.
 Student Onboarding uses a persisted Student Setup worklist with readiness, placement, identifiers, Finance and portal-account actions. Settings are consolidated into Readiness & Access and Numbering & Placement; obsolete saved-default menus and production workflow preview are removed. The Student header selects only the academic year. Rule editors use dependent Board/Medium selectors and checkbox School Level/Standard selections from the school's configured hierarchy; DDVS currently enables Secondary and Higher Secondary. The backend resolves scoped configuration and enforces activation, numbering, permissions, capacity and completion. Activation creates enrollment and enters Provisioning; completion requires Finance assignment, confirmed first-installment settlement, required account links, and recorded service consent when an existing policy requires it. See [workflows.md](./workflows.md) and [testing.md](./testing.md).
 
+Assessments provides scoped Sessions and Applicants workspaces with explicit booking, attendance, result, review and workflow continuation actions. See [workflows.md](./workflows.md) for the staff journey and [testing.md](./testing.md) for acceptance evidence.
+
 ## Read order
 
 Follow this order when changing Student frontend behavior:

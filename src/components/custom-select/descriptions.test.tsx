@@ -7,7 +7,7 @@ import CustomSelect from './index';
 it('shows option information without changing selection or closing the menu', () => {
   const change = vi.fn();
   render(
-    <CustomSelect
+    <CustomSelect<'value' | 'label' | 'caption', false>
       label="Scope"
       value="paid"
       onChange={change}

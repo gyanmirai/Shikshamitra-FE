@@ -11,7 +11,7 @@ audience: humans-and-agents
 # Find HR frontend API clients
 
 TL;DR: use this page to locate RTK Query clients and backend contract ownership for HR screens.
-Backend endpoint behavior is canonical in `../../../Shikshamitra-BE/docs/modules/hr/api.md`.
+Backend endpoint behavior is canonical in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md`.
 
 ## Client map
 
@@ -86,7 +86,7 @@ The workbench keeps the last completed page visible during recalculation and dis
 Salary calculation errors use the shared problem-details parser so allocation discrepancies include the server's gross, allocated amount, and difference.
 
 Do not infer backend behavior from a client helper alone.
-Confirm request and response behavior in `../../../Shikshamitra-BE/docs/modules/hr/api.md` and backend `Application.Contracts/HR/**`.
+Confirm request and response behavior in `https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md` and backend `Application.Contracts/HR/**`.
 The salary-template RTK Query client is `src/redux/hr/salary-template-api.ts`.
 It owns the complete template list, active-template choices, active component catalog, atomic active create or update, calculation, version history, default selection, and archiving through the shared authenticated API service.
 The calculation contract includes Monthly salary (GROSS) and Monthly cost to school (EMPLOYER_COST) salary bases, effective month, optional employee context, target variance, and ESI preview details.
