@@ -28,8 +28,7 @@ function Fixture() {
     <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', height: '100dvh', minHeight: 0 }}>
       <Typography variant="h5">Archived Fee Category</Typography>
       <Typography>Fixture status mutations: {count} · Synthetic data, no backend writes</Typography>
-      <FeeCategoryTable archived open={false} onAddFeeCategory={() => {}} editData={null} setOpenDialog={() => {}}
-        setEditData={() => {}} totalCount={1} isLoading={false} />
+      <FeeCategoryTable archived onAddFeeCategory={() => {}} setEditData={() => {}} />
     </Box></ThemeProvider></Provider>;
 }
 createRoot(document.getElementById('root')!).render(<Fixture />);

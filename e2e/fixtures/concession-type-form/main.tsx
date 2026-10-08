@@ -53,7 +53,11 @@ function Fixture() {
             {open && (
               <ConcessionTypeForm
                 open={openState}
-                editData={{ id: 'synthetic-concession', isUsedInDownstream: false }}
+                editData={{
+                  id: 'synthetic-concession',
+                  name: 'Synthetic sibling concession',
+                  isUsedInDownstream: false,
+                }}
                 onClose={() => setOpen(false)}
               />
             )}
