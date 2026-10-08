@@ -370,12 +370,23 @@ Dirty navigation is confirmed, navigation and duplicate actions are blocked whil
 
 ## Recurring salary editor
 
-Payroll Structure and Staff Directory share the recurring salary dialog.
+Payroll Structure and Staff Directory share the recurring Edit Salary sub-page.
 The staff payroll salary link and return link use client-side navigation to preserve the application shell.
 Hovering or focusing the salary link preloads the editor's independent reads through RTK Query, reusing data fetched within the last 30 seconds.
 Salary deep links start reads from the employee ID immediately; employee details still gate form initialization, and failed staff reads offer a retry.
-The footer owns Calculate salary and Save salary; saving retains the dialog, refreshes history, and clears the draft baseline.
+The footer owns Calculate salary and Save salary; saving keeps the page open, refreshes history, and clears the draft baseline.
+
 History starts collapsed, and employee deductions remain separate from employer contributions.
 Input changes require recalculation, failures retain the draft, and leaving with unsaved changes requires confirmation.
 One-time additions use the monthly payroll link and its existing employee and month selection.
 The editor never calls the legacy component-update API or removes existing temporary components.
+
+## Salary editor navigation
+
+Payroll Structure and Staff Directory open the dedicated Edit Salary page for the selected staff member.
+Staff-profile and staff-edit links return to their original payroll context through a validated same-origin `returnTo` URL.
+Existing `/hr/payroll/structure?employeeId={employeeId}&setup=salary` bookmarks redirect to the page with history replacement, including the previous `from=staff-profile` or `from=staff-edit` context.
+The editor keeps Calculate salary and Save salary in its persistent footer and preserves current compensation behavior.
+ESIC details open in the existing drawer over the page, with an independent enrollment draft guard.
+Closing the drawer preserves salary inputs, and saving enrollment invalidates the salary preview through the existing callback.
+One-time adjustments remain in monthly payroll.

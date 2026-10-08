@@ -5,10 +5,10 @@ import { testIds, hrEmployeePath } from './selectors';
 
 import type { EmployeeFixture } from './employee-fixtures';
 
-export async function gotoEmployeeList(page: Page) {
+export async function gotoEmployeeList(page: Page, timeout?: number) {
   await page.addInitScript(() => localStorage.setItem('onboarding_completed', 'true'));
   await page.goto(hrEmployeePath);
-  await expect(page.getByTestId(testIds.employeePage)).toBeVisible();
+  await expect(page.getByTestId(testIds.employeePage)).toBeVisible({ timeout });
   await dismissAcademicYearTour(page);
   await expect(page.getByTestId(testIds.employeeListFilters)).toBeVisible();
   await expect(table(page)).toBeVisible();

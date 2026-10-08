@@ -71,6 +71,7 @@ type EsiEnrollmentDrawerProps = {
   onClose: () => void;
   onSaved: () => Promise<unknown>;
   onAddOverride?: () => void;
+  onEditorStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 };
 
 export function EsiEnrollmentDrawer({
@@ -81,6 +82,7 @@ export function EsiEnrollmentDrawer({
   onClose,
   onSaved,
   onAddOverride,
+  onEditorStateChange,
 }: EsiEnrollmentDrawerProps) {
   const employeeId = employee?.employeeId || '';
   const enrollmentQuery = useGetEsiEnrollmentQuery(employeeId, { skip: !employeeId || !open });
@@ -99,6 +101,15 @@ export function EsiEnrollmentDrawer({
     initializedEmployee.current === employeeId &&
     JSON.stringify(form) !== JSON.stringify(baseline.current);
   const { requestNavigation, confirmation } = useUnsavedNavigation(dirty);
+  useEffect(() => {
+    onEditorStateChange?.({ dirty: open && dirty, busy: open && busy });
+  }, [open, dirty, busy, onEditorStateChange]);
+  useEffect(
+    () => () => {
+      onEditorStateChange?.({ dirty: false, busy: false });
+    },
+    [onEditorStateChange]
+  );
   const close = () => {
     if (!busy) requestNavigation(onClose);
   };
@@ -195,9 +206,10 @@ export function EsiEnrollmentDrawer({
         },
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: 1, minHeight: 0 }}>
         <Box
           sx={{
+            flexShrink: 0,
             px: 2.5,
             py: 2,
             display: 'flex',
@@ -225,7 +237,18 @@ export function EsiEnrollmentDrawer({
           </IconButton>
         </Box>
 
-        <Box sx={{ p: 2.5, display: 'grid', gap: 2.5, overflowY: 'auto' }}>
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            p: 2.5,
+            display: 'grid',
+            alignContent: 'start',
+            gap: 2.5,
+            overflowY: 'auto',
+            overscrollBehavior: 'contain',
+          }}
+        >
           {employee?.statutoryWages !== undefined && (
             <Box>
               <Typography variant="subtitle1" gutterBottom>
@@ -491,7 +514,9 @@ export function EsiEnrollmentDrawer({
         {canManageEnrollment ? (
           <Box
             sx={{
-              mt: 'auto',
+              flexShrink: 0,
+              flexWrap: 'wrap',
+              '& button': { minHeight: 44 },
               px: 2.5,
               py: 2,
               display: 'flex',

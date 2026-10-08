@@ -147,6 +147,7 @@ export function SalaryStructureBuilder({
   const [activationCompleted, setActivationCompleted] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [baseline, setBaseline] = useState<string | null>(null);
+  const [esiEditorState, setEsiEditorState] = useState({ dirty: false, busy: false });
   const [savedSignature, setSavedSignature] = useState('');
   const [operationError, setOperationError] = useState('');
   const [hasConflict, setHasConflict] = useState(false);
@@ -238,8 +239,11 @@ export function SalaryStructureBuilder({
     if (initialized && baseline === null) setBaseline(signature);
   }, [initialized, baseline, signature]);
   useEffect(() => {
-    onEditorStateChange?.({ dirty: baseline !== null && baseline !== signature, busy });
-  }, [baseline, signature, busy, onEditorStateChange]);
+    onEditorStateChange?.({
+      dirty: (baseline !== null && baseline !== signature) || esiEditorState.dirty,
+      busy: busy || esiEditorState.busy,
+    });
+  }, [baseline, signature, busy, esiEditorState.dirty, esiEditorState.busy, onEditorStateChange]);
   const calculationCurrent = Boolean(calculation && calculatedSignature === signature);
 
   useEffect(() => {
@@ -532,6 +536,7 @@ export function SalaryStructureBuilder({
             </Typography>
           )}
           <EmployeeEsiDetails
+            onEditorStateChange={setEsiEditorState}
             employeeId={employeeId}
             employeeName={
               [formik.values.firstName, formik.values.lastName].filter(Boolean).join(' ') ||
@@ -546,7 +551,7 @@ export function SalaryStructureBuilder({
         </Box>
         <Grid container spacing={2}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormControl fullWidth disabled={!canManage || busy}>
+            <FormControl fullWidth size="small" disabled={!canManage || busy}>
               <InputLabel id={salaryTemplateLabelId}>Salary template</InputLabel>
               <Select
                 labelId={salaryTemplateLabelId}
@@ -563,9 +568,10 @@ export function SalaryStructureBuilder({
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
+              size="small"
               label="Effective month"
               type="month"
               value={effectiveMonth}
@@ -577,9 +583,10 @@ export function SalaryStructureBuilder({
               slotProps={{ inputLabel: { shrink: true } }}
             />
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
               fullWidth
+              size="small"
               label={
                 salaryBasis === 'EMPLOYER_COST' ? 'Monthly cost to school (CTC)' : 'Monthly salary'
               }
@@ -594,7 +601,7 @@ export function SalaryStructureBuilder({
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
-            <FormControl fullWidth disabled={!canManage || busy}>
+            <FormControl fullWidth size="small" disabled={!canManage || busy}>
               <InputLabel id={salaryBasisLabelId}>Amount basis</InputLabel>
               <Select
                 labelId={salaryBasisLabelId}
@@ -630,7 +637,11 @@ export function SalaryStructureBuilder({
             />
           </Grid>
           <Grid size={{ xs: 12, md: 7 }}>
-            <FormControl fullWidth disabled={!canManage || busy || !pfApplicable || pfRulesError}>
+            <FormControl
+              fullWidth
+              size="small"
+              disabled={!canManage || busy || !pfApplicable || pfRulesError}
+            >
               <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
               <Select
                 labelId={pfRuleLabelId}
@@ -748,6 +759,7 @@ export function SalaryStructureBuilder({
             <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
+                size="small"
                 required={overrides.length > 0}
                 label="Customization reason"
                 value={customizationReason}

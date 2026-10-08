@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { createTheme } from 'src/theme/create-theme';
 import { it, vi, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { defaultSettings } from 'src/components/settings/config-settings';
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
@@ -32,7 +32,7 @@ const mocks = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('react-redux', () => ({ useSelector: () => [] }));
+vi.mock('react-redux', () => ({ useSelector: () => [], useDispatch: () => vi.fn() }));
 vi.mock('src/utils/permissions', () => ({
   hasGrantedPermission: (_permissions: unknown, name: string) => {
     if (name.endsWith('CompensationRevisions.Manage')) return mocks.canManageSalary;
@@ -422,6 +422,60 @@ describe('SalaryStructureBuilder initialization and activation', () => {
         body: expect.objectContaining({ insuranceNumber: '1234567890' }),
       })
     );
+    expect(mocks.refetchReadiness).toHaveBeenCalled();
+  });
+
+  it('includes an ESIC-only draft in page navigation protection and clears it after discard', async () => {
+    const user = userEvent.setup();
+    const onEditorStateChange = vi.fn();
+    renderBuilder({ onEditorStateChange });
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false })
+    );
+    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
+    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
+    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
+    await user.click(screen.getByRole('button', { name: 'Close staff ESIC details' }));
+    await user.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByRole('textbox', { name: /ESIC insurance number/ })).toHaveValue(
+      '1234567890'
+    );
+    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false });
+    await user.click(screen.getByRole('button', { name: 'Close staff ESIC details' }));
+    await user.click(screen.getByRole('button', { name: 'Discard changes' }));
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: false, busy: false })
+    );
+    expect(mocks.updateEnrollment).not.toHaveBeenCalled();
+  });
+
+  it('blocks page navigation during ESIC saves and invalidates the salary calculation afterwards', async () => {
+    const user = userEvent.setup();
+    const onEditorStateChange = vi.fn();
+    let completeSave!: () => void;
+    mocks.updateEnrollment.mockReturnValue({
+      unwrap: () =>
+        new Promise<void>((resolve) => {
+          completeSave = resolve;
+        }),
+    });
+    renderBuilder({ onEditorStateChange });
+    await user.type(
+      screen.getByRole('spinbutton', { name: 'Monthly cost to school (CTC)' }),
+      '10000'
+    );
+    await user.click(screen.getByRole('button', { name: 'Calculate salary' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save salary' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: 'ESIC details' }));
+    await user.type(screen.getByRole('textbox', { name: /ESIC insurance number/ }), '1234567890');
+    await user.click(screen.getByRole('button', { name: 'Save enrollment' }));
+    expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: true });
+    expect(screen.getByRole('button', { name: 'Close staff ESIC details' })).toBeDisabled();
+    await act(async () => completeSave());
+    await waitFor(() =>
+      expect(onEditorStateChange).toHaveBeenLastCalledWith({ dirty: true, busy: false })
+    );
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Save salary' })).toBeDisabled());
     expect(mocks.refetchReadiness).toHaveBeenCalled();
   });
 

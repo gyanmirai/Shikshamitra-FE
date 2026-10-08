@@ -15,6 +15,7 @@ type Props = {
   employeeName: string;
   employeeIdentifier?: string;
   onSaved?: () => Promise<unknown>;
+  onEditorStateChange?: (state: { dirty: boolean; busy: boolean }) => void;
 };
 
 export function EmployeeEsiDetails({
@@ -22,10 +23,14 @@ export function EmployeeEsiDetails({
   employeeName,
   employeeIdentifier = '',
   onSaved,
+  onEditorStateChange,
 }: Props) {
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const [open, setOpen] = useState(false);
-  const canView = hasGrantedPermission(permissions, hrPermissions.payroll.settings.statutorySchemes);
+  const canView = hasGrantedPermission(
+    permissions,
+    hrPermissions.payroll.settings.statutorySchemes
+  );
   const canManage = hasGrantedPermission(
     permissions,
     hrPermissions.payroll.settings.statutorySchemeActions.manageEnrollment
@@ -45,6 +50,7 @@ export function EmployeeEsiDetails({
         canApproveOverride={false}
         onClose={() => setOpen(false)}
         onSaved={async () => onSaved?.()}
+        onEditorStateChange={onEditorStateChange}
       />
     </>
   );

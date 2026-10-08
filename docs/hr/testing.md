@@ -627,7 +627,11 @@ Verify Save versus Save & Next, unchanged continuation, group-only requests, fai
 Run the structure screen and salary-editor-prefetch tests for parallel loading, employee switching, deep links, and permission-gated preloading.
 Verify the staff payroll salary link and return link do not reload the document, and that hover/focus followed by opening the editor reuses requests.
 
-Run SalaryStructureBuilder and salary-editor-dialog tests for calculation freshness, failed-save retention, unchanged-save prevention, activation, and unsaved navigation.
+Run SalaryStructureBuilder, salary-editor-screen, and salary-editor-navigation tests for calculation freshness, failed-save retention, unchanged-save prevention, activation, and unsaved navigation.
+
 Check both Staff Directory and Payroll Structure entry points at desktop, tablet, and mobile widths.
 Verify sticky footer access, keyboard history expansion, draft retention, and return to staff edit.
 Assert compensation requests contain no temporary component collections and monthly payroll restrictions remain unchanged.
+
+Run `e2e/hr/employee/employee-salary-structure.spec.ts` for page entry, draft preservation, ESIC drawer focus, legacy redirects, and return navigation.
+The salary editor tests cover denied access, unavailable staff reads, persistent footer actions, guarded navigation, and validated return destinations.
