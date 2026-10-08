@@ -16,6 +16,22 @@ export type InquiryFollowUp = {
   concurrencyStamp: string;
 };
 export type InquiryQualificationAnswer = { code: string; passed: boolean; notes?: string | null };
+export type InquiryFollowUpNote = {
+  id: string;
+  occurredAt: string;
+  note: string;
+  status: 0 | 2 | 6 | null;
+  reminderAt: string | null;
+  authorName: string | null;
+};
+export type RecordInquiryFollowUpNoteInput = {
+  inquiryId: string;
+  concurrencyStamp: string;
+  inquiryConcurrencyStamp: string;
+  note: string;
+  status: 0 | 2 | 6;
+  reminderAt: string | null;
+};
 export type AdmissionInquiryManagement = {
   inquiryId: string;
   managed: boolean;
@@ -25,6 +41,7 @@ export type AdmissionInquiryManagement = {
   firstContactDueAt: string | null;
   qualificationDueAt: string | null;
   lastContactAt: string | null;
+  nextReminderAt?: string | null;
   contactCount: number;
   outcome: InquiryOutcome | null;
   outcomeReason: string | null;
@@ -41,6 +58,7 @@ export type AdmissionInquiryManagement = {
   blockers: string[];
   qualificationAnswers: InquiryQualificationAnswer[];
   followUps: InquiryFollowUp[];
+  notes?: InquiryFollowUpNote[];
 };
 type Stamp = { concurrencyStamp: string };
 type FinishFollowUp = Stamp & {
@@ -61,6 +79,18 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
       query: url,
       transformResponse: unwrap<AdmissionInquiryManagement>,
       providesTags: tags,
+    }),
+    recordAdmissionInquiryFollowUpNote: builder.mutation<
+      AdmissionInquiryManagement,
+      RecordInquiryFollowUpNoteInput
+    >({
+      query: ({ inquiryId, ...body }) => ({
+        url: `${url(inquiryId)}/follow-up-notes`,
+        method: 'POST',
+        body,
+      }),
+      transformResponse: unwrap<AdmissionInquiryManagement>,
+      invalidatesTags: tags,
     }),
     recordAdmissionInquiryContact: builder.mutation<
       AdmissionInquiryManagement,
@@ -153,6 +183,7 @@ export const admissionInquiryManagementApi = api.injectEndpoints({
 
 export const {
   useGetAdmissionInquiryManagementQuery,
+  useRecordAdmissionInquiryFollowUpNoteMutation,
   useRecordAdmissionInquiryContactMutation,
   useScheduleAdmissionInquiryFollowUpMutation,
   useCompleteAdmissionInquiryFollowUpMutation,

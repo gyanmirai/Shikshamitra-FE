@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { DragEndEvent } from '@dnd-kit/core';
 import type {
   AdmissionWorkflowStage,
@@ -8,8 +9,10 @@ import type {
 
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomTooltip from 'src/components/custom-tooltip';
 import { EmptyContent } from 'src/components/empty-content';
-import { Box, Stack, Button, Typography } from '@mui/material';
+import { Box, Stack, Button, IconButton, Typography } from '@mui/material';
 import {
   SortableContext,
   verticalListSortingStrategy,
@@ -25,8 +28,15 @@ import {
 } from '@dnd-kit/core';
 
 import { WorkflowStageCard } from './workflow-stage-card';
+import { AdmissionDialogTitle } from '../../admission-dialog-title';
 
 type Props = {
+  dirty?: boolean;
+  footerActions: ReactNode;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
   readOnly: boolean;
@@ -43,6 +53,12 @@ type Props = {
 };
 
 export function WorkflowStageList({
+  dirty = false,
+  footerActions,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
   stages,
   transitions,
   readOnly,
@@ -86,7 +102,7 @@ export function WorkflowStageList({
         flex: 1,
         minHeight: 0,
         minWidth: 0,
-        overflowY: { xs: 'visible', md: 'auto' },
+        overflow: 'hidden',
       }}
     >
       <Stack
@@ -95,11 +111,9 @@ export function WorkflowStageList({
         justifyContent="space-between"
         spacing={1.5}
         sx={{
-          top: 0,
-          zIndex: 2,
-          px: 2,
+          flexShrink: 0,
+          px: 1,
           py: 1.5,
-          position: 'sticky',
           bgcolor: 'background.paper',
           borderBottom: 1,
           borderColor: 'divider',
@@ -107,148 +121,211 @@ export function WorkflowStageList({
       >
         <Box>
           <Stack direction="row" spacing={1} alignItems="center">
-            <Typography id="workflow-stages-heading" variant="h6" fontWeight={700}>
-              Journey
+            <Typography
+              id="workflow-stages-heading"
+              aria-label="Journey"
+              variant="h6"
+              fontWeight={700}
+              component="div"
+            >
+              <AdmissionDialogTitle
+                title="Journey"
+                helpText="Reordering changes the display order. Set each next step or special outcome to control where applicants go."
+                helpLabel="Journey arrangement information"
+              />
             </Typography>
             {stages.length > 0 && <Label variant="outlined">{stages.length} stages</Label>}
           </Stack>
-          <Typography variant="caption" color="text.secondary">
-            Arrange each stage and confirm where every applicant outcome goes next.
-          </Typography>
         </Box>
-        {!readOnly && stages.length > 0 && (
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<Iconify icon="mdi:plus" />}
-            onClick={onAdd}
-            disabled={loadingStageTypes}
-            sx={{
-              flexShrink: 0,
-              alignSelf: { xs: 'stretch', sm: 'center' },
-              bgcolor: 'text.primary',
-              color: 'background.paper',
-              '&:hover': { bgcolor: 'text.secondary' },
-            }}
-          >
-            Add stage
-          </Button>
-        )}
-      </Stack>
-      {stages.length === 0 && (
-        <Box sx={{ p: 2 }}>
-          <EmptyContent
-            filled
-            title="Build the admission journey"
-            description="Start with the first step an applicant enters. Before publishing, the journey must also include a final stage."
-            action={
-              !readOnly ? (
-                <Button
-                  size="small"
-                  variant="contained"
-                  startIcon={<Iconify icon="mdi:plus" />}
-                  onClick={onAdd}
-                  disabled={loadingStageTypes}
-                  sx={{
-                    mt: 2,
-                    minHeight: { xs: 44, md: 36 },
-                    bgcolor: 'text.primary',
-                    color: 'background.paper',
-                    '&:hover': { bgcolor: 'text.secondary' },
-                  }}
-                >
-                  Add first stage
-                </Button>
-              ) : undefined
-            }
-            sx={{ minHeight: 280, py: 4 }}
-            slotProps={{ img: { maxWidth: 104 } }}
-          />
-        </Box>
-      )}
-      {stages.length > 0 && (
-        <Box sx={{ minWidth: 0, p: { xs: 1, sm: 2 }, pb: { xs: 1, sm: 1.5 } }}>
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-            <SortableContext
-              items={stages.map((stage) => stage.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <Stack
-                spacing={1.25}
+        {!readOnly && (
+          <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+            <Stack role="group" aria-label="Journey edit history" direction="row" spacing={0.5}>
+              <CustomTooltip title="Undo">
+                <span>
+                  <IconButton
+                    aria-label="Undo"
+                    disabled={!canUndo}
+                    onClick={onUndo}
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Iconify icon="mdi:undo" width={20} />
+                  </IconButton>
+                </span>
+              </CustomTooltip>
+              <CustomTooltip title="Redo">
+                <span>
+                  <IconButton
+                    aria-label="Redo"
+                    disabled={!canRedo}
+                    onClick={onRedo}
+                    sx={{
+                      width: 44,
+                      height: 44,
+                      border: 1,
+                      borderColor: 'divider',
+                      borderRadius: 1,
+                    }}
+                  >
+                    <Iconify icon="mdi:redo" width={20} />
+                  </IconButton>
+                </span>
+              </CustomTooltip>
+            </Stack>
+            {stages.length > 0 && (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<Iconify icon="mdi:plus" />}
+                onClick={onAdd}
+                disabled={loadingStageTypes}
                 sx={{
-                  position: 'relative',
-                  '&::before': {
-                    content: '""',
-                    position: 'absolute',
-                    top: 34,
-                    bottom: 34,
-                    left: { xs: 26, sm: 32 },
-                    width: '1px',
-                    bgcolor: 'divider',
-                  },
+                  flexShrink: 0,
+                  bgcolor: 'text.primary',
+                  color: 'background.paper',
+                  '&:hover': { bgcolor: 'text.secondary' },
                 }}
               >
-                {stages.map((stage, index) => (
-                  <WorkflowStageCard
-                    key={stage.id}
-                    stage={stage}
-                    stages={stages}
-                    transitions={transitions.filter((item) => item.fromStageId === stage.id)}
-                    stepNumber={index + 1}
-                    readOnly={readOnly}
-                    issueCount={issueCountByStage[stage.id] ?? 0}
-                    onEdit={() => onEdit(stage)}
-                    onDuplicate={() => onDuplicate(stage)}
-                    onDelete={() => onDelete(stage)}
-                    onAddPath={() => onAddPath(stage)}
-                    onEditPath={onEditPath}
-                    onDeletePath={onDeletePath}
-                  />
-                ))}
-              </Stack>
-            </SortableContext>
-          </DndContext>
-        </Box>
-      )}
-      {stages.length > 0 && (
-        <Stack
-          role="status"
-          aria-label="Journey validation summary"
-          direction="row"
-          spacing={1}
-          useFlexGap
-          flexWrap="wrap"
-          alignItems="center"
-          sx={{
-            mt: 'auto',
-            position: { xs: 'static', md: 'sticky' },
-            bottom: 0,
-            zIndex: 2,
-            px: { xs: 1.5, sm: 3 },
-            py: 1.25,
-            bgcolor: 'background.paper',
-            borderTop: 1,
-            borderColor: 'divider',
-            boxShadow: { xs: 'none', md: '0 -6px 16px rgba(15, 23, 42, 0.04)' },
-          }}
-        >
-          <Iconify
-            icon={journeyReady ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
-            color={journeyReady ? 'success.main' : 'warning.main'}
-            width={20}
-          />
-          <Typography
-            variant="body2"
-            fontWeight={600}
-            color={journeyReady ? 'success.main' : 'warning.main'}
+                Add stage
+              </Button>
+            )}
+          </Stack>
+        )}
+      </Stack>
+      <Scrollbar
+        fillContent
+        sx={{ flex: 1 }}
+        slotProps={{ content: { minWidth: 0 } }}
+        ariaLabel="Admission journey stages"
+      >
+        {stages.length === 0 && (
+          <Box sx={{ p: 2 }}>
+            <EmptyContent
+              filled
+              title="Build the admission journey"
+              description="Start with the first step an applicant enters. Before publishing, the journey must also include a final stage."
+              action={
+                !readOnly ? (
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<Iconify icon="mdi:plus" />}
+                    onClick={onAdd}
+                    disabled={loadingStageTypes}
+                    sx={{
+                      mt: 2,
+                      bgcolor: 'text.primary',
+                      color: 'background.paper',
+                      '&:hover': { bgcolor: 'text.secondary' },
+                    }}
+                  >
+                    Add first stage
+                  </Button>
+                ) : undefined
+              }
+              sx={{ minHeight: 280, py: 4 }}
+              slotProps={{ img: { maxWidth: 104 } }}
+            />
+          </Box>
+        )}
+        {stages.length > 0 && (
+          <Box sx={{ minWidth: 0, p: { xs: 1, sm: 2 }, pb: { xs: 1, sm: 1.5 } }}>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+              <SortableContext
+                items={stages.map((stage) => stage.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <Stack
+                  spacing={1.25}
+                  sx={{
+                    position: 'relative',
+                    '&::before': {
+                      content: '""',
+                      position: 'absolute',
+                      top: 34,
+                      bottom: 34,
+                      left: { xs: 26, sm: 32 },
+                      width: '1px',
+                      bgcolor: 'divider',
+                    },
+                  }}
+                >
+                  {stages.map((stage, index) => (
+                    <WorkflowStageCard
+                      key={stage.id}
+                      stage={stage}
+                      stages={stages}
+                      transitions={transitions.filter((item) => item.fromStageId === stage.id)}
+                      stepNumber={index + 1}
+                      readOnly={readOnly}
+                      issueCount={issueCountByStage[stage.id] ?? 0}
+                      onEdit={() => onEdit(stage)}
+                      onDuplicate={() => onDuplicate(stage)}
+                      onDelete={() => onDelete(stage)}
+                      onAddPath={() => onAddPath(stage)}
+                      onEditPath={onEditPath}
+                      onDeletePath={onDeletePath}
+                    />
+                  ))}
+                </Stack>
+              </SortableContext>
+            </DndContext>
+          </Box>
+        )}
+      </Scrollbar>
+      <Stack
+        component="footer"
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1}
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        justifyContent="space-between"
+        sx={{
+          flexShrink: 0,
+          px: 1,
+          py: 1.25,
+          bgcolor: 'background.paper',
+          borderTop: 1,
+          borderColor: 'divider',
+        }}
+      >
+        {stages.length > 0 ? (
+          <Stack
+            role="status"
+            aria-label="Journey validation summary"
+            direction="row"
+            spacing={1}
+            useFlexGap
+            flexWrap="wrap"
+            alignItems="center"
+            sx={{ minWidth: 0 }}
           >
-            {journeyReady ? 'Journey valid' : 'Journey needs attention'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            · {stages.length} stages · {transitions.length} routes
-          </Typography>
-        </Stack>
-      )}
+            <Iconify
+              icon={journeyReady ? 'mdi:check-circle' : 'mdi:alert-circle-outline'}
+              color={journeyReady ? 'success.main' : 'warning.main'}
+              width={20}
+            />
+            <Typography
+              variant="body2"
+              fontWeight={600}
+              color={journeyReady ? 'success.main' : 'warning.main'}
+            >
+              {journeyReady ? 'Journey connected' : 'Journey needs attention'}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              · {stages.length} stages · {transitions.length} routes
+            </Typography>
+            {dirty && <Label color="warning">Unsaved changes</Label>}
+          </Stack>
+        ) : (
+          <Box />
+        )}
+        {footerActions}
+      </Stack>
     </Stack>
   );
 }

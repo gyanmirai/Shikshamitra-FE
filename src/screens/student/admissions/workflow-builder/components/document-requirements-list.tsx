@@ -39,7 +39,11 @@ export function DocumentRequirementsList({ requirements, onChange, readOnly, ...
   };
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">Document checklist · {requirements.length} of 30</Typography>
+      {requirements.length >= 25 && (
+        <Typography variant="caption" color="text.secondary">
+          {requirements.length} of 30 documents
+        </Typography>
+      )}
       {!requirements.length && (
         <Typography variant="body2" color="text.secondary">
           Add a standard or custom document to build the applicant checklist.

@@ -14,3 +14,17 @@ export function assessmentScopeKey(scope: {
 }) {
   return `${scope.admissionOfferingId}:${scope.workflowStageDefinitionId}`;
 }
+
+export function assessmentScopeLabel(scope: {
+  offeringName: string;
+  offeringCode?: string | null;
+  stageName: string;
+  workflowName?: string | null;
+  workflowVersion: number;
+}) {
+  const offering =
+    scope.offeringCode && scope.offeringCode !== scope.offeringName
+      ? `${scope.offeringName} (${scope.offeringCode})`
+      : scope.offeringName;
+  return `${offering} · ${scope.stageName} · ${scope.workflowName || 'Workflow'} v${scope.workflowVersion}`;
+}

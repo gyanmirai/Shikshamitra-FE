@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { AssessmentSession } from 'src/redux/student/admissions/admission-assessment-types';
 
 import dayjs from 'dayjs';
 import { Label } from 'src/components/label';
-import { Stack, Button } from '@mui/material';
+import { Iconify } from 'src/components/iconify';
+import { Stack, Tooltip, IconButton } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 
 import { assessmentDateTimeTimestamp, normalizeAssessmentDateTime } from './assessment-date-time';
@@ -14,9 +16,19 @@ type Props = {
   canManage: boolean;
   onEdit: (session: AssessmentSession) => void;
   onCancel: (session: AssessmentSession) => void;
+  onRoster?: (session: AssessmentSession) => void;
+  errorContent?: ReactNode;
 };
 
-export function AssessmentSessionTable({ sessions, loading, canManage, onEdit, onCancel }: Props) {
+export function AssessmentSessionTable({
+  sessions,
+  loading,
+  canManage,
+  onEdit,
+  onCancel,
+  onRoster,
+  errorContent,
+}: Props) {
   const now = Date.now();
   const columns: IColumn[] = [
     { id: 'name', label: 'Session', minWidth: 180, isFilter: true },
@@ -53,15 +65,7 @@ export function AssessmentSessionTable({ sessions, loading, canManage, onEdit, o
             : assessmentDateTimeTimestamp(session.startsAt) <= now
               ? 'In progress'
               : 'Scheduled';
-        return (
-          <Label
-            color={
-              status === 'In progress' ? 'success' : status === 'Scheduled' ? 'info' : 'default'
-            }
-          >
-            {status}
-          </Label>
-        );
+        return <Label color={status === 'In progress' ? 'success' : 'default'}>{status}</Label>;
       },
     },
     {
@@ -72,20 +76,52 @@ export function AssessmentSessionTable({ sessions, loading, canManage, onEdit, o
       minWidth: 170,
       render: (_: unknown, row) => {
         const session = row as AssessmentSession;
-        return canManage && !session.isCancelled ? (
+        return (
           <Stack direction="row" spacing={0.5}>
-            <Button
-              size="small"
-              disabled={assessmentDateTimeTimestamp(session.startsAt) <= now}
-              onClick={() => onEdit(session)}
-            >
-              Edit
-            </Button>
-            <Button size="small" color="error" onClick={() => onCancel(session)}>
-              Cancel
-            </Button>
+            {onRoster && (
+              <Tooltip title="View applicants">
+                <IconButton
+                  size="small"
+                  aria-label={`View applicants for ${session.name}`}
+                  onClick={() => onRoster(session)}
+                >
+                  <Iconify icon="mdi:account-group-outline" />
+                </IconButton>
+              </Tooltip>
+            )}
+            {canManage && !session.isCancelled && (
+              <>
+                <Tooltip
+                  title={
+                    assessmentDateTimeTimestamp(session.startsAt) <= now
+                      ? 'Started sessions cannot be edited'
+                      : 'Edit session'
+                  }
+                >
+                  <span>
+                    <IconButton
+                      size="small"
+                      aria-label={`Edit ${session.name}`}
+                      disabled={assessmentDateTimeTimestamp(session.startsAt) <= now}
+                      onClick={() => onEdit(session)}
+                    >
+                      <Iconify icon="mdi:pencil-outline" />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+                <Tooltip title="Cancel session">
+                  <IconButton
+                    size="small"
+                    aria-label={`Cancel ${session.name}`}
+                    onClick={() => onCancel(session)}
+                  >
+                    <Iconify icon="mdi:cancel" />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
           </Stack>
-        ) : null;
+        );
       },
     },
   ];
@@ -96,6 +132,7 @@ export function AssessmentSessionTable({ sessions, loading, canManage, onEdit, o
       columns={columns}
       data={sessions}
       isLoading={loading}
+      errorContent={errorContent}
       isSearch
       isPagination
       wrapperProps={{ sx: { height: 1 } }}

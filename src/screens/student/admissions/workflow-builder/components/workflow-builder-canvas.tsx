@@ -1,16 +1,21 @@
+import type { ReactNode } from 'react';
 import type { DragEndEvent } from '@dnd-kit/core';
 import type {
   AdmissionWorkflowStage,
   AdmissionWorkflowTransition,
 } from 'src/redux/student/admissions/admission-workflows-api';
 
-import { Box, Card } from '@mui/material';
+import { Card } from '@mui/material';
 
 import { WorkflowStageList } from './workflow-stage-list';
-import { WorkflowJourneyMap } from './workflow-journey-map';
 
 type Props = {
-  view: 'configure' | 'map';
+  dirty?: boolean;
+  footerActions: ReactNode;
+  canUndo: boolean;
+  canRedo: boolean;
+  onUndo: () => void;
+  onRedo: () => void;
   stages: AdmissionWorkflowStage[];
   transitions: AdmissionWorkflowTransition[];
   readOnly: boolean;
@@ -27,7 +32,12 @@ type Props = {
 };
 
 export function WorkflowBuilderCanvas({
-  view,
+  dirty,
+  footerActions,
+  canUndo,
+  canRedo,
+  onUndo,
+  onRedo,
   stages,
   transitions,
   readOnly,
@@ -46,56 +56,34 @@ export function WorkflowBuilderCanvas({
     <Card
       variant="outlined"
       sx={{
-        flex: { xs: 'none', md: 1 },
+        flex: 1,
         minHeight: 0,
         display: 'flex',
         flexDirection: 'column',
-        overflow: { xs: 'visible', md: 'hidden' },
+        overflow: 'hidden',
       }}
     >
-      {view === 'map' ? (
-        <Box
-          role="tabpanel"
-          id="workflow-builder-map-panel"
-          aria-labelledby="workflow-builder-map-tab"
-          sx={{ flex: 1, minHeight: 0, display: 'flex' }}
-        >
-          <WorkflowJourneyMap
-            stages={stages}
-            transitions={transitions}
-            readOnly={readOnly}
-            onEditStage={onEditStage}
-          />
-        </Box>
-      ) : (
-        <Box
-          role="tabpanel"
-          id="workflow-builder-configure-panel"
-          aria-labelledby="workflow-builder-configure-tab"
-          sx={{
-            flex: 1,
-            minHeight: 0,
-            display: 'flex',
-            overflow: { xs: 'visible', md: 'hidden' },
-          }}
-        >
-          <WorkflowStageList
-            stages={stages}
-            transitions={transitions}
-            readOnly={readOnly}
-            loadingStageTypes={loadingStageTypes}
-            issueCountByStage={issueCountByStage}
-            onAdd={onAddStage}
-            onEdit={onEditStage}
-            onDuplicate={onDuplicateStage}
-            onDelete={onDeleteStage}
-            onAddPath={onAddTransition}
-            onEditPath={onEditTransition}
-            onDeletePath={onDeleteTransition}
-            onDragEnd={onDragEnd}
-          />
-        </Box>
-      )}
+      <WorkflowStageList
+        dirty={dirty}
+        footerActions={footerActions}
+        canUndo={canUndo}
+        canRedo={canRedo}
+        onUndo={onUndo}
+        onRedo={onRedo}
+        stages={stages}
+        transitions={transitions}
+        readOnly={readOnly}
+        loadingStageTypes={loadingStageTypes}
+        issueCountByStage={issueCountByStage}
+        onAdd={onAddStage}
+        onEdit={onEditStage}
+        onDuplicate={onDuplicateStage}
+        onDelete={onDeleteStage}
+        onAddPath={onAddTransition}
+        onEditPath={onEditTransition}
+        onDeletePath={onDeleteTransition}
+        onDragEnd={onDragEnd}
+      />
     </Card>
   );
 }

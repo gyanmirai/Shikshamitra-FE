@@ -25,7 +25,6 @@ export const isAdmissionOfferingConfigurationIncomplete = (
 ) =>
   !values.workflowDefinitionId ||
   (values.entryMode !== 1 && !values.inquiryFormDefinitionId) ||
-  !values.applicationFormDefinitionId ||
   (values.entryMode !== 1 && !values.inquiryIntakeProfileId) ||
   !values.counsellorAssignmentProfileId;
 
@@ -56,6 +55,7 @@ export const getOfferingInitialValues = (
     code: string;
     track?: AdmissionOfferingFormValues['track'];
     entryMode?: AdmissionOfferingFormValues['entryMode'];
+    applicationCount?: number;
     useCycleDates: boolean;
     openDate?: string | null;
     closeDate?: string | null;
@@ -74,8 +74,8 @@ export const getOfferingInitialValues = (
   stageId: offering?.stageId ?? '',
   standardId: offering?.standardId ?? '',
   code: offering?.code ?? '',
-  track: offering?.track ?? 0,
-  entryMode: offering?.entryMode ?? 0,
+  track: offering?.applicationCount === 0 ? 0 : (offering?.track ?? 0),
+  entryMode: offering?.applicationCount === 0 ? 0 : (offering?.entryMode ?? 0),
   useCycleDates: offering?.useCycleDates ?? true,
   openDate: offering?.openDate ? dayjs(offering.openDate) : null,
   closeDate: offering?.closeDate ? dayjs(offering.closeDate) : null,

@@ -142,7 +142,7 @@ describe('student navigation', () => {
     expect(inquiries?.path).toBe('/student/admissions/inquiries');
     expect(inquiries?.permissionName).toBe(studentPermissions.enrollment.inquiries);
     expect(pipeline?.path).toBe('/student/admissions/pipeline');
-    expect(pipeline?.permissionName).toBe(studentPermissions.enrollment.inquiries);
+    expect(pipeline?.permissionName).toBe(studentPermissions.enrollment.applications);
 
     const applications = admissions?.children?.find((item) => item.title === 'Applications');
     expect(applications?.path).toBe('/student/admissions/applications');

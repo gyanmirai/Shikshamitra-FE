@@ -3,7 +3,7 @@ module: student
 domain: testing
 content_type: Troubleshooting
 status: canonical
-updated_on: 2026-10-05
+updated_on: 2026-10-07
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -11,6 +11,14 @@ audience: humans-and-agents
 # Validate Student Enrollment Admissions changes
 
 TL;DR: run the documentation check first, then focused lint, formatting, type, unit, and browser checks for the Enrollment Admissions surface that changed.
+
+## Admission Stage builder simplification (2026-10-07)
+
+Build journey opens the ordered stages directly. Configure/Journey map tabs, Template/Preview/Validate buttons, and the builder overflow menu are removed. Undo/Redo sit beside Add stage. The shared Scrollbar owns the stage body; journey status and permission-gated Save draft/Publish and approval actions stay in the bottom footer. Stage action menus and publish-time server validation remain unchanged.
+
+Focused checks passed 25 tests across five files covering the header, canvas, same-draft saves, draft refresh, and route preservation; the route suite passed all eight cases on an isolated rerun after a loaded-machine timeout. The final header/canvas rerun passed all eight tests. Changed-file lint, formatting, a focused TypeScript check of six changed files, Student docs validation, and diff checks passed. Full-project TypeScript was stopped after prolonged resource pressure and remains unverified.
+
+Authenticated in-app browser checks covered 1440 × 900, 768 × 1024, and 390 × 844: footer reachability, custom stage scrolling, compact themed buttons, and no horizontal document overflow. A temporary unsaved duplicate exercised Undo/Redo (4 → 5 → 4 → 5 → 4 stages); the original journey was restored and the temporary tab closed. No workflow was saved or published. Full E2E and final publication were not performed.
 
 ## Shared stepper restoration (2026-10-05)
 
@@ -76,7 +84,9 @@ Run the focused workflow editor checks with the repository Windows runner:
 node --require ./src/test/patch-vite-windows-net-use.cjs ./node_modules/vitest/vitest.mjs run src/screens/student/admissions/workflow-builder/workflow-route-improvements.test.ts src/screens/student/admissions/workflow-builder/workflow-route-simulator.test.ts src/screens/student/admissions/workflow-builder/workflow-transition-safety.test.tsx src/screens/student/admissions/workflow-builder/workflow-outcome-route.test.tsx src/screens/student/admissions/workflow-builder/workflow-stage-type-select.test.tsx src/screens/student/admissions/workflow-builder/workflow-form-stage-drawer.test.tsx --pool=threads --maxWorkers=1
 ```
 
-Coverage includes ancestor form fields, numeric and list comparisons, duplicate conditions, managed outcome gates, automatic paths only for simple new journeys, configured-type-change cancellation/confirmation, and custom-copy preservation. Configure stage uses the shared two-step wizard: Basics validates identity and published-form selection; Settings contains process rules, stage behavior, completion, and next steps. Check draft retention through Back/Next, invalid-save feedback, read-only navigation, dirty-close confirmation, form-detail failure/retry, shared section cards, and the shared stepper's default Back/Next footer placement. Icon rendering is mocked locally in editor tests to avoid third-party icon requests during teardown.
+Coverage includes ancestor form fields, numeric and list comparisons, duplicate conditions, managed outcome gates, automatic paths only for simple new journeys, configured-type-change cancellation/confirmation, and custom-copy preservation. Configure stage uses the shared two-step wizard: Stage details validates identity and published-form selection; Completion rules contains process rules, stage behavior and next steps. Check draft retention through Back/Next, Apply changes validation, read-only navigation, dirty-close confirmation, form-detail failure/retry, rounded section cards, meaningful information tooltips that do not toggle their associated inputs, accessible journey Edit/View icons, and small right-aligned Back/Apply controls. Stage codes are internal and the Advanced details editor is absent; existing codes, instructions and entry/ending flags must survive ordinary edits and Apply changes. Entry stage and End of journey controls remain in Advanced settings without information icons: verify entry capability restrictions, terminal editing for Form and Assessment, and read-only locking. Per-type advanced policy accordions remain available and reveal invalid policy settings. Straightforward labels omit redundant information icons; disabled reasons remain accessible and active validation and retry feedback stays visible. Next-step edits must wait for applying dirty stage values. Icon rendering is mocked locally in editor tests to avoid third-party icon requests during teardown.
+
+2026-10-08 presentation checks: 13 Form drawer tests and 12 journey/lifecycle/Offer-validity tests passed. Scoped type-aware ESLint passed for 58 changed builder files. Authenticated in-app browser checks covered desktop and 390px mobile layouts, 30px right-aligned Back/Apply controls, readable mobile stage names, information clicks preserving switches, existing route-editor navigation, dirty-path protection, Apply/Undo, and discard protection. Screenshot-only changes were discarded and the original saved workflow reopened clean; no workflow was saved or published. Broader document-requirement tests timed out on the busy Windows host, and the focused TypeScript check was interrupted under low memory. Full acceptance across all stage types remains unverified.
 
 Browser acceptance remains required at 390 × 844, 768 × 1024, and 1440 × 900. Verify class lookup failure/retry, class-specific document visibility, linked Form uploads reused in Document verification, dirty-answer upload blocking, replacement requiring fresh review, type-change cancellation, readable Offer fields, typed condition choices, missing/overlapping paths, and disabled outcomes. Unit tests do not prove a complete live admission journey or Student/Onboarding handoff.
 
@@ -152,6 +162,16 @@ The local in-app browser smoke test reached the application but redirected to `/
 The 2026-09-21 Student Onboarding implementation pass reached `/student/onboarding/setup` in the Codex in-app browser but was redirected to the sign-in screen. No authenticated external browser was connected. The live worklist, operational dialog, document upload, and activation confirmation therefore remain browser-blocked; focused contract, model, settings, permission, lint, and TypeScript checks are the recorded evidence for this pass.
 
 ## Managed assessment checks
+
+The workbench adds `assessment-workbench-model.test.ts`, `assessment-continue-dialog.test.tsx` and `admission-assessment-roster-api.test.ts`. These cover bounded URL state, historical/permission action guards, fresh stage/evidence checks before Continue, scoped request serialization and roster invalidation after booking. `application-return-url.test.ts` checks the approved Assessments return path alongside existing Pipeline navigation. Existing dialog dirty-state cases remain required because the workbench reuses those forms.
+
+Authenticated acceptance must cover offering/stage and academic context changes, URL reload/back/forward, valid and invalid session filters, queue counts, search/sort/page changes, result-only scopes, session booking, attendance, result/review, retake from session A to B, explicit Continue and disabled historical actions. Confirm save/reload, stale-record conflicts, read-only permission states, empty/error retry and narrow-screen table/drawer behavior. Current-page export must not imply exporting the full applicant roster. Backend tests own scope isolation, independent-review and exact route readiness; backend docs record the current candidate-classification scaling boundary.
+
+The 2026-10-07 workbench checks passed 64 focused frontend tests, strict affected-source TypeScript, changed-file ESLint and Student documentation validation. The isolated assessment release rerun passed 34 focused cases, strict affected-source TypeScript, changed-file ESLint and Student docs validation against the current remote frontend baseline. Backend checks passed 13 Application and 10 API contract tests, plus a rerun of the existing roster integration case with scope-label assertions. The full-project TypeScript check subsequently passed in the local working checkout after excluding ignored diagnostic artifacts and correcting two unsupported exact-name options in the existing local Inquiry tests. Those Inquiry tests passed 15 cases; their unpublished source changes are outside this assessment release. This local full-project result does not replace the merged release build and staging acceptance.
+
+Authenticated localhost checks used the existing synthetic `InquiryQA Edited0710` application (`APP-2026-000003`) in `QA0710-CLASS-1`. Created `QA-Assessments-0710-1851` at QA Hall with capacity 5, booked the applicant, recorded Present attendance after the actual scheduled start, and saved 75/100 marks. Booking, attendance/result queue changes, persisted score after reload, bounded score validation, search empty/recovery states, invalid-session warning/clear, valid-session filtering, URL sort retention, attempt history and Open application/Close return navigation were verified. The independent-review policy correctly keeps the result in Review and hides approval/Continue from its recorder. The test session and pending-review attempt remain as local QA evidence; no admission was finalized and no parent communication was sent.
+
+Desktop 1440×900, tablet 768×1024 and mobile 390×844 checks found no document horizontal overflow. Narrow-screen academic filters use an accessible expandable toggle so table rows remain reachable; desktop retains the shared filter row. The history drawer becomes full width on mobile and uses the shared Scrollbar. Independent approval with a second account followed by live Continue is deferred by the user. A restricted account is currently unavailable; the user moved that live check to staging. Multi-page real-data navigation and retakes remain release acceptance checks. Backend representative-volume evidence is recorded in the backend testing notes. Their focused guards/contracts have automated coverage; this change is not deployed. A final authenticated local reload reconfirmed the QA session, Present attendance, persisted 75/100 score and Review queue; the recorder still has no approval or Continue action.
 
 Run the admissions regression suite, including policy and request contracts, stage configuration, outcome routes, scheduling, history, local dialog guards, and legacy compatibility:
 
@@ -312,11 +332,58 @@ The 2026-09-11 focused run passed 18 model, policy, prerequisite, and RTK Query 
 
 Operational-queue coverage verifies that the list request serializes the work-queue filter and that next-action presentation prioritizes overdue follow-ups, still identifies first-contact work when no SLA deadline is configured, and stops showing qualification work after an outcome is recorded.
 Communication coverage verifies the inquiry-scoped POST payload, language-aware template fallback, and channel validation, including the required Email subject and at least one supported family channel. Inquiry API coverage also verifies concurrency-safe edit, timeline, atomic bulk assignment, and filtered CSV contracts. Backend tests separately verify campaign creation and the route/permission contract.
-Navigation coverage verifies the flat Admissions menu, the dependency-ordered Settings group, the hidden Review Queue sidebar entry, and the preserved Application Reviews permission entry. It also verifies that Pipeline is guarded by Inquiry View rather than Applications View. Its responsive smoke test should cover the transferred-only Pipeline table, linked application navigation and permission state, retained filters, empty/error/loading states, and the two Inquiry row actions at 390×844, 768×1024, and 1440×900.
-The browser showed real server-paged controls and the management drawer's recoverable error state against the still-running older API build.
-Managed lifecycle and API behavior are covered by backend service and contract tests until the new migration and Host are loaded into that external process.
+Navigation coverage verifies the flat Admissions menu, the dependency-ordered Settings group, the hidden Review Queue sidebar entry, and the preserved Application Reviews permission entry.
+Pipeline menu and route now require Applications View.
+Focused Pipeline tests live in `src/screens/student/admissions/pipeline/`, with application follow-up and safe-return coverage in `src/screens/student/admissions/application-detail/` and the follow-up client contract test in `src/redux/student/admissions/admission-application-follow-ups-api.test.ts`.
+Browser acceptance must cover active-only results, My/All defaults, complete scoped owner/stage filters, current counsellor, actual workflow guidance, retained original follow-ups, schedule/complete/cancel save-and-reload, URL/context return, permission denial and loading/empty/error states at 390×844, 768×1024 and 1440×900.
+Successful finalization must remove the case from Pipeline while preserving its Application and Onboarding handoff; failed finalization must retain it.
+
+The final 2026-10-07 Pipeline run passed 42 focused frontend tests across seven files, affected-source TypeScript and typed ESLint. Authenticated localhost checks verified the manager's All default, My/All selection, owner/current-step/status controls, search, empty-result recovery, sorting, reload and Continue/close with the original Pipeline query retained. Finalized applications were absent while the active inquiry-linked application remained. The current workflow step and Pipeline showed the same entered time. A new near-future reminder saved as 7:25 pm, retained that time after a full reload, and appeared in Pipeline as one open follow-up without a false overdue warning. Complete and Cancel persisted their notes/history after reload; Pipeline then showed no open follow-ups. Synthetic QA reminders were completed or cancelled, with no real communication sent.
+
+Desktop 1440×900, tablet 768×1024 and mobile 390×844 checks found no document-level horizontal overflow; the table retained its pinned 44px Continue action.
+The final mobile check included Columns and Export current page.
+Actual Excel and PDF downloads exposed a literal `false` from conditional column children; the Pipeline columns now return null for absent dates/warnings without changing the shared exporter.
+The final seven column tests exercise the actual shared export formatter, including absent reminders, future deadlines and retained overdue warnings.
+Both affected files passed typed ESLint, Prettier and affected-source TypeScript with zero diagnostics; repository-wide TypeScript was not rerun in this acceptance pass.
+Fresh UI exports produced an eight-column workbook with one active row and a matching landscape PDF; both files excluded Actions and the finalized synthetic application, had no literal boolean text, and passed content checks and PDF render inspection.
+
+The fresh synthetic `INQ-2026-000006` qualification persisted as Interested after reload, and explicit Move to next stage created `APP-2026-000004` while retaining its counsellor and original reminder.
+Reminder completion persisted before the application journey continued.
+The published five-stage workflow was exercised using an authorized assessment waiver with an explicit synthetic QA reason, saved application-form sections, automatic Form completion, configured manual Documents/Review completion and an auditable admission decision.
+Blank offer expiry and missing core identity blocked progression; a future expiry and identity repair through Applicant 360 resolved those prerequisites.
+The accepted offer finalized successfully, preserved all five completed stages and locked follow-up mutations.
+Continue onboarding opened one searchable Student Setup case for the same application, with the counsellor retained and placement, GR/roll identifiers and activation pending.
+A fresh Pipeline load retained the other active application and excluded this finalized case.
+This is local synthetic handoff acceptance; recorded marks with an independent second reviewer, managed document/review checklists and enrollment activation were not exercised by this journey.
+Qualification email was skipped because the synthetic family had no email; no campaign or dispatch was created.
+
+Live limited-account browser checks verified the counsellor's My default, an empty scoped All queue, and unavailable access to the finalized synthetic application; the teacher's My queue was also empty.
+Normal-trust HTTPS checks confirmed those account identities, empty scoped Pipeline/options responses, and not-found application/history/follow-up responses outside their academic access.
+The checked counsellor, teacher and `student-crm-denied` accounts all currently receive effective Applications.View from the running API, so these checks establish academic-scope isolation rather than missing-feature-permission denial.
+The denied-named account's effective grant disagrees with its current direct/current-role database rows; this permission-provenance discrepancy is unresolved and no grants, credentials, academic scopes, seeds or runtime caches were altered to force acceptance.
+An existing account that actually lacks effective Applications.View is still needed for the live feature-denied browser check; focused permission tests do not substitute for that acceptance result.
+The user's supplied `admin-ddvs` account was restored through normal sign-in and visibly opened Pipeline with the All default and the remaining active application; it has feature access and cannot provide the missing-permission fixture.
+
+The backend acceptance follow-up verified the History scope guard in the actual running Host and repaired exactly five historical reminder scheduled instants from unambiguous offset-bearing activity evidence, preserving original notes, completion fields and history.
+Read-only verification found no reminder/original-instant mismatches across the eight local tasks.
+The narrow repair is not an automatic migration or production data rollout; see [backend Student testing](../../../Shikshamitra-BE/docs/modules/student/testing.md).
+
+An earlier inquiry-management browser pass showed real server-paged controls and a recoverable management-drawer error against an older API build.
+The running-Host and fresh synthetic acceptance evidence above supersedes that older Pipeline runtime limitation; it does not imply that every managed lifecycle configuration or deployment has been exercised.
 
 The 2026-10-06 focused inquiry simplification checks cover the three status choices, required Not interested reason, separate Interested save and application handoff, Pending/Not interested/duplicate handoff blockers, repeat-transfer prevention, application navigation using the confirmed inquiry offering, full source-filter range, original API serialization, and pre-application status copy. Browser save/reload, availability denial, handoff/Pipeline and qualification email verification remain required integration checks.
+
+### Separate Inquiry Edit and Follow-up
+
+Focused suites cover the dedicated editor, row actions, form-history filtering, follow-up dialog, validation model, and management API contract. Verify the original configured form and its history in Edit; Follow-up must contain only note cards, Notes, Next reminder date, Status, and Cancel/Submit. Initial values must wait for both fresh detail and management responses, while failed submissions and later refreshes preserve the draft.
+
+The final focused frontend checks passed 38 cases, scoped TypeScript, changed-file ESLint, and Student documentation validation. The matching backend checks passed 27 focused tests and verified PostgreSQL reminder binding/read-back across midnight in IST; these are separate from authenticated browser acceptance.
+
+Local authenticated checks on 2026-10-07 used synthetic inquiry `INQ-2026-000005` with no email address. Its original form edit persisted after reload; form history retained only creation and form changes after four follow-up notes. Pending and Interested notes saved together with status and reminder, Interested enabled the explicit Move action without transferring automatically, and dirty Cancel used the shared confirmation. The dialog fitted 390 x 844, 768 x 1024, and 1440 x 900 without horizontal overflow. A new 10 October reminder survived full reload with the same selected date; read-only verification of the actual tenant database confirmed 9 October 18:30 UTC equals 10 October midnight IST. Not interested also survived full reload, cleared the date, disabled Move, and left zero scheduled reminders. A transient shared-API refresh error recovered through Retry without changing the saved record.
+
+```powershell
+npx vitest run src/screens/student/admissions/admission-inquiry-edit-page.test.tsx src/screens/student/admissions/inquiry-management/admission-inquiry-columns.test.ts src/screens/student/admissions/inquiry-management/inquiry-form-history.test.ts src/screens/student/admissions/inquiry-management/inquiry-follow-up-dialog.test.tsx src/screens/student/admissions/inquiry-management/inquiry-follow-up-model.test.ts src/redux/student/admissions/admission-inquiry-management-api.test.ts --maxWorkers=1 --no-file-parallelism
+```
 
 ## Managed Form checks
 
@@ -343,6 +410,10 @@ Run `admission-seat-policy.test.ts`, `admission-seat-api.test.ts`, and `managed-
 The 2026-09-11 focused run passed all eight Seat frontend tests and TypeScript. Focused ESLint passed after correcting one test import-order warning. Browser validation is limited to route and console health until the additive Seat migration and current API build are loaded into the externally managed backend process.
 
 ## Admission Offering checks
+
+The simplified offering regression checks cover workflow-owned Application forms, a retained Inquiry form selector, absent bulk code-prefix/track/entry-mode fields, automatic bounded codes, and selection across school levels without silently dropping classes. An unused historical direct offering starts editing as General/Inquiry; offerings with applications keep historical routing. Browser acceptance must preview, save and reload mixed-level offerings and verify the Applications page has no fresh Direct registration action.
+
+Authenticated local verification on 2026-10-07 selected Class 1 without narrowing away Class 9, then previewed and saved Class 2 (Primary) and Class 9 (Secondary) together. Both reloaded as inactive and Ready with generated codes `ADM-CLASS-2` and `ADM-CLASS-9`. Edit retained the Inquiry form; Applications had no Direct registration action. The bulk drawer also fit a 390 x 844 viewport without document overflow. These two local inactive QA offerings remain available for review; no stage/live deployment was performed. The 12 changed production files passed focused TypeScript checking; full-project TypeScript exhausted its 6 GB heap.
 
 ```bash
 npx vitest run src/utils/permissions.test.ts src/components/paginated-search-select/paginated-search-select.accessibility.test.tsx src/screens/student/admissions/admission-offering-model.test.ts src/screens/student/admissions/admission-offering-action-impact.test.tsx src/screens/student/admissions/admission-definition-select.test.ts src/screens/student/admissions/admission-filter-navigation.test.tsx

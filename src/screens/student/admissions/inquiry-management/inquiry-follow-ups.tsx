@@ -3,11 +3,12 @@ import type {
   AdmissionInquiryManagement,
 } from 'src/redux/student/admissions/admission-inquiry-management-api';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { fDateTime } from 'src/utils/format-time';
 import { shikshaMitraToast } from 'src/components/toast';
 import { LoadingButton } from 'src/components/loading-button';
-import { Chip, Paper, Stack, Button, TextField, Typography } from '@mui/material';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
+import { Chip, Alert, Paper, Stack, Button, TextField, Typography } from '@mui/material';
 import {
   useCancelAdmissionInquiryFollowUpMutation,
   useScheduleAdmissionInquiryFollowUpMutation,
@@ -21,9 +22,81 @@ export function InquiryFollowUps({
   value: AdmissionInquiryManagement;
   readOnly?: boolean;
 }) {
+  const [schedule, scheduling] = useScheduleAdmissionInquiryFollowUpMutation();
+  const [complete, completing] = useCompleteAdmissionInquiryFollowUpMutation();
+  const [cancel, cancelling] = useCancelAdmissionInquiryFollowUpMutation();
+  const finishInput = (item: InquiryFollowUp, note: string) => ({
+    inquiryId: value.inquiryId,
+    followUpId: item.id,
+    concurrencyStamp: value.concurrencyStamp,
+    followUpConcurrencyStamp: item.concurrencyStamp,
+    note,
+  });
+  return (
+    <InquiryFollowUpsPanel
+      value={value}
+      readOnly={readOnly}
+      busy={scheduling.isLoading || completing.isLoading || cancelling.isLoading}
+      actions={{
+        schedule: (body) =>
+          schedule({
+            inquiryId: value.inquiryId,
+            concurrencyStamp: value.concurrencyStamp,
+            ...body,
+          }).unwrap(),
+        complete: (item, note) => complete(finishInput(item, note)).unwrap(),
+        cancel: (item, note) => cancel(finishInput(item, note)).unwrap(),
+      }}
+    />
+  );
+}
+
+export type InquiryFollowUpActions = {
+  schedule: (body: { scheduledAt: string; purpose: string }) => Promise<unknown>;
+  complete: (item: InquiryFollowUp, note: string) => Promise<unknown>;
+  cancel: (item: InquiryFollowUp, note: string) => Promise<unknown>;
+};
+
+/** Shared inquiry follow-up presentation; the owning lifecycle supplies authorized commands. */
+export function InquiryFollowUpsPanel({
+  value,
+  readOnly = false,
+  busy = false,
+  actions,
+}: {
+  value: AdmissionInquiryManagement;
+  readOnly?: boolean;
+  busy?: boolean;
+  actions: InquiryFollowUpActions;
+}) {
   const [purpose, setPurpose] = useState('');
   const [scheduledAt, setScheduledAt] = useState('');
-  const [schedule, scheduling] = useScheduleAdmissionInquiryFollowUpMutation();
+  const [scheduling, setScheduling] = useState(false);
+  const submitting = useRef(false);
+  const schedule = async () => {
+    if (readOnly || busy || submitting.current || !purpose.trim() || !scheduledAt) return;
+    const scheduledDate = new Date(scheduledAt);
+    if (Number.isNaN(scheduledDate.getTime())) return;
+    submitting.current = true;
+    setScheduling(true);
+    try {
+      await actions.schedule({ scheduledAt: scheduledDate.toISOString(), purpose: purpose.trim() });
+      setPurpose('');
+      setScheduledAt('');
+      shikshaMitraToast.success({ message: 'Follow-up scheduled' });
+    } catch (error) {
+      const problem = parseApiProblemDetail(error);
+      shikshaMitraToast.error({
+        message:
+          problem.detail === 'Something went wrong'
+            ? 'Follow-up could not be scheduled. Reload and try again.'
+            : problem.detail,
+      });
+    } finally {
+      submitting.current = false;
+      setScheduling(false);
+    }
+  };
   return (
     <Stack spacing={1.5}>
       <Typography variant="subtitle2">
@@ -37,6 +110,7 @@ export function InquiryFollowUps({
             type="datetime-local"
             label="Next follow-up *"
             value={scheduledAt}
+            disabled={busy}
             onChange={(event) => setScheduledAt(event.target.value)}
             slotProps={{ inputLabel: { shrink: true } }}
           />
@@ -45,6 +119,7 @@ export function InquiryFollowUps({
             size="small"
             label="Purpose *"
             value={purpose}
+            disabled={busy}
             multiline
             minRows={2}
             slotProps={{ htmlInput: { maxLength: 512 } }}
@@ -52,74 +127,69 @@ export function InquiryFollowUps({
           />
           <LoadingButton
             variant="outlined"
-            loading={scheduling.isLoading}
-            disabled={!purpose.trim() || !scheduledAt}
-            onClick={() =>
-              schedule({
-                inquiryId: value.inquiryId,
-                concurrencyStamp: value.concurrencyStamp,
-                scheduledAt: new Date(scheduledAt).toISOString(),
-                purpose: purpose.trim(),
-              })
-                .unwrap()
-                .then(() => {
-                  setPurpose('');
-                  setScheduledAt('');
-                  shikshaMitraToast.success({ message: 'Follow-up scheduled' });
-                })
-                .catch(() =>
-                  shikshaMitraToast.error({
-                    message: 'Follow-up could not be scheduled. Reload and try again.',
-                  })
-                )
-            }
+            loading={scheduling}
+            disabled={busy || !purpose.trim() || !scheduledAt}
+            onClick={schedule}
+            sx={{ minHeight: 44 }}
           >
             Schedule follow-up
           </LoadingButton>
         </>
       )}
+      {value.followUps.length === 0 && <Alert severity="info">No follow-ups recorded yet.</Alert>}
       {value.followUps.map((item) => (
-        <FollowUpCard key={item.id} inquiry={value} item={item} readOnly={readOnly} />
+        <FollowUpCard key={item.id} item={item} readOnly={readOnly} busy={busy} actions={actions} />
       ))}
     </Stack>
   );
 }
 
 function FollowUpCard({
-  inquiry,
   item,
   readOnly,
+  busy,
+  actions,
 }: {
-  inquiry: AdmissionInquiryManagement;
   item: InquiryFollowUp;
   readOnly: boolean;
+  busy: boolean;
+  actions: InquiryFollowUpActions;
 }) {
   const [note, setNote] = useState('');
-  const [complete, completing] = useCompleteAdmissionInquiryFollowUpMutation();
-  const [cancel, cancelling] = useCancelAdmissionInquiryFollowUpMutation();
-  const finish = (cancelled: boolean) =>
-    (cancelled ? cancel : complete)({
-      inquiryId: inquiry.inquiryId,
-      followUpId: item.id,
-      concurrencyStamp: inquiry.concurrencyStamp,
-      followUpConcurrencyStamp: item.concurrencyStamp,
-      note: note.trim(),
-    })
-      .unwrap()
-      .then(() => {
-        setNote('');
-        shikshaMitraToast.success({
-          message: cancelled ? 'Follow-up cancelled' : 'Follow-up completed',
-        });
-      })
-      .catch(() =>
-        shikshaMitraToast.error({ message: 'The follow-up changed. Reload and try again.' })
-      );
+  const [finishing, setFinishing] = useState<'complete' | 'cancel' | null>(null);
+  const submitting = useRef(false);
+  const finish = async (cancelled: boolean) => {
+    if (readOnly || busy || submitting.current || !note.trim() || item.status !== 0) return;
+    submitting.current = true;
+    setFinishing(cancelled ? 'cancel' : 'complete');
+    try {
+      await (cancelled ? actions.cancel : actions.complete)(item, note.trim());
+      setNote('');
+      shikshaMitraToast.success({
+        message: cancelled ? 'Follow-up cancelled' : 'Follow-up completed',
+      });
+    } catch (error) {
+      const problem = parseApiProblemDetail(error);
+      shikshaMitraToast.error({
+        message:
+          problem.detail === 'Something went wrong'
+            ? 'The follow-up changed. Reload and try again.'
+            : problem.detail,
+      });
+    } finally {
+      submitting.current = false;
+      setFinishing(null);
+    }
+  };
   return (
     <Paper variant="outlined" sx={{ p: 1.25 }}>
       <Stack spacing={1}>
         <Stack direction="row" spacing={1} alignItems="center">
-          <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }}>
+          <Typography
+            variant="body2"
+            fontWeight={600}
+            sx={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}
+          >
             {item.purpose}
           </Typography>
           <Chip size="small" label={['Scheduled', 'Completed', 'Cancelled'][item.status]} />
@@ -127,29 +197,37 @@ function FollowUpCard({
         <Typography variant="caption" color="text.secondary">
           {fDateTime(item.scheduledAt)}
         </Typography>
+        {item.completionNote && (
+          <Typography variant="body2" sx={{ overflowWrap: 'anywhere' }}>
+            {item.completionNote}
+          </Typography>
+        )}
         {item.status === 0 && !readOnly && (
           <>
             <TextField
               size="small"
               label="Completion or cancellation note *"
               value={note}
+              disabled={busy}
               onChange={(event) => setNote(event.target.value)}
               slotProps={{ htmlInput: { maxLength: 1024 } }}
             />
             <Stack direction="row" spacing={1}>
               <LoadingButton
                 size="small"
-                loading={completing.isLoading}
-                disabled={!note.trim()}
+                loading={finishing === 'complete'}
+                disabled={busy || !note.trim()}
                 onClick={() => finish(false)}
+                sx={{ minHeight: 44 }}
               >
                 Complete
               </LoadingButton>
               <Button
                 size="small"
                 color="error"
-                disabled={!note.trim() || cancelling.isLoading}
+                disabled={busy || !note.trim()}
                 onClick={() => finish(true)}
+                sx={{ minHeight: 44 }}
               >
                 Cancel
               </Button>

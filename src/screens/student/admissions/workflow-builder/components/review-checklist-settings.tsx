@@ -26,7 +26,11 @@ export function ReviewChecklistSettings({
   };
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">Reviewer checklist · {value.length} of 30</Typography>
+      {value.length >= 25 && (
+        <Typography variant="caption" color="text.secondary">
+          {value.length} of 30 checklist items
+        </Typography>
+      )}
       {!value.length && (
         <Typography variant="body2" color="text.secondary">
           Add confirmations staff should complete, or use a recommendation with notes only.

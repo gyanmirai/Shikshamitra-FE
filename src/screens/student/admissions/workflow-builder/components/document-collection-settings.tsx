@@ -1,8 +1,8 @@
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 import type { AdmissionDocumentPolicy } from 'src/redux/student/admissions/admission-document-policy';
 
-import { Stack, Typography } from '@mui/material';
 import CustomSelect from 'src/components/custom-select';
+import { FormSectionCard } from 'src/components/form-section-card';
 
 export function DocumentCollectionSettings({
   policy,
@@ -20,8 +20,11 @@ export function DocumentCollectionSettings({
     policy.collectionFormStageCode &&
     !forms.some((stage) => stage.code === policy.collectionFormStageCode);
   return (
-    <Stack spacing={1}>
-      <Typography variant="subtitle2">When to collect documents</Typography>
+    <FormSectionCard
+      icon="mdi:upload-outline"
+      title="When to collect documents"
+      descriptionTooltip="Uploads collected during the selected form are reused here. Verification and waivers happen in this document stage."
+    >
       <CustomSelect
         size="small"
         fullWidth
@@ -44,12 +47,8 @@ export function DocumentCollectionSettings({
           onChange({ collectionFormStageCode: value === '__verification' ? null : String(value) })
         }
         error={Boolean(missing)}
-        helperText={
-          missing
-            ? 'Choose an available Form stage before publishing.'
-            : 'Uploads collected during the selected form are reused here. Verification and waivers happen in this document stage.'
-        }
+        helperText={missing ? 'Choose an available Form stage before publishing.' : undefined}
       />
-    </Stack>
+    </FormSectionCard>
   );
 }

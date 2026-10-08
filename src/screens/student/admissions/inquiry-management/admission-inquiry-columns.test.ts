@@ -16,6 +16,7 @@ const columnOptions = {
   counsellorOptions: [],
   offeringOptions: [],
   onManage: vi.fn(),
+  onFollowUp: vi.fn(),
   onMove: vi.fn(),
 };
 
@@ -102,13 +103,17 @@ describe('admission inquiry columns', () => {
     });
   });
 
-  it('shows only edit/follow-up and a disabled handoff for Pending', () => {
+  it('separates edit and follow-up with a disabled handoff for Pending', () => {
     const actions = getAdmissionInquiryActions(
       inquiry({ applicantId: 'applicant-1', admissionOfferingId: 'offering-1' }),
       columnOptions
     );
-    expect(actions.map((action) => action.id)).toEqual(['manage', 'move']);
-    expect(actions[1]).toMatchObject({
+    expect(actions.map((action) => action.id)).toEqual(['edit', 'follow-up', 'move']);
+    actions[0].onClick();
+    actions[1].onClick();
+    expect(columnOptions.onManage).toHaveBeenCalled();
+    expect(columnOptions.onFollowUp).toHaveBeenCalled();
+    expect(actions[2]).toMatchObject({
       disabled: true,
       tooltip: expect.stringContaining('Interested'),
     });
@@ -119,14 +124,14 @@ describe('admission inquiry columns', () => {
       admissionOfferingId: 'offering-1',
       status: 2,
     });
-    expect(getAdmissionInquiryActions(row, columnOptions)[1].disabled).toBe(false);
+    expect(getAdmissionInquiryActions(row, columnOptions)[2].disabled).toBe(false);
     expect(
       getAdmissionInquiryActions(
         { ...row, applicationId: 'app-1', isTransferred: true },
         columnOptions
-      )[1].disabled
+      )[2].disabled
     ).toBe(true);
-    expect(getAdmissionInquiryActions({ ...row, status: 6 }, columnOptions)[1].disabled).toBe(true);
+    expect(getAdmissionInquiryActions({ ...row, status: 6 }, columnOptions)[2].disabled).toBe(true);
   });
   it('omits mutation actions without permissions and opens application from Pipeline', () => {
     expect(

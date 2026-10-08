@@ -4,6 +4,7 @@ import type { AdmissionEligibilityCriterion } from 'src/redux/student/admissions
 
 import { useState } from 'react';
 import { Label } from 'src/components/label';
+import { fDate } from 'src/utils/format-time';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { Paper, Stack, Button, Typography } from '@mui/material';
 import { createEligibilityCriterion } from 'src/redux/student/admissions/admission-eligibility-policy';
@@ -37,47 +38,92 @@ export function EligibilityCriteriaList({
   };
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">Eligibility criteria · {criteria.length} of 30</Typography>
+      {criteria.length >= 25 && (
+        <Typography variant="caption" color="text.secondary">
+          {criteria.length} of 30 criteria
+        </Typography>
+      )}
       {!criteria.length && (
         <Typography variant="body2" color="text.secondary">
           Add the checks your school needs. Every configured criterion must pass or have an approved
           exception.
         </Typography>
       )}
-      {criteria.map((criterion, index) => (
-        <Paper key={criterion.code} variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
-          <Stack spacing={1}>
-            <Typography variant="subtitle2">{criterion.name}</Typography>
-            <Label sx={{ alignSelf: 'flex-start' }}>
-              {ELIGIBILITY_KIND_OPTIONS.find((item) => item.value === criterion.kind)?.label}
-            </Label>
-            {criterion.failureMessage && (
-              <Typography variant="body2" color="text.secondary">
-                {criterion.failureMessage}
+      {criteria.map((criterion, index) => {
+        const source = props.stages.find((stage) => stage.code === criterion.sourceStageCode)?.name;
+        const age = (months: number) =>
+          months % 12 === 0 ? `${months / 12} years` : `${months} months`;
+        const summary =
+          criterion.kind === 'age'
+            ? [
+                criterion.minAgeMonths != null ? `At least ${age(criterion.minAgeMonths)}` : null,
+                criterion.maxAgeMonths != null ? `Up to ${age(criterion.maxAgeMonths)}` : null,
+                criterion.cutoffDate ? `on ${fDate(criterion.cutoffDate)}` : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')
+            : criterion.kind === 'assessment' || criterion.kind === 'documents'
+              ? [
+                  source ||
+                    (criterion.sourceStageCode
+                      ? 'Source stage unavailable'
+                      : 'Source stage not selected'),
+                  criterion.requiredOutcome
+                    ? `Required result: ${criterion.requiredOutcome}`
+                    : null,
+                  criterion.minimumPercentage != null
+                    ? `Minimum ${criterion.minimumPercentage}%`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · ')
+              : props.forms.find((form) => form.id === criterion.formDefinitionId)?.name;
+        return (
+          <Paper key={criterion.code} variant="outlined" sx={{ p: 1.5, borderRadius: 1 }}>
+            <Stack spacing={1}>
+              <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
+                {criterion.name}
               </Typography>
-            )}
-            <Stack direction="row" spacing={1}>
-              <Button
-                size="small"
-                aria-label={`${readOnly ? 'View' : 'Edit'} ${criterion.name}`}
-                onClick={() => setEditing({ index, value: criterion })}
-              >
-                {readOnly ? 'View criterion' : 'Edit criterion'}
-              </Button>
-              {!readOnly && (
+              <Label sx={{ alignSelf: 'flex-start' }}>
+                {ELIGIBILITY_KIND_OPTIONS.find((item) => item.value === criterion.kind)?.label}
+              </Label>
+              {summary && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ overflowWrap: 'anywhere' }}
+                >
+                  {summary}
+                </Typography>
+              )}
+              {criterion.failureMessage && (
+                <Typography variant="body2" color="text.secondary">
+                  {criterion.failureMessage}
+                </Typography>
+              )}
+              <Stack direction="row" spacing={1}>
                 <Button
                   size="small"
-                  color="error"
-                  aria-label={`Remove ${criterion.name}`}
-                  onClick={() => setRemoving(index)}
+                  aria-label={`${readOnly ? 'View' : 'Edit'} ${criterion.name}`}
+                  onClick={() => setEditing({ index, value: criterion })}
                 >
-                  Remove
+                  {readOnly ? 'View criterion' : 'Edit criterion'}
                 </Button>
-              )}
+                {!readOnly && (
+                  <Button
+                    size="small"
+                    color="error"
+                    aria-label={`Remove ${criterion.name}`}
+                    onClick={() => setRemoving(index)}
+                  >
+                    Remove
+                  </Button>
+                )}
+              </Stack>
             </Stack>
-          </Stack>
-        </Paper>
-      ))}
+          </Paper>
+        );
+      })}
       {!readOnly && (
         <Button size="small" variant="outlined" disabled={criteria.length >= 30} onClick={add}>
           Add eligibility criterion

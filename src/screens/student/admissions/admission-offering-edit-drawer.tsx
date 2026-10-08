@@ -288,7 +288,7 @@ function AdmissionOfferingEditStep({
         <Box>
           <Typography variant="subtitle1">Configure offering</Typography>
           <Typography variant="body2" color="text.secondary">
-            Update its admission window, entry path, published process, and forms.
+            Update its admission window, published workflow, and intake setup.
           </Typography>
         </Box>
         {offering.applicationCount > 0 && (
@@ -305,16 +305,6 @@ function AdmissionOfferingEditStep({
           formik={formik}
           fetchWorkflows={editor.fetchWorkflows}
           fetchInquiryForms={editor.fetchInquiryForms}
-          fetchRegistrationForms={editor.fetchRegistrationForms}
-          initialWorkflow={
-            offering.workflowDefinitionId && offering.workflowName && offering.workflowVersion
-              ? {
-                  id: offering.workflowDefinitionId,
-                  name: offering.workflowName,
-                  version: offering.workflowVersion,
-                }
-              : null
-          }
           initialInquiryForm={
             offering.inquiryFormDefinitionId &&
             offering.inquiryFormName &&
@@ -326,14 +316,12 @@ function AdmissionOfferingEditStep({
                 }
               : null
           }
-          initialApplicationForm={
-            offering.applicationFormDefinitionId &&
-            offering.applicationFormName &&
-            offering.applicationFormVersion
+          initialWorkflow={
+            offering.workflowDefinitionId && offering.workflowName && offering.workflowVersion
               ? {
-                  id: offering.applicationFormDefinitionId,
-                  name: offering.applicationFormName,
-                  version: offering.applicationFormVersion,
+                  id: offering.workflowDefinitionId,
+                  name: offering.workflowName,
+                  version: offering.workflowVersion,
                 }
               : null
           }

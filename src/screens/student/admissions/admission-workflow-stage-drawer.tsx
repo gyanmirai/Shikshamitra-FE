@@ -8,13 +8,13 @@ import type {
 } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { useState, useEffect } from 'react';
-import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { CustomStepperWithFormik } from 'src/components/custom-stepper';
-import { Box, Stack, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
+import { Box, Stack, Alert, Drawer, Button, Divider, IconButton, Typography } from '@mui/material';
 import { readAdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 
+import { AdmissionDialogTitle } from './admission-dialog-title';
 import { WorkflowStageFields } from './workflow-builder/components/workflow-stage-fields';
 import { useWorkflowStageEditor } from './workflow-builder/hooks/use-workflow-stage-editor';
 
@@ -28,6 +28,8 @@ type Props = {
   readOnly: boolean;
   onClose: () => void;
   onSave: (stage: AdmissionWorkflowStage) => void;
+  onAddPath?: (stage: AdmissionWorkflowStage) => void;
+  onEditPath?: (transition: AdmissionWorkflowTransition) => void;
 };
 
 export function AdmissionWorkflowStageDrawer(props: Props) {
@@ -42,6 +44,8 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
     readOnly,
     onClose,
     onSave,
+    onAddPath,
+    onEditPath,
   } = props;
   const {
     formik,
@@ -91,26 +95,29 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
         <Box sx={{ height: 1, display: 'flex', flexDirection: 'column' }}>
           <Stack
             direction="row"
-            alignItems="flex-start"
+            alignItems="center"
             justifyContent="space-between"
             spacing={1}
             sx={{ px: { xs: 2, sm: 3 }, py: 2 }}
           >
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6">{readOnly ? 'Stage details' : 'Configure stage'}</Typography>
-              <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 0.25 }}>
-                <Typography variant="body2" color="text.secondary" noWrap>
-                  {metadata?.displayName ?? 'Stage'} · {formik.values.code || 'New stage'}
-                </Typography>
-                <Label color={formik.values.isRequired ? 'default' : 'info'}>
-                  {formik.values.isRequired ? 'Required' : 'Optional'}
-                </Label>
-              </Stack>
+              <Typography variant="h6" component="div">
+                <AdmissionDialogTitle
+                  title={`${readOnly ? 'View' : 'Configure'} ${metadata?.displayName ?? 'stage'}`}
+                  helpText={
+                    readOnly
+                      ? 'Review this stage’s details, completion rules, and next steps.'
+                      : 'Apply changes updates this stage in the journey. Use Save draft to store the workflow.'
+                  }
+                  helpLabel="Stage configuration information"
+                />
+              </Typography>
             </Box>
             <IconButton
               aria-label="Close stage editor"
+              size="small"
               onClick={requestClose}
-              sx={{ width: 44, height: 44, mt: -0.75, mr: -1 }}
+              sx={{ width: 44, height: 44, flexShrink: 0 }}
             >
               <Iconify icon="mdi:close" />
             </IconButton>
@@ -118,14 +125,14 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
           <Divider />
           <Box sx={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
             <CustomStepperWithFormik
-              steps={['Basics', 'Settings']}
+              steps={['Stage details', 'Completion rules']}
               activeStep={activeStep}
               initialValues={formik.initialValues}
               formikInstance={{ ...formik, validateForm: validateCurrentStep }}
               validationSchema={validationSchema}
               showSaveButton={false}
               nextButtonLabel="Next"
-              finalButtonLabel={readOnly ? 'Close' : 'Save stage'}
+              finalButtonLabel={readOnly ? 'Close' : 'Apply changes'}
               completedSteps={activeStep === 1 ? [0] : []}
               isStepClickable={(index) => index <= activeStep}
               onStepClick={(index) => setActiveStep(index)}
@@ -153,9 +160,12 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 ),
               ]}
               backButtonProps={{
+                size: 'small',
+                sx: { ml: 'auto', mr: 1 },
                 startIcon: <Iconify icon={activeStep === 0 ? 'mdi:close' : 'mdi:arrow-left'} />,
               }}
               saveAndNextButtonProps={{
+                size: 'small',
                 startIcon:
                   activeStep === 1 ? (
                     <Iconify icon={readOnly ? 'mdi:close' : 'mdi:content-save-outline'} />
@@ -167,21 +177,37 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
                 else formik.submitForm();
               }}
               renderItem={() => (
-                <WorkflowStageFields
-                  formik={formik}
-                  activeStep={activeStep}
-                  onGoToBasics={() => setActiveStep(0)}
-                  metadata={metadata}
-                  stageTypes={stageTypes}
-                  forms={resolvedForms}
-                  formDetailsLoading={formDetailsLoading}
-                  formDetailsError={formDetailsError}
-                  onRetryFormDetails={retryFormDetails}
-                  stages={stages}
-                  transitions={transitions}
-                  formDefinitionId={formDefinitionId}
-                  readOnly={readOnly}
-                />
+                <>
+                  {Boolean(
+                    (formik.touched.code && formik.errors.code) ||
+                    (formik.touched.description && formik.errors.description)
+                  ) && (
+                    <Alert severity="error" sx={{ mb: 2 }}>
+                      This stage has invalid saved details. Restore a valid workflow version or
+                      replace this stage before applying changes.
+                    </Alert>
+                  )}
+                  <WorkflowStageFields
+                    formik={formik}
+                    activeStep={activeStep}
+                    onGoToBasics={() => setActiveStep(0)}
+                    metadata={metadata}
+                    stageTypes={stageTypes}
+                    forms={resolvedForms}
+                    formDetailsLoading={formDetailsLoading}
+                    formDetailsError={formDetailsError}
+                    onRetryFormDetails={retryFormDetails}
+                    stages={stages}
+                    transitions={transitions}
+                    formDefinitionId={formDefinitionId}
+                    readOnly={readOnly}
+                    onAddPath={onAddPath}
+                    onEditPath={onEditPath}
+                    routeEditingDisabled={
+                      formik.dirty || !stages.some((item) => item.id === formik.values.id)
+                    }
+                  />
+                </>
               )}
             />
           </Box>
@@ -193,7 +219,7 @@ export function AdmissionWorkflowStageDrawer(props: Props) {
         title="Discard stage changes?"
         content="Your changes to this stage have not been added to the workflow draft."
         action={
-          <Button variant="contained" color="error" onClick={close}>
+          <Button size="small" variant="contained" color="error" onClick={close}>
             Discard changes
           </Button>
         }

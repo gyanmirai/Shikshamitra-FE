@@ -28,6 +28,7 @@ type Options = {
   counsellorOptions: { label: string; value: string }[];
   offeringOptions: { label: string; value: string }[];
   onManage: (inquiry: AdmissionInquiry) => void;
+  onFollowUp?: (inquiry: AdmissionInquiry) => void;
   onMove: (inquiry: AdmissionInquiry) => void;
 };
 
@@ -67,10 +68,24 @@ export function getAdmissionInquiryActions(
     ];
   if (options.canManage)
     actions.push({
-      id: 'manage',
-      label: `Edit / Follow-up ${reference}`,
+      id: 'edit',
+      label: `Edit ${reference}`,
       icon: 'mdi:pencil-outline',
       onClick: () => options.onManage(inquiry),
+    });
+  if (options.canManage && options.onFollowUp)
+    actions.push({
+      id: 'follow-up',
+      label: `Follow-up ${reference}`,
+      icon: 'mdi:note-text-outline',
+      disabled: Boolean(inquiry.isTransferred || inquiry.applicationId || inquiry.isDuplicate),
+      tooltip:
+        inquiry.isTransferred || inquiry.applicationId
+          ? 'Continue this application from Pipeline.'
+          : inquiry.isDuplicate
+            ? 'Continue the original inquiry.'
+            : undefined,
+      onClick: () => options.onFollowUp?.(inquiry),
     });
   if (options.canMove)
     actions.push({
@@ -196,9 +211,8 @@ export function buildAdmissionInquiryColumns(options: Options): IColumn[] {
       width: 152,
       minWidth: 152,
       maxWidth: 152,
-      align: 'right',
+      align: 'left',
       sticky: true,
-      stickyPosition: 'right',
       isSort: false,
       isFilter: false,
       excludeFromExport: true,

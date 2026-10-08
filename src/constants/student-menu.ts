@@ -201,7 +201,7 @@ const studentModule = (isDdvs: boolean) => ({
               title: 'Pipeline',
               path: studentPaths.enrollment.pipeline,
               _action: 'student-admissions-crm-pipeline',
-              permissionName: studentPermissions.enrollment.inquiries,
+              permissionName: studentPermissions.enrollment.applications,
               icon: menuIconView('mdi:chart-timeline-variant'),
             },
             {

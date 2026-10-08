@@ -46,6 +46,7 @@ export type AdmissionApplication = {
   applicationNumber: string;
   applicantId: string;
   applicantName: string;
+  inquiryId?: string | null;
   admissionCycleId: string;
   admissionOfferingId: string;
   assignedCounsellorId?: string | null;

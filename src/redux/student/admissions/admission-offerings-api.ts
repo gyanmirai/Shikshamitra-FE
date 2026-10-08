@@ -140,8 +140,9 @@ export type ValidateAdmissionOfferingInput = AdmissionOfferingWriteInput & {
 
 export type BulkAdmissionOfferingInput = Omit<
   AdmissionOfferingWriteInput,
-  'standardId' | 'code' | 'name'
+  'standardId' | 'code' | 'name' | 'stageId'
 > & {
+  stageId?: string | null;
   previewOnly: boolean;
   items: { standardId: string; code: string; name?: string }[];
 };

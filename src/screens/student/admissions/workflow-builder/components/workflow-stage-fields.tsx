@@ -21,7 +21,6 @@ import { WorkflowFormStageFields } from './workflow-form-stage-fields';
 import { WorkflowDocumentSettings } from './workflow-document-settings';
 import { WorkflowAssessmentSettings } from './workflow-assessment-settings';
 import { WorkflowEligibilitySettings } from './workflow-eligibility-settings';
-import { WorkflowStageCompletionSummary } from './workflow-stage-completion-summary';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
@@ -37,133 +36,122 @@ type Props = {
   readOnly: boolean;
   activeStep: number;
   onGoToBasics: () => void;
+  onAddPath?: (stage: AdmissionWorkflowStage) => void;
+  onEditPath?: (transition: AdmissionWorkflowTransition) => void;
+  routeEditingDisabled?: boolean;
 };
 
 export function WorkflowStageFields(props: Props) {
-  const { formik, activeStep } = props;
-  if (formik.values.stageType === 0 && activeStep === 0) {
-    return (
-      <Stack spacing={2} sx={{ p: 2 }}>
-        <Alert severity="info">
-          This saved Inquiry stage is retained for existing applications. To update this draft,
-          choose an application stage type below or remove the stage from the process.
-        </Alert>
-        <FormSectionCard title="Basics" icon="mdi:file-document-outline">
-          <WorkflowStageBasics {...props} />
-        </FormSectionCard>
-      </Stack>
-    );
-  }
-  if (formik.values.stageType === 1) {
-    return <WorkflowFormStageFields {...props} />;
-  }
-
-  return <WorkflowOtherStageFields {...props} />;
-}
-
-function WorkflowOtherStageFields(props: Props) {
-  const { formik, metadata, readOnly, forms, stages, transitions, activeStep } = props;
+  const {
+    formik,
+    metadata,
+    readOnly,
+    activeStep,
+    forms,
+    stages,
+    transitions,
+    routeEditingDisabled,
+    onAddPath,
+    onEditPath,
+  } = props;
+  if (formik.values.stageType === 1) return <WorkflowFormStageFields {...props} />;
+  const available = (key: string) => metadata?.supportedConfiguration?.includes(key) === true;
+  const policy = () => {
+    switch (formik.values.stageType) {
+      case 2:
+        return (
+          <WorkflowAssessmentSettings
+            formik={formik}
+            readOnly={readOnly}
+            available={available('assessment')}
+          />
+        );
+      case 3:
+        return (
+          <WorkflowEligibilitySettings
+            formik={formik}
+            forms={forms}
+            stages={stages}
+            readOnly={readOnly}
+            available={available('eligibility')}
+          />
+        );
+      case 4:
+        return (
+          <WorkflowPaymentSettings
+            formik={formik}
+            readOnly={readOnly}
+            available={available('payment')}
+          />
+        );
+      case 5:
+        return (
+          <WorkflowDocumentSettings
+            formik={formik}
+            forms={forms}
+            stages={stages}
+            readOnly={readOnly}
+            available={available('documentVerification')}
+          />
+        );
+      case 6:
+        return (
+          <WorkflowReviewSettings
+            formik={formik}
+            stages={stages}
+            readOnly={readOnly}
+            available={available('review')}
+          />
+        );
+      case 8:
+        return (
+          <WorkflowOfferSettings
+            formik={formik}
+            readOnly={readOnly}
+            available={available('offer')}
+          />
+        );
+      case 9:
+        return (
+          <WorkflowSeatSettings formik={formik} readOnly={readOnly} available={available('seat')} />
+        );
+      default:
+        return null;
+    }
+  };
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
-      {activeStep === 0 && (
-        <FormSectionCard title="Basics" icon="mdi:file-document-outline">
+      {formik.values.stageType === 0 && (
+        <Alert severity="warning">
+          This saved Inquiry stage is retained for existing applications. Replace it with an
+          application stage type before saving a new workflow draft.
+        </Alert>
+      )}
+      {activeStep === 0 ? (
+        <FormSectionCard
+          title="Stage details"
+          icon="mdi:file-document-outline"
+          descriptionTooltip={`${metadata?.description ?? 'Choose the stage type and name.'} Any selected form version is frozen with the workflow.`}
+        >
           <WorkflowStageBasics {...props} />
           {metadata?.supportsFormAttachment && <WorkflowStageForm {...props} />}
         </FormSectionCard>
-      )}
-      {activeStep === 1 && (
+      ) : (
         <>
-          <FormSectionCard title="Settings" icon="mdi:cog-outline">
-            {formik.values.stageType === 0 && (
-              <Alert severity="info">
-                This saved Inquiry stage is retained for existing applications. Replace it with an
-                application stage type before saving a new workflow draft.
-              </Alert>
-            )}
-            {formik.values.stageType === 2 && (
-              <WorkflowAssessmentSettings
-                formik={formik}
-                readOnly={readOnly}
-                available={metadata?.supportedConfiguration?.includes('assessment') === true}
-              />
-            )}
-            {formik.values.stageType === 5 && (
-              <WorkflowDocumentSettings
-                formik={formik}
-                forms={forms}
-                stages={stages}
-                readOnly={readOnly}
-                available={
-                  metadata?.supportedConfiguration?.includes('documentVerification') === true
-                }
-              />
-            )}
-            {formik.values.stageType === 3 && (
-              <WorkflowEligibilitySettings
-                formik={formik}
-                forms={forms}
-                stages={stages}
-                readOnly={readOnly}
-                available={metadata?.supportedConfiguration?.includes('eligibility') === true}
-              />
-            )}
-            {formik.values.stageType === 4 && (
-              <WorkflowPaymentSettings
-                formik={formik}
-                readOnly={readOnly}
-                available={metadata?.supportedConfiguration?.includes('payment') === true}
-              />
-            )}
-            {formik.values.stageType === 8 && (
-              <WorkflowOfferSettings
-                formik={formik}
-                readOnly={readOnly}
-                available={metadata?.supportedConfiguration?.includes('offer') === true}
-              />
-            )}
-            {formik.values.stageType === 9 && (
-              <WorkflowSeatSettings
-                formik={formik}
-                readOnly={readOnly}
-                available={metadata?.supportedConfiguration?.includes('seat') === true}
-              />
-            )}
-            {formik.values.stageType === 6 && (
-              <WorkflowReviewSettings
-                formik={formik}
-                stages={stages}
-                readOnly={readOnly}
-                available={metadata?.supportedConfiguration?.includes('review') === true}
-              />
-            )}
-            {formik.values.stageType === 7 && (
-              <Alert severity="info">
-                An authorized admission approver records Approve, Waitlist, or Reject. Use a Review
-                stage before this step to configure reviewer assignment, evidence prerequisites, and
-                a separate final approver.
-              </Alert>
-            )}
-            {![0, 2, 3, 4, 5, 6, 7, 8, 9].includes(formik.values.stageType) && (
-              <Alert severity="info">
-                {metadata?.nextRequiredAction ||
-                  'Authorized staff complete this stage using the application actions.'}
-              </Alert>
-            )}
-          </FormSectionCard>
-          <FormSectionCard title="Stage behavior & completion" icon="mdi:check-circle-outline">
-            <WorkflowStageCompletionSummary
-              stage={formik.values}
-              error={formik.errors.configurationJson}
-            />
-            <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} />
-          </FormSectionCard>
-          <FormSectionCard title="Next steps" icon="mdi:arrow-decision-outline">
+          {policy()}
+          <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} />
+          <FormSectionCard title="Next step" icon="mdi:arrow-decision-outline">
             <WorkflowStageNextSteps
               stage={formik.values}
               stages={stages}
               transitions={transitions}
+              readOnly={readOnly}
+              routeEditingDisabled={routeEditingDisabled}
+              onAddPath={onAddPath}
+              onEditPath={onEditPath}
             />
           </FormSectionCard>
+          <WorkflowStageBehavior formik={formik} metadata={metadata} readOnly={readOnly} advanced />
         </>
       )}
     </Stack>

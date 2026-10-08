@@ -1,7 +1,7 @@
 import type { AdmissionReviewPolicy } from 'src/redux/student/admissions/admission-review-policy';
 
 import CustomSelect from 'src/components/custom-select';
-import { Alert, Stack, Button, Switch, Typography, FormControlLabel } from '@mui/material';
+import { Alert, Stack, Button, Switch, FormControlLabel } from '@mui/material';
 import { useGetAdmissionReviewRolesQuery } from 'src/redux/student/admissions/admission-review-settings-api';
 
 import { ReviewAssigneeSelect } from './review-assignee-select';
@@ -28,7 +28,6 @@ export function ReviewResponsibilitySettings({
   ];
   return (
     <Stack spacing={1}>
-      <Typography variant="subtitle2">Responsibility and approval</Typography>
       <CustomSelect
         fullWidth
         size="small"
@@ -39,7 +38,6 @@ export function ReviewResponsibilitySettings({
         onChange={(value) =>
           onChange({ reviewerRole: value ? String(value) : null, assignedReviewerId: null })
         }
-        helperText="Changing the role clears the default reviewer so you can choose a matching person."
       />
       <ReviewAssigneeSelect
         value={policy.assignedReviewerId}
@@ -67,11 +65,7 @@ export function ReviewResponsibilitySettings({
         options={roleOptions(policy.approverRole)}
         disabled={disabled || query.isFetching}
         onChange={(value) => onChange({ approverRole: value ? String(value) : null })}
-        helperText={
-          query.isFetching
-            ? 'Loading roles…'
-            : 'The existing admission decision still requires the appropriate permissions.'
-        }
+        helperText={query.isFetching ? 'Loading roles…' : undefined}
       />
       {query.isError && (
         <Alert

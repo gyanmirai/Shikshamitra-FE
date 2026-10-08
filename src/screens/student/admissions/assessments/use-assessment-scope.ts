@@ -8,6 +8,9 @@ export function useAssessmentScope() {
     const next = new URLSearchParams(params.toString());
     if (value) next.set('assessmentScope', value);
     else next.delete('assessmentScope');
+    ['assessmentSession', 'assessmentQueue', 'assessmentSearch', 'assessmentPage'].forEach((key) =>
+      next.delete(key)
+    );
     router.push(`${pathname}?${next.toString()}`, { scroll: false });
   };
   return { scopeKey: params.get('assessmentScope') ?? '', setScope };

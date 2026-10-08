@@ -38,7 +38,7 @@ const hierarchy = [
 ] as AcademicOrganizationOption[];
 
 describe('bulk offering class fields', () => {
-  it('shows only Board, Medium, and Class and derives the hidden stage from Class', async () => {
+  it('keeps every school level available after selecting a class', async () => {
     const user = userEvent.setup();
 
     render(
@@ -58,7 +58,6 @@ describe('bulk offering class fields', () => {
               />
               <output data-testid="class-selection">
                 {JSON.stringify({
-                  stageId: formik.values.stageId,
                   standardIds: formik.values.standardIds,
                 })}
               </output>
@@ -79,9 +78,15 @@ describe('bulk offering class fields', () => {
 
     await waitFor(() =>
       expect(screen.getByTestId('class-selection')).toHaveTextContent(
-        '{"stageId":"primary","standardIds":["class-1"]}'
+        '{"standardIds":["class-1"]}'
       )
     );
-    expect(screen.queryByRole('option', { name: 'Class 9' })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Class 9' })).toBeVisible();
+    await user.click(screen.getByRole('option', { name: 'Class 9' }));
+    await waitFor(() =>
+      expect(screen.getByTestId('class-selection')).toHaveTextContent(
+        '{"standardIds":["class-1","class-9"]}'
+      )
+    );
   });
 });

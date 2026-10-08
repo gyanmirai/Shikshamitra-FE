@@ -9,6 +9,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { Label } from 'src/components/label';
 import { useSortable } from '@dnd-kit/sortable';
 import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import {
   Box,
@@ -86,16 +87,21 @@ export function WorkflowStageCard({
       <Stack
         direction="row"
         alignItems="center"
-        spacing={{ xs: 0.75, sm: 1.25 }}
-        sx={{ p: { xs: 1, sm: 1.25 } }}
+        spacing={{ xs: 0, sm: 1.25 }}
+        sx={{
+          p: { xs: 1, sm: 1.25 },
+          display: { xs: 'grid', sm: 'flex' },
+          gridTemplateColumns: '44px 36px minmax(0, 1fr) 44px 44px',
+          rowGap: 0.75,
+        }}
       >
         {!readOnly && (
           <IconButton
             size="small"
             aria-label={`Reorder ${stage.name}`}
             sx={{
-              width: { xs: 44, md: 36 },
-              height: { xs: 44, md: 36 },
+              width: 44,
+              height: 44,
               flexShrink: 0,
             }}
             {...attributes}
@@ -109,6 +115,8 @@ export function WorkflowStageCard({
             width: 36,
             height: 36,
             flexShrink: 0,
+            gridColumn: readOnly ? 1 : 2,
+            gridRow: 1,
             typography: 'subtitle2',
             color: 'text.primary',
             bgcolor: 'background.neutral',
@@ -118,7 +126,7 @@ export function WorkflowStageCard({
         >
           {stepNumber}
         </Avatar>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
+        <Box sx={{ flex: 1, minWidth: 0, gridColumn: '1 / -1', gridRow: 2 }}>
           <Stack direction="row" spacing={0.75} alignItems="center" useFlexGap flexWrap="wrap">
             <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
               {stage.name}
@@ -139,14 +147,16 @@ export function WorkflowStageCard({
               </Label>
             )}
           </Stack>
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            noWrap
-            sx={{ display: { xs: 'none', sm: 'block' } }}
-          >
-            {stage.description || stage.code}
-          </Typography>
+          {stage.description && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              noWrap
+              sx={{ display: { xs: 'none', sm: 'block' } }}
+            >
+              {stage.description}
+            </Typography>
+          )}
           <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.25, minWidth: 0 }}>
             <Iconify
               icon={stage.isTerminalStage ? 'mdi:flag-checkered' : 'mdi:arrow-right'}
@@ -182,94 +192,110 @@ export function WorkflowStageCard({
             startIcon={<Iconify icon="mdi:source-branch-plus" width={17} />}
             onClick={onAddPath}
             sx={{
-              minHeight: { xs: 44, md: 36 },
               flexShrink: 0,
               display: { xs: 'none', sm: 'inline-flex' },
             }}
           >
-            {orderedTransitions.some((path) => path.isDefault) ? 'Add special outcome' : 'Choose next step'}
+            {orderedTransitions.some((path) => path.isDefault)
+              ? 'Add special outcome'
+              : 'Choose next step'}
           </Button>
         )}
 
-        <ThreeDotsActions
-          moreLabel={`Actions for ${stage.name}`}
-          sx={{
-            '& .MuiIconButton-root': {
+        <CustomTooltip title={readOnly ? 'View stage' : 'Edit stage'}>
+          <IconButton
+            size="small"
+            aria-label={`${readOnly ? 'View' : 'Edit'} ${stage.name}`}
+            onClick={onEdit}
+            sx={{
+              gridColumn: 4,
+              gridRow: 1,
               width: { xs: 44, md: 36 },
               height: { xs: 44, md: 36 },
-            },
-          }}
-          actions={({ popover }) => (
-            <>
-              <MenuItem
-                onClick={() => {
-                  popover.onClose();
-                  onEdit();
-                }}
-              >
-                <Iconify icon={readOnly ? 'mdi:eye-outline' : 'mdi:pencil-outline'} />
-                {readOnly ? 'View stage' : 'Edit stage'}
-              </MenuItem>
-              {!readOnly && (
-                <MenuItem
-                  onClick={() => {
-                    popover.onClose();
-                    onDuplicate();
-                  }}
-                >
-                  <Iconify icon="mdi:content-copy" /> Duplicate stage
-                </MenuItem>
-              )}
-              {!readOnly && !stage.isTerminalStage && (
-                <MenuItem
-                  onClick={() => {
-                    popover.onClose();
-                    onAddPath();
-                  }}
-                >
-                  <Iconify icon="mdi:source-branch-plus" /> {orderedTransitions.some((path) => path.isDefault) ? 'Add special outcome' : 'Choose next step'}
-                </MenuItem>
-              )}
-              {orderedTransitions.length > 0 && <Divider />}
-              {orderedTransitions.map((path) => (
-                <Box key={path.id}>
+              flexShrink: 0,
+            }}
+          >
+            <Iconify icon={readOnly ? 'mdi:eye-outline' : 'mdi:pencil-outline'} width={20} />
+          </IconButton>
+        </CustomTooltip>
+
+        {(!readOnly || orderedTransitions.length > 0) && (
+          <ThreeDotsActions
+            moreLabel={`Actions for ${stage.name}`}
+            sx={{
+              gridColumn: 5,
+              gridRow: 1,
+              '& .MuiIconButton-root': {
+                width: { xs: 44, md: 36 },
+                height: { xs: 44, md: 36 },
+              },
+            }}
+            actions={({ popover }) => (
+              <>
+                {!readOnly && (
                   <MenuItem
                     onClick={() => {
                       popover.onClose();
-                      onEditPath(path);
+                      onDuplicate();
                     }}
                   >
-                    <Iconify icon={readOnly ? 'mdi:eye-outline' : 'mdi:pencil-outline'} />
-                    {readOnly ? 'View' : 'Edit'} route to {getDestination(path)}
+                    <Iconify icon="mdi:content-copy" /> Duplicate stage
                   </MenuItem>
-                  {!readOnly && (
+                )}
+                {!readOnly && !stage.isTerminalStage && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      onAddPath();
+                    }}
+                  >
+                    <Iconify icon="mdi:source-branch-plus" />{' '}
+                    {orderedTransitions.some((path) => path.isDefault)
+                      ? 'Add special outcome'
+                      : 'Choose next step'}
+                  </MenuItem>
+                )}
+                {orderedTransitions.length > 0 && <Divider />}
+                {orderedTransitions.map((path) => (
+                  <Box key={path.id}>
                     <MenuItem
                       onClick={() => {
                         popover.onClose();
-                        onDeletePath(path.id);
+                        onEditPath(path);
                       }}
-                      sx={{ color: 'error.main' }}
                     >
-                      <Iconify icon="mdi:delete-outline" /> Remove route to {getDestination(path)}
+                      <Iconify icon={readOnly ? 'mdi:eye-outline' : 'mdi:pencil-outline'} />
+                      {readOnly ? 'View' : 'Edit'} route to {getDestination(path)}
                     </MenuItem>
-                  )}
-                </Box>
-              ))}
-              {!readOnly && <Divider />}
-              {!readOnly && (
-                <MenuItem
-                  onClick={() => {
-                    popover.onClose();
-                    onDelete();
-                  }}
-                  sx={{ color: 'error.main' }}
-                >
-                  <Iconify icon="mdi:delete-outline" /> Delete stage
-                </MenuItem>
-              )}
-            </>
-          )}
-        />
+                    {!readOnly && (
+                      <MenuItem
+                        onClick={() => {
+                          popover.onClose();
+                          onDeletePath(path.id);
+                        }}
+                        sx={{ color: 'error.main' }}
+                      >
+                        <Iconify icon="mdi:delete-outline" /> Remove route to {getDestination(path)}
+                      </MenuItem>
+                    )}
+                  </Box>
+                ))}
+                {!readOnly && <Divider />}
+                {!readOnly && (
+                  <MenuItem
+                    onClick={() => {
+                      popover.onClose();
+                      onDelete();
+                    }}
+                    sx={{ color: 'error.main' }}
+                  >
+                    <Iconify icon="mdi:delete-outline" /> Delete stage
+                  </MenuItem>
+                )}
+              </>
+            )}
+          />
+        )}
       </Stack>
     </Card>
   );
