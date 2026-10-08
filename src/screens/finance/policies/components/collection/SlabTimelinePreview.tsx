@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import { varAlpha } from 'src/theme/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { alpha } from '@mui/material/styles';
 import { Box, Stack, Tooltip, Typography } from '@mui/material';
 
 import { computeSlabIssues } from './CollectionCommon';
@@ -12,6 +12,7 @@ import type { ILateFeeEscalationRule } from '../../types/finance-policy.types';
 
 interface SlabTimelinePreviewProps {
   rules: ILateFeeEscalationRule[];
+  maximumChargingDays?: number | null;
 }
 
 // A palette cycled per-slab (in sorted day order) so adjacent, non-overlapping
@@ -25,14 +26,20 @@ const SLAB_COLORS = [
   '#0d9488', // Teal
 ];
 
-export default function SlabTimelinePreview({ rules }: SlabTimelinePreviewProps) {
-  const { overlapIndices, gaps } = useMemo(() => computeSlabIssues(rules), [rules]);
+export default function SlabTimelinePreview({
+  rules,
+  maximumChargingDays,
+}: SlabTimelinePreviewProps) {
+  const { overlapIndices, gaps, hasIssues, invalidIndices } = useMemo(
+    () => computeSlabIssues(rules, maximumChargingDays),
+    [rules, maximumChargingDays]
+  );
 
   const timelineEnd = useMemo(() => {
     if (rules.length === 0) return 30;
-    const lastEnd = Math.max(...rules.map((r) => r.endDay ?? r.startDay + 30));
+    const lastEnd = Math.max(...rules.map((r) => r.endDay ?? maximumChargingDays ?? 365));
     return Math.max(lastEnd, 30);
-  }, [rules]);
+  }, [rules, maximumChargingDays]);
 
   if (rules.length === 0) return null;
 
@@ -40,18 +47,18 @@ export default function SlabTimelinePreview({ rules }: SlabTimelinePreviewProps)
     .map((r, i) => ({ ...r, _index: i }))
     .sort((a, b) => a.startDay - b.startDay);
 
-  const hasIssues = overlapIndices.length > 0 || gaps.length > 0;
+  if (invalidIndices.length > 0)
+    return (
+      <Typography variant="caption" color="error.main" sx={{ mb: 2, display: 'block' }}>
+        Correct slab days and values to preview coverage.
+      </Typography>
+    );
 
   return (
     <Box sx={{ mb: 2.5 }}>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ mb: 1 }}
-      >
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
         <Typography variant="caption" fontWeight={600} color="text.secondary">
-          Slab Coverage Timeline (Day 0 – {timelineEnd})
+          Slab Coverage Timeline (Day 1 – {timelineEnd})
         </Typography>
 
         {hasIssues && (
@@ -78,7 +85,7 @@ export default function SlabTimelinePreview({ rules }: SlabTimelinePreviewProps)
           overflow: 'hidden',
           border: '1px solid',
           borderColor: hasIssues ? 'error.light' : 'divider',
-          bgcolor: (theme) => alpha(theme.palette.background.default, 0.6),
+          bgcolor: (theme) => varAlpha(theme.vars.palette.background.defaultChannel, 0.6),
           boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.06)',
         }}
       >
@@ -102,7 +109,12 @@ export default function SlabTimelinePreview({ rules }: SlabTimelinePreviewProps)
                     Fee: {slab.calculationType === 'Flat' ? `₹${slab.value}` : `${slab.value}%`}
                   </Typography>
                   {isOverlap && (
-                    <Typography variant="caption" color="error.light" fontWeight={600} display="block">
+                    <Typography
+                      variant="caption"
+                      color="error.light"
+                      fontWeight={600}
+                      display="block"
+                    >
                       ⚠️ Overlaps adjacent slab!
                     </Typography>
                   )}
@@ -111,6 +123,8 @@ export default function SlabTimelinePreview({ rules }: SlabTimelinePreviewProps)
             >
               <Box
                 sx={{
+                  position: 'absolute',
+                  left: `${((slab.startDay - 1) / timelineEnd) * 100}%`,
                   width: `${widthPct}%`,
                   minWidth: 6,
                   height: '100%',

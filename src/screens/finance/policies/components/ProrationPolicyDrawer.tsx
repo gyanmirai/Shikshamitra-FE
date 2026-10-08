@@ -2,40 +2,19 @@
 
 import type { RootState } from 'src/redux/store';
 
-/**
- * ProrationPolicyDrawer
- *
- * Full-featured create/edit drawer for Proration Policies adhering to the ShikshaMitra UI skill.
- * Left: Policy Information · Fee Head Rules Configuration · Calculation Simulator
- * Right: Live Summary Panel · Rule Breakdown · Validation Checklist · Policy Guarantees
- * Footer: Cancel · Create/Update Policy
- */
-
 import { useSelector } from 'react-redux';
 import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
 import { alpha } from '@mui/material/styles';
-import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import React, { useRef, useCallback } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
-import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { financePermissions } from 'src/constants/finance-menu';
-import {
-  Box,
-  Chip,
-  Alert,
-  Stack,
-  Drawer,
-  Button,
-  Typography,
-  IconButton,
-  CircularProgress,
-} from '@mui/material';
+import { Box, Alert, Stack, Drawer, Button, Typography, CircularProgress } from '@mui/material';
 
-import { ProrationSummaryPanel } from './proration/ProrationCommon';
+import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 import ProrationFooterActions from './proration/ProrationFooterActions';
 import { useProrationPolicyForm } from '../hooks/useProrationPolicyForm';
 import ProrationGeneralSection from './proration/ProrationGeneralSection';
@@ -56,12 +35,20 @@ interface ProrationPolicyDrawerProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ProrationPolicyDrawer({
+// Scope form hooks to the open drawer so discarded drafts and simulation state
+// cannot survive into the next create, edit, or duplicate session.
+export default function ProrationPolicyDrawer(props: ProrationPolicyDrawerProps) {
+  const { open } = props;
+  return open ? <ProrationPolicyDrawerSession {...props} /> : null;
+}
+
+function ProrationPolicyDrawerSession({
   open,
   onClose,
   editData,
   academicYearId = '',
 }: ProrationPolicyDrawerProps) {
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canActivate = hasGrantedPermission(
     permissions,
@@ -80,7 +67,6 @@ export default function ProrationPolicyDrawer({
     activeEdit,
     otherDefaultPolicyName,
     unsavedChangesDialog,
-    checks,
     handleCloseAttempt,
     handleCustomSubmit,
   } = useProrationPolicyForm({ open, onClose, editData, academicYearId });
@@ -92,21 +78,14 @@ export default function ProrationPolicyDrawer({
   const handleSubmit = useCallback(
     (event?: React.FormEvent<HTMLFormElement>) => {
       event?.preventDefault();
-      handleCustomSubmit();
+      if (!busy) handleCustomSubmit();
     },
-    [handleCustomSubmit]
+    [busy, handleCustomSubmit]
   );
 
-  // Keyboard shortcut Ctrl+Enter / Cmd+Enter to submit
-  const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-        event.preventDefault();
-        handleCustomSubmit();
-      }
-    },
-    [handleCustomSubmit]
-  );
+  const close = () => {
+    if (!busy) handleCloseAttempt();
+  };
 
   if (!open) return null;
 
@@ -114,18 +93,20 @@ export default function ProrationPolicyDrawer({
     <Drawer
       anchor="right"
       open={open}
-      onClose={handleCloseAttempt}
+      onClose={close}
       slotProps={{
         backdrop: {
           sx: {
-            bgcolor: (theme) => alpha(theme.palette.grey[900], 0.44),
-            backdropFilter: 'blur(3px)',
+            bgcolor: (theme) => alpha(theme.palette.common.black, 0.32),
           },
         },
       }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-labelledby': 'proration-policy-title',
         sx: {
-          width: { xs: '100%', lg: 'min(1120px, 95vw)' },
+          width: { xs: '100%', sm: 'min(840px, 96vw)' },
           maxWidth: '100%',
           display: 'flex',
           flexDirection: 'column',
@@ -137,114 +118,45 @@ export default function ProrationPolicyDrawer({
       <Box
         component="form"
         ref={formRef}
-        aria-label={editData ? 'Edit proration policy' : 'Create proration policy'}
+        aria-label={editData ? 'Edit Proration Policy' : 'Create Proration Policy'}
         aria-busy={busy}
         noValidate
         onSubmit={handleSubmit}
-        onKeyDown={handleKeyDown}
         sx={{
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
+          minHeight: 0,
           bgcolor: 'background.paper',
         }}
       >
-        {/* ── Header ──────────────────────────────────────────────────────── */}
-        <Box
-          sx={{
-            px: { xs: 2, sm: 3 },
-            py: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            bgcolor: 'background.paper',
-            flexShrink: 0,
-            gap: 2,
-          }}
-        >
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.25,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.1),
-                color: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Iconify
-                icon={editData ? GlobalIcons.edit : 'solar:calculator-bold-duotone'}
-                width={22}
-                height={22}
-              />
-            </Box>
-
-            <Box sx={{ minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-                <Typography variant="h6" fontWeight={700}>
-                  {editData ? 'Edit Proration Policy' : 'Create Proration Policy'}
-                </Typography>
-
-                <CustomTooltip
-                  title="Proration policies define reusable per-fee-head rules for mid-term joiners and exits. Attached to Fee Structures."
-                  placement="right"
-                  arrow
-                >
-                  <Iconify
-                    icon={GlobalIcons.info}
-                    color="info.main"
-                    width={16}
-                    height={16}
-                    sx={{ cursor: 'pointer' }}
-                  />
-                </CustomTooltip>
-
-                <Label
-                  color={formik.values.status === 'Active' ? 'success' : 'warning'}
-                  sx={{ height: 22, fontSize: '0.72rem', fontWeight: 700 }}
-                >
-                  {formik.values.status || 'Draft'}
-                </Label>
-
-                {editData?.version && (
-                  <Chip
-                    size="small"
-                    variant="outlined"
-                    label={`v${editData.version}`}
-                    sx={{ height: 20, fontSize: '0.68rem', fontWeight: 600 }}
-                  />
-                )}
-              </Stack>
-
-              <Typography variant="caption" color="text.secondary" display="block">
-                Set admission and early withdrawal rules per fee head.
-              </Typography>
-            </Box>
-          </Stack>
-
-          <IconButton
-            aria-label="Close proration policy"
-            disabled={busy}
-            onClick={handleCloseAttempt}
-            sx={{
-              p: 0.75,
-              color: 'text.secondary',
-              '&:hover': { bgcolor: 'action.hover' },
-            }}
-          >
-            <Iconify icon="mdi:close" width={20} height={20} />
-          </IconButton>
-        </Box>
+        <FinancePolicyDrawerHeader
+          title={editData ? 'Edit Proration Policy' : 'Create Proration Policy'}
+          titleId="proration-policy-title"
+          description={`Configure admission and early withdrawal rules per fee head · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}. Existing recorded dues and receipts keep their amounts.`}
+          descriptionDisplay="tooltip"
+          onClose={close}
+          disabled={busy}
+          badges={
+            <>
+              <Label color={formik.values.status === 'Active' ? 'success' : 'warning'}>
+                {formik.values.status || 'Draft'}
+              </Label>
+              {editData?.version && <Label color="default">v{editData.version}</Label>}
+            </>
+          }
+        />
 
         {/* ── Main Body ────────────────────────────────────────────────────── */}
         <Box
-          sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden', position: 'relative' }}
+          sx={{
+            display: 'flex',
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden',
+            position: 'relative',
+            bgcolor: 'background.neutral',
+          }}
         >
           <Box
             component="fieldset"
@@ -254,7 +166,7 @@ export default function ProrationPolicyDrawer({
           >
             {/* Scrollable Form */}
             <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
-              <Box sx={{ p: { xs: 2, sm: 3 }, pb: 6 }}>
+              <Stack spacing={2} sx={{ p: { xs: 2, sm: 3 }, minWidth: 0 }}>
                 {isFeeHeadsError && (
                   <Alert severity="error" sx={{ mb: 2.5, borderRadius: 1.25 }}>
                     Active fee heads could not be loaded from server. Saving is disabled to prevent
@@ -280,12 +192,8 @@ export default function ProrationPolicyDrawer({
                     rules={formik.values.feeHeadRules}
                   />
                 )}
-                <ProrationSummaryPanel formik={formik} checks={checks} inline />
-              </Box>
+              </Stack>
             </Scrollbar>
-
-            {/* Sticky Right Summary Panel */}
-            <ProrationSummaryPanel formik={formik} checks={checks} />
           </Box>
           {busy && (
             <Stack
@@ -313,7 +221,7 @@ export default function ProrationPolicyDrawer({
         <ProrationFooterActions
           isSaving={busy}
           disabled={isFeeHeadsError}
-          onCancel={handleCloseAttempt}
+          onCancel={close}
           isEditing={Boolean(editData?.id)}
         />
 
@@ -322,19 +230,21 @@ export default function ProrationPolicyDrawer({
           open={unsavedChangesDialog.value}
           icon="warning"
           onClose={unsavedChangesDialog.onFalse}
-          title="Unsaved Changes"
-          content="You have unsaved changes in this proration policy form. Are you sure you want to discard them?"
+          title="Discard Unsaved Changes?"
+          content="Your changes to this proration policy will be lost."
           action={
             <Button
               variant="contained"
               color="error"
               size="small"
+              startIcon={<Iconify icon="solar:trash-bin-trash-bold" />}
               onClick={() => {
                 unsavedChangesDialog.onFalse();
+                formik.resetForm();
                 onClose();
               }}
             >
-              Discard Changes
+              Discard changes
             </Button>
           }
         />

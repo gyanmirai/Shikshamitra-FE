@@ -2,7 +2,7 @@ import type { RootState } from 'src/redux/store';
 
 import { useSelector } from 'react-redux';
 import { usePathname } from 'src/routes/hooks';
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { isExternalLink } from 'src/routes/utils';
 import { hasNavigationPermission } from 'src/utils/permissions';
 
@@ -49,21 +49,12 @@ export function NavList({
     [isSubLayout, removeTrailingSlash]
   );
 
-  useEffect(() => {
-    if (data.children && recur(data.children) && setCurrentOpenMenu) {
-      // Auto-open this menu if one of its descendants matches current path
-      setCurrentOpenMenu((prev) => {
-        if (prev.some((m) => m.action === data._action)) return prev; // already tracked
-        return [
-          ...prev.filter((m) => m.depth !== depth),
-          { action: data._action as string, depth },
-        ];
-      });
-    }
-  }, [data._action, data.children, recur, removeTrailingSlash, setCurrentOpenMenu, depth]);
+  // Route ancestry is independent of manually expanded groups. Finance's menu
+  // hierarchy does not mirror its URL hierarchy (Settings even has no path).
+  const hasActiveDescendant = Boolean(data.children && recur(data.children));
 
   const handleToggleMenu = () => {
-    if (!data.children || !setCurrentOpenMenu) return;
+    if (!data.children || !setCurrentOpenMenu || hasActiveDescendant) return;
     const isOpen = (currentOpenMenu || []).some((m) => m.action === data._action);
     if (isOpen) {
       setCurrentOpenMenu((prev) => prev.filter((m) => m.action !== data._action));
@@ -79,7 +70,8 @@ export function NavList({
   //   setOpenMenu(false);
   // }, []);
 
-  const isOpen = (currentOpenMenu || []).some((m) => m.action === data._action);
+  const isOpen =
+    hasActiveDescendant || (currentOpenMenu || []).some((m) => m.action === data._action);
   const renderNavItem = (
     <NavItem
       render={render}

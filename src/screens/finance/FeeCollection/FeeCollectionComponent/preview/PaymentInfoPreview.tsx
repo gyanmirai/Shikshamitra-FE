@@ -4,6 +4,7 @@ import { alpha, useTheme } from '@mui/material/styles';
 import { formatNumber } from 'src/utils/formate_number';
 import { Box, Grid, Stack, Divider, Typography } from '@mui/material';
 
+import { collectionPaymentDetails } from '../collectionPaymentDetails';
 import type { FeeCollectionPayment } from '../../Components/type';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -84,7 +85,9 @@ const DetailRow = ({ label, value }: { label: string; value?: string | null }) =
 const PaymentInfoPreview = ({ payment, remarks, bankAccounts }: Props) => {
   const theme = useTheme();
   const amount = Number(String(payment.amount || 0).replace(/[₹,\s]/g, ''));
-  const detailEntries = Object.entries(payment.details ?? {}).filter(([, v]) => Boolean(v));
+  const detailEntries = Object.entries(
+    collectionPaymentDetails(payment.paymentMethod, payment.details ?? {})
+  ).filter(([, v]) => Boolean(v));
   const paymentIcon = getPaymentIcon(payment.paymentMethod ?? '');
 
   return (

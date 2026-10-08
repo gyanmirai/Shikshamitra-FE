@@ -201,6 +201,8 @@ export interface RejectionResponse {
 
 export interface ConcessionApplication {
   id: string;
+  requesterId?: string | null;
+  submittedById?: string | null;
   studentId: string;
   concessionRequestId: string;
   concessionTypeId: string;
@@ -310,6 +312,7 @@ export interface ConcessionTypeOption {
 }
 
 export interface ConcessionPolicyOption {
+  autoCreateRefund?: boolean;
   concessionPolicyId: string;
   concessionPolicyVersionId: string;
   policyName: string;
@@ -383,6 +386,9 @@ export interface ConcessionDraftCommand {
 }
 
 export interface ConcessionRequestDetail {
+  autoCreateRefund: boolean;
+  paidConcessionAmount: number;
+  canCreateRefundRequests: boolean;
   concessionRequestId: string;
   academicYearId: string;
   studentId: string;
@@ -523,6 +529,7 @@ export type PreviewConcessionApprovalCommand = Pick<
 >;
 
 export interface ConcessionApprovalPreview {
+  autoCreateRefund: boolean;
   concessionRequestId: string;
   requestConcurrencyStamp: string;
   previewFingerprint: string;

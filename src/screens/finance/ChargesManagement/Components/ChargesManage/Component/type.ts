@@ -6,10 +6,6 @@ export interface IChargeData {
   id?: string;
   chargeName?: string;
   chargeCategoryId?: string;
-  incomeCategoryId?: string;
-  receivingBankAccountId?: string;
-  incomeCategoryName?: string;
-  receivingBankLabel?: string;
   categoryName?: string;
   amount: number;
   priority?: number;
@@ -45,10 +41,6 @@ export interface IChargeDetailData {
   chargeId?: string;
   id?: string;
   chargeCategoryId?: string;
-  incomeCategoryId?: string;
-  receivingBankAccountId?: string;
-  incomeCategoryName?: string;
-  receivingBankLabel?: string;
   categoryName?: string;
   amount: number;
   priority: number;

@@ -6,6 +6,7 @@ import * as Yup from 'yup';
 import { useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
+import { capitalizeWords } from 'src/utils/input-format';
 import { shikshaMitraToast } from 'src/components/toast';
 import { useFormik, setNestedObjectValues } from 'formik';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -26,7 +27,8 @@ const POLICY_ERROR_MESSAGES: Record<string, string> = {
     'A policy with this code already exists for the academic year.',
   'Finance:ConcessionPolicy:010018':
     'This policy is used by concession requests and cannot be moved to Draft or archived.',
-  'Finance:ConcessionPolicy:010025': 'This policy does not apply to the selected concession request.',
+  'Finance:ConcessionPolicy:010025':
+    'This policy does not apply to the selected concession request.',
   'Finance:ConcessionPolicy:010019': 'The policy was refreshed. Please review and submit again.',
   'Finance:ConcessionPolicy:010020':
     'This policy changed in another session. Refresh and try again.',
@@ -59,6 +61,7 @@ const getInitialValues = (
     maximumFixedAmount: d?.maximumFixedAmount ?? null,
     roundOff: 'RoundUp',
     applyOn: d?.applyOn || 'AllOutstanding',
+    autoCreateRefund: d?.applyOn === 'AllFees' ? (d?.autoCreateRefund ?? true) : false,
     concurrencyStamp: d?.concurrencyStamp || '',
     changeReason: '',
   };
@@ -76,6 +79,13 @@ const validationSchema = Yup.object().shape({
     .oneOf(['Draft', 'Active'], 'Status must be Draft or Active')
     .required('Status is required'),
   isDefault: Yup.boolean(),
+  autoCreateRefund: Yup.boolean().test(
+    'paid-scope',
+    'Automatic refunds require a scope that includes paid installments',
+    function validatePaidScope(value) {
+      return !value || this.parent.applyOn === 'AllFees';
+    }
+  ),
   description: Yup.string().max(500, 'Cannot exceed 500 characters').nullable(),
   valueSource: Yup.string()
     .oneOf(['PolicyFixed', 'RequestEnteredWithinLimits'])
@@ -199,6 +209,7 @@ export function useConcessionPolicyForm({
           maximumPercentage: values.maximumPercentage,
           maximumFixedAmount: values.maximumFixedAmount,
           applyOn: values.applyOn,
+          autoCreateRefund: values.applyOn === 'AllFees' && Boolean(values.autoCreateRefund),
           roundingMethod: 'RoundUp',
           changeReason: values.changeReason?.trim() || null,
           concurrencyStamp: editData?.id ? values.concurrencyStamp : null,
@@ -222,7 +233,7 @@ export function useConcessionPolicyForm({
   });
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    formik.handleChange(e);
+    formik.setFieldValue('policyName', capitalizeWords(e.target.value));
   };
 
   // ─── Close Handler ─────────────────────────────────────────────────────────
@@ -311,6 +322,7 @@ export function useConcessionPolicyForm({
   const simulation = useMemo(() => {
     const { values } = formik;
     const pending = Math.max(0, simFeeAmount - simAlreadyPaid);
+    const eligibleBase = values.applyOn === 'AllFees' ? simFeeAmount : pending;
 
     let concessionAmount = 0;
     const simulatedValue =
@@ -322,23 +334,28 @@ export function useConcessionPolicyForm({
           ? values.maximumPercentage
           : values.maximumFixedAmount;
     if (values.calculationMethod === 'Percentage' && simulatedValue) {
-      concessionAmount = (pending * simulatedValue) / 100;
+      concessionAmount = (eligibleBase * simulatedValue) / 100;
     } else if (values.calculationMethod === 'FixedAmount' && simulatedValue) {
       concessionAmount = simulatedValue;
     } else if (values.calculationMethod === 'FullWaiver') {
-      concessionAmount = pending;
+      concessionAmount = eligibleBase;
     }
 
-    const maximum = values.valueSource === 'RequestEnteredWithinLimits' && values.calculationMethod === 'FixedAmount'
-      ? Math.min(pending, values.maximumFixedAmount ?? pending) : pending;
-    concessionAmount = values.calculationMethod === 'FullWaiver'
-      ? pending : roundUpWithinAmount(concessionAmount, maximum);
+    const maximum =
+      values.valueSource === 'RequestEnteredWithinLimits' &&
+      values.calculationMethod === 'FixedAmount'
+        ? Math.min(eligibleBase, values.maximumFixedAmount ?? eligibleBase)
+        : eligibleBase;
+    concessionAmount =
+      values.calculationMethod === 'FullWaiver'
+        ? eligibleBase
+        : roundUpWithinAmount(concessionAmount, maximum);
 
     const newOutstanding = Math.max(0, pending - concessionAmount);
 
     return {
       concessionAmount,
-      refundRequired: 0,
+      refundRequired: Math.max(0, concessionAmount - pending),
       newOutstanding: roundUpAmount(newOutstanding),
       lateFeeImpact: roundUpAmount(simLateFee),
     };

@@ -1,7 +1,11 @@
 import type { SxProps, SelectProps, FormControlProps, FormHelperTextProps } from '@mui/material';
 
 import React, { useId, useState } from 'react';
+import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import {
+  Tooltip,
+  IconButton,
+  InputAdornment,
   Chip,
   Select,
   MenuItem,
@@ -40,6 +44,8 @@ export type CustomSelectProps<T extends string, J extends boolean> = Omit<
   addOtherItemOnClick?: () => void;
   disabledValues?: (string | number)[];
   disabledLabel?: string;
+  /** Optional guidance for menu options and the selected value. */
+  optionDescriptionKey?: T;
 };
 
 const CustomSelect = <T extends string, J extends boolean>({
@@ -63,6 +69,7 @@ const CustomSelect = <T extends string, J extends boolean>({
   addOtherItemOnClick,
   disabledValues = [],
   disabledLabel = 'Already configured',
+  optionDescriptionKey,
   inputProps,
   ...props
 }: CustomSelectProps<T, J>): React.ReactElement => {
@@ -79,6 +86,24 @@ const CustomSelect = <T extends string, J extends boolean>({
   );
   const generatedId = useId();
   const labelId = props.labelId ?? `${generatedId}-label`;
+  const selectedOption = options.find((option) => option[valueKey] === value);
+  const selectedDescription = optionDescriptionKey && selectedOption?.[optionDescriptionKey];
+  const optionInfo = (description: string | number, optionLabel: string | number) => (
+    <Tooltip title={String(description)} arrow>
+      <IconButton
+        size="small"
+        aria-label={`About ${optionLabel}`}
+        onMouseDown={(event) => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+        }}
+        sx={{ color: 'info.main' }}
+      >
+        <InfoOutlined sx={{ fontSize: 18 }} />
+      </IconButton>
+    </Tooltip>
+  );
 
   const handleChange = (event: any) => {
     const selectedValue: J extends true ? string[] | number[] : string | number =
@@ -130,6 +155,13 @@ const CustomSelect = <T extends string, J extends boolean>({
               'aria-label': inputProps?.['aria-label'] ?? label,
             }}
             disabled={disabled}
+            endAdornment={
+              selectedDescription ? (
+                <InputAdornment position="end" sx={{ mr: 2.5 }}>
+                  {optionInfo(selectedDescription, selectedOption![labelKey])}
+                </InputAdornment>
+              ) : undefined
+            }
             renderValue={
               multiple
                 ? (selected: string | string[] | number | number[]) => (
@@ -149,7 +181,9 @@ const CustomSelect = <T extends string, J extends boolean>({
                       ))}
                     </div>
                   )
-                : undefined
+                : optionDescriptionKey
+                  ? () => selectedOption?.[labelKey] ?? ''
+                  : undefined
             }
             sx={(theme) => ({
               ...(error &&
@@ -208,7 +242,12 @@ const CustomSelect = <T extends string, J extends boolean>({
               filteredOptions.map((option) => {
                 const isDisabled = disabledValues.includes(option[valueKey] as string | number);
                 return (
-                  <MenuItem key={option[valueKey]} value={option[valueKey]} disabled={isDisabled}>
+                  <MenuItem
+                    key={option[valueKey]}
+                    value={option[valueKey]}
+                    disabled={isDisabled}
+                    aria-label={optionDescriptionKey ? String(option[labelKey]) : undefined}
+                  >
                     {multiple && (
                       <Checkbox
                         checked={(value as string[])?.indexOf(option[valueKey] as string) > -1}
@@ -220,6 +259,9 @@ const CustomSelect = <T extends string, J extends boolean>({
                       secondary={isDisabled ? disabledLabel : undefined}
                       secondaryTypographyProps={isDisabled ? { fontSize: '0.72rem' } : undefined}
                     />
+                    {optionDescriptionKey && option[optionDescriptionKey]
+                      ? optionInfo(option[optionDescriptionKey], option[labelKey])
+                      : null}
                   </MenuItem>
                 );
               })

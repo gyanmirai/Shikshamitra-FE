@@ -55,13 +55,9 @@ describe('charge amount validation', () => {
 });
 
 describe('charge form validation', () => {
-  it.each([false, true])(
-    'does not require income or bank selections (edit: %s)',
-    async (isEdit) => {
-      const schema = createUpdateChargeValidationSchema(currentYear, isEdit);
-      await expect(
-        schema.validate({ ...validValues, chargeId: isEdit ? 'charge-id' : '' })
-      ).resolves.toMatchObject({ chargeCategoryId: 'category-id' });
-    }
-  );
+  it.each([false, true])('validates without financial routing inputs (edit: %s)', async (isEdit) => {
+    const schema = createUpdateChargeValidationSchema(currentYear, isEdit);
+    const values = { ...validValues, chargeId: isEdit ? 'charge-id' : '' };
+    await expect(schema.validate(values)).resolves.toMatchObject({ chargeCategoryId: 'category-id' });
+  });
 });

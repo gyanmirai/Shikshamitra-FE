@@ -44,8 +44,8 @@ A standard table region should contain:
   when the table scope is clear, avoid a redundant floating label and use a
   placeholder that names the searchable fields, such as
   `Search students by name, roll no. or GR no.`.
-- Search must apply to the visible table dataset and preserve the surrounding
-  page context.
+- Search must apply to all records in the active table scope, including other
+  pages, and preserve the surrounding page context.
 - Clearing the search must restore the unfiltered table.
 - Search results, no-results messaging, and pagination must agree with the
   active search term.
@@ -76,6 +76,33 @@ A standard table region should contain:
 - Keep column content aligned consistently by type: text left, numbers and
   dates aligned predictably, and actions aligned to the right.
 
+### Column filters and sorting
+
+- Give each useful data column a filter and sort control when its underlying
+  data supports them. Do not show a control that only affects the current page
+  or cannot affect the displayed value. Actions are never filterable or sortable.
+- Match the filter to the value users see: text operators for names, labelled
+  choices for enums and booleans, numeric comparisons and ranges for counts or
+  amounts, and day-based comparisons for dates. A boolean filter must distinguish
+  `false` from no filter. For a column showing several values, state whether its
+  filter means "contains this value" or an exact match.
+- Sort by the displayed value, not an unrelated stored code. When a cell shows a
+  derived count or formatted amount, filtering and sorting must use that same
+  meaning; explain any unit or membership rule in the header when it is not
+  obvious. Remove columns whose displayed value is not supplied by the data.
+- With server pagination, apply the active search, tab scope, and column filters
+  before counting and paging rows. Apply sorting before paging, use an allowed
+  set of sort fields, and add a stable tie-breaker so rows do not move between
+  pages. Do not sort or filter only the rows already loaded for one page.
+- Keep active filter and sort choices visible. Changing search, filters, or sort
+  returns to page one; changing pages or page size preserves those choices.
+  When switching tabs, clear filters that do not apply to the new scope and
+  keep rows, counts, and empty states aligned with the selected tab.
+- Use `CustomizableTable` column `filterType` and `enumOptions` for the matching
+  control, and its server-side filter and sort callbacks when rows are paged by
+  an API. Verify combinations of filters, sorting across page boundaries,
+  numeric ranges, dates, and explicit `false` values with focused tests.
+
 ## 4. Row actions and the overflow menu
 
 The rightmost table column is reserved for row actions and must behave
@@ -83,16 +110,15 @@ consistently in every module.
 
 ### Action-count rule
 
-- If a row has one, two, or three actions, show the actions directly as compact
-  icon buttons in the Actions column.
-- If a row has more than three actions, show the overflow menu represented by
-  the three-dots icon.
+- Show at most two actions directly as compact icon buttons in the Actions
+  column.
+- If a row has more than two actions, show the remaining actions in the
+  three-dots overflow menu beside those two buttons.
 - This threshold applies consistently to every table; individual modules must
   not invent a different threshold.
-- The three-dots menu must contain the complete set of actions available for
-  that row, in a logical and predictable order.
-- The overflow menu must not hide an action that is expected to be immediately
-  available when the row has three or fewer actions.
+- Keep the most common actions direct; place the remaining actions in the
+  three-dots menu in a logical and predictable order.
+- The overflow menu must not duplicate the two direct actions.
 
 ### Action presentation
 
@@ -224,7 +250,7 @@ row available while they horizontally scroll through other columns.
 - The sticky order from left to right must be: table content, Status, Actions.
 - If a table has no status concept, Actions may be the only sticky right-side
   column.
-- The existing three-action threshold still applies inside the sticky Actions
+- The existing two-direct-action limit still applies inside the sticky Actions
   column.
 - Sticky actions must retain their row alignment and must never appear to
   belong to the adjacent data column.
@@ -356,8 +382,8 @@ Before approving a table region, verify:
 - The table fills its available width without unnecessary action-column space.
 - Every visible column has a documented user benefit and useful data.
 - Column labels, formats, badges, and statuses follow shared terminology.
-- Row actions follow the three-action threshold.
-- More than three row actions use a three-dots overflow menu.
+- Row actions show at most two direct actions.
+- Additional row actions use a three-dots overflow menu.
 - Overflow menus are anchored, readable, keyboard accessible, and not clipped.
 - Active tabs and filters stay synchronized with rows, counts, pagination, and
   empty states.
@@ -374,6 +400,8 @@ Before approving a table region, verify:
 - Search no-results offers `Clear search`; filter no-results offers `Clear
   filters` when applicable.
 - Pagination and density controls preserve the user's table context.
+- Column filters and sorting match displayed values and apply across the full
+  active result set before pagination.
 - The table container owns scrolling and the page does not gain document-level
   horizontal overflow.
 - Keyboard and responsive behavior remain usable.

@@ -2,7 +2,7 @@
 
 import { LoadingButton } from '@mui/lab';
 import { Iconify } from 'src/components/iconify';
-import { Box, Button, Tooltip } from '@mui/material';
+import { Box, Button, Tooltip, IconButton } from '@mui/material';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -10,6 +10,7 @@ import { Box, Button, Tooltip } from '@mui/material';
 interface FormFooterProps {
   isSubmitting: boolean;
   disabled: boolean;
+  disabledReason?: string;
   onCancel: () => void;
   onSubmit: () => Promise<void>;
 }
@@ -17,26 +18,30 @@ interface FormFooterProps {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-export function FormFooter({ isSubmitting, disabled, onCancel, onSubmit }: FormFooterProps) {
+export function FormFooter({
+  isSubmitting,
+  disabled,
+  disabledReason,
+  onCancel,
+  onSubmit,
+}: FormFooterProps) {
   return (
     <Box
       sx={{
-        px: 3,
-        py: 2,
+        px: { xs: 2, sm: 3 },
+        py: 1.75,
         borderTop: '1px solid',
         borderColor: 'divider',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'flex-end',
-        gap: 1.5,
+        gap: 1,
         flexShrink: 0,
         bgcolor: 'background.paper',
-        boxShadow: '0 -2px 8px 0 rgba(0,0,0,0.06)',
       }}
     >
       <Button
         variant="outlined"
-        color="inherit"
         onClick={onCancel}
         size="small"
         disabled={isSubmitting}
@@ -45,22 +50,24 @@ export function FormFooter({ isSubmitting, disabled, onCancel, onSubmit }: FormF
         Cancel
       </Button>
 
-      <Tooltip title={disabled && !isSubmitting ? 'Make a change before submitting' : ''}>
-        <span>
-          <LoadingButton
-            variant="contained"
-            color="primary"
-            loading={isSubmitting}
-            disabled={disabled}
-            onClick={onSubmit}
-            size="small"
-            startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
-            sx={{ minWidth: 96 }}
-          >
-            Submit
-          </LoadingButton>
-        </span>
-      </Tooltip>
+      {disabled && !isSubmitting && disabledReason && (
+        <Tooltip title={disabledReason}>
+          <IconButton size="small" aria-label={`Submit unavailable: ${disabledReason}`}>
+            <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+          </IconButton>
+        </Tooltip>
+      )}
+      <LoadingButton
+        variant="contained"
+        loading={isSubmitting}
+        disabled={disabled}
+        onClick={onSubmit}
+        size="small"
+        startIcon={<Iconify icon="material-symbols-light:save" width={20} height={20} />}
+        sx={{ minWidth: 96 }}
+      >
+        Submit
+      </LoadingButton>
     </Box>
   );
 }

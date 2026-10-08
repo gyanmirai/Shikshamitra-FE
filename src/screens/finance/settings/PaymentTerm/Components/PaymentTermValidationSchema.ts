@@ -2,6 +2,8 @@ import dayjs from 'dayjs';
 import * as Yup from 'yup';
 
 import type { PaymentTermStatus, DemandGenerationRule } from '../type';
+import type { IPaymentTerm } from '../type';
+import { getInvoiceDateError, getInvoiceOffsetLimit } from '../invoiceScheduleValidation';
 
 // ---------------------------------------------------------------------------
 // Shared shape for a single installment
@@ -136,19 +138,22 @@ export const paymentTermValidationSchema = (
         }
       )
       .test(
-        'specific-demand-dates',
-        'An invoice date on or before the due date is required when invoice creation is enabled',
+        'valid-invoice-dates',
+        'Invoice dates must be between the installment start and payment due date',
         function (items) {
-          if (
-            this.parent.demandGenerationRule !== 'SpecificDate' ||
-            !this.parent.invoiceCreationEnabled
-          ) {
-            return true;
-          }
-          return items?.every((item) => {
-            if (!item?.demandDate || !item?.dueDate) return false;
-            return !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day');
+          const values = this.parent as IPaymentTerm;
+          const board = boards.find((item) => item.id === values.boardId);
+          const errors = (items ?? []).flatMap((item, index) => {
+            const message = getInvoiceDateError(
+              values,
+              item as IPaymentTerm['installments'][number],
+              board?.startDate
+            );
+            return message
+              ? [this.createError({ path: `${this.path}[${index}].demandDate`, message })]
+              : [];
           });
+          return errors.length ? new Yup.ValidationError(errors) : true;
         }
       ),
 
@@ -165,8 +170,23 @@ export const paymentTermValidationSchema = (
         is: (rule: DemandGenerationRule) => rule === 'XDaysBeforeDue',
         then: (schema) =>
           schema
+            .integer('Days before due must be a whole number')
             .min(1, 'Offset days must be at least 1')
-            .required('Offset days is required for X Days before due'),
+            .max(365, 'Days before due cannot exceed 365')
+            .required('Offset days is required for X Days before due')
+            .test('max-invoice-offset', function (offset) {
+              const values = this.parent as IPaymentTerm;
+              if (offset == null) return true;
+              const board = boards.find((item) => item.id === values.boardId);
+              const limit = getInvoiceOffsetLimit(values, board?.startDate);
+              return (
+                !limit ||
+                offset <= limit.days ||
+                this.createError({
+                  message: `Max ${Math.max(0, limit.days)} days for ${limit.name || 'this installment'}; invoice date cannot be before the installment start`,
+                })
+              );
+            }),
         otherwise: (schema) => schema.nullable(),
       }),
   });

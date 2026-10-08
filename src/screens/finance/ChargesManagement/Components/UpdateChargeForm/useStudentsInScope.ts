@@ -21,6 +21,9 @@ function mapStudent(item: any): IStudentOption {
     divisionName: item.divisionName,
     standardId: item.standardId,
     divisionId: item.divisionId,
+    gender: item.gender,
+    hasFeeStructureAssignment: item.hasFeeStructureAssignment,
+    hasChargeInCategory: item.hasChargeInCategory,
   };
 }
 
@@ -28,11 +31,14 @@ export function useStudentsInScope(
   boardId: string,
   educationMediumId: string,
   standardIds: string[],
-  divisionIds: string[]
+  divisionIds: string[],
+  chargeCategoryId?: string
 ) {
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const [result, setResult] = useState<{ key: string; students: IStudentOption[] } | null>(null);
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   const [getStudentsByScope] = useQueryAndMutation({
     type: 'mutation',
@@ -48,14 +54,16 @@ export function useStudentsInScope(
         // Only include divisionIds in the key when a single class is selected
         divisionIds: standardIds.length === 1 ? divisionIds : [],
         yearId: currentYear?.id,
+        chargeCategoryId,
       }),
-    [boardId, educationMediumId, standardIds, divisionIds, currentYear?.id]
+    [boardId, educationMediumId, standardIds, divisionIds, currentYear?.id, chargeCategoryId]
   );
   const hasFetched = result?.key === scopeKey;
   const students = hasFetched ? result.students : [];
   const isLoading =
     loadingKey === scopeKey ||
     (!hasFetched &&
+      errorKey !== scopeKey &&
       !!boardId &&
       !!educationMediumId &&
       standardIds.length > 0 &&
@@ -71,6 +79,7 @@ export function useStudentsInScope(
       }
 
       setLoadingKey(scopeKey);
+      setErrorKey(null);
       try {
         const params: {
           academicYearId: string;
@@ -79,12 +88,14 @@ export function useStudentsInScope(
           classIds: string[];
           divisionIds?: string[];
           onlyWithFeeStructureAssignment: boolean;
+          chargeCategoryId?: string;
         } = {
           academicYearId: currentYear.id,
           boardId,
           educationMediumId,
           classIds: standardIds,
           onlyWithFeeStructureAssignment: true,
+          chargeCategoryId: chargeCategoryId || undefined,
         };
 
         // Only send divisionIds to the API when exactly one class is selected
@@ -93,6 +104,9 @@ export function useStudentsInScope(
         }
 
         const response: any = await getStudentsByScope(params);
+        if (response?.error || !Array.isArray(response?.data)) {
+          throw new Error('Failed to load students');
+        }
         const items: any[] = Array.isArray(response?.data) ? response.data : [];
 
         if (!cancelled) {
@@ -103,6 +117,8 @@ export function useStudentsInScope(
           });
           setResult({ key: scopeKey, students: Array.from(unique.values()) });
         }
+      } catch {
+        if (!cancelled) setErrorKey(scopeKey);
       } finally {
         if (!cancelled) setLoadingKey(null);
       }
@@ -113,7 +129,14 @@ export function useStudentsInScope(
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scopeKey]);
+  }, [scopeKey, retryCount]);
 
-  return { students, isLoading, hasFetched, candidateStudentIds: students.map((s) => s.id) };
+  return {
+    students,
+    isLoading,
+    hasFetched,
+    isError: errorKey === scopeKey,
+    retry: () => setRetryCount((count) => count + 1),
+    candidateStudentIds: students.map((s) => s.id),
+  };
 }

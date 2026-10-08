@@ -2,16 +2,14 @@
 
 import React from 'react';
 import { getIn } from 'formik';
-import { Label } from 'src/components/label';
+import { varAlpha } from 'src/theme/styles';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import ShakingTextField from 'src/components/shaking-text-field';
 import FinanceRoutingFields from 'src/screens/finance/components/FinanceRoutingFields';
 import {
-  Box,
   Grid,
-  Card,
   Paper,
   Table,
   Stack,
@@ -34,11 +32,11 @@ import {
   FormHelperText,
   TableContainer,
   InputAdornment,
-  FormControlLabel,
 } from '@mui/material';
 
 import SlabTimelinePreview from './SlabTimelinePreview';
-import { SectionCard, computeSlabIssues } from './CollectionCommon';
+import CollectionNumberField from './CollectionNumberField';
+import { SectionCard, CollectionInfoTip, computeSlabIssues } from './CollectionCommon';
 
 interface CollectionLateFeeSectionProps {
   formik: any;
@@ -54,78 +52,27 @@ export default function CollectionLateFeeSection({
   removeSlab,
 }: CollectionLateFeeSectionProps) {
   const isLateFeeEnabled = Boolean(formik.values.enableLateFee);
-  const { overlapIndices } = computeSlabIssues(formik.values.escalationRules);
+  const { overlapIndices } = computeSlabIssues(
+    formik.values.escalationRules,
+    formik.values.maximumChargingDays
+  );
 
   return (
     <SectionCard
-      title="Late Fee Configuration"
-      subtitle="Setup grace periods, calculation types, escalation slabs, and runaway caps."
+      title="Late Fee Rules"
+      subtitle="Enable charges on unpaid fee heads, then set the grace period, calculation method, escalation slabs, and limits."
       icon={GlobalIcons.receiptIcon}
+      headerSpacing={isLateFeeEnabled ? 2 : 0}
       action={
-        <Label color={isLateFeeEnabled ? 'warning' : 'default'} sx={{ height: 22 }}>
-          {isLateFeeEnabled ? 'Late Fee Active' : 'Disabled'}
-        </Label>
+        <Switch
+          size="small"
+          checked={isLateFeeEnabled}
+          onChange={(_, checked) => formik.setFieldValue('enableLateFee', checked)}
+          slotProps={{ input: { 'aria-label': 'Enable late fee charges' } }}
+        />
       }
     >
-      <Grid container spacing={2.5}>
-        {/* Enable / Disable Late Fee Toggle Banner */}
-        <Grid size={{ xs: 12 }}>
-          <Card
-            variant="outlined"
-            sx={{
-              p: 2,
-              borderRadius: 1.5,
-              display: 'flex',
-              alignItems: 'center',
-              bgcolor: (theme) =>
-                isLateFeeEnabled
-                  ? alpha(theme.palette.warning.main, 0.05)
-                  : alpha(theme.palette.background.default, 0.4),
-              borderColor: (theme) =>
-                isLateFeeEnabled ? alpha(theme.palette.warning.main, 0.4) : theme.palette.divider,
-              boxShadow: (theme) =>
-                isLateFeeEnabled ? `0 0 0 1px ${alpha(theme.palette.warning.main, 0.2)}` : 'none',
-              transition: 'all 0.2s ease',
-              cursor: 'pointer',
-              '&:hover': {
-                borderColor: (theme) =>
-                  isLateFeeEnabled ? 'warning.main' : alpha(theme.palette.text.primary, 0.2),
-              },
-            }}
-            onClick={() => formik.setFieldValue('enableLateFee', !isLateFeeEnabled)}
-          >
-            <FormControlLabel
-              sx={{ m: 0, width: '100%', pointerEvents: 'none' }}
-              control={
-                <Switch size="small" checked={isLateFeeEnabled} color="warning" sx={{ mr: 1 }} />
-              }
-              label={
-                <Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography variant="subtitle2" fontWeight={600} color="text.primary">
-                      Enable Late Fee Charges
-                    </Typography>
-                    {isLateFeeEnabled && (
-                      <Label color="warning" sx={{ height: 18, fontSize: '0.65rem' }}>
-                        Enabled
-                      </Label>
-                    )}
-                  </Stack>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    display="block"
-                    sx={{ mt: 0.25 }}
-                  >
-                    Automatically calculate late charges on overdue unpaid fee heads once the grace
-                    period expires.
-                  </Typography>
-                </Box>
-              }
-            />
-          </Card>
-        </Grid>
-
+      <Grid container spacing={2}>
         {isLateFeeEnabled && (
           <>
             {/* Grace Period Days */}
@@ -133,26 +80,38 @@ export default function CollectionLateFeeSection({
               <ShakingTextField
                 error={formik.touched.gracePeriodDays && Boolean(formik.errors.gracePeriodDays)}
               >
-                <TextField
+                <CollectionNumberField
                   fullWidth
                   size="small"
-                  type="number"
-                  label="Grace Period *"
+                  kind="days"
+                  label="Grace period *"
                   placeholder="0"
                   name="gracePeriodDays"
                   value={formik.values.gracePeriodDays}
-                  onChange={formik.handleChange}
+                  onChange={(e) =>
+                    formik.setFieldValue(
+                      'gracePeriodDays',
+                      e.target.value === '' ? null : Number(e.target.value)
+                    )
+                  }
                   onBlur={formik.handleBlur}
                   slotProps={{
                     input: {
-                      endAdornment: <InputAdornment position="end">days</InputAdornment>,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          days
+                          <CollectionInfoTip
+                            label="Grace period"
+                            title="Number of buffer days after the due date before late fees start accruing."
+                          />
+                        </InputAdornment>
+                      ),
                     },
                     htmlInput: { min: 0 },
                   }}
                   error={formik.touched.gracePeriodDays && Boolean(formik.errors.gracePeriodDays)}
                   helperText={
-                    (formik.touched.gracePeriodDays && (formik.errors.gracePeriodDays as string)) ||
-                    'Number of buffer days after due date before late fees start accruing.'
+                    formik.touched.gracePeriodDays && (formik.errors.gracePeriodDays as string)
                   }
                 />
               </ShakingTextField>
@@ -168,9 +127,10 @@ export default function CollectionLateFeeSection({
                   size="small"
                   error={formik.touched.gracePeriodType && Boolean(formik.errors.gracePeriodType)}
                 >
-                  <InputLabel>Grace Day Calculation *</InputLabel>
+                  <InputLabel id="collection-grace-day-type">Grace day calculation *</InputLabel>
                   <Select
-                    label="Grace Day Calculation *"
+                    label="Grace day calculation *"
+                    labelId="collection-grace-day-type"
                     name="gracePeriodType"
                     value={formik.values.gracePeriodType}
                     onChange={formik.handleChange}
@@ -234,17 +194,28 @@ export default function CollectionLateFeeSection({
                     <TextField
                       {...params}
                       name="lateFeeApplyOnFeeHeads"
-                      label="Apply Late Fee On Fee Heads *"
+                      label="Apply late fee on fee heads *"
                       placeholder="Select applicable fee heads..."
+                      InputProps={{
+                        ...params.InputProps,
+                        endAdornment: (
+                          <>
+                            <CollectionInfoTip
+                              label="Apply late fee on fee heads"
+                              title="Late fees are computed only on unpaid balances of the selected fee heads."
+                            />
+                            {params.InputProps.endAdornment}
+                          </>
+                        ),
+                      }}
                       onBlur={formik.handleBlur}
                       error={
                         formik.touched.lateFeeApplyOnFeeHeads &&
                         Boolean(formik.errors.lateFeeApplyOnFeeHeads)
                       }
                       helperText={
-                        (formik.touched.lateFeeApplyOnFeeHeads &&
-                          (formik.errors.lateFeeApplyOnFeeHeads as string)) ||
-                        'Late fees are computed based only on unpaid balances of the selected fee heads.'
+                        formik.touched.lateFeeApplyOnFeeHeads &&
+                        (formik.errors.lateFeeApplyOnFeeHeads as string)
                       }
                     />
                   )}
@@ -252,7 +223,7 @@ export default function CollectionLateFeeSection({
               </ShakingTextField>
             </Grid>
 
-            {/* Calculation Type */}
+            {/* Calculation method */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <ShakingTextField
                 error={formik.touched.lateFeeType && Boolean(formik.errors.lateFeeType)}
@@ -262,9 +233,10 @@ export default function CollectionLateFeeSection({
                   size="small"
                   error={formik.touched.lateFeeType && Boolean(formik.errors.lateFeeType)}
                 >
-                  <InputLabel>Calculation Type *</InputLabel>
+                  <InputLabel id="collection-calculation-method">Calculation method *</InputLabel>
                   <Select
-                    label="Calculation Type *"
+                    label="Calculation method *"
+                    labelId="collection-calculation-method"
                     name="lateFeeType"
                     value={formik.values.lateFeeType}
                     onChange={(e) => {
@@ -299,15 +271,20 @@ export default function CollectionLateFeeSection({
                 <ShakingTextField
                   error={formik.touched.flatAmount && Boolean(formik.errors.flatAmount)}
                 >
-                  <TextField
+                  <CollectionNumberField
                     fullWidth
                     size="small"
-                    type="number"
-                    label="Flat Late Fee Amount *"
+                    kind="amount"
+                    label="Flat late fee amount *"
                     placeholder="0.00"
                     name="flatAmount"
                     value={formik.values.flatAmount ?? ''}
-                    onChange={formik.handleChange}
+                    onChange={(e) =>
+                      formik.setFieldValue(
+                        'flatAmount',
+                        e.target.value === '' ? null : Number(e.target.value)
+                      )
+                    }
                     onBlur={formik.handleBlur}
                     slotProps={{
                       input: {
@@ -328,15 +305,20 @@ export default function CollectionLateFeeSection({
                 <ShakingTextField
                   error={formik.touched.percentage && Boolean(formik.errors.percentage)}
                 >
-                  <TextField
+                  <CollectionNumberField
                     fullWidth
                     size="small"
-                    type="number"
-                    label="Interest Rate Percentage *"
+                    kind="percentage"
+                    label="Interest rate percentage *"
                     placeholder="0.00"
                     name="percentage"
                     value={formik.values.percentage ?? ''}
-                    onChange={formik.handleChange}
+                    onChange={(e) =>
+                      formik.setFieldValue(
+                        'percentage',
+                        e.target.value === '' ? null : Number(e.target.value)
+                      )
+                    }
                     onBlur={formik.handleBlur}
                     slotProps={{
                       input: {
@@ -354,9 +336,10 @@ export default function CollectionLateFeeSection({
             {formik.values.lateFeeType === 'Percentage' && (
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Calculation Base</InputLabel>
+                  <InputLabel id="collection-calculation-base">Calculation base</InputLabel>
                   <Select
-                    label="Calculation Base"
+                    label="Calculation base"
+                    labelId="collection-calculation-base"
                     name="percentageBase"
                     value={formik.values.percentageBase}
                     onChange={formik.handleChange}
@@ -372,9 +355,10 @@ export default function CollectionLateFeeSection({
             {formik.values.lateFeeType === 'Compound' && (
               <Grid size={{ xs: 12, sm: 6 }}>
                 <FormControl fullWidth size="small">
-                  <InputLabel>Compound Frequency</InputLabel>
+                  <InputLabel id="collection-compound-frequency">Compound frequency</InputLabel>
                   <Select
-                    label="Compound Frequency"
+                    label="Compound frequency"
+                    labelId="collection-compound-frequency"
                     name="compoundFrequency"
                     value={formik.values.compoundFrequency}
                     onChange={formik.handleChange}
@@ -392,15 +376,20 @@ export default function CollectionLateFeeSection({
                 <ShakingTextField
                   error={formik.touched.amountPerDay && Boolean(formik.errors.amountPerDay)}
                 >
-                  <TextField
+                  <CollectionNumberField
                     fullWidth
                     size="small"
-                    type="number"
-                    label="Amount Per Day *"
+                    kind="amount"
+                    label="Amount per day *"
                     placeholder="0.00"
                     name="amountPerDay"
                     value={formik.values.amountPerDay ?? ''}
-                    onChange={formik.handleChange}
+                    onChange={(e) =>
+                      formik.setFieldValue(
+                        'amountPerDay',
+                        e.target.value === '' ? null : Number(e.target.value)
+                      )
+                    }
                     onBlur={formik.handleBlur}
                     slotProps={{
                       input: {
@@ -423,15 +412,20 @@ export default function CollectionLateFeeSection({
                 <ShakingTextField
                   error={formik.touched.amountPerWeek && Boolean(formik.errors.amountPerWeek)}
                 >
-                  <TextField
+                  <CollectionNumberField
                     fullWidth
                     size="small"
-                    type="number"
-                    label="Amount Per Week *"
+                    kind="amount"
+                    label="Amount per week *"
                     placeholder="0.00"
                     name="amountPerWeek"
                     value={formik.values.amountPerWeek ?? ''}
-                    onChange={formik.handleChange}
+                    onChange={(e) =>
+                      formik.setFieldValue(
+                        'amountPerWeek',
+                        e.target.value === '' ? null : Number(e.target.value)
+                      )
+                    }
                     onBlur={formik.handleBlur}
                     slotProps={{
                       input: {
@@ -454,15 +448,20 @@ export default function CollectionLateFeeSection({
                 <ShakingTextField
                   error={formik.touched.amountPerMonth && Boolean(formik.errors.amountPerMonth)}
                 >
-                  <TextField
+                  <CollectionNumberField
                     fullWidth
                     size="small"
-                    type="number"
-                    label="Amount Per Month *"
+                    kind="amount"
+                    label="Amount per month *"
                     placeholder="0.00"
                     name="amountPerMonth"
                     value={formik.values.amountPerMonth ?? ''}
-                    onChange={formik.handleChange}
+                    onChange={(e) =>
+                      formik.setFieldValue(
+                        'amountPerMonth',
+                        e.target.value === '' ? null : Number(e.target.value)
+                      )
+                    }
                     onBlur={formik.handleBlur}
                     slotProps={{
                       input: {
@@ -488,7 +487,7 @@ export default function CollectionLateFeeSection({
                   sx={{
                     p: 2,
                     borderRadius: 1.5,
-                    bgcolor: (theme) => alpha(theme.palette.background.default, 0.5),
+                    bgcolor: (theme) => varAlpha(theme.vars.palette.background.defaultChannel, 0.5),
                     borderColor: 'divider',
                   }}
                 >
@@ -498,25 +497,34 @@ export default function CollectionLateFeeSection({
                     justifyContent="space-between"
                     sx={{ mb: 1.5 }}
                   >
-                    <Box>
+                    <Stack direction="row" spacing={0.5} alignItems="center">
                       <Typography variant="subtitle2" fontWeight={700}>
-                        Escalation Slabs Builder
+                        Escalation slabs
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Configure tiered late charges based on how many days overdue the payment is.
-                      </Typography>
-                    </Box>
+                      <CollectionInfoTip
+                        label="Escalation slabs"
+                        title="Configure tiered late charges based on how many days overdue the payment is."
+                      />
+                    </Stack>
                     <Button
                       size="small"
                       variant="contained"
                       startIcon={<Iconify icon={GlobalIcons.addIcon} />}
                       onClick={addSlab}
+                      disabled={formik.values.escalationRules.some(
+                        (rule: any) =>
+                          rule.endDay === null ||
+                          rule.endDay >= (formik.values.maximumChargingDays ?? 365)
+                      )}
                     >
                       Add Slab
                     </Button>
                   </Stack>
 
-                  <SlabTimelinePreview rules={formik.values.escalationRules} />
+                  <SlabTimelinePreview
+                    rules={formik.values.escalationRules}
+                    maximumChargingDays={formik.values.maximumChargingDays}
+                  />
 
                   {formik.values.escalationRules.length === 0 ? (
                     <Paper
@@ -547,7 +555,7 @@ export default function CollectionLateFeeSection({
                     <TableContainer
                       component={Paper}
                       variant="outlined"
-                      sx={{ borderRadius: 1.5, overflow: 'hidden' }}
+                      sx={{ borderRadius: 1.5, overflowX: 'auto' }}
                     >
                       <Table size="small">
                         <TableHead>
@@ -593,15 +601,15 @@ export default function CollectionLateFeeSection({
                                 }}
                               >
                                 <TableCell sx={{ py: 0.75 }}>
-                                  <TextField
+                                  <CollectionNumberField
                                     size="small"
-                                    type="number"
+                                    kind="days"
                                     name={`escalationRules[${idx}].startDay`}
                                     value={rule.startDay}
                                     onChange={(e) =>
                                       formik.setFieldValue(
                                         `escalationRules[${idx}].startDay`,
-                                        +e.target.value
+                                        e.target.value === '' ? null : Number(e.target.value)
                                       )
                                     }
                                     onBlur={formik.handleBlur}
@@ -609,7 +617,11 @@ export default function CollectionLateFeeSection({
                                       getIn(formik.touched, `escalationRules[${idx}].startDay`) &&
                                       getIn(formik.errors, `escalationRules[${idx}].startDay`)
                                     )}
-                                    sx={{ width: 85 }}
+                                    helperText={
+                                      getIn(formik.touched, `escalationRules[${idx}].startDay`) &&
+                                      getIn(formik.errors, `escalationRules[${idx}].startDay`)
+                                    }
+                                    sx={{ width: 100 }}
                                     slotProps={{
                                       htmlInput: {
                                         min: 0,
@@ -619,16 +631,16 @@ export default function CollectionLateFeeSection({
                                   />
                                 </TableCell>
                                 <TableCell sx={{ py: 0.75 }}>
-                                  <TextField
+                                  <CollectionNumberField
                                     size="small"
-                                    type="number"
+                                    kind="days"
                                     placeholder="Open"
                                     name={`escalationRules[${idx}].endDay`}
                                     value={rule.endDay ?? ''}
                                     onChange={(e) =>
                                       formik.setFieldValue(
                                         `escalationRules[${idx}].endDay`,
-                                        e.target.value === '' ? null : +e.target.value
+                                        e.target.value === '' ? null : Number(e.target.value)
                                       )
                                     }
                                     onBlur={formik.handleBlur}
@@ -636,7 +648,11 @@ export default function CollectionLateFeeSection({
                                       getIn(formik.touched, `escalationRules[${idx}].endDay`) &&
                                       getIn(formik.errors, `escalationRules[${idx}].endDay`)
                                     )}
-                                    sx={{ width: 85 }}
+                                    helperText={
+                                      getIn(formik.touched, `escalationRules[${idx}].endDay`) &&
+                                      getIn(formik.errors, `escalationRules[${idx}].endDay`)
+                                    }
+                                    sx={{ width: 100 }}
                                     slotProps={{
                                       htmlInput: {
                                         min: 0,
@@ -670,15 +686,19 @@ export default function CollectionLateFeeSection({
                                   </FormControl>
                                 </TableCell>
                                 <TableCell sx={{ py: 0.75 }}>
-                                  <TextField
+                                  <CollectionNumberField
                                     size="small"
-                                    type="number"
+                                    kind={
+                                      rule.calculationType === 'Percentage'
+                                        ? 'percentage'
+                                        : 'amount'
+                                    }
                                     name={`escalationRules[${idx}].value`}
                                     value={rule.value}
                                     onChange={(e) =>
                                       formik.setFieldValue(
                                         `escalationRules[${idx}].value`,
-                                        +e.target.value
+                                        e.target.value === '' ? null : Number(e.target.value)
                                       )
                                     }
                                     onBlur={formik.handleBlur}
@@ -686,7 +706,11 @@ export default function CollectionLateFeeSection({
                                       getIn(formik.touched, `escalationRules[${idx}].value`) &&
                                       getIn(formik.errors, `escalationRules[${idx}].value`)
                                     )}
-                                    sx={{ width: 90 }}
+                                    helperText={
+                                      getIn(formik.touched, `escalationRules[${idx}].value`) &&
+                                      getIn(formik.errors, `escalationRules[${idx}].value`)
+                                    }
+                                    sx={{ width: 125 }}
                                     slotProps={{
                                       htmlInput: {
                                         min: 0,
@@ -730,7 +754,6 @@ export default function CollectionLateFeeSection({
 
             {/* Rounding Method */}
 
-
             {/* Runaway Caps */}
             <Grid size={{ xs: 12, sm: 6 }}>
               <ShakingTextField
@@ -738,24 +761,32 @@ export default function CollectionLateFeeSection({
                   formik.touched.maximumLateFeeAmount && Boolean(formik.errors.maximumLateFeeAmount)
                 }
               >
-                <TextField
+                <CollectionNumberField
                   fullWidth
                   size="small"
-                  type="number"
-                  label="Maximum Late Fee Ceiling Amount"
+                  kind="amount"
+                  label="Maximum late fee amount"
                   placeholder="No limit"
                   name="maximumLateFeeAmount"
                   value={formik.values.maximumLateFeeAmount ?? ''}
                   onChange={(e) =>
                     formik.setFieldValue(
                       'maximumLateFeeAmount',
-                      e.target.value === '' ? null : +e.target.value
+                      e.target.value === '' ? null : Number(e.target.value)
                     )
                   }
                   onBlur={formik.handleBlur}
                   slotProps={{
                     input: {
                       startAdornment: <InputAdornment position="start">₹</InputAdornment>,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <CollectionInfoTip
+                            label="Maximum late fee amount"
+                            title="Optional cap: late fees will never exceed this total amount."
+                          />
+                        </InputAdornment>
+                      ),
                     },
                     htmlInput: { min: 0 },
                   }}
@@ -764,9 +795,8 @@ export default function CollectionLateFeeSection({
                     Boolean(formik.errors.maximumLateFeeAmount)
                   }
                   helperText={
-                    (formik.touched.maximumLateFeeAmount &&
-                      (formik.errors.maximumLateFeeAmount as string)) ||
-                    'Optional cap: late fees will never exceed this total amount.'
+                    formik.touched.maximumLateFeeAmount &&
+                    (formik.errors.maximumLateFeeAmount as string)
                   }
                 />
               </ShakingTextField>
@@ -778,24 +808,32 @@ export default function CollectionLateFeeSection({
                   formik.touched.maximumChargingDays && Boolean(formik.errors.maximumChargingDays)
                 }
               >
-                <TextField
+                <CollectionNumberField
                   fullWidth
                   size="small"
-                  type="number"
-                  label="Maximum Charging Days Cutoff"
+                  kind="days"
+                  label="Maximum charging days"
                   placeholder="No limit"
                   name="maximumChargingDays"
                   value={formik.values.maximumChargingDays ?? ''}
                   onChange={(e) =>
                     formik.setFieldValue(
                       'maximumChargingDays',
-                      e.target.value === '' ? null : +e.target.value
+                      e.target.value === '' ? null : Number(e.target.value)
                     )
                   }
                   onBlur={formik.handleBlur}
                   slotProps={{
                     input: {
-                      endAdornment: <InputAdornment position="end">days</InputAdornment>,
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          days
+                          <CollectionInfoTip
+                            label="Maximum charging days"
+                            title="Optional cutoff: stop accruing additional late fees after this many days."
+                          />
+                        </InputAdornment>
+                      ),
                     },
                     htmlInput: { min: 0 },
                   }}
@@ -803,9 +841,8 @@ export default function CollectionLateFeeSection({
                     formik.touched.maximumChargingDays && Boolean(formik.errors.maximumChargingDays)
                   }
                   helperText={
-                    (formik.touched.maximumChargingDays &&
-                      (formik.errors.maximumChargingDays as string)) ||
-                    'Optional cutoff: stop accruing additional late fees after this many days.'
+                    formik.touched.maximumChargingDays &&
+                    (formik.errors.maximumChargingDays as string)
                   }
                 />
               </ShakingTextField>
@@ -817,7 +854,7 @@ export default function CollectionLateFeeSection({
                 academicYearId={formik.values.academicYearId || ''}
                 operation="collection-policy"
                 categoryField="lateFeeIncomeCategoryId"
-                categoryLabel="Late Fee Income Category"
+                categoryLabel="Late fee income category"
               />
             </Grid>
           </>

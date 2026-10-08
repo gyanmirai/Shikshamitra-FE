@@ -1264,6 +1264,11 @@ Use `ShakingTextField` to provide the shared validation feedback animation aroun
 
 **Date picker rules**
 
+For bounded selections with optional guidance, `CustomSelect` accepts `optionDescriptionKey`
+pointing to the description field in each option. It renders an accessible info tooltip beside
+each menu option and the selected single value. Use this in concession policy dropdowns instead
+of descriptive helper text; keep validation errors in `helperText`.
+
 - Always use the MUI X date picker components from `@mui/x-date-pickers` for date, time, date-time, and date-range fields; do not use native date inputs or another date-picker library.
 - Always use `dayjs` as the date adapter and field value type, including through `LocalizationProvider` with `AdapterDayjs` and shared date-picker wrappers.
 - Keep empty picker values as `null`, validate Dayjs values with the established form rules, and convert them to the API contract only at the submit or serialization boundary.

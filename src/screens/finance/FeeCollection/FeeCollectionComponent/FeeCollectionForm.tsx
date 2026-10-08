@@ -66,6 +66,7 @@ import {
 import FeeLedgerList from './FeeLedgerList';
 import { toPeriod } from './FeeLedgerShared';
 import { normalizeLedgerStatus } from './feeLedgerStatus';
+import { collectionPaymentDetails } from './collectionPaymentDetails';
 import {
   applySelectionFilter,
   academicYearMonthsFromDates,
@@ -736,10 +737,7 @@ const FeeCollectComponentForm = ({
         ]?.filter((field: IPaymentFieldConfig) => field.name !== 'amount') ?? [];
 
       const detailErrors: Record<string, string> = {};
-      if (
-        (values.payment.paymentMethod !== 'Cash' || values.charges.length > 0) &&
-        !values.payment.details?.bankAccount
-      )
+      if (values.payment.paymentMethod !== 'Cash' && !values.payment.details?.bankAccount)
         detailErrors.bankAccount = 'Select the receiving school bank account';
 
       activeMethodFields.forEach((field: IPaymentFieldConfig) => {
@@ -856,26 +854,16 @@ const FeeCollectComponentForm = ({
       { items: formik.values.selectedItems, charges: chargeIds }
     );
     formik.setFieldValue('charges', chargeIds, false);
-    const selectedBanks = [
-      ...new Set(
-        (formData?.charges ?? [])
-          .filter((x: ChargeDetail) => chargeIds.includes(x.chargeId))
-          .map((x: ChargeDetail) => x.receivingBankAccountId)
-          .filter(Boolean)
-      ),
-    ];
-    if (selectedBanks.length === 1)
-      formik.setFieldValue('payment.details.bankAccount', selectedBanks[0], false);
   };
 
   const handlePaymentMethodChange = (method: string) => {
     formik.setFieldValue('payment', {
       paymentMethod: method,
       amount: formik.values.payment.amount,
-      details: {
+      details: collectionPaymentDetails(method, {
         ...buildDetailsForMethod(method),
         bankAccount: formik.values.payment.details.bankAccount || '',
-      },
+      }),
     });
   };
 
@@ -885,10 +873,18 @@ const FeeCollectComponentForm = ({
   const buildPaymentPayload = (paymentMethodNum: number, receivedAmount: number) => [
     {
       paymentMethod: paymentMethodNum,
-      bankAccountId: String(formik.values.payment.details.bankAccount || '') || undefined,
+      bankAccountId:
+        formik.values.payment.paymentMethod === 'Cash'
+          ? undefined
+          : String(formik.values.payment.details.bankAccount || '') || undefined,
       amount: receivedAmount,
       details: Object.fromEntries(
-        Object.entries(formik.values.payment.details)
+        Object.entries(
+          collectionPaymentDetails(
+            formik.values.payment.paymentMethod,
+            formik.values.payment.details
+          )
+        )
           .filter(([, v]) => v != null && v !== '')
           .map(([k, v]) => [
             k,
@@ -1898,34 +1894,36 @@ const FeeCollectComponentForm = ({
                       </TextField>
                     </ShakingTextField>
 
-                    <TextField
-                      fullWidth
-                      select
-                      size="small"
-                      label="Receiving School Bank Account"
-                      value={formik.values.payment.details.bankAccount || ''}
-                      disabled={isBankAccountsBusy}
-                      sx={{ mb: 2 }}
-                      onChange={(event) =>
-                        formik.setFieldValue('payment.details.bankAccount', event.target.value)
-                      }
-                      error={Boolean(
-                        formik.touched.payment?.details?.bankAccount &&
-                        formik.errors.payment?.details?.bankAccount
-                      )}
-                      helperText={
-                        formik.touched.payment?.details?.bankAccount
-                          ? String(formik.errors.payment?.details?.bankAccount || '')
-                          : 'Optional for cash fees; required for charges and non-cash payments.'
-                      }
-                    >
-                      <MenuItem value="">Select school bank account</MenuItem>
-                      {bankAccountOptions.map((account: { id: string; name: string }) => (
-                        <MenuItem key={account.id} value={account.id}>
-                          {account.name}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                    {formik.values.payment.paymentMethod !== 'Cash' && (
+                      <TextField
+                        fullWidth
+                        select
+                        size="small"
+                        label="Receiving School Bank Account"
+                        value={formik.values.payment.details.bankAccount || ''}
+                        disabled={isBankAccountsBusy}
+                        sx={{ mb: 2 }}
+                        onChange={(event) =>
+                          formik.setFieldValue('payment.details.bankAccount', event.target.value)
+                        }
+                        error={Boolean(
+                          formik.touched.payment?.details?.bankAccount &&
+                          formik.errors.payment?.details?.bankAccount
+                        )}
+                        helperText={
+                          formik.touched.payment?.details?.bankAccount
+                            ? String(formik.errors.payment?.details?.bankAccount || '')
+                            : 'Required for non-cash payments.'
+                        }
+                      >
+                        <MenuItem value="">Select school bank account</MenuItem>
+                        {bankAccountOptions.map((account: { id: string; name: string }) => (
+                          <MenuItem key={account.id} value={account.id}>
+                            {account.name}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    )}
                     {/* ── Amount Tendered ── */}
                     {formik.values.payment.paymentMethod && (
                       <Box

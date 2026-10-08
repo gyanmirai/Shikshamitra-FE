@@ -1,6 +1,7 @@
 import React from 'react';
-import { Box, Card, Stack, Typography } from '@mui/material';
-import { InfoTooltipIcon } from 'src/screens/hr/policies/components/HRPolicySharedUI';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Paper, Stack, IconButton, Typography } from '@mui/material';
 
 // ---------------------------------------------------------------------------
 // SectionCard — labelled card wrapper used throughout PaymentTermForm sections
@@ -15,46 +16,39 @@ interface SectionCardProps {
 }
 
 export function SectionCard({ title, subtitle, info, action, children }: SectionCardProps) {
-  const hasContent = React.Children.toArray(children).filter(Boolean).length > 0;
-
   return (
-    <Card
+    <Paper
       variant="outlined"
       sx={{
-        mb: 2.5,
-        boxShadow: '0 1px 4px 0 rgba(0,0,0,0.06)',
+        p: { xs: 2, sm: 2.5 },
         borderRadius: 2,
-        overflow: 'visible',
+        minWidth: 0,
       }}
     >
-      <Box
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.5}
         sx={{
-          px: 2.5,
-          py: 1.75,
-          display: 'flex',
-          alignItems: 'center',
+          mb: 2.5,
+          alignItems: { xs: 'stretch', sm: 'center' },
           justifyContent: 'space-between',
-          borderBottom: hasContent ? '1px solid' : 'none',
-          borderColor: 'divider',
-          borderRadius: hasContent ? '8px 8px 0 0' : 2,
         }}
       >
-        <Box>
-          <Stack direction="row" spacing={0.75} alignItems="center">
-            <Typography variant="h6" fontWeight={700} lineHeight={1.4}>
-              {title}
-            </Typography>
-            {info ? <InfoTooltipIcon title={info} /> : null}
-          </Stack>
-          {subtitle && (
-            <Typography variant="caption" color="text.secondary" display="block">
-              {subtitle}
-            </Typography>
+        <Stack direction="row" spacing={0.75} alignItems="center">
+          <Typography variant="subtitle1" fontWeight={700}>
+            {title}
+          </Typography>
+          {(info || subtitle) && (
+            <CustomTooltip arrow placement="bottom" title={info || subtitle || ''}>
+              <IconButton size="small" aria-label={`${title} information`}>
+                <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+              </IconButton>
+            </CustomTooltip>
           )}
-        </Box>
+        </Stack>
         {action}
-      </Box>
-      {hasContent && <Box sx={{ p: 2.5 }}>{children}</Box>}
-    </Card>
+      </Stack>
+      <Box>{children}</Box>
+    </Paper>
   );
 }

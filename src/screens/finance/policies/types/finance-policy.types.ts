@@ -139,6 +139,7 @@ export interface IConcessionPolicy extends Omit<IFinancePolicyBase, 'status'> {
   maximumFixedAmount: number | null;
   roundOff: ConcessionRoundOff;
   applyOn: 'AllOutstanding' | 'CurrentInstallment' | 'FutureInstallments' | 'AllFees';
+  autoCreateRefund?: boolean;
   version?: number;
   isUsedInDownstream?: boolean;
   concurrencyStamp: string;
@@ -163,6 +164,8 @@ export interface IRefundPolicy extends Omit<
   isDefault: boolean;
   feeHeadScope: 'AllFeeHeads' | 'SelectedFeeHeads';
   applicableFeeHeadIds: string[];
+  feeHeadNames?: Record<string, string>;
+  feeHeadStatuses?: Record<string, 'Active' | 'Inactive' | 'Deleted'>;
   includePaidCharges: boolean;
   includePaidLateFee: boolean;
   allowPartialRefund: boolean;
@@ -179,7 +182,9 @@ export interface IRefundPolicy extends Omit<
   allowedPayoutMethods: RefundPayoutMethod[];
   processingTargetDays: number | null;
   expenseCategoryId?: string | null;
+  expenseCategoryName?: string | null;
   defaultPayingBankAccountId?: string | null;
+  defaultPayingBankAccountName?: string | null;
   version?: number;
   isUsedInDownstream?: boolean;
   concurrencyStamp: string;
@@ -190,7 +195,8 @@ export interface IRefundPolicy extends Omit<
 
 export type IRefundPolicyFormValues = Omit<
   IRefundPolicy,
-  'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt' | 'academicYearName'
+  | 'id' | 'createdBy' | 'updatedBy' | 'createdAt' | 'updatedAt' | 'academicYearName'
+  | 'feeHeadNames' | 'feeHeadStatuses' | 'expenseCategoryName' | 'defaultPayingBankAccountName'
 >;
 
 // ─── Table row (list view) ────────────────────────────────────────────────────

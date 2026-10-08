@@ -41,8 +41,6 @@ export interface IChargeDetailResponse {
   chargeId: string;
   chargeName: string;
   chargeCategoryId: string;
-  incomeCategoryId: string;
-  receivingBankAccountId: string;
   categoryName: string;
   purposeDescription: string;
   amount: number;
@@ -78,6 +76,9 @@ export interface IStudentOption {
   divisionName?: string;
   standardId?: string;
   divisionId?: string;
+  gender?: number;
+  hasFeeStructureAssignment?: boolean;
+  hasChargeInCategory?: boolean;
 }
 
 /**
@@ -143,8 +144,6 @@ export interface IUpdateRestrictions {
 export interface IChargeUpdatePayload {
   chargeId: string;
   chargeCategoryId: string;
-  incomeCategoryId: string;
-  receivingBankAccountId: string;
   purposeDescription: string;
   amount: number;
   dueDate: string; // ISO string

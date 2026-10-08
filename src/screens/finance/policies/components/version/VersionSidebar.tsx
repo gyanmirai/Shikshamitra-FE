@@ -1,6 +1,10 @@
 'use client';
 
+import { Label } from 'src/components/label';
 import React, { useMemo, useState } from 'react';
+import { Iconify } from 'src/components/iconify';
+import { Scrollbar } from 'src/components/scrollbar';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Stack,
@@ -12,11 +16,9 @@ import {
   InputAdornment,
   ListItemButton,
 } from '@mui/material';
-import { Label } from 'src/components/label';
-import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 
 import { formatVersionTimestamp } from './finance-policy-version-formatters';
+
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
 
 interface VersionSidebarProps {
@@ -44,7 +46,7 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: Versio
     <Paper
       variant="outlined"
       sx={{
-        maxHeight: 1,
+        height: 1,
         p: 1.5,
         display: 'flex',
         flexDirection: 'column',
@@ -53,9 +55,20 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: Versio
       }}
     >
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1.5 }}>
-        <Typography variant="subtitle1" component="h3">
-          Versions
-        </Typography>
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Typography variant="subtitle1" component="h3">
+            Versions
+          </Typography>
+          <CustomTooltip
+            arrow
+            placement="right"
+            title="Versions are listed newest first. Latest marks the newest recorded snapshot, regardless of policy status. Search by version, author, date, or recorded reason."
+          >
+            <IconButton size="small" aria-label="Versions information">
+              <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+            </IconButton>
+          </CustomTooltip>
+        </Stack>
         <Label color="default">
           {searchQuery.trim() ? `${filteredVersions.length} / ${versions.length}` : versions.length}
         </Label>
@@ -66,6 +79,7 @@ function VersionSidebar({ versions, selectedVersionId, onSelectVersion }: Versio
         value={searchQuery}
         onChange={(event) => setSearchQuery(event.target.value)}
         placeholder="Search versions…"
+        label="Search versions"
         slotProps={{
           htmlInput: { 'aria-label': 'Search versions' },
           input: {

@@ -22,7 +22,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
-import { SectionCard } from '../collection/CollectionCommon';
+import { ConcessionSectionCard as SectionCard } from '../concession/ConcessionCommon';
 import { isProratedRule, defaultConfiguration, applyAdmissionPreset } from './prorationRuleHelpers';
 
 import type {
@@ -109,7 +109,7 @@ function EventSettings({
     <Stack
       component="section"
       aria-label={`${eventName} settings for ${rule.feeHeadName || rule.feeHeadId}`}
-      spacing={1.5}
+      spacing={2}
       sx={{ minWidth: 0 }}
     >
       <Box>
@@ -346,14 +346,11 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
 
   return (
     <SectionCard
-      title="Fee head configuration"
+      title="Fee Head Configuration"
       subtitle="Choose when each recurring fee should be prorated."
       icon="solar:widget-bold-duotone"
-      sx={{
-        '& > .MuiBox-root:first-of-type': { flexWrap: 'wrap', '& > .MuiBox-root': { minWidth: 0 } },
-      }}
       action={
-        <Label color={proratedCount ? 'primary' : 'default'}>
+        <Label color="default">
           {proratedCount} / {rules.filter((rule) => rule.feeType !== 'OneTime').length} prorated
         </Label>
       }
@@ -417,9 +414,7 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
                       <Typography variant="subtitle2" sx={{ overflowWrap: 'anywhere' }}>
                         {rule.feeHeadName || rule.feeHeadId}
                       </Typography>
-                      <Label color={oneTime ? 'default' : 'info'}>
-                        {oneTime ? 'One-time' : 'Recurring'}
-                      </Label>
+                      <Label color="default">{oneTime ? 'One-time' : 'Recurring'}</Label>
                       {showRowError && <Label color="error">Check settings</Label>}
                     </Stack>
                     {oneTime ? (
@@ -483,7 +478,7 @@ export default function ProrationFeeHeadsSection({ formik }: { formik: PolicyFor
                         display: 'grid',
                         gridTemplateColumns: {
                           xs: 'minmax(0, 1fr)',
-                          md: 'repeat(2, minmax(0, 1fr))',
+                          sm: 'repeat(2, minmax(0, 1fr))',
                         },
                         gap: 2,
                         p: 1.5,

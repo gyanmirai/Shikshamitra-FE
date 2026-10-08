@@ -6,18 +6,17 @@ import { Add } from '@mui/icons-material';
 import { useSelector } from 'react-redux';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Scrollbar } from 'src/components/scrollbar';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import React, { useRef, useMemo, useState } from 'react';
-import { LoadingScreen } from 'src/components/loading-screen';
 import { shikshaMitraToast } from 'src/components/toast';
+import { LoadingScreen } from 'src/components/loading-screen';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { DialogScrollContent } from 'src/components/customDialog';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import { BackPopUpChecked } from 'src/components/back-popup-check/BackPopUpCheck';
 import { DownstreamUsageWarning } from 'src/screens/finance/settings/components/DownstreamUsageWarning';
-import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import {
   useGetConcessionTypesQuery,
   usePutConcessionTypeMutation,
@@ -214,10 +213,14 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
           {formik.values.documents && (
             <Grid size={{ xs: 12 }}>
               <Paper variant="outlined" sx={{ p: 2 }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                  <Typography mb={1} fontWeight={600}>
-                    Add Documents
-                  </Typography>
+                <Box
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  gap={1}
+                  mb={1}
+                >
+                  <Typography fontWeight={600}>Add Documents</Typography>
                   <Button
                     variant="outlined"
                     startIcon={<Add />}
@@ -228,12 +231,30 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                     Document
                   </Button>
                 </Box>
+                {documentsLocked && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    Document requirements cannot be changed because this concession type is already
+                    in use.
+                  </Typography>
+                )}
                 <Box display="flex" flexDirection="column">
                   {(formik?.values?.documents ?? [])?.length > 0 && (
-                    <Scrollbar sx={{ height: '150px', pt: 1 }}>
+                    <Box>
                       {formik?.values?.documents?.map((doc, idx) => (
-                        <Box key={idx} display="flex" alignItems="center" gap={1} mb={2}>
+                        <Box
+                          key={doc.id ?? idx}
+                          display="flex"
+                          alignItems="flex-start"
+                          flexWrap="wrap"
+                          gap={2}
+                          sx={{
+                            py: 1.5,
+                            borderBottom: idx < formik.values.documents!.length - 1 ? 1 : 0,
+                            borderColor: 'divider',
+                          }}
+                        >
                           <ShakingTextField
+                            sx={{ flex: '1 1 220px', width: 'auto', minWidth: 0 }}
                             error={
                               !!(
                                 Array.isArray(formik?.touched?.documents) &&
@@ -246,6 +267,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                             }
                           >
                             <TextField
+                              fullWidth
                               label="Document Name *"
                               size="small"
                               name={`documents.${idx}.documentName`}
@@ -259,7 +281,6 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                               onBlur={() =>
                                 formik.setFieldTouched(`documents.${idx}.documentName`, true)
                               }
-                              sx={{ minWidth: 250 }}
                               error={
                                 !!(
                                   Array.isArray(formik?.touched?.documents) &&
@@ -291,6 +312,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                           </ShakingTextField>
 
                           <ShakingTextField
+                            sx={{ flex: '1 1 220px', width: 'auto', minWidth: 0 }}
                             error={
                               !!(
                                 Array.isArray(formik?.touched?.documents) &&
@@ -303,6 +325,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                             }
                           >
                             <TextField
+                              fullWidth
                               label="Maximum File Size (MB) *"
                               size="small"
                               type="number"
@@ -357,11 +380,11 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                 max: 20,
                                 step: 0.01,
                               }}
-                              sx={{ minWidth: 150 }}
                             />
                           </ShakingTextField>
 
                           <ShakingTextField
+                            sx={{ flex: '2 1 300px', width: 'auto', minWidth: 0 }}
                             error={
                               !!(
                                 Array.isArray(formik?.touched?.documents) &&
@@ -375,16 +398,22 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                           >
                             <Autocomplete
                               multiple
+                              fullWidth
                               disabled={documentsLocked}
                               options={ConcessionDocumentFormatArray}
                               disableCloseOnSelect
                               getOptionLabel={(option) => option.label}
                               value={ConcessionDocumentFormatArray.filter((item) =>
-                                doc.acceptedFormats.includes(item.value)
+                                (doc.acceptedFormats ?? []).some(
+                                  (format) => Number(format) === item.value
+                                )
                               )}
                               onChange={(_, data) => {
                                 const docs = [...(formik.values.documents ?? [])];
-                                docs[idx].acceptedFormats = data.map((item) => item.value);
+                                docs[idx] = {
+                                  ...docs[idx],
+                                  acceptedFormats: data.map((item) => item.value),
+                                };
                                 formik.setFieldValue('documents', docs);
                               }}
                               isOptionEqualToValue={(option, value) => option.value === value.value}
@@ -413,10 +442,9 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                               renderInput={(params) => (
                                 <TextField
                                   {...params}
+                                  fullWidth
                                   label="Accepted Format *"
-                                  value={`${doc.acceptedFormats?.length || 0} formats selected`}
                                   size="small"
-                                  sx={{ minWidth: 350 }} // Added minWidth to increase dropdown width
                                   error={
                                     !!(
                                       Array.isArray(formik?.touched?.documents) &&
@@ -460,7 +488,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                                 disabled={documentsLocked}
                                 onChange={(event) => {
                                   const docs = [...(formik.values.documents ?? [])];
-                                  docs[idx].isRequired = event.target.checked;
+                                  docs[idx] = { ...docs[idx], isRequired: event.target.checked };
                                   formik.setFieldValue('documents', docs);
                                 }}
                               />
@@ -469,6 +497,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                           />
 
                           <IconButton
+                            aria-label={`Remove ${doc.documentName || `document ${idx + 1}`}`}
                             color="error"
                             disabled={documentsLocked}
                             onClick={() => handleRemoveDocument(idx)}
@@ -477,7 +506,7 @@ const ConcessionTypeForm: React.FC<IConcessionTypeFormProps> = ({
                           </IconButton>
                         </Box>
                       ))}
-                    </Scrollbar>
+                    </Box>
                   )}
                   <Typography
                     sx={{

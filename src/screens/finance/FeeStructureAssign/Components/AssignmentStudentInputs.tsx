@@ -4,9 +4,9 @@ import type {
   AssignmentServicePeriod,
 } from 'src/redux/finance/studentFeeAssignment';
 
+import { useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import CustomSelect from 'src/components/custom-select';
-import { formatNumber } from 'src/utils/formate_number';
 import { amountError } from 'src/screens/finance/settings/FeeStructure/feeStructureModel';
 import { useAssignmentTransportSourcesQuery } from 'src/redux/finance/studentFeeAssignment';
 import {
@@ -20,21 +20,23 @@ import {
   FormControlLabel,
 } from '@mui/material';
 
+import AssignmentMoneyInput from './AssignmentMoneyInput';
+import { formatAssignmentMoney } from './assignmentMoney';
+
 export default function AssignmentStudentInputs({
   candidate,
   request,
   onChange,
   canOverrideDates,
-  canOverrideAmount,
   disabled,
 }: {
   candidate: AssignmentCandidate;
   request: AssignmentRequest;
   onChange: (value: AssignmentRequest) => void;
   canOverrideDates: boolean;
-  canOverrideAmount: boolean;
   disabled: boolean;
 }) {
+  const [touchedAmounts, setTouchedAmounts] = useState<string[]>([]);
   const usesTransport = request.servicePeriods.some((p) => p.source === 'TransportService');
   const transport = useAssignmentTransportSourcesQuery(
     { studentId: request.studentId, academicYearId: request.academicYearId },
@@ -58,9 +60,6 @@ export default function AssignmentStudentInputs({
           source: 'AcademicYear' as const,
         };
         const variable = request.variableFeeHeads?.find((h) => h.feeHeadId === head.feeHeadId);
-        const amount =
-          request.feeHeadDetails.find((h) => h.feeHeadId === head.feeHeadId)?.amount ??
-          head.configuredAmount;
         return (
           <Box
             key={head.feeHeadId}
@@ -95,7 +94,7 @@ export default function AssignmentStudentInputs({
             <Typography variant="body2" color="text.secondary">
               {head.isVariable
                 ? 'Variable amount entered per student'
-                : formatNumber(head.configuredAmount ?? 0, 'INR')}{' '}
+                : formatAssignmentMoney(head.configuredAmount ?? 0)}{' '}
               · {head.isOneTime ? 'One-time' : 'Total for Payment Term coverage'} · Payment schedule
               from the published term
             </Typography>
@@ -205,21 +204,29 @@ export default function AssignmentStudentInputs({
                 )}
                 {head.isVariable && (
                   <>
-                    <TextField
+                    <AssignmentMoneyInput
                       label={`${head.feeHeadName} student amount for term coverage`}
-                      type="number"
                       required
                       fullWidth
-                      value={variable?.amount ?? ''}
+                      value={variable?.amount ?? null}
                       disabled={disabled}
-                      inputProps={{ min: 0, max: 9999999999.99, step: 1 }}
-                      error={variable !== undefined && !!amountError(variable.amount)}
+                      error={
+                        touchedAmounts.includes(head.feeHeadId) &&
+                        !!amountError(variable?.amount)
+                      }
                       helperText={
-                        variable !== undefined && amountError(variable.amount)
-                          ? amountError(variable.amount)
+                        touchedAmounts.includes(head.feeHeadId) && amountError(variable?.amount)
+                          ? amountError(variable?.amount)
                           : 'Required when included. Enter the full coverage total before proration; installments split this amount.'
                       }
-                      onChange={(e) =>
+                      onBlur={() =>
+                        setTouchedAmounts((previous) =>
+                          previous.includes(head.feeHeadId)
+                            ? previous
+                            : [...previous, head.feeHeadId]
+                        )
+                      }
+                      onAmountChange={(amount) =>
                         onChange({
                           ...request,
                           variableFeeHeads: [
@@ -228,7 +235,7 @@ export default function AssignmentStudentInputs({
                             ),
                             {
                               feeHeadId: head.feeHeadId,
-                              amount: e.target.value === '' ? null : Number(e.target.value),
+                              amount,
                               zeroAmountReason: variable?.zeroAmountReason,
                             },
                           ],
@@ -256,22 +263,13 @@ export default function AssignmentStudentInputs({
                     )}
                   </>
                 )}
-                {!head.isVariable && canOverrideAmount && (
+                {!head.isVariable && (
                   <TextField
-                    label={`Authorized ${head.isOneTime ? 'one-time' : 'annual total'} amount`}
-                    type="number"
-                    value={amount ?? ''}
-                    disabled={disabled}
-                    inputProps={{ min: 0, step: 1 }}
-                    onChange={(e) =>
-                      onChange({
-                        ...request,
-                        feeHeadDetails: [
-                          ...request.feeHeadDetails.filter((h) => h.feeHeadId !== head.feeHeadId),
-                          { feeHeadId: head.feeHeadId, amount: Number(e.target.value) },
-                        ],
-                      })
-                    }
+                    label={`Configured ${head.isOneTime ? 'one-time' : 'annual total'} amount`}
+                    value={formatAssignmentMoney(head.configuredAmount ?? 0)}
+                    fullWidth
+                    InputProps={{ readOnly: true }}
+                    helperText="Fixed amount from the published fee structure."
                   />
                 )}
               </Stack>
@@ -279,19 +277,6 @@ export default function AssignmentStudentInputs({
           </Box>
         );
       })}
-      {request.feeHeadDetails.some(
-        (h) =>
-          h.amount !== candidate.heads.find((x) => x.feeHeadId === h.feeHeadId)?.configuredAmount
-      ) && (
-        <TextField
-          label="Reason for amount override"
-          required
-          disabled={disabled}
-          value={request.overrideReason ?? ''}
-          inputProps={{ maxLength: 500 }}
-          onChange={(e) => onChange({ ...request, overrideReason: e.target.value })}
-        />
-      )}
     </Stack>
   );
 }

@@ -3,44 +3,37 @@
 import React from 'react';
 import { LoadingButton } from '@mui/lab';
 import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import { Stack, Button } from '@mui/material';
-import { alpha } from '@mui/material/styles';
-
+import { Iconify } from 'src/components/iconify';
 
 interface CollectionFooterActionsProps {
   isSaving: boolean;
+  invalid?: boolean;
   onCancel: () => void;
-  submitLabel: string;
 }
 
 export default function CollectionFooterActions({
   isSaving,
+  invalid = false,
   onCancel,
-  submitLabel,
 }: CollectionFooterActionsProps) {
   return (
     <Stack
       direction="row"
       justifyContent="flex-end"
       alignItems="center"
-      spacing={1.5}
+      spacing={1}
       sx={{
         px: { xs: 2, sm: 3 },
         py: 1.75,
-        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.95),
-        backdropFilter: 'blur(8px)',
-        position: 'sticky',
-        bottom: 0,
-        zIndex: 2,
+        bgcolor: (theme) => theme.vars.palette.background.paper,
+        flexShrink: 0,
         borderTop: '1px solid',
         borderColor: 'divider',
-        boxShadow: (theme) => `0 -4px 16px -4px ${alpha(theme.palette.grey[500], 0.12)}`,
       }}
     >
       <Button
         variant="outlined"
-        color="inherit"
         onClick={onCancel}
         size="small"
         startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -50,21 +43,13 @@ export default function CollectionFooterActions({
       </Button>
       <LoadingButton
         variant="contained"
-        color="primary"
         loading={isSaving}
         type="submit"
         size="small"
-        startIcon={
-          <Iconify
-            icon={submitLabel.toLowerCase().includes('draft') ? GlobalIcons.submit : GlobalIcons.publish}
-            width={18}
-            height={18}
-          />
-        }
-        disabled={isSaving}
-        sx={{ minWidth: 110 }}
+        startIcon={<Iconify icon={GlobalIcons.submit} width={18} />}
+        disabled={isSaving || invalid}
       >
-        {submitLabel}
+        Submit
       </LoadingButton>
     </Stack>
   );

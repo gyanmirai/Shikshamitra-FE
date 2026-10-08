@@ -1,21 +1,20 @@
 'use client';
 
 import React from 'react';
+import { varAlpha } from 'src/theme/styles';
 import { Label } from 'src/components/label';
+import { alpha } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
-import {
-  Box,
-  Stack,
-  Paper,
-  Divider,
-  TextField,
-  Typography,
-  InputAdornment,
-} from '@mui/material';
-import { alpha } from '@mui/material/styles';
+import { Box, Stack, Paper, Divider, Typography, InputAdornment } from '@mui/material';
 
+import CollectionNumberField from './CollectionNumberField';
 import { SummaryRow, ValidationCheck, ValidationWarning } from './CollectionCommon';
+
+const formatSimulationAmount = (value: number) =>
+  Number.isFinite(value)
+    ? `₹${value.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+    : 'Outside simulation range';
 
 interface CollectionSummaryPanelProps {
   formik: any;
@@ -27,6 +26,7 @@ interface CollectionSummaryPanelProps {
     lateFeeValid: boolean;
     incomeHeadValid: boolean;
     slabValid: boolean;
+    capsValid: boolean;
     isDefaultConflict: boolean;
     uncappedRunawayRisk: boolean;
     isReadyToPublish: boolean;
@@ -65,10 +65,7 @@ export default function CollectionSummaryPanel({
         borderLeft: '1px solid',
         borderColor: 'divider',
         overflow: 'hidden',
-        bgcolor: (theme) =>
-          theme.palette.mode === 'dark'
-            ? alpha(theme.palette.background.default, 0.6)
-            : alpha(theme.palette.grey[50], 0.7),
+        bgcolor: (theme) => varAlpha(theme.vars.palette.background.defaultChannel, 0.6),
       }}
     >
       <Scrollbar sx={{ flex: 1 }}>
@@ -206,10 +203,10 @@ export default function CollectionSummaryPanel({
           </Stack>
 
           <Stack spacing={1.25} mb={2.5}>
-            <TextField
+            <CollectionNumberField
               fullWidth
               size="small"
-              type="number"
+              kind="amount"
               label="Outstanding Overdue Fee"
               value={calcAmount}
               onChange={(e) => setCalcAmount(Math.max(0, +e.target.value))}
@@ -220,10 +217,10 @@ export default function CollectionSummaryPanel({
                 htmlInput: { min: 0, style: { fontSize: '12px', padding: '6px 8px' } },
               }}
             />
-            <TextField
+            <CollectionNumberField
               fullWidth
               size="small"
-              type="number"
+              kind="days"
               label="Days Overdue Past Due Date"
               value={calcDaysLate}
               onChange={(e) => setCalcDaysLate(Math.max(0, +e.target.value))}
@@ -234,10 +231,10 @@ export default function CollectionSummaryPanel({
                 htmlInput: { min: 0, style: { fontSize: '12px', padding: '6px 8px' } },
               }}
             />
-            <TextField
+            <CollectionNumberField
               fullWidth
               size="small"
-              type="number"
+              kind="amount"
               label="Payment Amount Made"
               value={calcPayment}
               onChange={(e) => setCalcPayment(Math.max(0, +e.target.value))}
@@ -254,7 +251,7 @@ export default function CollectionSummaryPanel({
               sx={{
                 p: 1.75,
                 borderRadius: 1.5,
-                bgcolor: (theme) => alpha(theme.palette.background.paper, 0.9),
+                bgcolor: (theme) => varAlpha(theme.vars.palette.background.paperChannel, 0.9),
                 boxShadow: '0 2px 8px -4px rgba(0,0,0,0.08)',
               }}
             >
@@ -263,16 +260,26 @@ export default function CollectionSummaryPanel({
                   <Typography variant="caption" color="text.secondary">
                     Late Fee Accrued:
                   </Typography>
-                  <Typography variant="subtitle2" fontWeight={700} color="error.main">
-                    ₹{calculatedLateFee.toLocaleString('en-IN')}
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    sx={{ overflowWrap: 'anywhere', textAlign: 'right', minWidth: 0 }}
+                    color="error.main"
+                  >
+                    {formatSimulationAmount(calculatedLateFee)}
                   </Typography>
                 </Box>
                 <Box display="flex" justifyContent="space-between" alignItems="center">
                   <Typography variant="caption" color="text.secondary">
                     Payment Allocated:
                   </Typography>
-                  <Typography variant="subtitle2" fontWeight={700} color="success.main">
-                    ₹{allocatedPayment.toLocaleString('en-IN')}
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    sx={{ overflowWrap: 'anywhere', textAlign: 'right', minWidth: 0 }}
+                    color="success.main"
+                  >
+                    {formatSimulationAmount(allocatedPayment)}
                   </Typography>
                 </Box>
                 <Divider sx={{ my: 0.25 }} />
@@ -280,8 +287,13 @@ export default function CollectionSummaryPanel({
                   <Typography variant="caption" fontWeight={600} color="text.primary">
                     Remaining Total Balance:
                   </Typography>
-                  <Typography variant="subtitle2" fontWeight={700} color="primary.main">
-                    ₹{remainingBalance.toLocaleString('en-IN')}
+                  <Typography
+                    variant="subtitle2"
+                    fontWeight={700}
+                    sx={{ overflowWrap: 'anywhere', textAlign: 'right', minWidth: 0 }}
+                    color="primary.main"
+                  >
+                    {formatSimulationAmount(remainingBalance)}
                   </Typography>
                 </Box>
               </Stack>
@@ -308,7 +320,9 @@ export default function CollectionSummaryPanel({
               }}
             >
               <Iconify
-                icon={checks.isReadyToPublish ? 'solar:check-circle-bold' : 'solar:danger-triangle-bold'}
+                icon={
+                  checks.isReadyToPublish ? 'solar:check-circle-bold' : 'solar:danger-triangle-bold'
+                }
                 width={14}
                 height={14}
               />
@@ -332,7 +346,11 @@ export default function CollectionSummaryPanel({
             <ValidationCheck label="Grace day type supported" valid={checks.graceTypeValid} />
             <ValidationCheck label="Late fee heads selected" valid={checks.headsValid} />
             <ValidationCheck label="Late fee formula configured" valid={checks.lateFeeValid} />
-            <ValidationCheck label="Escalation slabs valid (no gaps/overlaps)" valid={checks.slabValid} />
+            <ValidationCheck
+              label="Escalation slabs valid (no gaps/overlaps)"
+              valid={checks.slabValid}
+            />
+            <ValidationCheck label="Late fee ceiling and charging cutoff valid" valid={checks.capsValid} />
             <ValidationCheck label="Income ledger head selected" valid={checks.incomeHeadValid} />
             <ValidationCheck
               label="Default policy conflict check"
@@ -345,11 +363,19 @@ export default function CollectionSummaryPanel({
 
           <Box sx={{ mt: 1.5 }}>
             {checks.isReadyToPublish ? (
-              <Label color="success" variant="filled" sx={{ width: '100%', height: 26, fontSize: '0.72rem', fontWeight: 700 }}>
+              <Label
+                color="success"
+                variant="filled"
+                sx={{ width: '100%', height: 26, fontSize: '0.72rem', fontWeight: 700 }}
+              >
                 Ready to Save / Activate
               </Label>
             ) : (
-              <Label color="warning" variant="filled" sx={{ width: '100%', height: 26, fontSize: '0.72rem', fontWeight: 700 }}>
+              <Label
+                color="warning"
+                variant="filled"
+                sx={{ width: '100%', height: 26, fontSize: '0.72rem', fontWeight: 700 }}
+              >
                 Required Fields Incomplete
               </Label>
             )}

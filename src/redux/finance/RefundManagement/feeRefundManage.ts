@@ -47,6 +47,7 @@ export interface FeeRefundRequestDto {
   refundPolicyVersionId?: string;
   concessionRequestId?: string | null;
   refundPolicyName?: string;
+  allowedPayoutMethods: string[];
   originalReceiptId?: string;
   originalReceiptNumber?: string;
   currency: string;

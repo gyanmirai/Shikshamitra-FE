@@ -1,6 +1,7 @@
 import type { RootState } from 'src/redux/store';
 
 import { useFormik } from 'formik';
+import { useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
 import { LoadingButton } from '@mui/lab';
 import { useSelector } from 'react-redux';
@@ -10,6 +11,10 @@ import { Iconify } from 'src/components/iconify';
 import React, { useMemo, useEffect } from 'react';
 import { Scrollbar } from 'src/components/scrollbar';
 import { shikshaMitraToast } from 'src/components/toast';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { financePermissions } from 'src/constants/finance-menu';
+import { hasGrantedPermission } from 'src/utils/permissions';
+import { isFinanceAdministratorSession } from 'src/utils/finance-admin-auto-approval';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { FeeMonth } from 'src/enums/fee-collection-type';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -37,10 +42,12 @@ import {
   useUpdateFeeRefundMutation,
   usePreviewFeeRefundMutation,
   useLazyGetRefundEligibilityQuery,
+  useGetRefundEligibilityQuery,
 } from 'src/redux/finance/RefundManagement/feeRefundManage';
 
 import FeeRefundDetailsForm from './FeeRefundDetailForm';
 import RefundGeneralInfoCard from './RefundGeneralInfoCard';
+import { normalizeRefundMethod } from './refundPayoutMethods';
 import {
   buildRefundInitialValues,
   buildFeeRefundApiPayload,
@@ -176,6 +183,18 @@ const FeeRefundFormComponent = ({
   editRefundId,
   replacementRefundId,
 }: FeeRefundFormProps): React.ReactElement => {
+  const { data: session, status: sessionStatus } = useSession();
+  const isAdminCreator = isFinanceAdministratorSession(session);
+  const refundPermissions = useSelector((state: RootState) => state.auth.permissions);
+  const adminCanApprove = hasGrantedPermission(refundPermissions, financePermissions.fees.refundActions.approve);
+  const [adminConfirmation, setAdminConfirmation] = React.useState<{
+    fingerprint: string;
+    studentName: string;
+    amount: number;
+    method: string;
+    receiptNumber: string;
+  } | null>(null);
+  const confirmedAdminFingerprint = React.useRef<string | null>(null);
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   // List filters may refresh while the request is being edited.
   const [openingScope] = React.useState(() => ({
@@ -344,7 +363,7 @@ const FeeRefundFormComponent = ({
           ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.studentName ?? '')
           : '',
         refundMethod: isEdit
-          ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.refundMethod ?? '')
+          ? normalizeRefundMethod((editRefundDetail as FeeRefundRequestDto | undefined)?.refundMethod ?? '')
           : '',
         notes: hasSourceRefund ? ((editRefundDetail as FeeRefundRequestDto | undefined)?.reason ?? '') : '',
         paymentDetails: isEdit
@@ -368,6 +387,14 @@ const FeeRefundFormComponent = ({
     validateOnBlur: true,
     validateOnChange: true,
     onSubmit: async (values, helpers) => {
+      if (!hasSourceRefund && !refundCanSubmit) {
+        shikshaMitraToast.error({ message: 'Choose a student with refundable paid fees before submitting.' });
+        return;
+      }
+      if (sessionStatus === 'loading') {
+        shikshaMitraToast.error({ message: 'Wait for your role to finish loading.' });
+        return;
+      }
       if (!currentYear?.id) {
         shikshaMitraToast.error({ message: 'Academic year not set. Please reload and try again.' });
         return;
@@ -390,28 +417,73 @@ const FeeRefundFormComponent = ({
             return;
           }
           setReviewedPreview({ fingerprint, result: latest });
+          if (isAdminCreator && confirmedAdminFingerprint.current !== fingerprint) {
+            if (!adminCanApprove) {
+              shikshaMitraToast.error({ message: 'Approve permission is required to create an automatically approved refund.' });
+              return;
+            }
+            setAdminConfirmation({
+              fingerprint,
+              studentName: values.studentName,
+              amount: latest.maximumAllowedAmount,
+              method: values.refundMethod,
+              receiptNumber: values.feeHeadRefunds.flatMap((feeHead) => feeHead.months)
+                .find((month) => Number(month.amount) > 0)?.receiptNumber ?? '',
+            });
+            return;
+          }
+        } else if (isAdminCreator) {
+          const fingerprint = JSON.stringify(payload);
+          if (confirmedAdminFingerprint.current !== fingerprint) {
+            if (!adminCanApprove) {
+              shikshaMitraToast.error({ message: 'Approve permission is required to create an automatically approved refund.' });
+              return;
+            }
+            setAdminConfirmation({
+              fingerprint,
+              studentName: values.studentName,
+              amount: payload.lines.reduce((sum, line) => sum + line.amount, 0),
+              method: values.refundMethod,
+              receiptNumber: editRefundDetail?.originalReceiptNumber ?? '',
+            });
+            return;
+          }
         }
         if (isEdit && editRefundId) {
           await updateFeeRefund({ id: editRefundId, body: payload }).unwrap();
           if (submitIntent.current === 'submit') {
-            await submitFeeRefund(editRefundId).unwrap();
-            shikshaMitraToast.success({ message: 'Refund request submitted successfully.' });
+            const submitted = await submitFeeRefund(editRefundId).unwrap();
+            if (isAdminCreator && submitted.status !== 2) {
+              shikshaMitraToast.warning({ message: 'Refund request is Pending. Automatic approval did not occur.' });
+            } else {
+              shikshaMitraToast.success({ message: submitted.status === 2
+                ? 'Refund request approved. Record the payout separately.'
+                : 'Refund request submitted successfully.' });
+            }
           } else {
             shikshaMitraToast.success({ message: 'Refund draft updated successfully.' });
           }
         } else {
-          await createFeeRefund({
+          const created = await createFeeRefund({
             ...payload,
             idempotencyKey: requestKey.current,
             replacesRefundRequestId: replacementRefundId,
           }).unwrap();
-          shikshaMitraToast.success({ message: 'Refund request submitted successfully.' });
+          if (isAdminCreator && created.status !== 2) {
+            shikshaMitraToast.warning({ message: 'Refund request is Pending. Automatic approval did not occur.' });
+          } else {
+            shikshaMitraToast.success({ message: created.status === 2
+              ? 'Refund request approved. Record the payout separately.'
+              : 'Refund request submitted successfully.' });
+          }
         }
 
+        confirmedAdminFingerprint.current = null;
         helpers.resetForm();
         requestKey.current = crypto.randomUUID();
         onCancel?.(null, true);
       } catch (err: any) {
+        confirmedAdminFingerprint.current = null;
         const parsed = parseApiProblemDetail(err);
         const message = err?.status === 500 && parsed.detail === 'The request failed.'
           ? 'The refund request could not be checked. Please try again or contact support.'
@@ -420,6 +492,20 @@ const FeeRefundFormComponent = ({
       }
     },
   });
+
+  const refundEligibility = useGetRefundEligibilityQuery(
+    { studentId: formik.values.studentId, academicYearId: currentYear?.id ?? '' },
+    { skip: hasSourceRefund || !formik.values.studentId || !currentYear?.id }
+  );
+  const refundCanSubmit = Boolean(
+    refundEligibility.currentData &&
+    !refundEligibility.isFetching &&
+    !refundEligibility.isError &&
+    refundEligibility.currentData.totalRefundable > 0 &&
+    refundEligibility.currentData.feeHeads.some((head) =>
+      head.months.some((month) => month.refundable > 0)
+    )
+  );
   useEffect(() => {
     formik.resetForm();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -497,7 +583,10 @@ const FeeRefundFormComponent = ({
                 </Paper>
 
                 {/* ── Fee Refund Details ── */}
-                <FeeRefundDetailsForm formik={formik} />
+                <FeeRefundDetailsForm
+                  formik={formik}
+                  allowedPayoutMethods={isEdit ? editRefundDetail?.allowedPayoutMethods : undefined}
+                />
               </>
             )}
           </BackPopUpChecked>
@@ -581,6 +670,7 @@ const FeeRefundFormComponent = ({
               type="submit"
               variant="contained"
               size="small"
+              disabled={sessionStatus === 'loading' || (!hasSourceRefund && !refundCanSubmit)}
               loading={
                 loading ||
                 isSubmitting ||
@@ -602,6 +692,37 @@ const FeeRefundFormComponent = ({
           </Box>
         </Box>
       </Box>
+      <ConfirmDialog
+        open={adminConfirmation !== null}
+        icon="warning"
+        title="Submit and approve refund?"
+        disableBackdropClick
+        cancelText="Keep editing"
+        onClose={() => setAdminConfirmation(null)}
+        content={
+          <Stack spacing={1}>
+            <Typography>{adminConfirmation?.studentName || 'Selected student'} · {currentYear?.name}</Typography>
+            <Typography>Refund: {formatCurrency(adminConfirmation?.amount ?? 0)} via {adminConfirmation?.method}</Typography>
+            {adminConfirmation?.receiptNumber && <Typography>Receipt: {adminConfirmation.receiptNumber}</Typography>}
+            <Typography>This request will be approved automatically when you confirm.</Typography>
+            <Typography>Approval does not send the payout; payout is recorded separately.</Typography>
+          </Stack>
+        }
+        action={
+          <LoadingButton
+            type="button"
+            variant="contained"
+            loading={isSubmitting || isUpdating || isSubmittingDraft || isPreviewing}
+            onClick={() => {
+              confirmedAdminFingerprint.current = adminConfirmation?.fingerprint ?? null;
+              setAdminConfirmation(null);
+              formik.submitForm();
+            }}
+          >
+            Submit and approve
+          </LoadingButton>
+        }
+      />
     </Box>
   );
 };

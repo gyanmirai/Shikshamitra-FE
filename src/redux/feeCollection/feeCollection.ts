@@ -142,10 +142,6 @@ export interface FeeLedgerMonth {
 }
 
 export interface ChargeDetail {
-  incomeCategoryId?: string;
-  receivingBankAccountId?: string;
-  incomeCategoryName?: string;
-  receivingBankLabel?: string;
   chargeId: string;
   sourceType: 'Charge' | 'LateFee';
   sourceId: string;
@@ -175,6 +171,7 @@ export interface FeeCollectFormDto {
 export interface StudentSummary {
   id: string;
   name: string;
+  grNo: string;
   standardName: string;
   divisionName: string;
   rollNo: string;
@@ -186,6 +183,8 @@ export interface FeeOverview {
   paidFee: number;
   pendingFee: number;
   concessionAmount?: number;
+  overdueFee?: number;
+  reconciliationAmount?: number;
 }
 
 export interface FeeHeadSummary {

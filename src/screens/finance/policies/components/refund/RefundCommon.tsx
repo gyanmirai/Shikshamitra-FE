@@ -7,6 +7,8 @@ import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { Box, Paper, Stack, Divider, Typography } from '@mui/material';
 
+import { ConcessionSectionCard } from '../concession/ConcessionCommon';
+
 import type { IRefundPolicyFormValues } from '../../types/finance-policy.types';
 
 // ─── SectionCard ─────────────────────────────────────────────────────────────
@@ -21,58 +23,9 @@ interface SectionCardProps {
 
 export function SectionCard({ title, subtitle, icon, children, action }: SectionCardProps) {
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        p: { xs: 2, sm: 2.5 },
-        mb: 2.5,
-        borderRadius: 1.75,
-        bgcolor: (theme) =>
-          theme.palette.mode === 'dark'
-            ? alpha(theme.palette.background.paper, 0.95)
-            : alpha(theme.palette.background.paper, 0.98),
-        borderColor: 'divider',
-        boxShadow: (theme) => `0 2px 12px -4px ${alpha(theme.palette.grey[500], 0.1)}`,
-      }}
-    >
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        spacing={1.5}
-        sx={{ mb: 2 }}
-      >
-        <Stack direction="row" spacing={1.5} alignItems="center">
-          <Box
-            sx={{
-              width: 34,
-              height: 34,
-              borderRadius: 1,
-              bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-              color: 'primary.main',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <Iconify icon={icon} width={18} height={18} />
-          </Box>
-          <Box>
-            <Typography variant="subtitle2" fontWeight={700} color="text.primary">
-              {title}
-            </Typography>
-            {subtitle && (
-              <Typography variant="caption" color="text.secondary" display="block">
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
-        </Stack>
-        {action && <Box>{action}</Box>}
-      </Stack>
+    <ConcessionSectionCard title={title} subtitle={subtitle} icon={icon} action={action}>
       {children}
-    </Paper>
+    </ConcessionSectionCard>
   );
 }
 
@@ -135,7 +88,12 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
           {/* Header */}
           <Box>
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
-              <Iconify icon="solar:chart-square-bold-duotone" color="primary.main" width={20} height={20} />
+              <Iconify
+                icon="solar:chart-square-bold-duotone"
+                color="primary.main"
+                width={20}
+                height={20}
+              />
               <Typography variant="subtitle2" fontWeight={700}>
                 Live Policy Summary
               </Typography>
@@ -154,7 +112,12 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
               bgcolor: 'background.paper',
             }}
           >
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              sx={{ mb: 1 }}
+            >
               <Typography variant="caption" color="text.secondary" fontWeight={600}>
                 POLICY IDENTITY
               </Typography>
@@ -227,7 +190,12 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
             }}
           >
             <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.25 }}>
-              <Iconify icon="solar:calculator-bold-duotone" color="primary.main" width={18} height={18} />
+              <Iconify
+                icon="solar:calculator-bold-duotone"
+                color="primary.main"
+                width={18}
+                height={18}
+              />
               <Typography variant="caption" fontWeight={700} color="primary.main">
                 ESTIMATED WATERFALL (EXAMPLE ₹10,000)
               </Typography>
@@ -293,12 +261,21 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
               bgcolor: 'background.paper',
             }}
           >
-            <Typography variant="caption" color="text.secondary" fontWeight={700} sx={{ mb: 1, display: 'block' }}>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              fontWeight={700}
+              sx={{ mb: 1, display: 'block' }}
+            >
               READINESS CHECKLIST
             </Typography>
 
             <Stack spacing={1}>
-              <CheckItem label="General Information" valid={checks.generalValid} hint="Name (min 3 chars), Status" />
+              <CheckItem
+                label="General Information"
+                valid={checks.generalValid}
+                hint="Name (min 3 chars), Status"
+              />
               <CheckItem
                 label="Eligibility & Scope"
                 valid={checks.eligibilityValid}
@@ -340,8 +317,8 @@ export function RefundSummaryPanel({ formik, checks, liveSimulation }: RefundSum
                   Settled Money Only Invariant
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.71rem' }}>
-                  Refund payouts are strictly constrained to settled receipts. Prior refunds and active reservations
-                  are always subtracted first before calculating eligibility.
+                  Refund payouts are strictly constrained to settled receipts. Prior refunds and
+                  active reservations are always subtracted first before calculating eligibility.
                 </Typography>
               </Box>
             </Stack>
@@ -363,10 +340,20 @@ function CheckItem({ label, valid, hint }: { label: string; valid: boolean; hint
           height={16}
         />
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" fontWeight={600} color={valid ? 'text.primary' : 'text.secondary'} noWrap>
+          <Typography
+            variant="caption"
+            fontWeight={600}
+            color={valid ? 'text.primary' : 'text.secondary'}
+            noWrap
+          >
             {label}
           </Typography>
-          <Typography variant="caption" color="text.disabled" display="block" sx={{ fontSize: '0.68rem' }}>
+          <Typography
+            variant="caption"
+            color="text.disabled"
+            display="block"
+            sx={{ fontSize: '0.68rem' }}
+          >
             {hint}
           </Typography>
         </Box>

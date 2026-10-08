@@ -45,6 +45,7 @@ export interface IFeeHeadMonthRefund {
   dueFeeId: string;
   sourceAllocationId?: string;
   sourceReceiptId?: string;
+  receiptNumber?: string;
   amount: number | string;
 }
 

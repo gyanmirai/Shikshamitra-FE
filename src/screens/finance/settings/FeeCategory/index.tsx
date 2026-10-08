@@ -2,19 +2,19 @@
 
 import type { RootState } from 'src/redux/store';
 
+import React, { useState } from 'react';
 import { Add } from '@mui/icons-material';
+import { Box, Card, Stack, Button, Typography } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
-import React, { useState, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import CustomDialog from 'src/components/customDialog';
-import { Box, Card, Stack, Button, Typography } from '@mui/material';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { financePermissions } from 'src/constants/finance-menu';
+import { setIsChanges } from 'src/redux/confirmPopup/confirmPopupSlice';
 import { useGetFeeCategoriesQuery } from 'src/redux/feeCategory/feeCategoryApi';
 
 import FeeCategoryForm from './Components/FeeCategoryForm';
@@ -28,7 +28,6 @@ const FeeCategoryCreation = () => {
   // Dialog control states
   const addFeeCategoryDialog = useBoolean(); // Controls add/edit fee category dialog
   const viewFeeCategoryDialog = useBoolean(); // Controls view details dialog
-  const [open, setOpen] = useState(false); // Controls table dialog state
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
@@ -46,16 +45,6 @@ const FeeCategoryCreation = () => {
     },
     { skip: !academicYearId }
   );
-
-  const [queryParams, setQueryParams] = useState({ page: 1, pageSize: 10, search: '' });
-
-  const handleServerPagination = useCallback((page: number, rowsPerPage: number) => {
-    setQueryParams((prev) => ({ ...prev, page, pageSize: rowsPerPage }));
-  }, []);
-
-  const handleServerSearch = useCallback((search: string) => {
-    setQueryParams((prev) => ({ ...prev, search, page: 1 }));
-  }, []);
 
   // Global state for tracking unsaved changes
   const { isChanges } = useSelector((state: RootState) => state.confirmPopup);
@@ -97,7 +86,7 @@ const FeeCategoryCreation = () => {
     <Box height="100%" display="flex" flexDirection="column">
       <CustomBreadcrumbs
         heading="Fee Category"
-        description="Manage all fee categories such as Academic, Hostel. Use the actions to edit or delete existing categories. Click ‘Add Fee Category’ to create a new one."
+        description="Organize fee heads into categories and manage their status."
         links={[
           { name: 'Finance', href: '/finance/dashboard' },
           { name: 'Fees', href: '/finance/fee-collection' },
@@ -108,6 +97,7 @@ const FeeCategoryCreation = () => {
           canAdd && archiveView === 'current' ? (
             <Button
               onClick={() => addFeeCategoryDialog.onTrue()}
+              aria-label="Add Fee Category"
               size="small"
               startIcon={<Add />}
               variant="contained"
@@ -146,55 +136,19 @@ const FeeCategoryCreation = () => {
       <FeeCategoryTable
         key={archiveView}
         archived={archiveView === 'archived'}
-        open={open}
         onAddFeeCategory={addFeeCategoryDialog}
-        setOpenDialog={setOpen}
-        editData={selectedFeeCategory}
         setEditData={setSelectedFeeCategory}
-        onServerPagination={handleServerPagination}
-        onServerSearch={handleServerSearch}
         onView={(data) => {
           setSelectedFeeCategory(data);
           viewFeeCategoryDialog.onTrue();
         }}
       />
 
-      {/* Add/Edit Dialog */}
-      <CustomDialog
-        open={addFeeCategoryDialog.value}
-        handleClose={() => {
-          addFeeCategoryDialog.onFalse();
-          setTimeout(() => {
-            setSelectedFeeCategory(null);
-          }, 200);
-        }}
-        title={
-          <Box display="flex" flexDirection="row" gap={1} alignItems="center">
-            <Typography variant="h5">
-              {selectedFeeCategory ? 'Update Fee Category' : 'Add Fee Category'}
-            </Typography>
-            <CustomTooltip
-              arrow
-              placement="right"
-              sx={{ textAlign: 'justify' }}
-              title={
-                selectedFeeCategory
-                  ? 'Update existing fee category by entering its name (e.g., Academic, Transport, Hostel).'
-                  : 'Create a new fee category by entering its name (e.g., Academic, Transport, Hostel).'
-              }
-            >
-              <Iconify icon="lucide:info" sx={{ cursor: 'pointer' }} color="info.main" />
-            </CustomTooltip>
-          </Box>
-        }
-        maxWidth="md"
-      >
-        <FeeCategoryForm
-          open={addFeeCategoryDialog}
-          onClose={handleClose}
-          editData={selectedFeeCategory}
-        />
-      </CustomDialog>
+      <FeeCategoryForm
+        open={addFeeCategoryDialog}
+        onClose={handleClose}
+        editData={selectedFeeCategory}
+      />
 
       {/* View Details Dialog */}
       <CustomDialog

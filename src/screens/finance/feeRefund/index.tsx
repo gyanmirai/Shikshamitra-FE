@@ -38,6 +38,7 @@ import {
 import RefundWorklist from './Components/RefundWorklist';
 import RefundRemarksForm from './Components/RefundRemarksForm';
 import FeeRefundFormComponent from './NewRefundForm/RefundForm';
+import { normalizeRefundMethod, getAllowedRefundMethodOptions } from './NewRefundForm/refundPayoutMethods';
 import FeeRefundReasonApprovalForm from './Components/FeeRefuncRejectApproveForm';
 
 import type { IStudentFeeData } from './type';
@@ -246,7 +247,7 @@ const FeeRefund = () => {
           }}
           onRecord={(data) => {
             setSelectedFeeRefund(data);
-            setSettlementMethod(data._refundMethod ?? '');
+            setSettlementMethod(normalizeRefundMethod(data._refundMethod ?? ''));
             setExternalReference('');
             setEvidenceReference('');
             setBankAccountId(data._payingBankAccountId ?? '');
@@ -397,6 +398,7 @@ const FeeRefund = () => {
             selectedFeeRefund?._defaultPayingBankAccountId
           }
           defaultMethod={selectedFeeRefund?._refundMethod}
+          allowedPayoutMethods={selectedFeeRefund?._allowedPayoutMethods}
           onClose={async (e, isSubmit, notes, routing) => {
             if (isSubmit && selectedFeeRefund) {
               try {
@@ -465,9 +467,9 @@ const FeeRefund = () => {
             disabled={!!selectedFeeRefund?._refundMethod}
             required
           >
-            {['Cash', 'Cheque', 'DemandDraft', 'BankTransfer', 'Upi'].map((method) => (
-              <MenuItem key={method} value={method}>
-                {method}
+            {getAllowedRefundMethodOptions(selectedFeeRefund?._allowedPayoutMethods).map((method) => (
+              <MenuItem key={method.value} value={method.value}>
+                {method.label}
               </MenuItem>
             ))}
           </TextField>
@@ -528,6 +530,7 @@ const FeeRefund = () => {
                 isProcessing ||
                 !selectedFeeRefund?._refundRequestId ||
                 !settlementMethod ||
+                !getAllowedRefundMethodOptions(selectedFeeRefund?._allowedPayoutMethods).some((method) => method.value === settlementMethod) ||
                 !evidenceReference.trim() ||
                 (settlementMethod !== 'Cash' && !externalReference.trim()) ||
                 (settlementMethod !== 'Cash' && !bankAccountId)

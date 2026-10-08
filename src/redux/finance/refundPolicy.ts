@@ -13,6 +13,16 @@ export interface RefundPolicyListArgs {
   search?: string;
   page?: number;
   pageSize?: number;
+  sorting?: string;
+  policyNameFilter?: string;
+  policyNameOperator?: string;
+  amountMode?: string;
+  feeHeadScope?: string;
+  allowedPayoutMethod?: string;
+  allowPartialRefund?: boolean;
+  updatedAtOperator?: string;
+  updatedAt?: string;
+  updatedAtEnd?: string;
 }
 
 export interface RefundPolicyListResponse {
@@ -26,6 +36,10 @@ export type RefundPolicySavePayload = Omit<
   | 'policyType'
   | 'policyCode'
   | 'academicYearName'
+  | 'feeHeadNames'
+  | 'feeHeadStatuses'
+  | 'expenseCategoryName'
+  | 'defaultPayingBankAccountName'
   | 'version'
   | 'isUsedInDownstream'
   | 'creationTime'

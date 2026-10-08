@@ -3,6 +3,8 @@ import { varAlpha } from 'src/theme/styles';
 import { Tag, Class, Phone, Person } from '@mui/icons-material';
 import { Box, Card, Grid, Typography, CardContent } from '@mui/material';
 
+import type { StudentSummary } from 'src/redux/feeCollection/feeCollection';
+
 const itemVariant = (i: number) => ({
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
@@ -49,7 +51,7 @@ const InfoItem = ({
   </Box>
 );
 
-export const StudentFeesSummaryView = ({ student }: any) => (
+export const StudentFeesSummaryView = ({ student }: { student: StudentSummary }) => (
   <Card
     variant="outlined"
     sx={{
@@ -93,7 +95,7 @@ export const StudentFeesSummaryView = ({ student }: any) => (
             <InfoItem
               icon={<Person sx={{ fontSize: 18 }} />}
               label="Name (GR No)"
-              value={`${student?.name ?? ''}${student?.grNumber ? ` (${student.grNumber})` : ''}`}
+              value={`${student.name}${student.grNo ? ` (${student.grNo})` : ''}`}
             />
           </motion.div>
         </Grid>
@@ -103,7 +105,7 @@ export const StudentFeesSummaryView = ({ student }: any) => (
             <InfoItem
               icon={<Class sx={{ fontSize: 18 }} />}
               label="Class / Division"
-              value={`${student?.standardName ?? ''} / ${student?.divisionName ?? ''}`}
+              value={`${student.standardName} / ${student.divisionName}`}
             />
           </motion.div>
         </Grid>
@@ -113,7 +115,7 @@ export const StudentFeesSummaryView = ({ student }: any) => (
             <InfoItem
               icon={<Tag sx={{ fontSize: 18 }} />}
               label="Roll No"
-              value={student?.rollNumber}
+              value={student.rollNo}
             />
           </motion.div>
         </Grid>
@@ -123,7 +125,7 @@ export const StudentFeesSummaryView = ({ student }: any) => (
             <InfoItem
               icon={<Phone sx={{ fontSize: 18 }} />}
               label="Contact"
-              value={student?.mobileNo}
+              value={student.mobileNo}
             />
           </motion.div>
         </Grid>

@@ -15,6 +15,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { formatNumber } from 'src/utils/formate_number';
 import { shikshaMitraToast } from 'src/components/toast';
+import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import CustomTooltip from 'src/components/custom-tooltip';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
@@ -47,6 +48,7 @@ import {
 } from '@mui/material';
 import {
   useRejectConcessionRequestMutation,
+  useCreateConcessionRefundRequestsMutation,
   useGetStudentConcessionDetailsQuery,
   useUploadConcessionDocumentsMutation,
   useDeleteConcessionApplicationMutation,
@@ -66,6 +68,7 @@ import type {
   IConcessionRequestItem,
   IViewConcessionRequestProps,
 } from './type';
+import { canDecideConcession } from '../Concession/concessionDecisionEligibility';
 
 // ─── Reject Reason Dialog ─────────────────────────────────────────────────────
 
@@ -507,6 +510,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
 }) => {
   const [previewDoc, setPreviewDoc] = useState<{ url: string; name: string } | null>(null);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.sub as string | undefined);
   const actions = financePermissions.fees.concessionActions;
   const canApprove = hasGrantedPermission(permissions, actions.approve);
   const canReject = hasGrantedPermission(permissions, actions.reject);
@@ -515,6 +519,32 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   const canDelete = hasGrantedPermission(permissions, actions.delete);
   const canViewDocuments = hasGrantedPermission(permissions, actions.viewDocument);
   const canUploadDocuments = hasGrantedPermission(permissions, actions.uploadDocument);
+  const canCreateRefund = hasGrantedPermission(
+    permissions,
+    financePermissions.fees.refundActions.add
+  );
+  const [createRefundRequests, { isLoading: isCreatingRefund }] =
+    useCreateConcessionRefundRequestsMutation();
+  const refundCommandKey = useRef('');
+  const [refundCreated, setRefundCreated] = useState(false);
+  const handleCreateRefundRequests = async () => {
+    if (isCreatingRefund || refundCreated) return;
+    try {
+      await createRefundRequests({
+        concessionRequestId: item.studentConcessionTypeRequestId || item.id || '',
+        body: {
+          requestConcurrencyStamp: item.concurrencyStamp || '',
+          idempotencyKey: (refundCommandKey.current ||= window.crypto.randomUUID()),
+        },
+      }).unwrap();
+      setRefundCreated(true);
+      shikshaMitraToast.success({
+        message: 'Linked refund requests created for separate review and payout.',
+      });
+    } catch (error) {
+      shikshaMitraToast.error({ message: parseApiProblemDetail(error).detail });
+    }
+  };
   const serverAllows = (action: string) =>
     !item.availableActions?.length || item.availableActions.includes(action);
   const isApproved = item.status === ConcessionStatusType.Approved;
@@ -523,6 +553,14 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   const isCancelled = item.status === ConcessionStatusType.Cancelled;
   const isDraft = item.status === ConcessionStatusType.Draft;
   const isPending = isDraft || item.status === ConcessionStatusType.Pending;
+  const decisionAllowed = canDecideConcession(
+    currentUserId,
+    item.requesterId,
+    item.submittedById
+  );
+  const decisionBlockReason = !currentUserId || !item.requesterId
+    ? 'Decision identity is unavailable'
+    : 'You cannot approve or reject your own request';
   const statusLabel = isPending
     ? 'Pending'
     : (ConcessionStatusType[item.status] as keyof typeof ConcessionStatusType);
@@ -542,7 +580,7 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
   const displayDocs = hasRequiredDocs ? uploadedDocs : (item.submittedDocuments || []).slice(0, 1);
 
   // Approve should be disabled if any required document is not uploaded
-  const approveDisabled = !isPending || !allMandatoryDocsUploaded;
+  const approveDisabled = !isPending || !allMandatoryDocsUploaded || !decisionAllowed;
 
   return (
     <Card
@@ -608,15 +646,43 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           )}
         </Stack>
 
+        {(item.paidConcessionAmount ?? 0) > 0 && (
+          <Stack spacing={1} sx={{ mt: 1.5 }}>
+            <Typography variant="body2">
+              Paid concession: {formatNumber(item.paidConcessionAmount ?? 0, 'INR')}. Refund request
+              creation: {item.autoCreateRefund ? 'Automatic' : 'Manual'}.
+            </Typography>
+            {item.canCreateRefundRequests && !refundCreated && canCreateRefund && (
+              <LoadingButton
+                variant="outlined"
+                loading={isCreatingRefund}
+                onClick={handleCreateRefundRequests}
+              >
+                Create refund requests
+              </LoadingButton>
+            )}
+          </Stack>
+        )}
         {(item.refundRequests?.length ?? 0) > 0 && (
           <Box mb={1.5}>
             <Typography variant="overline" color="text.secondary" fontWeight={700}>
               Refund requests from this concession
             </Typography>
             {item.refundRequests?.map((refund) => (
-              <Stack key={refund.refundRequestId} direction="row" justifyContent="space-between" alignItems="center" spacing={1} py={0.5}>
-                <Typography variant="body2">{refund.voucherNumber} · {formatNumber(refund.amount, 'INR')}</Typography>
-                <Label variant="soft" color={refund.status === 'Processed' ? 'success' : 'info'}>{refund.status}</Label>
+              <Stack
+                key={refund.refundRequestId}
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                spacing={1}
+                py={0.5}
+              >
+                <Typography variant="body2">
+                  {refund.voucherNumber} · {formatNumber(refund.amount, 'INR')}
+                </Typography>
+                <Label variant="soft" color={refund.status === 'Processed' ? 'success' : 'info'}>
+                  {refund.status}
+                </Label>
               </Stack>
             ))}
           </Box>
@@ -845,7 +911,9 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
         {canApprove && serverAllows('approve') && (
           <Tooltip
             title={
-              !allMandatoryDocsUploaded && !isApproved && !isRejected && !isCancelled
+              !decisionAllowed
+                ? decisionBlockReason
+                : !allMandatoryDocsUploaded && !isApproved && !isRejected && !isCancelled
                 ? `Upload all mandatory documents first — click "See All" to upload pending documents`
                 : ''
             }
@@ -869,17 +937,21 @@ const ConcessionItemCard: React.FC<IConcessionCardProps> = ({
           </Tooltip>
         )}
         {canReject && serverAllows('reject') && (
-          <LoadingButton
-            fullWidth
-            size="small"
-            variant="soft"
-            color="error"
-            disabled={!isPending}
-            startIcon={<Cancel fontSize="small" />}
-            onClick={() => onReject(item)}
-          >
-            Reject
-          </LoadingButton>
+          <Tooltip title={!decisionAllowed ? decisionBlockReason : ''} placement="top" arrow>
+            <span style={{ flex: 1 }}>
+              <LoadingButton
+                fullWidth
+                size="small"
+                variant="soft"
+                color="error"
+                disabled={!isPending || !decisionAllowed}
+                startIcon={<Cancel fontSize="small" />}
+                onClick={() => onReject(item)}
+              >
+                Reject
+              </LoadingButton>
+            </span>
+          </Tooltip>
         )}
         {canReverse && serverAllows('reverse') && (
           <LoadingButton
@@ -919,6 +991,7 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
   const theme = useTheme();
   const { currentYear } = useSelector((state: RootState) => state.globalState);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
+  const currentUserId = useSelector((state: RootState) => state.auth.user?.sub as string | undefined);
   const canUploadDocuments = hasGrantedPermission(
     permissions,
     financePermissions.fees.concessionActions.uploadDocument
@@ -971,10 +1044,12 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
   );
 
   const handleApproveClick = (item: IConcessionRequestItem) => {
+    if (!canDecideConcession(currentUserId, item.requesterId, item.submittedById)) return;
     setApprovalView({ item, mode: 'Approve' });
   };
 
   const handleRejectClick = (item: IConcessionRequestItem) => {
+    if (!canDecideConcession(currentUserId, item.requesterId, item.submittedById)) return;
     setSelectedItem(item);
     rejectDialog.onTrue();
   };
@@ -1065,26 +1140,20 @@ const ViewConcessionRequest: React.FC<IViewConcessionRequestProps> = ({
               {[
                 {
                   label: 'Pending',
-	                  value: 'pending',
-	                  count: allItems.filter((i) =>
-	                    groupedStatuses.pending.includes(i.status)
-	                  ).length,
+                  value: 'pending',
+                  count: allItems.filter((i) => groupedStatuses.pending.includes(i.status)).length,
                   color: 'warning' as LabelColor,
                 },
                 {
                   label: 'Approved',
-	                  value: 'approved',
-	                  count: allItems.filter((i) =>
-	                    groupedStatuses.approved.includes(i.status)
-	                  ).length,
+                  value: 'approved',
+                  count: allItems.filter((i) => groupedStatuses.approved.includes(i.status)).length,
                   color: 'success' as LabelColor,
                 },
                 {
                   label: 'Rejected',
-	                  value: 'rejected',
-	                  count: allItems.filter((i) =>
-	                    groupedStatuses.rejected.includes(i.status)
-	                  ).length,
+                  value: 'rejected',
+                  count: allItems.filter((i) => groupedStatuses.rejected.includes(i.status)).length,
                   color: 'error' as LabelColor,
                 },
               ].map((tab) => (

@@ -96,6 +96,43 @@ async function addHead() {
   fireEvent.click(screen.getByRole('button', { name: 'Add head' }));
 }
 
+it('blocks Next and direct Review when collection is missing while allowing incomplete draft saves', () => {
+  render(ui());
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
+  expect(screen.getByText('Collection Policy is required')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Save & next' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Save draft' })).not.toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute(
+    'aria-current',
+    'step'
+  );
+  expect(state.mutate).not.toHaveBeenCalled();
+});
+
+it('validates clearing collection immediately and keeps refund optional', async () => {
+  Object.assign(state.lookups.settings.permissions, { collection: true, collectionRead: true });
+  state.lookups.settings.policies = [
+    {
+      family: 'collection',
+      id: 'collection',
+      versionId: 'collection-v1',
+      name: 'Collection',
+      versionNumber: 1,
+      isDefault: false,
+    },
+  ];
+  render(ui());
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Collection Policy' }));
+  fireEvent.click(await screen.findByRole('option', { name: 'Collection · v1' }));
+  expect(screen.getByRole('button', { name: 'Save & next' })).not.toBeDisabled();
+  expect(screen.queryByText('Collection Policy is required')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Clear selection' }));
+  expect(screen.getByText('Collection Policy is required')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Save & next' })).toBeDisabled();
+});
+
 it('resumes a saved structure at its scoped saved navigation step', () => {
   window.localStorage.setItem(
     'fee-structure-progress:metadata:class:saved',
@@ -111,6 +148,16 @@ it('resumes a saved structure at its scoped saved navigation step', () => {
   expect(screen.getByRole('combobox', { name: 'Collection Policy' })).toBeTruthy();
 });
 
+it('returns an incomplete saved draft to Policies when its stored progress points to Review', () => {
+  window.localStorage.setItem('fee-structure-progress:metadata:class:saved', JSON.stringify('review'));
+  render(ui({ ...structureCandidate(), id: 'saved', name: 'Saved fees', status: 1, revisionNumber: 1 }));
+  expect(screen.getByText('Collection Policy is required')).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: /^Step 3: Review & publish$/i }));
+  expect(screen.getByRole('button', { name: /^Step 2: Policies$/i })).toHaveAttribute('aria-current', 'step');
+  expect(state.mutate).not.toHaveBeenCalled();
+});
+
 it('ignores an outstanding preview when a newer saved structure arrives', async () => {
   Object.assign(state.lookups.settings.permissions, { publish: true });
   let resolvePreview!: (value: any) => void;
@@ -124,6 +171,7 @@ it('ignores an outstanding preview when a newer saved structure arrives', async 
     ...structureCandidate(),
     id: 'saved',
     name: 'Original fees',
+    collectionPolicyVersionId: 'collection-v1',
     status: 1,
     revisionNumber: 1,
     concurrencyStamp: 'old',
@@ -455,14 +503,29 @@ it('does not restore an old fixed price after switching variable pricing off', a
 });
 
 it('shows unpriced variable installments as entered at assignment even when the table supplies its null placeholder', async () => {
+  Object.assign(state.lookups.settings.permissions, { collection: true, collectionRead: true });
+  state.lookups.settings.policies = [
+    {
+      family: 'collection',
+      id: 'collection',
+      versionId: 'collection-v1',
+      name: 'Collection',
+      versionNumber: 1,
+      isDefault: false,
+    },
+  ];
   render(ui());
   fireEvent.change(screen.getByRole('textbox', { name: /Structure name/i }), {
     target: { value: 'Variable fees' },
   });
+  fireEvent.click(screen.getByRole('button', { name: /^Step 2: Policies$/i }));
+  fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Collection Policy' }));
+  fireEvent.click(await screen.findByRole('option', { name: 'Collection · v1' }));
   state.mutate.mockReturnValueOnce({
     unwrap: () =>
       Promise.resolve({
         isReady: true,
+        candidate: { collectionPolicyVersionId: 'collection-v1' },
         errors: [],
         warnings: [],
         coverage: [],

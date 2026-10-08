@@ -15,6 +15,11 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import {
   useCreateRevisionMutation,
+  useGetPaymentTermUsageQuery,
+  useGetPaymentTermDefaultImpactQuery,
+  useLazyGetPaymentTermDefaultImpactQuery,
+  type PaymentTermUsage,
+  type PaymentTermDefaultImpact,
   useCreatePaymentTermMutation,
   type CreateInstallmentRequest,
   useLazyGetPaymentTermByIdQuery,
@@ -27,6 +32,7 @@ import {
 import { getInitialPaymentTermData } from '../Components/PaymentTermInitialValues';
 import { paymentTermValidationSchema } from '../Components/PaymentTermValidationSchema';
 import { toPaymentTermApiDate } from '../paymentTermApiDate';
+import { getInvoiceDateError, getInvoiceOffsetLimit } from '../invoiceScheduleValidation';
 
 import type { IInstallment, IPaymentTerm, DemandGenerationRule } from '../type';
 
@@ -64,6 +70,7 @@ export interface IPaymentTermChecks {
   demandOffsetValid: boolean;
   specificDatesValid: boolean;
   isReadyToPublish: boolean;
+  validationMessage: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,7 +83,13 @@ export interface UsePaymentTermFormReturn {
   demandLabel: string;
   isSubmitting: boolean;
   isLoadingDetail: boolean;
-  handleSubmit: () => Promise<void>;
+  handleSubmit: (confirmed?: boolean) => Promise<void>;
+  defaultImpact?: PaymentTermDefaultImpact;
+  termUsage?: PaymentTermUsage;
+  confirmationImpact: PaymentTermDefaultImpact | null;
+  cancelDefaultConfirmation: () => void;
+  isLoadingImpact: boolean;
+  impactError: boolean;
   addInstallment: () => void;
   removeInstallment: (index: number) => void;
 }
@@ -172,6 +185,10 @@ export function usePaymentTermForm(
   const { currentYear } = useSelector((state: RootState) => state.globalState);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmationImpact, setConfirmationImpact] = useState<PaymentTermDefaultImpact | null>(
+    null
+  );
+  const [getDefaultImpact] = useLazyGetPaymentTermDefaultImpactQuery();
   // ── Data queries ──────────────────────────────────────────────────────────
   const { data: boardData } = useGetBoardsQuery('');
 
@@ -214,9 +231,30 @@ export function usePaymentTermForm(
   const formik = useFormik<IPaymentTerm>({
     initialValues,
     validationSchema,
+    validateOnMount: true,
     enableReinitialize: true,
     onSubmit: async () => {},
   });
+
+  const impactParams = useMemo(
+    () => ({
+      academicYearId: currentYear?.id ?? formik.values.academicYearId,
+      boardId: formik.values.boardId,
+      paymentTermId: editData?.id,
+    }),
+    [currentYear?.id, formik.values.academicYearId, formik.values.boardId, editData?.id]
+  );
+  const {
+    currentData: defaultImpact,
+    isFetching: isLoadingImpact,
+    isError: impactError,
+  } = useGetPaymentTermDefaultImpactQuery(impactParams, {
+    skip: !formik.values.isDefaultTerm || !impactParams.academicYearId || !impactParams.boardId,
+  });
+  const { currentData: termUsage } = useGetPaymentTermUsageQuery(
+    { paymentTermId: editData?.id ?? '' },
+    { skip: !editData?.id }
+  );
 
   useEffect(() => {
     if (!editData?.id) return undefined;
@@ -286,17 +324,19 @@ export function usePaymentTermForm(
         await createRevision({
           paymentTermId: editData.id,
           body: { changeReason: 'Updated via Payment Term editor' },
-        });
+        }).unwrap();
       }
 
       await updateDraft({
         paymentTermId: editData.id,
         body: buildDraftBody(values),
-      });
+      }).unwrap();
 
       shikshaMitraToast.success({
         message: needsRevision
-          ? `"${values.paymentTermName}" saved as a new draft revision.`
+          ? values.status === 'Active'
+            ? `"${values.paymentTermName}" published as a new revision.`
+            : `"${values.paymentTermName}" saved as a new draft revision.`
           : `"${values.paymentTermName}" updated successfully.`,
       });
     } else {
@@ -319,7 +359,7 @@ export function usePaymentTermForm(
             values.invoiceCreationEnabled
           )
         ),
-      });
+      }).unwrap();
       shikshaMitraToast.success({
         message: `"${values.paymentTermName}" created successfully.`,
       });
@@ -343,38 +383,65 @@ export function usePaymentTermForm(
    * handleSubmit is passed as a prop to the FormFooter component.
    * Stable reference prevents FormFooter re-renders during fast form typing.
    */
-  const handleSubmit = useCallback(async () => {
-    const errors = await formik.validateForm();
-    const hasErrors = Object.keys(errors).length > 0;
-    if (hasErrors) {
-      const instTouched = formik.values.installments.map(() => ({
-        installmentName: true,
-        dueDate: true,
-        startDate: true,
-        endDate: true,
-        demandDate: true,
-        allocationPercentage: true,
-      }));
-      formik.setTouched({
-        boardId: true,
-        paymentTermName: true,
-        status: true,
-        demandGenerationRule: true,
-        demandOffsetDays: true,
-        installments: instTouched,
-      } as FormikTouched<IPaymentTerm>);
-      shikshaMitraToast.error({ message: 'Fix all errors before submitting.' });
-      return;
-    }
-    setIsSubmitting(true);
-    try {
-      await submitToAPI();
-    } catch {
-      shikshaMitraToast.error({ message: 'Failed to submit.' });
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [formik, submitToAPI]);
+  const handleSubmit = useCallback(
+    async (confirmed = false) => {
+      if (isSubmitting || isLoadingDetail) return;
+      const errors = await formik.validateForm();
+      const hasErrors = Object.keys(errors).length > 0;
+      if (hasErrors) {
+        const instTouched = formik.values.installments.map(() => ({
+          installmentName: true,
+          dueDate: true,
+          startDate: true,
+          endDate: true,
+          demandDate: true,
+          allocationPercentage: true,
+        }));
+        formik.setTouched({
+          boardId: true,
+          paymentTermName: true,
+          status: true,
+          demandGenerationRule: true,
+          demandOffsetDays: true,
+          installments: instTouched,
+        } as FormikTouched<IPaymentTerm>);
+        shikshaMitraToast.error({ message: 'Fix all errors before submitting.' });
+        return;
+      }
+      setIsSubmitting(true);
+      try {
+        if (formik.values.isDefaultTerm && formik.values.status === 'Active') {
+          // Fetch immediately before saving so confirmation reflects the latest default.
+          const impact = await getDefaultImpact(impactParams, false).unwrap();
+          if (
+            impact.replacesExistingDefault &&
+            (!confirmed ||
+              impact.currentDefaultId !== confirmationImpact?.currentDefaultId ||
+              impact.currentDefaultVersionNumber !==
+                confirmationImpact?.currentDefaultVersionNumber)
+          ) {
+            setConfirmationImpact(impact);
+            return;
+          }
+        }
+        setConfirmationImpact(null);
+        await submitToAPI();
+      } catch {
+        shikshaMitraToast.error({ message: 'Failed to submit.' });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [
+      formik,
+      submitToAPI,
+      isSubmitting,
+      isLoadingDetail,
+      getDefaultImpact,
+      impactParams,
+      confirmationImpact,
+    ]
+  );
 
   // ── Installment CRUD ──────────────────────────────────────────────────────
   /**
@@ -456,7 +523,7 @@ export function usePaymentTermForm(
     );
     const allocationValid =
       v.installments.every((item) => Number(item.allocationPercentage) > 0) &&
-      Math.abs(allocationTotal - 100) < 0.01;
+      Math.abs(allocationTotal - 100) <= 0.01;
     const periodsValid =
       hasInstallments &&
       v.installments.every((item) => {
@@ -464,9 +531,7 @@ export function usePaymentTermForm(
         const start = dayjs(item.startDate as string);
         const end = dayjs(item.endDate as string);
         const due = dayjs(item.dueDate as string);
-        return (
-          !end.isBefore(start, 'day') && !due.isBefore(start, 'day') && !due.isAfter(end, 'day')
-        );
+        return !end.isBefore(start, 'day') && !due.isBefore(start, 'day');
       });
     const installmentsBySequence = [...v.installments].sort(
       (a, b) => (a.sequence || 0) - (b.sequence || 0)
@@ -511,17 +576,24 @@ export function usePaymentTermForm(
     }
 
     const demandSet = Boolean(v.demandGenerationRule);
+    const offsetLimit = getInvoiceOffsetLimit(v, selectedBoard?.startDate);
     const demandOffsetValid =
       v.demandGenerationRule !== 'XDaysBeforeDue' ||
-      (v.demandOffsetDays !== null && v.demandOffsetDays >= 1);
-    const specificDatesValid =
-      v.demandGenerationRule !== 'SpecificDate' ||
-      !v.invoiceCreationEnabled ||
-      v.installments.every(
-        (item) =>
-          Boolean(item.demandDate && item.dueDate) &&
-          !dayjs(item.demandDate as string).isAfter(dayjs(item.dueDate as string), 'day')
-      );
+      (v.demandOffsetDays !== null &&
+        Number.isInteger(Number(v.demandOffsetDays)) &&
+        v.demandOffsetDays >= 1 &&
+        v.demandOffsetDays <= 365 &&
+        (!offsetLimit || v.demandOffsetDays <= offsetLimit.days));
+    const specificDatesValid = v.installments.every(
+      (item) => !getInvoiceDateError(v, item, selectedBoard?.startDate)
+    );
+    let validationMessage = '';
+    try {
+      validationSchema.validateSync(v, { abortEarly: true });
+    } catch (error) {
+      validationMessage =
+        error instanceof Error ? error.message : 'Fix all validation errors before submitting.';
+    }
     const isReadyToPublish =
       boardValid &&
       nameValid &&
@@ -554,9 +626,10 @@ export function usePaymentTermForm(
       demandSet,
       demandOffsetValid,
       specificDatesValid,
-      isReadyToPublish: isReadyToPublish && specificDatesValid,
+      isReadyToPublish: isReadyToPublish && specificDatesValid && !validationMessage,
+      validationMessage,
     };
-  }, [boards, formik.values]);
+  }, [boards, formik.values, validationSchema]);
 
   // ── Demand label for the summary sidebar ──────────────────────────────────
   /**
@@ -581,6 +654,12 @@ export function usePaymentTermForm(
   }, [formik.values.demandGenerationRule, formik.values.demandOffsetDays]);
 
   return {
+    defaultImpact,
+    termUsage,
+    confirmationImpact,
+    cancelDefaultConfirmation: () => setConfirmationImpact(null),
+    isLoadingImpact,
+    impactError,
     formik,
     boards,
     checks,

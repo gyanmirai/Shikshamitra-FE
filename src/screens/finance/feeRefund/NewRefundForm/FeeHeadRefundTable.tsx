@@ -405,17 +405,32 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
   if (!studentId) return null;
   if (isLoading || isFetching) return <RefundTableSkeleton />;
   if (eligibilityError) {
-    const { detail } = parseApiProblemDetail(eligibilityError);
-    const message = detail === 'Something went wrong'
+    const { detail, errorCode } = parseApiProblemDetail(eligibilityError);
+    const message = !isAdj && errorCode === 'Finance:RefundPolicy:010016'
+      ? 'No refund is possible. This student has no paid fees eligible for a refund.'
+      : detail === 'Something went wrong' || detail === 'One or more business rules were violated.'
       ? 'Unable to check refund eligibility. Please try again.'
       : detail;
+    const isBusinessRule = typeof errorCode === 'string' &&
+      (errorCode.startsWith('Finance:FeeRefund:') || errorCode === 'Finance:RefundPolicy:010016');
     return (
       <Alert
         severity="error"
         sx={{ borderRadius: 3 }}
-        action={<Button color="inherit" size="small" onClick={() => refetchEligibility()}>Retry</Button>}
+        action={isBusinessRule ? undefined :
+          <Button color="inherit" size="small" onClick={() => refetchEligibility()}>Retry</Button>}
       >
         {message}
+      </Alert>
+    );
+  }
+
+  if (!isAdj && refundEligibility.data && refundEligibility.data.totalRefundable <= 0) {
+    return (
+      <Alert severity="info" sx={{ borderRadius: 3 }}>
+        {refundEligibility.data.totalPaid <= 0
+          ? 'No refund is possible. This student has not paid any fees yet.'
+          : 'No refund is possible. No refundable paid balance remains for this student.'}
       </Alert>
     );
   }
@@ -440,7 +455,9 @@ const FeeHeadRefundTable: React.FC<FeeHeadRefundTableProps> = ({
       <Alert severity="info" sx={{ borderRadius: 3 }}>
         {isAdj
           ? 'No adjustable fee records found for this student. Adjustments can only be raised for students with adjustable fees.'
-          : 'No fee payment records found for this student. Refunds can only be raised for students with existing fee payments.'}
+          : eligibility && eligibility.totalPaid <= 0
+            ? 'No refund is possible. This student has not paid any fees yet.'
+            : 'No refund is possible. No refundable paid balance remains for this student.'}
       </Alert>
     );
   }

@@ -5,11 +5,13 @@ import AdaptiveThreeDotsActions from 'src/components/adaptive-three-dots-actions
 import type { IColumn } from 'src/components/customizabaleTable/types';
 import type { PaymentTermListItem } from 'src/redux/finance/paymentTerm';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Label } from 'src/components/label';
 
 import CustomizableTable from 'src/components/customizabaleTable';
-import { Chip, Stack, Typography } from '@mui/material';
+import { Chip, Stack, Typography, Button, Drawer, Box } from '@mui/material';
+import { DrawerHeader } from 'src/screens/hr/policies/components/HRPolicySharedUI';
+import { PaymentTermUsageBreakdown } from './PaymentTermUsage';
 
 import type { IPaymentTermTableProps } from '../type';
 
@@ -56,6 +58,7 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   canDelete,
   actionLoading,
 }) => {
+  const [usageTerm, setUsageTerm] = useState<PaymentTermListItem | null>(null);
   const columns: IColumn[] = useMemo(
     () => [
       {
@@ -100,6 +103,24 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
             {typeof value === 'number' && value > 0 ? `v${value}` : '-'}
           </Typography>
         ),
+      },
+      {
+        id: 'usage',
+        label: 'Used In',
+        align: 'left',
+        minWidth: 190,
+        isSort: false,
+        isFilter: false,
+        render: (_, row) => {
+          const term = row as PaymentTermListItem;
+          return term.usage ? (
+            <Button size="small" onClick={() => setUsageTerm(term)} disabled={!canView}>
+              {term.usage.feeHeadCount} fee heads · {term.usage.classCount} classes
+            </Button>
+          ) : (
+            <Typography variant="body2">Usage unavailable</Typography>
+          );
+        },
       },
       {
         id: 'actions',
@@ -222,26 +243,45 @@ const PaymentTermTable: React.FC<IPaymentTermTableProps> = ({
   );
 
   return (
-    <CustomizableTable
-      tableId="payment-term-table"
-      columns={columns}
-      data={data}
-      isLoading={loading}
-      isSearch
-      isFilter={false}
-      isPagination
-      serverSidePagination
-      serverSideSearch
-      totalCount={totalCount}
-      page={page - 1}
-      rowsPerPage={rowsPerPage}
-      searchTerm={searchTerm}
-      onServerPagination={onPaginationChange}
-      onServerSearch={onSearchChange}
-      noDataText={archived ? 'No archived payment terms.' : 'No current payment terms found.'}
-      wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
-      tableContainerProps={{ sx: { height: '100%' } }}
-    />
+    <>
+      <CustomizableTable
+        tableId="payment-term-table"
+        columns={columns}
+        data={data}
+        isLoading={loading}
+        isSearch
+        isFilter={false}
+        isPagination
+        serverSidePagination
+        serverSideSearch
+        totalCount={totalCount}
+        page={page - 1}
+        rowsPerPage={rowsPerPage}
+        searchTerm={searchTerm}
+        onServerPagination={onPaginationChange}
+        onServerSearch={onSearchChange}
+        noDataText={archived ? 'No archived payment terms.' : 'No current payment terms found.'}
+        wrapperProps={{ sx: { flex: 1, minHeight: 0 } }}
+        tableContainerProps={{ sx: { height: '100%' } }}
+      />
+      <Drawer
+        open={Boolean(usageTerm)}
+        onClose={() => setUsageTerm(null)}
+        anchor="right"
+        PaperProps={{ sx: { width: { xs: '100%', md: 800 }, maxWidth: '100%' } }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          <DrawerHeader
+            title={`${usageTerm?.name ?? 'Payment Term'} — Used In`}
+            subtitle="Assigned fee heads by class, fee structure, and term version."
+            onClose={() => setUsageTerm(null)}
+          />
+          <Box sx={{ p: 3, overflow: 'auto', flex: 1 }}>
+            {usageTerm?.usage && <PaymentTermUsageBreakdown usage={usageTerm.usage} />}
+          </Box>
+        </Box>
+      </Drawer>
+    </>
   );
 };
 

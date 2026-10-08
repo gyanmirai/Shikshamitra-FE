@@ -1,7 +1,8 @@
 'use client';
 
 import { Iconify } from 'src/components/iconify';
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import { toggleFilteredStudents } from './studentFilters';
 import {
   Box,
   List,
@@ -16,6 +17,7 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemButton,
+  TablePagination,
 } from '@mui/material';
 
 interface IStudentOption {
@@ -34,13 +36,15 @@ interface StudentSelectionLayoutProps {
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   divisionFilter?: string;
-	disabled?: boolean;
+  totalCount?: number;
+  disabled?: boolean;
+  emptyMessage?: string;
 }
 
 /**
  * Student Selection Layout Component
  * Displays list of students with checkboxes and search capability
- * Uses debounced search to avoid API spam
+ * Select All affects every filtered result and preserves other selections
  */
 export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
   students,
@@ -50,31 +54,14 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
   searchQuery = '',
   onSearchChange,
   divisionFilter,
-	disabled = false,
+  totalCount = students.length,
+  disabled = false,
+  emptyMessage,
 }) => {
-  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
-  const [debounceTimer, setDebounceTimer] = useState<NodeJS.Timeout | null>(null);
-
-  // Debounce search with 500ms delay
-  const handleSearchChange = useCallback(
-    (query: string) => {
-      setLocalSearchQuery(query);
-
-      if (debounceTimer) {
-        clearTimeout(debounceTimer);
-      }
-
-      const timer = setTimeout(() => {
-        if (onSearchChange) {
-          onSearchChange(query);
-        }
-      }, 500);
-
-      setDebounceTimer(timer);
-    },
-    [onSearchChange, debounceTimer]
-  );
-
+  const localSearchQuery = searchQuery;
+  const handleSearchChange = (query: string) => onSearchChange?.(query);
+  const [page, setPage] = useState(0);
+  useEffect(() => setPage(0), [searchQuery, divisionFilter, students]);
   // Handle individual student selection
   const handleStudentToggle = useCallback(
     (studentId: string) => {
@@ -87,18 +74,6 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
     },
     [selectedStudentIds, onSelectionChange]
   );
-
-  // Handle select all toggle
-  const handleSelectAllToggle = useCallback(() => {
-    const allStudentIds = students.map((s) => s.id);
-    const allSelected = allStudentIds.every((id) => selectedStudentIds.includes(id));
-
-    if (allSelected) {
-      onSelectionChange([]);
-    } else {
-      onSelectionChange(allStudentIds);
-    }
-  }, [students, selectedStudentIds, onSelectionChange]);
 
   // Filter students based on search
   const filteredStudents = useMemo(
@@ -117,6 +92,16 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
     [students, localSearchQuery, divisionFilter]
   );
 
+  // Handle select all toggle
+  const handleSelectAllToggle = useCallback(() => {
+    onSelectionChange(
+      toggleFilteredStudents(
+        selectedStudentIds,
+        filteredStudents.map((s) => s.id)
+      )
+    );
+  }, [filteredStudents, selectedStudentIds, onSelectionChange]);
+
   const selectAllChecked = useMemo(
     () =>
       filteredStudents.length > 0 &&
@@ -124,17 +109,18 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
     [filteredStudents, selectedStudentIds]
   );
 
+  const currentPage = Math.min(page, Math.max(0, Math.ceil(filteredStudents.length / 25) - 1));
+
   return (
-	<Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', opacity: disabled ? 0.6 : 1 }}>
+    <Box
+      sx={{ display: 'flex', flexDirection: 'column', height: '100%', opacity: disabled ? 0.6 : 1 }}
+    >
       {/* Search Header */}
       <Paper
         variant="outlined"
         sx={{
           p: 1.5,
-          height: '100%',
           borderRadius: 2,
-          transition: 'box-shadow 0.2s ease',
-          '&:hover': { boxShadow: 4 },
         }}
       >
         <Stack spacing={1.5}>
@@ -142,9 +128,10 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
             <TextField
               size="small"
               fullWidth
-              placeholder="Search by name, admission #, or roll #"
+              label="Search students"
+              placeholder="Name, admission #, or roll #"
               value={localSearchQuery}
-			  disabled={disabled}
+              disabled={disabled}
               onChange={(e) => handleSearchChange(e.target.value)}
               InputProps={{
                 startAdornment: <Iconify icon="solar:magnifer-linear" sx={{ mr: 1 }} />,
@@ -154,15 +141,15 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
               size="small"
               variant={selectAllChecked ? 'contained' : 'outlined'}
               onClick={handleSelectAllToggle}
-              color="success"
-			  disabled={disabled || filteredStudents.length === 0}
+              disabled={disabled || filteredStudents.length === 0}
               sx={{ whiteSpace: 'nowrap', minWidth: 96 }}
             >
-              {selectAllChecked ? 'Clear All' : 'Select All'}
+              {selectAllChecked ? 'Deselect results' : 'Select all results'}
             </Button>
           </Stack>
           <Typography variant="caption" color="text.secondary">
-            {selectedStudentIds.length} student{selectedStudentIds.length !== 1 ? 's' : ''} selected
+            {selectedStudentIds.length} of {totalCount} students selected ·{' '}
+            {filteredStudents.length} matching results
           </Typography>
         </Stack>
 
@@ -178,18 +165,17 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
             <Box sx={{ py: 3, textAlign: 'center' }}>
               <Iconify icon="solar:user-search-line-duotone" sx={{ fontSize: 40, mb: 1 }} />
               <Typography variant="body2" color="text.secondary">
-                {localSearchQuery
-                  ? 'No students found matching your search'
-                  : 'No students available'}
+                {emptyMessage ||
+                  (localSearchQuery ? 'No students match your search' : 'No students available')}
               </Typography>
             </Box>
           ) : (
             <List disablePadding>
               {/* Individual Students */}
-              {filteredStudents.map((student) => (
+              {filteredStudents.slice(currentPage * 25, (currentPage + 1) * 25).map((student) => (
                 <ListItem key={student.id} disablePadding>
                   <ListItemButton
-					disabled={disabled}
+                    disabled={disabled}
                     onClick={() => handleStudentToggle(student.id)}
                     sx={{ py: 1, px: 1 }}
                   >
@@ -199,7 +185,7 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
                         checked={selectedStudentIds.includes(student.id)}
                         tabIndex={-1}
                         disableRipple
-						disabled={disabled}
+                        disabled={disabled}
                       />
                     </ListItemIcon>
                     <ListItemText
@@ -223,6 +209,16 @@ export const StudentSelectionLayout: React.FC<StudentSelectionLayoutProps> = ({
             </List>
           )}
         </Box>
+        {filteredStudents.length > 25 && (
+          <TablePagination
+            component="div"
+            count={filteredStudents.length}
+            page={currentPage}
+            rowsPerPage={25}
+            rowsPerPageOptions={[25]}
+            onPageChange={(_event, next) => setPage(next)}
+          />
+        )}
       </Paper>
     </Box>
   );

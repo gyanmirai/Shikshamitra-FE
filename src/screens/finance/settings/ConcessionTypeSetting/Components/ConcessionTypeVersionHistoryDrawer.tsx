@@ -33,16 +33,27 @@ const formatAction = (action: string) =>
     .replace(/[_-]+/g, ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
 
-const formatFieldName = (fieldName: string) =>
-  fieldName
+const formatFieldName = (fieldName: string) => {
+  if (fieldName === 'DiscountType') return 'Legacy discount type';
+  return fieldName
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
+};
 
 const displayValue = (value?: string | null) => {
-  if (value === null || value === undefined || value === '') return '—';
+  if (value === null || value === undefined || value === '' || value.toLowerCase() === 'null')
+    return 'Not set';
   if (value.toLowerCase() === 'true') return 'Active';
   if (value.toLowerCase() === 'false') return 'Inactive';
   return value;
+};
+
+const displayFieldValue = (fieldName: string, value?: string | null) => {
+  if (fieldName === 'DiscountType') {
+    if (value === '0') return 'Percentage';
+    if (value === '1') return 'Flat amount';
+  }
+  return displayValue(value);
 };
 
 function VersionCard({ version }: { version: ConcessionTypeVersionHistoryItem }) {
@@ -89,6 +100,11 @@ function VersionCard({ version }: { version: ConcessionTypeVersionHistoryItem })
                 <Typography variant="caption" color="text.secondary">
                   {formatFieldName(field.fieldName)}
                 </Typography>
+                {field.fieldName === 'DiscountType' ? (
+                  <Typography variant="caption" color="text.secondary" display="block">
+                    This older setting is no longer editable in the concession type form.
+                  </Typography>
+                ) : null}
                 <Stack
                   direction={{ xs: 'column', sm: 'row' }}
                   spacing={0.75}
@@ -99,11 +115,11 @@ function VersionCard({ version }: { version: ConcessionTypeVersionHistoryItem })
                     color="text.secondary"
                     sx={{ wordBreak: 'break-word' }}
                   >
-                    {displayValue(field.originalValue)}
+                    {displayFieldValue(field.fieldName, field.originalValue)}
                   </Typography>
                   <Iconify icon="eva:arrow-forward-fill" color="text.disabled" />
                   <Typography variant="body2" fontWeight={600} sx={{ wordBreak: 'break-word' }}>
-                    {displayValue(field.newValue)}
+                    {displayFieldValue(field.fieldName, field.newValue)}
                   </Typography>
                 </Stack>
               </Box>
@@ -113,7 +129,7 @@ function VersionCard({ version }: { version: ConcessionTypeVersionHistoryItem })
           <Typography variant="body2" color="text.secondary">
             {version.changeAction === 'created'
               ? 'Initial concession type record.'
-              : 'The change was recorded without field-level details.'}
+              : 'No field-level changes were recorded for this version. The original change cannot be reconstructed.'}
           </Typography>
         )}
       </Stack>

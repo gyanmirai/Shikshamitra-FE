@@ -1,6 +1,9 @@
 'use client';
 
 import React from 'react';
+import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
+import CustomTooltip from 'src/components/custom-tooltip';
 import {
   Box,
   Stack,
@@ -11,15 +14,17 @@ import {
   TableBody,
   TableCell,
   Typography,
+  IconButton,
   TableContainer,
 } from '@mui/material';
-import { Label } from 'src/components/label';
 
 import {
-  formatFinancePolicyVersionField,
   formatVersionTimestamp,
+  contextFromRefundSnapshot,
+  formatFinancePolicyVersionField,
   formatFinancePolicyVersionValue,
 } from './finance-policy-version-formatters';
+
 import type { PolicyVersion } from '../../hooks/useFinancePolicyVersion';
 import type { VersionValueContext } from './finance-policy-version-formatters';
 
@@ -85,10 +90,20 @@ function VersionDiffTable({
               {formatVersionTimestamp(selectedVersion.date)}
             </Typography>
           </Stack>
-          <Box sx={{ mt: 1.5, pt: 1.5, borderTop: 1, borderColor: 'divider' }}>
-            <Typography variant="caption" color="text.secondary" display="block">
-              Change reason
-            </Typography>
+          <Box sx={{ mt: 1.5, p: 1.5, borderRadius: 1.5, bgcolor: 'background.neutral' }}>
+            <Stack direction="row" spacing={0.5} alignItems="center">
+              <Typography variant="caption" color="text.secondary">
+                Change reason
+              </Typography>
+              <CustomTooltip
+                arrow
+                title="The reason recorded when this version was created. Older snapshots may have no recorded reason."
+              >
+                <IconButton size="small" aria-label="Change reason information">
+                  <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+                </IconButton>
+              </CustomTooltip>
+            </Stack>
             <Typography variant="body2" sx={{ mt: 0.5, overflowWrap: 'anywhere' }}>
               {selectedVersion.changeReason || 'No reason recorded'}
             </Typography>
@@ -103,9 +118,19 @@ function VersionDiffTable({
           justifyContent="space-between"
           sx={{ mb: 1.5 }}
         >
-          <Typography variant="subtitle1" component="h3">
-            Changes
-          </Typography>
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            <Typography variant="subtitle1" component="h3">
+              Changes
+            </Typography>
+            <CustomTooltip
+              arrow
+              title="Before shows the previous version's recorded value. After shows the selected version's value. The first version has no previous snapshot; a dash (—) means no value was recorded."
+            >
+              <IconButton size="small" aria-label="Version changes information">
+                <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+              </IconButton>
+            </CustomTooltip>
+          </Stack>
           <Label color="default">
             {selectedVersion.changedFields.length}{' '}
             {selectedVersion.changedFields.length === 1 ? 'field' : 'fields'}
@@ -148,10 +173,18 @@ function VersionDiffTable({
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {renderValueCell(field.field, field.oldValue, valueContext)}
+                      {renderValueCell(
+                        field.field,
+                        field.oldValue,
+                        contextFromRefundSnapshot(selectedVersion.snapshotBefore, valueContext)
+                      )}
                     </TableCell>
                     <TableCell>
-                      {renderValueCell(field.field, field.newValue, valueContext)}
+                      {renderValueCell(
+                        field.field,
+                        field.newValue,
+                        contextFromRefundSnapshot(selectedVersion.snapshotAfter, valueContext)
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}

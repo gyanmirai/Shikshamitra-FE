@@ -161,6 +161,10 @@ const RefundRemarksForm: React.FC<IRefundFormProps> = ({
       label: 'Refund Method',
       value: displayStudent?.refundMethod || 'N/A',
     },
+    {
+      label: 'Policy payment methods',
+      value: dto?.allowedPayoutMethods?.join(', ') || 'No payment methods available',
+    },
   ];
 
   return (

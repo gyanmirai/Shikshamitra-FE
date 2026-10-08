@@ -54,6 +54,7 @@ vi.mock('./AssignmentReview', () => ({
 }));
 vi.mock('src/redux/finance/studentFeeAssignment', () => ({
   assignmentPolicyFamilies: ['concession', 'refund', 'collection', 'proration'],
+  selectableAssignmentPolicyFamilies: ['refund', 'collection'],
   useAssignmentPolicyOptionsQuery: () => ({
     data: [
       {
@@ -61,6 +62,13 @@ vi.mock('src/redux/finance/studentFeeAssignment', () => ({
         policyId: 'collection-policy',
         versionId: 'collection-version',
         name: 'Student collection',
+        version: 1,
+      },
+      {
+        family: 'refund',
+        policyId: 'refund-policy',
+        versionId: 'refund-version',
+        name: 'Student refund',
         version: 1,
       },
     ],
@@ -245,8 +253,47 @@ describe('assignment review and commit boundaries', () => {
     );
     expect(screen.getByRole('combobox', { name: 'Collection policy' })).toBeDisabled();
     expect(screen.queryByRole('combobox', { name: 'Proration policy' })).not.toBeInTheDocument();
-    expect(screen.getByRole('combobox', { name: 'Concession policy' })).toHaveValue('');
+    expect(screen.queryByRole('combobox', { name: 'Concession policy' })).not.toBeInTheDocument();
+    expect(screen.getByText(/You do not have permission to override policies/)).toBeInTheDocument();
   });
+  it('keeps refund and collection overrides scoped to one student and permits a reset', async () => {
+    mocks.bulkPreview.mockImplementation(({ items }) => ({
+      unwrap: async () => ({
+        results: items.map((item: any) => ({
+          studentId: item.studentId,
+          preview: result(item.studentId),
+        })),
+      }),
+    }));
+    mount(
+      [
+        { studentId: 'one', studentName: 'Aarav', isFeeStructureAssigned: false },
+        { studentId: 'two', studentName: 'Meera', isFeeStructureAssigned: false },
+      ],
+      true
+    );
+    await selectStructure();
+    fireEvent.click(screen.getByText('Meera'));
+    const refundSelectors = screen.getAllByRole('combobox', { name: 'Refund policy' });
+    const collectionSelectors = screen.getAllByRole('combobox', { name: 'Collection policy' });
+    fireEvent.change(refundSelectors[0], { target: { value: 'refund-version' } });
+    fireEvent.change(collectionSelectors[0], { target: { value: 'collection-version' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Reset refund to fee structure default' }));
+    expect(refundSelectors[0]).toHaveValue('');
+    fireEvent.change(screen.getByRole('textbox', { name: /Policy override reason/ }), {
+      target: { value: 'Approved exception for Aarav' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Preview assignments' }));
+    await waitFor(() => expect(mocks.bulkPreview).toHaveBeenCalledTimes(1));
+    const requests = mocks.bulkPreview.mock.calls[0][0].items;
+    expect(requests.find((item: any) => item.studentId === 'one')).toEqual(
+      expect.objectContaining({
+        policies: [{ family: 'collection', versionId: 'collection-version' }],
+        policyOverrideReason: 'Approved exception for Aarav',
+      })
+    );
+    expect(requests.find((item: any) => item.studentId === 'two').policies).toBeUndefined();
+  }, 20000);
   it('requires a policy reason and submits the student override through preview and commit', async () => {
     mount(undefined, true);
     await selectStructure();

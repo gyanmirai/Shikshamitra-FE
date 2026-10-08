@@ -2,6 +2,7 @@ import { it, expect, describe } from 'vitest';
 
 import {
   deserializeVersionValue,
+  contextFromRefundSnapshot,
   formatFinancePolicyVersionField,
   formatVersionTimestamp,
   formatFinancePolicyVersionValue,
@@ -91,7 +92,7 @@ describe('finance policy version formatters', () => {
         'LateFeeApplyOnFeeHeads',
         '["3a23e578-2df7-465b-477d-80bf033233e3"]'
       ).text
-    ).toBe('Fee head unavailable');
+    ).toBe('Fee head name not recorded');
     expect(formatFinancePolicyVersionValue('EffectiveFrom', '2026-06-01T00:00:00+00:00').text).toBe(
       '01-06-2026'
     );
@@ -101,5 +102,30 @@ describe('finance policy version formatters', () => {
     expect(formatVersionTimestamp('2026-09-28T17:32:00+00:00')).toMatch(
       /^\d{2}-\d{2}-2026 \d{2}:\d{2} (AM|PM)$/
     );
+  });
+
+  it('formats refund policy enums and historical reference names', () => {
+    const headId = '3a242733-4e56-40e9-3855-acd9fd0082c0';
+    const categoryId = '3a241dbc-142e-9544-3273-fe991d43e12c';
+    const accountId = '3a240d4d-8df2-9f9c-71ad-5f0cd77ac2d4';
+    const context = contextFromRefundSnapshot({
+      FeeHeadNames: { [headId]: 'Transport Fee at the time' },
+      ExpenseCategoryId: categoryId,
+      ExpenseCategoryName: 'Refund expense at the time',
+      DefaultPayingBankAccountId: accountId,
+      DefaultPayingBankAccountName: 'Main bank at the time',
+    });
+
+    expect(formatFinancePolicyVersionField('ExpenseCategoryId')).toBe('Expense Category');
+    expect(formatFinancePolicyVersionField('DefaultPayingBankAccountId')).toBe('Default Paying Bank Account');
+    expect(formatFinancePolicyVersionValue('ApplicableFeeHeadIds', [headId], context).text).toBe('Transport Fee at the time');
+    expect(formatFinancePolicyVersionValue('ExpenseCategoryId', categoryId, context).text).toBe('Refund expense at the time');
+    expect(formatFinancePolicyVersionValue('DefaultPayingBankAccountId', accountId, context).text).toBe('Main bank at the time');
+    expect(formatFinancePolicyVersionValue('AllowedPayoutMethods', '[0,1,2,3,4]').text).toBe('Cash, Cheque, Demand draft, Bank transfer, UPI');
+    expect(formatFinancePolicyVersionValue('DeductionType', 0).text).toBe('No deduction');
+    expect(formatFinancePolicyVersionValue('AmountMode', 1).text).toBe('Up to eligible amount');
+    expect(formatFinancePolicyVersionValue('AmountMode', 1).text).not.toContain('₹');
+    expect(formatFinancePolicyVersionValue('FeeHeadScope', 0, { policyType: 'refund' }).text).toBe('All fee heads');
+    expect(formatFinancePolicyVersionValue('ApplicableFeeHeadIds', [headId]).text).toBe('Fee head name not recorded');
   });
 });

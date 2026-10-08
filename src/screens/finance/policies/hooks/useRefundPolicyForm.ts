@@ -3,6 +3,7 @@
 import type { RootState } from 'src/redux/store';
 
 import * as Yup from 'yup';
+import isEqual from 'lodash/isEqual';
 import { useSelector } from 'react-redux';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useMemo, useState, useEffect } from 'react';
@@ -12,6 +13,7 @@ import { roundUpWithinAmount } from 'src/utils/whole-rupee-amount';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useGetActiveFeeHeadsQuery } from 'src/redux/feeHeadManage/feeHeadManageApi';
+import { useGetFinanceRoutingOptionsQuery } from 'src/redux/finance/financeRoutingApi';
 import {
   useGetRefundPolicyByIdQuery,
   useGetRefundPolicyImpactQuery,
@@ -62,7 +64,7 @@ export const emptyValues = (academicYearId: string): IRefundPolicyFormValues => 
   deductionValue: null,
   maximumDeduction: null,
   deductionExplanation: '',
-  // Payout choice belongs to the refund transaction, not the policy setup screen.
+  // The policy defines the methods available to its refund transactions.
   allowedPayoutMethods: ['Cash', 'Cheque', 'DemandDraft', 'BankTransfer', 'Upi'],
   processingTargetDays: null,
   expenseCategoryId: '',
@@ -188,9 +190,19 @@ export function useRefundPolicyForm({
   const unsavedChangesDialog = useBoolean();
 
   // Queries
-  const { data: detail, isLoading: isDetailLoading } = useGetRefundPolicyByIdQuery(policyId || '', {
+  const {
+    currentData: detail,
+    isFetching: isDetailFetching,
+    isError: isDetailError,
+    refetch: refetchDetail,
+  } = useGetRefundPolicyByIdQuery(policyId || '', {
     skip: !open || !policyId,
   });
+  // A query can be uninitialized on the first render after opening the drawer.
+  // Never expose empty defaults before the selected policy has been received.
+  const isDetailLoading = Boolean(
+    open && policyId && !isDetailError && (isDetailFetching || !detail)
+  );
 
   const { data: impact, isLoading: isImpactLoading } = useGetRefundPolicyImpactQuery(
     policyId || '',
@@ -199,10 +211,36 @@ export function useRefundPolicyForm({
     }
   );
 
-  const { data: feeHeads = [], isLoading: isFeeHeadsLoading } = useGetActiveFeeHeadsQuery(
-    activeAcademicYearId,
+  const {
+    data: feeHeads = [],
+    isFetching: isFeeHeadsLoading,
+    isError: isFeeHeadsError,
+    refetch: refetchFeeHeads,
+  } = useGetActiveFeeHeadsQuery(activeAcademicYearId, { skip: !open || !activeAcademicYearId });
+  const {
+    currentData: routingOptions,
+    isFetching: isRoutingLoading,
+    isError: isRoutingError,
+    refetch: refetchRouting,
+  } = useGetFinanceRoutingOptionsQuery(
+    { academicYearId: activeAcademicYearId, operation: 'refund-policy' },
     { skip: !open || !activeAcademicYearId }
   );
+  const isOptionsError = isFeeHeadsError || isRoutingError;
+  const isInitializing =
+    isDetailLoading ||
+    Boolean(
+      open &&
+      activeAcademicYearId &&
+      !isOptionsError &&
+      (isFeeHeadsLoading || isRoutingLoading || !routingOptions)
+    );
+  const isLoadError = isDetailError || isOptionsError;
+  const retryLoading = () => {
+    if (policyId && isDetailError) refetchDetail();
+    if (isFeeHeadsError) refetchFeeHeads();
+    if (isRoutingError) refetchRouting();
+  };
 
   // Mutations
   const [createPolicy, { isLoading: isCreating }] = useQueryAndMutation({
@@ -235,7 +273,7 @@ export function useRefundPolicyForm({
   });
 
   const initialValues = useMemo<IRefundPolicyFormValues>(() => {
-    if (!detail) return emptyValues(activeAcademicYearId);
+    if (!policyId || !detail) return emptyValues(activeAcademicYearId);
     return {
       ...emptyValues(detail.academicYearId || activeAcademicYearId),
       ...detail,
@@ -243,13 +281,15 @@ export function useRefundPolicyForm({
       status: detail.status === 'Archived' ? 'Draft' : detail.status,
       changeReason: '',
     };
-  }, [activeAcademicYearId, detail]);
+  }, [activeAcademicYearId, detail, policyId]);
 
   const formik = useFormik<IRefundPolicyFormValues>({
     initialValues,
     enableReinitialize: true,
     validationSchema,
     onSubmit: async (values, { resetForm }) => {
+      if (isFormInitializing || isLoadError || !activeAcademicYearId || (policyId && !detail))
+        return;
       if (activeEdit && !values.changeReason?.trim()) {
         formik.setFieldError('changeReason', 'Change reason is required for an Active policy');
         return;
@@ -310,6 +350,11 @@ export function useRefundPolicyForm({
     },
   });
 
+  // Formik reinitializes in an effect after the fetched values first render.
+  // Keep the skeleton until the form has received those values as well.
+  const isFormInitializing =
+    isInitializing || (open && !isEqual(formik.initialValues, initialValues));
+
   useEffect(() => {
     if (!open) {
       formik.resetForm({ values: emptyValues(activeAcademicYearId) });
@@ -328,7 +373,14 @@ export function useRefundPolicyForm({
 
   // Custom submit (with optional status override: 'Draft' | 'Active')
   const handleCustomSubmit = async (targetStatus?: 'Draft' | 'Active') => {
-    if (isSaving) return;
+    if (
+      isSaving ||
+      isFormInitializing ||
+      isLoadError ||
+      !activeAcademicYearId ||
+      (policyId && !detail)
+    )
+      return;
 
     if (targetStatus) {
       await formik.setFieldValue('status', targetStatus, false);
@@ -436,9 +488,16 @@ export function useRefundPolicyForm({
     }
 
     // Whole rupees, bounded by the eligible balance and hard caps.
-    netRefund = roundUpWithinAmount(netRefund, Math.min(remainingEligible,
-      values.maximumPerRequest ?? Number.MAX_SAFE_INTEGER,
-      values.maximumPerStudentYear == null ? Number.MAX_SAFE_INTEGER : Math.max(0, values.maximumPerStudentYear - studentYearUsed)));
+    netRefund = roundUpWithinAmount(
+      netRefund,
+      Math.min(
+        remainingEligible,
+        values.maximumPerRequest ?? Number.MAX_SAFE_INTEGER,
+        values.maximumPerStudentYear == null
+          ? Number.MAX_SAFE_INTEGER
+          : Math.max(0, values.maximumPerStudentYear - studentYearUsed)
+      )
+    );
 
     return {
       remainingEligible,
@@ -514,6 +573,11 @@ export function useRefundPolicyForm({
     isFeeHeadsLoading,
     isSaving,
     isDetailLoading,
+    isDetailError,
+    refetchDetail,
+    isInitializing: isFormInitializing,
+    isLoadError,
+    retryLoading,
     unsavedChangesDialog,
     simulationInput,
     setSimulationInput,

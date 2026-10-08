@@ -233,7 +233,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
             <ValidationCheck label="All due dates configured" valid={checks.allDueDates} />
             <ValidationCheck label="Unique installment names" valid={checks.uniqueNames} />
             <ValidationCheck label="Allocation totals 100%" valid={checks.allocationValid} />
-            <ValidationCheck label="Due dates are within each period" valid={checks.periodsValid} />
+            <ValidationCheck label="Due dates are on or after installment starts" valid={checks.periodsValid} />
             <ValidationCheck
               label="Installment periods do not overlap"
               valid={checks.periodsNonOverlapping}
@@ -246,13 +246,12 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
             <ValidationCheck label="Invoice date rule selected" valid={checks.demandSet} />
             {values.demandGenerationRule === 'XDaysBeforeDue' && (
               <ValidationCheck
-                label="Offset days configured (≥1)"
+                label="Offset days within the allowed range"
                 valid={checks.demandOffsetValid}
               />
             )}
-            {values.demandGenerationRule === 'SpecificDate' && (
-              <ValidationCheck label="Invoice dates configured" valid={checks.specificDatesValid} />
-            )}
+            <ValidationCheck label="Invoice dates within start and due dates" valid={checks.specificDatesValid} />
+            <ValidationCheck label="All required fields valid" valid={!checks.validationMessage} />
           </Stack>
 
           {checks.isReadyToPublish ? (
@@ -277,7 +276,7 @@ export function SummaryPanel({ values, boards, checks, demandLabel }: SummaryPan
                 '& .MuiAlert-message': { fontSize: '0.7rem' },
               }}
             >
-              Complete the required fields before saving.
+              {checks.validationMessage || 'Complete the required fields before saving.'}
             </Alert>
           )}
         </Box>

@@ -22,7 +22,6 @@ import {
   Stack,
   Button,
   Dialog,
-  Drawer,
   Select,
   MenuItem,
   TextField,
@@ -442,20 +441,11 @@ const PaymentTerm = () => {
         />
       </Box>
 
-      <Drawer
-        anchor="right"
+      <PaymentTermForm
         open={addPaymentTermDrawer.value}
-        onClose={() => handleClose()}
-        PaperProps={{
-          sx: { width: { xs: '100%', sm: 'min(1180px, 92vw)' }, maxWidth: '100%' },
-        }}
-      >
-        <PaymentTermForm
-          open={addPaymentTermDrawer.value}
-          onClose={handleClose}
-          editData={selectedPaymentTerm}
-        />
-      </Drawer>
+        onClose={handleClose}
+        editData={selectedPaymentTerm}
+      />
 
       <PaymentTermDetailsDrawer
         open={Boolean(detailsTarget)}

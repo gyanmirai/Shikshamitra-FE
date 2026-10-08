@@ -4,7 +4,6 @@ import type { RootState } from 'src/redux/store';
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Label } from 'src/components/label';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
@@ -16,6 +15,7 @@ import { useGetProrationPoliciesQuery } from 'src/redux/finance/prorationPolicy'
 
 import FinancePolicyTable from '../components/FinancePolicyTable';
 import ProrationPolicyDrawer from '../components/ProrationPolicyDrawer';
+import { FinancePolicyArchiveTabs } from '../components/FinancePolicyArchiveTabs';
 
 import type { IFinancePolicyRow } from '../types/finance-policy.types';
 
@@ -32,7 +32,7 @@ export default function ProrationPolicyWorkspace() {
   );
   const academicYearId = currentYear?.id || '';
   const isArchived = archiveView === 'archived';
-  const { data: archivedSummary } = useGetProrationPoliciesQuery(
+  const { currentData: archivedSummary } = useGetProrationPoliciesQuery(
     {
       academicYearId,
       status: 'Archived',
@@ -53,7 +53,7 @@ export default function ProrationPolicyWorkspace() {
   };
 
   return (
-    <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ height: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 1 }}>
       <CustomBreadcrumbs
         heading="Proration Policy"
         description="Define reusable per-fee-head proration rules for mid-session admissions, exits, and service changes. Assign one policy to each Fee Structure."
@@ -64,38 +64,19 @@ export default function ProrationPolicyWorkspace() {
         ]}
       />
 
-      <Card sx={{ px: 1, py: 1.25, mb: 1.5 }}>
+      <Card sx={{ p: 1, flexShrink: 0 }}>
         <Stack
           direction={{ xs: 'column', md: 'row' }}
           alignItems={{ xs: 'stretch', md: 'center' }}
           justifyContent="space-between"
           spacing={1}
         >
-          <Stack direction="row" spacing={1}>
-            <Button
-              size="small"
-              variant={!isArchived ? 'contained' : 'outlined'}
-              color={!isArchived ? 'inherit' : 'primary'}
-              onClick={() => setArchiveView('current')}
-              disableElevation
-            >
-              Current Policies
-            </Button>
-            <Button
-              size="small"
-              variant={isArchived ? 'contained' : 'outlined'}
-              color={isArchived ? 'inherit' : 'primary'}
-              onClick={() => setArchiveView('archived')}
-              endIcon={
-                <Label color="default" variant="soft">
-                  {archivedSummary?.totalCount ?? 0}
-                </Label>
-              }
-              disableElevation
-            >
-              Archived
-            </Button>
-          </Stack>
+          <FinancePolicyArchiveTabs
+            value={archiveView}
+            onChange={setArchiveView}
+            archivedCount={archivedSummary?.totalCount}
+            ariaLabel="Proration policy views"
+          />
 
           {!isArchived && canCreate && (
             <Button
@@ -106,13 +87,15 @@ export default function ProrationPolicyWorkspace() {
               disabled={!academicYearId}
               sx={{ px: 2 }}
             >
-              Proration Policy
+              Create policy
             </Button>
           )}
         </Stack>
       </Card>
 
-      <Box sx={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
+      >
         <FinancePolicyTable
           policyType="proration"
           onAdd={handleAdd}

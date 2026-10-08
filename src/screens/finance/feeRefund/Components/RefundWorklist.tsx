@@ -72,6 +72,7 @@ function toRow(item: FeeRefundRequestDto, index: number): IStudentFeeData {
     _availableActions: item.availableActions,
     _approvedAmount: item.approvedAmount,
     _refundMethod: item.refundMethod ?? undefined,
+    _allowedPayoutMethods: item.allowedPayoutMethods,
     _expenseCategoryId: item.expenseCategoryId ?? undefined,
     _payingBankAccountId: item.payingBankAccountId ?? undefined,
     _defaultExpenseCategoryId: item.defaultExpenseCategoryId ?? undefined,

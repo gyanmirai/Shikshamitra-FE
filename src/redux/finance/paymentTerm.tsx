@@ -11,7 +11,33 @@ export interface PaymentTermListResponse {
   items: PaymentTermListItem[];
 }
 
+export interface PaymentTermUsage {
+  paymentTermId: string;
+  versionId?: string | null;
+  feeHeadCount: number;
+  feeStructureCount: number;
+  classCount: number;
+  assignments: {
+    classId: string;
+    className: string;
+    feeStructureId: string;
+    feeStructureName: string;
+    feeHeadId: string;
+    feeHeadName: string;
+    versionId?: string | null;
+    versionNumber?: number | null;
+  }[];
+}
+export interface PaymentTermDefaultImpact {
+  currentDefaultId?: string | null;
+  currentDefaultName?: string | null;
+  currentDefaultVersionNumber?: number | null;
+  currentDefaultUsage?: PaymentTermUsage | null;
+  replacesExistingDefault: boolean;
+  assignmentNote: string;
+}
 export interface PaymentTermListItem {
+  usage?: PaymentTermUsage;
   publishedVersionId?: string | null;
   publishedVersionNumber?: number | null;
   id: string;
@@ -195,6 +221,7 @@ export interface PreviewPaymentTermTemplateRequest {
   dueDaysAfterCoverageStart?: number;
   demandGenerationRule: CreatePaymentTermRequest['demandGenerationRule'];
   demandOffsetDays?: number | null;
+  specificDemandDates?: string[];
 }
 
 export interface PaymentTermTemplatePreviewResponse {
@@ -348,6 +375,23 @@ export const normalizePaymentTermVersionHistoryResponse = (
 
 export const PaymentTermApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getPaymentTermUsage: builder.query<
+      PaymentTermUsage,
+      { paymentTermId: string; versionId?: string }
+    >({
+      query: ({ paymentTermId, versionId }) => ({
+        url: `/finance/payment-terms/${paymentTermId}/usage`,
+        params: { versionId },
+      }),
+      providesTags: [paymentTermType.paymentTerm],
+    }),
+    getPaymentTermDefaultImpact: builder.query<
+      PaymentTermDefaultImpact,
+      { academicYearId: string; boardId: string; paymentTermId?: string }
+    >({
+      query: (params) => ({ url: '/finance/payment-terms/default-impact', params }),
+      providesTags: [paymentTermType.paymentTerm],
+    }),
     // ── List ────────────────────────────────────────────────────────────────
     getPaymentTerms: builder.query<PaymentTermListResponse, PaymentTermListParams>({
       query: (params) => ({
@@ -529,6 +573,9 @@ export const PaymentTermApi = api.injectEndpoints({
 // Kept old hook names for gradual migration; new typed hooks available below.
 
 export const {
+  useGetPaymentTermUsageQuery,
+  useLazyGetPaymentTermDefaultImpactQuery,
+  useGetPaymentTermDefaultImpactQuery,
   useGetPaymentTermsQuery,
   useLazyGetPaymentTermsQuery,
   useGetPaymentTermByIdQuery,

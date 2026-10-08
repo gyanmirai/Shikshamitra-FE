@@ -170,4 +170,20 @@ describe('PaymentTermTable', () => {
     expect(getPaymentTermDisplayStatus(published)).toBe('Active');
     expect(getPaymentTermDisplayStatus(createTerm({ status: 'Archived' }))).toBe('Archived');
   });
+
+  it('opens the usage breakdown with the assigned class, structure, head and version', () => {
+    const term = createTerm({ usage: {
+      paymentTermId: 'term-draft', feeHeadCount: 1, feeStructureCount: 1, classCount: 1,
+      assignments: [{ classId: 'class3', className: 'Class 3', feeStructureId: 'fs1',
+        feeStructureName: 'Class 3 Fees', feeHeadId: 'head1', feeHeadName: 'School Fees',
+        versionId: 'version1', versionNumber: 1 }],
+    } });
+    render(<PaymentTermTable {...baseProps} data={[term]} totalCount={1} />);
+    fireEvent.click(screen.getByRole('button', { name: '1 fee heads · 1 classes' }));
+    expect(screen.getByText('Quarterly Payment Term — Used In')).toBeInTheDocument();
+    expect(screen.getByText('Class 3 Fees')).toBeInTheDocument();
+    expect(screen.getByText('School Fees')).toBeInTheDocument();
+    expect(screen.getByText('Class 3')).toBeInTheDocument();
+    expect(screen.getAllByText('v1').length).toBeGreaterThan(0);
+  });
 });

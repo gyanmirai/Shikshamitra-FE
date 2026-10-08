@@ -1,18 +1,18 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
+
+import { useSelector } from 'react-redux';
 import React, { useCallback } from 'react';
-import { Close } from '@mui/icons-material';
-import { alpha, useTheme } from '@mui/material/styles';
-import { Box, Stack, Drawer, Button, Typography, IconButton } from '@mui/material';
+import { varAlpha } from 'src/theme/styles';
+import { alpha } from '@mui/material/styles';
 import { Label } from 'src/components/label';
-import { GlobalIcons } from 'src/utils/icons';
-import { Iconify } from 'src/components/iconify';
 import { Scrollbar } from 'src/components/scrollbar';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { Box, Stack, Drawer, Button, Typography, CircularProgress } from '@mui/material';
 
-import CollectionSummaryPanel from './collection/CollectionSummaryPanel';
+import FinancePolicyDrawerHeader from './FinancePolicyDrawerHeader';
 import { useCollectionPolicyForm } from '../hooks/useCollectionPolicyForm';
-import CollectionOnlineSection from './collection/CollectionOnlineSection';
 import CollectionFooterActions from './collection/CollectionFooterActions';
 import CollectionGeneralSection from './collection/CollectionGeneralSection';
 import CollectionLateFeeSection from './collection/CollectionLateFeeSection';
@@ -26,7 +26,14 @@ interface CollectionPolicyDrawerProps {
   academicYearId?: string;
 }
 
-export default function CollectionPolicyDrawer({
+// Scope form hooks to the open drawer so discarded drafts and simulation state
+// cannot survive into the next create, edit, or duplicate session.
+export default function CollectionPolicyDrawer(props: CollectionPolicyDrawerProps) {
+  const { open } = props;
+  return open ? <CollectionPolicyDrawerSession {...props} /> : null;
+}
+
+function CollectionPolicyDrawerSession({
   open,
   onClose,
   editData,
@@ -34,20 +41,11 @@ export default function CollectionPolicyDrawer({
 }: CollectionPolicyDrawerProps) {
   const {
     formik,
+    checks,
     feeHeads,
     isSaving,
     unsavedChangesDialog,
-    checks,
     otherDefaultPolicyName,
-    calcAmount,
-    setCalcAmount,
-    calcDaysLate,
-    setCalcDaysLate,
-    calcPayment,
-    setCalcPayment,
-    calculatedLateFee,
-    allocatedPayment,
-    remainingBalance,
     handleCustomSubmit,
     handleCloseAttempt,
     addSlab,
@@ -58,7 +56,11 @@ export default function CollectionPolicyDrawer({
     editData,
     academicYearId,
   });
-  const theme = useTheme();
+  const { currentYear } = useSelector((state: RootState) => state.globalState);
+  const busy = isSaving || formik.isSubmitting;
+  const close = () => {
+    if (!busy) handleCloseAttempt();
+  };
   const handleAddSlab = useCallback(() => {
     addSlab();
   }, [addSlab]);
@@ -75,13 +77,10 @@ export default function CollectionPolicyDrawer({
   const handleSubmit = useCallback(
     (event?: React.FormEvent<HTMLFormElement>) => {
       event?.preventDefault();
-      handleCustomSubmit(selectedStatus);
+      if (!busy) handleCustomSubmit(selectedStatus);
     },
-    [handleCustomSubmit, selectedStatus]
+    [busy, handleCustomSubmit, selectedStatus]
   );
-
-  const submitLabel =
-    selectedStatus === 'Draft' ? 'Save as Draft' : isAlreadyActive ? 'Save Changes' : 'Activate Policy';
 
   if (!open) return null;
 
@@ -89,10 +88,16 @@ export default function CollectionPolicyDrawer({
     <Drawer
       anchor="right"
       open={open}
-      onClose={handleCloseAttempt}
+      onClose={close}
+      slotProps={{
+        backdrop: { sx: { bgcolor: (theme) => alpha(theme.palette.common.black, 0.32) } },
+      }}
       PaperProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-labelledby': 'collection-policy-title',
         sx: {
-          width: { xs: '100%', md: '90vw', lg: 'min(1180px, 95vw)' },
+          width: { xs: '100%', sm: 'min(840px, 96vw)' },
           maxWidth: '100%',
         },
       }}
@@ -101,137 +106,95 @@ export default function CollectionPolicyDrawer({
         component="form"
         noValidate
         onSubmit={handleSubmit}
+        aria-busy={busy}
         sx={{
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
+          minHeight: 0,
           bgcolor: 'background.paper',
         }}
       >
-        {/* Drawer Header */}
+        <FinancePolicyDrawerHeader
+          title={editData ? 'Edit Collection Policy' : 'Create Collection Policy'}
+          titleId="collection-policy-title"
+          description={`Configure grace periods and late fees · ${editData?.academicYearName || currentYear?.name || 'Current academic year'}`}
+          descriptionDisplay="tooltip"
+          onClose={close}
+          disabled={busy}
+          badges={
+            <>
+              <Label color={formik.values.status === 'Active' ? 'success' : 'warning'}>
+                {formik.values.status}
+              </Label>
+              {editData?.policyCode && <Label color="default">{editData.policyCode}</Label>}
+              {editData?.version && <Label color="default">v{editData.version}</Label>}
+            </>
+          }
+        />
         <Box
           sx={{
-            px: { xs: 2, sm: 3 },
-            py: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            bgcolor: (paletteTheme) =>
-              paletteTheme.palette.mode === 'dark'
-                ? alpha(paletteTheme.palette.background.default, 0.4)
-                : alpha(paletteTheme.palette.grey[50], 0.6),
-            flexShrink: 0,
+            flex: 1,
+            minHeight: 0,
+            position: 'relative',
+            bgcolor: 'background.neutral',
+            overflow: 'hidden',
           }}
         >
-          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ minWidth: 0 }}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: 1.25,
-                bgcolor: (paletteTheme) => alpha(paletteTheme.palette.primary.main, 0.1),
-                color: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Iconify
-                icon={editData ? GlobalIcons.edit : GlobalIcons.addIcon}
-                width={22}
-                height={22}
-              />
-            </Box>
-            <Box sx={{ minWidth: 0 }}>
-              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                <Typography variant="h6" fontWeight={700} noWrap>
-                  {editData ? 'Edit Collection Policy' : 'Create Collection Policy'}
-                </Typography>
-                {editData?.policyCode && (
-                  <Label color="default" sx={{ height: 20, fontSize: '0.7rem' }}>
-                    {editData.policyCode}
-                  </Label>
-                )}
-                <Label
-                  color={formik.values.status === 'Active' ? 'success' : 'warning'}
-                  sx={{ height: 20, fontSize: '0.7rem' }}
-                >
-                  {formik.values.status}
-                </Label>
-              </Stack>
-              <Typography variant="caption" color="text.secondary" display="block">
-                Define grace period days, late fee computation slabs, waiver workflows, and online payment options.
-              </Typography>
-            </Box>
-          </Stack>
-          <IconButton
-            aria-label="close"
-            onClick={handleCloseAttempt}
-            sx={{
-              transition: 'all 0.2s',
-              '&:hover': {
-                backgroundColor: theme.palette.action.hover,
-                transform: 'scale(1.1)',
-              },
-            }}
-          >
-            <Close sx={{ fontSize: 20 }} />
-          </IconButton>
-        </Box>
-
-        {/* Main Body */}
-        <Box sx={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {/* Scrollable Form */}
-          <Scrollbar sx={{ flex: 1, minWidth: 0 }}>
-            <Box sx={{ p: { xs: 2, sm: 3 }, pb: 6 }}>
-              <CollectionGeneralSection
-                formik={formik}
-                otherDefaultPolicyName={otherDefaultPolicyName}
-                activeEdit={isAlreadyActive}
-              />
-              <CollectionLateFeeSection
-                formik={formik}
-                feeHeads={feeHeads}
-                addSlab={handleAddSlab}
-                removeSlab={handleRemoveSlab}
-              />
-              <CollectionOnlineSection formik={formik} />
+          <Scrollbar sx={{ height: 1 }}>
+            <Box
+              component="fieldset"
+              disabled={busy}
+              inert={busy}
+              sx={{ border: 0, m: 0, minWidth: 0, p: { xs: 2, sm: 3 } }}
+            >
+              <Stack spacing={2} sx={{ minWidth: 0 }}>
+                <CollectionGeneralSection
+                  formik={formik}
+                  otherDefaultPolicyName={otherDefaultPolicyName}
+                  activeEdit={isAlreadyActive}
+                />
+                <CollectionLateFeeSection
+                  formik={formik}
+                  feeHeads={feeHeads}
+                  addSlab={handleAddSlab}
+                  removeSlab={handleRemoveSlab}
+                />
+              </Stack>
             </Box>
           </Scrollbar>
 
-          {/* Sticky Right Summary Panel */}
-          <CollectionSummaryPanel
-            formik={formik}
-            checks={checks}
-            calcAmount={calcAmount}
-            setCalcAmount={setCalcAmount}
-            calcDaysLate={calcDaysLate}
-            setCalcDaysLate={setCalcDaysLate}
-            calcPayment={calcPayment}
-            setCalcPayment={setCalcPayment}
-            calculatedLateFee={calculatedLateFee}
-            allocatedPayment={allocatedPayment}
-            remainingBalance={remainingBalance}
-          />
+          {busy && (
+            <Stack
+              role="status"
+              alignItems="center"
+              justifyContent="center"
+              spacing={1.5}
+              sx={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 1,
+                bgcolor: (theme) => varAlpha(theme.vars.palette.background.paperChannel, 0.72),
+              }}
+            >
+              <CircularProgress size={28} />
+              <Typography variant="body2">Saving policy…</Typography>
+            </Stack>
+          )}
         </Box>
 
         {/* Sticky Footer */}
-        <CollectionFooterActions
-          isSaving={isSaving}
-          onCancel={handleCloseAttempt}
-          submitLabel={submitLabel}
-        />
+        <CollectionFooterActions isSaving={busy} invalid={!checks.numericValid} onCancel={close} />
 
         {/* Unsaved changes confirmation dialog */}
         <ConfirmDialog
           open={unsavedChangesDialog.value}
           icon="warning"
           onClose={unsavedChangesDialog.onFalse}
+          disableBackdropClick
           title="Discard Unsaved Changes?"
-          content="You have unsaved modifications in this Collection Policy form. Closing will discard all current changes."
+          content="Your changes to this collection policy will be lost."
           action={
             <Button
               variant="contained"
@@ -239,10 +202,11 @@ export default function CollectionPolicyDrawer({
               size="small"
               onClick={() => {
                 unsavedChangesDialog.onFalse();
+                formik.resetForm();
                 onClose();
               }}
             >
-              Discard Changes
+              Discard changes
             </Button>
           }
         />

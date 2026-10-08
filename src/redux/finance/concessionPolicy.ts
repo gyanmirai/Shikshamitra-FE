@@ -34,6 +34,18 @@ export interface ConcessionPolicyListArgs {
   academicYearId: string;
   status?: string;
   search?: string;
+  policyNameFilter?: string;
+  policyNameOperator?: string;
+  valueSource?: string;
+  calculationMethod?: string;
+  applyOn?: string;
+  limitOperator?: string;
+  limitValue?: number;
+  limitMax?: number;
+  updatedAtOperator?: string;
+  updatedAt?: string;
+  updatedAtEnd?: string;
+  sorting?: string;
   page?: number;
   pageSize?: number;
 }
@@ -57,6 +69,7 @@ export interface ConcessionPolicySavePayload {
   maximumPercentage: number | null;
   maximumFixedAmount: number | null;
   applyOn: 'AllOutstanding' | 'CurrentInstallment' | 'FutureInstallments' | 'AllFees';
+  autoCreateRefund?: boolean;
   roundingMethod: 'None' | 'RoundUp' | 'RoundDown' | 'NearestRupee';
   changeReason?: string | null;
   concurrencyStamp?: string | null;

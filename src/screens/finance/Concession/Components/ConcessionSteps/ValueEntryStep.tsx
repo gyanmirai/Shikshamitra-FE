@@ -153,7 +153,9 @@ function RequestEnteredInstallments({ formik, requestContext, policy, preview }:
       <Typography variant="body2" color="text.secondary">
         Enter a {percentage ? 'percentage' : 'rupee amount'} for each eligible installment line.
         {policy.applyOn === 'AllFees'
-          ? 'Paid amounts can be discounted; any overpayment will create a refund request after approval.'
+          ? policy.autoCreateRefund === false
+            ? 'Paid amounts can be discounted. The paid concession is refundable; create linked refund requests manually after approval.'
+            : 'Paid amounts can be discounted. The paid concession automatically creates linked refund requests after approval.'
           : 'Only the remaining outstanding balance can be discounted.'}
       </Typography>
       {Object.entries(groups).map(([installment, rows]) => (

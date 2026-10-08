@@ -6,7 +6,10 @@ import React from 'react';
 import { alpha } from '@mui/material/styles';
 import { GlobalIcons } from 'src/utils/icons';
 import { Iconify } from 'src/components/iconify';
-import { Box, Card, Stack, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Box, Paper, Stack, Typography, IconButton } from '@mui/material';
+
+import { validCollectionNumber } from '../../collectionNumericLimits';
 
 import type { ILateFeeEscalationRule } from '../../types/finance-policy.types';
 
@@ -24,17 +27,43 @@ export interface ISlabIssues {
   /** Indices into the original `rules` array that participate in an overlap. */
   overlapIndices: number[];
   gaps: ISlabGap[];
+  invalidIndices: number[];
   hasIssues: boolean;
 }
 
-export function computeSlabIssues(rules: ILateFeeEscalationRule[]): ISlabIssues {
-  if (!rules || rules.length < 2) return { overlapIndices: [], gaps: [], hasIssues: false };
+export function computeSlabIssues(
+  rules: ILateFeeEscalationRule[],
+  maximumChargingDays?: number | null
+): ISlabIssues {
+  if (!rules?.length) return { overlapIndices: [], invalidIndices: [], gaps: [], hasIssues: true };
+  const cutoff = maximumChargingDays ?? 365;
+  const invalidIndices = rules.flatMap((rule, index) =>
+    !validCollectionNumber(rule.startDay, 'days', 1) ||
+    rule.startDay > cutoff ||
+    (rule.endDay !== null &&
+      (!validCollectionNumber(rule.endDay, 'days', 1) ||
+        rule.endDay < rule.startDay ||
+        rule.endDay > cutoff)) ||
+    !validCollectionNumber(
+      rule.value,
+      rule.calculationType === 'Percentage' ? 'percentage' : 'amount',
+      0.01
+    ) ||
+    !['Flat', 'Percentage'].includes(rule.calculationType) ||
+    (rule.maxFee != null && !validCollectionNumber(rule.maxFee, 'amount', 0.01))
+      ? [index]
+      : []
+  );
 
   const indexed = rules.map((r, i) => ({ ...r, _index: i }));
   const sorted = [...indexed].sort((a, b) => a.startDay - b.startDay);
 
   const overlapSet = new Set<number>();
   const gaps: ISlabGap[] = [];
+  if (sorted[0].startDay > 1) gaps.push({ afterDay: 0, beforeDay: sorted[0].startDay });
+  const last = sorted[sorted.length - 1];
+  if (maximumChargingDays != null && last.endDay !== null && last.endDay < cutoff)
+    gaps.push({ afterDay: last.endDay, beforeDay: cutoff + 1 });
 
   for (let i = 0; i < sorted.length - 1; i += 1) {
     const current = sorted[i];
@@ -51,9 +80,10 @@ export function computeSlabIssues(rules: ILateFeeEscalationRule[]): ISlabIssues 
   }
 
   return {
+    invalidIndices,
     overlapIndices: Array.from(overlapSet),
     gaps,
-    hasIssues: overlapSet.size > 0 || gaps.length > 0,
+    hasIssues: invalidIndices.length > 0 || overlapSet.size > 0 || gaps.length > 0,
   };
 }
 
@@ -64,6 +94,7 @@ export function SectionCard({
   icon,
   action,
   children,
+  headerSpacing = 2,
   sx = {},
 }: {
   title: string;
@@ -71,70 +102,42 @@ export function SectionCard({
   icon?: string;
   action?: React.ReactNode;
   children: React.ReactNode;
+  headerSpacing?: number;
   sx?: SxProps<Theme>;
 }) {
   return (
-    <Card
+    <Paper
       variant="outlined"
-      sx={[
-        {
-          mb: 2.5,
-          borderRadius: 1.75,
-          bgcolor: 'background.paper',
-          borderColor: 'divider',
-          boxShadow: (theme) => `0 4px 16px -8px ${alpha(theme.palette.grey[500], 0.16)}`,
-          overflow: 'visible',
-        },
-        ...(Array.isArray(sx) ? sx : [sx]),
-      ]}
+      sx={[{ p: 2, borderRadius: 2, minWidth: 0 }, ...(Array.isArray(sx) ? sx : [sx])]}
     >
-      <Box
-        sx={{
-          px: { xs: 2, sm: 2.5 },
-          py: 1.75,
-          borderBottom: '1px solid',
-          borderColor: 'divider',
-          bgcolor: 'background.neutral',
-          borderRadius: '14px 14px 0 0',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 1.5,
-        }}
-      >
-        <Stack direction="row" spacing={1.25} alignItems="center">
-          {icon && (
-            <Box
-              sx={{
-                width: 32,
-                height: 32,
-                borderRadius: 1,
-                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
-                color: 'primary.main',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <Iconify icon={icon} width={18} height={18} />
-            </Box>
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: headerSpacing }}>
+        {icon && <Iconify icon={icon} width={20} sx={{ color: 'text.secondary', flexShrink: 0 }} />}
+        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="subtitle1" component="h3">
+            {title}
+          </Typography>
+          {subtitle && (
+            <CustomTooltip arrow placement="right" title={subtitle}>
+              <IconButton size="small" aria-label={`${title} information`}>
+                <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+              </IconButton>
+            </CustomTooltip>
           )}
-          <Box>
-            <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3}>
-              {title}
-            </Typography>
-            {subtitle && (
-              <Typography variant="caption" color="text.secondary" display="block">
-                {subtitle}
-              </Typography>
-            )}
-          </Box>
         </Stack>
-        {action && <Box sx={{ flexShrink: 0 }}>{action}</Box>}
-      </Box>
-      <Box sx={{ p: { xs: 2, sm: 2.5 } }}>{children}</Box>
-    </Card>
+        {action}
+      </Stack>
+      {children}
+    </Paper>
+  );
+}
+
+export function CollectionInfoTip({ label, title }: { label: string; title: string }) {
+  return (
+    <CustomTooltip arrow placement="right" title={title}>
+      <IconButton size="small" aria-label={`${label} information`}>
+        <Iconify icon="lucide:info" width={16} sx={{ color: 'info.main' }} aria-hidden />
+      </IconButton>
+    </CustomTooltip>
   );
 }
 
@@ -234,7 +237,7 @@ export function SummaryRow({ label, value }: { label: string; value: React.React
       >
         {label}
       </Typography>
-      <Box sx={{ minWidth: 0, textAlign: 'right' }}>{value}</Box>
+      <Box sx={{ minWidth: 0, textAlign: 'right', overflowWrap: 'anywhere' }}>{value}</Box>
     </Stack>
   );
 }

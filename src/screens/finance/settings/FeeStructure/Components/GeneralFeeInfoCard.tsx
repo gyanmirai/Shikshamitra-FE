@@ -28,7 +28,7 @@ export default function FeeGeneralInfoCard({ feeStructure }: { feeStructure: any
               width: 40,
               height: 40,
               borderRadius: '10px',
-              bgcolor: 'white',
+              bgcolor: 'background.neutral',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

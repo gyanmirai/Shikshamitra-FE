@@ -7,7 +7,8 @@ const FeeStructureSkeleton = () => (
       <Paper
         key={index}
         sx={{
-          border: '1px solid #eee',
+          border: 1,
+          borderColor: 'divider',
           borderRadius: 1,
           p: 1.5,
           width: '100%',

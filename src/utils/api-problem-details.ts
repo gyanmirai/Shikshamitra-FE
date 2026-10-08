@@ -53,6 +53,11 @@ const KNOWN_ERROR_MESSAGES: Record<string, string> = {
   'Finance:ConcessionPolicy:010022': 'Only an Active concession policy can be the default.',
   'Finance:RefundPolicy:010028': 'Only an Active refund policy can be the default.',
   'Finance:FeeRefund:010010': "No refund policy is assigned to this student's fee structure. Assign a refund policy before creating a refund request.",
+  'Finance:FeeRefund:010002': 'No refundable paid balance remains for the selected fee lines.',
+  'Finance:FeeRefund:010004': 'A refund has already been requested for this payment. Review the existing refund request.',
+  'Finance:FeeRefund:010011': 'The assigned refund policy is unavailable. Ask an administrator to review the fee assignment.',
+  'Finance:FeeRefund:010012': 'The selected fee head is not refundable under the assigned policy.',
+  'Finance:FeeRefund:010025': 'This payment is not settled yet, so it cannot be refunded.',
   'Finance:ProrationPolicy:010025': 'Only an Active proration policy can be the default.',
   'Finance:PaymentTerm:000039':
     'These template options cannot produce a valid schedule for the selected board period. Review the installment count and date rules, then try again.',

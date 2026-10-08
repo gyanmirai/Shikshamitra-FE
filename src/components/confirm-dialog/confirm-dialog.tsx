@@ -34,6 +34,7 @@ export function ConfirmDialog({
   icon = 'error',
   disableBackdropClick = false,
   disableCancel = false,
+  cancelText = 'Cancel',
   ...other
 }: ConfirmDialogProps) {
   const theme = useTheme();
@@ -76,7 +77,7 @@ export function ConfirmDialog({
           disabled={disableCancel}
           size="small"
         >
-          Cancel
+          {cancelText}
         </Button>
         {isValidElement(action)
           ? cloneElement(action as React.ReactElement<any>, { size: 'small' })
