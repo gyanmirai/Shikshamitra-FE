@@ -13,6 +13,7 @@ import { Editor } from 'src/components/editor';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
+import { ConfirmDialog } from 'src/components/confirm-dialog';
 import CustomDialog from 'src/components/customDialog';
 import CustomSelect from 'src/components/custom-select';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -84,9 +85,19 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
 }) => {
   const [previewDoc, setPreviewDoc] = useState<string | null>(null);
   const [previewFileState, setPreviewFileState] = useState<any>(null);
-  const [createRubricFromTemplate, { isLoading: isRubricCopyLoading }] =
-    useCreateRubricFromTemplateMutation();
+  const [createRubricFromTemplate] = useCreateRubricFromTemplateMutation();
   const submitModeRef = useRef<'draft' | 'publish' | 'schedule'>('draft');
+  const activeSubmitModeRef = useRef<'draft' | 'publish' | 'schedule' | null>(null);
+  const [activeSubmitMode, setActiveSubmitMode] = useState<'draft' | 'publish' | 'schedule' | null>(
+    null
+  );
+  const overrideDialog = useBoolean();
+  const resolveOverrideRef = useRef<((confirmed: boolean) => void) | null>(null);
+  const resolveOverride = (confirmed: boolean) => {
+    overrideDialog.onFalse();
+    resolveOverrideRef.current?.(confirmed);
+    resolveOverrideRef.current = null;
+  };
   const setHomeworkSubmitMode = (mode: 'draft' | 'publish' | 'schedule') => {
     submitModeRef.current = mode;
   };
@@ -96,17 +107,17 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     submitModeRef.current = 'draft';
   }, [editData?.id]);
 
-  const [addHomework, { isLoading: isAddLoading }] = useQueryAndMutation({
+  const [addHomework] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddHomeworkMutation,
   });
   const { currentMedium: medium } = useSelector((state: RootState) => state.globalState);
 
-  const [updateHomework, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+  const [updateHomework] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkMutation,
   });
-  const [updateHomeworkStatus, { isLoading: isPublishLoading }] = useQueryAndMutation({
+  const [updateHomeworkStatus] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateHomeworkStatusMutation,
   });
@@ -173,35 +184,28 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
       try {
         const activeClassId = values.classId || values.class;
 
-        // Check if user is overriding selected template defaults
         const selectedType = activeHomeworkTypes.find((t: any) => t.id === values.homeworkTypeId);
-        if (selectedType) {
-          let hasOverride = false;
-          if (
-            selectedType.defaultSubmissionType !== undefined &&
-            selectedType.defaultSubmissionType !== null &&
-            selectedType.defaultSubmissionType !== values.submissionType
-          ) {
-            hasOverride = true;
-          }
-
-          if (selectedType.defaultDueDays !== undefined && selectedType.defaultDueDays !== null) {
-            const hasDueDaysDiff = values.divisions.some((d: any) => {
-              if (!d.publishDate || !d.dueDate) return false;
-              const diff = dayjs(d.dueDate).diff(dayjs(d.publishDate), 'day');
-              return diff !== selectedType.defaultDueDays;
-            });
-            if (hasDueDaysDiff) {
-              hasOverride = true;
-            }
-          }
-
-          if (hasOverride) {
-            const confirmOverride = window.confirm(
-              'Warning: You have modified submission settings or due days from the default homework type template. Are you sure you want to override these settings?'
+        const submissionChanged =
+          selectedType?.defaultSubmissionType !== undefined &&
+          selectedType.defaultSubmissionType !== null &&
+          selectedType.defaultSubmissionType !== values.submissionType;
+        const dueDaysChanged =
+          selectedType?.defaultDueDays !== undefined &&
+          selectedType.defaultDueDays !== null &&
+          values.divisions.some((division) => {
+            if (!division.publishDate || !division.dueDate) return false;
+            return (
+              dayjs(division.dueDate).diff(dayjs(division.publishDate), 'day') !==
+              selectedType.defaultDueDays
             );
-            if (!confirmOverride) return;
-          }
+          });
+
+        if (submissionChanged || dueDaysChanged) {
+          const confirmed = await new Promise<boolean>((resolve) => {
+            resolveOverrideRef.current = resolve;
+            overrideDialog.onTrue();
+          });
+          if (!confirmed) return;
         }
 
         if (editData) {
@@ -283,6 +287,17 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
     },
     formik.isSubmitting
   );
+
+  const submitHomework = (mode: 'draft' | 'publish' | 'schedule') => {
+    if (activeSubmitModeRef.current) return;
+    activeSubmitModeRef.current = mode;
+    setActiveSubmitMode(mode);
+    setHomeworkSubmitMode(mode);
+    void formik.submitForm().finally(() => {
+      activeSubmitModeRef.current = null;
+      setActiveSubmitMode(null);
+    });
+  };
 
   const divisionSelectionError =
     formik.touched.divisions &&
@@ -1106,6 +1121,7 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
           <Button
             type="button"
             variant="outlined"
+            disabled={activeSubmitMode !== null}
             onClick={() => onClose(null, false)}
             color="inherit"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -1114,11 +1130,15 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             Cancel
           </Button>
           <LoadingButton
-            disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
+            disabled={
+              (activeSubmitMode !== null && activeSubmitMode !== 'draft') ||
+              referenceUpload.isUploading ||
+              Boolean(referenceUpload.error)
+            }
             type="button"
             variant="contained"
             size="small"
-            loading={isUpdateLoading || isAddLoading || isRubricCopyLoading}
+            loading={activeSubmitMode === 'draft'}
             startIcon={
               <Iconify
                 icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -1126,27 +1146,25 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
                 height={18}
               />
             }
-            onClick={() => {
-              setHomeworkSubmitMode('draft');
-              formik.submitForm();
-            }}
+            onClick={() => submitHomework('draft')}
           >
             {editData ? 'Update Draft' : 'Save Draft'}
           </LoadingButton>
           {!editData && (
             <LoadingButton
-              disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
+              disabled={
+                activeSubmitMode === 'draft' ||
+                referenceUpload.isUploading ||
+                Boolean(referenceUpload.error)
+              }
               type="button"
               variant="contained"
               size="small"
-              loading={isUpdateLoading || isAddLoading || isPublishLoading || isRubricCopyLoading}
+              loading={activeSubmitMode === 'publish' || activeSubmitMode === 'schedule'}
               startIcon={
                 <Iconify icon={shouldSchedule ? 'solar:calendar-mark-bold' : 'solar:upload-bold'} />
               }
-              onClick={() => {
-                setHomeworkSubmitMode(shouldSchedule ? 'schedule' : 'publish');
-                formik.submitForm();
-              }}
+              onClick={() => submitHomework(shouldSchedule ? 'schedule' : 'publish')}
             >
               {shouldSchedule ? 'Schedule Publish' : 'Publish Now'}
             </LoadingButton>
@@ -1156,6 +1174,37 @@ const HomeworkForm: React.FC<IHomeWorkCreationFormProps> = ({
             onClose={() => setPreviewDoc(null)}
             url={previewDoc || ''}
             documentName={previewFileState ? previewFileState.name : 'Document Preview'}
+          />
+          <ConfirmDialog
+            open={overrideDialog.value}
+            disableBackdropClick
+            onClose={() => resolveOverride(false)}
+            icon="warning"
+            title={
+              submitModeRef.current === 'publish'
+                ? 'Publish homework with your settings?'
+                : submitModeRef.current === 'schedule'
+                  ? 'Schedule homework with your settings?'
+                  : 'Save homework with your settings?'
+            }
+            content="The due date or submission method differs from the homework type defaults. Your selected values will be used for this homework."
+            cancelText="Keep editing"
+            action={
+              <Button
+                type="button"
+                variant="contained"
+                color="warning"
+                size="small"
+                startIcon={<Iconify icon={GlobalIcons.submit} />}
+                onClick={() => resolveOverride(true)}
+              >
+                {submitModeRef.current === 'publish'
+                  ? 'Publish homework'
+                  : submitModeRef.current === 'schedule'
+                    ? 'Schedule homework'
+                    : 'Save homework'}
+              </Button>
+            }
           />
         </Box>
       </Box>

@@ -22,21 +22,21 @@ export function getLearningTaskTableActions(
 ): AdaptiveThreeDotsAction[] {
   const actions: AdaptiveThreeDotsAction[] = [];
 
-  if (options.canEdit) {
-    actions.push({
-      id: 'edit',
-      label: 'Edit',
-      icon: GlobalIcons.edit,
-      onClick: options.onEdit,
-    });
-  }
-
   if (options.canPublish) {
     actions.push({
       id: 'publish',
       label: 'Publish now',
       icon: 'solar:upload-bold',
       onClick: options.onPublish,
+    });
+  }
+
+  if (options.canEdit) {
+    actions.push({
+      id: 'edit',
+      label: 'Edit',
+      icon: GlobalIcons.edit,
+      onClick: options.onEdit,
     });
   }
 

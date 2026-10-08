@@ -99,6 +99,15 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
   const [pendingAssignmentTypeId, setPendingAssignmentTypeId] = useState<string | null>(null);
   const [pendingSubmitValues, setPendingSubmitValues] = useState<AssignmentFormValues | null>(null);
   const submitModeRef = useRef<'draft' | 'publish' | 'schedule'>('draft');
+  const activeSubmitModeRef = useRef<'draft' | 'publish' | 'schedule' | null>(null);
+  const pendingOverrideRef = useRef(false);
+  const [activeSubmitMode, setActiveSubmitMode] = useState<'draft' | 'publish' | 'schedule' | null>(
+    null
+  );
+  const finishSubmission = () => {
+    activeSubmitModeRef.current = null;
+    setActiveSubmitMode(null);
+  };
 
   useEffect(() => {
     // A reopened form must never inherit a previous Publish Now selection.
@@ -114,21 +123,20 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
     return decodeURIComponent(file.split('?')[0].split('/').filter(Boolean).pop() || 'Attachment');
   };
 
-  const [addAssignment, { isLoading: isAddLoading }] = useQueryAndMutation({
+  const [addAssignment] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useAddAssignmentMutation,
   });
 
-  const [updateAssignment, { isLoading: isUpdateLoading }] = useQueryAndMutation({
+  const [updateAssignment] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateAssignmentMutation,
   });
-  const [updateAssignmentStatus, { isLoading: isPublishLoading }] = useQueryAndMutation({
+  const [updateAssignmentStatus] = useQueryAndMutation({
     type: 'mutation',
     currentQueryAndMutation: useUpdateAssignmentStatusMutation,
   });
-  const [createRubricFromTemplate, { isLoading: isRubricCopyLoading }] =
-    useCreateRubricFromTemplateMutation();
+  const [createRubricFromTemplate] = useCreateRubricFromTemplateMutation();
 
   const {
     data: assignmentByIdData,
@@ -276,6 +284,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
         (assignmentType) => assignmentType.id === values.assignmentTypeId
       );
       if (hasAssignmentTypeOverrides(values, selectedType)) {
+        pendingOverrideRef.current = true;
         setPendingSubmitValues(values);
         overrideDialog.onTrue();
         return;
@@ -292,6 +301,16 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
     },
     formik.isSubmitting
   );
+
+  const submitAssignment = (mode: 'draft' | 'publish' | 'schedule') => {
+    if (activeSubmitModeRef.current) return;
+    activeSubmitModeRef.current = mode;
+    setActiveSubmitMode(mode);
+    submitModeRef.current = mode;
+    void formik.submitForm().finally(() => {
+      if (!pendingOverrideRef.current) finishSubmission();
+    });
+  };
 
   const divisionSelectionError =
     formik.touched.divisions &&
@@ -1144,6 +1163,7 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           <Button
             type="button"
             variant="outlined"
+            disabled={activeSubmitMode !== null}
             onClick={() => onClose(null, false)}
             color="inherit"
             startIcon={<Iconify icon={GlobalIcons.cancel} />}
@@ -1152,10 +1172,14 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
             Cancel
           </Button>
           <LoadingButton
-            disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
+            disabled={
+              (activeSubmitMode !== null && activeSubmitMode !== 'draft') ||
+              referenceUpload.isUploading ||
+              Boolean(referenceUpload.error)
+            }
             size="small"
             variant="contained"
-            loading={isAddLoading || isUpdateLoading || isPublishLoading || isRubricCopyLoading}
+            loading={activeSubmitMode === 'draft'}
             startIcon={
               <Iconify
                 icon={editData ? GlobalIcons.edit : GlobalIcons.submit}
@@ -1164,27 +1188,25 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
               />
             }
             type="button"
-            onClick={() => {
-              submitModeRef.current = 'draft';
-              formik.submitForm();
-            }}
+            onClick={() => submitAssignment('draft')}
           >
             {editData ? 'Update Draft' : 'Save Draft'}
           </LoadingButton>
           {!editData && (
             <LoadingButton
-              disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
+              disabled={
+                activeSubmitMode === 'draft' ||
+                referenceUpload.isUploading ||
+                Boolean(referenceUpload.error)
+              }
               type="button"
               variant="contained"
               size="small"
-              loading={isAddLoading || isUpdateLoading || isPublishLoading || isRubricCopyLoading}
+              loading={activeSubmitMode === 'publish' || activeSubmitMode === 'schedule'}
               startIcon={
                 <Iconify icon={shouldSchedule ? 'solar:calendar-mark-bold' : GlobalIcons.publish} />
               }
-              onClick={() => {
-                submitModeRef.current = shouldSchedule ? 'schedule' : 'publish';
-                formik.submitForm();
-              }}
+              onClick={() => submitAssignment(shouldSchedule ? 'schedule' : 'publish')}
             >
               {shouldSchedule ? 'Schedule Publish' : 'Publish Now'}
             </LoadingButton>
@@ -1271,22 +1293,28 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
           onClose={() => {
             overrideDialog.onFalse();
             setPendingSubmitValues(null);
+            pendingOverrideRef.current = false;
+            finishSubmission();
           }}
           icon="warning"
-          title="Use Overridden Settings?"
+          title={
+            submitModeRef.current === 'publish'
+              ? 'Publish assignment with your settings?'
+              : submitModeRef.current === 'schedule'
+                ? 'Schedule assignment with your settings?'
+                : 'Save assignment with your settings?'
+          }
           content={
             <Typography variant="body2" color="text.secondary">
-              Your current marks, submission method, evaluation, or due-date offset differ from
-              the selected assignment type&apos;s defaults. Do you want to submit with your
-              custom values?
+              The marks, submission method, evaluation, or due date differ from the assignment type
+              defaults. Your selected values will be used for this assignment.
             </Typography>
           }
           action={
-            <LoadingButton
+            <Button
               disabled={referenceUpload.isUploading || Boolean(referenceUpload.error)}
               type="button"
               size="small"
-              loading={isAddLoading || isUpdateLoading || isPublishLoading || isRubricCopyLoading}
               variant="contained"
               color="warning"
               startIcon={<Iconify icon={GlobalIcons.submit} />}
@@ -1295,11 +1323,20 @@ const AssignmentForm: React.FC<IAssignmentFormProps> = ({ classes, editData, onC
                 const values = pendingSubmitValues;
                 overrideDialog.onFalse();
                 setPendingSubmitValues(null);
-                await saveAssignment(values);
+                try {
+                  await saveAssignment(values);
+                } finally {
+                  pendingOverrideRef.current = false;
+                  finishSubmission();
+                }
               }}
             >
-              Continue with My Values
-            </LoadingButton>
+              {submitModeRef.current === 'publish'
+                ? 'Publish assignment'
+                : submitModeRef.current === 'schedule'
+                  ? 'Schedule assignment'
+                  : 'Save assignment'}
+            </Button>
           }
         />
       </Box>

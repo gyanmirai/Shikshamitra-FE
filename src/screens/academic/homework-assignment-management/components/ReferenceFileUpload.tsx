@@ -34,6 +34,7 @@ export function ReferenceFileUpload({
         onPreview={onPreview}
         primaryText="Upload Reference File"
         secondaryText="Supports PDF, DOCX, PNG, JPG/JPEG (Max 5MB)"
+        dragProps={{ sx: { flexDirection: value ? 'row' : 'column', gap: 1 } }}
       />
       {upload.error && (
         <Alert

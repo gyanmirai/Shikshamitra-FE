@@ -448,6 +448,7 @@ const AssignmentCreation = ({ addAssignmentDialog }: any) => {
       <ConfirmDialog
         open={publishAssignmentDialog.value}
         disableBackdropClick
+        icon="info"
         onClose={() => {
           publishAssignmentDialog.onFalse();
           setSelectedAssignment(null);
