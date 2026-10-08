@@ -1,6 +1,5 @@
 'use client';
 
-import type { RootState } from 'src/redux/store';
 import type { IColumn } from 'src/components/customizabaleTable/types';
 
 import NextLink from 'next/link';
@@ -10,9 +9,9 @@ import { Iconify } from 'src/components/iconify';
 import { fDateTime } from 'src/utils/format-time';
 import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
+import { Box, Stack, MenuItem, TextField } from '@mui/material';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
-import { Box, Stack, Button, MenuItem, TextField } from '@mui/material';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import {
   type AdmissionApplication,
@@ -46,9 +45,6 @@ export default function AdmissionApplicationsScreen({
   const router = useRouter();
   const searchParams = useSearchParams();
   const counsellorId = searchParams.get('counsellor') ?? '';
-  const [directRegistrationOpen, setDirectRegistrationOpen] = useState(false);
-  const permissions = useSelector((state: RootState) => state.auth.permissions);
-  const canStart = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
   const counsellors = useGetAdmissionApplicationCounsellorsQuery({});
   const {
     currentData: data,
@@ -130,20 +126,6 @@ export default function AdmissionApplicationsScreen({
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: isPipeline ? 'Pipeline' : 'Applications' },
         ]}
-        action={
-          !isPipeline && canStart ? (
-            <Button
-              size="small"
-              variant="contained"
-              aria-label="Start direct registration"
-              startIcon={<Iconify icon="mdi:plus" />}
-              onClick={() => setDirectRegistrationOpen(true)}
-              sx={{ minHeight: { xs: 44, sm: 36 } }}
-            >
-              Direct registration
-            </Button>
-          ) : undefined
-        }
       />
       <AdmissionAcademicFilters
         boardId={academic.boardId}
@@ -151,10 +133,6 @@ export default function AdmissionApplicationsScreen({
         standardId={academic.standardId}
         onClear={academic.clear}
         onChange={academic.update}
-      />
-      <AdmissionDirectRegistrationDialog
-        open={directRegistrationOpen}
-        onClose={() => setDirectRegistrationOpen(false)}
       />
       {isError && (
         <AdmissionQueryError

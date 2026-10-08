@@ -291,7 +291,6 @@ function BulkAdmissionOfferingStep({
             cycle={cycle}
             fetchWorkflows={bulk.fetchWorkflows}
             fetchInquiryForms={bulk.fetchInquiryForms}
-            fetchRegistrationForms={bulk.fetchRegistrationForms}
             change={change}
           />
         </FormSectionCard>

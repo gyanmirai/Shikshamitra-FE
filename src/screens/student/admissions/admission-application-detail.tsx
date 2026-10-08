@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
 import { Label } from 'src/components/label';
 import { useRouter } from 'src/routes/hooks';
 import { Iconify } from 'src/components/iconify';
@@ -9,6 +8,7 @@ import { useBoolean } from 'src/hooks/use-boolean';
 import { Scrollbar } from 'src/components/scrollbar';
 import { CustomTabs } from 'src/components/custom-tabs';
 import { studentPaths } from 'src/constants/student-menu';
+import { useParams, useSearchParams } from 'next/navigation';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
 import { FormBusyRegion } from 'src/components/form-busy-region';
 import CustomDialog, { DialogScrollContent } from 'src/components/customDialog';
@@ -17,8 +17,10 @@ import { Box, Tab, Alert, Paper, Stack, Button, Skeleton, Typography } from '@mu
 import { AdmissionQueryError } from './admission-query-error';
 import { formatAdmissionReference } from './admission-reference';
 import { FormHistoryCard } from './application-detail/form-history-card';
+import { ApplicationFollowUps } from './application-detail/application-follow-ups';
 import { useApplicationDetail } from './application-detail/use-application-detail';
 import { TransitionHistoryCard } from './application-detail/transition-history-card';
+import { getApplicationReturnUrl } from './application-detail/application-return-url';
 import { ApplicationRuntimeForm } from './application-detail/application-runtime-form';
 import { ApplicationCurrentTask } from './application-detail/application-current-task';
 import { ApplicationProgressCard } from './application-detail/application-progress-card';
@@ -51,6 +53,8 @@ type DetailTab = 'current' | 'form' | 'history';
 export default function AdmissionApplicationDetailScreen() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  const searchParams = useSearchParams();
+  const returnUrl = getApplicationReturnUrl(searchParams.get('returnTo'));
   const detail = useApplicationDetail(id);
   const completionDialog = useBoolean();
   const [activeTab, setActiveTab] = useState<DetailTab>('current');
@@ -85,7 +89,7 @@ export default function AdmissionApplicationDetailScreen() {
     workflowQuery.isError ||
     (!isLoading && (!application || !form));
 
-  const closeDetail = () => router.push(studentPaths.enrollment.applications);
+  const closeDetail = () => router.push(returnUrl);
 
   const renderRuntimeForm = () => {
     if (!application || !form) return null;
@@ -315,6 +319,7 @@ export default function AdmissionApplicationDetailScreen() {
                       available.
                     </Alert>
                   )}
+                  {application.inquiryId && <ApplicationFollowUps applicationId={application.id} />}
                 </Stack>
               )}
 
@@ -482,7 +487,11 @@ export default function AdmissionApplicationDetailScreen() {
                 severity="warning"
                 action={
                   <Button color="inherit" size="small" onClick={closeDetail}>
-                    Back to applications
+                    {returnUrl === studentPaths.enrollment.applications
+                      ? 'Back to applications'
+                      : returnUrl.startsWith(studentPaths.enrollment.assessments)
+                        ? 'Back to assessments'
+                        : 'Back to Pipeline'}
                   </Button>
                 }
               >

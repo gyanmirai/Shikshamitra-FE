@@ -8,7 +8,7 @@ import { reviewerId, setupReviewEditor, chooseReviewOption } from './review-edit
 describe('review stage configuration', { timeout: 30000 }, () => {
   it('saves a scoped reviewer, earlier evidence and approval/due-date options without dropping sibling settings', async () => {
     const user = userEvent.setup();
-    const { onSave } = setupReviewEditor(JSON.stringify({ layout: 'compact' }));
+    const { onSave } = await setupReviewEditor(JSON.stringify({ layout: 'compact' }));
     await user.click(
       screen.getByRole('radio', { name: 'Collect a staff review and recommendation' })
     );
@@ -21,8 +21,9 @@ describe('review stage configuration', { timeout: 30000 }, () => {
       })
     );
     await chooseReviewOption(user, 'Final approver role (optional)', 'Admissions lead');
+    await user.click(screen.getByRole('button', { name: 'Review timing' }));
     await user.click(screen.getByRole('switch', { name: 'Set a review due date' }));
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toMatchObject({
       layout: 'compact',
@@ -40,7 +41,7 @@ describe('review stage configuration', { timeout: 30000 }, () => {
 
   it('validates checklist names and saves an optional item without submitting the surrounding stage', async () => {
     const user = userEvent.setup();
-    const { onSave } = setupReviewEditor(JSON.stringify({ review: DEFAULT_REVIEW_POLICY }));
+    const { onSave } = await setupReviewEditor(JSON.stringify({ review: DEFAULT_REVIEW_POLICY }));
     await user.click(screen.getByRole('button', { name: 'Add review checklist item' }));
     const dialog = screen.getByRole('dialog', { name: 'Configure review checklist item' });
     await user.click(within(dialog).getByRole('button', { name: 'Save checklist item' }));
@@ -57,7 +58,7 @@ describe('review stage configuration', { timeout: 30000 }, () => {
       ).not.toBeInTheDocument()
     );
     expect(onSave).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).review.checklist).toEqual([
       { code: 'CHECK_1', name: 'Family meeting notes considered', required: false },
@@ -66,11 +67,11 @@ describe('review stage configuration', { timeout: 30000 }, () => {
 
   it('clears the named reviewer when its configured role changes', async () => {
     const user = userEvent.setup();
-    const { onSave } = setupReviewEditor(
+    const { onSave } = await setupReviewEditor(
       JSON.stringify({ review: { ...DEFAULT_REVIEW_POLICY, assignedReviewerId: reviewerId } })
     );
     await chooseReviewOption(user, 'Reviewer role (optional)', 'Admissions lead');
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(
       JSON.parse(onSave.mock.calls[0][0].configurationJson).review.assignedReviewerId

@@ -16,41 +16,55 @@ const classes = [
 ] as Standards[];
 
 describe('bulk offering class selection', () => {
-  it('derives the required stage from the selected class and keeps a batch within it', () => {
-    expect(selectBulkClasses(['class-1', 'class-2'], classes)).toEqual({
-      stageId: 'primary',
-      standardIds: ['class-1', 'class-2'],
+  it('retains classes across school levels and removes only missing or duplicate IDs', () => {
+    expect(selectBulkClasses(['class-1', 'class-9', 'class-1', 'missing'], classes)).toEqual({
+      standardIds: ['class-1', 'class-9'],
     });
-    expect(selectBulkClasses(['class-1', 'class-9'], classes)).toEqual({
-      stageId: 'primary',
-      standardIds: ['class-1'],
-    });
-    expect(selectBulkClasses([], classes)).toEqual({ stageId: '', standardIds: [] });
+    expect(selectBulkClasses([], classes)).toEqual({ standardIds: [] });
   });
 
-  it('keeps the derived stage and empty campus in the preview and create payload', async () => {
-    const selection = selectBulkClasses(['class-1', 'class-2'], classes);
+  it('lets the server derive each school level and application form for preview and create', async () => {
     const values = {
       ...bulkOfferingInitialValues,
       boardId: 'board-1',
       mediumId: 'medium-1',
-      ...selection,
+      inquiryFormDefinitionId: 'inquiry-1',
+      ...selectBulkClasses(['class-1', 'class-9'], classes),
     };
-
     await expect(bulkOfferingSchema.isValid(values)).resolves.toBe(true);
     const preview = toBulkOfferingInput(values, classes, true);
     expect(preview).toMatchObject({
-      stageId: 'primary',
+      track: 0,
+      entryMode: 0,
       campusId: null,
       previewOnly: true,
+      inquiryFormDefinitionId: 'inquiry-1',
+      applicationFormDefinitionId: null,
       items: [
         { standardId: 'class-1', code: 'ADM-CLASS-1' },
-        { standardId: 'class-2', code: 'ADM-CLASS-2' },
+        { standardId: 'class-9', code: 'ADM-CLASS-9' },
       ],
     });
-    expect(toBulkOfferingInput(values, classes, false)).toMatchObject({
-      stageId: 'primary',
-      previewOnly: false,
+    expect(preview).not.toHaveProperty('stageId');
+    expect(toBulkOfferingInput(values, classes, false)).toEqual({ ...preview, previewOnly: false });
+  });
+
+  it('generates distinct bounded codes for duplicate, non-Latin, punctuation, and long names', () => {
+    const standards = [
+      { id: '00000000-0000-0000-0000-000000000001', name: 'Class 1' },
+      { id: '00000000-0000-0000-0000-000000000002', name: 'Class 1' },
+      { id: '00000000-0000-0000-0000-000000000003', name: 'कक्षा' },
+      { id: '00000000-0000-0000-0000-000000000004', name: '!!!' },
+      { id: '00000000-0000-0000-0000-000000000005', name: 'A'.repeat(100) },
+    ] as Standards[];
+    const values = { ...bulkOfferingInitialValues, standardIds: standards.map((item) => item.id) };
+    const preview = toBulkOfferingInput(values, standards, true);
+    const codes = preview.items.map((item) => item.code);
+    expect(new Set(codes).size).toBe(5);
+    codes.forEach((code) => {
+      expect(code.length).toBeLessThanOrEqual(64);
+      expect(code).toMatch(/^ADM-[A-Z0-9-]+$/);
     });
+    expect(toBulkOfferingInput(values, standards, false).items).toEqual(preview.items);
   });
 });

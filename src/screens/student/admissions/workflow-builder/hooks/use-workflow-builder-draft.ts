@@ -139,7 +139,7 @@ export function useWorkflowBuilderDraft(
     );
     if (!metadata) return;
     setEditingStage(
-      createStage(metadata, stages.length, !stages.some((stage) => stage.isEntryStage))
+      createStage(metadata, stages.length, !stages.some((stage) => stage.isEntryStage), stages)
     );
     setStageDrawerOpen(true);
   };

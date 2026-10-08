@@ -1,10 +1,14 @@
-import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
+import type {
+  AdmissionWorkflowStage,
+  AdmissionWorkflowStageTypeMetadata,
+} from 'src/redux/student/admissions/admission-workflows-api';
 
 import { it, expect, describe } from 'vitest';
 import { normalizeAdmissionWorkflowStageType } from 'src/redux/student/admissions/admission-workflows-api';
 
 import { getRegistrationFormTemplate } from './form-dialog/registration-form-template';
 import {
+  createStage,
   reorderStages,
   duplicateStage,
   parseSimpleCondition,
@@ -27,6 +31,19 @@ const stage = (id: string, displayOrder: number): AdmissionWorkflowStage => ({
 });
 
 describe('workflow builder utilities', () => {
+  it('generates unique internal codes after deletion without changing surviving stages', () => {
+    const metadata = {
+      type: 2,
+      displayName: 'Assessment',
+      description: 'Record assessment results',
+    } as AdmissionWorkflowStageTypeMetadata;
+    const existing = [stage('stage_1', 0), stage('stage_3', 1), stage('stage_4', 2)];
+    const next = createStage(metadata, existing.length, false, existing);
+    expect(next.code).toBe('STAGE_5');
+    expect(next.displayOrder).toBe(3);
+    expect(existing.map((item) => item.code)).toEqual(['STAGE_1', 'STAGE_3', 'STAGE_4']);
+    expect(createStage(metadata, 0, true).code).toBe('STAGE_1');
+  });
   it('reorders stages without changing explicit entry and terminal meaning', () => {
     const result = reorderStages(
       [stage('one', 0), stage('two', 1), stage('three', 2)],
@@ -80,6 +97,16 @@ describe('workflow builder utilities', () => {
     expect(copy.isEntryStage).toBe(false);
     expect(copy.isTerminalStage).toBe(false);
     expect(result.map((item) => item.displayOrder)).toEqual([0, 1, 2]);
+  });
+
+  it('keeps generated duplicate codes within the internal contract even for a maximum-length saved code', () => {
+    const source = { ...stage('long-code', 0), code: 'A'.repeat(64) };
+    const first = duplicateStage([source], source.id);
+    const second = duplicateStage(first, source.id);
+    expect(first[1].code).toBe(`${'A'.repeat(59)}_COPY`);
+    expect(second[1].code).toBe(`${'A'.repeat(57)}_COPY_2`);
+    expect(second.every((item) => item.code.length <= 64)).toBe(true);
+    expect(source.code).toHaveLength(64);
   });
 
   it('upgrades only legacy Form stages before saving or validating a workflow', () => {

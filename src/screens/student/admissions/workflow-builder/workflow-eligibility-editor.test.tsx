@@ -8,21 +8,19 @@ import { setupEligibilityEditor, chooseEligibilityOption } from './eligibility-e
 describe('eligibility stage setup', { timeout: 15000 }, () => {
   it('keeps legacy completion and disables managed setup when the backend lacks support', async () => {
     const user = userEvent.setup();
-    const { onSave } = setupEligibilityEditor(undefined, false, false);
-    expect(
-      screen.getByRole('radio', { name: 'Basic completion (existing process)' })
-    ).toBeChecked();
+    const { onSave } = await setupEligibilityEditor(undefined, false, false);
+    expect(screen.getByRole('radio', { name: 'Complete manually' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Check eligibility rules' })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(onSave.mock.calls[0][0].configurationJson).toBeUndefined();
   });
 
   it('requires valid age criteria and saves optional exception reviewer settings', async () => {
     const user = userEvent.setup();
-    const { onSave } = setupEligibilityEditor();
+    const { onSave } = await setupEligibilityEditor();
     await user.click(screen.getByRole('radio', { name: 'Check eligibility rules' }));
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Add eligibility criterion' }));
     const dialog = screen.getByRole('dialog', { name: 'Configure eligibility criterion' });
@@ -49,7 +47,7 @@ describe('eligibility stage setup', { timeout: 15000 }, () => {
       ).toBeEnabled()
     );
     await chooseEligibilityOption(user, 'Exception approval role (optional)', 'Admissions lead');
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     const policy = JSON.parse(onSave.mock.calls[0][0].configurationJson).eligibility;
     expect(policy).toMatchObject({
@@ -79,7 +77,7 @@ describe('eligibility stage setup', { timeout: 15000 }, () => {
       ],
     };
     const user = userEvent.setup();
-    const { onSave } = setupEligibilityEditor(JSON.stringify({ eligibility: policy }), true);
+    const { onSave } = await setupEligibilityEditor(JSON.stringify({ eligibility: policy }), true);
     await user.click(screen.getByRole('button', { name: 'View Age requirement' }));
     const dialog = screen.getByRole('dialog', { name: 'Eligibility criterion' });
     expect(within(dialog).getByRole('spinbutton', { name: 'Minimum age years' })).toBeDisabled();

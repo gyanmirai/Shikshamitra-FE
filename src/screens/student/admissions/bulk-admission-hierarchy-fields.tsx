@@ -27,9 +27,6 @@ export function BulkAdmissionHierarchyFields({
 }: Props) {
   const { values, errors, touched } = formik;
   const options = getAdmissionHierarchyOptions(hierarchy, values.boardId, values.mediumId);
-  const visibleStandards = values.stageId
-    ? standards.filter((item) => item.educationMediumStageId === values.stageId)
-    : standards;
 
   return (
     <Grid container spacing={1.5}>
@@ -44,7 +41,6 @@ export function BulkAdmissionHierarchyFields({
           onChange={(id) => {
             change('boardId', id);
             change('mediumId', '');
-            change('stageId', '');
             change('standardIds', []);
           }}
           error={touched.boardId && Boolean(errors.boardId)}
@@ -62,7 +58,6 @@ export function BulkAdmissionHierarchyFields({
           disabled={!values.boardId || loading}
           onChange={(id) => {
             change('mediumId', id);
-            change('stageId', '');
             change('standardIds', []);
           }}
           error={touched.mediumId && Boolean(errors.mediumId)}
@@ -72,7 +67,7 @@ export function BulkAdmissionHierarchyFields({
       <Grid size={{ xs: 12, sm: 4 }}>
         <CustomSelect
           multiple
-          options={visibleStandards}
+          options={standards}
           label="Class *"
           labelKey="name"
           valueKey="id"
@@ -84,20 +79,10 @@ export function BulkAdmissionHierarchyFields({
               (Array.isArray(ids) ? ids : [ids]).map(String),
               standards
             );
-            change('stageId', selection.stageId);
             change('standardIds', selection.standardIds);
           }}
-          error={
-            (touched.standardIds && Boolean(errors.standardIds)) ||
-            (touched.stageId && Boolean(errors.stageId))
-          }
-          helperText={
-            touched.standardIds || touched.stageId
-              ? String(errors.standardIds ?? errors.stageId ?? '')
-              : values.stageId
-                ? 'Clear selected classes to see all classes again.'
-                : 'Preview verifies that the selected classes are available in your scope.'
-          }
+          error={touched.standardIds && Boolean(errors.standardIds)}
+          helperText={touched.standardIds ? String(errors.standardIds ?? '') : undefined}
         />
       </Grid>
     </Grid>

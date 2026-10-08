@@ -11,8 +11,8 @@ import {
 
 import { renderDocumentEditor, chooseDocumentOption } from './document-editor-test-fixture';
 
-const setupDocumentEditor = (...args: Parameters<typeof renderDocumentEditor>) => ({
-  ...renderDocumentEditor(...args),
+const setupDocumentEditor = async (...args: Parameters<typeof renderDocumentEditor>) => ({
+  ...(await renderDocumentEditor(...args)),
   user: userEvent.setup(),
 });
 
@@ -57,7 +57,7 @@ describe('document requirement editor', { timeout: 15000 }, () => {
         HttpResponse.json([{ id, name: 'Class 10', context: 'CBSE / English / Secondary' }])
       )
     );
-    const { user, onSave } = setupDocumentEditor(json());
+    const { user, onSave } = await setupDocumentEditor(json());
     await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
     await chooseDocumentOption(user, 'Applies to classes', 'Selected classes');
     const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
@@ -74,7 +74,7 @@ describe('document requirement editor', { timeout: 15000 }, () => {
         screen.queryByRole('dialog', { name: 'Configure document requirement' })
       ).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(
       JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification.requirements[0]
@@ -82,7 +82,7 @@ describe('document requirement editor', { timeout: 15000 }, () => {
     ).toEqual([id]);
   });
   it('requires a comparison before saving a conditional document and preserves the chosen rule', async () => {
-    const { user, onSave } = setupDocumentEditor(json());
+    const { user, onSave } = await setupDocumentEditor(json());
     await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
     const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
     await chooseDocumentOption(user, 'When is it required?', 'Required when conditions match');
@@ -106,7 +106,7 @@ describe('document requirement editor', { timeout: 15000 }, () => {
         screen.queryByRole('dialog', { name: 'Configure document requirement' })
       ).not.toBeInTheDocument()
     );
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     const [item] = JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification
       .requirements;
@@ -120,7 +120,7 @@ describe('document requirement editor', { timeout: 15000 }, () => {
   it('keeps an unsaved requirement open when cancellation is declined', async () => {
     const confirm = vi.fn(() => false);
     vi.stubGlobal('confirm', confirm);
-    const { user } = setupDocumentEditor(json());
+    const { user } = await setupDocumentEditor(json());
     await user.click(screen.getByRole('button', { name: 'Edit Birth certificate' }));
     const dialog = screen.getByRole('dialog', { name: 'Configure document requirement' });
     await user.type(
@@ -133,7 +133,7 @@ describe('document requirement editor', { timeout: 15000 }, () => {
     vi.unstubAllGlobals();
   });
   it('creates a conditional custom requirement collected as a physical original with one save', async () => {
-    const { user, onSave } = setupDocumentEditor();
+    const { user, onSave } = await setupDocumentEditor();
     await user.click(screen.getByRole('radio', { name: 'Collect and verify documents' }));
     await user.click(screen.getByRole('button', { name: 'Add custom document' }));
     const dialog = within(screen.getByRole('dialog', { name: 'Configure document requirement' }));
@@ -151,7 +151,7 @@ describe('document requirement editor', { timeout: 15000 }, () => {
       ).not.toBeInTheDocument()
     );
     expect(onSave).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     const [item] = JSON.parse(onSave.mock.calls[0][0].configurationJson).documentVerification
       .requirements;

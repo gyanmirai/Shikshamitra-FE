@@ -3,20 +3,34 @@ import { Iconify } from 'src/components/iconify';
 import { Alert, Stack, Paper, Button, Skeleton, Typography } from '@mui/material';
 import { useGetAdmissionInquiryTimelineQuery } from 'src/redux/student/admissions/admission-inquiries-api';
 
+import { isInquiryFormActivity } from './inquiry-form-history';
 import { AdmissionActivityTimeline } from '../admission-activity-timeline';
 
-export function InquiryTimeline({ inquiryId }: { inquiryId: string }) {
+export function InquiryTimeline({
+  inquiryId,
+  scope = 'all',
+}: {
+  inquiryId: string;
+  scope?: 'all' | 'form';
+}) {
   const query = useGetAdmissionInquiryTimelineQuery(inquiryId);
-  const activities = query.data ?? [];
+  const activities = (query.data ?? []).filter(
+    (item) => scope !== 'form' || isInquiryFormActivity(item)
+  );
+  const title = scope === 'form' ? 'Form history' : 'Timeline and communications';
 
   return (
     <Paper variant="outlined" sx={{ p: 2 }}>
       <Stack spacing={1.5}>
         <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
           <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle1">Timeline and communications</Typography>
+            <Typography variant="subtitle1" component="h2">
+              {title}
+            </Typography>
             <Typography variant="body2" color="text.secondary">
-              Contact, follow-up, assignment, and communication history in one place.
+              {scope === 'form'
+                ? 'Inquiry form creation and saved changes, newest first.'
+                : 'Contact, follow-up, assignment, and communication history in one place.'}
             </Typography>
           </Stack>
           {!query.isLoading && <Label color="default">{activities.length}</Label>}
@@ -43,14 +57,18 @@ export function InquiryTimeline({ inquiryId }: { inquiryId: string }) {
               </Button>
             }
           >
-            Timeline and communications could not be loaded.
+            {title} could not be loaded.
           </Alert>
         )}
         {!query.isLoading && !query.isError && (
           <AdmissionActivityTimeline
             activities={activities}
             initiallyVisible={5}
-            emptyDescription="Contact notes, follow-ups, and communications will appear here."
+            emptyDescription={
+              scope === 'form'
+                ? 'Saved inquiry form changes will appear here.'
+                : 'Contact notes, follow-ups, and communications will appear here.'
+            }
           />
         )}
       </Stack>

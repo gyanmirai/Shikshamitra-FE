@@ -14,7 +14,7 @@ describe('admissions workflow templates', () => {
     expect(WORKFLOW_TEMPLATE_IDS).toEqual(['standard', 'simple', 'assessment', 'selective']);
     expect(ADMISSION_WORKFLOW_TEMPLATES.map((template) => template.name)).toEqual([
       'Standard admission',
-      'Simple direct admission',
+      'Simple admission',
       'Assessment-based admission',
       'Selective admission with offer',
     ]);

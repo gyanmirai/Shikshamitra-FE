@@ -12,6 +12,8 @@ import { DEFAULT_ASSESSMENT_POLICY } from 'src/redux/student/admissions/admissio
 import { AdmissionWorkflowStageDrawer } from '../admission-workflow-stage-drawer';
 import { renderDocumentUi } from '../document-verification/document-ui-test-fixture';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 // Load the same rendered icons directly; avoid transforming the unrelated MUI icon catalogue.
 vi.mock('@mui/icons-material', async () => {
   const [Info, Error, CheckCircle, WarningAmber] = await Promise.all([
@@ -57,13 +59,18 @@ const stage: AdmissionWorkflowStage = {
   isEntryStage: false,
   isTerminalStage: false,
 };
-function setup(configurationJson?: string, readOnly = false) {
+async function setup(
+  configurationJson?: string,
+  readOnly = false,
+  description?: string,
+  stageChanges: Partial<AdmissionWorkflowStage> = {}
+) {
   const onSave = vi.fn();
   const onClose = vi.fn();
   renderDocumentUi(
     <AdmissionWorkflowStageDrawer
       open
-      stage={{ ...stage, configurationJson }}
+      stage={{ ...stage, configurationJson, description, ...stageChanges }}
       stageTypes={[metadata]}
       forms={[]}
       readOnly={readOnly}
@@ -71,54 +78,78 @@ function setup(configurationJson?: string, readOnly = false) {
       onClose={onClose}
     />
   );
-  fireEvent.click(screen.getByRole('tab', { name: 'Process' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await screen.findByRole('button', { name: readOnly ? 'Close' : 'Apply changes' });
   return { onSave, onClose, user: userEvent.setup() };
 }
 async function chooseProcess(user: ReturnType<typeof userEvent.setup>, name: string) {
-  await user.click(screen.getByRole('combobox', { name: 'Assessment process' }));
-  await user.click(screen.getByRole('option', { name }));
-  await waitFor(() =>
-    expect(screen.queryByRole('listbox', { hidden: true })).not.toBeInTheDocument()
-  );
+  await user.click(screen.getByRole('radio', { name }));
 }
 
 // Real MUI transitions and keyboard entry need a bounded allowance on busy Windows hosts.
 describe('assessment stage editor interactions', { timeout: 15000 }, () => {
-
-  it('lets an assessment become the entry stage', async () => {
-    const { user, onSave } = setup();
-    await user.click(screen.getByRole('tab', { name: 'Settings' }));
-    await user.click(screen.getByRole('button', { name: 'Journey position (advanced)' }));
-    await user.click(screen.getByRole('switch', { name: 'Applicants start here' }));
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+  it('preserves an assessment entry-stage flag while editing visible stage details', async () => {
+    const { user, onSave } = await setup(undefined, false, undefined, { isEntryStage: true });
+    expect(screen.queryByRole('switch', { name: 'Entry stage' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    const name = screen.getByRole('textbox', { name: 'Stage name *' });
+    await user.clear(name);
+    await user.type(name, 'School entrance assessment');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() =>
-      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ isEntryStage: true }))
+      expect(onSave).toHaveBeenCalledWith(
+        expect.objectContaining({ isEntryStage: true, name: 'School entrance assessment' })
+      )
     );
+  });
+
+  it('opts into result recording without enabling scheduling', async () => {
+    const { user, onSave } = await setup('{"extension":{"source":"intake"}}');
+    await chooseProcess(user, 'Record an assessment result');
+    expect(screen.getByRole('radio', { name: 'Record an assessment result' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Schedule an entrance exam' })).not.toBeChecked();
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
+    expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toEqual({
+      extension: { source: 'intake' },
+      assessment: { ...DEFAULT_ASSESSMENT_POLICY, schedulingEnabled: false },
+    });
   });
 
   it('leaves basic legacy assessment configuration untouched when saving unrelated stage details', async () => {
     const original = '{"integration":{"rubric":"existing"}}';
-    const { user, onSave } = setup(original);
-    expect(screen.getByRole('combobox', { name: 'Assessment process' })).toHaveTextContent(
-      'Basic completion'
-    );
+    const { user, onSave } = await setup(original, false, 'Keep the original instructions');
+    expect(screen.getByRole('radio', { name: 'Complete manually' })).toBeChecked();
+    expect(screen.getAllByRole('radio')).toHaveLength(3);
+    expect(screen.getByRole('radio', { name: 'Record an assessment result' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Schedule an entrance exam' })).not.toBeChecked();
     expect(screen.queryByRole('spinbutton', { name: /Total marks/ })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('tab', { name: 'Basics' }));
-    await user.type(screen.getByRole('textbox', { name: 'Staff instructions' }), 'Bring a pencil');
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Back' }));
+    const name = screen.getByRole('textbox', { name: 'Stage name *' });
+    await user.clear(name);
+    await user.type(name, 'School entrance assessment');
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(
-        expect.objectContaining({ configurationJson: original, description: 'Bring a pencil' })
+        expect.objectContaining({
+          configurationJson: original,
+          name: 'School entrance assessment',
+          description: 'Keep the original instructions',
+        })
       )
     );
   });
 
   it('opts into scheduled assessment and preserves sibling settings when saving the draft stage', async () => {
-    const { user, onSave } = setup('{"formDefinitionId":"frozen-form","extension":{"rubric":"A"}}');
+    const { user, onSave } = await setup(
+      '{"formDefinitionId":"frozen-form","extension":{"rubric":"A"}}'
+    );
     await chooseProcess(user, 'Schedule an entrance exam');
     await user.click(screen.getByRole('switch', { name: 'Require attendance' }));
     await user.click(screen.getByRole('switch', { name: 'Require result review' }));
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson)).toEqual({
       formDefinitionId: 'frozen-form',
@@ -133,17 +164,17 @@ describe('assessment stage editor interactions', { timeout: 15000 }, () => {
   });
 
   it('blocks invalid passing marks and preserves settings when returning to basic completion', async () => {
-    const { user, onSave } = setup(JSON.stringify({ assessment: DEFAULT_ASSESSMENT_POLICY }));
+    const { user, onSave } = await setup(JSON.stringify({ assessment: DEFAULT_ASSESSMENT_POLICY }));
     const input = screen.getByRole('spinbutton', { name: /Passing marks/ });
     await user.clear(input);
     await user.type(input, '101');
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();
     expect(
       await screen.findByText('Passing marks must be between zero and the total marks.')
     ).toBeInTheDocument();
-    await chooseProcess(user, 'Basic completion (existing process)');
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await chooseProcess(user, 'Complete manually');
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     await waitFor(() => expect(onSave).toHaveBeenCalledOnce());
     expect(JSON.parse(onSave.mock.calls[0][0].configurationJson).assessment).toMatchObject({
       enabled: false,
@@ -152,25 +183,19 @@ describe('assessment stage editor interactions', { timeout: 15000 }, () => {
   });
 
   it('prevents future policy versions from being silently downgraded or saved', async () => {
-    const { user, onSave } = setup(
+    const { user, onSave } = await setup(
       JSON.stringify({ assessment: { ...DEFAULT_ASSESSMENT_POLICY, version: 2 } })
     );
-    expect(screen.getByRole('combobox', { name: 'Assessment process' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
+    screen.getAllByRole('radio').forEach((option) => expect(option).toBeDisabled());
     expect(screen.getByText(/unsupported or incomplete/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Save stage' }));
+    await user.click(screen.getByRole('button', { name: 'Apply changes' }));
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('keeps published stage controls read-only', () => {
-    setup(JSON.stringify({ assessment: DEFAULT_ASSESSMENT_POLICY }), true);
-    expect(screen.getByRole('combobox', { name: 'Assessment process' })).toHaveAttribute(
-      'aria-disabled',
-      'true'
-    );
+  it('keeps published stage controls read-only', async () => {
+    await setup(JSON.stringify({ assessment: DEFAULT_ASSESSMENT_POLICY }), true);
+    screen.getAllByRole('radio').forEach((option) => expect(option).toBeDisabled());
     expect(screen.getByRole('spinbutton', { name: /Total marks/ })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Save stage' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Apply changes' })).not.toBeInTheDocument();
   });
 });

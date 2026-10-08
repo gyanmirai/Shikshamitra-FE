@@ -24,7 +24,7 @@ TL;DR: use this page to map the implemented Admissions and Student Onboarding ro
 | Admissions → Settings → Intake & Assignment           | `/student/admissions/settings/intake-assignment`  | `src/screens/student/admissions/admission-intake-assignment.tsx`  | `Students.Admissions.Offerings.View`                             |
 | Admissions → Settings → Admission Offering            | `/student/admissions/settings/offerings`          | `src/screens/student/admissions/admission-offerings.tsx`          | `View`; additive commands use `Add`, destructive commands use `Delete` |
 | Admissions → Inquiries                               | `/student/admissions/inquiries`                   | `src/screens/student/admissions/admission-inquiries.tsx`          | `Students.Admissions.Inquiries`                                        |
-| Admissions → Pipeline                                | `/student/admissions/pipeline`                    | `src/screens/student/admissions/admission-inquiry-pipeline.tsx`   | `Students.Admissions.Inquiries`                                        |
+| Admissions → Pipeline                                | `/student/admissions/pipeline`                    | `src/screens/student/admissions/admission-inquiry-pipeline.tsx`   | `Students.Admissions.Applications.View`                                |
 | Admissions → Applicant 360                           | `/student/admissions/applicants/[id]`             | `src/screens/student/admissions/admission-applicant-360.tsx`      | inherited from Admissions                                              |
 | Admissions → Assessments                             | `/student/admissions/assessments`                 | `src/screens/student/admissions/admission-assessments.tsx`        | `Students.Admissions.Assessments.View`                                 |
 | Admissions → Applications                            | `/student/admissions/applications`                | `src/screens/student/admissions/admission-applications.tsx`       | `Students.Admissions.Applications`                                     |
@@ -51,13 +51,16 @@ Student Setup reads the durable onboarding worklist. Placement, identifiers, rea
 The Assessment workspace is available at `/student/admissions/assessments`, owned by `src/screens/student/admissions/admission-assessments.tsx` and guarded by `Students.Admissions.Assessments.View`.
 It appears directly under Admissions as Assessments.
 The corresponding App Router entry is `src/app/(auth-route)/student/admissions/assessments/page.tsx`.
-Session and applicant assessment actions use granular assessment permissions; backend authorization and offering scope remain authoritative.
+Sessions and Applicants are URL-backed workspace tabs. Scope, applicant queue, session, search, sorting and pagination remain shareable without replacing unrelated academic filters. Assessment View opens the workbench; Add controls session and normal applicant actions, Delete controls waiver, and Continue additionally requires Applications View and Advance. Backend capabilities, authorization and offering scope remain authoritative.
 
 The application-review workspace remains available at `/student/admissions/reviews`, owned by `src/screens/student/admissions/admission-reviews.tsx`, with the App Router entry `src/app/(auth-route)/student/admissions/reviews/page.tsx`. It is intentionally not a separate sidebar item. `Students.Admissions.Reviews.View` remains exposed in the permission editor as **Application Reviews** under Applications, and the existing deep link and embedded review actions remain protected. Assigned-to-me and overdue filters use server pagination; rows open the existing application detail route.
 
 The Admissions menu and route constants are defined in `src/constants/student-menu.ts`.
 The Admissions menu exposes Inquiries, Pipeline, Assessments, Applications, and Settings. Settings follows the school setup order: Admission Periods, Admission Form, Admission Stage, Intake & Assignment, and Admission Offering. There are no numbered labels, and the Admissions root redirects to Inquiries.
-Pipeline keeps its existing name and Inquiry View access. It lists inquiries already handed to linked applications and opens the existing application detail route when the user has Applications View. Applications retains its existing independent list and route.
+Pipeline uses Applications View for both its menu and route guard.
+It lists active inquiry-linked applications and opens the existing current-step detail workspace.
+The `returnTo` query accepts only the Pipeline route and preserves its search, filters, sort and page when closing the application.
+Applications retains completed, closed and historical records through its existing independent list and route.
 The Inquiry list stores its search, filters, and selected `inquiryId` in query parameters. Applicant 360 also accepts `inquiryId` when opened from the management drawer so application start uses the exact inquiry selected by the counselor.
 Applicant 360 is the applicant-level admissions workspace: it explains the family context, surfaces missing identity data, shows the current application stage, exposes the next action, and keeps applications, inquiry activity, and internal notes together.
 

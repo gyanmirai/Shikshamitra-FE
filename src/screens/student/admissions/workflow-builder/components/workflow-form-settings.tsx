@@ -3,9 +3,9 @@ import type { AdmissionForm } from 'src/redux/student/admissions/admission-forms
 import type { AdmissionWorkflowStage } from 'src/redux/student/admissions/admission-workflows-api';
 import type { AdmissionFormStagePolicy } from 'src/redux/student/admissions/admission-form-stage-policy';
 
-import { varAlpha } from 'src/theme/styles';
 import { Iconify } from 'src/components/iconify';
-import { Box, Grid, Alert, Paper, Stack, Button, ButtonBase, Typography } from '@mui/material';
+import CustomTooltip from 'src/components/custom-tooltip';
+import { Alert, Stack, Button, Switch, Typography } from '@mui/material';
 import { readStageConfiguration } from 'src/redux/student/admissions/admission-assessment-policy';
 import {
   DEFAULT_FORM_STAGE_POLICY,
@@ -14,6 +14,7 @@ import {
   getAdmissionFormStageConfigurationError,
 } from 'src/redux/student/admissions/admission-form-stage-policy';
 
+import { WorkflowProcessChoice } from './workflow-process-choice';
 import { FormStageBehaviorSettings } from './form-stage-behavior-settings';
 import { FormStageVerificationSettings } from './form-stage-verification-settings';
 
@@ -32,14 +33,15 @@ type Props = {
 const PROCESS_OPTIONS = [
   {
     value: 'basic',
-    title: 'Basic submission',
-    description: 'A simple submission process with no verification.',
+    title: 'Submission only',
+    description: 'Use the existing simple submission process without managed verification rules.',
     icon: 'mdi:file-document-outline',
   },
   {
     value: 'managed',
-    title: 'Managed submission',
-    description: 'Collect, submit, verify, and correct a published dynamic form.',
+    title: 'Submission with rules',
+    description:
+      'Configure responsibility, deadlines, optional verification, corrections and submission limits.',
     icon: 'mdi:account-group-outline',
   },
 ] as const;
@@ -73,77 +75,33 @@ export function WorkflowFormSettings({
 
   return (
     <Stack spacing={2}>
-      <Box>
-        <Typography variant="h6">Form process</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Choose how the form is completed, its deadline, resubmissions, and verification.
-        </Typography>
-      </Box>
-
       {!available && (
         <Alert severity="info">
           Managed Form settings are not available in this environment yet.
         </Alert>
       )}
 
-      <Grid container spacing={1} role="radiogroup" aria-label="Form process">
-        {PROCESS_OPTIONS.map((option) => {
-          const selected = selectedProcess === option.value;
-          const optionDisabled = disabled || (option.value === 'managed' && !formDefinitionId);
-          return (
-            <Grid key={option.value} size={{ xs: 12, sm: 6 }}>
-              <ButtonBase
-                type="button"
-                role="radio"
-                aria-checked={selected}
-                disabled={optionDisabled}
-                onClick={() => update({ enabled: option.value === 'managed' })}
-                sx={{ width: 1, borderRadius: 1.5, textAlign: 'left' }}
-              >
-                <Paper
-                  variant="outlined"
-                  sx={(theme) => ({
-                    width: 1,
-                    minHeight: 96,
-                    p: 2,
-                    borderRadius: 1.5,
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 1.5,
-                    borderColor: selected ? 'success.main' : 'divider',
-                    bgcolor: selected
-                      ? varAlpha(theme.vars.palette.success.mainChannel, 0.08)
-                      : 'background.paper',
-                  })}
-                >
-                  <Iconify
-                    icon={option.icon}
-                    width={24}
-                    sx={{ color: selected ? 'success.main' : 'text.secondary', mt: 0.25 }}
-                  />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="subtitle2">{option.title}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {option.description}
-                    </Typography>
-                  </Box>
-                  {selected && (
-                    <Iconify
-                      icon="mdi:check-circle"
-                      width={22}
-                      sx={{ color: 'success.main', flexShrink: 0 }}
-                    />
-                  )}
-                </Paper>
-              </ButtonBase>
-            </Grid>
-          );
-        })}
-      </Grid>
+      <WorkflowProcessChoice
+        label="Form process"
+        value={selectedProcess}
+        options={PROCESS_OPTIONS.map((option) => ({
+          ...option,
+          disabled: option.value === 'managed' && !formDefinitionId,
+        }))}
+        disabled={disabled}
+        onChange={(value) => update({ enabled: value === 'managed' })}
+      />
 
       {policy?.enabled && (
         <>
-          <FormStageBehaviorSettings policy={policy} disabled={disabled} onChange={update} />
+          <FormStageBehaviorSettings
+            policy={policy}
+            disabled={disabled}
+            onChange={update}
+            expandAdvanced={Boolean(
+              error && (formik.touched.configurationJson || formik.submitCount > 0)
+            )}
+          />
           <FormStageVerificationSettings
             policy={policy}
             form={selectedForm}
@@ -153,6 +111,36 @@ export function WorkflowFormSettings({
             disabled={disabled}
             onChange={update}
           />
+          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+            <Typography component="div" variant="body2" sx={{ minWidth: 0 }}>
+              Move to the next stage automatically
+            </Typography>
+            <CustomTooltip
+              title={
+                policy.requireSectionVerification
+                  ? 'Automatic advancement is unavailable while staff verification is required.'
+                  : 'Send applicants to the next stage after completion.'
+              }
+              arrow
+            >
+              <span>
+                <Switch
+                  size="small"
+                  slotProps={{
+                    input: {
+                      'aria-label': 'Move to the next stage automatically',
+                      'aria-description': policy.requireSectionVerification
+                        ? 'Automatic advancement is unavailable while staff verification is required.'
+                        : 'Send applicants to the next stage after completion.',
+                    },
+                  }}
+                  checked={policy.autoAdvanceOnSubmit}
+                  disabled={disabled || policy.requireSectionVerification}
+                  onChange={(_, checked) => update({ autoAdvanceOnSubmit: checked })}
+                />
+              </span>
+            </CustomTooltip>
+          </Stack>
         </>
       )}
 
@@ -167,11 +155,11 @@ export function WorkflowFormSettings({
               endIcon={<Iconify icon="mdi:arrow-right" />}
               onClick={onGoToBasics}
             >
-              Go to Basics
+              Go to stage details
             </Button>
           }
         >
-          Choose a published form in Basics to finish setup.
+          Choose a published form in Stage details to finish setup.
         </Alert>
       ) : (
         error && <Alert severity="error">{error}</Alert>

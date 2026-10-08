@@ -13,7 +13,6 @@ import { WorkflowFormSettings } from './workflow-form-settings';
 import { WorkflowStageNextSteps } from './workflow-stage-next-steps';
 import { WorkflowFormStageBasics } from './workflow-form-stage-basics';
 import { WorkflowFormStageSettings } from './workflow-form-stage-settings';
-import { WorkflowStageCompletionSummary } from './workflow-stage-completion-summary';
 
 type Props = {
   formik: FormikProps<AdmissionWorkflowStage>;
@@ -29,6 +28,9 @@ type Props = {
   readOnly: boolean;
   activeStep: number;
   onGoToBasics: () => void;
+  onAddPath?: (stage: AdmissionWorkflowStage) => void;
+  onEditPath?: (transition: AdmissionWorkflowTransition) => void;
+  routeEditingDisabled?: boolean;
 };
 
 export function WorkflowFormStageFields(props: Props) {
@@ -45,17 +47,24 @@ export function WorkflowFormStageFields(props: Props) {
     transitions,
     activeStep,
     onGoToBasics,
+    onAddPath,
+    onEditPath,
+    routeEditingDisabled,
   } = props;
 
   return (
     <Stack spacing={2} sx={{ p: 2 }}>
       {activeStep === 0 ? (
-        <FormSectionCard title="Basics" icon="mdi:file-document-outline">
+        <FormSectionCard
+          title="Stage details"
+          icon="mdi:file-document-outline"
+          descriptionTooltip="Choose the stage type, its name and the published form version applicants will complete. The selected form version is frozen with the workflow."
+        >
           <WorkflowFormStageBasics {...props} />
         </FormSectionCard>
       ) : (
         <>
-          <FormSectionCard title="Settings" icon="mdi:cog-outline">
+          <FormSectionCard title="Form completion" icon="mdi:file-check-outline">
             <WorkflowFormSettings
               formik={formik}
               forms={forms}
@@ -68,15 +77,19 @@ export function WorkflowFormStageFields(props: Props) {
               onGoToBasics={onGoToBasics}
             />
           </FormSectionCard>
-          <WorkflowStageCompletionSummary stage={formik.values} />
           <WorkflowFormStageSettings {...props} />
-          <FormSectionCard title="Next steps" icon="mdi:arrow-decision-outline">
+          <FormSectionCard title="Next step" icon="mdi:arrow-decision-outline">
             <WorkflowStageNextSteps
               stage={formik.values}
               stages={stages}
               transitions={transitions}
+              readOnly={readOnly}
+              onAddPath={onAddPath}
+              onEditPath={onEditPath}
+              routeEditingDisabled={routeEditingDisabled}
             />
           </FormSectionCard>
+          <WorkflowFormStageSettings {...props} advanced />
         </>
       )}
     </Stack>

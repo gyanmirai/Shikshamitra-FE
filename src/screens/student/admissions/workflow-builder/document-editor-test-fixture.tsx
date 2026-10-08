@@ -18,6 +18,8 @@ import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/re
 
 import { AdmissionWorkflowStageDrawer } from '../admission-workflow-stage-drawer';
 
+vi.mock('src/components/iconify', () => ({ Iconify: () => null }));
+
 const metadata: AdmissionWorkflowStageTypeMetadata = {
   type: 5,
   displayName: 'Document verification',
@@ -44,11 +46,12 @@ const stage: AdmissionWorkflowStage = {
   isEntryStage: false,
   isTerminalStage: false,
 };
-const createEditorStore = () => configureStore({
-  reducer: { confirmPopup, [api.reducerPath]: api.reducer },
-  middleware: (defaults) => defaults().concat(api.middleware),
-});
-export function renderDocumentEditor(
+const createEditorStore = () =>
+  configureStore({
+    reducer: { confirmPopup, [api.reducerPath]: api.reducer },
+    middleware: (defaults) => defaults().concat(api.middleware),
+  });
+export async function renderDocumentEditor(
   configurationJson?: string,
   readOnly = false,
   available = true
@@ -81,7 +84,8 @@ export function renderDocumentEditor(
       </ThemeProvider>
     </Provider>
   );
-  fireEvent.click(screen.getByRole('tab', { name: 'Process' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  await screen.findByRole('button', { name: readOnly ? 'Close' : 'Apply changes' });
   return { onSave, onClose, store };
 }
 const stores: ReturnType<typeof createEditorStore>[] = [];

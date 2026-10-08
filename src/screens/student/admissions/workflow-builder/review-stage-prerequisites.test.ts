@@ -38,6 +38,12 @@ describe('review evidence configuration constraints', () => {
     expect(getReviewStageError(review, [source, review])).toBeUndefined();
   });
 
+  it('describes a missing prerequisite without exposing its internal stage code', () => {
+    const message = getReviewStageError(review, [review]);
+    expect(message).toContain('saved assessment prerequisite');
+    expect(message).not.toContain(source.code);
+  });
+
   it.each([
     { ...source, displayOrder: 3 },
     { ...source, configurationJson: undefined },
