@@ -290,7 +290,11 @@ export function EsiEnrollmentDrawer({
             {enrollmentQuery.isError ? (
               <Alert
                 severity="error"
-                action={<Button onClick={() => enrollmentQuery.refetch()}>Retry</Button>}
+                action={
+                  <Button size="small" onClick={() => enrollmentQuery.refetch()}>
+                    Retry
+                  </Button>
+                }
               >
                 Enrollment details could not be loaded.
               </Alert>
@@ -516,7 +520,6 @@ export function EsiEnrollmentDrawer({
             sx={{
               flexShrink: 0,
               flexWrap: 'wrap',
-              '& button': { minHeight: 44 },
               px: 2.5,
               py: 2,
               display: 'flex',

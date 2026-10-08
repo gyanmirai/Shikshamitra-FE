@@ -12,6 +12,8 @@ import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { createPortal } from 'react-dom';
 import { useSelector } from 'react-redux';
+import { Iconify } from 'src/components/iconify';
+import { ExpandMore } from '@mui/icons-material';
 import { useGetPFQuery } from 'src/redux/PF/PFApi';
 import { hrPermissions } from 'src/constants/hr-menus';
 import { formatCurrency } from 'src/utils/cureencyFormater';
@@ -19,7 +21,6 @@ import { hasGrantedPermission } from 'src/utils/permissions';
 import { useId, useRef, useMemo, useState, useEffect } from 'react';
 import { parseApiProblemDetail } from 'src/utils/api-problem-details';
 import { useUpdateEmployeeStatusMutation } from 'src/redux/hr/employeeApi';
-import { Tune, Calculate, RestartAlt, ExpandMore } from '@mui/icons-material';
 import {
   useGetActiveSalaryTemplatesQuery,
   useCalculateSalaryTemplateMutation,
@@ -38,11 +39,13 @@ import {
   Button,
   Select,
   Switch,
+  Tooltip,
   Divider,
   MenuItem,
   Skeleton,
   TextField,
   Accordion,
+  IconButton,
   Typography,
   InputLabel,
   FormControl,
@@ -484,7 +487,7 @@ export function SalaryStructureBuilder({
       <Button
         size="small"
         variant="outlined"
-        startIcon={<Calculate />}
+        startIcon={<Iconify icon="mdi:calculator" />}
         onClick={calculateSalary}
         disabled={
           !canManage ||
@@ -617,48 +620,56 @@ export function SalaryStructureBuilder({
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, md: 5 }}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={pfApplicable}
-                  disabled={!canManage || busy}
-                  onChange={(_, checked) => {
-                    setPfApplicable(checked);
-                    if (!checked) setPfRuleId('');
-                    else if (!pfRuleId)
-                      setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
+          <Grid size={{ xs: 12 }}>
+            <Box
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'auto minmax(0, 1fr)' },
+                alignItems: 'center',
+                gap: 2,
+              }}
+            >
+              <FormControlLabel
+                sx={{ m: 0 }}
+                control={
+                  <Switch
+                    checked={pfApplicable}
+                    disabled={!canManage || busy}
+                    onChange={(_, checked) => {
+                      setPfApplicable(checked);
+                      if (!checked) setPfRuleId('');
+                      else if (!pfRuleId)
+                        setPfRuleId(selectedVersion?.defaultPfRuleId || pfRules[0]?.id || '');
+                      setCalculation(null);
+                    }}
+                    inputProps={{ 'aria-label': 'PF applicable for staff' }}
+                  />
+                }
+                label="PF applicable"
+              />
+              <FormControl
+                fullWidth
+                size="small"
+                disabled={!canManage || busy || !pfApplicable || pfRulesError}
+              >
+                <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
+                <Select
+                  labelId={pfRuleLabelId}
+                  label="PF rule"
+                  value={pfRuleId}
+                  onChange={(event) => {
+                    setPfRuleId(event.target.value);
                     setCalculation(null);
                   }}
-                  inputProps={{ 'aria-label': 'PF applicable for staff' }}
-                />
-              }
-              label="PF applicable"
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 7 }}>
-            <FormControl
-              fullWidth
-              size="small"
-              disabled={!canManage || busy || !pfApplicable || pfRulesError}
-            >
-              <InputLabel id={pfRuleLabelId}>PF rule</InputLabel>
-              <Select
-                labelId={pfRuleLabelId}
-                label="PF rule"
-                value={pfRuleId}
-                onChange={(event) => {
-                  setPfRuleId(event.target.value);
-                  setCalculation(null);
-                }}
-              >
-                {pfRules.map((rule: any) => (
-                  <MenuItem key={rule.id} value={rule.id}>
-                    {rule.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                >
+                  {pfRules.map((rule: any) => (
+                    <MenuItem key={rule.id} value={rule.id}>
+                      {rule.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
           </Grid>
         </Grid>
 
@@ -671,27 +682,37 @@ export function SalaryStructureBuilder({
           flexWrap="wrap"
         >
           <Box>
-            <Box display="flex" gap={1} alignItems="center">
+            <Box display="flex" gap={1} alignItems="center" flexWrap="wrap">
               <Typography variant="subtitle1">Staff-specific customization</Typography>
+              <Tooltip title="Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay locked.">
+                <IconButton
+                  size="small"
+                  aria-label="About staff-specific customization"
+                  sx={{ minWidth: 44, minHeight: 44 }}
+                >
+                  <Iconify icon="mdi:information-outline" />
+                </IconButton>
+              </Tooltip>
               {customizing && overrides.length ? (
                 <Chip size="small" color="warning" label="Customized" />
               ) : null}
             </Box>
-            <Typography variant="body2" color="text.secondary">
-              Basic, DA, and ordinary rows can be customized. Statutory and balancing rows stay
-              locked.
-            </Typography>
           </Box>
           {canManage ? (
-            <Box display="flex" gap={1}>
+            <Box display="flex" gap={1} sx={{ ml: 'auto' }}>
               {customizing ? (
-                <Button startIcon={<RestartAlt />} onClick={resetToTemplate}>
+                <Button
+                  size="small"
+                  startIcon={<Iconify icon="mdi:restore" />}
+                  onClick={resetToTemplate}
+                >
                   Reset to template
                 </Button>
               ) : null}
               <Button
+                size="small"
                 variant="outlined"
-                startIcon={<Tune />}
+                startIcon={<Iconify icon="mdi:tune-variant" />}
                 onClick={() => setCustomizing(true)}
                 disabled={customizing}
               >
@@ -712,7 +733,7 @@ export function SalaryStructureBuilder({
                       Template: {contractLabel(rule.formulaType)} {rule.value ?? ''}
                     </Typography>
                     <Grid container spacing={1} mt={0.5}>
-                      <Grid size={{ xs: 7 }}>
+                      <Grid size={{ xs: 12, sm: 7 }}>
                         <FormControl fullWidth size="small" disabled={busy}>
                           <InputLabel id={`calculation-${rule.componentId}-label`}>
                             Calculation
@@ -735,7 +756,7 @@ export function SalaryStructureBuilder({
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid size={{ xs: 5 }}>
+                      <Grid size={{ xs: 12, sm: 5 }}>
                         <TextField
                           fullWidth
                           size="small"
@@ -779,6 +800,7 @@ export function SalaryStructureBuilder({
             action={
               hasConflict ? (
                 <Button
+                  size="small"
                   disabled={busy}
                   onClick={async () => {
                     setLocalBusy(true);

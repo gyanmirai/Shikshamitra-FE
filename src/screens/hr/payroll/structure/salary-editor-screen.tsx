@@ -14,7 +14,7 @@ import { useGetEmployeeByIdQuery } from 'src/redux/hr/employeeApi';
 import { EmployeeStatusType } from 'src/enums/employee-status-type';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 import { useUnsavedNavigation } from 'src/hooks/use-unsaved-navigation';
-import { Box, Alert, Paper, Button, Skeleton, Typography } from '@mui/material';
+import { Box, Link, Alert, Paper, Button, Skeleton, Typography } from '@mui/material';
 
 import { SalaryStructureBuilder } from './SalaryStructureBuilder';
 import { useSalaryEditorPrefetch } from './use-salary-editor-prefetch';
@@ -73,7 +73,14 @@ export default function SalaryEditorScreen({ employeeId }: { employeeId: string 
           onEditorStateChange={setEditorState}
         />
       ) : (
-        <Alert severity="error" action={<Button href={returnHref}>Back</Button>}>
+        <Alert
+          severity="error"
+          action={
+            <Button size="small" href={returnHref}>
+              Back
+            </Button>
+          }
+        >
           You do not have permission to view this salary.
         </Alert>
       )}
@@ -143,7 +150,7 @@ function SalaryEditorWorkspace({
           <Alert
             severity="error"
             action={
-              <Button onClick={() => refetch()} disabled={isFetching}>
+              <Button size="small" onClick={() => refetch()} disabled={isFetching}>
                 Retry
               </Button>
             }
@@ -166,14 +173,15 @@ function SalaryEditorWorkspace({
               actionContainer={actionContainer}
               onEditorStateChange={onEditorStateChange}
             />
-            <Button
+            <Link
               component={RouterLink}
               href={hrPaths.payroll.runPayroll}
-              size="small"
-              sx={{ justifySelf: 'start', textAlign: 'left', minHeight: 44 }}
+              variant="body2"
+              underline="hover"
+              sx={{ justifySelf: 'start' }}
             >
               Manage one-time adjustments in monthly payroll
-            </Button>
+            </Link>
           </Box>
         )}
       </Box>
@@ -186,21 +194,25 @@ function SalaryEditorWorkspace({
           flexShrink: 0,
           flexWrap: 'wrap',
           gap: 1,
-          p: 2,
+          px: 2,
+          py: 1.5,
           borderTop: 1,
           borderColor: 'divider',
           bgcolor: 'background.paper',
-          '& button': { minHeight: 44 },
         }}
       >
         <Button
+          size="small"
           onClick={() => requestNavigation(() => router.push(returnHref))}
           disabled={editorState.busy}
           color="inherit"
         >
           Back
         </Button>
-        <Box ref={setActionContainer} sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }} />
+        <Box
+          ref={setActionContainer}
+          sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, flexWrap: 'wrap', ml: 'auto' }}
+        />
       </Box>
     </Paper>
   );
