@@ -3,7 +3,7 @@ module: student
 domain: overview
 content_type: Landing
 status: canonical
-updated_on: 2026-09-29
+updated_on: 2026-10-08
 owner: frontend-team
 audience: humans-and-agents
 ---
@@ -79,3 +79,6 @@ git diff --check
 
 Frontend docs own route, screen, client, cache, and browser behavior.
 Backend Admissions rules, contracts, permissions, errors, and data integrity remain owned by the backend source paths linked above.
+## Student dashboard
+
+The shared `/student/dashboard` follows academic section-card spacing, server-confirmed role priorities, permitted shortcuts and independently loaded year summaries. Use [workflows.md](./workflows.md#student-dashboard), [clients.md](./clients.md#student-dashboard-client) and [testing.md](./testing.md#student-dashboard-validation). Metric definitions remain in the [backend product rules](../../../Shikshamitra-BE/docs/modules/student/product.md#student-dashboard).
