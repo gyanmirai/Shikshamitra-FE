@@ -138,4 +138,4 @@ No arbitrary payslip recipient or separate contact field is sent.
 `src/redux/hr/employee-payroll-profile-api.ts` owns the typed profile-details PATCH and invalidates the existing employee/payroll tags.
 The profile reads existing bank details, effective compensation revisions, revision history, and effective policy assignments.
 Salary changes reuse the compensation workspace; policy changes reuse direct employee override, disable-override, and impact-preview clients.
-The backend owns permitted groups, atomic validation, and authorization in [HR API contracts](../../../Shikshamitra-BE/docs/modules/hr/api.md).
+The backend owns permitted groups, atomic validation, and authorization in [HR API contracts](https://github.com/gyanmirai/Shikshamitra-BE/blob/main/docs/modules/hr/api.md).
