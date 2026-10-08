@@ -1,4 +1,5 @@
 // ===== Academic Calendar API (reducerPath: academicApi) =====
+export const hostTenantType = { tenants: 'HostTenants' } as const;
 export const academicCalendarType = {
   calendar: 'AcademicCalendar',
   calendarDay: 'AcademicCalendarDay',
@@ -767,6 +768,7 @@ export const allTagTypes = {
   ...studentTakeAttendanceType,
   ...bulkStudentType,
   ...tenantType,
+  ...hostTenantType,
   ...transportType,
   ...yearType,
   ...permissionType,

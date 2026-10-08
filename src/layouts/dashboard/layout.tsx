@@ -1,5 +1,6 @@
 'use client';
 
+import type { RootState } from 'src/redux/store';
 import type { SettingsState } from 'src/components/settings';
 import type { NavSectionProps } from 'src/components/nav-section';
 import type { Theme, SxProps, CSSObject, Breakpoint } from '@mui/material/styles';
@@ -8,11 +9,13 @@ import { useMemo } from 'react';
 import Alert from '@mui/material/Alert';
 import { useSelector } from 'react-redux';
 import { useTheme } from '@mui/material/styles';
+import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { varAlpha, stylesMode } from 'src/theme/styles';
 import { bulletColor } from 'src/components/nav-section';
 import { iconButtonClasses } from '@mui/material/IconButton';
 import { useSettingsContext } from 'src/components/settings';
+import { hostTenantPath } from 'src/constants/host-tenant-menu';
 
 import { Main } from './main';
 import { NavMobile } from './nav-mobile';
@@ -36,7 +39,8 @@ export type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
-  const { mainModuleVisibility } = useSelector((state: any) => state.auth);
+  const { mainModuleVisibility, sessionContext } = useSelector((state: RootState) => state.auth);
+  const isHost = sessionContext?.accountMode === 'host';
   const theme = useTheme();
 
   const mobileNavOpen = useBoolean();
@@ -47,17 +51,33 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
 
   const layoutQuery: Breakpoint = 'lg';
 
-  const navData = data?.nav ?? dashboardNavData(mainModuleVisibility);
+  const navData: NavSectionProps['data'] = isHost
+    ? [
+        {
+          subheader: 'Management',
+          items: [
+            {
+              title: 'Tenant',
+              path: hostTenantPath,
+              _action: 'host',
+              icon: <Iconify icon="solar:buildings-2-outline" />,
+            },
+          ],
+        },
+      ]
+    : (data?.nav ?? dashboardNavData(mainModuleVisibility));
 
-  const isNavMini = settings.navLayout === 'mini';
+  const isNavMini = !isHost && settings.navLayout === 'mini';
 
-  const isNavHorizontal = settings.navLayout === 'horizontal';
+  const isNavHorizontal = !isHost && settings.navLayout === 'horizontal';
 
-  const isNavVertical = isNavMini || settings.navLayout === 'vertical';
+  const isNavVertical = isHost || isNavMini || settings.navLayout === 'vertical';
 
   return (
     <>
       <NavMobile
+        closeOnLinkSelection={isHost}
+        homePath={isHost ? hostTenantPath : undefined}
         data={navData}
         open={mobileNavOpen.value}
         onClose={mobileNavOpen.onFalse}
@@ -94,6 +114,10 @@ export function DashboardLayout({ sx, children, data }: DashboardLayoutProps) {
               signIn: false,
               purchase: false,
               helpLink: false,
+              workspaces: !isHost,
+              notifications: !isHost,
+              settings: !isHost,
+              searchbar: !isHost,
             }}
             slots={{
               topArea: (

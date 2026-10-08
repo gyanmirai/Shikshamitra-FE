@@ -8,7 +8,6 @@ import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
 import { Icon } from '@iconify/react';
 import Alert from '@mui/material/Alert';
-import React, { useState } from 'react';
 import Stack from '@mui/material/Stack';
 import { signIn } from 'next-auth/react';
 import Button from '@mui/material/Button';
@@ -17,6 +16,7 @@ import TextField from '@mui/material/TextField';
 import { useTheme } from '@mui/material/styles';
 import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
+import React, { useState, useEffect } from 'react';
 import { RouterLink } from 'src/routes/components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { shikshaMitraToast } from 'src/components/toast';
@@ -41,6 +41,12 @@ const BRAND_GREEN = '#2f8f68';
 const BRAND_GREEN_DARK = '#1f7a57';
 
 export default function LoginPage() {
+  const [tenantInactive, setTenantInactive] = useState(false);
+  useEffect(() => {
+    setTenantInactive(
+      new URLSearchParams(window.location.search).get('reason') === 'tenant-inactive'
+    );
+  }, []);
   const [view, setView] = useState<'login' | 'forgot'>('login');
   const [showPassword, setShowPassword] = useState(false);
   const [isForgotPasswordSent, setIsForgotPasswordSent] = useState(false);
@@ -53,6 +59,7 @@ export default function LoginPage() {
     initialValues: { organization: '', email: '', password: '' },
     validationSchema: loginSchema,
     onSubmit: async (values) => {
+      setTenantInactive(false);
       try {
         const res = await signIn('credentials', {
           email: values.email,
@@ -61,7 +68,13 @@ export default function LoginPage() {
           redirect: false,
         });
         if (res?.error) {
-          shikshaMitraToast.error({ message: 'Invalid credentials' });
+          const inactive = res.code === 'tenant-inactive';
+          setTenantInactive(inactive);
+          shikshaMitraToast.error({
+            message: inactive
+              ? 'This school is inactive. Contact the platform administrator.'
+              : 'Invalid credentials',
+          });
           setShakeError(true);
           setTimeout(() => setShakeError(false), 500);
         }
@@ -609,6 +622,11 @@ export default function LoginPage() {
                     </motion.div>
 
                     <Box component="form" onSubmit={loginFormik.handleSubmit}>
+                      {tenantInactive && (
+                        <Alert severity="warning" sx={{ mb: 2 }}>
+                          This school is inactive. Contact the platform administrator.
+                        </Alert>
+                      )}
                       <Stack spacing={3}>
                         {/* Organization */}
                         <motion.div variants={itemVariants}>

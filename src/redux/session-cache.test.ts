@@ -18,6 +18,23 @@ const buildSession = (secondsUntilExpiry = 3600) =>
   }) as any;
 
 describe('session cache', () => {
+  it('does not restore the previous account after logout or an identity change', async () => {
+    let resolveOld!: (value: ReturnType<typeof buildSession>) => void;
+    mockedGetSession.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveOld = resolve;
+      })
+    );
+    const oldRequest = getCachedAuthSession();
+    clearCachedAuthSession();
+    const current = buildSession(7200);
+    mockedGetSession.mockResolvedValueOnce(current);
+    await expect(getCachedAuthSession()).resolves.toBe(current);
+    resolveOld(buildSession());
+    await expect(oldRequest).resolves.toBeNull();
+    await expect(getCachedAuthSession()).resolves.toBe(current);
+    expect(mockedGetSession).toHaveBeenCalledTimes(2);
+  });
   beforeEach(() => {
     clearCachedAuthSession();
     mockedGetSession.mockReset();

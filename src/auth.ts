@@ -1,10 +1,14 @@
-import NextAuth from 'next-auth';
 import { jwtDecode } from 'jwt-decode';
 import { createHash } from 'node:crypto';
+import NextAuth, { CredentialsSignin } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 
 import { refreshAccessToken } from './auth-token';
 import { runAuthRequestOnce } from './auth-request';
+
+class InactiveTenantSignIn extends CredentialsSignin {
+  code = 'tenant-inactive';
+}
 
 async function signInFn({
   email,
@@ -49,7 +53,7 @@ async function requestPasswordToken({
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      __tenant: organizationName as string,
+      ...(organizationName?.trim() ? { __tenant: organizationName.trim() } : {}),
     },
     body,
   });
@@ -58,8 +62,10 @@ async function requestPasswordToken({
     let apiError: string | undefined;
     try {
       const errorData = await resp.json();
+      if (errorData?.errorCode === 'TENANT_INACTIVE') throw new InactiveTenantSignIn();
       apiError = errorData?.error;
-    } catch {
+    } catch (error) {
+      if (error instanceof InactiveTenantSignIn) throw error;
       // ignore parse errors
     }
     if (apiError === 'invalid_grant') {

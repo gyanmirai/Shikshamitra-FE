@@ -67,6 +67,16 @@ const baseQueryWithAuth: typeof rawBaseQuery = async (args, api, extraOptions) =
     //  Response interceptor logic
     if (result.error) {
       const { status } = result.error;
+      const data = result.error.data as { errorCode?: string } | undefined;
+      if (status === 403 && data?.errorCode === 'TENANT_INACTIVE') {
+        clearCachedAuthSession();
+        api.dispatch({ type: 'auth/clearUser' });
+        api.dispatch({ type: 'globalState/setCurrentYear', payload: {} });
+        api.dispatch({ type: 'globalState/setCurrentBoard', payload: {} });
+        api.dispatch({ type: 'globalState/setCurrentMedium', payload: {} });
+        toast.error('This school is inactive. Contact the platform administrator.');
+        await signOut({ callbackUrl: '/login?reason=tenant-inactive' });
+      }
 
       if (status === 401) {
         clearCachedAuthSession();
