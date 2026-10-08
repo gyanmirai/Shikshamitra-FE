@@ -6,17 +6,17 @@ import type {
 } from 'src/redux/student/admissions/admission-offerings-api';
 
 import dayjs from 'dayjs';
+import { Grid, TextField } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers';
 import CustomSelect from 'src/components/custom-select';
-import { Grid, TextField } from '@mui/material';
 import { useGetAdmissionIntakeSetupsQuery } from 'src/redux/student/admissions/admission-intake-profiles-api';
 
 import { ADMISSION_DATE_FORMAT } from './admission-date-formats';
 import { AdmissionDefinitionSelect } from './admission-definition-select';
 import {
   getIntakeSetupSelection,
-  hasLegacyIntakeSelection,
   findSelectedIntakeSetup,
+  hasLegacyIntakeSelection,
 } from './admission-intake-setup-selection';
 
 import type { BulkOfferingValues } from './bulk-admission-offering-model';
@@ -158,7 +158,8 @@ export function BulkAdmissionConfigurationFields({
       </Grid>
       <Grid size={12}>
         <CustomSelect
-          label="Intake & assignment setup"
+          label="Intake & assignment setup (required for activation)"
+          isLoading={setups.isFetching}
           value={selectedSetup?.id ?? (legacySelection ? '__legacy__' : '')}
           options={[
             ...(legacySelection
@@ -192,8 +193,8 @@ export function BulkAdmissionConfigurationFields({
                 : touched.inquiryIntakeProfileId || touched.counsellorAssignmentProfileId
                   ? errors.inquiryIntakeProfileId || errors.counsellorAssignmentProfileId
                   : startsWithInquiry
-                    ? 'Applies inquiry handling and counsellor routing together.'
-                    : 'Direct registration uses only this setup’s counsellor routing.'
+                    ? 'Required for activation. Applies inquiry handling and counsellor routing together.'
+                    : 'Required for activation. Direct registration uses this setup’s counsellor routing.'
           }
         />
       </Grid>

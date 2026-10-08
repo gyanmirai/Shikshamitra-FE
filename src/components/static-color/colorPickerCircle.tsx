@@ -6,8 +6,37 @@ interface ColorPickerProps {
   colors?: string[];
   onSelect: (color: string) => void;
   initialColor?: string;
+  disabled?: boolean;
 }
 
+const colorNames: Record<string, string> = {
+  '#00B96B': 'Green',
+  '#8E24AA': 'Purple',
+  '#00BCD4': 'Cyan',
+  '#0D47A1': 'Dark blue',
+  '#4CAF50': 'Light green',
+  '#FFB300': 'Amber',
+  '#FF5722': 'Deep orange',
+  '#8B0000': 'Dark red',
+  '#1E90FF': 'Dodger blue',
+  '#FF4500': 'Orange red',
+  '#9C27B0': 'Purple',
+  '#795548': 'Brown',
+  '#607D8B': 'Blue grey',
+  '#E91E63': 'Pink',
+  '#F44336': 'Red',
+  '#2196F3': 'Blue',
+  '#009688': 'Teal',
+  '#FFEB3B': 'Yellow',
+  '#673AB7': 'Deep purple',
+  '#3F51B5': 'Indigo',
+  '#4DD0E1': 'Light cyan',
+  '#AED581': 'Light green',
+  '#BA68C8': 'Medium purple',
+  '#F06292': 'Light pink',
+  '#FFA726': 'Orange',
+  '#A1887F': 'Taupe',
+};
 const staticColors = [
   '#00B96B', // green
   '#8E24AA', // purple
@@ -41,6 +70,7 @@ export default function ColorPickerCircle({
   colors = staticColors,
   onSelect,
   initialColor,
+  disabled = false,
 }: ColorPickerProps) {
   const [selectedColor, setSelectedColor] = useState(initialColor || '');
 
@@ -61,22 +91,45 @@ export default function ColorPickerCircle({
       {colors.map((color) => (
         <IconButton
           key={color}
+          disabled={disabled}
+          aria-label={`${colorNames[color.toUpperCase()] ?? 'Colour'} (${color})`}
+          aria-pressed={selectedColor === color}
           onClick={() => handleClick(color)}
           sx={{
-            width: 20,
-            height: 20,
-            bgcolor: color,
+            width: { xs: 44, sm: 20 },
+            height: { xs: 44, sm: 20 },
+            '@media (pointer: coarse)': { width: 44, height: 44 },
             borderRadius: '50%',
-            boxShadow: selectedColor === color ? `0 0 0 4px ${color}44` : 'none',
-            color: '#fff',
+            color: (theme) => theme.palette.getContrastText(color),
+            '&.Mui-focusVisible': {
+              outline: '3px solid',
+              outlineColor: 'text.primary',
+              outlineOffset: 3,
+            },
             p: 0,
-            '&:hover': {
+            '&:hover .color-picker-swatch': {
               boxShadow: `0 0 0 4px ${color}44`,
               backgroundColor: `${color}99`, // Change the background color on hover with alpha
             },
           }}
         >
-          {selectedColor === color && <CheckIcon fontSize="small" />}
+          <Box
+            component="span"
+            className="color-picker-swatch"
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 20,
+              height: 20,
+              flexShrink: 0,
+              bgcolor: color,
+              borderRadius: '50%',
+              boxShadow: selectedColor === color ? `0 0 0 4px ${color}44` : 'none',
+            }}
+          >
+            {selectedColor === color && <CheckIcon sx={{ fontSize: 14 }} />}
+          </Box>
         </IconButton>
       ))}
     </Box>

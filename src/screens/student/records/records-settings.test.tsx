@@ -3,11 +3,17 @@ import type {
   StudentRecordsSettings,
 } from 'src/redux/student/records/student-records-types';
 
+import { ThemeProvider } from '@mui/material/styles';
+import { createTheme } from 'src/theme/create-theme';
 import { vi, it, expect, describe, beforeEach } from 'vitest';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { defaultSettings } from 'src/components/settings/config-settings';
+import { screen, within, waitFor, fireEvent, render as renderComponent } from '@testing-library/react';
 
 import RecordsSettings from './records-settings';
 import { recordActions, recordOutcomes, recordsPolicySchema } from './records-settings-model';
+
+const render = (element: React.ReactElement) =>
+  renderComponent(<ThemeProvider theme={createTheme(defaultSettings)}>{element}</ThemeProvider>);
 
 const mocks = vi.hoisted(() => ({
   params: new URLSearchParams(),
@@ -19,8 +25,10 @@ const mocks = vi.hoisted(() => ({
   navigate: vi.fn(),
 }));
 vi.mock('react-redux', () => ({
+  useDispatch: () => vi.fn(),
   useSelector: (select: any) =>
     select({
+      confirmPopup: { isChanges: false },
       globalState: { currentYear: { id: 'year-1', name: '2026–27' } },
       auth: { permissions: mocks.permissions },
     }),
@@ -31,6 +39,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => mocks.params,
 }));
 vi.mock('src/components/iconify', () => ({ Iconify: () => <span /> }));
+vi.mock('@mui/icons-material', () => ({ Close: () => <span />, DeleteOutline: () => <span /> }));
 vi.mock('src/routes/components', () => ({
   RouterLink: ({ href, children, ...props }: any) => (
     <a href={href} {...props}>
@@ -50,12 +59,6 @@ vi.mock('src/components/customDialog', () => ({
       </div>
     ) : null,
   DialogScrollContent: ({ children }: any) => <div>{children}</div>,
-}));
-vi.mock('src/hooks/use-unsaved-navigation', () => ({
-  useUnsavedNavigation: () => ({
-    requestNavigation: (work: () => unknown) => work(),
-    confirmation: null,
-  }),
 }));
 vi.mock('src/components/custom-select', () => ({
   default: ({ label, value, options, onChange, multiple, disabled }: any) => (
@@ -172,18 +175,56 @@ beforeEach(() => {
 });
 
 describe('Student Records settings', () => {
-  it('offers four real task links without a Directory/Profile settings page', () => {
+  it('opens the first settings panel with four icon tabs and no counts', () => {
     render(<RecordsSettings />);
-    expect(screen.getByRole('link', { name: /Change Rules & Approvals/ })).toHaveAttribute(
+    const tabs = within(screen.getByRole('tablist', { name: 'Student Records settings tasks' }));
+    expect(tabs.getAllByRole('tab')).toHaveLength(4);
+    expect(tabs.getByRole('tab', { name: 'Change Rules & Approvals' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
+    expect(screen.getByRole('tabpanel', { name: 'Change Rules & Approvals' })).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Save draft' })).toBeVisible();
+    expect(tabs.getByRole('tab', { name: 'Change Rules & Approvals' })).toHaveAttribute(
       'href',
       '/student/records/settings/changes'
     );
-    expect(screen.getByRole('link', { name: /Documents & IDs/ })).toHaveAttribute(
+    expect(tabs.getByRole('tab', { name: 'Documents & IDs' })).toHaveAttribute(
       'href',
       '/student/records/settings/documents'
     );
-    expect(screen.getByRole('link', { name: /Year-End & Transitions/ })).toBeVisible();
-    expect(screen.getByRole('link', { name: /Access & Visibility/ })).toBeVisible();
+    expect(tabs.getByRole('tab', { name: 'Year-End & Transitions' })).toBeVisible();
+    expect(tabs.getByRole('tab', { name: 'Access & Visibility' })).toBeVisible();
+    expect(tabs.queryByText(/^\d+$/)).not.toBeInTheDocument();
+  });
+  it('restores the selected route and preserves academic-year scope in every tab link', () => {
+    mocks.params = new URLSearchParams('scope=year&year=year-1');
+    render(<RecordsSettings task="documents" />);
+    const tab = screen.getByRole('tab', { name: 'Documents & IDs' });
+    expect(tab).toHaveAttribute('aria-selected', 'true');
+    const panel = screen.getByRole('tabpanel', { name: 'Documents & IDs' });
+    expect(tab).toHaveAttribute('aria-controls', panel.id);
+    expect(within(panel).getByLabelText('Certificate number prefix')).toBeVisible();
+    screen.getAllByRole('tab').forEach((item) => {
+      expect(item.getAttribute('href')).toContain('?scope=year&year=year-1');
+    });
+  });
+  it('protects unsaved edits when following a settings tab link', async () => {
+    render(<RecordsSettings task="documents" />);
+    fireEvent.change(screen.getByLabelText('Certificate number prefix'), {
+      target: { value: 'NEW' },
+    });
+    await waitFor(() => expect(screen.getByText(/Unsaved changes/)).toBeVisible());
+    const destination = screen.getByRole('tab', { name: 'Change Rules & Approvals' });
+    fireEvent.click(destination);
+    expect(screen.getByRole('dialog', { name: 'Discard unsaved changes?' })).toBeVisible();
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
+    expect(screen.getByLabelText('Certificate number prefix')).toHaveValue('NEW');
+    fireEvent.click(destination);
+    fireEvent.click(screen.getByRole('button', { name: 'Discard changes' }));
+    expect(mocks.navigate).toHaveBeenCalledExactlyOnceWith('/student/records/settings/changes');
+    expect(mocks.save).not.toHaveBeenCalled();
   });
   it('requires a saved current preview and includes the concurrency stamp when publishing', async () => {
     render(<RecordsSettings task="documents" />);
@@ -237,7 +278,9 @@ describe('Student Records settings', () => {
     const retry = vi.fn();
     mocks.query = { currentData: undefined, isError: true, refetch: retry };
     render(<RecordsSettings task="documents" />);
-    expect(screen.getByRole('heading', { name: 'Documents & IDs', level: 1 })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Student Records Settings', level: 1 })).toBeVisible();
+    expect(screen.getByRole('tab', { name: 'Documents & IDs' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tabpanel', { name: 'Documents & IDs' })).toHaveTextContent(/could not be loaded/);
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(retry).toHaveBeenCalledOnce();
   });

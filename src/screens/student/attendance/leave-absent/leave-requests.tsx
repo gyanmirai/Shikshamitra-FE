@@ -26,6 +26,7 @@ import sortQueryString from 'src/utils/sort-query-string';
 import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { editorClasses } from 'src/components/editor/classes';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import ShakingTextField from 'src/components/shaking-text-field';
 import CustomizableTable from 'src/components/customizabaleTable';
 import useQueryAndMutation from 'src/redux/customQueryAndMutation';
@@ -80,6 +81,7 @@ const LeaveAndAbsentScreen = ({
   // State to control the dialog visibility
   // Dialog control for add/edit form
   const dialog = useBoolean();
+  const [formBusy, setFormBusy] = useState(false);
   // Dialog control for reject confirmation
   const confirmRejectDialog = useBoolean();
   // Dialog control for view leave details
@@ -355,8 +357,10 @@ const LeaveAndAbsentScreen = ({
         tableId="leave-absent-table"
         noDataText={
           <>
-            No leave requests match this school scope.{' '}
-            {canWrite && (
+            {context.params.get('leaveSearch')
+              ? 'No leave requests match your search. Use Clear search to see requests in this scope.'
+              : 'No leave requests have been recorded in this school scope.'}{' '}
+            {canWrite && !context.params.get('leaveSearch') && (
               <Button size="small" onClick={dialog.onTrue}>
                 Add leave request
               </Button>
@@ -385,6 +389,7 @@ const LeaveAndAbsentScreen = ({
       <CustomDialog
         maxWidth="md"
         open={dialog.value}
+        disableClose={formBusy}
         handleClose={dialog.onFalse}
         title={
           <Box display="flex" flexDirection="row" gap={1} alignItems="center">
@@ -403,7 +408,11 @@ const LeaveAndAbsentScreen = ({
           </Box>
         }
       >
-        <LeaveRequestForm handleClose={handleClose} isLoading={isLoading} />
+        <LeaveRequestForm
+          handleClose={handleClose}
+          isLoading={isLoading}
+          onBusyChange={setFormBusy}
+        />
       </CustomDialog>
       <CustomDialog
         title={
@@ -429,13 +438,19 @@ const LeaveAndAbsentScreen = ({
           </Box>
         }
         open={confirmRejectDialog.value}
+        disableClose={formBusy}
         handleClose={() => {
           setWhichStatus(null);
           confirmRejectDialog.onFalse();
           setLeaveId('');
         }}
       >
-        <LeaveAbsent handleClose={handleClose} leaveId={leaveId} status={whichStatus} />
+        <LeaveAbsent
+          handleClose={handleClose}
+          leaveId={leaveId}
+          status={whichStatus}
+          onBusyChange={setFormBusy}
+        />
       </CustomDialog>
       {/* View Leave Details Dialog */}
       <CustomDialog
@@ -470,17 +485,20 @@ const LeaveAndAbsentScreen = ({
 export default LeaveAndAbsentScreen;
 
 const LeaveRequestForm = ({
+  onBusyChange,
   handleClose,
   isLoading,
 }: {
   handleClose: (e: any, isSubmit: boolean) => void;
   isLoading: boolean;
+  onBusyChange: (busy: boolean) => void;
 }) => {
   // State to store all available organizations
   const [allOrganization, setAllOrganization] = useState<Organization[]>([]);
   // State to store the selected organization
   const [organization, setOrganization] = useState<string>('');
   const dialog = useBoolean();
+  const [formBusy, setFormBusy] = useState(false);
   // State to store all available classes
   const [allClass, setAllClass] = useState<Standards[]>([]);
   // State to store the selected class
@@ -626,280 +644,296 @@ const LeaveRequestForm = ({
     });
 
   const { currentYear } = useSelector((state: RootState) => state.globalState);
+  useEffect(() => {
+    onBusyChange(addStudentLeaveLoading || formBusy);
+  }, [addStudentLeaveLoading, formBusy, onBusyChange]);
+  useEffect(() => () => onBusyChange(false), [onBusyChange]);
   return (
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <DialogScrollContent>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <CustomSelect
-              label="Organization"
-              disabled={!medium}
-              options={allOrganization || []}
-              value={organization}
-              labelKey="name"
-              valueKey="id"
-              onChange={(value: any) => {
-                setOrganization(value || '');
-                setStudent(null);
-              }}
-              formControlProps={{ sx: { width: '100%' } }}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <CustomSelect
-              label="Class"
-              disabled={!organization}
-              options={allClass || []}
-              value={classes}
-              labelKey="name"
-              valueKey="id"
-              onChange={(value: any) => {
-                setClass(value || '');
-                setStudent(null);
-              }}
-              formControlProps={{ sx: { width: '100%' } }}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <CustomSelect
-              label="Division"
-              disabled={!classes}
-              options={allDivision || []}
-              value={division}
-              labelKey="name"
-              valueKey="id"
-              onChange={(value: any) => {
-                setDivision(value || '');
-                setStudent(null);
-              }}
-              formControlProps={{ sx: { width: '100%' } }}
-            />
-          </Grid>
-
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <CustomTooltip
-              placement="top"
-              title={
-                student
-                  ? `${student?.firstName || ''} ${student?.lastName || ''}`.trim()
-                  : undefined
-              }
-            >
-              <PaginatedSearchSelect
-                key={`${organization}-${classes}-${division}`}
-                label="Student"
-                isLoading={isStudentsLoading}
-                noOptionsText="No Student Found"
-                disabled={!division}
-                fetchOptions={async (query: string, page: number) => {
-                  if (!division) return { data: [], hasMore: false };
-                  try {
-                    const res = await getStudents(division).unwrap();
-
-                    let filteredItems = res?.items || [];
-                    if (query) {
-                      const lowerQuery = query.toLowerCase();
-                      filteredItems = filteredItems.filter((item: any) =>
-                        `${item.firstName || ''} ${item.lastName || ''} ${item.middleName || ''}`
-                          .toLowerCase()
-                          .includes(lowerQuery)
-                      );
-                    }
-
-                    return {
-                      data: filteredItems?.map((item: any) => ({
-                        label: `${item?.firstName || ''} ${item?.lastName || ''}`,
-                        id: item.studentId,
-                        originalData: item,
-                      })),
-                      hasMore: false,
-                    };
-                  } catch {
-                    return { data: [], hasMore: false };
-                  }
+        <FormBusyRegion busy={addStudentLeaveLoading} label="Submitting leave request…">
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <CustomSelect
+                label="Organization"
+                disabled={!medium}
+                options={allOrganization || []}
+                value={organization}
+                labelKey="name"
+                valueKey="id"
+                onChange={(value: any) => {
+                  setOrganization(value || '');
+                  setStudent(null);
                 }}
-                value={
-                  student
-                    ? {
-                        label: `${student.firstName || ''} ${student.lastName || ''}`,
-                        id: student.studentId as string,
-                      }
-                    : null
-                }
-                isOptionEqualToValue={(option, value) => option.id === value?.id}
-                getOptionLabel={(option: any) => option?.label || ''}
-                renderOption={(prop, option: any) => (
-                  <li {...prop} key={option.id}>
-                    {option.label}
-                  </li>
-                )}
-                minChars={0}
-                onChange={(_, value: any) => {
-                  setStudent(value?.originalData || null);
-                }}
-                fullWidth
-                sx={{ width: '100%' }}
-                size="small"
+                formControlProps={{ sx: { width: '100%' } }}
               />
-            </CustomTooltip>
-          </Grid>
-        </Grid>
+            </Grid>
 
-        {student?.studentId && (
-          <Box component="form" mt={3}>
-            <Grid container spacing={3}>
-              {/* Row 1: Leave Type and Half Day Button */}
-              <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
-                <ShakingTextField error={!!(touched.leaveType && errors.leaveType)}>
-                  <CustomSelect
-                    label="Leave Type *"
-                    options={attendanceTypes?.items || []}
-                    value={values.leaveType}
-                    labelKey="leaveTypeName"
-                    valueKey="id"
-                    onChange={(value: any) => {
-                      setFieldValue('leaveType', value || '');
-                    }}
-                    error={!!(touched.leaveType && errors.leaveType)}
-                    helperText={(touched.leaveType && errors.leaveType) as string}
-                    formControlProps={{ sx: { width: '100%' } }}
-                  />
-                </ShakingTextField>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <CustomSelect
+                label="Class"
+                disabled={!organization}
+                options={allClass || []}
+                value={classes}
+                labelKey="name"
+                valueKey="id"
+                onChange={(value: any) => {
+                  setClass(value || '');
+                  setStudent(null);
+                }}
+                formControlProps={{ sx: { width: '100%' } }}
+              />
+            </Grid>
 
-                <CustomDialog open={dialog.value} handleClose={dialog.onFalse} title="Leave Type">
-                  <AttendanceTypeForm handleClose={dialog.onFalse} editData={null} />
-                </CustomDialog>
-              </Grid>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <CustomSelect
+                label="Division"
+                disabled={!classes}
+                options={allDivision || []}
+                value={division}
+                labelKey="name"
+                valueKey="id"
+                onChange={(value: any) => {
+                  setDivision(value || '');
+                  setStudent(null);
+                }}
+                formControlProps={{ sx: { width: '100%' } }}
+              />
+            </Grid>
 
-              <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
-                <Button
-                  variant={values.isHalfDay ? 'contained' : 'outlined'}
-                  color={values.isHalfDay ? 'primary' : 'inherit'}
-                  size="small"
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <CustomTooltip
+                placement="top"
+                title={
+                  student
+                    ? `${student?.firstName || ''} ${student?.lastName || ''}`.trim()
+                    : undefined
+                }
+              >
+                <PaginatedSearchSelect
+                  key={`${organization}-${classes}-${division}`}
+                  label="Student"
+                  isLoading={isStudentsLoading}
+                  noOptionsText="No Student Found"
+                  disabled={!division}
+                  fetchOptions={async (query: string, page: number) => {
+                    if (!division) return { data: [], hasMore: false };
+                    try {
+                      const res = await getStudents(division).unwrap();
+
+                      let filteredItems = res?.items || [];
+                      if (query) {
+                        const lowerQuery = query.toLowerCase();
+                        filteredItems = filteredItems.filter((item: any) =>
+                          `${item.firstName || ''} ${item.lastName || ''} ${item.middleName || ''}`
+                            .toLowerCase()
+                            .includes(lowerQuery)
+                        );
+                      }
+
+                      return {
+                        data: filteredItems?.map((item: any) => ({
+                          label: `${item?.firstName || ''} ${item?.lastName || ''}`,
+                          id: item.studentId,
+                          originalData: item,
+                        })),
+                        hasMore: false,
+                      };
+                    } catch {
+                      return { data: [], hasMore: false };
+                    }
+                  }}
+                  value={
+                    student
+                      ? {
+                          label: `${student.firstName || ''} ${student.lastName || ''}`,
+                          id: student.studentId as string,
+                        }
+                      : null
+                  }
+                  isOptionEqualToValue={(option, value) => option.id === value?.id}
+                  getOptionLabel={(option: any) => option?.label || ''}
+                  renderOption={(prop, option: any) => (
+                    <li {...prop} key={option.id}>
+                      {option.label}
+                    </li>
+                  )}
+                  minChars={0}
+                  onChange={(_, value: any) => {
+                    setStudent(value?.originalData || null);
+                  }}
                   fullWidth
-                  onClick={() => {
-                    setFieldValue('isHalfDay', !values.isHalfDay);
-                    if (!values.isHalfDay) setFieldValue('endDate', null);
-                  }}
-                  sx={{
-                    height: '36px',
-                    borderRadius: '8px',
-                    textTransform: 'none',
-                    fontWeight: 500,
-                    fontSize: '0.875rem',
-                    border: values.isHalfDay ? 0 : 1,
-                    borderColor: 'divider',
-                    '&:hover': {
-                      backgroundColor: values.isHalfDay ? 'primary.dark' : 'action.hover',
-                    },
-                  }}
-                >
-                  Half Day
-                </Button>
-              </Grid>
+                  sx={{ width: '100%' }}
+                  size="small"
+                />
+              </CustomTooltip>
+            </Grid>
+          </Grid>
 
-              {/* Row 2: Date Fields */}
-              <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
-                <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
-                  <DatePicker
-                    label={values.isHalfDay ? 'Date *' : 'Start Date *'}
-                    onChange={(value) => setFieldValue('startDate', value)}
-                    format="DD-MM-YYYY"
-                    minDate={dayjs(currentYear?.startDate)}
-                    maxDate={dayjs(currentYear?.endDate)}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                        helperText: touched.startDate && errors.startDate,
-                        error: touched.startDate && Boolean(errors.startDate),
+          {student?.studentId && (
+            <Box component="form" mt={3}>
+              <Grid container spacing={3}>
+                {/* Row 1: Leave Type and Half Day Button */}
+                <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
+                  <ShakingTextField error={!!(touched.leaveType && errors.leaveType)}>
+                    <CustomSelect
+                      label="Leave Type *"
+                      options={attendanceTypes?.items || []}
+                      value={values.leaveType}
+                      labelKey="leaveTypeName"
+                      valueKey="id"
+                      onChange={(value: any) => {
+                        setFieldValue('leaveType', value || '');
+                      }}
+                      error={!!(touched.leaveType && errors.leaveType)}
+                      helperText={(touched.leaveType && errors.leaveType) as string}
+                      formControlProps={{ sx: { width: '100%' } }}
+                    />
+                  </ShakingTextField>
+
+                  <CustomDialog
+                    open={dialog.value}
+                    disableClose={formBusy}
+                    handleClose={dialog.onFalse}
+                    title="Leave Type"
+                  >
+                    <AttendanceTypeForm
+                      handleClose={dialog.onFalse}
+                      editData={null}
+                      onBusyChange={setFormBusy}
+                    />
+                  </CustomDialog>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
+                  <Button
+                    variant={values.isHalfDay ? 'contained' : 'outlined'}
+                    color={values.isHalfDay ? 'primary' : 'inherit'}
+                    size="small"
+                    fullWidth
+                    onClick={() => {
+                      setFieldValue('isHalfDay', !values.isHalfDay);
+                      if (!values.isHalfDay) setFieldValue('endDate', null);
+                    }}
+                    sx={{
+                      height: '36px',
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      border: values.isHalfDay ? 0 : 1,
+                      borderColor: 'divider',
+                      '&:hover': {
+                        backgroundColor: values.isHalfDay ? 'primary.dark' : 'action.hover',
                       },
                     }}
-                    disablePast
-                  />
-                </ShakingTextField>
-              </Grid>
+                  >
+                    Half Day
+                  </Button>
+                </Grid>
 
-              {!values.isHalfDay && (
+                {/* Row 2: Date Fields */}
                 <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
-                  <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
+                  <ShakingTextField error={touched.startDate && Boolean(errors.startDate)}>
                     <DatePicker
-                      label="End Date *"
+                      label={values.isHalfDay ? 'Date *' : 'Start Date *'}
+                      onChange={(value) => setFieldValue('startDate', value)}
                       format="DD-MM-YYYY"
                       minDate={dayjs(currentYear?.startDate)}
                       maxDate={dayjs(currentYear?.endDate)}
-                      onChange={(value) => setFieldValue('endDate', value)}
                       slotProps={{
                         textField: {
                           size: 'small',
                           fullWidth: true,
-                          helperText: touched.endDate && errors.endDate,
-                          error: touched.endDate && Boolean(errors.endDate),
+                          helperText: touched.startDate && errors.startDate,
+                          error: touched.startDate && Boolean(errors.startDate),
                         },
                       }}
                       disablePast
                     />
                   </ShakingTextField>
                 </Grid>
-              )}
 
-              {/* Row 3: Description and Upload */}
-              <Grid size={{ xs: 12 }} mb={-2}>
-                <Typography variant="subtitle2">Leave Description</Typography>
-              </Grid>
+                {!values.isHalfDay && (
+                  <Grid size={{ xs: 12, sm: values.isHalfDay ? 4 : 3 }}>
+                    <ShakingTextField error={touched.endDate && Boolean(errors.endDate)}>
+                      <DatePicker
+                        label="End Date *"
+                        format="DD-MM-YYYY"
+                        minDate={dayjs(currentYear?.startDate)}
+                        maxDate={dayjs(currentYear?.endDate)}
+                        onChange={(value) => setFieldValue('endDate', value)}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            fullWidth: true,
+                            helperText: touched.endDate && errors.endDate,
+                            error: touched.endDate && Boolean(errors.endDate),
+                          },
+                        }}
+                        disablePast
+                      />
+                    </ShakingTextField>
+                  </Grid>
+                )}
 
-              <Grid size={{ xs: 12 }}>
-                <ShakingTextField error={touched.description && Boolean(errors.description)}>
-                  <Editor
-                    onChange={(value) => setFieldValue('description', value)}
-                    placeholder="Leave description *"
-                    error={touched.description && Boolean(errors.description)}
-                    helperText={touched.description && errors.description}
-                    sx={{
-                      height: '100%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      [`& .${editorClasses.content.root}`]: {
-                        minHeight: '200px',
+                {/* Row 3: Description and Upload */}
+                <Grid size={{ xs: 12 }} mb={-2}>
+                  <Typography variant="subtitle2">Leave Description</Typography>
+                </Grid>
+
+                <Grid size={{ xs: 12 }}>
+                  <ShakingTextField error={touched.description && Boolean(errors.description)}>
+                    <Editor
+                      onChange={(value) => setFieldValue('description', value)}
+                      placeholder="Leave description *"
+                      error={touched.description && Boolean(errors.description)}
+                      helperText={touched.description && errors.description}
+                      sx={{
                         height: '100%',
-                        flex: 1,
-                        '& .tiptap': {
-                          '&.ProseMirror': {
-                            padding: '16px',
-                            paddingBottom: '24px',
-                            minHeight: '100%',
-                            height: '100%',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'flex-start',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        [`& .${editorClasses.content.root}`]: {
+                          minHeight: '200px',
+                          height: '100%',
+                          flex: 1,
+                          '& .tiptap': {
+                            '&.ProseMirror': {
+                              padding: '16px',
+                              paddingBottom: '24px',
+                              minHeight: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              justifyContent: 'flex-start',
+                            },
                           },
                         },
-                      },
-                    }}
-                  />
-                </ShakingTextField>
-              </Grid>
+                      }}
+                    />
+                  </ShakingTextField>
+                </Grid>
 
-              <Grid size={{ xs: 12 }}>
-                <FileUploader
-                  value={typeof values.docs === 'string' ? undefined : values.docs}
-                  multiple={false}
-                  onChange={(value) => setFieldValue('docs', value)}
-                  primaryText="Please Upload Your File"
-                  secondaryText="Maximum file size is 5MB"
-                />
+                <Grid size={{ xs: 12 }}>
+                  <FileUploader
+                    value={typeof values.docs === 'string' ? undefined : values.docs}
+                    multiple={false}
+                    onChange={(value) => setFieldValue('docs', value)}
+                    primaryText="Please Upload Your File"
+                    secondaryText="Maximum file size is 5MB"
+                  />
+                </Grid>
               </Grid>
-            </Grid>
-          </Box>
-        )}
+            </Box>
+          )}
+        </FormBusyRegion>
       </DialogScrollContent>
 
       <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
         <Button
           startIcon={<Iconify icon="mdi:close" />}
           size="small"
+          disabled={addStudentLeaveLoading || formBusy}
           onClick={() => {
             handleClose(null, false);
           }}
@@ -923,6 +957,7 @@ const LeaveRequestForm = ({
 };
 
 const LeaveAbsent = ({
+  onBusyChange,
   handleClose,
   status,
   leaveId,
@@ -930,6 +965,7 @@ const LeaveAbsent = ({
   handleClose: (e: any, isSubmit: boolean) => void;
   status: EmployeeLeaveStatusType | null;
   leaveId: string;
+  onBusyChange: (busy: boolean) => void;
 }) => {
   /**
    * Custom hook for managing leave status changes
@@ -945,6 +981,11 @@ const LeaveAbsent = ({
     currentQueryAndMutation: useRejectStudentLeaveMutation,
   });
 
+  const busy = isApproveLeaveLoading || isRejectLeaveLoading;
+  useEffect(() => {
+    onBusyChange(busy);
+  }, [busy, onBusyChange]);
+  useEffect(() => () => onBusyChange(false), [onBusyChange]);
   const { initialValues, values, errors, touched, handleChange, handleSubmit } = useFormik({
     initialValues: {
       remarks: '',
@@ -990,24 +1031,28 @@ const LeaveAbsent = ({
     <BackPopUpChecked initialValues={initialValues} currentValues={values}>
       <Box component="form" onSubmit={handleSubmit}>
         <DialogScrollContent>
-          <TextField
-            value={values.remarks}
-            onChange={handleChange}
-            name="remarks"
-            label={status === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
-            multiline
-            fullWidth
-            rows={4}
-            error={touched.remarks && !!errors.remarks}
-            helperText={touched.remarks && (errors.remarks as string)}
-            sx={{ mb: 2 }}
-          />
+          <FormBusyRegion busy={busy} label="Recording leave decision…">
+            <TextField
+              disabled={busy}
+              value={values.remarks}
+              onChange={handleChange}
+              name="remarks"
+              label={status === EmployeeLeaveStatusType.Rejected ? 'Remarks *' : 'Remarks'}
+              multiline
+              fullWidth
+              rows={4}
+              error={touched.remarks && !!errors.remarks}
+              helperText={touched.remarks && (errors.remarks as string)}
+              sx={{ mb: 2 }}
+            />
+          </FormBusyRegion>
         </DialogScrollContent>
         <DialogActions sx={{ p: 2, boxShadow: 'var(--shadows-10)' }}>
           <Button
             variant="outlined"
             size="small"
             color="inherit"
+            disabled={busy}
             onClick={() => {
               handleClose(null, false);
             }}

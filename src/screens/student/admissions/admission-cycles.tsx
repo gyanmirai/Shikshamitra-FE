@@ -476,8 +476,8 @@ export default function AdmissionCyclesScreen() {
         heading="Admission Periods"
         description="Create, publish, monitor, close and retain controlled admission periods."
         links={[
-          { name: 'Students', href: '/student/dashboard' },
-          { name: 'Admissions', href: '/student/admissions' },
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Periods' },
         ]}

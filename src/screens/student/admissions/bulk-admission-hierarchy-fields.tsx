@@ -58,7 +58,8 @@ export function BulkAdmissionHierarchyFields({
           labelKey="name"
           valueKey="id"
           value={values.mediumId}
-          disabled={!values.boardId}
+          isLoading={loading}
+          disabled={!values.boardId || loading}
           onChange={(id) => {
             change('mediumId', id);
             change('stageId', '');
@@ -76,7 +77,8 @@ export function BulkAdmissionHierarchyFields({
           labelKey="name"
           valueKey="id"
           value={values.standardIds}
-          disabled={!values.mediumId}
+          isLoading={loading}
+          disabled={!values.mediumId || loading}
           onChange={(ids) => {
             const selection = selectBulkClasses(
               (Array.isArray(ids) ? ids : [ids]).map(String),
@@ -94,7 +96,7 @@ export function BulkAdmissionHierarchyFields({
               ? String(errors.standardIds ?? errors.stageId ?? '')
               : values.stageId
                 ? 'Clear selected classes to see all classes again.'
-                : undefined
+                : 'Preview verifies that the selected classes are available in your scope.'
           }
         />
       </Grid>

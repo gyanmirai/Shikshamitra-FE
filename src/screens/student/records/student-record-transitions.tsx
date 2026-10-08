@@ -10,6 +10,7 @@ import type {
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Label } from 'src/components/label';
+import { Iconify } from 'src/components/iconify';
 import { RouterLink } from 'src/routes/components';
 import { CustomTabs } from 'src/components/custom-tabs';
 import CustomSelect from 'src/components/custom-select';
@@ -165,7 +166,7 @@ export default function StudentRecordTransitions() {
         heading="Year-End & Transitions"
         description="Review promotions, exits, annual renewals, and returning students with school rules."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Student Records', href: studentPaths.records.root },
           { name: 'Year-End & Transitions' },
         ]}
@@ -177,6 +178,8 @@ export default function StudentRecordTransitions() {
           id="transitions-tab-history"
           aria-controls="transitions-panel-history"
           label="Transitions"
+          icon={<Iconify icon="mdi:history" />}
+          iconPosition="start"
           href={recordsQueryUrl(pathname, params.toString(), {
             view: undefined,
             page: 0,
@@ -189,6 +192,8 @@ export default function StudentRecordTransitions() {
           id="transitions-tab-renewals"
           aria-controls="transitions-panel-renewals"
           label="Annual renewals"
+          icon={<Iconify icon="mdi:calendar-sync" />}
+          iconPosition="start"
           href={recordsQueryUrl(pathname, params.toString(), {
             view: 'renewals',
             page: 0,
@@ -202,6 +207,8 @@ export default function StudentRecordTransitions() {
             id="transitions-tab-new"
             aria-controls="transitions-panel-new"
             label="Prepare batch"
+            icon={<Iconify icon="mdi:account-arrow-right-outline" />}
+            iconPosition="start"
             href={recordsQueryUrl(pathname, params.toString(), {
               view: 'new',
               page: 0,
@@ -216,6 +223,8 @@ export default function StudentRecordTransitions() {
             id="transitions-tab-return"
             aria-controls="transitions-panel-return"
             label="Returning students"
+            icon={<Iconify icon="mdi:account-convert" />}
+            iconPosition="start"
             href={recordsQueryUrl(pathname, params.toString(), {
               view: 'return',
               page: 0,
@@ -616,7 +625,17 @@ export default function StudentRecordTransitions() {
                 loading={busy}
                 onClick={() => runCommand(false)}
               >
-                {command === 'correct' ? 'Submit correction' : 'Confirm action'}
+                {
+                  {
+                    correct: 'Submit correction',
+                    approve: 'Approve transition',
+                    reject: 'Reject transition',
+                    cancel: 'Cancel transition',
+                    apply: 'Apply transition',
+                    confirm: 'Confirm renewal',
+                    activate: 'Activate renewal',
+                  }[command]
+                }
               </Button>
             </>
           )}

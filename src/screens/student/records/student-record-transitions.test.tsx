@@ -3,6 +3,12 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 
 import StudentRecordTransitions from './student-record-transitions';
 
+// Icon assets come from an external provider; these tests exercise the real UI controls.
+vi.mock('@iconify/react', () => ({
+  Icon: () => <svg aria-hidden="true" />,
+  disableCache: vi.fn(),
+}));
+
 const mocks = vi.hoisted(() => ({
   permissions: [] as any[],
   row: {} as any,
@@ -118,7 +124,7 @@ describe('Transition command permissions', () => {
     fireEvent.change(screen.getByLabelText('Reason or review remarks'), {
       target: { value: 'Reviewed all exit evidence' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm action' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Approve transition' }));
     await waitFor(() =>
       expect(mocks.decide).toHaveBeenCalledWith({
         id: 'transition-1',

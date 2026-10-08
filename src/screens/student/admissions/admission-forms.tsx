@@ -74,7 +74,7 @@ export default function AdmissionFormsScreen() {
         heading="Admission Form"
         description="Create and publish the inquiry and registration forms used across admissions."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Form' },

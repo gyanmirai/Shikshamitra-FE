@@ -100,7 +100,7 @@ export default function AdmissionFormPreviewScreen() {
         heading={`${form.name} preview`}
         description="Test field visibility and required validation before publishing this form."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Form', href: studentPaths.enrollment.settings.forms },

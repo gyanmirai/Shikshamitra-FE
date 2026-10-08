@@ -64,7 +64,7 @@ export default function AdmissionAssessmentsScreen() {
         heading="Assessments"
         description="Manage assessment sessions. Book applicants and record results from their application."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Applications', href: studentPaths.enrollment.applications },
           { name: 'Assessments' },
         ]}

@@ -6,15 +6,16 @@ import type { IColumn } from 'src/components/customizabaleTable/types';
 import * as Yup from 'yup';
 import { useFormik } from 'formik';
 import { LoadingButton } from '@mui/lab';
-import React, { useMemo, useState } from 'react';
 import { Iconify } from 'src/components/iconify';
 import { useBoolean } from 'src/hooks/use-boolean';
 import { useDispatch, useSelector } from 'react-redux';
 import { shikshaMitraToast } from 'src/components/toast';
 import CustomTooltip from 'src/components/custom-tooltip';
 import sortQueryString from 'src/utils/sort-query-string';
+import React, { useMemo, useState, useEffect } from 'react';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import { ConfirmDialog } from 'src/components/confirm-dialog';
+import { FormBusyRegion } from 'src/components/form-busy-region';
 import ThreeDotsActions from 'src/components/three-dots-actions';
 import ShakingTextField from 'src/components/shaking-text-field';
 import { useConfirmWithUndo } from 'src/hooks/useConfirmWithUndo';
@@ -46,7 +47,18 @@ import {
 
 import type { IAttendanceRule } from './type';
 
-const AttendanceType = ({ embedded = false }: { embedded?: boolean }) => {
+const AttendanceType = ({
+  embedded = false,
+  onBusyChange,
+}: {
+  embedded?: boolean;
+  onBusyChange?: (busy: boolean) => void;
+}) => {
+  const [formBusy, setFormBusy] = useState(false);
+  useEffect(() => {
+    onBusyChange?.(formBusy);
+  }, [formBusy, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canWrite = hasGrantedPermission(permissions, 'Students.Attendance.Setting.LeaveType.Add');
   const canDelete = hasGrantedPermission(
@@ -279,12 +291,13 @@ const AttendanceType = ({ embedded = false }: { embedded?: boolean }) => {
               setEditData(null);
             }}
           >
-            Yes
+            Delete leave type
           </LoadingButton>
         }
       />
       <CustomDialog
         open={dialog?.value}
+        disableClose={formBusy}
         handleClose={() => {
           setEditData(null);
           dialog?.onFalse();
@@ -308,7 +321,11 @@ const AttendanceType = ({ embedded = false }: { embedded?: boolean }) => {
           </Box>
         }
       >
-        <AttendanceTypeForm handleClose={handleClose} editData={editData} />
+        <AttendanceTypeForm
+          handleClose={handleClose}
+          editData={editData}
+          onBusyChange={setFormBusy}
+        />
       </CustomDialog>
     </Box>
   );
@@ -317,11 +334,13 @@ const AttendanceType = ({ embedded = false }: { embedded?: boolean }) => {
 export default AttendanceType;
 
 export const AttendanceTypeForm = ({
+  onBusyChange,
   handleClose,
   editData,
 }: {
   handleClose: (e: any, isSubmit: boolean) => void;
   editData?: IAttendanceRule | null;
+  onBusyChange?: (busy: boolean) => void;
 }) => {
   // Mutation hook for updating attendance type with loading state
   const [updateAttendanceType, { isLoading: isUpdateLoading }] = useQueryAndMutation({
@@ -335,6 +354,11 @@ export const AttendanceTypeForm = ({
     currentQueryAndMutation: useAddStudentAttendanceTypeMutation,
   });
 
+  const busy = isUpdateLoading || isLoading;
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
+  useEffect(() => () => onBusyChange?.(false), [onBusyChange]);
   const {
     initialValues,
     values,
@@ -386,52 +410,55 @@ export const AttendanceTypeForm = ({
       <BackPopUpChecked initialValues={initialValues} currentValues={values}>
         {/* <Scrollbar sx={{ p: 2 }}> */}
         <DialogScrollContent>
-          <Stack spacing={3}>
-            <ShakingTextField error={touched.type && Boolean(errors.type)}>
-              <TextField
-                label="Leave Type *"
-                name="type"
-                fullWidth
-                value={values.type}
-                onChange={handleChange}
-                onBlur={handleBlur} // This was missing!
-                size="small"
-                error={!!(errors.type && touched.type)}
-                helperText={touched.type && errors.type}
-              />
-            </ShakingTextField>
-            <ShakingTextField error={touched.color && Boolean(errors.color)}>
-              {/* Dynamic Heading */}
-              <Typography
-                variant="subtitle2"
-                sx={{ mb: 1 }}
-                color={touched.color && errors.color ? 'error.main' : 'text.primary'}
-              >
-                Leave Type Color *
-              </Typography>
+          <FormBusyRegion busy={busy} label="Saving leave type…">
+            <Stack spacing={3}>
+              <ShakingTextField error={touched.type && Boolean(errors.type)}>
+                <TextField
+                  label="Leave Type *"
+                  name="type"
+                  fullWidth
+                  value={values.type}
+                  onChange={handleChange}
+                  onBlur={handleBlur} // This was missing!
+                  size="small"
+                  error={!!(errors.type && touched.type)}
+                  helperText={touched.type && errors.type}
+                />
+              </ShakingTextField>
+              <ShakingTextField error={touched.color && Boolean(errors.color)}>
+                {/* Dynamic Heading */}
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1 }}
+                  color={touched.color && errors.color ? 'error.main' : 'text.primary'}
+                >
+                  Leave Type Color *
+                </Typography>
 
-              {/* Color Picker */}
-              <ColorPickerCircle
-                onSelect={(color: string) => {
-                  setFieldValue('color', color);
-                }}
-                initialColor={values.color}
-              />
-            </ShakingTextField>
-            <ShakingTextField error={touched.isActive && Boolean(errors.isActive)}>
-              <FormControlLabel
-                label="Active"
-                control={
-                  <Switch
-                    checked={values.isActive}
-                    onChange={(e) => {
-                      setFieldValue('isActive', e.target.checked);
-                    }}
-                  />
-                }
-              />
-            </ShakingTextField>
-          </Stack>
+                {/* Color Picker */}
+                <ColorPickerCircle
+                  onSelect={(color: string) => {
+                    setFieldValue('color', color);
+                  }}
+                  initialColor={values.color}
+                  disabled={busy}
+                />
+              </ShakingTextField>
+              <ShakingTextField error={touched.isActive && Boolean(errors.isActive)}>
+                <FormControlLabel
+                  label="Active"
+                  control={
+                    <Switch
+                      checked={values.isActive}
+                      onChange={(e) => {
+                        setFieldValue('isActive', e.target.checked);
+                      }}
+                    />
+                  }
+                />
+              </ShakingTextField>
+            </Stack>
+          </FormBusyRegion>
         </DialogScrollContent>
         {/* </Scrollbar> */}
       </BackPopUpChecked>
@@ -440,6 +467,7 @@ export const AttendanceTypeForm = ({
           size="small"
           startIcon={<Iconify icon="mdi:close" />}
           variant="outlined"
+          disabled={busy}
           color="inherit"
           onClick={() => {
             handleClose(null, false);
@@ -463,7 +491,7 @@ export const AttendanceTypeForm = ({
           type="submit"
           size="small"
         >
-          {editData ? 'Update' : 'Submit'}
+          Submit
         </LoadingButton>
       </DialogActions>
     </Box>

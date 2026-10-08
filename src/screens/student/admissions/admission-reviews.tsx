@@ -43,7 +43,7 @@ export default function AdmissionReviewsScreen() {
         heading="Application Reviews"
         description="Find assigned reviews, check deadlines and open the application to review its evidence."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Applications', href: studentPaths.enrollment.applications },
           { name: 'Application Reviews' },

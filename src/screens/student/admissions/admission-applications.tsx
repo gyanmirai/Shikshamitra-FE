@@ -7,6 +7,8 @@ import NextLink from 'next/link';
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Iconify } from 'src/components/iconify';
+import { fDateTime } from 'src/utils/format-time';
+import { studentPaths } from 'src/constants/student-menu';
 import { hasGrantedPermission } from 'src/utils/permissions';
 import CustomizableTable from 'src/components/customizabaleTable';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
@@ -24,7 +26,10 @@ import { getAdmissionApplicationStatusLabel } from './application-status';
 import { withAdmissionCounsellorFilter } from './admission-application-filters';
 import AdmissionDirectRegistrationDialog from './admission-direct-registration-dialog';
 import { ADMISSION_APPLICATION_PERMISSIONS } from './admission-application-permissions';
-import { AdmissionAcademicFilters, useAdmissionAcademicFilters } from './admission-academic-filters';
+import {
+  AdmissionAcademicFilters,
+  useAdmissionAcademicFilters,
+} from './admission-academic-filters';
 
 type AdmissionApplicationsView = 'applications' | 'pipeline';
 
@@ -45,18 +50,26 @@ export default function AdmissionApplicationsScreen({
   const permissions = useSelector((state: RootState) => state.auth.permissions);
   const canStart = hasGrantedPermission(permissions, ADMISSION_APPLICATION_PERMISSIONS.manage);
   const counsellors = useGetAdmissionApplicationCounsellorsQuery({});
-  const { currentData: data, isLoading, isError, refetch } = useGetAdmissionApplicationsQuery({
-    academicYearId: academic.academicYearId,
-    boardId: academic.boardId || undefined,
-    mediumId: academic.mediumId || undefined,
-    standardId: academic.standardId || undefined,
-    maxResultCount: 100,
-    skipCount: 0,
-    search: search || undefined,
-    status: status === '' ? undefined : (Number(status) as AdmissionApplication['status']),
-    currentStageSearch: stageSearch || undefined,
-    assignedCounsellorId: counsellorId || undefined,
-  }, { skip: !academic.academicYearId });
+  const {
+    currentData: data,
+    isLoading,
+    isError,
+    refetch,
+  } = useGetAdmissionApplicationsQuery(
+    {
+      academicYearId: academic.academicYearId,
+      boardId: academic.boardId || undefined,
+      mediumId: academic.mediumId || undefined,
+      standardId: academic.standardId || undefined,
+      maxResultCount: 100,
+      skipCount: 0,
+      search: search || undefined,
+      status: status === '' ? undefined : (Number(status) as AdmissionApplication['status']),
+      currentStageSearch: stageSearch || undefined,
+      assignedCounsellorId: counsellorId || undefined,
+    },
+    { skip: !academic.academicYearId }
+  );
   const columns: IColumn[] = [
     {
       id: 'applicationNumber',
@@ -94,7 +107,12 @@ export default function AdmissionApplicationsScreen({
       minWidth: 120,
       render: (value) => getAdmissionApplicationStatusLabel(Number(value)),
     },
-    { id: 'lastSavedAt', label: 'Last saved', minWidth: 180 },
+    {
+      id: 'lastSavedAt',
+      label: 'Last saved',
+      minWidth: 180,
+      render: (value) => (value ? fDateTime(value) : '—'),
+    },
   ];
   const isPipeline = view === 'pipeline';
 
@@ -108,8 +126,8 @@ export default function AdmissionApplicationsScreen({
             : 'Find applications, review their current stage, and continue applicant work.'
         }
         links={[
-          { name: 'Students', href: '/student' },
-          { name: 'Admissions', href: '/student/admissions' },
+          { name: 'Student', href: studentPaths.dashboard },
+          { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: isPipeline ? 'Pipeline' : 'Applications' },
         ]}
         action={

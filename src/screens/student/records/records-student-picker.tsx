@@ -9,10 +9,14 @@ export default function RecordsStudentPicker({
   onSelect,
   disabled = false,
   selectedId,
+  size = 'medium',
+  helperText = 'Search across active and former records.',
 }: {
   onSelect: (student: StudentDirectoryItem | null) => void;
   disabled?: boolean;
   selectedId?: string;
+  size?: 'small' | 'medium';
+  helperText?: string | null;
 }) {
   const [localSelection, setLocalSelection] = useState<StudentDirectoryItem | null>(null);
   const [search, setSearch] = useState('');
@@ -39,6 +43,7 @@ export default function RecordsStudentPicker({
   return (
     <Stack spacing={1}>
       <Autocomplete
+        size={size}
         value={selection}
         options={query.currentData?.items ?? []}
         loading={query.isFetching || selectedQuery.isFetching}
@@ -60,7 +65,8 @@ export default function RecordsStudentPicker({
           <TextField
             {...params}
             label="Student"
-            helperText="Search across active and former records."
+            helperText={helperText}
+            placeholder={size === 'small' ? 'Search name or GR number' : undefined}
           />
         )}
       />

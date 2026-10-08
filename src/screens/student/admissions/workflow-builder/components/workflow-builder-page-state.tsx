@@ -17,7 +17,7 @@ export function WorkflowBuilderPageState({ state, onRetry = () => undefined }: P
         heading="Admission Stage"
         description="Configure the stages and transitions for this admission journey."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Admission Stage', href: studentPaths.enrollment.settings.workflows },

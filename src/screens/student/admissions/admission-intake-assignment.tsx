@@ -333,7 +333,7 @@ export default function AdmissionIntakeAssignmentScreen() {
         heading="Intake & Assignment"
         description="Configure how inquiries are handled and how one journey counsellor is assigned through onboarding."
         links={[
-          { name: 'Students', href: studentPaths.dashboard },
+          { name: 'Student', href: studentPaths.dashboard },
           { name: 'Admissions', href: studentPaths.enrollment.root },
           { name: 'Settings', href: studentPaths.enrollment.settings.root },
           { name: 'Intake & Assignment' },

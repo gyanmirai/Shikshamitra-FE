@@ -309,3 +309,23 @@ describe('AdmissionApplicationDetailScreen', () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe('Application save navigation locks', () => {
+  it.each(['updateState', 'submitState', 'advanceState', 'reopenState'])(
+    'locks workspace tabs while %s is busy and restores them afterwards',
+    (state) => {
+      loadPaymentDetail();
+      detailState[state].isLoading = true;
+      const { rerender } = render(<AdmissionApplicationDetailScreen />);
+      expect(screen.getByRole('tab', { name: 'Application form' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('tab', { name: 'Application form' }));
+      expect(screen.getByRole('tab', { name: 'Current step' })).toHaveAttribute(
+        'aria-selected',
+        'true'
+      );
+      detailState[state].isLoading = false;
+      rerender(<AdmissionApplicationDetailScreen />);
+      expect(screen.getByRole('tab', { name: 'Application form' })).toBeEnabled();
+    }
+  );
+});

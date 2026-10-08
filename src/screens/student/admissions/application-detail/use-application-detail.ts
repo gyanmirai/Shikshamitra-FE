@@ -116,70 +116,76 @@ export function useApplicationDetail(id: string) {
   const save = async () => {
     await persistChanges(true);
   };
+  const [advancing, setAdvancing] = useState(false);
   const advance = async (options?: AdvanceOptions) => {
-    let application = applicationQuery.data;
-    let workflow = workflowQuery.data;
-    // Managed review and assessment actions can change the application's stamp
-    // before their query invalidations finish. Read both records at action time.
+    setAdvancing(true);
     try {
-      [application, workflow] = await Promise.all([
-        applicationQuery.refetch().unwrap(),
-        workflowQuery.refetch().unwrap(),
-      ]);
-    } catch {
-      shikshaMitraToast.error({
-        message: 'The latest application could not be loaded. Try again before continuing.',
-      });
-      return false;
-    }
-    if (workflow.currentStageInstanceId !== workflowQuery.data?.currentStageInstanceId) {
-      shikshaMitraToast.info({
-        message: 'The admission step changed. Review the updated step before continuing.',
-      });
-      return false;
-    }
-    if (!application?.concurrencyStamp || !workflow?.currentStageInstanceId) {
-      shikshaMitraToast.error({
-        message: 'The application changed or is still loading. Refresh it before continuing.',
-      });
-      return false;
-    }
-    const currentStage = workflow.stages.find(
-      (stage) => stage.id === workflow.currentStageInstanceId
-    );
-    if (
-      !options?.skipCurrentStage &&
-      !options?.adminOverride &&
-      !canRequestNormalStageAdvance(currentStage, application.status)
-    ) {
-      shikshaMitraToast.error({
-        message:
-          "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again.",
-      });
-      return false;
-    }
-    try {
-      await advanceWorkflow({
-        id,
-        expectedCurrentStageInstanceId: workflow.currentStageInstanceId,
-        idempotencyKey: crypto.randomUUID(),
-        ...options,
-        concurrencyStamp: application.concurrencyStamp,
-      }).unwrap();
-      setRuntimeAction(null);
-      shikshaMitraToast.success({
-        message: options?.skipCurrentStage
-          ? 'Current stage skipped'
-          : options?.adminOverride
-            ? 'Workflow transition overridden'
-            : 'Application moved to the next stage',
-      });
-      return true;
-    } catch (error) {
-      shikshaMitraToast.error({
-        message: parseApiProblemDetail(error).detail || 'Unable to advance the workflow',
-      });
-      return false;
+      let application = applicationQuery.data;
+      let workflow = workflowQuery.data;
+      // Managed review and assessment actions can change the application's stamp
+      // before their query invalidations finish. Read both records at action time.
+      try {
+        [application, workflow] = await Promise.all([
+          applicationQuery.refetch().unwrap(),
+          workflowQuery.refetch().unwrap(),
+        ]);
+      } catch {
+        shikshaMitraToast.error({
+          message: 'The latest application could not be loaded. Try again before continuing.',
+        });
+        return false;
+      }
+      if (workflow.currentStageInstanceId !== workflowQuery.data?.currentStageInstanceId) {
+        shikshaMitraToast.info({
+          message: 'The admission step changed. Review the updated step before continuing.',
+        });
+        return false;
+      }
+      if (!application?.concurrencyStamp || !workflow?.currentStageInstanceId) {
+        shikshaMitraToast.error({
+          message: 'The application changed or is still loading. Refresh it before continuing.',
+        });
+        return false;
+      }
+      const currentStage = workflow.stages.find(
+        (stage) => stage.id === workflow.currentStageInstanceId
+      );
+      if (
+        !options?.skipCurrentStage &&
+        !options?.adminOverride &&
+        !canRequestNormalStageAdvance(currentStage, application.status)
+      ) {
+        shikshaMitraToast.error({
+          message:
+            "This admission step is not available in the application's current status. Refresh the application, complete the required decision or submission first, then try again.",
+        });
+        return false;
+      }
+      try {
+        await advanceWorkflow({
+          id,
+          expectedCurrentStageInstanceId: workflow.currentStageInstanceId,
+          idempotencyKey: crypto.randomUUID(),
+          ...options,
+          concurrencyStamp: application.concurrencyStamp,
+        }).unwrap();
+        setRuntimeAction(null);
+        shikshaMitraToast.success({
+          message: options?.skipCurrentStage
+            ? 'Current stage skipped'
+            : options?.adminOverride
+              ? 'Workflow transition overridden'
+              : 'Application moved to the next stage',
+        });
+        return true;
+      } catch (error) {
+        shikshaMitraToast.error({
+          message: parseApiProblemDetail(error).detail || 'Unable to advance the workflow',
+        });
+        return false;
+      }
+    } finally {
+      setAdvancing(false);
     }
   };
   const submitApplication = async () => {
@@ -259,7 +265,7 @@ export function useApplicationDetail(id: string) {
     setRuntimeAction,
     updateState,
     submitState,
-    advanceState,
+    advanceState: { ...advanceState, isLoading: advanceState.isLoading || advancing },
     save,
     advance,
     submitApplication,
