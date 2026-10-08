@@ -46,7 +46,7 @@ describe('controlled employee account email change', () => {
     state.save.mockReturnValue({ unwrap: () => Promise.resolve({ ...record, accountEmail: 'new@example.test' }) });
     const view = render(<EmployeeAccountEmailAction employeeId="employee" />);
     const opener = screen.getByRole('button', { name: 'Change account email' });
-    opener.focus();
+    act(() => { opener.focus(); });
     fireEvent.click(opener);
     expect(screen.getByLabelText('Loading account email')).toBeInTheDocument();
     state.query.currentData = record;
@@ -57,7 +57,8 @@ describe('controlled employee account email change', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Keep editing' }));
     fireEvent.click(screen.getByRole('button', { name: /^Change email$/ }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Change account email' })).not.toBeInTheDocument());
-    expect(opener).toHaveFocus();
+    // Focus restoration runs on the animation frame after the dialog unmounts.
+    await waitFor(() => expect(opener).toHaveFocus());
   });
 
   it('requires both exact action permissions', () => {
@@ -193,6 +194,6 @@ describe('controlled employee account email change', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Discard changes' }));
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Change account email' })).not.toBeInTheDocument());
-    expect(opener).toHaveFocus();
+    await waitFor(() => expect(opener).toHaveFocus());
   });
 });

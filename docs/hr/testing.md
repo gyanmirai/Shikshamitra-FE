@@ -74,15 +74,16 @@ The payroll full-cycle spec uses a future non-current month so the background cu
 The spec aggregates every payroll preview page before selecting its fixture employee.
 Employee E2E helpers select only an explicitly onboarding-approved Employee-audience role that supports the requested employee group.
 
-## Deployment regression gate
+## Local regression checks before deployment
 
-The frontend deployment workflow runs the HR documentation validator and the complete HR Vitest surface before the production build.
-Keep these commands aligned with `.github/workflows/deploy.yml`:
+Run the complete HR Vitest surface locally before merging.
+The frontend deployment workflow runs HR documentation validation, the production build, and TypeScript validation on `main`; it does not run tests.
 
 ```bash
 npm run docs:hr:check
 npx vitest run src/redux/hr src/screens/hr src/utils/hr-audit-format.test.ts
 npm run build
+npm run ts
 ```
 
 ## Coverage map
